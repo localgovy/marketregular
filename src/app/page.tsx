@@ -1,12 +1,7 @@
 import { FloorTape } from "@/components/floor-tape";
 import { HomeGeo } from "@/components/home-geo";
+import { HomeMosaic } from "@/components/visit-loop";
 import { MarketRow } from "@/components/market-row";
-import {
-  VisitAfter,
-  VisitAt,
-  VisitBefore,
-  VisitWayfind,
-} from "@/components/visit-loop";
 import {
   getCurrentProfile,
   getFloorTape,
@@ -141,36 +136,30 @@ export default async function HomePage() {
         </aside>
 
         <div className="order-1 min-w-0 px-4 py-5 lg:px-6 lg:py-6">
-          <VisitWayfind />
           {showcase ? (
-            <div className="grid gap-6">
-              <VisitBefore
-                cities={cities}
-                provinces={provinces}
-                tags={tags}
-                openNow={openNow}
-                scheduleMap={scheduleMap}
-                showcase={showcase}
-                attending={attending}
-                tablePeek={tablePeek}
-                signedIn={signedIn}
-              />
-              <VisitAt markets={markets} signedIn={signedIn} attending={attending} />
-            </div>
+            <HomeMosaic
+              cities={cities}
+              provinces={provinces}
+              tags={tags}
+              openNow={openNow}
+              scheduleMap={scheduleMap}
+              showcase={showcase}
+              attending={attending}
+              tablePeek={tablePeek}
+              markets={markets}
+              signedIn={signedIn}
+              returning={returning}
+              spotlightName={spotlight?.vendorName ?? null}
+              spotlightSlug={spotlight?.vendorSlug ?? null}
+              otherHalls={otherHalls}
+            />
           ) : (
             <p className="text-sm text-muted-foreground">Directory is empty.</p>
           )}
         </div>
 
         <div className="order-3 min-w-0 px-4 pb-8 lg:px-6 lg:pt-6">
-          <VisitAfter
-            returning={returning}
-            spotlightName={spotlight?.vendorName ?? null}
-            spotlightSlug={spotlight?.vendorSlug ?? null}
-            otherHalls={otherHalls}
-          />
-
-          <section className="mt-8">
+          <section>
             <div className="mb-2 flex items-baseline justify-between gap-3">
               <h2 className="text-sm font-medium tracking-wide text-primary uppercase">
                 All halls

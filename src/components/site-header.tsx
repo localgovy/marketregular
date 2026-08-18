@@ -21,17 +21,6 @@ export async function SiteHeader() {
         </Link>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:justify-between lg:px-6">
           <div className="hidden min-w-0 flex-1 items-center gap-3 md:flex">
-            <nav className="hidden shrink-0 items-baseline gap-3 text-xs tracking-wide lg:flex">
-              <a href="/#before" className="text-muted-foreground hover:text-foreground">
-                1 Before
-              </a>
-              <a href="/#at" className="text-muted-foreground hover:text-foreground">
-                2 At
-              </a>
-              <a href="/#after" className="text-muted-foreground hover:text-foreground">
-                3 After
-              </a>
-            </nav>
             <form action="/search" className="flex min-w-0 max-w-lg flex-1 items-center gap-2">
               <Input
                 name="q"
