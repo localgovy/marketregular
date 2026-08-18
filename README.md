@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Market Regular
 
-## Getting Started
+Canada-wide farmers’ market hub: search markets and vendors (schedules, menus, contact, tags), leave on-site reviews and posts, and follow a live floor feed.
 
-First, run the development server:
+Web first at [marketregular.com](https://marketregular.com). The same Supabase backend is meant to serve an iOS app later.
+
+## Stack
+
+- Next.js (App Router) + TypeScript + Tailwind + shadcn/ui
+- Vercel hosting
+- Supabase (Postgres, Auth, Realtime, Storage, PostGIS)
+- MapLibre via OpenFreeMap
+
+The public directory works from the bundled Canadian seed data until a Supabase project is connected. Auth, live posts, reviews, photos, admin, and vendor claims require Supabase.
+
+## Local development
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Domain
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+See [DOMAIN.md](DOMAIN.md) for NamesLink → Vercel DNS (A on `@`, CNAME on `www`, Proxy off).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Supabase
 
-## Learn More
+This account already has two free projects, so a third `marketregular` project could not be created automatically. Either pause/upgrade an existing project, or create `marketregular` after a slot is free (Canada region `ca-central-1` if available).
 
-To learn more about Next.js, take a look at the following resources:
+Then:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx supabase link --project-ref <project-ref>
+npx supabase db push
+npx supabase db query --linked < supabase/seed.sql
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+(`db query` command names vary by CLI version; you can also paste `supabase/seed.sql` into the SQL editor.)
 
-## Deploy on Vercel
+Enable Email auth (and Google later). Add the site URL and `https://marketregular.com/auth/callback` to Auth redirect URLs.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars. Set `ADMIN_EMAILS` to your login email.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Regenerate seed SQL after editing `src/data/directory.ts`:
+
+```bash
+node --experimental-strip-types scripts/generate-seed-sql.ts
+```
+
+## Admin
+
+Sign in with an `ADMIN_EMAILS` address, then open `/admin` to edit markets/vendors, moderate the feed, and approve listing claims.
+
+## What is seeded
+
+22 markets from St. John’s to Whitehorse, plus fictional example vendors and menus (so we are not publishing real stall-holders without consent). Swap those for real vendors from `/admin`.
