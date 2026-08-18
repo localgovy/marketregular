@@ -171,11 +171,11 @@ export function FloorTape({
     <div className="flex h-full min-h-0 flex-col bg-[#ece7db]">
       <div className="border-b border-border bg-background px-3 py-3">
         <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
-          Heard on the floor
+          After the market
         </p>
         <p className="font-heading text-base leading-tight">The tape</p>
         <p className="text-[12px] text-muted-foreground">
-          Scribbles, verdicts, and whoever tagged a stall.
+          This is the after-market feed: notes and reviews from people who were on site.
         </p>
       </div>
       <FloorComposer

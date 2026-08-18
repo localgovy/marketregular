@@ -161,9 +161,36 @@ export function localStalls(): StallRef[] {
         slug: vendor.slug,
         market_id: link.market_id,
         stall: link.stall,
+        days: link.days,
       },
     ];
   });
+}
+
+export function localTablePeek(vendorIds: string[]) {
+  const lines: Array<{
+    vendorName: string;
+    vendorSlug: string;
+    item: string;
+    priceCents: number | null;
+    note: string | null;
+  }> = [];
+  for (const id of vendorIds) {
+    const vendor = seedVendors.find((v) => v.id === id);
+    if (!vendor) continue;
+    const menu = menusFor(id)[0];
+    if (!menu) continue;
+    const review = seedReviews.find((r) => !r.flagged && r.vendor_id === id);
+    lines.push({
+      vendorName: vendor.name,
+      vendorSlug: vendor.slug,
+      item: menu.name,
+      priceCents: menu.price_cents,
+      note: review?.body ?? null,
+    });
+    if (lines.length >= 3) break;
+  }
+  return lines;
 }
 
 export function localFloorTape(limit = 24): FloorItem[] {

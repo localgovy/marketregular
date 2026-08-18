@@ -10,6 +10,7 @@ import {
   localSchedules,
   localSearch,
   localStalls,
+  localTablePeek,
   localVendorBySlug,
   localVendors,
 } from "@/lib/data/local";
@@ -86,7 +87,7 @@ export async function listStalls(): Promise<StallRef[]> {
   if (!supabase) return localStalls();
   const { data, error } = await supabase
     .from("market_vendors")
-    .select("market_id, stall, vendors(id, name, slug, status)");
+    .select("market_id, stall, days, vendors(id, name, slug, status)");
   if (error || !data?.length) return localStalls();
   return data.flatMap((row) => {
     const raw = (row as { vendors?: unknown }).vendors;
@@ -101,9 +102,56 @@ export async function listStalls(): Promise<StallRef[]> {
         slug: v.slug,
         market_id: (row as { market_id: string }).market_id,
         stall: (row as { stall: string | null }).stall,
+        days: Array.isArray((row as { days?: number[] }).days)
+          ? ((row as { days: number[] }).days)
+          : [],
       },
     ];
   });
+}
+
+export type TablePeek = {
+  vendorName: string;
+  vendorSlug: string;
+  item: string;
+  priceCents: number | null;
+  note: string | null;
+};
+
+export async function getTablePeek(vendorIds: string[]): Promise<TablePeek[]> {
+  if (!vendorIds.length) return [];
+  const supabase = await db();
+  if (!supabase) return localTablePeek(vendorIds);
+  const { data, error } = await supabase
+    .from("vendor_menus")
+    .select("name, price_cents, vendor_id, vendors(name, slug)")
+    .in("vendor_id", vendorIds)
+    .limit(12);
+  if (error || !data?.length) return localTablePeek(vendorIds);
+
+  const seen = new Set<string>();
+  const lines: TablePeek[] = [];
+  for (const row of data as Array<{
+    name: string;
+    price_cents: number | null;
+    vendor_id: string;
+    vendors: { name: string; slug: string } | { name: string; slug: string }[] | null;
+  }>) {
+    if (seen.has(row.vendor_id)) continue;
+    const raw = row.vendors;
+    const vendor = Array.isArray(raw) ? raw[0] : raw;
+    if (!vendor) continue;
+    seen.add(row.vendor_id);
+    lines.push({
+      vendorName: vendor.name,
+      vendorSlug: vendor.slug,
+      item: row.name,
+      priceCents: row.price_cents,
+      note: null,
+    });
+    if (lines.length >= 3) break;
+  }
+  return lines.length ? lines : localTablePeek(vendorIds);
 }
 
 export async function searchDirectory(filters: SearchFilters) {

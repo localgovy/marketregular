@@ -153,6 +153,7 @@ export type StallRef = {
   slug: string;
   market_id: string;
   stall: string | null;
+  days: number[];
 };
 
 export type SearchFilters = {
