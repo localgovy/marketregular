@@ -25,7 +25,7 @@ export async function SiteHeader() {
               <Input
                 name="q"
                 type="search"
-                placeholder="Find a market or stall"
+                placeholder="Search markets or vendors"
                 className="bg-card"
                 autoComplete="off"
               />

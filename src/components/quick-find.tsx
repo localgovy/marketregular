@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PRODUCT_TAGS, WEEKDAYS, provinceName } from "@/lib/constants";
+import { WEEKDAYS, provinceName } from "@/lib/constants";
 
 function weekdayInToronto() {
   const name = new Intl.DateTimeFormat("en-CA", {
@@ -15,11 +15,10 @@ function weekdayInToronto() {
 export function QuickFind({
   cities,
   provinces,
-  tags,
 }: {
   cities: string[];
   provinces: string[];
-  tags: string[];
+  tags?: string[];
 }) {
   const today = weekdayInToronto();
   const chips: Array<{ href: string; label: string }> = [
@@ -29,56 +28,47 @@ export function QuickFind({
   if (today >= 0 && today !== 6) {
     chips.splice(1, 0, {
       href: `/search?weekday=${today}`,
-      label: `Today · ${WEEKDAYS[today]}`,
+      label: `Today (${WEEKDAYS[today]})`,
     });
-  }
-  for (const code of provinces.slice(0, 4)) {
-    chips.push({ href: `/search?province=${code}`, label: provinceName(code) });
   }
   for (const city of cities.slice(0, 5)) {
     chips.push({ href: `/search?city=${encodeURIComponent(city)}`, label: city });
   }
-  const preferred = PRODUCT_TAGS.filter((t) => tags.includes(t));
-  const shownTags = (preferred.length ? preferred : PRODUCT_TAGS).slice(0, 8);
-  for (const tag of shownTags) {
-    chips.push({
-      href: `/search?tag=${encodeURIComponent(tag)}`,
-      label: tag.replaceAll("-", " "),
-    });
+  for (const code of provinces.slice(0, 3)) {
+    chips.push({ href: `/search?province=${code}`, label: provinceName(code) });
   }
 
   return (
     <div>
-      <form action="/search" className="flex gap-2">
+      <form action="/search" className="flex flex-col gap-2 sm:flex-row">
+        <label className="sr-only" htmlFor="home-search">
+          Search for a market, vendor, or city
+        </label>
         <Input
+          id="home-search"
           name="q"
           type="search"
-          placeholder="Market, vendor, city, tomato…"
-          className="bg-card"
+          placeholder="Example: Halifax, peaches, or St. Lawrence"
+          className="h-11 bg-card text-base"
           autoComplete="off"
         />
-        <button type="submit" className={cn(buttonVariants(), "shrink-0")}>
-          Find
+        <button type="submit" className={cn(buttonVariants({ size: "lg" }), "shrink-0")}>
+          Search
         </button>
       </form>
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      <p className="mt-3 text-base text-muted-foreground">Shortcuts</p>
+      <div className="mt-2 flex flex-wrap gap-2">
         {chips.map((chip) => (
           <Link
             key={chip.href + chip.label}
             href={chip.href}
-            className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
-              "h-7 capitalize",
-            )}
+            className={cn(buttonVariants({ variant: "outline" }), "h-10 px-3 text-base")}
           >
             {chip.label}
           </Link>
         ))}
-        <Link
-          href="/search"
-          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "h-7")}
-        >
-          All filters
+        <Link href="/search" className={cn(buttonVariants({ variant: "ghost" }), "h-10 px-3 text-base")}>
+          More search options
         </Link>
       </div>
     </div>

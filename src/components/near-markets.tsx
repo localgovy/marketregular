@@ -11,8 +11,8 @@ export function NearMarkets({ markets }: { markets: Market[] }) {
 
   if (!coords) {
     return (
-      <p className="text-xs text-muted-foreground">
-        Nearby markets show up here after you share location.
+      <p className="text-sm text-muted-foreground">
+        Nearby markets will show here after you share your location.
         {error ? <span className="ml-1 text-destructive">{error}</span> : null}
       </p>
     );
@@ -34,7 +34,7 @@ export function NearMarkets({ markets }: { markets: Market[] }) {
             href={`/markets/${m.slug}`}
             className="flex items-baseline justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-secondary"
           >
-            <span className="min-w-0 truncate text-sm font-medium">
+            <span className="min-w-0 truncate text-base font-medium">
               {m.name}
               <span className="ml-1 font-normal text-muted-foreground">
                 {m.city}, {provinceName(m.province)}

@@ -35,23 +35,23 @@ export function CheckInPanel({
         }
       >
         <div className="min-w-0">
-          <p className={compact ? "text-sm font-medium" : "font-heading text-lg"}>
-            On the floor?
+          <p className={compact ? "text-base font-medium" : "font-heading text-lg"}>
+            Are you at a market?
           </p>
           {!compact ? (
-            <p className="mt-1 text-sm text-muted-foreground">
-              Share your location to post and review while you&apos;re at a market. We store a yes/no
-              check-in, not your pin.
+            <p className="mt-1 text-base text-muted-foreground">
+              Share your location to post a note or review while you are there. We only save that you
+              were at the market — not your exact pin on a map.
             </p>
           ) : (
-            <p className="text-xs text-muted-foreground">
-              Share location to post. We keep a yes/no, not your pin.
+            <p className="text-sm text-muted-foreground">
+              Press the button so we can confirm you are at a market. Then you can post.
             </p>
           )}
-          {error ? <p className="mt-1 text-xs text-destructive">{error}</p> : null}
+          {error ? <p className="mt-1 text-sm text-destructive">{error}</p> : null}
         </div>
-        <Button className={compact ? "" : "mt-4"} onClick={request} type="button" size={compact ? "sm" : "default"}>
-          Use my location
+        <Button className={compact ? "" : "mt-4"} onClick={request} type="button">
+          Share my location
         </Button>
       </div>
     );
@@ -61,9 +61,9 @@ export function CheckInPanel({
     if (compact) {
       return (
         <div className="rounded-lg border border-dashed border-border bg-card px-3 py-2.5">
-          <p className="text-sm font-medium">Not at a market right now</p>
-          <p className="text-xs text-muted-foreground">
-            Stamp in when you&apos;re on site. Browse below in the meantime.
+          <p className="text-base font-medium">You are not at a market right now</p>
+          <p className="text-sm text-muted-foreground">
+            You can still search and read notes. Posting is only for people who are actually at a market.
           </p>
         </div>
       );
@@ -156,8 +156,8 @@ export function CheckInPanel({
           Sign in to post
         </Link>
       ) : compact ? (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Leave the note on the live floor — tag a stall if you have one.
+        <p className="mt-2 text-sm text-muted-foreground">
+          You are close enough to post. Use the “Write a note” box in the notes column.
         </p>
       ) : (
         <>

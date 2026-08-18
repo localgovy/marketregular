@@ -161,15 +161,18 @@ export default async function HomePage() {
         <div className="order-3 min-w-0 px-4 pb-8 lg:px-6 lg:pt-6">
           <section>
             <div className="mb-2 flex items-baseline justify-between gap-3">
-              <h2 className="text-sm font-medium tracking-wide text-primary uppercase">
-                All halls
-              </h2>
-              <span className="text-xs text-muted-foreground">{markets.length} listed</span>
+              <div>
+                <h2 className="font-heading text-2xl">All markets</h2>
+                <p className="mt-1 text-base text-muted-foreground">
+                  Browse by province. Tap a name to see hours, vendors, and the map.
+                </p>
+              </div>
+              <span className="text-base text-muted-foreground">{markets.length} listed</span>
             </div>
             <div className="grid gap-8 sm:grid-cols-2">
               {byProvince.map((group) => (
                 <div key={group.code}>
-                  <h3 className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                  <h3 className="mb-1 text-base font-medium text-muted-foreground">
                     {group.name}
                   </h3>
                   {group.markets.map((market) => (
@@ -186,13 +189,12 @@ export default async function HomePage() {
           </section>
 
           <section className="mt-8">
-            <h2 className="mb-2 text-sm font-medium tracking-wide text-primary uppercase">
-              Stalls
-            </h2>
+            <h2 className="mb-2 font-heading text-2xl">Vendors</h2>
+            <p className="mb-3 text-base text-muted-foreground">Tap a name to see their stall.</p>
             <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
               {vendors.slice(0, 16).map((vendor) => (
                 <li key={vendor.id}>
-                  <Link href={`/vendors/${vendor.slug}`} className="hover:text-primary hover:underline">
+                  <Link href={`/vendors/${vendor.slug}`} className="text-base hover:text-primary hover:underline">
                     {vendor.name}
                   </Link>
                 </li>

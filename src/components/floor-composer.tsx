@@ -48,7 +48,7 @@ export function FloorComposer({
   function submit() {
     setMessage(null);
     if (!marketId) {
-      setMessage("Tag a stall or share location so we know which floor.");
+      setMessage("Pick a vendor from the list, or share your location so we know which market.");
       return;
     }
     if (rating > 0 && body.trim().length < 8) {
@@ -89,18 +89,18 @@ export function FloorComposer({
       setRating(0);
       setVendorId("");
       setTags([]);
-      setMessage(result.demo ? "Pinned to this tape for now." : "On the tape.");
+      setMessage(result.demo ? "Your note is on the list for now." : "Your note is posted.");
     });
   }
 
   return (
     <div className="border-b border-border bg-[#f7f3e8] px-3 py-3">
-      <p className="font-heading text-[15px] leading-tight">Got a dispatch?</p>
-      <p className="mt-0.5 text-[11px] text-muted-foreground">
-        A note for whoever&apos;s walking in next. Tag a stall if you know it.
+      <p className="text-base font-medium">Write a note or review</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Tell the next shopper what you saw. Optional: pick a vendor and a star rating.
       </p>
       <Textarea
-        className="mt-2 min-h-[4.5rem] bg-[#fbf8ef] text-[13px]"
+        className="mt-2 min-h-[4.5rem] bg-[#fbf8ef] text-base"
         rows={3}
         value={body}
         onChange={(e) => setBody(e.target.value)}
@@ -112,7 +112,7 @@ export function FloorComposer({
             key={n}
             type="button"
             onClick={() => setRating((current) => (current === n ? 0 : n))}
-            className={`size-6 rounded-sm text-xs ${
+            className={`size-8 rounded-sm text-sm ${
               n <= rating ? "bg-ticket text-[#fbf8ef]" : "bg-background text-muted-foreground"
             }`}
             aria-label={`${n} star${n === 1 ? "" : "s"}`}
@@ -120,27 +120,28 @@ export function FloorComposer({
             {n}
           </button>
         ))}
-        <span className="ml-1 text-[11px] text-muted-foreground">
-          {rating ? "Saved as a review too" : "Optional score"}
+        <span className="ml-1 text-sm text-muted-foreground">
+          {rating ? `${rating} out of 5 — this will also save as a review` : "Star rating (optional)"}
         </span>
       </div>
-      <label className="mt-2 block text-[11px] text-muted-foreground">
-        Tag a stall
+      <label className="mt-3 block text-sm text-muted-foreground">
+        Which vendor is this about? (optional)
         <select
           value={vendorId}
           onChange={(e) => setVendorId(e.target.value)}
-          className="mt-1 h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
+          className="mt-1 h-10 w-full rounded-md border border-input bg-background px-2 text-base"
         >
-          <option value="">No stall — just the hall</option>
+          <option value="">The market in general</option>
           {stallOptions.map((stall) => (
             <option key={`${stall.market_id}-${stall.id}`} value={stall.id}>
               {stall.name}
-              {stall.stall ? ` · ${stall.stall}` : ""}
+              {stall.stall ? ` · stall ${stall.stall}` : ""}
             </option>
           ))}
         </select>
       </label>
-      <div className="mt-2 flex flex-wrap gap-1">
+      <p className="mt-3 text-sm text-muted-foreground">What is it about? (optional)</p>
+      <div className="mt-1 flex flex-wrap gap-1">
         {FLOOR_TAGS.map((tag) => {
           const on = tags.includes(tag);
           return (
@@ -148,7 +149,7 @@ export function FloorComposer({
               key={tag}
               type="button"
               onClick={() => toggleTag(tag)}
-              className={`rounded-sm px-1.5 py-0.5 text-[10px] tracking-wide uppercase ${
+              className={`rounded-md px-2 py-1 text-sm ${
                 on ? "bg-foreground text-background" : "bg-background text-muted-foreground"
               }`}
             >
@@ -157,33 +158,34 @@ export function FloorComposer({
           );
         })}
       </div>
-      <div className="mt-2.5 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
         {!demo && !signedIn ? (
           <Link
             href="/login"
-            className="inline-flex h-8 items-center rounded-md bg-primary px-2.5 text-sm font-medium text-primary-foreground"
+            className="inline-flex h-10 items-center rounded-md bg-primary px-3 text-base font-medium text-primary-foreground"
           >
             Sign in to post
           </Link>
         ) : !demo && !coords ? (
-          <Button type="button" size="sm" onClick={request}>
-            Share location
+          <Button type="button" onClick={request}>
+            Share my location
           </Button>
         ) : !demo && !market ? (
-          <p className="text-[11px] text-muted-foreground">Walk into a market to stamp the tape.</p>
+          <p className="text-sm text-muted-foreground">
+            You need to be at a market to post. Browse the page until then.
+          </p>
         ) : (
           <Button
             type="button"
-            size="sm"
             onClick={submit}
             disabled={pending || body.trim().length < 3 || !canWrite}
           >
-            {pending ? "Pinning…" : rating ? "Pin review" : "Pin to the tape"}
+            {pending ? "Posting…" : rating ? "Post review" : "Post note"}
           </Button>
         )}
-        {error ? <span className="text-[11px] text-destructive">{error}</span> : null}
+        {error ? <span className="text-sm text-destructive">{error}</span> : null}
       </div>
-      {message ? <p className="mt-1.5 text-[11px] text-muted-foreground">{message}</p> : null}
+      {message ? <p className="mt-2 text-sm text-muted-foreground">{message}</p> : null}
     </div>
   );
 }

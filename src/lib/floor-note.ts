@@ -54,21 +54,12 @@ export function scrapStyle(id: string) {
 }
 
 export function floorKicker(item: Pick<FloorItem, "kind" | "id" | "rating">) {
-  let n = 0;
-  for (const ch of item.id) n += ch.charCodeAt(0);
   if (item.kind === "review") {
-    const lines = ["The verdict.", "Took notes.", "Would shuffle back.", "One regular's take."];
-    if (item.rating === 5) return "Would cross town for this.";
-    if (item.rating != null && item.rating <= 2) return "A word to the wise.";
-    return lines[n % lines.length];
+    return item.rating != null ? `Review · ${item.rating} out of 5` : "Review";
   }
-  const lines = ["Psst.", "From the floor.", "Walked past.", "Don't sleep on this.", "Passing it on."];
-  return lines[n % lines.length];
+  return "Note from the market";
 }
 
 export const NOTE_PROMPTS = [
-  "Peaches? The last loaf? A line that isn't moving?",
-  "What's on the tables right now?",
-  "Shout it down the aisle.",
-  "What should the next person know?",
+  "What should the next shopper know? Peaches, a long line, sold out bread…",
 ];

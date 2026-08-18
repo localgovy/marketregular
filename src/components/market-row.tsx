@@ -20,15 +20,15 @@ export function MarketRow({
   return (
     <Link
       href={`/markets/${market.slug}`}
-      className="flex items-baseline justify-between gap-3 border-b border-border py-2.5 hover:bg-secondary/50"
+      className="flex items-baseline justify-between gap-3 border-b border-border py-3 hover:bg-secondary/50"
     >
       <span className="min-w-0">
-        <span className="block truncate font-medium">{market.name}</span>
-        <span className="text-xs text-muted-foreground">
+        <span className="block truncate text-base font-medium">{market.name}</span>
+        <span className="text-sm text-muted-foreground">
           {market.city}, {provinceName(market.province)}
         </span>
       </span>
-      <span className="shrink-0 text-right text-xs">
+      <span className="shrink-0 text-right text-sm">
         {open ? (
           <span className="font-medium text-ticket">Open now</span>
         ) : (

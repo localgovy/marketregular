@@ -21,10 +21,10 @@ function TapeCard({ item, stalls }: { item: FloorItem; stalls: StallRef[] }) {
 
   return (
     <li className={`mx-2 my-2 rounded-sm px-3 py-3 shadow-[1px_2px_0_rgba(23,22,20,0.06)] ${scrapStyle(item.id)}`}>
-      <p className="font-heading text-[13px] text-ticket italic">{floorKicker(item)}</p>
+      <p className="text-sm font-medium text-ticket">{floorKicker(item)}</p>
       <div className="mt-1 flex items-baseline justify-between gap-2">
-        <p className="text-[11px] text-muted-foreground">
-          <span className="font-medium text-foreground">{item.author_name ?? "A regular"}</span>
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">{item.author_name ?? "A shopper"}</span>
           {place ? (
             <>
               {" "}
@@ -39,22 +39,17 @@ function TapeCard({ item, stalls }: { item: FloorItem; stalls: StallRef[] }) {
             </>
           ) : null}
         </p>
-        <time className="shrink-0 text-[10px] text-muted-foreground" dateTime={item.created_at}>
+        <time className="shrink-0 text-sm text-muted-foreground" dateTime={item.created_at}>
           {timeAgo(item.created_at)}
         </time>
       </div>
-      {item.kind === "review" && item.rating != null ? (
-        <p className="mt-1 text-[10px] font-medium tracking-wide text-ticket">
-          {item.rating}/5 · not a shrug
-        </p>
-      ) : null}
-      <p className="mt-1.5 font-heading text-[15px] leading-snug">{item.body}</p>
+      <p className="mt-1.5 text-base leading-snug">{item.body}</p>
       {item.tags.length ? (
         <ul className="mt-2 flex flex-wrap gap-1">
           {item.tags.map((tag) => (
             <li
               key={tag}
-              className="rounded-[2px] bg-foreground/90 px-1.5 py-px text-[9px] tracking-[0.12em] text-[#f4f1ea] uppercase"
+              className="rounded-md bg-foreground/90 px-2 py-0.5 text-sm text-[#f4f1ea]"
             >
               {tag}
             </li>
@@ -62,8 +57,8 @@ function TapeCard({ item, stalls }: { item: FloorItem; stalls: StallRef[] }) {
         </ul>
       ) : null}
       {item.verified_on_site ? (
-        <p className="mt-2 inline-block -rotate-[2deg] border border-stamp px-1.5 py-px text-[9px] font-medium tracking-[0.16em] text-stamp uppercase">
-          On site
+        <p className="mt-2 inline-block border border-stamp px-1.5 py-0.5 text-sm text-stamp">
+          Posted at the market
         </p>
       ) : null}
     </li>
@@ -171,11 +166,12 @@ export function FloorTape({
     <div className="flex h-full min-h-0 flex-col bg-[#ece7db]">
       <div className="border-b border-border bg-background px-3 py-3">
         <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
-          Live floor
+          Live notes
         </p>
-        <p className="font-heading text-base leading-tight">The tape</p>
-        <p className="text-[12px] text-muted-foreground">
-          Notes from people on site. Leave one if you’re there.
+        <p className="font-heading text-lg leading-tight">What shoppers are saying</p>
+        <p className="mt-1 text-sm leading-snug text-muted-foreground">
+          Read notes from people at markets today. To write one, fill in the box below — you need
+          to be at the market.
         </p>
       </div>
       <FloorComposer
@@ -190,8 +186,8 @@ export function FloorTape({
           ))}
         </ol>
       ) : (
-        <p className="px-3 py-4 font-heading text-sm text-muted-foreground">
-          Blank tape. First peach of the day gets the top slot.
+        <p className="px-3 py-4 text-base text-muted-foreground">
+          No notes yet. If you are at a market, you can write the first one in the box above.
         </p>
       )}
     </div>
