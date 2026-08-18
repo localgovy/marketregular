@@ -94,7 +94,7 @@ export function FloorComposer({
   }
 
   return (
-    <div className="border-b border-border bg-[#f7f3e8] px-3 py-3">
+    <div className="border-b border-board/15 bg-[#f7f3e8] px-3 py-3 shadow-[inset_4px_0_0_var(--stamp)]">
       <p className="text-base font-medium">Write a note or review</p>
       <p className="mt-1 text-sm text-muted-foreground">
         Tell the next shopper what you saw. Optional: pick a vendor and a star rating.

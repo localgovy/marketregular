@@ -20,7 +20,13 @@ function TapeCard({ item, stalls }: { item: FloorItem; stalls: StallRef[] }) {
   const place = vendor ?? item.market_name;
 
   return (
-    <li className={`mx-2 my-2 rounded-sm px-3 py-3 shadow-[1px_2px_0_rgba(23,22,20,0.06)] ${scrapStyle(item.id)}`}>
+    <li
+      className={`mx-2 my-2 rounded-sm px-3 py-3 shadow-[1px_2px_0_rgba(23,22,20,0.08)] ${scrapStyle(item.id)} ${
+        item.kind === "review"
+          ? "shadow-[inset_3px_0_0_var(--ticket),1px_2px_0_rgba(23,22,20,0.08)]"
+          : "shadow-[inset_3px_0_0_var(--stamp),1px_2px_0_rgba(23,22,20,0.08)]"
+      }`}
+    >
       <p className="text-sm font-medium text-ticket">{floorKicker(item)}</p>
       <div className="mt-1 flex items-baseline justify-between gap-2">
         <p className="text-sm text-muted-foreground">
@@ -164,14 +170,15 @@ export function FloorTape({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#ece7db]">
-      <div className="border-b border-border bg-background px-3 py-3">
-        <p className="text-[11px] font-medium tracking-[0.16em] text-primary uppercase">
+      <div className="bg-board px-3 py-3 text-chalk">
+        <p className="flex items-center gap-2 text-sm font-medium text-ticket">
+          <span className="live-dot size-2 rounded-full bg-ticket" />
           Live notes
         </p>
-        <p className="font-heading text-lg leading-tight">What shoppers are saying</p>
-        <p className="mt-1 text-sm leading-snug text-muted-foreground">
-          Read notes from people at markets today. To write one, fill in the box below — you need
-          to be at the market.
+        <p className="font-heading text-xl leading-tight">What shoppers are saying</p>
+        <p className="mt-1 text-sm leading-snug text-chalk/80">
+          This column is the feed. Read notes from people at markets today. To write one, fill in
+          the box below — you need to be at the market.
         </p>
       </div>
       <FloorComposer

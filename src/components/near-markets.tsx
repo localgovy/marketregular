@@ -27,25 +27,28 @@ export function NearMarkets({ markets }: { markets: Market[] }) {
     .slice(0, 5);
 
   return (
-    <ul className="grid gap-1 sm:grid-cols-2">
-      {nearest.map((m) => (
-        <li key={m.id}>
-          <Link
-            href={`/markets/${m.slug}`}
-            className="flex items-baseline justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-secondary"
-          >
-            <span className="min-w-0 truncate text-base font-medium">
-              {m.name}
-              <span className="ml-1 font-normal text-muted-foreground">
-                {m.city}, {provinceName(m.province)}
+    <div>
+      <p className="mb-2 text-sm font-medium text-stamp">Closest to you</p>
+      <ul className="overflow-hidden rounded-md bg-card ring-1 ring-stamp/20">
+        {nearest.map((m) => (
+          <li key={m.id} className="border-b border-border last:border-b-0">
+            <Link
+              href={`/markets/${m.slug}`}
+              className="flex items-baseline justify-between gap-2 px-3 py-2 hover:bg-panel-here"
+            >
+              <span className="min-w-0 truncate text-base font-medium">
+                {m.name}
+                <span className="ml-1 font-normal text-muted-foreground">
+                  {m.city}, {provinceName(m.province)}
+                </span>
               </span>
-            </span>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {formatDistance(m.distance)}
-            </span>
-          </Link>
-        </li>
-      ))}
-    </ul>
+              <span className="shrink-0 text-sm font-medium text-ticket">
+                {formatDistance(m.distance)}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

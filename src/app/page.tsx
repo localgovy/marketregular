@@ -1,5 +1,6 @@
 import { FloorTape } from "@/components/floor-tape";
 import { HomeGeo } from "@/components/home-geo";
+import { HomePanel } from "@/components/home-panel";
 import { HomeMosaic } from "@/components/visit-loop";
 import { MarketRow } from "@/components/market-row";
 import {
@@ -14,6 +15,7 @@ import {
 } from "@/lib/data/catalog";
 import { PROVINCES, WEEKDAYS } from "@/lib/constants";
 import type { Market, StallRef } from "@/types/database";
+import { List, Store } from "lucide-react";
 import Link from "next/link";
 
 function weekdayInToronto() {
@@ -130,7 +132,7 @@ export default async function HomePage() {
       <div className="flex flex-col lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)]">
         <aside
           id="tape"
-          className="order-2 h-[70vh] scroll-mt-20 overflow-hidden border-y border-border lg:order-1 lg:row-span-2 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:border-y-0 lg:border-r"
+          className="order-2 h-[70vh] scroll-mt-20 overflow-hidden border-y border-board lg:order-1 lg:row-span-2 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:border-y-0 lg:border-r lg:border-board"
         >
           <FloorTape initialItems={tape} signedIn={signedIn} stalls={stalls} />
         </aside>
@@ -159,20 +161,19 @@ export default async function HomePage() {
         </div>
 
         <div className="order-3 min-w-0 px-4 pb-8 lg:px-6 lg:pt-6">
-          <section>
-            <div className="mb-2 flex items-baseline justify-between gap-3">
-              <div>
-                <h2 className="font-heading text-2xl">All markets</h2>
-                <p className="mt-1 text-base text-muted-foreground">
-                  Browse by province. Tap a name to see hours, vendors, and the map.
-                </p>
-              </div>
-              <span className="text-base text-muted-foreground">{markets.length} listed</span>
-            </div>
-            <div className="grid gap-8 sm:grid-cols-2">
+          <HomePanel
+            id="directory"
+            tone="directory"
+            icon={List}
+            kicker="The full list"
+            title="All markets"
+            how="Browse by province. Tap a name to see hours, vendors, and the map."
+            action={<span>{markets.length} listed</span>}
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
               {byProvince.map((group) => (
-                <div key={group.code}>
-                  <h3 className="mb-1 text-base font-medium text-muted-foreground">
+                <div key={group.code} className="overflow-hidden rounded-md bg-card ring-1 ring-border">
+                  <h3 className="bg-primary px-3 py-1.5 text-base font-medium text-primary-foreground">
                     {group.name}
                   </h3>
                   {group.markets.map((market) => (
@@ -181,26 +182,35 @@ export default async function HomePage() {
                       market={market}
                       schedules={scheduleMap.get(market.id)}
                       open={openIds.has(market.id)}
+                      inset
                     />
                   ))}
                 </div>
               ))}
             </div>
-          </section>
+          </HomePanel>
 
-          <section className="mt-8">
-            <h2 className="mb-2 font-heading text-2xl">Vendors</h2>
-            <p className="mb-3 text-base text-muted-foreground">Tap a name to see their stall.</p>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <HomePanel
+            tone="vendors"
+            icon={Store}
+            kicker="Name list"
+            title="Vendors"
+            how="Tap a name to see their stall."
+            className="mt-5"
+          >
+            <ul className="flex flex-wrap gap-2">
               {vendors.slice(0, 16).map((vendor) => (
                 <li key={vendor.id}>
-                  <Link href={`/vendors/${vendor.slug}`} className="text-base hover:text-primary hover:underline">
+                  <Link
+                    href={`/vendors/${vendor.slug}`}
+                    className="inline-flex min-h-10 items-center rounded-md bg-foreground px-3 py-1.5 text-base text-[#f4f1ea] hover:bg-foreground/90"
+                  >
                     {vendor.name}
                   </Link>
                 </li>
               ))}
             </ul>
-          </section>
+          </HomePanel>
         </div>
       </div>
     </HomeGeo>
