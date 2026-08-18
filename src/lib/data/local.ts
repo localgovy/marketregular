@@ -10,6 +10,7 @@ import {
   toPublicVendor,
 } from "@/data/directory";
 import { distanceMeters } from "@/lib/geo";
+import { decodeFloorBody } from "@/lib/floor-note";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import type {
   FloorItem,
@@ -19,6 +20,7 @@ import type {
   Post,
   Review,
   SearchFilters,
+  StallRef,
   Vendor,
   VendorDetail,
 } from "@/types/database";
@@ -148,22 +150,43 @@ export function localSchedules(): MarketSchedule[] {
   return localMarkets().flatMap((m) => schedulesFor(m.id));
 }
 
+export function localStalls(): StallRef[] {
+  return seedMarketVendors.flatMap((link) => {
+    const vendor = seedVendors.find((v) => v.id === link.vendor_id);
+    if (!vendor) return [];
+    return [
+      {
+        id: vendor.id,
+        name: vendor.name,
+        slug: vendor.slug,
+        market_id: link.market_id,
+        stall: link.stall,
+      },
+    ];
+  });
+}
+
 export function localFloorTape(limit = 24): FloorItem[] {
   const posts: FloorItem[] = seedPosts
     .filter((p) => !p.flagged)
-    .map((p) => ({
-      id: p.id,
-      kind: "post" as const,
-      body: p.body,
-      created_at: p.created_at,
-      author_name: p.author_name ?? null,
-      market_name: p.market_name ?? null,
-      market_slug: p.market_slug ?? null,
-      vendor_name: null,
-      vendor_slug: null,
-      rating: null,
-      verified_on_site: p.verified_on_site,
-    }));
+    .map((p) => {
+      const decoded = decodeFloorBody(p.body);
+      const tagged = localStalls().find((s) => s.slug === (p.vendor_slug ?? decoded.vendorSlug));
+      return {
+        id: p.id,
+        kind: "post" as const,
+        body: decoded.body,
+        created_at: p.created_at,
+        author_name: p.author_name ?? null,
+        market_name: p.market_name ?? null,
+        market_slug: p.market_slug ?? null,
+        vendor_name: p.vendor_name ?? tagged?.name ?? null,
+        vendor_slug: p.vendor_slug ?? tagged?.slug ?? decoded.vendorSlug,
+        rating: null,
+        verified_on_site: p.verified_on_site,
+        tags: p.tags?.length ? p.tags : decoded.tags,
+      };
+    });
 
   const reviews: FloorItem[] = seedReviews
     .filter((r) => !r.flagged)
@@ -182,6 +205,7 @@ export function localFloorTape(limit = 24): FloorItem[] {
         vendor_slug: vendor?.slug ?? null,
         rating: r.rating,
         verified_on_site: r.verified_on_site,
+        tags: decodeFloorBody(r.body).tags,
       };
     });
 

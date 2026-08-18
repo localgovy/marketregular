@@ -1,5 +1,6 @@
 import { FloorTape } from "@/components/floor-tape";
 import { HomeEngage } from "@/components/home-engage";
+import { HomeGeo } from "@/components/home-geo";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { MarketRow } from "@/components/market-row";
 import { QuickFind } from "@/components/quick-find";
@@ -9,17 +10,19 @@ import {
   getOpenToday,
   listMarkets,
   listSchedules,
+  listStalls,
   listVendors,
 } from "@/lib/data/catalog";
 import { PROVINCES } from "@/lib/constants";
 import Link from "next/link";
 
 export default async function HomePage() {
-  const [tape, openNow, markets, vendors, schedules, profile] = await Promise.all([
+  const [tape, openNow, markets, vendors, stalls, schedules, profile] = await Promise.all([
     getFloorTape(),
     getOpenToday(),
     listMarkets(),
     listVendors(),
+    listStalls(),
     listSchedules(),
     getCurrentProfile(),
   ]);
@@ -45,9 +48,10 @@ export default async function HomePage() {
   );
 
   return (
+    <HomeGeo markets={markets}>
     <div className="lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)]">
-      <aside className="order-2 h-[50vh] overflow-hidden border-y border-border lg:order-1 lg:row-span-2 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:border-y-0 lg:border-r">
-        <FloorTape initialItems={tape} />
+      <aside className="order-2 h-[70vh] overflow-hidden border-y border-border lg:order-1 lg:row-span-2 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:border-y-0 lg:border-r">
+        <FloorTape initialItems={tape} signedIn={Boolean(profile)} stalls={stalls} />
       </aside>
 
       <div className="order-1 min-w-0 px-4 py-5 lg:px-6 lg:py-6">
@@ -145,5 +149,6 @@ export default async function HomePage() {
         </section>
       </div>
     </div>
+    </HomeGeo>
   );
 }

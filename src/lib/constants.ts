@@ -59,6 +59,21 @@ export const AMENITY_TAGS = [
   "family-friendly",
 ] as const;
 
+export const FLOOR_TAGS = [
+  "peaches",
+  "tomatoes",
+  "strawberries",
+  "bread",
+  "flowers",
+  "prawns",
+  "honey",
+  "cheese",
+  "cider",
+  "coffee",
+  "pie",
+  "corn",
+] as const;
+
 export const DEFAULT_GEOFENCE_M = 250;
 
 export function provinceName(code: string) {

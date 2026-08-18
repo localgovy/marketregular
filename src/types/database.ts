@@ -88,6 +88,9 @@ export type Post = {
   market_name?: string | null;
   market_slug?: string | null;
   market_city?: string | null;
+  tags?: string[];
+  vendor_name?: string | null;
+  vendor_slug?: string | null;
 };
 
 export type Review = {
@@ -141,6 +144,15 @@ export type FloorItem = {
   vendor_slug: string | null;
   rating: number | null;
   verified_on_site: boolean;
+  tags: string[];
+};
+
+export type StallRef = {
+  id: string;
+  name: string;
+  slug: string;
+  market_id: string;
+  stall: string | null;
 };
 
 export type SearchFilters = {

@@ -1,17 +1,22 @@
 "use server";
 
 import { isWithinGeofence } from "@/lib/geo";
+import { encodeFloorBody } from "@/lib/floor-note";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+async function getClient() {
+  return createServerSupabaseClient();
+}
+
 async function requireUser() {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) throw new Error("Supabase is not configured yet.");
+  const supabase = await getClient();
+  if (!supabase) return { supabase: null, user: null, demo: true as const };
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error("Sign in to post from a market.");
-  return { supabase, user };
+  if (!user) return { supabase, user: null, demo: false as const };
+  return { supabase, user, demo: false as const };
 }
 
 async function verifyOnSite(
@@ -46,11 +51,16 @@ export async function createPost(input: {
   lat: number;
   lng: number;
   photos?: string[];
+  tags?: string[];
+  vendorSlug?: string;
 }) {
-  const { supabase, user } = await requireUser();
-  const body = input.body.trim();
-  if (body.length < 3) return { error: "Write a little more." };
+  const body = encodeFloorBody(input.body, input.tags ?? [], input.vendorSlug);
+  if (input.body.trim().length < 3) return { error: "Write a little more." };
   if (body.length > 2000) return { error: "Posts are limited to 2,000 characters." };
+
+  const { supabase, user, demo } = await requireUser();
+  if (demo) return { error: null, demo: true };
+  if (!supabase || !user) return { error: "Sign in to post from a market." };
 
   const ok = await verifyOnSite(supabase, input.marketId, input.lat, input.lng);
   if (!ok) {
@@ -77,7 +87,7 @@ export async function createPost(input: {
 
   revalidatePath("/");
   revalidatePath("/search");
-  return { error: null };
+  return { error: null, demo: false };
 }
 
 export async function createReview(input: {
@@ -88,11 +98,14 @@ export async function createReview(input: {
   lat: number;
   lng: number;
 }) {
-  const { supabase, user } = await requireUser();
   const body = input.body.trim();
   if (!input.marketId && !input.vendorId) return { error: "Pick a market or vendor." };
   if (input.rating < 1 || input.rating > 5) return { error: "Rating must be 1–5." };
   if (body.length < 8) return { error: "Tell people a bit more about your visit." };
+
+  const { supabase, user, demo } = await requireUser();
+  if (demo) return { error: null, demo: true };
+  if (!supabase || !user) return { error: "Sign in to post from a market." };
 
   let marketId = input.marketId;
   if (!marketId && input.vendorId) {
@@ -127,11 +140,49 @@ export async function createReview(input: {
   }
 
   revalidatePath("/");
-  return { error: null };
+  return { error: null, demo: false };
+}
+
+export async function composeFloorNote(input: {
+  marketId: string;
+  body: string;
+  lat: number;
+  lng: number;
+  rating: number;
+  vendorId?: string;
+  vendorSlug?: string;
+  tags: string[];
+}) {
+  const post = await createPost({
+    marketId: input.marketId,
+    body: input.body,
+    lat: input.lat,
+    lng: input.lng,
+    tags: input.tags,
+    vendorSlug: input.vendorSlug,
+  });
+  if (post.error) return post;
+
+  if (input.rating >= 1) {
+    const review = await createReview({
+      marketId: input.vendorId ? input.marketId : input.marketId,
+      vendorId: input.vendorId,
+      rating: input.rating,
+      body: input.body,
+      lat: input.lat,
+      lng: input.lng,
+    });
+    if (review.error && !review.error.includes("already reviewed")) {
+      return review;
+    }
+  }
+
+  return { error: null, demo: post.demo };
 }
 
 export async function flagItem(table: "posts" | "reviews", id: string) {
-  const { supabase, user } = await requireUser();
+  const { supabase, user, demo } = await requireUser();
+  if (demo || !supabase || !user) return { error: "Admins only." };
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
@@ -146,7 +197,8 @@ export async function flagItem(table: "posts" | "reviews", id: string) {
 }
 
 export async function unflagItem(table: "posts" | "reviews", id: string) {
-  const { supabase, user } = await requireUser();
+  const { supabase, user, demo } = await requireUser();
+  if (demo || !supabase || !user) return { error: "Admins only." };
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")

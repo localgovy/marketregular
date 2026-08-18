@@ -155,6 +155,10 @@ export function CheckInPanel({
         <Link href="/login" className="mt-4 inline-flex h-8 items-center rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground">
           Sign in to post
         </Link>
+      ) : compact ? (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Leave the note on the live floor — tag a stall if you have one.
+        </p>
       ) : (
         <>
           <div className="mt-4 flex gap-2">

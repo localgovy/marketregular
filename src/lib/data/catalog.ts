@@ -9,10 +9,12 @@ import {
   localPosts,
   localSchedules,
   localSearch,
+  localStalls,
   localVendorBySlug,
   localVendors,
 } from "@/lib/data/local";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
+import { decodeFloorBody } from "@/lib/floor-note";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
   FloorItem,
@@ -24,6 +26,7 @@ import type {
   Profile,
   Review,
   SearchFilters,
+  StallRef,
   Vendor,
   VendorDetail,
 } from "@/types/database";
@@ -76,6 +79,31 @@ export async function listVendors(): Promise<Vendor[]> {
     .order("name");
   if (error || !data?.length) return localVendors();
   return data as Vendor[];
+}
+
+export async function listStalls(): Promise<StallRef[]> {
+  const supabase = await db();
+  if (!supabase) return localStalls();
+  const { data, error } = await supabase
+    .from("market_vendors")
+    .select("market_id, stall, vendors(id, name, slug, status)");
+  if (error || !data?.length) return localStalls();
+  return data.flatMap((row) => {
+    const raw = (row as { vendors?: unknown }).vendors;
+    const vendor = Array.isArray(raw) ? raw[0] : raw;
+    if (!vendor || typeof vendor !== "object") return [];
+    const v = vendor as { id: string; name: string; slug: string; status: string };
+    if (v.status !== "published") return [];
+    return [
+      {
+        id: v.id,
+        name: v.name,
+        slug: v.slug,
+        market_id: (row as { market_id: string }).market_id,
+        stall: (row as { stall: string | null }).stall,
+      },
+    ];
+  });
 }
 
 export async function searchDirectory(filters: SearchFilters) {
@@ -291,19 +319,23 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
         markets?: { name: string; slug: string };
       }
     >
-  ).map((p) => ({
-    id: p.id,
-    kind: "post",
-    body: p.body,
-    created_at: p.created_at,
-    author_name: p.profiles?.display_name ?? "Regular",
-    market_name: p.markets?.name ?? null,
-    market_slug: p.markets?.slug ?? null,
-    vendor_name: null,
-    vendor_slug: null,
-    rating: null,
-    verified_on_site: p.verified_on_site,
-  }));
+  ).map((p) => {
+    const decoded = decodeFloorBody(p.body);
+    return {
+      id: p.id,
+      kind: "post" as const,
+      body: decoded.body,
+      created_at: p.created_at,
+      author_name: p.profiles?.display_name ?? "Regular",
+      market_name: p.markets?.name ?? null,
+      market_slug: p.markets?.slug ?? null,
+      vendor_name: null,
+      vendor_slug: decoded.vendorSlug,
+      rating: null,
+      verified_on_site: p.verified_on_site,
+      tags: decoded.tags,
+    };
+  });
 
   const fromReviews: FloorItem[] = (
     (reviews ?? []) as Array<
@@ -313,19 +345,23 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
         vendors?: { name: string; slug: string };
       }
     >
-  ).map((r) => ({
-    id: r.id,
-    kind: "review",
-    body: r.body,
-    created_at: r.created_at,
-    author_name: r.profiles?.display_name ?? "Regular",
-    market_name: r.markets?.name ?? null,
-    market_slug: r.markets?.slug ?? null,
-    vendor_name: r.vendors?.name ?? null,
-    vendor_slug: r.vendors?.slug ?? null,
-    rating: r.rating,
-    verified_on_site: r.verified_on_site,
-  }));
+  ).map((r) => {
+    const decoded = decodeFloorBody(r.body);
+    return {
+      id: r.id,
+      kind: "review" as const,
+      body: decoded.body,
+      created_at: r.created_at,
+      author_name: r.profiles?.display_name ?? "Regular",
+      market_name: r.markets?.name ?? null,
+      market_slug: r.markets?.slug ?? null,
+      vendor_name: r.vendors?.name ?? null,
+      vendor_slug: r.vendors?.slug ?? decoded.vendorSlug,
+      rating: r.rating,
+      verified_on_site: r.verified_on_site,
+      tags: decoded.tags,
+    };
+  });
 
   const merged = [...fromPosts, ...fromReviews].sort(
     (a, b) => +new Date(b.created_at) - +new Date(a.created_at),
