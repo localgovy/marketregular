@@ -2,7 +2,7 @@
 
 Canada-wide farmers’ market hub: search markets and vendors (schedules, menus, contact, tags), leave on-site reviews and posts, and follow a live floor feed.
 
-Web first at [marketregular.com](https://marketregular.com). The same Supabase backend is meant to serve an iOS app later.
+Web first at [marketregular.com](https://marketregular.com). Source: [github.com/localgovy/marketregular](https://github.com/localgovy/marketregular). The same Supabase backend is meant to serve an iOS app later.
 
 ## Stack
 
@@ -23,7 +23,7 @@ npm run dev
 
 ## Domain
 
-See [DOMAIN.md](DOMAIN.md) for NamesLink → Vercel DNS (A on `@`, CNAME on `www`, Proxy off).
+See [DOMAIN.md](DOMAIN.md) for NamesLink → Vercel DNS (A on `@`, CNAME on `www`, Proxy off). Import the GitHub repo into Vercel first so you have a project to attach the domain to.
 
 ## Supabase
 
