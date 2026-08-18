@@ -2,10 +2,12 @@ import { isSupabaseConfigured } from "@/lib/constants";
 import {
   localCities,
   localFeatured,
+  localFloorTape,
   localMarketBySlug,
   localMarkets,
   localOpenToday,
   localPosts,
+  localSchedules,
   localSearch,
   localVendorBySlug,
   localVendors,
@@ -13,6 +15,7 @@ import {
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
+  FloorItem,
   Market,
   MarketDetail,
   MarketSchedule,
@@ -259,6 +262,78 @@ export async function getLivePosts(limit = 20): Promise<Post[]> {
   }));
 }
 
+export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
+  const supabase = await db();
+  if (!supabase) return localFloorTape(limit);
+
+  const [{ data: posts, error: postError }, { data: reviews, error: reviewError }] =
+    await Promise.all([
+      supabase
+        .from("posts")
+        .select("*, profiles(display_name), markets(name, slug)")
+        .eq("flagged", false)
+        .order("created_at", { ascending: false })
+        .limit(limit),
+      supabase
+        .from("reviews")
+        .select("*, profiles(display_name), markets(name, slug), vendors(name, slug)")
+        .eq("flagged", false)
+        .order("created_at", { ascending: false })
+        .limit(limit),
+    ]);
+
+  if (postError && reviewError) return localFloorTape(limit);
+
+  const fromPosts: FloorItem[] = (
+    (posts ?? []) as Array<
+      Post & {
+        profiles?: { display_name: string | null };
+        markets?: { name: string; slug: string };
+      }
+    >
+  ).map((p) => ({
+    id: p.id,
+    kind: "post",
+    body: p.body,
+    created_at: p.created_at,
+    author_name: p.profiles?.display_name ?? "Regular",
+    market_name: p.markets?.name ?? null,
+    market_slug: p.markets?.slug ?? null,
+    vendor_name: null,
+    vendor_slug: null,
+    rating: null,
+    verified_on_site: p.verified_on_site,
+  }));
+
+  const fromReviews: FloorItem[] = (
+    (reviews ?? []) as Array<
+      Review & {
+        profiles?: { display_name: string | null };
+        markets?: { name: string; slug: string };
+        vendors?: { name: string; slug: string };
+      }
+    >
+  ).map((r) => ({
+    id: r.id,
+    kind: "review",
+    body: r.body,
+    created_at: r.created_at,
+    author_name: r.profiles?.display_name ?? "Regular",
+    market_name: r.markets?.name ?? null,
+    market_slug: r.markets?.slug ?? null,
+    vendor_name: r.vendors?.name ?? null,
+    vendor_slug: r.vendors?.slug ?? null,
+    rating: r.rating,
+    verified_on_site: r.verified_on_site,
+  }));
+
+  const merged = [...fromPosts, ...fromReviews].sort(
+    (a, b) => +new Date(b.created_at) - +new Date(a.created_at),
+  );
+  if (!merged.length) return localFloorTape(limit);
+  return merged.slice(0, limit);
+}
+
 export async function getFeaturedMarkets() {
   const supabase = await db();
   if (!supabase) return localFeatured();
@@ -289,6 +364,14 @@ export async function getOpenToday() {
 export async function getCities() {
   const markets = await listMarkets();
   return [...new Set(markets.map((m) => m.city))].sort();
+}
+
+export async function listSchedules(): Promise<MarketSchedule[]> {
+  const supabase = await db();
+  if (!supabase) return localSchedules();
+  const { data, error } = await supabase.from("market_schedules").select("*");
+  if (error || !data?.length) return localSchedules();
+  return data as MarketSchedule[];
 }
 
 export async function getSchedules(marketId: string) {

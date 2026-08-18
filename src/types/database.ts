@@ -129,6 +129,20 @@ export type VendorDetail = Vendor & {
   reviews: Review[];
 };
 
+export type FloorItem = {
+  id: string;
+  kind: "post" | "review";
+  body: string;
+  created_at: string;
+  author_name: string | null;
+  market_name: string | null;
+  market_slug: string | null;
+  vendor_name: string | null;
+  vendor_slug: string | null;
+  rating: number | null;
+  verified_on_site: boolean;
+};
+
 export type SearchFilters = {
   q?: string;
   province?: string;

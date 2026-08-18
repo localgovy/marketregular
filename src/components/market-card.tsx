@@ -12,6 +12,9 @@ export function MarketCard({
   market: Market;
   schedules?: MarketSchedule[];
 }) {
+  const when = schedules?.length
+    ? nextOpenLabel(schedules, market.province)
+    : null;
   return (
     <Link href={`/markets/${market.slug}`} className="block h-full">
       <Card className="h-full transition-shadow hover:shadow-md">
@@ -27,9 +30,11 @@ export function MarketCard({
           <p className="line-clamp-3 text-sm text-muted-foreground">
             {market.about}
           </p>
-          {schedules?.length ? (
-            <p className="text-sm font-medium text-primary">
-              {nextOpenLabel(schedules, market.province)}
+          {when ? (
+            <p
+              className={`text-sm font-medium ${when === "Open now" ? "text-ticket" : "text-primary"}`}
+            >
+              {when}
             </p>
           ) : null}
           <TagList tags={market.tags.slice(0, 4)} />

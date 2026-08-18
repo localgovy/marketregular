@@ -34,9 +34,9 @@ export function MarketMap({
     for (const market of markets) {
       bounds.extend([market.lng, market.lat]);
       const popup = new Popup({ offset: 16 }).setHTML(
-        `<a href="/markets/${market.slug}" style="font-weight:600;color:#1f4a38">${market.name}</a><div style="color:#5c6b63">${market.city}</div>`,
+        `<a href="/markets/${market.slug}" style="font-weight:600;color:#171614">${market.name}</a><div style="color:#5e5b54">${market.city}</div>`,
       );
-      new Marker({ color: "#1f4a38" })
+      new Marker({ color: "#3a555c" })
         .setLngLat([market.lng, market.lat])
         .setPopup(popup)
         .addTo(map);

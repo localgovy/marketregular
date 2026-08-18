@@ -91,7 +91,7 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
             </div>
           ) : null}
           {post.verified_on_site ? (
-            <p className="mt-2 text-xs tracking-wide text-primary uppercase">On site</p>
+            <p className="mt-2 text-xs tracking-wide text-stamp uppercase">On site</p>
           ) : null}
         </li>
       ))}

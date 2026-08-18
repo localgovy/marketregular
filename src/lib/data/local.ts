@@ -12,8 +12,10 @@ import {
 import { distanceMeters } from "@/lib/geo";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import type {
+  FloorItem,
   Market,
   MarketDetail,
+  MarketSchedule,
   Post,
   Review,
   SearchFilters,
@@ -140,4 +142,50 @@ export function localFeatured() {
 
 export function localOpenToday() {
   return localMarkets().filter((m) => isMarketOpen(schedulesFor(m.id), m.province));
+}
+
+export function localSchedules(): MarketSchedule[] {
+  return localMarkets().flatMap((m) => schedulesFor(m.id));
+}
+
+export function localFloorTape(limit = 24): FloorItem[] {
+  const posts: FloorItem[] = seedPosts
+    .filter((p) => !p.flagged)
+    .map((p) => ({
+      id: p.id,
+      kind: "post" as const,
+      body: p.body,
+      created_at: p.created_at,
+      author_name: p.author_name ?? null,
+      market_name: p.market_name ?? null,
+      market_slug: p.market_slug ?? null,
+      vendor_name: null,
+      vendor_slug: null,
+      rating: null,
+      verified_on_site: p.verified_on_site,
+    }));
+
+  const reviews: FloorItem[] = seedReviews
+    .filter((r) => !r.flagged)
+    .map((r) => {
+      const market = seedMarkets.find((m) => m.id === r.market_id);
+      const vendor = seedVendors.find((v) => v.id === r.vendor_id);
+      return {
+        id: r.id,
+        kind: "review" as const,
+        body: r.body,
+        created_at: r.created_at,
+        author_name: r.author_name ?? null,
+        market_name: market?.name ?? null,
+        market_slug: market?.slug ?? null,
+        vendor_name: vendor?.name ?? null,
+        vendor_slug: vendor?.slug ?? null,
+        rating: r.rating,
+        verified_on_site: r.verified_on_site,
+      };
+    });
+
+  return [...posts, ...reviews]
+    .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+    .slice(0, limit);
 }

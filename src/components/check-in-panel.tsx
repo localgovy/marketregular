@@ -9,7 +9,13 @@ import { formatDistance } from "@/lib/geo";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import Link from "next/link";
 
-export function CheckInPanel({ signedIn }: { signedIn: boolean }) {
+export function CheckInPanel({
+  signedIn,
+  compact = false,
+}: {
+  signedIn: boolean;
+  compact?: boolean;
+}) {
   const { nearby, coords, error, request } = useGeo();
   const market = nearby[0];
   const [body, setBody] = useState("");
@@ -19,18 +25,56 @@ export function CheckInPanel({ signedIn }: { signedIn: boolean }) {
   const [pending, start] = useTransition();
   const [files, setFiles] = useState<File[]>([]);
 
-  if (!market || !coords) {
+  if (!coords) {
+    return (
+      <div
+        className={
+          compact
+            ? "flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card px-3 py-2.5"
+            : "rounded-xl bg-card p-5 ring-1 ring-foreground/10"
+        }
+      >
+        <div className="min-w-0">
+          <p className={compact ? "text-sm font-medium" : "font-heading text-lg"}>
+            On the floor?
+          </p>
+          {!compact ? (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Share your location to post and review while you&apos;re at a market. We store a yes/no
+              check-in, not your pin.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Share location to post. We keep a yes/no, not your pin.
+            </p>
+          )}
+          {error ? <p className="mt-1 text-xs text-destructive">{error}</p> : null}
+        </div>
+        <Button className={compact ? "" : "mt-4"} onClick={request} type="button" size={compact ? "sm" : "default"}>
+          Use my location
+        </Button>
+      </div>
+    );
+  }
+
+  if (!market) {
+    if (compact) {
+      return (
+        <div className="rounded-lg border border-dashed border-border bg-card px-3 py-2.5">
+          <p className="text-sm font-medium">Not at a market right now</p>
+          <p className="text-xs text-muted-foreground">
+            Stamp in when you&apos;re on site. Browse below in the meantime.
+          </p>
+        </div>
+      );
+    }
     return (
       <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
         <p className="font-heading text-lg">On the floor?</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Share your location to post and review while you&apos;re at a market. We store a yes/no
-          check-in, not your pin.
+          You&apos;re not inside a market fence. Open a listing, or come back when you&apos;re there.
         </p>
         {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
-        <Button className="mt-4" onClick={request} type="button">
-          Use my location
-        </Button>
       </div>
     );
   }
@@ -90,9 +134,18 @@ export function CheckInPanel({ signedIn }: { signedIn: boolean }) {
   }
 
   return (
-    <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
+    <div
+      className={
+        compact
+          ? "rounded-lg border border-border bg-card px-3 py-3"
+          : "rounded-xl bg-card p-5 ring-1 ring-foreground/10"
+      }
+    >
       <p className="text-xs tracking-wide text-primary uppercase">You&apos;re at</p>
-      <Link href={`/markets/${stall.slug}`} className="font-heading text-2xl hover:underline">
+      <Link
+        href={`/markets/${stall.slug}`}
+        className={compact ? "text-base font-medium hover:underline" : "font-heading text-2xl hover:underline"}
+      >
         {stall.name}
       </Link>
       <p className="text-sm text-muted-foreground">
@@ -138,7 +191,7 @@ export function CheckInPanel({ signedIn }: { signedIn: boolean }) {
           ) : null}
           <Textarea
             className="mt-3"
-            rows={4}
+            rows={compact ? 2 : 4}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder={
@@ -147,7 +200,7 @@ export function CheckInPanel({ signedIn }: { signedIn: boolean }) {
                 : "What should someone know before they come?"
             }
           />
-          {mode === "post" ? (
+          {mode === "post" && !compact ? (
             <input
               className="mt-2 text-sm"
               type="file"

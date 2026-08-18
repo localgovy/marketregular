@@ -39,8 +39,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --color-terracotta: var(--terracotta);
-  --color-forest: var(--forest);
+  --color-stamp: var(--stamp);
+  --color-ticket: var(--ticket);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -51,40 +51,41 @@
 }
 
 :root {
-  --background: oklch(0.96 0.02 92);
-  --foreground: oklch(0.24 0.03 145);
-  --card: oklch(0.985 0.01 92);
-  --card-foreground: oklch(0.24 0.03 145);
-  --popover: oklch(0.985 0.01 92);
-  --popover-foreground: oklch(0.24 0.03 145);
-  --primary: oklch(0.38 0.07 155);
-  --primary-foreground: oklch(0.98 0.01 92);
-  --secondary: oklch(0.93 0.025 90);
-  --secondary-foreground: oklch(0.28 0.04 150);
-  --muted: oklch(0.93 0.02 90);
-  --muted-foreground: oklch(0.48 0.03 140);
-  --accent: oklch(0.93 0.03 85);
-  --accent-foreground: oklch(0.3 0.05 150);
-  --terracotta: oklch(0.61 0.14 38);
-  --forest: oklch(0.38 0.07 155);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.88 0.02 90);
-  --input: oklch(0.88 0.02 90);
-  --ring: oklch(0.45 0.07 155);
-  --chart-1: oklch(0.38 0.07 155);
-  --chart-2: oklch(0.61 0.14 38);
-  --chart-3: oklch(0.72 0.1 85);
-  --chart-4: oklch(0.5 0.05 200);
-  --chart-5: oklch(0.45 0.08 40);
-  --radius: 0.7rem;
-  --sidebar: oklch(0.96 0.02 92);
-  --sidebar-foreground: oklch(0.24 0.03 145);
-  --sidebar-primary: oklch(0.38 0.07 155);
-  --sidebar-primary-foreground: oklch(0.98 0.01 92);
-  --sidebar-accent: oklch(0.93 0.025 90);
-  --sidebar-accent-foreground: oklch(0.28 0.04 150);
-  --sidebar-border: oklch(0.88 0.02 90);
-  --sidebar-ring: oklch(0.45 0.07 155);
+  /* Receipt paper, stall steel, ticket brass, rubber stamp. */
+  --background: #f2f0ea;
+  --foreground: #171614;
+  --card: #f7f6f1;
+  --card-foreground: #171614;
+  --popover: #f7f6f1;
+  --popover-foreground: #171614;
+  --primary: #3a555c;
+  --primary-foreground: #f2f0ea;
+  --secondary: #e8e5dd;
+  --secondary-foreground: #171614;
+  --muted: #e8e5dd;
+  --muted-foreground: #5e5b54;
+  --accent: #e4e0d6;
+  --accent-foreground: #171614;
+  --stamp: #a61f16;
+  --ticket: #a07d2a;
+  --destructive: #a61f16;
+  --border: #d3cfc6;
+  --input: #d3cfc6;
+  --ring: #3a555c;
+  --chart-1: #3a555c;
+  --chart-2: #a07d2a;
+  --chart-3: #a61f16;
+  --chart-4: #171614;
+  --chart-5: #5e5b54;
+  --radius: 0.35rem;
+  --sidebar: #f2f0ea;
+  --sidebar-foreground: #171614;
+  --sidebar-primary: #3a555c;
+  --sidebar-primary-foreground: #f2f0ea;
+  --sidebar-accent: #e8e5dd;
+  --sidebar-accent-foreground: #171614;
+  --sidebar-border: #d3cfc6;
+  --sidebar-ring: #3a555c;
 }
 
 @layer base {
