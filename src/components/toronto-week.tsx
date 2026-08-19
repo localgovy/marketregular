@@ -12,7 +12,7 @@ function SlotRow({
   return (
     <Link
       href={`/markets/${slot.market.slug}`}
-      className="flex items-start justify-between gap-3 px-3 py-3 hover:bg-foreground/5"
+      className="flex items-start justify-between gap-3 px-3 py-3 hover:bg-primary/[0.045]"
     >
       <span className="min-w-0">
         <span className="block truncate text-base font-medium">{slot.market.name}</span>
@@ -32,6 +32,30 @@ function SlotRow({
         )}
       </span>
     </Link>
+  );
+}
+
+function DayCard({
+  group,
+  titleClass,
+}: {
+  group: UpcomingGroup;
+  titleClass: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-md bg-[color-mix(in_srgb,var(--foreground)_3%,var(--card))] ring-1 ring-border/70">
+      <div className="flex items-baseline justify-between gap-2 border-b border-border/60 bg-[color-mix(in_srgb,var(--primary)_7%,white)] px-3 py-2">
+        <h3 className={titleClass}>{group.label}</h3>
+        <p className="text-sm font-medium text-primary">{group.date}</p>
+      </div>
+      <ul className="divide-y divide-border/50">
+        {group.slots.map((slot) => (
+          <li key={slot.market.id}>
+            <SlotRow slot={slot} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -55,40 +79,17 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
       ) : (
         <div className="grid gap-4">
           {open ? (
-            <div className="overflow-hidden rounded-md ring-1 ring-border">
-              <div className="flex items-baseline justify-between gap-2 border-b border-border bg-card px-3 py-2">
-                <h3 className="font-heading text-xl leading-tight">{open.label}</h3>
-                <p className="text-sm font-medium text-primary">{open.date}</p>
-              </div>
-              <ul className="divide-y divide-border bg-secondary">
-                {open.slots.map((slot) => (
-                  <li key={slot.market.id}>
-                    <SlotRow slot={slot} />
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <DayCard group={open} titleClass="font-heading text-xl leading-tight" />
           ) : null}
 
           {rest.length ? (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid items-start gap-3 sm:grid-cols-2">
               {rest.map((group) => (
-                <div
+                <DayCard
                   key={group.id}
-                  className="overflow-hidden rounded-md ring-1 ring-border"
-                >
-                  <div className="flex items-baseline justify-between gap-2 border-b border-border bg-card px-3 py-2">
-                    <h3 className="font-heading text-lg leading-tight">{group.label}</h3>
-                    <p className="text-sm font-medium text-primary">{group.date}</p>
-                  </div>
-                  <ul className="divide-y divide-border bg-secondary">
-                    {group.slots.map((slot) => (
-                      <li key={slot.market.id}>
-                        <SlotRow slot={slot} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                  group={group}
+                  titleClass="font-heading text-lg leading-tight"
+                />
               ))}
             </div>
           ) : null}
