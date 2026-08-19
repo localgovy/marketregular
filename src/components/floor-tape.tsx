@@ -169,10 +169,10 @@ export function FloorTape({
   }, []);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#e8efe4]">
-      <div className="shrink-0 bg-board px-3 py-2 text-chalk">
-        <p className="flex items-center gap-2 text-sm font-medium text-ticket">
-          <span className="live-dot size-2 rounded-full bg-ticket" />
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      <div className="shrink-0 bg-board px-3 pt-6 pb-3 text-chalk">
+        <p className="flex items-center gap-2 text-sm font-medium text-chalk/80">
+          <span className="live-dot size-2 rounded-full bg-chalk" />
           Live notes
         </p>
         <p className="font-heading text-lg leading-tight">The group chat from the stalls</p>

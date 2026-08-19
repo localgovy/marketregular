@@ -28,7 +28,7 @@ function SlotRow({
             Open · until {slot.until}
           </span>
         ) : (
-          <span className="font-mono text-sm font-medium text-foreground">{slot.hours}</span>
+          <span className="font-mono text-sm text-muted-foreground">{slot.hours}</span>
         )}
       </span>
     </Link>
@@ -55,12 +55,12 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
       ) : (
         <div className="grid gap-4">
           {open ? (
-            <div className="overflow-hidden rounded-md bg-receipt ring-1 ring-ticket/30">
-              <div className="flex items-baseline justify-between gap-2 bg-ticket px-3 py-2 text-receipt">
+            <div className="overflow-hidden rounded-md ring-1 ring-border">
+              <div className="flex items-baseline justify-between gap-2 border-b border-border px-3 py-2">
                 <h3 className="font-heading text-xl leading-tight">{open.label}</h3>
-                <p className="text-sm opacity-90">{open.hint}</p>
+                <p className="text-sm text-muted-foreground">{open.hint}</p>
               </div>
-              <ul className="divide-y divide-ticket/20">
+              <ul className="divide-y divide-border">
                 {open.slots.map((slot) => (
                   <li key={slot.market.id}>
                     <SlotRow slot={slot} />
@@ -75,13 +75,13 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
               {rest.map((group) => (
                 <div
                   key={group.id}
-                  className="overflow-hidden rounded-md bg-receipt ring-1 ring-ticket/20"
+                  className="overflow-hidden rounded-md ring-1 ring-border"
                 >
-                  <div className="flex items-baseline justify-between gap-2 border-b border-ticket/20 px-3 py-2">
+                  <div className="flex items-baseline justify-between gap-2 border-b border-border px-3 py-2">
                     <h3 className="font-heading text-lg leading-tight">{group.label}</h3>
                     <p className="text-sm text-muted-foreground">{group.hint}</p>
                   </div>
-                  <ul className="divide-y divide-ticket/15">
+                  <ul className="divide-y divide-border">
                     {group.slots.map((slot) => (
                       <li key={slot.market.id}>
                         <SlotRow slot={slot} />

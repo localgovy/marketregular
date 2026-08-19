@@ -12,59 +12,26 @@ export type PanelTone =
   | "more"
   | "directory";
 
-const tones: Record<
-  PanelTone,
-  {
-    shell: string;
-    bar: string;
-    body: string;
-  }
-> = {
-  find: {
-    shell: "bg-panel-find ring-primary/25",
-    bar: "bg-primary text-primary-foreground",
-    body: "bg-[color-mix(in_srgb,var(--background)_55%,white)]",
-  },
-  open: {
-    shell: "bg-panel-open ring-ticket/35",
-    bar: "bg-ticket text-receipt",
-    body: "bg-[color-mix(in_srgb,var(--background)_35%,var(--receipt))]",
-  },
-  vendors: {
-    shell: "bg-panel-vendors ring-foreground/15",
-    bar: "bg-foreground text-receipt",
-    body: "bg-card",
-  },
-  menus: {
-    shell: "bg-panel-menus ring-ticket/25",
-    bar: "bg-[#8a4f1f] text-receipt",
-    body: "bg-receipt",
-  },
-  here: {
-    shell: "bg-panel-here ring-stamp/30",
-    bar: "bg-stamp text-[#fbeceb]",
-    body: "bg-[color-mix(in_srgb,var(--background)_50%,white)]",
-  },
-  map: {
-    shell: "bg-panel-map ring-primary/30",
-    bar: "bg-primary text-primary-foreground",
-    body: "bg-card",
-  },
-  back: {
-    shell: "bg-panel-back ring-ticket/20",
-    bar: "bg-[#7a5324] text-receipt",
-    body: "bg-card",
-  },
-  more: {
-    shell: "bg-secondary ring-border",
-    bar: "bg-board text-chalk",
-    body: "bg-card",
-  },
-  directory: {
-    shell: "bg-card ring-border",
-    bar: "bg-primary text-primary-foreground",
-    body: "bg-background",
-  },
+const quiet = {
+  shell: "bg-card ring-1 ring-border",
+  featured: false,
+};
+
+const featured = {
+  shell: "bg-card ring-1 ring-border shadow-sm border-l-[3px] border-l-primary",
+  featured: true,
+};
+
+const tones: Record<PanelTone, { shell: string; featured: boolean }> = {
+  find: featured,
+  open: featured,
+  vendors: quiet,
+  menus: quiet,
+  here: quiet,
+  map: quiet,
+  back: quiet,
+  more: quiet,
+  directory: quiet,
 };
 
 export function HomePanel({
@@ -94,35 +61,31 @@ export function HomePanel({
   return (
     <section
       id={id}
-      className={cn(
-        "scroll-mt-24 overflow-hidden rounded-lg ring-1",
-        t.shell,
-        className
-      )}
+      className={cn("scroll-mt-24 overflow-hidden rounded-lg", t.shell, className)}
     >
-      <div className={cn("flex flex-wrap items-end justify-between gap-3 px-4 py-3", t.bar)}>
+      <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4 pb-1">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-md bg-black/15">
-            <Icon className="size-5" aria-hidden />
+          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground">
+            <Icon className="size-4" aria-hidden />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-medium tracking-wide opacity-85">{kicker}</p>
+            <p className="text-sm text-muted-foreground">{kicker}</p>
             <h2 className="font-heading text-2xl leading-tight">{title}</h2>
           </div>
         </div>
         {action ? (
-          <div className="shrink-0 text-base font-medium [&_a]:underline [&_a]:underline-offset-4">
+          <div className="shrink-0 text-base font-medium text-primary [&_a]:underline [&_a]:underline-offset-4">
             {action}
           </div>
         ) : null}
       </div>
       {flush ? (
         <>
-          <p className={cn("px-4 pt-3 pb-2 text-base text-muted-foreground", t.body)}>{how}</p>
+          <p className="px-4 pt-2 pb-3 text-base text-muted-foreground">{how}</p>
           {children}
         </>
       ) : (
-        <div className={cn("px-4 py-4", t.body)}>
+        <div className="px-4 pt-2 pb-4">
           <p className="mb-4 text-base text-muted-foreground">{how}</p>
           {children}
         </div>
@@ -142,23 +105,21 @@ export function JumpChip({
   hint: string;
   tone: "find" | "open" | "here" | "notes";
 }) {
-  const styles = {
-    find: "bg-primary text-primary-foreground hover:bg-primary/90",
-    open: "bg-ticket text-receipt hover:bg-ticket/90",
-    here: "bg-stamp text-[#fbeceb] hover:bg-stamp/90",
-    notes: "bg-board text-chalk hover:bg-board/90",
-  }[tone];
-
+  const featuredChip = tone === "open" || tone === "find";
   return (
     <a
       href={href}
       className={cn(
         "flex min-h-12 min-w-[9.5rem] flex-1 flex-col justify-center rounded-md px-3 py-2 no-underline transition-colors",
-        styles
+        featuredChip
+          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+          : "bg-card text-foreground ring-1 ring-border hover:bg-secondary"
       )}
     >
       <span className="text-base font-medium">{label}</span>
-      <span className="text-sm opacity-80">{hint}</span>
+      <span className={cn("text-sm", featuredChip ? "opacity-80" : "text-muted-foreground")}>
+        {hint}
+      </span>
     </a>
   );
 }

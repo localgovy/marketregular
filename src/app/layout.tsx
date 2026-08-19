@@ -1,19 +1,22 @@
 import type { Metadata } from "next";
-import { Figtree, Fraunces } from "next/font/google";
+import { Schibsted_Grotesk, Young_Serif } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/constants";
 import "./globals.css";
 
-const sans = Figtree({
+const grotesk = Schibsted_Grotesk({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-grotesk",
+  display: "swap",
 });
 
-const heading = Fraunces({
+const display = Young_Serif({
   subsets: ["latin"],
-  variable: "--font-heading",
+  weight: "400",
+  variable: "--font-display",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -38,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-CA"
-      className={`${sans.variable} ${heading.variable} h-full antialiased`}
+      className={`${grotesk.variable} ${display.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <SiteHeader />

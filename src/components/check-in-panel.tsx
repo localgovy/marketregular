@@ -30,7 +30,7 @@ export function CheckInPanel({
       <div
         className={
           compact
-            ? "flex flex-wrap items-center justify-between gap-3 rounded-md bg-card px-3 py-3 ring-2 ring-stamp"
+            ? "flex flex-wrap items-center justify-between gap-3 rounded-md bg-background px-3 py-3 ring-1 ring-border"
             : "rounded-xl bg-card p-5 ring-1 ring-foreground/10"
         }
       >
@@ -50,11 +50,7 @@ export function CheckInPanel({
           )}
           {error ? <p className="mt-1 text-sm text-destructive">{error}</p> : null}
         </div>
-        <Button
-          className={compact ? "bg-stamp text-[#fbeceb] hover:bg-stamp/90" : "mt-4"}
-          onClick={request}
-          type="button"
-        >
+        <Button className={compact ? "" : "mt-4"} onClick={request} type="button">
           Share my location
         </Button>
       </div>
@@ -64,7 +60,7 @@ export function CheckInPanel({
   if (!market) {
     if (compact) {
       return (
-        <div className="rounded-md border-2 border-dashed border-stamp/40 bg-card px-3 py-3">
+        <div className="rounded-md border border-dashed border-border bg-background px-3 py-3">
           <p className="text-base font-medium">You are not at a market right now</p>
           <p className="text-sm text-muted-foreground">
             You can still search and read notes. Posting is only for people who are actually at a market.
@@ -141,11 +137,11 @@ export function CheckInPanel({
     <div
       className={
         compact
-          ? "rounded-md bg-card px-3 py-3 ring-2 ring-ticket"
+          ? "rounded-md bg-background px-3 py-3 ring-1 ring-border"
           : "rounded-xl bg-card p-5 ring-1 ring-foreground/10"
       }
     >
-      <p className="text-sm font-medium text-ticket">You are at this market</p>
+      <p className="text-sm font-medium text-primary">You are at this market</p>
       <Link
         href={`/markets/${stall.slug}`}
         className={compact ? "text-base font-medium hover:underline" : "font-heading text-2xl hover:underline"}

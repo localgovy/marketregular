@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-grotesk);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-heading);
+  --font-heading: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -61,51 +61,51 @@
 }
 
 :root {
-  /* Sun cream, awning teal, mango ticket, tomato stamp. */
-  --background: #f7f2e6;
-  --foreground: #1a1714;
-  --card: #fffaf0;
-  --card-foreground: #1a1714;
-  --popover: #fffaf0;
-  --popover-foreground: #1a1714;
-  --primary: #2d7a62;
-  --primary-foreground: #f7f2e6;
-  --secondary: #ece4d2;
-  --secondary-foreground: #1a1714;
-  --muted: #ece4d2;
-  --muted-foreground: #6a6358;
-  --accent: #f3e6c8;
-  --accent-foreground: #1a1714;
-  --stamp: #d94a38;
-  --ticket: #e09a1a;
-  --board: #1a4d3e;
-  --chalk: #f4ebd4;
-  --receipt: #fff8e8;
-  --panel-find: #d8ede4;
-  --panel-open: #f8e8c4;
-  --panel-vendors: #ede4d4;
-  --panel-menus: #f8eedc;
-  --panel-here: #f8e0d8;
-  --panel-map: #d6ebe3;
-  --panel-back: #f0e6d0;
-  --destructive: #d94a38;
-  --border: #e0d4bc;
-  --input: #e0d4bc;
-  --ring: #2d7a62;
-  --chart-1: #2d7a62;
-  --chart-2: #e09a1a;
-  --chart-3: #d94a38;
-  --chart-4: #1a1714;
-  --chart-5: #6a6358;
+  /* Warm paper, quiet leaf, honey only for "open now". */
+  --background: #f4f1ea;
+  --foreground: #1c1916;
+  --card: #faf7f0;
+  --card-foreground: #1c1916;
+  --popover: #faf7f0;
+  --popover-foreground: #1c1916;
+  --primary: #3a6558;
+  --primary-foreground: #f4f1ea;
+  --secondary: #ece7dc;
+  --secondary-foreground: #1c1916;
+  --muted: #ece7dc;
+  --muted-foreground: #5e5a53;
+  --accent: #ece7dc;
+  --accent-foreground: #1c1916;
+  --stamp: #9e4a3e;
+  --ticket: #b07f2a;
+  --board: #2c4a40;
+  --chalk: #f3eee4;
+  --receipt: #faf7f0;
+  --panel-find: #faf7f0;
+  --panel-open: #faf7f0;
+  --panel-vendors: #faf7f0;
+  --panel-menus: #faf7f0;
+  --panel-here: #faf7f0;
+  --panel-map: #faf7f0;
+  --panel-back: #faf7f0;
+  --destructive: #9e4a3e;
+  --border: #ddd6c8;
+  --input: #ddd6c8;
+  --ring: #3a6558;
+  --chart-1: #3a6558;
+  --chart-2: #b07f2a;
+  --chart-3: #9e4a3e;
+  --chart-4: #1c1916;
+  --chart-5: #5e5a53;
   --radius: 0.35rem;
-  --sidebar: #f7f2e6;
-  --sidebar-foreground: #1a1714;
-  --sidebar-primary: #2d7a62;
-  --sidebar-primary-foreground: #f7f2e6;
-  --sidebar-accent: #ece4d2;
-  --sidebar-accent-foreground: #1a1714;
-  --sidebar-border: #e0d4bc;
-  --sidebar-ring: #2d7a62;
+  --sidebar: #f4f1ea;
+  --sidebar-foreground: #1c1916;
+  --sidebar-primary: #3a6558;
+  --sidebar-primary-foreground: #f4f1ea;
+  --sidebar-accent: #ece7dc;
+  --sidebar-accent-foreground: #1c1916;
+  --sidebar-border: #ddd6c8;
+  --sidebar-ring: #3a6558;
 }
 
 @layer base {
@@ -119,7 +119,9 @@
     @apply font-sans;
   }
   h1, h2, h3, .font-heading {
-    font-family: var(--font-heading), ui-serif, Georgia, serif;
+    font-family: var(--font-heading), "Iowan Old Style", Palatino, serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
   }
 }
 

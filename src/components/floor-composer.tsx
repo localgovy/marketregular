@@ -119,7 +119,7 @@ export function FloorComposer({
   return (
     <div
       ref={wrapRef}
-      className="relative z-10 shrink-0 border-b border-board/15 bg-receipt px-2 py-2 shadow-[inset_3px_0_0_var(--stamp)]"
+      className="relative z-10 shrink-0 border-b border-border bg-card px-2 py-2"
     >
       <label className="sr-only" htmlFor="floor-note">
         Write a note or review

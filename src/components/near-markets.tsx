@@ -27,13 +27,13 @@ export function NearMarkets({ markets }: { markets: Market[] }) {
 
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-stamp">Closest to you</p>
-      <ul className="overflow-hidden rounded-md bg-card ring-1 ring-stamp/20">
+      <p className="mb-2 text-sm font-medium text-muted-foreground">Closest to you</p>
+      <ul className="overflow-hidden rounded-md ring-1 ring-border">
         {nearest.map((m) => (
           <li key={m.id} className="border-b border-border last:border-b-0">
             <Link
               href={`/markets/${m.slug}`}
-              className="flex items-baseline justify-between gap-2 px-3 py-2 hover:bg-panel-here"
+              className="flex items-baseline justify-between gap-2 px-3 py-2 hover:bg-secondary/60"
             >
               <span className="min-w-0 truncate text-base font-medium">
                 {m.name}

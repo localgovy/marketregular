@@ -47,7 +47,7 @@ function StallNames({ stalls }: { stalls: StallRef[] }) {
         <li key={`${stall.market_id}-${stall.id}`}>
           <Link
             href={`/vendors/${stall.slug}`}
-            className="inline-flex min-h-11 items-center rounded-md bg-foreground px-3 py-2 text-base font-medium text-receipt shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-foreground/90"
+            className="inline-flex min-h-11 items-center rounded-md border border-border bg-background px-3 py-2 text-base font-medium hover:bg-secondary"
           >
             {stall.name}
             {stall.stall ? (
@@ -144,11 +144,11 @@ export function HomeMosaic({
           how="A few things for sale, plus what shoppers said. Tap the vendor name for the full page."
         >
           {tablePeek.length ? (
-            <ul className="overflow-hidden rounded-md ring-1 ring-ticket/20">
+            <ul className="overflow-hidden rounded-md ring-1 ring-border">
               {tablePeek.map((line) => (
                 <li
                   key={line.vendorSlug + line.item}
-                  className="border-b border-dashed border-ticket/25 bg-receipt px-3 py-3 last:border-b-0"
+                  className="border-b border-border px-3 py-3 last:border-b-0"
                 >
                   <Link
                     href={`/vendors/${line.vendorSlug}`}
@@ -159,13 +159,13 @@ export function HomeMosaic({
                   <p className="mt-0.5 flex flex-wrap items-baseline gap-2 text-base">
                     {line.item}
                     {formatPrice(line.priceCents) ? (
-                      <span className="inline-flex rounded-sm bg-ticket px-1.5 py-0.5 font-mono text-sm text-receipt">
+                      <span className="font-mono text-sm text-ticket">
                         {formatPrice(line.priceCents)}
                       </span>
                     ) : null}
                   </p>
                   {line.note ? (
-                    <p className="mt-1 border-l-2 border-stamp/70 pl-2 text-base text-muted-foreground">
+                    <p className="mt-1 text-base text-muted-foreground">
                       “{line.note}”
                     </p>
                   ) : null}
@@ -228,9 +228,7 @@ export function HomeMosaic({
                       {row.marketName}
                     </Link>
                   </span>
-                  <span className="inline-flex rounded-sm bg-ticket px-2 py-0.5 text-sm font-medium text-receipt">
-                    {row.when}
-                  </span>
+                  <span className="text-sm text-muted-foreground">{row.when}</span>
                 </li>
               ))}
             </ul>
@@ -263,7 +261,7 @@ export function HomeMosaic({
                   <li key={hall.slug}>
                     <Link
                       href={`/markets/${hall.slug}`}
-                      className="inline-flex min-h-11 items-center rounded-md border border-primary/30 bg-card px-3 py-2 text-base hover:bg-panel-find"
+                      className="inline-flex min-h-11 items-center rounded-md border border-border bg-background px-3 py-2 text-base hover:bg-secondary"
                     >
                       {hall.name}
                     </Link>

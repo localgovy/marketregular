@@ -47,7 +47,7 @@ export function QuickFind({ tags = [] }: { tags?: string[] }) {
     <div>
       <form
         action="/search"
-        className="flex flex-col gap-2 rounded-md bg-card p-3 ring-1 ring-primary/20 sm:flex-row sm:items-stretch"
+        className="flex flex-col gap-2 sm:flex-row sm:items-stretch"
       >
         <label className="sr-only" htmlFor="home-search">
           Search for a Toronto market, vendor, or neighbourhood
@@ -64,7 +64,7 @@ export function QuickFind({ tags = [] }: { tags?: string[] }) {
           Search
         </button>
       </form>
-      <p className="mt-3 text-base text-muted-foreground">Shortcuts — gold means open right now</p>
+      <p className="mt-3 text-base text-muted-foreground">Shortcuts</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {chips.map((chip) => (
           <Link
@@ -73,8 +73,7 @@ export function QuickFind({ tags = [] }: { tags?: string[] }) {
             className={cn(
               buttonVariants({ variant: chip.tone === "open" ? "default" : "outline" }),
               "h-10 px-3 text-base",
-              chip.tone === "open" && "bg-ticket text-receipt hover:bg-ticket/90",
-              chip.tone === "day" && "border-ticket/50 bg-panel-open text-foreground hover:bg-panel-open"
+              chip.tone === "open" && "bg-ticket text-receipt hover:bg-ticket/90"
             )}
           >
             {chip.label}

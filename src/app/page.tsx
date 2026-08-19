@@ -186,7 +186,7 @@ export default async function HomePage() {
                 <li key={vendor.id}>
                   <Link
                     href={`/vendors/${vendor.slug}`}
-                    className="inline-flex min-h-10 items-center rounded-md bg-foreground px-3 py-1.5 text-base text-receipt hover:bg-foreground/90"
+                    className="inline-flex min-h-10 items-center rounded-md border border-border bg-background px-3 py-1.5 text-base hover:bg-secondary"
                   >
                     {vendor.name}
                   </Link>

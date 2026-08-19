@@ -37,7 +37,7 @@ export function MarketMap({
       const popup = new Popup({ offset: 16 }).setHTML(
         `<a href="/markets/${market.slug}" style="font-weight:600;color:#1a1714">${market.name}</a><div style="color:#6a6358">${market.address ?? market.city}</div>`,
       );
-      new Marker({ color: "#2d7a62" })
+      new Marker({ color: "#3a6558" })
         .setLngLat([market.lng, market.lat])
         .setPopup(popup)
         .addTo(map);

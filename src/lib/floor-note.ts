@@ -37,11 +37,11 @@ export function scrapStyle(id: string) {
   let n = 0;
   for (const ch of id) n = (n + ch.charCodeAt(0) * 17) % 97;
   const papers = [
-    "bg-[#fff6e4]",
-    "bg-[#fdeee4]",
-    "bg-[#eef6e8]",
-    "bg-[#f8f1dc]",
-    "bg-[#f6e8ea]",
+    "bg-[#f7f3ea]",
+    "bg-[#f4efe4]",
+    "bg-[#f6f1e6]",
+    "bg-[#f3eee3]",
+    "bg-[#f8f4eb]",
   ];
   const tilts = [
     "-rotate-[0.7deg]",
