@@ -61,7 +61,7 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
             key={post.id}
             className={`rounded-sm px-4 py-3 shadow-[1px_2px_0_rgba(23,22,20,0.06)] ${scrapStyle(post.id)}`}
           >
-            <p className="font-heading text-[13px] text-ticket italic">
+            <p className="font-heading text-[13px] text-ticket">
               {floorKicker({ kind: "post", id: post.id, rating: null })}
             </p>
             <div className="mt-1 flex flex-wrap items-baseline justify-between gap-2">
