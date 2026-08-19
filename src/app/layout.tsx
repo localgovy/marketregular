@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: `%s · ${SITE_NAME}`,
   },
   description:
-    "Find Canadian farmers' markets and their vendors: schedules, menus, contact, tags, on-site reviews, and a live floor feed.",
+    "Find Toronto farmers' markets and their vendors: this week's hours, maps, menus, on-site reviews, and a live floor feed.",
   icons: {
     icon: "/favicon.svg",
   },

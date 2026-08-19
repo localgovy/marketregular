@@ -43,6 +43,7 @@
   --color-ticket: var(--ticket);
   --color-board: var(--board);
   --color-chalk: var(--chalk);
+  --color-receipt: var(--receipt);
   --color-panel-find: var(--panel-find);
   --color-panel-open: var(--panel-open);
   --color-panel-vendors: var(--panel-vendors);
@@ -60,50 +61,51 @@
 }
 
 :root {
-  /* Receipt paper, stall steel, ticket brass, rubber stamp. */
-  --background: #f2f0ea;
-  --foreground: #171614;
-  --card: #f7f6f1;
-  --card-foreground: #171614;
-  --popover: #f7f6f1;
-  --popover-foreground: #171614;
-  --primary: #3a555c;
-  --primary-foreground: #f2f0ea;
-  --secondary: #e8e5dd;
-  --secondary-foreground: #171614;
-  --muted: #e8e5dd;
-  --muted-foreground: #5e5b54;
-  --accent: #e4e0d6;
-  --accent-foreground: #171614;
-  --stamp: #a61f16;
-  --ticket: #a07d2a;
-  --board: #1f3532;
-  --chalk: #efe7d6;
-  --panel-find: #dce7ea;
-  --panel-open: #f3ead3;
-  --panel-vendors: #e5e0d4;
-  --panel-menus: #f7f1e3;
-  --panel-here: #f4e3df;
-  --panel-map: #d7e3e6;
-  --panel-back: #ebe5d6;
-  --destructive: #a61f16;
-  --border: #d3cfc6;
-  --input: #d3cfc6;
-  --ring: #3a555c;
-  --chart-1: #3a555c;
-  --chart-2: #a07d2a;
-  --chart-3: #a61f16;
-  --chart-4: #171614;
-  --chart-5: #5e5b54;
+  /* Sun cream, awning teal, mango ticket, tomato stamp. */
+  --background: #f7f2e6;
+  --foreground: #1a1714;
+  --card: #fffaf0;
+  --card-foreground: #1a1714;
+  --popover: #fffaf0;
+  --popover-foreground: #1a1714;
+  --primary: #2d7a62;
+  --primary-foreground: #f7f2e6;
+  --secondary: #ece4d2;
+  --secondary-foreground: #1a1714;
+  --muted: #ece4d2;
+  --muted-foreground: #6a6358;
+  --accent: #f3e6c8;
+  --accent-foreground: #1a1714;
+  --stamp: #d94a38;
+  --ticket: #e09a1a;
+  --board: #1a4d3e;
+  --chalk: #f4ebd4;
+  --receipt: #fff8e8;
+  --panel-find: #d8ede4;
+  --panel-open: #f8e8c4;
+  --panel-vendors: #ede4d4;
+  --panel-menus: #f8eedc;
+  --panel-here: #f8e0d8;
+  --panel-map: #d6ebe3;
+  --panel-back: #f0e6d0;
+  --destructive: #d94a38;
+  --border: #e0d4bc;
+  --input: #e0d4bc;
+  --ring: #2d7a62;
+  --chart-1: #2d7a62;
+  --chart-2: #e09a1a;
+  --chart-3: #d94a38;
+  --chart-4: #1a1714;
+  --chart-5: #6a6358;
   --radius: 0.35rem;
-  --sidebar: #f2f0ea;
-  --sidebar-foreground: #171614;
-  --sidebar-primary: #3a555c;
-  --sidebar-primary-foreground: #f2f0ea;
-  --sidebar-accent: #e8e5dd;
-  --sidebar-accent-foreground: #171614;
-  --sidebar-border: #d3cfc6;
-  --sidebar-ring: #3a555c;
+  --sidebar: #f7f2e6;
+  --sidebar-foreground: #1a1714;
+  --sidebar-primary: #2d7a62;
+  --sidebar-primary-foreground: #f7f2e6;
+  --sidebar-accent: #ece4d2;
+  --sidebar-accent-foreground: #1a1714;
+  --sidebar-border: #e0d4bc;
+  --sidebar-ring: #2d7a62;
 }
 
 @layer base {

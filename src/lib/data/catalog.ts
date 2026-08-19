@@ -1,4 +1,5 @@
 import { isSupabaseConfigured } from "@/lib/constants";
+import { LAUNCH_CITY, isLaunchCity } from "@/lib/launch";
 import {
   localCities,
   localFeatured,
@@ -65,6 +66,7 @@ export async function listMarkets(): Promise<Market[]> {
     .from("markets")
     .select("*")
     .eq("status", "published")
+    .ilike("city", LAUNCH_CITY)
     .order("name");
   if (error || !data?.length) return localMarkets();
   return data as Market[];
@@ -158,7 +160,11 @@ export async function searchDirectory(filters: SearchFilters) {
   const supabase = await db();
   if (!supabase) return localSearch(filters);
 
-  let marketQuery = supabase.from("markets").select("*").eq("status", "published");
+  let marketQuery = supabase
+    .from("markets")
+    .select("*")
+    .eq("status", "published")
+    .ilike("city", LAUNCH_CITY);
   let vendorQuery = supabase.from("vendors").select("*").eq("status", "published");
 
   if (filters.q?.trim()) {
@@ -216,6 +222,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
     .eq("slug", slug)
     .maybeSingle();
   if (!market) return localMarketBySlug(slug);
+  if (!isLaunchCity((market as Market).city)) return null;
 
   const [{ data: schedules }, { data: links }, { data: reviews }, { data: posts }] =
     await Promise.all([
@@ -297,14 +304,17 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
       : { data: [] };
   const marketMap = new Map((markets ?? []).map((m: Market) => [m.id, m]));
 
+  const vendorMarkets = (links ?? []).flatMap((link: { market_id: string; stall: string | null; days: number[] }) => {
+    const m = marketMap.get(link.market_id);
+    if (!m || !isLaunchCity(m.city)) return [];
+    return [{ ...m, stall: link.stall, days: link.days }];
+  });
+  if (!vendorMarkets.length) return localVendorBySlug(slug);
+
   return {
     ...(vendor as Vendor),
     menus: (menus ?? []) as MenuItem[],
-    markets: (links ?? []).flatMap((link: { market_id: string; stall: string | null; days: number[] }) => {
-      const m = marketMap.get(link.market_id);
-      if (!m) return [];
-      return [{ ...m, stall: link.stall, days: link.days }];
-    }),
+    markets: vendorMarkets,
     reviews: ((reviews ?? []) as Array<Review & { profiles?: { display_name: string | null } }>).map(
       (r) => ({ ...r, author_name: r.profiles?.display_name ?? "Regular" }),
     ),
@@ -328,7 +338,8 @@ export async function getLivePosts(limit = 20): Promise<Post[]> {
         markets?: { name: string; slug: string; city: string };
       }
     >
-  ).map((p) => ({
+  )
+    .filter((p) => !p.markets?.city || isLaunchCity(p.markets.city)).map((p) => ({
     ...p,
     author_name: p.profiles?.display_name ?? "Regular",
     author_avatar: p.profiles?.avatar_url,
@@ -426,6 +437,7 @@ export async function getFeaturedMarkets() {
     .select("*")
     .eq("status", "published")
     .eq("featured", true)
+    .ilike("city", LAUNCH_CITY)
     .order("name");
   if (!data?.length) return localFeatured();
   return data as Market[];

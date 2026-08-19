@@ -87,7 +87,7 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
                 {decoded.tags.map((tag) => (
                   <li
                     key={tag}
-                    className="rounded-[2px] bg-foreground/90 px-1.5 py-px text-[9px] tracking-[0.12em] text-[#f4f1ea] uppercase"
+                    className="rounded-[2px] bg-foreground/90 px-1.5 py-px text-[9px] tracking-[0.12em] text-receipt uppercase"
                   >
                     {tag}
                   </li>

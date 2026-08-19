@@ -27,18 +27,18 @@ const tones: Record<
   },
   open: {
     shell: "bg-panel-open ring-ticket/35",
-    bar: "bg-ticket text-[#fbf8ef]",
-    body: "bg-[color-mix(in_srgb,var(--background)_40%,#fbf8ef)]",
+    bar: "bg-ticket text-receipt",
+    body: "bg-[color-mix(in_srgb,var(--background)_35%,var(--receipt))]",
   },
   vendors: {
     shell: "bg-panel-vendors ring-foreground/15",
-    bar: "bg-foreground text-[#f4f1ea]",
+    bar: "bg-foreground text-receipt",
     body: "bg-card",
   },
   menus: {
     shell: "bg-panel-menus ring-ticket/25",
-    bar: "bg-[#3d3424] text-[#f7f1e3]",
-    body: "bg-[#fbf8ef]",
+    bar: "bg-[#8a4f1f] text-receipt",
+    body: "bg-receipt",
   },
   here: {
     shell: "bg-panel-here ring-stamp/30",
@@ -52,12 +52,12 @@ const tones: Record<
   },
   back: {
     shell: "bg-panel-back ring-ticket/20",
-    bar: "bg-[#4a4336] text-[#f4efdf]",
+    bar: "bg-[#7a5324] text-receipt",
     body: "bg-card",
   },
   more: {
     shell: "bg-secondary ring-border",
-    bar: "bg-[#2f4a50] text-[#e8f0f1]",
+    bar: "bg-board text-chalk",
     body: "bg-card",
   },
   directory: {
@@ -144,7 +144,7 @@ export function JumpChip({
 }) {
   const styles = {
     find: "bg-primary text-primary-foreground hover:bg-primary/90",
-    open: "bg-ticket text-[#fbf8ef] hover:bg-ticket/90",
+    open: "bg-ticket text-receipt hover:bg-ticket/90",
     here: "bg-stamp text-[#fbeceb] hover:bg-stamp/90",
     notes: "bg-board text-chalk hover:bg-board/90",
   }[tone];

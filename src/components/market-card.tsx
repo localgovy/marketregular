@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TagList } from "@/components/tag-list";
-import { provinceName } from "@/lib/constants";
 import { nextOpenLabel } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
 
@@ -20,7 +19,7 @@ export function MarketCard({
       <Card className="h-full transition-shadow hover:shadow-md">
         <CardHeader>
           <p className="text-xs tracking-wide text-muted-foreground uppercase">
-            {market.city}, {provinceName(market.province)}
+            {market.address}
           </p>
           <CardTitle className="font-heading text-xl leading-snug">
             {market.name}

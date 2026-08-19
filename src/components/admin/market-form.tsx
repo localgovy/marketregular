@@ -41,7 +41,7 @@ export function MarketForm({ market }: { market?: Market }) {
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="city">City</Label>
-        <Input id="city" name="city" required defaultValue={market?.city} />
+        <Input id="city" name="city" required defaultValue={market?.city ?? "Toronto"} />
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="province">Province</Label>

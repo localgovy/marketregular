@@ -1,14 +1,18 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { Hash, Star, Store } from "lucide-react";
 import { composeFloorNote } from "@/app/actions/presence";
 import { useGeo } from "@/components/geo-provider";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FLOOR_TAGS, isSupabaseConfigured } from "@/lib/constants";
 import { NOTE_PROMPTS } from "@/lib/floor-note";
+import { cn } from "@/lib/utils";
 import type { FloorItem, StallRef } from "@/types/database";
+
+type Extra = "stars" | "vendor" | "tags" | null;
 
 export function FloorComposer({
   signedIn,
@@ -26,8 +30,10 @@ export function FloorComposer({
   const [rating, setRating] = useState(0);
   const [vendorId, setVendorId] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [extra, setExtra] = useState<Extra>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const wrapRef = useRef<HTMLDivElement>(null);
   const prompt = NOTE_PROMPTS[Math.floor(Date.now() / 3_600_000) % NOTE_PROMPTS.length];
 
   const stallOptions = useMemo(() => {
@@ -39,6 +45,22 @@ export function FloorComposer({
   const marketId = market?.id ?? tagged?.market_id;
   const canWrite = demo || (signedIn && Boolean(market && coords));
 
+  useEffect(() => {
+    if (!extra) return;
+    function close(event: PointerEvent) {
+      if (!wrapRef.current?.contains(event.target as Node)) setExtra(null);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setExtra(null);
+    }
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [extra]);
+
   function toggleTag(tag: string) {
     setTags((current) =>
       current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag],
@@ -47,8 +69,9 @@ export function FloorComposer({
 
   function submit() {
     setMessage(null);
+    setExtra(null);
     if (!marketId) {
-      setMessage("Pick a vendor from the list, or share your location so we know which market.");
+      setMessage("Pick a vendor, or share your location so we know which market.");
       return;
     }
     if (rating > 0 && body.trim().length < 8) {
@@ -94,98 +117,260 @@ export function FloorComposer({
   }
 
   return (
-    <div className="border-b border-board/15 bg-[#f7f3e8] px-3 py-3 shadow-[inset_4px_0_0_var(--stamp)]">
-      <p className="text-base font-medium">Write a note or review</p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Tell the next shopper what you saw. Optional: pick a vendor and a star rating.
-      </p>
+    <div
+      ref={wrapRef}
+      className="relative z-10 shrink-0 border-b border-board/15 bg-receipt px-2 py-2 shadow-[inset_3px_0_0_var(--stamp)]"
+    >
+      <label className="sr-only" htmlFor="floor-note">
+        Write a note or review
+      </label>
       <Textarea
-        className="mt-2 min-h-[4.5rem] bg-[#fbf8ef] text-base"
-        rows={3}
+        id="floor-note"
+        className="min-h-10 max-h-24 resize-none bg-transparent px-2 py-1.5 text-base shadow-none"
+        rows={2}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder={prompt}
       />
-      <div className="mt-2 flex flex-wrap items-center gap-1">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => setRating((current) => (current === n ? 0 : n))}
-            className={`size-8 rounded-sm text-sm ${
-              n <= rating ? "bg-ticket text-[#fbf8ef]" : "bg-background text-muted-foreground"
-            }`}
-            aria-label={`${n} star${n === 1 ? "" : "s"}`}
-          >
-            {n}
-          </button>
-        ))}
-        <span className="ml-1 text-sm text-muted-foreground">
-          {rating ? `${rating} out of 5 — this will also save as a review` : "Star rating (optional)"}
-        </span>
-      </div>
-      <label className="mt-3 block text-sm text-muted-foreground">
-        Which vendor is this about? (optional)
-        <select
-          value={vendorId}
-          onChange={(e) => setVendorId(e.target.value)}
-          className="mt-1 h-10 w-full rounded-md border border-input bg-background px-2 text-base"
-        >
-          <option value="">The market in general</option>
-          {stallOptions.map((stall) => (
-            <option key={`${stall.market_id}-${stall.id}`} value={stall.id}>
-              {stall.name}
-              {stall.stall ? ` · stall ${stall.stall}` : ""}
-            </option>
+
+      {rating || tagged || tags.length ? (
+        <ul className="mt-1.5 flex flex-wrap gap-1 px-1">
+          {rating ? (
+            <li className="inline-flex overflow-hidden rounded-full bg-ticket text-receipt">
+              <button
+                type="button"
+                onClick={() => setExtra("stars")}
+                className="px-2 py-0.5 text-sm"
+              >
+                {rating} / 5
+              </button>
+              <button
+                type="button"
+                aria-label="Remove rating"
+                onClick={() => setRating(0)}
+                className="px-1.5 text-sm opacity-80 hover:opacity-100"
+              >
+                ×
+              </button>
+            </li>
+          ) : null}
+          {tagged ? (
+            <li className="inline-flex overflow-hidden rounded-full bg-foreground text-receipt">
+              <button
+                type="button"
+                onClick={() => setExtra("vendor")}
+                className="px-2 py-0.5 text-sm"
+              >
+                {tagged.name}
+              </button>
+              <button
+                type="button"
+                aria-label="Remove vendor"
+                onClick={() => setVendorId("")}
+                className="px-1.5 text-sm opacity-80 hover:opacity-100"
+              >
+                ×
+              </button>
+            </li>
+          ) : null}
+          {tags.map((tag) => (
+            <li key={tag} className="inline-flex overflow-hidden rounded-full bg-primary text-primary-foreground">
+              <button
+                type="button"
+                onClick={() => setExtra("tags")}
+                className="px-2 py-0.5 text-sm"
+              >
+                {tag}
+              </button>
+              <button
+                type="button"
+                aria-label={`Remove ${tag}`}
+                onClick={() => toggleTag(tag)}
+                className="px-1.5 text-sm opacity-80 hover:opacity-100"
+              >
+                ×
+              </button>
+            </li>
           ))}
-        </select>
-      </label>
-      <p className="mt-3 text-sm text-muted-foreground">What is it about? (optional)</p>
-      <div className="mt-1 flex flex-wrap gap-1">
-        {FLOOR_TAGS.map((tag) => {
-          const on = tags.includes(tag);
-          return (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => toggleTag(tag)}
-              className={`rounded-md px-2 py-1 text-sm ${
-                on ? "bg-foreground text-background" : "bg-background text-muted-foreground"
-              }`}
+        </ul>
+      ) : null}
+
+      <div className="mt-1.5 flex items-center gap-1 px-1">
+        <ExtraButton
+          label="Stars"
+          open={extra === "stars"}
+          onClick={() => setExtra((current) => (current === "stars" ? null : "stars"))}
+        >
+          <Star className={cn("size-4", rating ? "fill-ticket text-ticket" : "")} />
+        </ExtraButton>
+        <ExtraButton
+          label="Vendor"
+          open={extra === "vendor"}
+          onClick={() => setExtra((current) => (current === "vendor" ? null : "vendor"))}
+        >
+          <Store className="size-4" />
+        </ExtraButton>
+        <ExtraButton
+          label="Topic"
+          open={extra === "tags"}
+          onClick={() => setExtra((current) => (current === "tags" ? null : "tags"))}
+        >
+          <Hash className="size-4" />
+        </ExtraButton>
+        <div className="ml-auto flex min-w-0 items-center gap-1">
+          {!demo && !signedIn ? (
+            <Link
+              href="/login"
+              className="inline-flex h-8 items-center rounded-md bg-primary px-2 text-sm font-medium text-primary-foreground"
             >
-              {tag}
-            </button>
-          );
-        })}
+              Sign in
+            </Link>
+          ) : !demo && !coords ? (
+            <Button type="button" size="sm" onClick={request}>
+              Share location
+            </Button>
+          ) : !demo && !market ? (
+            <p className="truncate text-xs text-muted-foreground">At a market to post</p>
+          ) : (
+            <Button
+              type="button"
+              size="sm"
+              onClick={submit}
+              disabled={pending || body.trim().length < 3 || !canWrite}
+            >
+              {pending ? "…" : rating ? "Review" : "Post"}
+            </Button>
+          )}
+        </div>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        {!demo && !signedIn ? (
-          <Link
-            href="/login"
-            className="inline-flex h-10 items-center rounded-md bg-primary px-3 text-base font-medium text-primary-foreground"
-          >
-            Sign in to post
-          </Link>
-        ) : !demo && !coords ? (
-          <Button type="button" onClick={request}>
-            Share my location
-          </Button>
-        ) : !demo && !market ? (
-          <p className="text-sm text-muted-foreground">
-            You need to be at a market to post. Browse the page until then.
+
+      {extra === "stars" ? (
+        <ExtraPanel title="Star rating" hint="Click outside the box to save it on this note.">
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRating((current) => (current === n ? 0 : n))}
+                className={cn(
+                  "flex size-9 items-center justify-center rounded-md text-sm",
+                  n <= rating ? "bg-ticket text-receipt" : "bg-secondary text-muted-foreground",
+                )}
+                aria-label={`${n} star${n === 1 ? "" : "s"}`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {rating ? `${rating} out of 5 — this posts as a review` : "Optional. Leave at 0 for a plain note."}
           </p>
-        ) : (
-          <Button
-            type="button"
-            onClick={submit}
-            disabled={pending || body.trim().length < 3 || !canWrite}
-          >
-            {pending ? "Posting…" : rating ? "Post review" : "Post note"}
-          </Button>
-        )}
-        {error ? <span className="text-sm text-destructive">{error}</span> : null}
-      </div>
-      {message ? <p className="mt-2 text-sm text-muted-foreground">{message}</p> : null}
+        </ExtraPanel>
+      ) : null}
+
+      {extra === "vendor" ? (
+        <ExtraPanel title="Which stall?" hint="Pick one, then click outside the box to save it.">
+          <div className="max-h-36 overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => setVendorId("")}
+              className={cn(
+                "block w-full rounded-md px-2 py-1.5 text-left text-sm",
+                !vendorId ? "bg-foreground text-receipt" : "hover:bg-secondary",
+              )}
+            >
+              The market in general
+            </button>
+            {stallOptions.map((stall) => (
+              <button
+                key={`${stall.market_id}-${stall.id}`}
+                type="button"
+                onClick={() => setVendorId(stall.id)}
+                className={cn(
+                  "block w-full rounded-md px-2 py-1.5 text-left text-sm",
+                  vendorId === stall.id ? "bg-foreground text-receipt" : "hover:bg-secondary",
+                )}
+              >
+                {stall.name}
+                {stall.stall ? (
+                  <span className="ml-1 text-muted-foreground">Stall {stall.stall}</span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+        </ExtraPanel>
+      ) : null}
+
+      {extra === "tags" ? (
+        <ExtraPanel title="What is it about?" hint="Tap topics, then click outside the box to save them.">
+          <div className="flex flex-wrap gap-1">
+            {FLOOR_TAGS.map((tag) => {
+              const on = tags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={cn(
+                    "rounded-full px-2 py-1 text-sm",
+                    on ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
+                  )}
+                >
+                  {tag}
+                </button>
+              );
+            })}
+          </div>
+        </ExtraPanel>
+      ) : null}
+
+      {error ? <p className="mt-1 px-1 text-sm text-destructive">{error}</p> : null}
+      {message ? <p className="mt-1 px-1 text-sm text-muted-foreground">{message}</p> : null}
+    </div>
+  );
+}
+
+function ExtraButton({
+  label,
+  open,
+  onClick,
+  children,
+}: {
+  label: string;
+  open: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-expanded={open}
+      onClick={onClick}
+      className={cn(
+        "flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground",
+        open && "bg-secondary text-foreground",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ExtraPanel({
+  title,
+  hint,
+  children,
+}: {
+  title: string;
+  hint: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="absolute inset-x-2 top-[calc(100%-0.25rem)] z-20 rounded-md bg-card p-3 shadow-md ring-1 ring-border">
+      <p className="font-medium">{title}</p>
+      <p className="mb-2 text-sm text-muted-foreground">{hint}</p>
+      {children}
     </div>
   );
 }

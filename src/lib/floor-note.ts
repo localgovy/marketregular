@@ -37,11 +37,11 @@ export function scrapStyle(id: string) {
   let n = 0;
   for (const ch of id) n = (n + ch.charCodeAt(0) * 17) % 97;
   const papers = [
-    "bg-[#f8f4e8]",
-    "bg-[#f3efe2]",
-    "bg-[#efe8d8]",
-    "bg-[#f6f1e3]",
-    "bg-[#f1eadc]",
+    "bg-[#fff6e4]",
+    "bg-[#fdeee4]",
+    "bg-[#eef6e8]",
+    "bg-[#f8f1dc]",
+    "bg-[#f6e8ea]",
   ];
   const tilts = [
     "-rotate-[0.7deg]",
@@ -61,5 +61,5 @@ export function floorKicker(item: Pick<FloorItem, "kind" | "id" | "rating">) {
 }
 
 export const NOTE_PROMPTS = [
-  "What should the next shopper know? Peaches, a long line, sold out bread…",
+  "What should the next shopper know?",
 ];

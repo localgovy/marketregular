@@ -13,7 +13,8 @@ import {
   listStalls,
   listVendors,
 } from "@/lib/data/catalog";
-import { PROVINCES, WEEKDAYS } from "@/lib/constants";
+import { WEEKDAYS } from "@/lib/constants";
+import { upcomingByDay } from "@/lib/upcoming";
 import type { Market, StallRef } from "@/types/database";
 import { List, Store } from "lucide-react";
 import Link from "next/link";
@@ -92,7 +93,10 @@ export default async function HomePage() {
     scheduleMap.set(row.market_id, list);
   }
 
-  const showcase = openNow[0] ?? markets[0];
+  const tags = [...new Set(markets.flatMap((m) => m.tags))].sort();
+  const week = upcomingByDay(markets, scheduleMap);
+  const nextUp = week.flatMap((group) => group.slots)[0]?.market;
+  const showcase = openNow[0] ?? nextUp ?? markets[0];
   const attending = showcase
     ? stalls.filter((s) => s.market_id === showcase.id).slice(0, 6)
     : [];
@@ -114,17 +118,6 @@ export default async function HomePage() {
     : [];
 
   const openIds = new Set(openNow.map((m) => m.id));
-  const cities = [...new Set(markets.map((m) => m.city))].sort();
-  const provinces = PROVINCES.map((p) => p.code).filter((code) =>
-    markets.some((m) => m.province === code),
-  );
-  const tags = [...new Set(markets.flatMap((m) => m.tags))].sort();
-  const byProvince = PROVINCES.filter((p) => markets.some((m) => m.province === p.code)).map(
-    (p) => ({
-      ...p,
-      markets: markets.filter((m) => m.province === p.code),
-    }),
-  );
   const signedIn = Boolean(profile);
 
   return (
@@ -140,11 +133,8 @@ export default async function HomePage() {
         <div className="order-1 min-w-0 px-4 py-5 lg:px-6 lg:py-6">
           {showcase ? (
             <HomeMosaic
-              cities={cities}
-              provinces={provinces}
               tags={tags}
-              openNow={openNow}
-              scheduleMap={scheduleMap}
+              week={week}
               showcase={showcase}
               attending={attending}
               tablePeek={tablePeek}
@@ -166,26 +156,19 @@ export default async function HomePage() {
             tone="directory"
             icon={List}
             kicker="The full list"
-            title="All markets"
-            how="Browse by province. Tap a name to see hours, vendors, and the map."
+            title="All Toronto markets"
+            how="Every market we list in the city. Tap a name to see hours, vendors, and the map."
             action={<span>{markets.length} listed</span>}
           >
-            <div className="grid gap-4 sm:grid-cols-2">
-              {byProvince.map((group) => (
-                <div key={group.code} className="overflow-hidden rounded-md bg-card ring-1 ring-border">
-                  <h3 className="bg-primary px-3 py-1.5 text-base font-medium text-primary-foreground">
-                    {group.name}
-                  </h3>
-                  {group.markets.map((market) => (
-                    <MarketRow
-                      key={market.id}
-                      market={market}
-                      schedules={scheduleMap.get(market.id)}
-                      open={openIds.has(market.id)}
-                      inset
-                    />
-                  ))}
-                </div>
+            <div className="overflow-hidden rounded-md bg-card ring-1 ring-border">
+              {markets.map((market) => (
+                <MarketRow
+                  key={market.id}
+                  market={market}
+                  schedules={scheduleMap.get(market.id)}
+                  open={openIds.has(market.id)}
+                  inset
+                />
               ))}
             </div>
           </HomePanel>
@@ -203,7 +186,7 @@ export default async function HomePage() {
                 <li key={vendor.id}>
                   <Link
                     href={`/vendors/${vendor.slug}`}
-                    className="inline-flex min-h-10 items-center rounded-md bg-foreground px-3 py-1.5 text-base text-[#f4f1ea] hover:bg-foreground/90"
+                    className="inline-flex min-h-10 items-center rounded-md bg-foreground px-3 py-1.5 text-base text-receipt hover:bg-foreground/90"
                   >
                     {vendor.name}
                   </Link>

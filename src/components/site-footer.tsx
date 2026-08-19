@@ -6,7 +6,7 @@ export function SiteFooter() {
     <footer className="mt-auto border-t border-border/70 bg-secondary/40">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
         <p>
-          {SITE_NAME} — a directory and live floor for Canadian farmers&apos; markets.
+          {SITE_NAME} — Toronto farmers&apos; markets, this week.
         </p>
         <div className="flex gap-4">
           <Link href="/search" className="hover:text-foreground">

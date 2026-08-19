@@ -6,6 +6,13 @@ import {
   seedMarkets,
   seedVendors,
 } from "../src/data/directory.ts";
+import { isLaunchCity } from "../src/lib/launch.ts";
+
+const launchMarkets = seedMarkets.filter((m) => isLaunchCity(m.city));
+const launchIds = new Set(launchMarkets.map((m) => m.id));
+const launchLinks = seedMarketVendors.filter((mv) => launchIds.has(mv.market_id));
+const launchVendorIds = new Set(launchLinks.map((mv) => mv.vendor_id));
+const launchVendors = seedVendors.filter((v) => launchVendorIds.has(v.id));
 
 function sqlStr(value: string | null | undefined) {
   if (value == null) return "null";
@@ -21,12 +28,12 @@ function sqlArr(values: string[] | number[]) {
 }
 
 const lines: string[] = [
-  "-- Generated from src/data/directory.ts — re-run scripts/generate-seed-sql.ts after seed edits",
+  "-- Generated from Toronto launch markets in src/data/directory.ts — re-run scripts/generate-seed-sql.ts after seed edits",
   "insert into public.markets (id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, phone, email, tags, status, featured) values",
 ];
 
 lines.push(
-  seedMarkets
+  launchMarkets
     .map(
       (m) =>
         `  (${sqlStr(m.id)}, ${sqlStr(m.slug)}, ${sqlStr(m.name)}, ${sqlStr(m.about)}, ${sqlStr(m.address)}, ${sqlStr(m.city)}, ${sqlStr(m.province)}, ${sqlStr(m.postal_code)}, ${m.lat}, ${m.lng}, ${m.geofence_radius_m}, ${sqlStr(m.website)}, ${sqlStr(m.phone)}, ${sqlStr(m.email ?? null)}, ${sqlArr(m.tags)}, 'published', ${m.featured})`,
@@ -38,7 +45,7 @@ lines.push(
   "insert into public.market_schedules (market_id, weekday, opens_at, closes_at, season_start, season_end, notes) values",
 );
 const scheduleRows: string[] = [];
-for (const m of seedMarkets) {
+for (const m of launchMarkets) {
   for (const s of m.schedules) {
     scheduleRows.push(
       `  (${sqlStr(m.id)}, ${s.weekday}, ${sqlStr(s.opens_at)}, ${sqlStr(s.closes_at)}, ${sqlStr(s.season_start)}, ${sqlStr(s.season_end)}, ${sqlStr(s.notes)})`,
@@ -51,7 +58,7 @@ lines.push(
   "insert into public.vendors (id, slug, name, about, website, phone, tags, status) values",
 );
 lines.push(
-  seedVendors
+  launchVendors
     .map(
       (v) =>
         `  (${sqlStr(v.id)}, ${sqlStr(v.slug)}, ${sqlStr(v.name)}, ${sqlStr(v.about)}, ${sqlStr(v.website)}, ${sqlStr(v.phone)}, ${sqlArr(v.tags)}, 'published')`,
@@ -60,7 +67,7 @@ lines.push(
 );
 
 const menuRows: string[] = [];
-for (const v of seedVendors) {
+for (const v of launchVendors) {
   for (const item of v.menus) {
     menuRows.push(
       `  (${sqlStr(v.id)}, ${sqlStr(item.name)}, ${sqlStr(item.description)}, ${item.price_cents ?? "null"}, ${sqlStr(item.season)}, ${sqlArr(item.dietary)})`,
@@ -76,7 +83,7 @@ lines.push(
   "insert into public.market_vendors (market_id, vendor_id, stall, days) values",
 );
 lines.push(
-  seedMarketVendors
+  launchLinks
     .map(
       (mv) =>
         `  (${sqlStr(mv.market_id)}, ${sqlStr(mv.vendor_id)}, ${sqlStr(mv.stall)}, ${sqlArr(mv.days)})`,

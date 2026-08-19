@@ -9,13 +9,14 @@ import {
   Popup,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { LAUNCH_CENTER, LAUNCH_ZOOM } from "@/lib/launch";
 import type { Market } from "@/types/database";
 
 export function MarketMap({
   markets,
   className,
 }: {
-  markets: Array<Pick<Market, "id" | "name" | "slug" | "lat" | "lng" | "city">>;
+  markets: Array<Pick<Market, "id" | "name" | "slug" | "lat" | "lng" | "city" | "address">>;
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -25,8 +26,8 @@ export function MarketMap({
     const map = new Map({
       container: ref.current,
       style: "https://tiles.openfreemap.org/styles/positron",
-      center: [markets[0].lng, markets[0].lat],
-      zoom: markets.length === 1 ? 14 : 3.4,
+      center: [LAUNCH_CENTER.lng, LAUNCH_CENTER.lat],
+      zoom: markets.length === 1 ? 14 : LAUNCH_ZOOM,
     });
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");
 
@@ -34,15 +35,15 @@ export function MarketMap({
     for (const market of markets) {
       bounds.extend([market.lng, market.lat]);
       const popup = new Popup({ offset: 16 }).setHTML(
-        `<a href="/markets/${market.slug}" style="font-weight:600;color:#171614">${market.name}</a><div style="color:#5e5b54">${market.city}</div>`,
+        `<a href="/markets/${market.slug}" style="font-weight:600;color:#1a1714">${market.name}</a><div style="color:#6a6358">${market.address ?? market.city}</div>`,
       );
-      new Marker({ color: "#3a555c" })
+      new Marker({ color: "#2d7a62" })
         .setLngLat([market.lng, market.lat])
         .setPopup(popup)
         .addTo(map);
     }
     if (markets.length > 1) {
-      map.fitBounds(bounds, { padding: 48, maxZoom: 10, duration: 0 });
+      map.fitBounds(bounds, { padding: 48, maxZoom: 13, duration: 0 });
     }
 
     return () => map.remove();

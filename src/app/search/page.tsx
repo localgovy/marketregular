@@ -3,10 +3,11 @@ import { MarketCard } from "@/components/market-card";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
 import { VendorCard } from "@/components/vendor-card";
-import { getCities, searchDirectory } from "@/lib/data/catalog";
+import { searchDirectory } from "@/lib/data/catalog";
+import { LAUNCH_CITY } from "@/lib/launch";
 
 export const metadata: Metadata = {
-  title: "Search markets and vendors",
+  title: "Search Toronto markets and vendors",
 };
 
 export default async function SearchPage({
@@ -23,30 +24,22 @@ export default async function SearchPage({
 }) {
   const params = await searchParams;
   const weekday = params.weekday === undefined || params.weekday === "" ? undefined : Number(params.weekday);
-  const [{ markets, vendors }, cities] = await Promise.all([
-    searchDirectory({
-      q: params.q,
-      province: params.province || undefined,
-      city: params.city || undefined,
-      weekday: Number.isFinite(weekday) ? weekday : undefined,
-      tag: params.tag || undefined,
-      openNow: params.openNow === "1",
-    }),
-    getCities(),
-  ]);
+  const { markets, vendors } = await searchDirectory({
+    q: params.q,
+    weekday: Number.isFinite(weekday) ? weekday : undefined,
+    tag: params.tag || undefined,
+    openNow: params.openNow === "1",
+  });
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <h1 className="font-heading text-4xl">Find a market</h1>
+      <h1 className="font-heading text-4xl">Find a {LAUNCH_CITY} market</h1>
       <p className="mt-2 mb-6 text-muted-foreground">
-        Filter by province, city, day, what they sell, or whether the doors are open right now.
+        Filter by day, what they sell, or whether the doors are open right now.
       </p>
       <SearchForm
-        cities={cities}
         defaults={{
           q: params.q,
-          province: params.province,
-          city: params.city,
           weekday: params.weekday,
           tag: params.tag,
           openNow: params.openNow === "1",

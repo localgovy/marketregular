@@ -55,7 +55,7 @@ function TapeCard({ item, stalls }: { item: FloorItem; stalls: StallRef[] }) {
           {item.tags.map((tag) => (
             <li
               key={tag}
-              className="rounded-md bg-foreground/90 px-2 py-0.5 text-sm text-[#f4f1ea]"
+              className="rounded-md bg-foreground/90 px-2 py-0.5 text-sm text-receipt"
             >
               {tag}
             </li>
@@ -169,16 +169,16 @@ export function FloorTape({
   }, []);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[#ece7db]">
-      <div className="bg-board px-3 py-3 text-chalk">
+    <div className="flex h-full min-h-0 flex-col bg-[#e8efe4]">
+      <div className="shrink-0 bg-board px-3 py-2 text-chalk">
         <p className="flex items-center gap-2 text-sm font-medium text-ticket">
           <span className="live-dot size-2 rounded-full bg-ticket" />
           Live notes
         </p>
-        <p className="font-heading text-xl leading-tight">What shoppers are saying</p>
+        <p className="font-heading text-lg leading-tight">The group chat from the stalls</p>
         <p className="mt-1 text-sm leading-snug text-chalk/80">
-          This column is the feed. Read notes from people at markets today. To write one, fill in
-          the box below — you need to be at the market.
+          The peaches, the line, the loaf that already sold out. Read it here — and if you&apos;re
+          actually at the market, add yours. Tote optional.
         </p>
       </div>
       <FloorComposer
@@ -187,7 +187,7 @@ export function FloorTape({
         onPosted={(item) => setItems((current) => [item, ...current].slice(0, 30))}
       />
       {items.length ? (
-        <ol className="min-h-0 flex-1 overflow-y-auto pb-3">
+        <ol className="min-h-0 flex-1 overflow-y-auto pb-4">
           {items.map((item) => (
             <TapeCard key={`${item.kind}-${item.id}`} item={item} stalls={stalls} />
           ))}

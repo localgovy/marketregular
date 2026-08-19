@@ -10,7 +10,7 @@ const Inner = dynamic(
 
 export function MarketMapLazy(
   props: {
-    markets: Array<Pick<Market, "id" | "name" | "slug" | "lat" | "lng" | "city">>;
+    markets: Array<Pick<Market, "id" | "name" | "slug" | "lat" | "lng" | "city" | "address">>;
     className?: string;
   },
 ) {

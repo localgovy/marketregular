@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useGeo } from "@/components/geo-provider";
 import { distanceMeters, formatDistance } from "@/lib/geo";
-import { provinceName } from "@/lib/constants";
 import type { Market } from "@/types/database";
 
 export function NearMarkets({ markets }: { markets: Market[] }) {
@@ -39,7 +38,7 @@ export function NearMarkets({ markets }: { markets: Market[] }) {
               <span className="min-w-0 truncate text-base font-medium">
                 {m.name}
                 <span className="ml-1 font-normal text-muted-foreground">
-                  {m.city}, {provinceName(m.province)}
+                  {m.address}
                 </span>
               </span>
               <span className="shrink-0 text-sm font-medium text-ticket">

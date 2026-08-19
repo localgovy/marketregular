@@ -1,5 +1,5 @@
 export const SITE_NAME = "Market Regular";
-export const SITE_TAGLINE = "Canada's farmers' markets, in season.";
+export const SITE_TAGLINE = "Toronto farmers' markets, this week.";
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://marketregular.com";
 

@@ -17,7 +17,7 @@ export async function SiteHeader() {
               {SITE_NAME}
             </span>
             <span className="hidden text-xs tracking-[0.18em] text-muted-foreground uppercase sm:inline lg:text-chalk/70">
-              Canada
+              Toronto
             </span>
           </Link>
         </div>
@@ -27,7 +27,7 @@ export async function SiteHeader() {
               <Input
                 name="q"
                 type="search"
-                placeholder="Search markets or vendors"
+                placeholder="Search Toronto markets or vendors"
                 className="bg-card"
                 autoComplete="off"
               />

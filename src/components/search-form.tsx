@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PROVINCES, PRODUCT_TAGS, AMENITY_TAGS, WEEKDAYS } from "@/lib/constants";
+import { PRODUCT_TAGS, AMENITY_TAGS, WEEKDAYS } from "@/lib/constants";
 
 export function SearchForm({
-  cities,
   defaults,
 }: {
-  cities: string[];
+  cities?: string[];
   defaults?: {
     q?: string;
     province?: string;
@@ -18,37 +17,13 @@ export function SearchForm({
 }) {
   const tags = [...PRODUCT_TAGS, ...AMENITY_TAGS];
   return (
-    <form action="/search" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+    <form action="/search" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
       <Input
         name="q"
         defaultValue={defaults?.q}
-        placeholder="Market, vendor, city, or tomato"
+        placeholder="Market, vendor, neighbourhood, or tomato"
         className="lg:col-span-2 bg-card"
       />
-      <select
-        name="province"
-        defaultValue={defaults?.province ?? ""}
-        className="h-8 rounded-lg border border-input bg-card px-2.5 text-sm"
-      >
-        <option value="">All provinces</option>
-        {PROVINCES.map((p) => (
-          <option key={p.code} value={p.code}>
-            {p.name}
-          </option>
-        ))}
-      </select>
-      <select
-        name="city"
-        defaultValue={defaults?.city ?? ""}
-        className="h-8 rounded-lg border border-input bg-card px-2.5 text-sm"
-      >
-        <option value="">All cities</option>
-        {cities.map((city) => (
-          <option key={city} value={city}>
-            {city}
-          </option>
-        ))}
-      </select>
       <select
         name="weekday"
         defaultValue={defaults?.weekday ?? ""}
@@ -73,7 +48,7 @@ export function SearchForm({
           </option>
         ))}
       </select>
-      <label className="flex h-8 items-center gap-2 text-sm lg:col-span-2">
+      <label className="flex h-8 items-center gap-2 text-sm">
         <input
           type="checkbox"
           name="openNow"

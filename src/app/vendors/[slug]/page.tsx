@@ -7,7 +7,7 @@ import { TagList } from "@/components/tag-list";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { formatPhone, formatPrice } from "@/lib/format";
-import { provinceName, WEEKDAYS } from "@/lib/constants";
+import { WEEKDAYS } from "@/lib/constants";
 
 export async function generateMetadata({
   params,
@@ -19,7 +19,7 @@ export async function generateMetadata({
   if (!vendor) return { title: "Vendor" };
   return {
     title: vendor.name,
-    description: vendor.about ?? `${vendor.name} at Canadian farmers' markets`,
+    description: vendor.about ?? `${vendor.name} at Toronto farmers' markets`,
   };
 }
 
@@ -96,7 +96,7 @@ export default async function VendorPage({
                     {market.name}
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    {market.city}, {provinceName(market.province)}
+                    {market.address}
                     {market.stall ? ` · ${market.stall}` : ""}
                     {market.days.length
                       ? ` · ${market.days.map((d) => WEEKDAYS[d]?.slice(0, 3)).join(", ")}`

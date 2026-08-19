@@ -11,6 +11,7 @@ import {
 } from "@/data/directory";
 import { distanceMeters } from "@/lib/geo";
 import { decodeFloorBody } from "@/lib/floor-note";
+import { isLaunchCity } from "@/lib/launch";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import type {
   FloorItem,
@@ -29,12 +30,20 @@ function haystack(parts: Array<string | null | undefined>) {
   return parts.filter(Boolean).join(" ").toLowerCase();
 }
 
+function launchMarketIds() {
+  return new Set(seedMarkets.filter((m) => isLaunchCity(m.city)).map((m) => m.id));
+}
+
 export function localMarkets(): Market[] {
-  return seedMarkets.map(toPublicMarket);
+  return seedMarkets.filter((m) => isLaunchCity(m.city)).map(toPublicMarket);
 }
 
 export function localVendors(): Vendor[] {
-  return seedVendors.map(toPublicVendor);
+  const ids = launchMarketIds();
+  const vendorIds = new Set(
+    seedMarketVendors.filter((link) => ids.has(link.market_id)).map((link) => link.vendor_id),
+  );
+  return seedVendors.filter((v) => vendorIds.has(v.id)).map(toPublicVendor);
 }
 
 export function localSearch(filters: SearchFilters) {
@@ -88,7 +97,7 @@ export function localSearch(filters: SearchFilters) {
 
 export function localMarketBySlug(slug: string): MarketDetail | null {
   const seed = seedMarkets.find((m) => m.slug === slug);
-  if (!seed) return null;
+  if (!seed || !isLaunchCity(seed.city)) return null;
   const market = toPublicMarket(seed);
   const vendorLinks = seedMarketVendors.filter((mv) => mv.market_id === market.id);
   const vendors = vendorLinks.flatMap((link) => {
@@ -112,9 +121,10 @@ export function localVendorBySlug(slug: string): VendorDetail | null {
   const links = seedMarketVendors.filter((mv) => mv.vendor_id === vendor.id);
   const markets = links.flatMap((link) => {
     const m = seedMarkets.find((x) => x.id === link.market_id);
-    if (!m) return [];
+    if (!m || !isLaunchCity(m.city)) return [];
     return [{ ...toPublicMarket(m), stall: link.stall, days: link.days }];
   });
+  if (!markets.length) return null;
   return {
     ...vendor,
     menus: menusFor(vendor.id),
@@ -124,8 +134,9 @@ export function localVendorBySlug(slug: string): VendorDetail | null {
 }
 
 export function localPosts(limit = 20): Post[] {
+  const ids = launchMarketIds();
   return [...seedPosts]
-    .filter((p) => !p.flagged)
+    .filter((p) => !p.flagged && ids.has(p.market_id))
     .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
     .slice(0, limit);
 }
@@ -135,7 +146,7 @@ export function localReviewsForMarket(marketId: string): Review[] {
 }
 
 export function localCities() {
-  return [...new Set(seedMarkets.map((m) => m.city))].sort();
+  return [...new Set(localMarkets().map((m) => m.city))].sort();
 }
 
 export function localFeatured() {
@@ -151,7 +162,9 @@ export function localSchedules(): MarketSchedule[] {
 }
 
 export function localStalls(): StallRef[] {
+  const ids = launchMarketIds();
   return seedMarketVendors.flatMap((link) => {
+    if (!ids.has(link.market_id)) return [];
     const vendor = seedVendors.find((v) => v.id === link.vendor_id);
     if (!vendor) return [];
     return [
@@ -194,8 +207,9 @@ export function localTablePeek(vendorIds: string[]) {
 }
 
 export function localFloorTape(limit = 24): FloorItem[] {
+  const ids = launchMarketIds();
   const posts: FloorItem[] = seedPosts
-    .filter((p) => !p.flagged)
+    .filter((p) => !p.flagged && ids.has(p.market_id))
     .map((p) => {
       const decoded = decodeFloorBody(p.body);
       const tagged = localStalls().find((s) => s.slug === (p.vendor_slug ?? decoded.vendorSlug));
@@ -216,7 +230,12 @@ export function localFloorTape(limit = 24): FloorItem[] {
     });
 
   const reviews: FloorItem[] = seedReviews
-    .filter((r) => !r.flagged)
+    .filter((r) => {
+      if (r.flagged) return false;
+      if (r.market_id) return ids.has(r.market_id);
+      if (!r.vendor_id) return false;
+      return seedMarketVendors.some((link) => link.vendor_id === r.vendor_id && ids.has(link.market_id));
+    })
     .map((r) => {
       const market = seedMarkets.find((m) => m.id === r.market_id);
       const vendor = seedVendors.find((v) => v.id === r.vendor_id);

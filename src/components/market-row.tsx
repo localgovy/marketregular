@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { provinceName } from "@/lib/constants";
 import { nextOpenLabel } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
 import type { Market, MarketSchedule } from "@/types/database";
@@ -30,14 +29,12 @@ export function MarketRow({
     >
       <span className="min-w-0">
         <span className="block truncate text-base font-medium">{market.name}</span>
-        <span className="text-sm text-muted-foreground">
-          {market.city}, {provinceName(market.province)}
-        </span>
+        <span className="text-sm text-muted-foreground">{market.address}</span>
       </span>
       <span className="shrink-0 text-right text-sm">
         {open ? (
-          <span className="inline-flex items-center gap-1.5 rounded-sm bg-ticket px-2 py-1 text-xs font-semibold tracking-wide text-[#fbf8ef] uppercase">
-            <span className="live-dot size-1.5 rounded-full bg-[#fbf8ef]" />
+          <span className="inline-flex items-center gap-1.5 rounded-sm bg-ticket px-2 py-1 text-xs font-semibold tracking-wide text-receipt uppercase">
+            <span className="live-dot size-1.5 rounded-full bg-receipt" />
             Open now
           </span>
         ) : (

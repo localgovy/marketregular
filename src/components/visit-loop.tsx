@@ -6,17 +6,18 @@ import {
   Receipt,
   Search,
   Store,
-  Ticket,
   Waypoints,
 } from "lucide-react";
 import { HomeEngage } from "@/components/home-engage";
 import { HomePanel, JumpChip } from "@/components/home-panel";
 import { MarketMapLazy } from "@/components/market-map-lazy";
-import { MarketRow } from "@/components/market-row";
 import { QuickFind } from "@/components/quick-find";
+import { TorontoWeek } from "@/components/toronto-week";
 import { formatPrice } from "@/lib/format";
+import { LAUNCH_CITY } from "@/lib/launch";
 import type { TablePeek } from "@/lib/data/catalog";
-import type { Market, MarketSchedule, StallRef } from "@/types/database";
+import type { UpcomingGroup } from "@/lib/upcoming";
+import type { Market, StallRef } from "@/types/database";
 
 export type ReturningRow = {
   vendorName: string;
@@ -46,7 +47,7 @@ function StallNames({ stalls }: { stalls: StallRef[] }) {
         <li key={`${stall.market_id}-${stall.id}`}>
           <Link
             href={`/vendors/${stall.slug}`}
-            className="inline-flex min-h-11 items-center rounded-md bg-foreground px-3 py-2 text-base font-medium text-[#f4f1ea] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-foreground/90"
+            className="inline-flex min-h-11 items-center rounded-md bg-foreground px-3 py-2 text-base font-medium text-receipt shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-foreground/90"
           >
             {stall.name}
             {stall.stall ? (
@@ -60,11 +61,8 @@ function StallNames({ stalls }: { stalls: StallRef[] }) {
 }
 
 export function HomeMosaic({
-  cities,
-  provinces,
   tags,
-  openNow,
-  scheduleMap,
+  week,
   showcase,
   attending,
   tablePeek,
@@ -75,11 +73,8 @@ export function HomeMosaic({
   spotlightSlug,
   otherHalls,
 }: {
-  cities: string[];
-  provinces: string[];
   tags: string[];
-  openNow: Market[];
-  scheduleMap: Map<string, MarketSchedule[]>;
+  week: UpcomingGroup[];
   showcase: Market;
   attending: StallRef[];
   tablePeek: TablePeek[];
@@ -93,68 +88,36 @@ export function HomeMosaic({
   return (
     <div>
       <header className="mb-6 max-w-2xl">
-        <h1 className="font-heading text-3xl leading-tight sm:text-4xl">Canadian farmers&apos; markets</h1>
+        <h1 className="font-heading text-3xl leading-tight sm:text-4xl">
+          {LAUNCH_CITY} farmers&apos; markets
+        </h1>
         <p className="mt-2 text-lg text-muted-foreground">
-          Look up a market, see which vendors will be there, and read notes from people shopping today.
-          Use any part of the page — nothing has to be done in order.
+          See which markets are on this week, who is selling, and what shoppers posted today.
         </p>
       </header>
 
       <nav aria-label="Jump to a part of this page" className="mb-6 flex flex-wrap gap-2">
-        <JumpChip href="#find" tone="find" label="Find a market" hint="Type a name or tap a city" />
-        <JumpChip href="#open" tone="open" label="Who is open" hint="Gold means open right now" />
+        <JumpChip href="#week" tone="open" label="This week" hint="Upcoming markets in Toronto" />
+        <JumpChip href="#find" tone="find" label="Search" hint="A name, food, or neighbourhood" />
         <JumpChip href="#here" tone="here" label="I am shopping" hint="Share location, then post" />
         <JumpChip href="#tape" tone="notes" label="Today's notes" hint="What shoppers posted today" />
       </nav>
+
+      <TorontoWeek groups={week} />
 
       <HomePanel
         id="find"
         tone="find"
         icon={Search}
         kicker="Look it up"
-        title="Find a market"
-        how="Type a city, market name, or food, then press Search. Or tap a shortcut."
+        title="Search Toronto markets"
+        how="Type a market name, a neighbourhood, or a food, then press Search. Or tap a day."
+        className="mt-5"
       >
-        <QuickFind cities={cities} provinces={provinces} tags={tags} />
+        <QuickFind tags={tags} />
       </HomePanel>
 
       <div className="mt-5 grid items-start gap-5 xl:grid-cols-2">
-        <HomePanel
-          id="open"
-          tone="open"
-          icon={Ticket}
-          kicker="Lights are on"
-          title="Open right now"
-          how="These markets are open this minute. Tap a name to see hours, vendors, and a map."
-          action={
-            <Link href="/search?openNow=1" className="text-inherit">
-              Show all open markets
-            </Link>
-          }
-        >
-          {openNow.length ? (
-            <div className="divide-y divide-ticket/20 overflow-hidden rounded-md bg-[#fbf8ef] ring-1 ring-ticket/20">
-              {openNow.slice(0, 6).map((market) => (
-                <MarketRow
-                  key={market.id}
-                  market={market}
-                  schedules={scheduleMap.get(market.id)}
-                  open
-                  inset
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-base text-muted-foreground">
-              Nothing is open this minute. Try{" "}
-              <Link href="/search?weekday=6" className="text-primary hover:underline">
-                Saturday markets
-              </Link>
-              — that is when most of them run.
-            </p>
-          )}
-        </HomePanel>
-
         <HomePanel
           tone="vendors"
           icon={Store}
@@ -168,7 +131,7 @@ export function HomeMosaic({
           }
         >
           <p className="mb-3 text-base text-muted-foreground">
-            {showcase.city}. A sample of who sets up here.
+            {showcase.address}. A sample of who sets up here.
           </p>
           <StallNames stalls={attending} />
         </HomePanel>
@@ -185,7 +148,7 @@ export function HomeMosaic({
               {tablePeek.map((line) => (
                 <li
                   key={line.vendorSlug + line.item}
-                  className="border-b border-dashed border-ticket/25 bg-[#fbf8ef] px-3 py-3 last:border-b-0"
+                  className="border-b border-dashed border-ticket/25 bg-receipt px-3 py-3 last:border-b-0"
                 >
                   <Link
                     href={`/vendors/${line.vendorSlug}`}
@@ -196,7 +159,7 @@ export function HomeMosaic({
                   <p className="mt-0.5 flex flex-wrap items-baseline gap-2 text-base">
                     {line.item}
                     {formatPrice(line.priceCents) ? (
-                      <span className="inline-flex rounded-sm bg-ticket px-1.5 py-0.5 font-mono text-sm text-[#fbf8ef]">
+                      <span className="inline-flex rounded-sm bg-ticket px-1.5 py-0.5 font-mono text-sm text-receipt">
                         {formatPrice(line.priceCents)}
                       </span>
                     ) : null}
@@ -230,8 +193,8 @@ export function HomeMosaic({
         <HomePanel
           tone="map"
           icon={Map}
-          kicker="See the pins"
-          title="Map of markets"
+          kicker="Around the city"
+          title="Map of Toronto markets"
           how="Tap a pin, then tap the market name in the popup to open its page."
           className="xl:col-span-2"
           flush
@@ -265,7 +228,7 @@ export function HomeMosaic({
                       {row.marketName}
                     </Link>
                   </span>
-                  <span className="inline-flex rounded-sm bg-ticket px-2 py-0.5 text-sm font-medium text-[#fbf8ef]">
+                  <span className="inline-flex rounded-sm bg-ticket px-2 py-0.5 text-sm font-medium text-receipt">
                     {row.when}
                   </span>
                 </li>
@@ -281,7 +244,7 @@ export function HomeMosaic({
           icon={Waypoints}
           kicker="Same tables, other days"
           title="Other markets they visit"
-          how="The same vendor often sells at more than one market. Tap a market to open it."
+          how="The same vendor often sells at more than one Toronto market. Tap a market to open it."
         >
           {spotlightName && otherHalls.length ? (
             <div>
@@ -303,7 +266,6 @@ export function HomeMosaic({
                       className="inline-flex min-h-11 items-center rounded-md border border-primary/30 bg-card px-3 py-2 text-base hover:bg-panel-find"
                     >
                       {hall.name}
-                      <span className="ml-2 text-sm text-muted-foreground">{hall.city}</span>
                     </Link>
                   </li>
                 ))}
@@ -314,12 +276,6 @@ export function HomeMosaic({
               Open any vendor page to see every market they attend.
             </p>
           )}
-          <p className="mt-4 rounded-md bg-panel-open px-3 py-2 text-base">
-            Most markets are busiest on Saturday.{" "}
-            <Link href="/search?weekday=6" className="font-medium text-primary hover:underline">
-              Show Saturday markets
-            </Link>
-          </p>
         </HomePanel>
       </div>
     </div>

@@ -9,12 +9,16 @@ export type ScheduleRow = {
   notes: string | null;
 };
 
-function parseHm(value: string) {
+export function parseHm(value: string) {
   const [h, m] = value.split(":").map(Number);
   return (h ?? 0) * 60 + (m ?? 0);
 }
 
-function inSeason(now: Date, start: string | null, end: string | null, tz: string) {
+export function formatHours(opensAt: string, closesAt: string) {
+  return `${opensAt.slice(0, 5)}–${closesAt.slice(0, 5)}`;
+}
+
+export function inSeason(now: Date, start: string | null, end: string | null, tz: string) {
   if (!start || !end) return true;
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,

@@ -9,7 +9,7 @@ import { ScheduleList } from "@/components/schedule-list";
 import { TagList } from "@/components/tag-list";
 import { VendorCard } from "@/components/vendor-card";
 import { buttonVariants } from "@/components/ui/button";
-import { provinceName, WEEKDAYS } from "@/lib/constants";
+import { WEEKDAYS } from "@/lib/constants";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { formatPhone } from "@/lib/format";
 
@@ -47,7 +47,7 @@ export default async function MarketPage({
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <p className="text-sm tracking-wide text-muted-foreground uppercase">
-        {market.city}, {provinceName(market.province)}
+        {market.address}
       </p>
       <h1 className="mt-1 font-heading text-4xl sm:text-5xl">{market.name}</h1>
       <TagList className="mt-4" tags={market.tags} />

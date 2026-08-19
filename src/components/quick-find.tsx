@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { WEEKDAYS, provinceName } from "@/lib/constants";
+import { WEEKDAYS } from "@/lib/constants";
 
 function weekdayInToronto() {
   const name = new Intl.DateTimeFormat("en-CA", {
@@ -12,31 +12,35 @@ function weekdayInToronto() {
   return WEEKDAYS.findIndex((d) => d === name);
 }
 
-export function QuickFind({
-  cities,
-  provinces,
-}: {
-  cities: string[];
-  provinces: string[];
-  tags?: string[];
-}) {
+export function QuickFind({ tags = [] }: { tags?: string[] }) {
   const today = weekdayInToronto();
+  const tomorrow = (today + 1) % 7;
   const chips: Array<{ href: string; label: string; tone?: "open" | "day" }> = [
     { href: "/search?openNow=1", label: "Open now", tone: "open" },
-    { href: "/search?weekday=6", label: "Saturday", tone: "day" },
   ];
-  if (today >= 0 && today !== 6) {
-    chips.splice(1, 0, {
+  if (today >= 0) {
+    chips.push({
       href: `/search?weekday=${today}`,
       label: `Today (${WEEKDAYS[today]})`,
       tone: "day",
     });
+    chips.push({
+      href: `/search?weekday=${tomorrow}`,
+      label: `Tomorrow (${WEEKDAYS[tomorrow]})`,
+      tone: "day",
+    });
   }
-  for (const city of cities.slice(0, 5)) {
-    chips.push({ href: `/search?city=${encodeURIComponent(city)}`, label: city });
+  if (today !== 6) {
+    chips.push({ href: "/search?weekday=6", label: "Saturday", tone: "day" });
   }
-  for (const code of provinces.slice(0, 3)) {
-    chips.push({ href: `/search?province=${code}`, label: provinceName(code) });
+  if (today !== 0) {
+    chips.push({ href: "/search?weekday=0", label: "Sunday", tone: "day" });
+  }
+  for (const tag of tags.slice(0, 4)) {
+    chips.push({
+      href: `/search?tag=${encodeURIComponent(tag)}`,
+      label: tag.replaceAll("-", " "),
+    });
   }
 
   return (
@@ -46,13 +50,13 @@ export function QuickFind({
         className="flex flex-col gap-2 rounded-md bg-card p-3 ring-1 ring-primary/20 sm:flex-row sm:items-stretch"
       >
         <label className="sr-only" htmlFor="home-search">
-          Search for a market, vendor, or city
+          Search for a Toronto market, vendor, or neighbourhood
         </label>
         <Input
           id="home-search"
           name="q"
           type="search"
-          placeholder="Example: Halifax, peaches, or St. Lawrence"
+          placeholder="Example: Wychwood, peaches, or St. Lawrence"
           className="h-12 bg-background text-base"
           autoComplete="off"
         />
@@ -69,7 +73,7 @@ export function QuickFind({
             className={cn(
               buttonVariants({ variant: chip.tone === "open" ? "default" : "outline" }),
               "h-10 px-3 text-base",
-              chip.tone === "open" && "bg-ticket text-[#fbf8ef] hover:bg-ticket/90",
+              chip.tone === "open" && "bg-ticket text-receipt hover:bg-ticket/90",
               chip.tone === "day" && "border-ticket/50 bg-panel-open text-foreground hover:bg-panel-open"
             )}
           >
