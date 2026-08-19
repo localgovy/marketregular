@@ -2,7 +2,7 @@ import { signOut, updateProfile } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { KeptDesk } from "@/components/kept-rail";
+import { SavedDesk } from "@/components/saved-rail";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -54,11 +54,11 @@ export default async function AccountPage() {
           Sign out
         </Button>
       </form>
-      <h2 className="mt-12 font-heading text-2xl">Kept</h2>
+      <h2 className="mt-12 font-heading text-2xl">Saved</h2>
       <p className="mt-1 mb-4 text-sm text-muted-foreground">
         Same list as on the floor. It lives in this browser for now.
       </p>
-      <KeptDesk markets={markets} vendors={vendors} />
+      <SavedDesk markets={markets} vendors={vendors} />
       <h2 className="mt-12 font-heading text-2xl">Your posts</h2>
       <ul className="mt-3 grid gap-2">
         {(posts ?? []).map((post) => (

@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useKeeps } from "@/components/keep-button";
+import { useSaves } from "@/components/save-button";
 import type { Market } from "@/types/database";
 
 export function FloorStrip({ openNow }: { openNow: Market[] }) {
-  const keeps = useKeeps();
-  const keptCount = keeps.markets.length + keeps.vendors.length;
+  const saves = useSaves();
+  const savedCount = saves.markets.length + saves.vendors.length;
 
   return (
     <nav
@@ -42,8 +42,8 @@ export function FloorStrip({ openNow }: { openNow: Market[] }) {
         <a href="#tape" className="text-primary hover:underline">
           Tape
         </a>
-        <Link href="/kept" className="text-primary hover:underline">
-          Kept{keptCount ? ` · ${keptCount}` : ""}
+        <Link href="/saved" className="text-primary hover:underline">
+          Saved{savedCount ? ` · ${savedCount}` : ""}
         </Link>
       </p>
     </nav>

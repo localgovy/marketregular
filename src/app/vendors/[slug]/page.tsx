@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckInIsland } from "@/components/check-in-island";
 import { ClaimForm } from "@/components/claim-form";
-import { KeepButton } from "@/components/keep-button";
+import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
@@ -41,7 +41,7 @@ export default async function VendorPage({
       <p className="text-sm tracking-wide text-muted-foreground uppercase">Vendor</p>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1 className="font-heading text-4xl sm:text-5xl">{vendor.name}</h1>
-        <KeepButton kind="vendor" slug={vendor.slug} name={vendor.name} size="md" />
+        <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="md" />
       </div>
       <TagList className="mt-4" tags={vendor.tags} />
 
@@ -108,7 +108,7 @@ export default async function VendorPage({
                         : ""}
                     </p>
                   </div>
-                  <KeepButton kind="market" slug={market.slug} name={market.name} />
+                  <SaveButton kind="market" slug={market.slug} name={market.name} />
                 </li>
               ))}
             </ul>

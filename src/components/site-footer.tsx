@@ -18,8 +18,8 @@ export function SiteFooter() {
           <Link href="/vendors" className="hover:text-foreground">
             Vendors
           </Link>
-          <Link href="/kept" className="hover:text-foreground">
-            Kept
+          <Link href="/saved" className="hover:text-foreground">
+            Saved
           </Link>
         </div>
       </div>

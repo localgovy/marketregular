@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { KeepButton } from "@/components/keep-button";
+import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { nextOpenLabel } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
@@ -43,7 +43,7 @@ export function MarketCard({
         </Card>
       </Link>
       <span className="absolute top-4 right-4">
-        <KeepButton kind="market" slug={market.slug} name={market.name} />
+        <SaveButton kind="market" slug={market.slug} name={market.name} />
       </span>
     </div>
   );

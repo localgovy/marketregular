@@ -2,53 +2,53 @@
 
 import { useSyncExternalStore } from "react";
 import {
-  EMPTY_KEEPS,
-  getKeeps,
-  isKept,
-  subscribeKeeps,
-  toggleKeep,
-  type KeepKind,
-} from "@/lib/keeps";
+  EMPTY_SAVES,
+  getSaves,
+  isSaved,
+  subscribeSaves,
+  toggleSave,
+  type SaveKind,
+} from "@/lib/saves";
 import { cn } from "@/lib/utils";
 
-export function useKeeps() {
-  return useSyncExternalStore(subscribeKeeps, getKeeps, () => EMPTY_KEEPS);
+export function useSaves() {
+  return useSyncExternalStore(subscribeSaves, getSaves, () => EMPTY_SAVES);
 }
 
-export function KeepButton({
+export function SaveButton({
   kind,
   slug,
   name,
   size = "sm",
 }: {
-  kind: KeepKind;
+  kind: SaveKind;
   slug: string;
   name?: string;
   size?: "sm" | "md";
 }) {
-  const keeps = useKeeps();
-  const kept = isKept(kind, slug, keeps);
+  const saves = useSaves();
+  const saved = isSaved(kind, slug, saves);
   const label = name ?? (kind === "market" ? "this market" : "this stall");
 
   return (
     <button
       type="button"
-      aria-pressed={kept}
-      aria-label={kept ? `Remove ${label} from your list` : `Keep ${label} on your list`}
+      aria-pressed={saved}
+      aria-label={saved ? `Remove ${label} from saved` : `Save ${label}`}
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
-        toggleKeep(kind, slug);
+        toggleSave(kind, slug);
       }}
       className={cn(
         "inline-flex shrink-0 cursor-pointer items-center justify-center rounded-sm font-mono font-semibold tracking-[0.14em] uppercase outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
         size === "md" ? "h-10 px-3 text-[11px]" : "h-8 px-2.5 text-[10px]",
-        kept
+        saved
           ? "bg-foreground text-receipt"
           : "border border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground",
       )}
     >
-      {kept ? "Kept" : "Keep"}
+      {saved ? "Saved" : "Save"}
     </button>
   );
 }

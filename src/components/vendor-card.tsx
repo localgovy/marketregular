@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { KeepButton } from "@/components/keep-button";
+import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import type { Vendor } from "@/types/database";
 
@@ -20,7 +20,7 @@ export function VendorCard({ vendor }: { vendor: Vendor }) {
         </Card>
       </Link>
       <span className="absolute top-4 right-4">
-        <KeepButton kind="vendor" slug={vendor.slug} name={vendor.name} />
+        <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
       </span>
     </div>
   );

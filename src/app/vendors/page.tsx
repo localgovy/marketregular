@@ -22,7 +22,7 @@ export default async function VendorsIndexPage() {
       <h1 className="font-heading text-4xl">Vendors</h1>
       <p className="mt-2 mb-6 text-muted-foreground">
         Stalls in the {LAUNCH_CITY} directory. Tap a name for the menu and which markets they stand
-        at. Keep a stall to put it on your list.
+        at. Save a stall to put it on your list.
       </p>
       <p className="mb-6 text-sm">
         <Link href="/search" className="font-medium text-primary hover:underline">

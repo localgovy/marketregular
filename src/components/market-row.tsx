@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { KeepButton } from "@/components/keep-button";
+import { SaveButton } from "@/components/save-button";
 import { nextOpenLabel } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
 import type { Market, MarketSchedule } from "@/types/database";
@@ -47,7 +47,7 @@ export function MarketRow({
         </span>
       </Link>
       <span className={inset ? "pr-2" : "pr-1"}>
-        <KeepButton kind="market" slug={market.slug} name={market.name} />
+        <SaveButton kind="market" slug={market.slug} name={market.name} />
       </span>
     </div>
   );

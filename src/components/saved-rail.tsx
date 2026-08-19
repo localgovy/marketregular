@@ -3,40 +3,40 @@
 import Link from "next/link";
 import { Bookmark } from "lucide-react";
 import { HomePanel } from "@/components/home-panel";
-import { KeepButton, useKeeps } from "@/components/keep-button";
+import { SaveButton, useSaves } from "@/components/save-button";
 import type { Market, Vendor } from "@/types/database";
 
-export function KeptRail({
+export function SavedRail({
   markets,
   vendors,
 }: {
   markets: Market[];
   vendors: Vendor[];
 }) {
-  const keeps = useKeeps();
-  const keptMarkets = markets.filter((market) => keeps.markets.includes(market.slug));
-  const keptVendors = vendors.filter((vendor) => keeps.vendors.includes(vendor.slug));
+  const saves = useSaves();
+  const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
+  const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
 
-  if (!keptMarkets.length && !keptVendors.length) return null;
+  if (!savedMarkets.length && !savedVendors.length) return null;
 
   return (
     <HomePanel
-      id="kept"
+      id="saved"
       tone="here"
       icon={Bookmark}
       kicker="On your list"
-      title="Kept"
-      how="Markets and stalls you marked Keep. They stay in this browser."
+      title="Saved"
+      how="Markets and stalls you saved. They stay in this browser."
       action={
-        <Link href="/kept" className="hover:underline">
+        <Link href="/saved" className="hover:underline">
           Open list
         </Link>
       }
     >
       <div className="grid gap-3">
-        {keptMarkets.length ? (
+        {savedMarkets.length ? (
           <ul className="overflow-hidden rounded-md ring-1 ring-border">
-            {keptMarkets.map((market) => (
+            {savedMarkets.map((market) => (
               <li
                 key={market.id}
                 className="flex items-center gap-2 border-b border-border last:border-b-0"
@@ -49,15 +49,15 @@ export function KeptRail({
                   <span className="text-sm text-muted-foreground">{market.address}</span>
                 </Link>
                 <span className="pr-2">
-                  <KeepButton kind="market" slug={market.slug} name={market.name} />
+                  <SaveButton kind="market" slug={market.slug} name={market.name} />
                 </span>
               </li>
             ))}
           </ul>
         ) : null}
-        {keptVendors.length ? (
+        {savedVendors.length ? (
           <ul className="flex flex-wrap gap-2">
-            {keptVendors.map((vendor) => (
+            {savedVendors.map((vendor) => (
               <li key={vendor.id} className="flex items-center gap-1.5">
                 <Link
                   href={`/vendors/${vendor.slug}`}
@@ -65,7 +65,7 @@ export function KeptRail({
                 >
                   {vendor.name}
                 </Link>
-                <KeepButton kind="vendor" slug={vendor.slug} name={vendor.name} />
+                <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
               </li>
             ))}
           </ul>
@@ -75,31 +75,31 @@ export function KeptRail({
   );
 }
 
-export function KeptDesk({
+export function SavedDesk({
   markets,
   vendors,
 }: {
   markets: Market[];
   vendors: Vendor[];
 }) {
-  const keeps = useKeeps();
-  const keptMarkets = markets.filter((market) => keeps.markets.includes(market.slug));
-  const keptVendors = vendors.filter((vendor) => keeps.vendors.includes(vendor.slug));
-  const empty = !keptMarkets.length && !keptVendors.length;
+  const saves = useSaves();
+  const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
+  const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
+  const empty = !savedMarkets.length && !savedVendors.length;
 
   return (
     <div className="grid gap-10">
       {empty ? (
         <p className="text-muted-foreground">
-          Nothing kept yet. Open a market or a stall and press Keep. It stays in this
+          Nothing saved yet. Open a market or a stall and press Save. It stays in this
           browser until you take it off. You do not need an account.
         </p>
       ) : null}
       <section>
         <h2 className="font-heading text-2xl">Markets</h2>
-        {keptMarkets.length ? (
+        {savedMarkets.length ? (
           <ul className="mt-3 overflow-hidden rounded-md bg-card ring-1 ring-border">
-            {keptMarkets.map((market) => (
+            {savedMarkets.map((market) => (
               <li
                 key={market.id}
                 className="flex items-center gap-2 border-b border-border last:border-b-0"
@@ -112,7 +112,7 @@ export function KeptDesk({
                   <span className="text-sm text-muted-foreground">{market.address}</span>
                 </Link>
                 <span className="pr-3">
-                  <KeepButton kind="market" slug={market.slug} name={market.name} />
+                  <SaveButton kind="market" slug={market.slug} name={market.name} />
                 </span>
               </li>
             ))}
@@ -123,9 +123,9 @@ export function KeptDesk({
       </section>
       <section>
         <h2 className="font-heading text-2xl">Vendors</h2>
-        {keptVendors.length ? (
+        {savedVendors.length ? (
           <ul className="mt-3 overflow-hidden rounded-md bg-card ring-1 ring-border">
-            {keptVendors.map((vendor) => (
+            {savedVendors.map((vendor) => (
               <li
                 key={vendor.id}
                 className="flex items-center gap-2 border-b border-border last:border-b-0"
@@ -142,7 +142,7 @@ export function KeptDesk({
                   ) : null}
                 </Link>
                 <span className="pr-3">
-                  <KeepButton kind="vendor" slug={vendor.slug} name={vendor.name} />
+                  <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
                 </span>
               </li>
             ))}

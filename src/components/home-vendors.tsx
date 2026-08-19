@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Award, Store } from "lucide-react";
 import { HomePanel } from "@/components/home-panel";
-import { KeepButton } from "@/components/keep-button";
+import { SaveButton } from "@/components/save-button";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 
 function tagLine(tags: string[]) {
@@ -53,7 +53,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
                 </span>
               </Link>
               <span className="flex items-center pr-2">
-                <KeepButton kind="vendor" slug={row.vendorSlug} name={row.vendorName} />
+                <SaveButton kind="vendor" slug={row.vendorSlug} name={row.vendorName} />
               </span>
             </li>
           ))}
@@ -109,7 +109,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
                 </span>
               </span>
               <span className="shrink-0 self-start">
-                <KeepButton kind="vendor" slug={pick.vendorSlug} name={pick.vendorName} />
+                <SaveButton kind="vendor" slug={pick.vendorSlug} name={pick.vendorName} />
               </span>
             </li>
           ))}

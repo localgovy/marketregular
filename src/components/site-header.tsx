@@ -27,7 +27,7 @@ export async function SiteHeader() {
               <Input
                 name="q"
                 type="search"
-                placeholder="Market, vendor, neighbourhood, or tomato"
+                placeholder="Search market, vendor, location, food"
                 className="bg-card"
                 autoComplete="off"
               />
@@ -43,8 +43,8 @@ export async function SiteHeader() {
             <Link href="/vendors" className="hidden hover:underline sm:inline">
               Vendors
             </Link>
-            <Link href="/kept" className="hover:underline">
-              Kept
+            <Link href="/saved" className="hover:underline">
+              Saved
             </Link>
             <Link
               href="/search"

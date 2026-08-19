@@ -33,7 +33,7 @@ export default async function MarketsIndexPage() {
       </p>
       <h1 className="font-heading text-4xl">Markets</h1>
       <p className="mt-2 mb-6 text-muted-foreground">
-        Every {LAUNCH_CITY} hall we list. Tap a name for hours, vendors, and the map. Keep the ones
+        Every {LAUNCH_CITY} hall we list. Tap a name for hours, vendors, and the map. Save the ones
         you actually go to.
       </p>
       <p className="mb-6 text-sm">

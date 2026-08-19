@@ -3,7 +3,7 @@ import { CheckInPanel } from "@/components/check-in-panel";
 import { FloorStrip } from "@/components/floor-strip";
 import { HomePanel } from "@/components/home-panel";
 import { VendorsTodayPanel, VendorsWeekPanel } from "@/components/home-vendors";
-import { KeptRail } from "@/components/kept-rail";
+import { SavedRail } from "@/components/saved-rail";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { QuickFind } from "@/components/quick-find";
 import { TorontoWeek } from "@/components/toronto-week";
@@ -36,7 +36,7 @@ export function HomeMosaic({
           {LAUNCH_CITY} farmers&apos; markets
         </h1>
         <p className="mt-2 text-lg text-muted-foreground">
-          Find a hall, keep the stalls you actually buy from, then check the tape once you&apos;re
+          Find a hall, save the stalls you actually buy from, then check the tape once you&apos;re
           on the floor.
         </p>
       </header>
@@ -76,7 +76,7 @@ export function HomeMosaic({
         </div>
 
         <div className="flex min-w-0 flex-col gap-5">
-          <KeptRail markets={markets} vendors={vendors} />
+          <SavedRail markets={markets} vendors={vendors} />
           <HomePanel
             tone="here"
             icon={LocateFixed}

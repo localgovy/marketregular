@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { KeepButton } from "@/components/keep-button";
+import { SaveButton } from "@/components/save-button";
 import type { Vendor } from "@/types/database";
 
 function tagLine(tags: string[]) {
@@ -20,7 +20,7 @@ export function VendorRow({ vendor }: { vendor: Vendor }) {
         </span>
       </Link>
       <span className="pr-3">
-        <KeepButton kind="vendor" slug={vendor.slug} name={vendor.name} />
+        <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
       </span>
     </div>
   );

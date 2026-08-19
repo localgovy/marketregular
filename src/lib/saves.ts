@@ -1,24 +1,25 @@
-export type KeepKind = "market" | "vendor";
+export type SaveKind = "market" | "vendor";
 
-export type Keeps = {
+export type Saves = {
   markets: string[];
   vendors: string[];
 };
 
-export const EMPTY_KEEPS: Keeps = { markets: [], vendors: [] };
+export const EMPTY_SAVES: Saves = { markets: [], vendors: [] };
 
-const KEY = "mr-keeps";
+const KEY = "mr-saves";
+const LEGACY_KEY = "mr-keeps";
 const listeners = new Set<() => void>();
-let snapshot: Keeps = EMPTY_KEEPS;
+let snapshot: Saves = EMPTY_SAVES;
 
-function clone(keeps: Keeps): Keeps {
-  return { markets: [...keeps.markets], vendors: [...keeps.vendors] };
+function clone(saves: Saves): Saves {
+  return { markets: [...saves.markets], vendors: [...saves.vendors] };
 }
 
-function parse(raw: string | null): Keeps {
-  if (!raw) return clone(EMPTY_KEEPS);
+function parse(raw: string | null): Saves {
+  if (!raw) return clone(EMPTY_SAVES);
   try {
-    const parsed = JSON.parse(raw) as Partial<Keeps>;
+    const parsed = JSON.parse(raw) as Partial<Saves>;
     return {
       markets: Array.isArray(parsed.markets)
         ? parsed.markets.filter((item): item is string => typeof item === "string")
@@ -28,11 +29,11 @@ function parse(raw: string | null): Keeps {
         : [],
     };
   } catch {
-    return clone(EMPTY_KEEPS);
+    return clone(EMPTY_SAVES);
   }
 }
 
-function emit(next: Keeps) {
+function emit(next: Saves) {
   snapshot = next;
   try {
     window.localStorage.setItem(KEY, JSON.stringify(next));
@@ -43,30 +44,31 @@ function emit(next: Keeps) {
 }
 
 if (typeof window !== "undefined") {
-  snapshot = parse(window.localStorage.getItem(KEY));
+  const stored = window.localStorage.getItem(KEY) ?? window.localStorage.getItem(LEGACY_KEY);
+  snapshot = parse(stored);
   window.addEventListener("storage", (event) => {
-    if (event.key !== KEY) return;
+    if (event.key !== KEY && event.key !== LEGACY_KEY) return;
     snapshot = parse(event.newValue);
     listeners.forEach((fn) => fn());
   });
 }
 
-export function getKeeps() {
+export function getSaves() {
   return snapshot;
 }
 
-export function subscribeKeeps(listener: () => void) {
+export function subscribeSaves(listener: () => void) {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
   };
 }
 
-export function isKept(kind: KeepKind, slug: string, keeps: Keeps = snapshot) {
-  return keeps[kind === "market" ? "markets" : "vendors"].includes(slug);
+export function isSaved(kind: SaveKind, slug: string, saves: Saves = snapshot) {
+  return saves[kind === "market" ? "markets" : "vendors"].includes(slug);
 }
 
-export function toggleKeep(kind: KeepKind, slug: string) {
+export function toggleSave(kind: SaveKind, slug: string) {
   const key = kind === "market" ? "markets" : "vendors";
   const current = snapshot[key];
   const nextList = current.includes(slug)

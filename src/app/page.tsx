@@ -76,7 +76,7 @@ export default async function HomePage() {
             icon={List}
             kicker="The full list"
             title="All Toronto markets"
-            how="Every market we list in the city. Tap a name, then Keep the ones you actually go to."
+            how="Every market we list in the city. Tap a name, then save the ones you actually go to."
             action={
               <Link href="/markets" className="hover:underline">
                 {markets.length} listed
@@ -101,7 +101,7 @@ export default async function HomePage() {
             icon={Store}
             kicker="Name list"
             title="Vendors"
-            how="Every stall in the directory. Keep the ones you buy from."
+            how="Every stall in the directory. Save the ones you buy from."
             className="mt-5"
             action={
               <Link href="/vendors" className="hover:underline">
