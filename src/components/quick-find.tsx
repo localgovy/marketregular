@@ -85,7 +85,8 @@ export function QuickFind({ markets }: { markets: Market[] }) {
   const [q, setQ] = useState("");
   const [whenId, setWhenId] = useState<string | null>(null);
   const [areaQ, setAreaQ] = useState<string | null>(null);
-  const [tag, setTag] = useState<string | null>(null);
+  const [product, setProduct] = useState<string | null>(null);
+  const [setupTag, setSetupTag] = useState<string | null>(null);
   const [near, setNear] = useState(false);
 
   const selectedWhen = when.find((item) => item.id === whenId);
@@ -204,8 +205,8 @@ export function QuickFind({ markets }: { markets: Market[] }) {
           {products.map((item) => (
             <ToggleChip
               key={item}
-              pressed={tag === item}
-              onClick={() => setTag((current) => (current === item ? null : item))}
+              pressed={product === item}
+              onClick={() => setProduct((current) => (current === item ? null : item))}
             >
               {tagLabel(item)}
             </ToggleChip>
@@ -218,15 +219,16 @@ export function QuickFind({ markets }: { markets: Market[] }) {
           {setup.map((item) => (
             <ToggleChip
               key={item}
-              pressed={tag === item}
-              onClick={() => setTag((current) => (current === item ? null : item))}
+              pressed={setupTag === item}
+              onClick={() => setSetupTag((current) => (current === item ? null : item))}
             >
               {tagLabel(item)}
             </ToggleChip>
           ))}
         </FindGroup>
       ) : null}
-      {tag ? <input type="hidden" name="tag" value={tag} /> : null}
+      {product ? <input type="hidden" name="tag" value={product} /> : null}
+      {setupTag ? <input type="hidden" name="setup" value={setupTag} /> : null}
 
       <button
         type="submit"
@@ -235,7 +237,7 @@ export function QuickFind({ markets }: { markets: Market[] }) {
           "h-12 w-full bg-card px-6 text-base text-primary hover:bg-card/90 sm:w-auto sm:justify-self-start",
         )}
       >
-        {query || whenId || tag || near ? "Search with these" : "Search all markets"}
+        {query || whenId || product || setupTag || near ? "Search with these" : "Search all markets"}
       </button>
     </form>
   );

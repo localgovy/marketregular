@@ -162,6 +162,7 @@ export type SearchFilters = {
   city?: string;
   weekday?: number;
   tag?: string;
+  setup?: string;
   openNow?: boolean;
   near?: { lat: number; lng: number };
 };

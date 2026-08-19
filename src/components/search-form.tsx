@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PRODUCT_TAGS, AMENITY_TAGS, WEEKDAYS } from "@/lib/constants";
+import { PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
+import { FIND_SETUP, tagLabel } from "@/lib/find-paths";
 
 export function SearchForm({
   defaults,
@@ -12,12 +13,12 @@ export function SearchForm({
     city?: string;
     weekday?: string;
     tag?: string;
+    setup?: string;
     openNow?: boolean;
   };
 }) {
-  const tags = [...PRODUCT_TAGS, ...AMENITY_TAGS];
   return (
-    <form action="/search" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    <form action="/search" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
       <Input
         name="q"
         defaultValue={defaults?.q}
@@ -41,10 +42,22 @@ export function SearchForm({
         defaultValue={defaults?.tag ?? ""}
         className="h-8 rounded-lg border border-input bg-card px-2.5 text-sm"
       >
-        <option value="">Any tag</option>
-        {tags.map((tag) => (
+        <option value="">Anything they sell</option>
+        {PRODUCT_TAGS.map((tag) => (
           <option key={tag} value={tag}>
-            {tag.replaceAll("-", " ")}
+            {tagLabel(tag)}
+          </option>
+        ))}
+      </select>
+      <select
+        name="setup"
+        defaultValue={defaults?.setup ?? ""}
+        className="h-8 rounded-lg border border-input bg-card px-2.5 text-sm"
+      >
+        <option value="">Indoor or outdoor</option>
+        {FIND_SETUP.map((tag) => (
+          <option key={tag} value={tag}>
+            {tagLabel(tag)}
           </option>
         ))}
       </select>

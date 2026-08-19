@@ -20,6 +20,7 @@ export default async function SearchPage({
     city?: string;
     weekday?: string;
     tag?: string;
+    setup?: string;
     openNow?: string;
     lat?: string;
     lng?: string;
@@ -34,6 +35,7 @@ export default async function SearchPage({
     q: params.q,
     weekday: Number.isFinite(weekday) ? weekday : undefined,
     tag: params.tag || undefined,
+    setup: params.setup || undefined,
     openNow: params.openNow === "1",
     near,
   });
@@ -59,6 +61,7 @@ export default async function SearchPage({
           q: params.q,
           weekday: params.weekday,
           tag: params.tag,
+          setup: params.setup,
           openNow: params.openNow === "1",
         }}
       />

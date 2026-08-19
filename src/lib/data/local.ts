@@ -77,6 +77,9 @@ export function localSearch(filters: SearchFilters) {
     markets = markets.filter((m) => m.tags.includes(filters.tag!));
     vendors = vendors.filter((v) => v.tags.includes(filters.tag!));
   }
+  if (filters.setup) {
+    markets = markets.filter((m) => m.tags.includes(filters.setup!));
+  }
   if (filters.weekday != null) {
     markets = markets.filter((m) =>
       isOpenOnWeekday(schedulesFor(m.id), filters.weekday!),

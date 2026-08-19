@@ -181,6 +181,9 @@ export async function searchDirectory(filters: SearchFilters) {
     marketQuery = marketQuery.contains("tags", [filters.tag]);
     vendorQuery = vendorQuery.contains("tags", [filters.tag]);
   }
+  if (filters.setup) {
+    marketQuery = marketQuery.contains("tags", [filters.setup]);
+  }
 
   const [{ data: marketRows }, { data: vendorRows }, { data: scheduleRows }] =
     await Promise.all([
