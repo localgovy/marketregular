@@ -278,6 +278,11 @@
   );
 }
 
+/* Find filters: a whole painted tile. No clip-path — it shears the rule. */
+@utility find-chip {
+  border-radius: 0;
+}
+
 @utility stall-panel {
   border-radius: 0;
   clip-path: polygon(

@@ -26,9 +26,9 @@ function weekdayInToronto() {
 }
 
 const chipIdle =
-  "stall-chip inline-flex h-10 items-center border-0 bg-board px-3 text-base font-medium text-primary-foreground shadow-[inset_0_0_0_2px_color-mix(in_srgb,var(--primary-foreground)_72%,transparent)] hover:bg-[color-mix(in_srgb,var(--board)_82%,white)]";
+  "find-chip inline-flex h-10 items-center border border-[color-mix(in_srgb,var(--chalk)_78%,transparent)] bg-[color-mix(in_srgb,var(--chalk)_18%,var(--primary))] px-3.5 text-base font-medium text-primary-foreground hover:bg-[color-mix(in_srgb,var(--chalk)_26%,var(--primary))]";
 const chipOn =
-  "stall-chip inline-flex h-10 items-center bg-card px-3 text-base font-medium text-primary hover:bg-card/90";
+  "find-chip inline-flex h-10 items-center border border-[color-mix(in_srgb,var(--foreground)_22%,transparent)] bg-card px-3.5 text-base font-medium text-primary hover:bg-card";
 
 function ToggleChip({
   pressed,
@@ -43,7 +43,7 @@ function ToggleChip({
 }) {
   const selected =
     tone === "open"
-      ? "stall-chip inline-flex h-10 items-center bg-ticket px-3 text-base font-medium text-receipt hover:bg-ticket/90"
+      ? "find-chip inline-flex h-10 items-center border border-[color-mix(in_srgb,var(--foreground)_35%,var(--ticket))] bg-ticket px-3.5 text-base font-medium text-receipt hover:bg-ticket"
       : chipOn;
   return (
     <button
