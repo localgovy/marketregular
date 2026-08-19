@@ -29,10 +29,10 @@ export function HomeMosaic({
   return (
     <div>
       <header className="mb-4 max-w-2xl">
-        <h1 className="font-heading text-3xl leading-tight sm:text-4xl">
+        <h1>
           {LAUNCH_CITY} farmers&apos; markets
         </h1>
-        <p className="mt-2 text-lg text-muted-foreground">
+        <p className="type-lede mt-2 text-muted-foreground">
           Find a hall, save the stalls you actually buy from, then check the tape once you&apos;re
           on the floor.
         </p>

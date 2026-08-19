@@ -15,7 +15,7 @@ export default async function ModerationPage() {
   return (
     <div className="grid gap-10">
       <section>
-        <h2 className="font-heading text-2xl">Posts</h2>
+        <h2>Posts</h2>
         <ul className="mt-3 grid gap-3">
           {(posts ?? []).map((post) => (
             <li key={post.id} className="rounded-xl bg-card p-4 text-sm ring-1 ring-foreground/10">
@@ -40,7 +40,7 @@ export default async function ModerationPage() {
         </ul>
       </section>
       <section>
-        <h2 className="font-heading text-2xl">Reviews</h2>
+        <h2>Reviews</h2>
         <ul className="mt-3 grid gap-3">
           {(reviews ?? []).map((review) => (
             <li key={review.id} className="rounded-xl bg-card p-4 text-sm ring-1 ring-foreground/10">

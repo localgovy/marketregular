@@ -30,8 +30,8 @@ export default async function AccountPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-12">
-      <h1 className="font-heading text-4xl">Your stall pass</h1>
-      <p className="mt-2 text-muted-foreground">
+      <h1>Your stall pass</h1>
+      <p className="type-lede mt-2 text-muted-foreground">
         {profile.role === "admin"
           ? "You can edit the directory."
           : profile.role === "vendor"
@@ -54,12 +54,12 @@ export default async function AccountPage() {
           Sign out
         </Button>
       </form>
-      <h2 className="mt-12 font-heading text-2xl">Saved</h2>
-      <p className="mt-1 mb-4 text-sm text-muted-foreground">
+      <h2 className="mt-12">Saved</h2>
+      <p className="type-kicker mt-1 mb-4 text-muted-foreground">
         Same list as on the floor. It lives in this browser for now.
       </p>
       <SavedDesk markets={markets} vendors={vendors} />
-      <h2 className="mt-12 font-heading text-2xl">Your posts</h2>
+      <h2 className="mt-12">Your posts</h2>
       <ul className="mt-3 grid gap-2">
         {(posts ?? []).map((post) => (
           <li key={post.id} className="rounded-lg bg-card p-3 text-sm ring-1 ring-foreground/10">

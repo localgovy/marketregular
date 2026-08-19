@@ -52,8 +52,8 @@ export default async function SearchPage({
           ← {LAUNCH_CITY} farmers&apos; markets
         </Link>
       </p>
-      <h1 className="font-heading text-4xl">Find a {LAUNCH_CITY} market</h1>
-      <p className="mt-2 mb-6 text-muted-foreground">
+      <h1>Find a {LAUNCH_CITY} market</h1>
+      <p className="type-lede mt-2 mb-6 text-muted-foreground">
         {near
           ? "Closest to you first. You can still filter by day or what they sell."
           : "Filter by day, what they sell, or whether the doors are open right now."}
@@ -73,7 +73,7 @@ export default async function SearchPage({
       <p className="mt-6 text-sm text-muted-foreground">
         {markets.length} markets · {vendors.length} vendors
       </p>
-      <h2 className="mt-8 mb-4 font-heading text-2xl">Markets</h2>
+      <h2 className="mt-8 mb-4">Markets</h2>
       {markets.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {markets.map((market) => (
@@ -83,7 +83,7 @@ export default async function SearchPage({
       ) : (
         <p className="text-muted-foreground">No markets match those filters.</p>
       )}
-      <h2 className="mt-12 mb-4 font-heading text-2xl">Vendors</h2>
+      <h2 className="mt-12 mb-4">Vendors</h2>
       {vendors.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {vendors.map((vendor) => (

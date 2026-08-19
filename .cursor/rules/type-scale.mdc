@@ -1,0 +1,24 @@
+---
+description: Type scale — Mona titles, Grotesk body, sized to the column
+alwaysApply: true
+---
+
+# Type scale
+
+Two families only: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotesk** (`font-sans`) for everything else. Do not put Mona on body copy, kickers, notes, empty states, or the site name.
+
+| Role | Face | Size | Example |
+| --- | --- | --- | --- |
+| Wordmark | Grotesk | `type-wordmark` (`text-xl font-medium tracking-[-0.04em]`) | Market Regular |
+| Kicker | Grotesk | `type-kicker` (`text-sm`) | Toronto, Live notes, When, where, or what |
+| Page title | Mona | `h1` (`text-3xl sm:text-4xl leading-tight`) | Toronto farmers' markets |
+| Panel / section | Mona | `h2` (`text-2xl leading-tight`) | Find a market |
+| Narrow column / day / card | Mona | `h3` or `type-column` (`text-lg leading-tight`) | The group chat from the stalls |
+| Lede | Grotesk | `type-lede` (`text-lg`) | Sentence under an h1 |
+| How / body | Grotesk | `text-base` | Choose when, a neighbourhood… |
+| List names | Grotesk | `text-base font-medium` | Wychwood Barns in a row |
+| Times / prices / stalls | Mono | `text-sm` tabular | `08:00–14:00` |
+
+Use real heading tags and let the base sizes apply. Do not add `text-4xl`, `text-5xl`, `text-[13px]`, or `font-heading` on paragraphs.
+
+The wordmark is Grotesk on purpose so it does not look like a page title. Nav stays Grotesk `text-sm font-medium`.

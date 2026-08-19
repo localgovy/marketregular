@@ -10,8 +10,8 @@ export function VendorCard({ vendor }: { vendor: Vendor }) {
       <Link href={`/vendors/${vendor.slug}`} className="block h-full">
         <Card className="h-full transition-shadow hover:shadow-md">
           <CardHeader className="pr-16">
-            <p className="text-sm text-muted-foreground">Stall</p>
-            <CardTitle className="font-heading text-xl leading-snug">{vendor.name}</CardTitle>
+            <p className="type-kicker text-muted-foreground">Stall</p>
+            <CardTitle className="type-column">{vendor.name}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <p className="line-clamp-3 text-sm text-muted-foreground">{vendor.about}</p>

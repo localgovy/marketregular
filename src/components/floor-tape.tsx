@@ -174,12 +174,12 @@ export function FloorTape({
     <div className="flex h-full min-h-0 flex-col bg-background">
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="awning-board px-3 pt-4 pb-3 text-chalk">
-          <p className="flex items-center gap-2 text-sm font-medium text-chalk/80">
+          <p className="type-kicker flex items-center gap-2 text-chalk/80">
             <span className="live-dot size-2 rounded-full bg-chalk" />
             Live notes
           </p>
-          <p className="font-heading text-lg leading-tight">The group chat from the stalls</p>
-          <p className="mt-1 text-sm leading-snug text-chalk/80">
+          <h2 className="type-column">The group chat from the stalls</h2>
+          <p className="type-kicker mt-1 leading-snug text-chalk/80">
             The peaches, the line, the loaf that already sold out. Read it here, and add yours
             if you want. Location is optional.
           </p>

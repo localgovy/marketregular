@@ -13,10 +13,10 @@ export async function SiteHeader() {
       <div className="header-stripe-paper flex h-16 w-full items-center gap-3 px-4 lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)] lg:gap-0 lg:px-0 lg:shadow-none">
         <div className="flex h-16 items-center lg:header-stripe-board lg:awning-board lg:px-4">
           <Link href="/" aria-label={`${SITE_NAME} home`} className="flex shrink-0 items-baseline gap-2">
-            <span className="text-xl font-medium tracking-[-0.04em] text-foreground lg:text-chalk">
+            <span className="type-wordmark text-foreground lg:text-chalk">
               {SITE_NAME}
             </span>
-            <span className="hidden text-sm text-muted-foreground sm:inline lg:text-chalk/70">
+            <span className="type-kicker hidden text-muted-foreground sm:inline lg:text-chalk/70">
               Toronto
             </span>
           </Link>

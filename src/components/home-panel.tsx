@@ -108,13 +108,13 @@ export function HomePanel({
           <div className="min-w-0">
             <p
               className={cn(
-                "text-sm",
+                "type-kicker",
                 leaf ? "text-primary-foreground/75" : "text-muted-foreground"
               )}
             >
               {kicker}
             </p>
-            <h2 className="font-heading text-2xl leading-tight">{title}</h2>
+            <h2>{title}</h2>
           </div>
         </div>
         {action ? (

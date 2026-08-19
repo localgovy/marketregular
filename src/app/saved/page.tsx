@@ -19,8 +19,8 @@ export default async function SavedPage() {
           ← {LAUNCH_CITY} farmers&apos; markets
         </Link>
       </p>
-      <h1 className="font-heading text-4xl">Saved</h1>
-      <p className="mt-2 mb-8 text-muted-foreground">
+      <h1>Saved</h1>
+      <p className="type-lede mt-2 mb-8 text-muted-foreground">
         Your list of halls and stalls. Saved on this device so Saturday is already decided.
       </p>
       <SavedDesk markets={markets} vendors={vendors} />

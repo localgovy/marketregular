@@ -19,8 +19,8 @@ export default async function VendorsIndexPage() {
           ← {LAUNCH_CITY} farmers&apos; markets
         </Link>
       </p>
-      <h1 className="font-heading text-4xl">Vendors</h1>
-      <p className="mt-2 mb-6 text-muted-foreground">
+      <h1>Vendors</h1>
+      <p className="type-lede mt-2 mb-6 text-muted-foreground">
         Stalls in the {LAUNCH_CITY} directory. Tap a name for the menu and which markets they stand
         at. Save a stall to put it on your list.
       </p>

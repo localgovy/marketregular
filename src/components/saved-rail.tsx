@@ -96,7 +96,7 @@ export function SavedDesk({
         </p>
       ) : null}
       <section>
-        <h2 className="font-heading text-2xl">Markets</h2>
+        <h2>Markets</h2>
         {savedMarkets.length ? (
           <ul className="mt-3 overflow-hidden rounded-md bg-card ring-1 ring-border">
             {savedMarkets.map((market) => (
@@ -122,7 +122,7 @@ export function SavedDesk({
         )}
       </section>
       <section>
-        <h2 className="font-heading text-2xl">Vendors</h2>
+        <h2>Vendors</h2>
         {savedVendors.length ? (
           <ul className="mt-3 overflow-hidden rounded-md bg-card ring-1 ring-border">
             {savedVendors.map((vendor) => (

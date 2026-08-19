@@ -64,7 +64,7 @@ export default async function HomePage() {
               weekVendors={weekVendors}
             />
           ) : (
-            <p className="text-sm text-muted-foreground">Directory is empty.</p>
+            <p className="text-base text-muted-foreground">Directory is empty.</p>
           )}
         </div>
 

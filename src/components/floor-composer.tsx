@@ -506,8 +506,8 @@ function ExtraPanel({
 }) {
   return (
     <div className="absolute inset-x-2 top-[calc(100%-0.25rem)] z-20 rounded-md bg-card p-3 shadow-md ring-1 ring-border">
-      <p className="font-medium">{title}</p>
-      <p className="mb-2 text-sm text-muted-foreground">{hint}</p>
+      <p className="type-column">{title}</p>
+      <p className="type-kicker mb-2 text-muted-foreground">{hint}</p>
       {children}
     </div>
   );

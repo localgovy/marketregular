@@ -21,8 +21,8 @@ export default async function AdminHomePage() {
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map((s) => (
         <li key={s.label} className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-          <p className="text-sm text-muted-foreground">{s.label}</p>
-          <p className="font-heading text-4xl">{s.value}</p>
+          <p className="type-kicker text-muted-foreground">{s.label}</p>
+          <p className="type-page">{s.value}</p>
         </li>
       ))}
     </ul>

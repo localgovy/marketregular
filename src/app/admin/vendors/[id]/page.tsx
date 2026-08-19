@@ -29,7 +29,7 @@ export default async function EditVendorPage({
     <div className="grid gap-10">
       <VendorForm vendor={vendor as Vendor} />
       <section>
-        <h2 className="font-heading text-2xl">Menu items</h2>
+        <h2>Menu items</h2>
         <ul className="mt-3 divide-y divide-border">
           {((menus ?? []) as MenuItem[]).map((item) => (
             <li key={item.id} className="py-2 text-sm">

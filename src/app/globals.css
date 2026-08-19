@@ -118,18 +118,69 @@
   html {
     @apply font-sans;
   }
-  h1, h2, h3, .font-heading {
+  /* Mona for titles. Grotesk (font-sans) for everything else. */
+  h1,
+  h2,
+  h3,
+  .font-heading {
     font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
     letter-spacing: -0.03em;
   }
-  h1, h2, h3 {
+  h1,
+  h2,
+  h3 {
     font-weight: 600;
     font-stretch: 97%;
   }
+  /* Page title: “Toronto farmers' markets” */
   h1 {
     letter-spacing: -0.04em;
     font-stretch: 94%;
+    @apply text-3xl leading-tight sm:text-4xl;
   }
+  /* Panel / section title: “Find a market” */
+  h2 {
+    @apply text-2xl leading-tight;
+  }
+  /* Narrow column / day title: “The group chat from the stalls” */
+  h3 {
+    @apply text-lg leading-tight;
+  }
+}
+
+/* Page title when it isn’t an h1 — e.g. a big stat. */
+@utility type-page {
+  font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.04em;
+  font-weight: 600;
+  font-stretch: 94%;
+  @apply text-3xl leading-tight sm:text-4xl;
+}
+
+/* Wordmark: Grotesk lockup, not a Mona heading. */
+@utility type-wordmark {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.04em;
+  @apply text-xl font-medium leading-tight;
+}
+
+/* City, “Live notes”, panel kicker. */
+@utility type-kicker {
+  @apply text-sm;
+}
+
+/* Sentence under a page title. */
+@utility type-lede {
+  @apply text-lg leading-snug;
+}
+
+/* Mona title in a tight column or on a card — same as h3. */
+@utility type-column {
+  font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  font-stretch: 97%;
+  @apply text-lg leading-tight;
 }
 
 @keyframes live-dot {

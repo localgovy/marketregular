@@ -46,7 +46,7 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
 
   if (!posts.length) {
     return (
-      <p className="font-heading text-sm text-muted-foreground">
+      <p className="text-base text-muted-foreground">
         Quiet in this hall. Leave the first note.
       </p>
     );
@@ -61,11 +61,11 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
             key={post.id}
             className={`rounded-sm px-4 py-3 shadow-[1px_2px_0_rgba(23,22,20,0.06)] ${scrapStyle(post.id)}`}
           >
-            <p className="font-heading text-[13px] text-ticket">
+            <p className="text-sm font-medium text-ticket">
               {floorKicker({ kind: "post", id: post.id, rating: null })}
             </p>
             <div className="mt-1 flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 <span className="font-medium text-foreground">{post.author_name ?? "A regular"}</span>
                 {post.market_slug ? (
                   <>
@@ -81,7 +81,7 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
                 {timeAgo(post.created_at)}
               </time>
             </div>
-            <p className="mt-2 font-heading text-[1.02rem] leading-snug">{decoded.body}</p>
+            <p className="mt-2 text-base leading-snug">{decoded.body}</p>
             {decoded.tags.length ? (
               <ul className="mt-2 flex flex-wrap gap-1">
                 {decoded.tags.map((tag) => (

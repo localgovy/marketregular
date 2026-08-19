@@ -30,18 +30,12 @@ function SlotRow({ slot }: { slot: UpcomingSlot }) {
   );
 }
 
-function DayCard({
-  group,
-  titleClass,
-}: {
-  group: UpcomingGroup;
-  titleClass: string;
-}) {
+function DayCard({ group }: { group: UpcomingGroup }) {
   return (
     <div className="rounded-md bg-[color-mix(in_srgb,var(--foreground)_3%,var(--card))] ring-1 ring-border/70">
       <div className="flex items-baseline justify-between gap-2 border-b border-border/60 bg-card px-3 py-1.5">
-        <h3 className={titleClass}>{group.label}</h3>
-        <p className="shrink-0 text-sm font-medium text-primary">{group.date}</p>
+        <h3>{group.label}</h3>
+        <p className="type-kicker shrink-0 font-medium text-primary">{group.date}</p>
       </div>
       <ul className="divide-y divide-border/50">
         {group.slots.map((slot) => (
@@ -73,18 +67,12 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
         </p>
       ) : (
         <div className="grid gap-3">
-          {open ? (
-            <DayCard group={open} titleClass="font-heading text-xl leading-tight" />
-          ) : null}
+          {open ? <DayCard group={open} /> : null}
 
           {rest.length ? (
             <div className="grid gap-3 sm:grid-cols-2">
               {rest.map((group) => (
-                <DayCard
-                  key={group.id}
-                  group={group}
-                  titleClass="font-heading text-lg leading-tight"
-                />
+                <DayCard key={group.id} group={group} />
               ))}
             </div>
           ) : null}

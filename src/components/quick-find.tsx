@@ -66,7 +66,7 @@ function FindGroup({
 }) {
   return (
     <div>
-      <p className="text-sm font-medium text-primary-foreground/80">{label}</p>
+      <p className="type-kicker text-primary-foreground/80">{label}</p>
       <div className="mt-1.5 flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -154,7 +154,7 @@ export function QuickFind({ markets }: { markets: Market[] }) {
       ) : null}
 
       <div>
-        <p className="text-sm font-medium text-primary-foreground/80">Where in the city</p>
+        <p className="type-kicker text-primary-foreground/80">Where in the city</p>
         <div className="mt-1.5 grid gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <ToggleChip pressed={near} onClick={toggleNear}>
@@ -243,7 +243,7 @@ export function QuickFind({ markets }: { markets: Market[] }) {
           type="submit"
           className="find-go stall-chip inline-flex min-h-[3.35rem] w-full cursor-pointer items-center justify-between gap-4 px-5 py-3 text-left text-receipt outline-none transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-receipt active:translate-y-px"
         >
-          <span className="font-heading text-lg font-semibold tracking-tight sm:text-xl">
+          <span className="type-column text-receipt">
             {query || whenId || productTags.length || setupTag || near
               ? "Search with these"
               : "Search all markets"}

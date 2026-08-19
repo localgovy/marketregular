@@ -32,7 +32,7 @@ export default async function EditMarketPage({
     <div className="grid gap-10">
       <MarketForm market={market as Market} />
       <section>
-        <h2 className="font-heading text-2xl">Hours</h2>
+        <h2>Hours</h2>
         <ul className="mt-3 divide-y divide-border">
           {((schedules ?? []) as MarketSchedule[]).map((row) => (
             <li key={row.id} className="flex items-center justify-between py-2 text-sm">
@@ -71,7 +71,7 @@ export default async function EditMarketPage({
         </form>
       </section>
       <section>
-        <h2 className="font-heading text-2xl">Attach a vendor</h2>
+        <h2>Attach a vendor</h2>
         <form action={linkVendorToMarket} className="mt-3 grid gap-2 sm:grid-cols-3">
           <input type="hidden" name="market_id" value={id} />
           <select name="vendor_id" className="h-8 rounded-lg border border-input px-2 text-sm">

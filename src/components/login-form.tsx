@@ -35,7 +35,7 @@ export function LoginForm({ next = "/account" }: { next?: string }) {
   if (!configured) {
     return (
       <div className="rounded-xl bg-card p-6 ring-1 ring-foreground/10">
-        <p className="font-heading text-xl">Accounts are almost ready</p>
+        <p className="type-column">Accounts are almost ready</p>
         <p className="mt-2 text-sm text-muted-foreground">
           Connect a Supabase project (see README) to enable sign-in, posts, and reviews.
           The directory already works without it.
@@ -47,7 +47,7 @@ export function LoginForm({ next = "/account" }: { next?: string }) {
   return (
     <div className="grid gap-8">
       <form action={passSubmit} className="grid gap-3">
-        <h2 className="font-heading text-xl">Sign in</h2>
+        <h3>Sign in</h3>
         <div className="grid gap-1.5">
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" required autoComplete="email" />
@@ -65,7 +65,7 @@ export function LoginForm({ next = "/account" }: { next?: string }) {
       </form>
 
       <form action={upSubmit} className="grid gap-3">
-        <h2 className="font-heading text-xl">Create an account</h2>
+        <h3>Create an account</h3>
         <div className="grid gap-1.5">
           <Label htmlFor="display_name">Name on posts</Label>
           <Input id="display_name" name="display_name" required />
@@ -90,7 +90,7 @@ export function LoginForm({ next = "/account" }: { next?: string }) {
       </form>
 
       <form action={magicSubmit} className="grid gap-3">
-        <h2 className="font-heading text-xl">Magic link</h2>
+        <h3>Magic link</h3>
         <Input name="email" type="email" required placeholder="you@email.com" />
         <Button type="submit" variant="secondary" disabled={magicPending}>
           Email me a link
