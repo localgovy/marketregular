@@ -180,8 +180,8 @@ export function FloorTape({
           </p>
           <p className="font-heading text-lg leading-tight">The group chat from the stalls</p>
           <p className="mt-1 text-sm leading-snug text-chalk/80">
-            The peaches, the line, the loaf that already sold out. Read it here — and if you&apos;re
-            actually at the market, add yours. Tote optional.
+            The peaches, the line, the loaf that already sold out. Read it here, and add yours
+            if you want. Location is optional.
           </p>
         </div>
         <div className="sticky top-0 z-10">
@@ -200,7 +200,7 @@ export function FloorTape({
           </ol>
         ) : (
           <p className="px-3 py-4 text-base text-muted-foreground">
-            No notes yet. If you are at a market, you can write the first one in the box above.
+            No notes yet. Write the first one in the box above.
           </p>
         )}
       </div>

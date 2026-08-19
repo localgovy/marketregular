@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckInIsland } from "@/components/check-in-island";
 import { ClaimForm } from "@/components/claim-form";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
@@ -85,7 +84,7 @@ export default async function VendorPage({
                 </li>
               ))}
               {!vendor.reviews.length ? (
-                <p className="text-sm text-muted-foreground">No on-site reviews yet.</p>
+                <p className="text-sm text-muted-foreground">No reviews yet.</p>
               ) : null}
             </ul>
           </section>
@@ -128,7 +127,6 @@ export default async function VendorPage({
               </a>
             ) : null}
           </div>
-          <CheckInIsland markets={vendor.markets} signedIn={Boolean(profile)} />
           <div className="rounded-xl bg-secondary/50 p-5">
             <p className="font-medium">Is this your stall?</p>
             {profile ? (

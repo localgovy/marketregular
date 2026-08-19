@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckInIsland } from "@/components/check-in-island";
 import { ClaimForm } from "@/components/claim-form";
 import { SaveButton } from "@/components/save-button";
 import { LiveFeed } from "@/components/live-feed";
@@ -88,7 +87,8 @@ export default async function MarketPage({
             <h2 className="font-heading text-2xl">Reviews</h2>
             {avg ? (
               <p className="mt-1 text-sm text-muted-foreground">
-                {avg.toFixed(1)} / 5 · {market.reviews.length} on-site reviews
+                {avg.toFixed(1)} / 5 · {market.reviews.length}{" "}
+                {market.reviews.length === 1 ? "review" : "reviews"}
               </p>
             ) : null}
             <ul className="mt-4 grid gap-3">
@@ -134,7 +134,6 @@ export default async function MarketPage({
               </a>
             ) : null}
           </div>
-          <CheckInIsland markets={[market]} signedIn={Boolean(profile)} />
           <div className="rounded-xl bg-secondary/50 p-5">
             <p className="font-medium">Do you run this market?</p>
             <p className="mt-1 text-sm text-muted-foreground">

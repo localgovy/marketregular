@@ -51,7 +51,8 @@ export function FloorComposer({
   }, [market, stalls]);
 
   const tagged = stallOptions.find((s) => s.id === vendorId);
-  const canWrite = demo || (signedIn && Boolean(market && coords));
+  const canWrite = demo || signedIn;
+  const onSite = Boolean(coords && here?.id === market?.id);
 
   const marketMatches = useMemo(() => {
     const q = marketQuery.trim().toLowerCase();
@@ -122,12 +123,10 @@ export function FloorComposer({
       return;
     }
     start(async () => {
-      const pin = coords ?? { lat: 0, lng: 0 };
       const result = await composeFloorNote({
         marketId: market.id,
         body,
-        lat: pin.lat,
-        lng: pin.lng,
+        ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
         rating,
         vendorId: tagged?.id,
         vendorSlug: tagged?.slug,
@@ -148,7 +147,7 @@ export function FloorComposer({
         vendor_name: tagged?.name ?? null,
         vendor_slug: tagged?.slug ?? null,
         rating: rating > 0 ? rating : null,
-        verified_on_site: Boolean(coords && here?.id === market.id),
+        verified_on_site: onSite,
         tags,
       });
       setBody("");
@@ -290,12 +289,6 @@ export function FloorComposer({
             >
               Sign in
             </Link>
-          ) : !demo && !coords ? (
-            <Button type="button" size="sm" onClick={request}>
-              Share location
-            </Button>
-          ) : !demo && !here ? (
-            <p className="truncate text-xs text-muted-foreground">At a market to post</p>
           ) : (
             <Button
               type="button"
@@ -377,6 +370,26 @@ export function FloorComposer({
 
           {market ? (
             <div className="mt-3 border-t border-border pt-3">
+              {onSite ? (
+                <p className="mb-3 text-sm text-muted-foreground">
+                  You shared your location. This note will show as posted at the market.
+                </p>
+              ) : (
+                <div className="mb-3">
+                  <p className="text-sm text-muted-foreground">
+                    Optional. Share location only if you want an on-site stamp.
+                  </p>
+                  <Button type="button" size="sm" variant="outline" className="mt-2" onClick={request}>
+                    I&apos;m at this market
+                  </Button>
+                  {error ? <p className="mt-1 text-sm text-destructive">{error}</p> : null}
+                  {coords && here && here.id !== market.id ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      You&apos;re not close enough for that stamp. You can still post.
+                    </p>
+                  ) : null}
+                </div>
+              )}
               <p className="flex items-center gap-1.5 text-sm font-medium">
                 <Store className="size-3.5" aria-hidden />
                 Vendor at this market
@@ -450,7 +463,6 @@ export function FloorComposer({
         </ExtraPanel>
       ) : null}
 
-      {error ? <p className="mt-1 px-1 text-sm text-destructive">{error}</p> : null}
       {message ? <p className="mt-1 px-1 text-sm text-muted-foreground">{message}</p> : null}
     </div>
   );

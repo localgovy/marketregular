@@ -36,7 +36,7 @@ export default async function AccountPage() {
           ? "You can edit the directory."
           : profile.role === "vendor"
             ? "You can update listings you claim."
-            : "Posts and reviews only count when you're on site."}
+            : "Posts and reviews are yours. Location is optional when you write them."}
       </p>
       <form action={updateProfile} className="mt-8 grid gap-3">
         <Label htmlFor="display_name">Display name</Label>

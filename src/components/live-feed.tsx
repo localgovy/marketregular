@@ -47,7 +47,7 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
   if (!posts.length) {
     return (
       <p className="font-heading text-sm text-muted-foreground">
-        Quiet in this hall. Stamp in and leave the first note.
+        Quiet in this hall. Leave the first note.
       </p>
     );
   }

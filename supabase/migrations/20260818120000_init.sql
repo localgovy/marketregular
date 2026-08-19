@@ -315,7 +315,7 @@ create policy "posts readable" on public.posts
 
 create policy "auth insert posts" on public.posts
   for insert to authenticated
-  with check (auth.uid() = user_id and verified_on_site = true);
+  with check (auth.uid() = user_id);
 
 create policy "users delete own posts" on public.posts
   for delete using (auth.uid() = user_id or public.is_admin());
@@ -328,7 +328,7 @@ create policy "reviews readable" on public.reviews
 
 create policy "auth insert reviews" on public.reviews
   for insert to authenticated
-  with check (auth.uid() = user_id and verified_on_site = true);
+  with check (auth.uid() = user_id);
 
 create policy "admin update reviews" on public.reviews
   for update using (public.is_admin());

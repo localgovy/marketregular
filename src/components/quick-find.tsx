@@ -161,9 +161,11 @@ export function QuickFind({ markets }: { markets: Market[] }) {
               Near me
             </ToggleChip>
             {!coords ? (
-              <span className="text-sm text-primary-foreground/70">
-                {error ?? "Share your location, then press Search."}
-              </span>
+              near ? (
+                <span className="text-sm text-primary-foreground/70">
+                  {error ?? "Uses your location to sort the list."}
+                </span>
+              ) : null
             ) : near && nearest.length ? (
               <span className="text-sm text-primary-foreground/80">
                 Closest: {nearest.map((row) => `${row.market.name} ${formatDistance(row.distance)}`).join(" · ")}

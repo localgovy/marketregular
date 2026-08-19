@@ -62,7 +62,6 @@ export default async function HomePage() {
               openNow={openNow}
               sellingToday={sellingToday}
               weekVendors={weekVendors}
-              signedIn={signedIn}
             />
           ) : (
             <p className="text-sm text-muted-foreground">Directory is empty.</p>

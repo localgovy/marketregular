@@ -37,7 +37,7 @@ export function LoginForm({ next = "/account" }: { next?: string }) {
       <div className="rounded-xl bg-card p-6 ring-1 ring-foreground/10">
         <p className="font-heading text-xl">Accounts are almost ready</p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Connect a Supabase project (see README) to enable sign-in, on-site posts, and reviews.
+          Connect a Supabase project (see README) to enable sign-in, posts, and reviews.
           The directory already works without it.
         </p>
       </div>

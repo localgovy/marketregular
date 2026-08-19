@@ -1,5 +1,4 @@
-import { LocateFixed, Map, Search } from "lucide-react";
-import { CheckInPanel } from "@/components/check-in-panel";
+import { Map, Search } from "lucide-react";
 import { FloorStrip } from "@/components/floor-strip";
 import { HomePanel } from "@/components/home-panel";
 import { VendorsTodayPanel, VendorsWeekPanel } from "@/components/home-vendors";
@@ -19,7 +18,6 @@ export function HomeMosaic({
   openNow,
   sellingToday,
   weekVendors,
-  signedIn,
 }: {
   week: UpcomingGroup[];
   markets: Market[];
@@ -27,7 +25,6 @@ export function HomeMosaic({
   openNow: Market[];
   sellingToday: VendorTodayRow[];
   weekVendors: VendorWeekPick[];
-  signedIn: boolean;
 }) {
   return (
     <div>
@@ -75,15 +72,6 @@ export function HomeMosaic({
 
         <div className="flex min-w-0 flex-col gap-5">
           <SavedRail markets={markets} vendors={vendors} />
-          <HomePanel
-            tone="here"
-            icon={LocateFixed}
-            kicker="On the floor"
-            title="Stamp in"
-            how="Posts and reviews only count inside a market fence. We keep a yes/no, not your pin."
-          >
-            <CheckInPanel signedIn={signedIn} compact />
-          </HomePanel>
           <VendorsTodayPanel rows={sellingToday} />
           <VendorsWeekPanel picks={weekVendors} />
         </div>

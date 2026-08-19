@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import { distanceMeters } from "@/lib/geo";
 import type { Market } from "@/types/database";
 
@@ -37,10 +37,6 @@ export function GeoProvider({
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 30_000 },
     );
   };
-
-  useEffect(() => {
-    request();
-  }, []);
 
   const nearby = useMemo(() => {
     if (!coords) return [];

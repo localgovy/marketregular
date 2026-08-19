@@ -19,6 +19,15 @@ async function requireUser() {
   return { supabase, user, demo: false as const };
 }
 
+function hasCoords(lat?: number, lng?: number) {
+  return (
+    typeof lat === "number" &&
+    typeof lng === "number" &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lng)
+  );
+}
+
 async function verifyOnSite(
   supabase: NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>,
   marketId: string,
@@ -45,11 +54,21 @@ async function verifyOnSite(
   );
 }
 
+async function onSiteIfShared(
+  supabase: NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>,
+  marketId: string,
+  lat?: number,
+  lng?: number,
+) {
+  if (!hasCoords(lat, lng)) return false;
+  return verifyOnSite(supabase, marketId, lat, lng);
+}
+
 export async function createPost(input: {
   marketId: string;
   body: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   photos?: string[];
   tags?: string[];
   vendorSlug?: string;
@@ -60,12 +79,9 @@ export async function createPost(input: {
 
   const { supabase, user, demo } = await requireUser();
   if (demo) return { error: null, demo: true };
-  if (!supabase || !user) return { error: "Sign in to post from a market." };
+  if (!supabase || !user) return { error: "Sign in to post." };
 
-  const ok = await verifyOnSite(supabase, input.marketId, input.lat, input.lng);
-  if (!ok) {
-    return { error: "You need to be at this market to post on the live feed." };
-  }
+  const onSite = await onSiteIfShared(supabase, input.marketId, input.lat, input.lng);
 
   const { count } = await supabase
     .from("posts")
@@ -81,7 +97,7 @@ export async function createPost(input: {
     market_id: input.marketId,
     body,
     photos: input.photos ?? [],
-    verified_on_site: true,
+    verified_on_site: onSite,
   });
   if (error) return { error: error.message };
 
@@ -95,8 +111,8 @@ export async function createReview(input: {
   vendorId?: string;
   rating: number;
   body: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
 }) {
   const body = input.body.trim();
   if (!input.marketId && !input.vendorId) return { error: "Pick a market or vendor." };
@@ -105,7 +121,7 @@ export async function createReview(input: {
 
   const { supabase, user, demo } = await requireUser();
   if (demo) return { error: null, demo: true };
-  if (!supabase || !user) return { error: "Sign in to post from a market." };
+  if (!supabase || !user) return { error: "Sign in to post." };
 
   let marketId = input.marketId;
   if (!marketId && input.vendorId) {
@@ -119,10 +135,7 @@ export async function createReview(input: {
   }
   if (!marketId) return { error: "Could not match this vendor to a market." };
 
-  const ok = await verifyOnSite(supabase, marketId, input.lat, input.lng);
-  if (!ok) {
-    return { error: "Reviews are for people actually at the market." };
-  }
+  const onSite = await onSiteIfShared(supabase, marketId, input.lat, input.lng);
 
   const { error } = await supabase.from("reviews").insert({
     user_id: user.id,
@@ -130,7 +143,7 @@ export async function createReview(input: {
     vendor_id: input.vendorId ?? null,
     rating: input.rating,
     body,
-    verified_on_site: true,
+    verified_on_site: onSite,
   });
   if (error) {
     if (error.code === "23505") {
@@ -146,8 +159,8 @@ export async function createReview(input: {
 export async function composeFloorNote(input: {
   marketId: string;
   body: string;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
   rating: number;
   vendorId?: string;
   vendorSlug?: string;
