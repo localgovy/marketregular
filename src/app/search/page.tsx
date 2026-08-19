@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { MarketCard } from "@/components/market-card";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
@@ -44,14 +43,6 @@ export default async function SearchPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <p className="mb-4">
-        <Link
-          href="/"
-          className="text-base font-medium text-primary underline-offset-4 hover:underline"
-        >
-          ← {LAUNCH_CITY} farmers&apos; markets
-        </Link>
-      </p>
       <h1>Find a {LAUNCH_CITY} market</h1>
       <p className="type-lede mt-2 mb-6 text-muted-foreground">
         {near

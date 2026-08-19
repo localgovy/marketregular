@@ -11,14 +11,6 @@ export default async function VendorsIndexPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
-      <p className="mb-4">
-        <Link
-          href="/"
-          className="text-base font-medium text-primary underline-offset-4 hover:underline"
-        >
-          ← {LAUNCH_CITY} farmers&apos; markets
-        </Link>
-      </p>
       <h1>Vendors</h1>
       <p className="type-lede mt-2 mb-6 text-muted-foreground">
         Stalls in the {LAUNCH_CITY} directory. Tap a name for the menu and which markets they stand

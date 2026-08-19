@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { SaveButton } from "@/components/save-button";
 import { ReviewCard } from "@/components/review-card";
@@ -39,7 +40,10 @@ export default async function VendorPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <p className="type-kicker text-muted-foreground">Stall</p>
+      <div className="flex items-center gap-1">
+        <BackButton href="/vendors" />
+        <p className="type-kicker text-muted-foreground">Stall</p>
+      </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{vendor.name}</h1>
         <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />

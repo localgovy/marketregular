@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { SaveButton } from "@/components/save-button";
 import { LiveFeed } from "@/components/live-feed";
@@ -46,9 +47,10 @@ export default async function MarketPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <p className="type-kicker text-muted-foreground">
-        {market.address}
-      </p>
+      <div className="flex items-center gap-1">
+        <BackButton href="/markets" />
+        <p className="type-kicker text-muted-foreground">{market.address}</p>
+      </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{market.name}</h1>
         <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
