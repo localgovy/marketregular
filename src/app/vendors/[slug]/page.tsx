@@ -63,7 +63,7 @@ export default async function VendorPage({
           <section>
             <h2>Reviews</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Anything written about this stall, including from the live tape.
+              Anything written about this stall, including from the live reviews.
             </p>
             {vendor.feed.length ? (
               <ol className="mt-4 flex flex-col gap-2">

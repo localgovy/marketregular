@@ -35,12 +35,13 @@ export function FloorStrip({ openNow }: { openNow: Market[] }) {
           No Toronto market is open this minute.
         </p>
       )}
-      <p className="flex flex-wrap gap-x-3 text-sm font-medium">
+      <p className="flex flex-wrap items-baseline gap-x-3 text-sm font-medium">
+        <span className="text-muted-foreground">Jump to:</span>
         <a href="#find" className="text-primary hover:underline">
           Find
         </a>
-        <a href="#tape" className="text-primary hover:underline">
-          Tape
+        <a href="#reviews" className="text-primary hover:underline">
+          Reviews
         </a>
         <Link href="/events" className="text-primary hover:underline">
           Events

@@ -47,7 +47,7 @@ export default async function HomePage() {
     <HomeGeo markets={markets}>
       <div className="flex flex-col lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)]">
         <aside
-          id="tape"
+          id="reviews"
           className="order-2 h-[70vh] scroll-mt-20 overflow-hidden border-y border-board lg:order-1 lg:row-span-2 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:border-y-0 lg:border-r lg:border-board"
         >
           <FloorTape initialItems={tape} signedIn={signedIn} stalls={stalls} markets={markets} />

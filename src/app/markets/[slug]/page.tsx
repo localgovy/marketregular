@@ -92,7 +92,7 @@ export default async function MarketPage({
               </p>
             ) : (
               <p className="mt-1 text-sm text-muted-foreground">
-                Same reviews as the live tape. A score is optional.
+                Same reviews as the live list. A score is optional.
               </p>
             )}
             <div className="mt-4">
