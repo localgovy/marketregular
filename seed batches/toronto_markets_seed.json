@@ -1,0 +1,1584 @@
+[
+  {
+    "source_name": "St. Lawrence Market",
+    "name": "St. Lawrence Market",
+    "slug": "st-lawrence-market",
+    "about": "Toronto’s historic public market includes the South Market’s specialty food merchants, artisans and prepared-food businesses.",
+    "address": "91–95 Front Street East",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M5E 1C3",
+    "lat": 43.6486879,
+    "lng": -79.3715454,
+    "geofence_radius_m": 350,
+    "website": "https://www.stlawrencemarket.com/",
+    "phone": "416-392-7219",
+    "email": "stlawrencemarket@toronto.ca",
+    "tags": [
+      "produce",
+      "bakery",
+      "cheese",
+      "meat",
+      "seafood",
+      "prepared-food",
+      "crafts",
+      "indoor",
+      "year-round",
+      "accessible"
+    ],
+    "featured": true,
+    "schedules": [
+      {
+        "weekday": 0,
+        "opens_at": "10:00",
+        "closes_at": "17:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "South Market"
+      },
+      {
+        "weekday": 2,
+        "opens_at": "09:00",
+        "closes_at": "19:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "South Market"
+      },
+      {
+        "weekday": 3,
+        "opens_at": "09:00",
+        "closes_at": "19:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "South Market"
+      },
+      {
+        "weekday": 4,
+        "opens_at": "09:00",
+        "closes_at": "19:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "South Market"
+      },
+      {
+        "weekday": 5,
+        "opens_at": "09:00",
+        "closes_at": "19:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "South Market"
+      },
+      {
+        "weekday": 6,
+        "opens_at": "07:00",
+        "closes_at": "17:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "South Market; separate from the Saturday Farmers’ Market in the North Market"
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.stlawrencemarket.com/about_us",
+      "https://www.toronto.ca/services-payments/venues-facilities-bookings/booking-city-facilities/st-lawrence-market/",
+      "https://www.google.com/maps/place/St.+Lawrence+Market/data=!4m7!3m6!1s0x89d4cb31b4dd275b:0xca0ab5acf1a5b6fd!8m2!3d43.6486879!4d-79.3715454!16zL20vMDZqOTNf"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Evergreen Brick Works Saturday Farmers Market",
+    "name": "Evergreen Brick Works Saturday Farmers Market",
+    "slug": "evergreen-brick-works-saturday-farmers-market",
+    "about": "Evergreen’s year-round Saturday market connects shoppers with local Ontario farmers and food producers. It operates under the outdoor pavilions from May through October and indoors from November through April.",
+    "address": "550 Bayview Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M4W 3X8",
+    "lat": 43.6845894,
+    "lng": -79.366016,
+    "geofence_radius_m": 350,
+    "website": "https://www.evergreen.ca/evergreen-brick-work/activities/saturday-farmers-market/",
+    "phone": "416-596-7670",
+    "email": "info@evergreen.ca",
+    "tags": [
+      "produce",
+      "bakery",
+      "meat",
+      "prepared-food",
+      "indoor",
+      "outdoor",
+      "year-round",
+      "parking",
+      "transit",
+      "accessible"
+    ],
+    "featured": true,
+    "schedules": [
+      {
+        "weekday": 6,
+        "opens_at": "09:00",
+        "closes_at": "13:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "Outdoor Pavilions May–October; indoor TD Future Cities Centre November–April"
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.evergreen.ca/evergreen-brick-work/activities/saturday-farmers-market/",
+      "https://www.evergreen.ca/evergreen-brick-works/visitor-info/",
+      "https://www.evergreen.ca/about-us/contact-us/",
+      "https://www.google.com/maps/place/Saturday+Farmers%27+Market+at+Evergreen/data=!4m7!3m6!1s0x89d4cdc728aae5ab:0x1c6b90d8433768e1!8m2!3d43.6845894!4d-79.366016!16s%2Fg%2F11s77531sw"
+    ],
+    "gaps": [
+      "hours conflict: the specific official market page and Google Maps say 09:00–13:00, while other Evergreen visitor pages display 08:00–13:00; the specific market page was used"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "The Stop Farmers’ Market at Wychwood Barns",
+    "name": "The Stop’s Farmers’ Market",
+    "slug": "the-stops-farmers-market",
+    "about": "The Stop operates a year-round community farmers’ market with local farmers, prepared-food producers, arts and crafts, and weekly community programming.",
+    "address": "601 Christie Street",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M6G 4C7",
+    "lat": 43.6799336,
+    "lng": -79.4241445,
+    "geofence_radius_m": 220,
+    "website": "https://www.thestop.org/farmersmarket/",
+    "phone": "416-652-7867",
+    "email": "farmersmarket@thestop.org",
+    "tags": [
+      "produce",
+      "meat",
+      "cheese",
+      "preserves",
+      "prepared-food",
+      "crafts",
+      "indoor",
+      "outdoor",
+      "year-round",
+      "accessible",
+      "card-accepted",
+      "atm"
+    ],
+    "featured": true,
+    "schedules": [
+      {
+        "weekday": 6,
+        "opens_at": "08:00",
+        "closes_at": "13:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "Outdoor along the Barns’ walkways May–October; inside the main Barn November–April"
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.thestop.org/farmersmarket/",
+      "https://www.thestop.org/urban-agriculture/",
+      "https://www.google.com/maps/place/The+Stop%27s+Farmer%27s+Market/data=!4m7!3m6!1s0x882b357ae86cf68f:0xa5869f5d52ecb26!8m2!3d43.6799336!4d-79.4241445!16s%2Fg%2F11pqwyt_n0"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Dufferin Grove Farmers’ Market",
+    "name": "Dufferin Grove Organic Farmers’ Market",
+    "slug": "dufferin-grove-organic-farmers-market",
+    "about": "Established in 2002, this year-round market connects local and predominantly organic farmers and food producers with the surrounding community.",
+    "address": "875 Dufferin Street",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M6H 3K8",
+    "lat": 43.6569279,
+    "lng": -79.433563,
+    "geofence_radius_m": 220,
+    "website": "https://www.dufferingrovemarket.ca/",
+    "phone": null,
+    "email": "info@dufferingrovemarket.ca",
+    "tags": [
+      "produce",
+      "organic",
+      "bakery",
+      "cheese",
+      "meat",
+      "seafood",
+      "honey",
+      "preserves",
+      "prepared-food",
+      "year-round",
+      "accessible"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 4,
+        "opens_at": "15:00",
+        "closes_at": "19:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "At the new Dufferin Grove Clubhouse at the northwest corner of the park"
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.dufferingrovemarket.ca/about/about-the-market/",
+      "https://www.dufferingrovemarket.ca/vendor/",
+      "https://maps.app.goo.gl/XMufqKwfyear9s2R9"
+    ],
+    "gaps": [
+      "phone: no organizer phone was found on the official site"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Sorauren Farmers’ Market",
+    "name": "Sorauren Farmers’ Market",
+    "slug": "sorauren-farmers-market",
+    "about": "This nonprofit farmers’ market has connected the community with sustainable farmers and local food producers since 2008. This record represents the Sorauren Avenue Park floor.",
+    "address": "50 Wabash Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M6R 1N2",
+    "lat": 43.6480468,
+    "lng": -79.4430797,
+    "geofence_radius_m": 220,
+    "website": "https://www.soraurenmarket.com/",
+    "phone": null,
+    "email": null,
+    "tags": [
+      "produce",
+      "organic",
+      "bakery",
+      "cheese",
+      "meat",
+      "seafood",
+      "flowers",
+      "honey",
+      "preserves",
+      "prepared-food",
+      "outdoor",
+      "year-round",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 1,
+        "opens_at": "15:00",
+        "closes_at": "19:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "The current official page lists every Monday at Sorauren Avenue Park, including statutory holidays."
+      }
+    ],
+    "confidence": "inferred",
+    "sources": [
+      "https://www.soraurenmarket.com/",
+      "https://www.soraurenmarket.com/vendor-application-forms",
+      "https://www.soraurenmarket.com/events",
+      "https://soraurenpark.com/about/",
+      "https://maps.app.goo.gl/98GuV73ygAPb5bPi8"
+    ],
+    "gaps": [
+      "Organizer phone and email are not published.",
+      "Older organizer material described an indoor winter move to 128A Sterling Road; the current page instead lists Sorauren Avenue Park every Monday. Reconfirm the floor before winter."
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Leslieville Farmers’ Market",
+    "name": "The Leslieville Farmers’ Market",
+    "slug": "the-leslieville-farmers-market",
+    "about": "The Leslieville Farmers’ Market’s Greenwood Park edition is a weekly outdoor market for local food, sustainable agriculture, small-scale producers and handmade goods.",
+    "address": "150 Greenwood Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M4L 1Y5",
+    "lat": 43.668448,
+    "lng": -79.3292284,
+    "geofence_radius_m": 220,
+    "website": "https://www.leslievillemarket.com/",
+    "phone": "647-381-4555",
+    "email": "alexa@leslievillemarket.com",
+    "tags": [
+      "produce",
+      "bakery",
+      "honey",
+      "preserves",
+      "prepared-food",
+      "coffee",
+      "crafts",
+      "outdoor",
+      "parking",
+      "transit",
+      "accessible",
+      "card-accepted",
+      "family-friendly",
+      "seasonal"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 0,
+        "opens_at": "09:00",
+        "closes_at": "14:00",
+        "season_start": "05-10",
+        "season_end": "10-25",
+        "notes": "2026 outdoor season at Greenwood Park."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.leslievillemarket.com/",
+      "https://www.leslievillemarket.com/greenwood",
+      "https://www.leslievillemarket.com/vendorapplication",
+      "https://maps.app.goo.gl/9TeAeYK4QMQ82WVy5"
+    ],
+    "gaps": [
+      "The same organizer runs indoor spring and late-fall editions at East End Food Hub, 1470 Gerrard Street East; those schedules are excluded because this record has the Greenwood Park pin."
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Withrow Park Farmers’ Market",
+    "name": "Withrow Park Farmers’ Market",
+    "slug": "withrow-park-farmers-market",
+    "about": "This nonprofit seasonal market connects local residents with Ontario farmers, food producers and small businesses in the northeast corner of Withrow Park.",
+    "address": "725 Logan Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M4K 3B9",
+    "lat": 43.6763536,
+    "lng": -79.3474728,
+    "geofence_radius_m": 220,
+    "website": "https://withrowmarket.ca/",
+    "phone": "647-852-9275",
+    "email": "manager@withrowmarket.ca",
+    "tags": [
+      "produce",
+      "bakery",
+      "meat",
+      "flowers",
+      "prepared-food",
+      "outdoor",
+      "seasonal",
+      "accessible",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 6,
+        "opens_at": "09:00",
+        "closes_at": "13:00",
+        "season_start": "05-30",
+        "season_end": "10-17",
+        "notes": "2026 season; rain or shine"
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://withrowmarket.ca/",
+      "https://withrowmarket.ca/wp-content/uploads/2026/02/WPFM-Vendor-Handbook-2026.pdf",
+      "https://maps.app.goo.gl/Lu6H6G2eiQJRsEs59"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Trinity Bellwoods Farmers’ Market",
+    "name": "Trinity Bellwoods Farmers’ Market",
+    "slug": "trinity-bellwoods-farmers-market",
+    "about": "A farmer-focused market supporting access to local, sustainable, naturally grown and certified organic agriculture. It operates seasonally in the northwest section of Trinity Bellwoods Park.",
+    "address": "1053 Dundas Street West",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M6J 1X1",
+    "lat": 43.6492554,
+    "lng": -79.4175195,
+    "geofence_radius_m": 220,
+    "website": "https://www.tbfm.ca/",
+    "phone": null,
+    "email": "hello@tbfm.ca",
+    "tags": [
+      "produce",
+      "organic",
+      "prepared-food",
+      "outdoor",
+      "seasonal",
+      "transit",
+      "accessible",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 2,
+        "opens_at": "15:00",
+        "closes_at": "19:00",
+        "season_start": "05-05",
+        "season_end": "10-27",
+        "notes": "2026 season; rain or shine."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.tbfm.ca/",
+      "https://www.tbfm.ca/market-info/",
+      "https://www.tbfm.ca/contact-us/",
+      "https://maps.app.goo.gl/eboxGa8DdG6shCNc6"
+    ],
+    "gaps": [
+      "phone"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "The Junction Farmers Market",
+    "name": "The Junction Farmers Market",
+    "slug": "the-junction-farmers-market",
+    "about": "An independent nonprofit market providing sustainably produced fresh food while supporting local growers, producers and community food access.",
+    "address": "275 Keele Street",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M6P 2K5",
+    "lat": 43.6622321,
+    "lng": -79.4625,
+    "geofence_radius_m": 220,
+    "website": "https://junctionmarket.ca/",
+    "phone": null,
+    "email": "info@junctionmarket.ca",
+    "tags": [
+      "produce",
+      "organic",
+      "bakery",
+      "cheese",
+      "meat",
+      "flowers",
+      "honey",
+      "prepared-food",
+      "coffee",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 6,
+        "opens_at": "09:00",
+        "closes_at": "13:00",
+        "season_start": "05-16",
+        "season_end": "10-31",
+        "notes": "2026 season in Baird Park."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://junctionmarket.ca/",
+      "https://junctionmarket.ca/vendor-info/",
+      "https://junctionmarket.ca/vendors/",
+      "https://junctionmarket.ca/contact-us/",
+      "https://maps.app.goo.gl/aBPq3sgS6nuZ75Ga8"
+    ],
+    "gaps": [
+      "phone"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "St. Lawrence Saturday Farmers’ Market",
+    "name": "St. Lawrence Farmers’ Market",
+    "slug": "st-lawrence-farmers-market",
+    "about": "The historic weekly farmers’ market operates inside St. Lawrence Market North. The market has operated in the St. Lawrence neighbourhood since 1803.",
+    "address": "92 Front Street East",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M5E 1C3",
+    "lat": 43.6495154,
+    "lng": -79.3719386,
+    "geofence_radius_m": 350,
+    "website": "https://www.stlawrencemarket.com/",
+    "phone": "416-392-7219",
+    "email": "stlawrencemarket@toronto.ca",
+    "tags": [
+      "produce",
+      "organic",
+      "bakery",
+      "cheese",
+      "meat",
+      "seafood",
+      "flowers",
+      "honey",
+      "preserves",
+      "prepared-food",
+      "coffee",
+      "indoor",
+      "year-round",
+      "parking",
+      "transit",
+      "accessible"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 6,
+        "opens_at": "05:00",
+        "closes_at": "15:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "Year-round; statutory-holiday substitutions or closures may apply."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.stlawrencemarket.com/pages/hours_parking/",
+      "https://www.stlawrencemarket.com/rental_form/1782586861_461373.pdf",
+      "https://www.stlawrencemarket.com/events/event_detail/833/Doors%20Open%20at%20St.%20Lawrence%20Market%20North",
+      "https://www.google.com/maps/place/St.+Lawrence+Market+North/data=!4m7!3m6!1s0x89d4cb00028e48b5:0x789e0d66bb38f7ea!8m2!3d43.6495154!4d-79.3719386!16s%2Fg%2F11wp_vhx_h"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Underpass Park Farmers’ Market",
+    "name": "Underpass Park Farmers’ Market",
+    "slug": "underpass-park-farmers-market",
+    "about": "A seasonal, nonprofit community farmers’ market operating in Underpass Park. Its current offerings include produce, baked goods and prepared food.",
+    "address": "29 Lower River Street",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": null,
+    "lat": 43.6555674,
+    "lng": -79.3549712,
+    "geofence_radius_m": 220,
+    "website": "https://underpassparkmarket.com/",
+    "phone": null,
+    "email": "manager.upfm@gmail.com",
+    "tags": [
+      "produce",
+      "bakery",
+      "prepared-food",
+      "outdoor",
+      "seasonal",
+      "card-accepted"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 4,
+        "opens_at": "16:00",
+        "closes_at": "19:30",
+        "season_start": "05-14",
+        "season_end": "10-15",
+        "notes": "2026 season; rain or shine."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://underpassparkmarket.com/upfm-2/",
+      "https://underpassparkmarket.com/contact-info/",
+      "https://maps.app.goo.gl/8suhwvUJfhgN4gLm6"
+    ],
+    "gaps": [
+      "postal_code",
+      "phone"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "East Lynn Park Farmers’ Market",
+    "name": "East Lynn Park Farmers’ Market",
+    "slug": "east-lynn-park-farmers-market",
+    "about": "A Verified Local Market operated jointly by Farmers’ Markets Ontario and Danforth East Community Association volunteers. Farmers sell what they grow, supplemented by specialty food and drink vendors.",
+    "address": "1949 Danforth Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M4C 1J4",
+    "lat": 43.6841988,
+    "lng": -79.315742,
+    "geofence_radius_m": 220,
+    "website": "https://www.eastlynnparkfarmersmarket.ca/",
+    "phone": "613-475-4769",
+    "email": "teamfmo@farmersmarketsontario.com",
+    "tags": [
+      "produce",
+      "bakery",
+      "cheese",
+      "meat",
+      "seafood",
+      "honey",
+      "prepared-food",
+      "outdoor",
+      "seasonal",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 4,
+        "opens_at": "15:00",
+        "closes_at": "19:00",
+        "season_start": "06-04",
+        "season_end": "10-08",
+        "notes": "2026 season."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.eastlynnparkfarmersmarket.ca/",
+      "https://www.farmersmarketsontario.com/view-market/?market_id=east_lynn_park_farmers_market",
+      "https://maps.app.goo.gl/SqEbauroEQ8tNG4u8"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Allan Gardens Farmers’ Market",
+    "name": "Allan Gardens Farmers’ Market",
+    "slug": "allan-gardens-farmers-market",
+    "about": "A year-round market connecting local farmers, food producers and artisan makers directly with consumers. It is operated by the nonprofit Friends of Allan Gardens at the Children’s Conservatory and Teaching Garden.",
+    "address": "19 Horticultural Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": null,
+    "lat": 43.6619028,
+    "lng": -79.3754708,
+    "geofence_radius_m": 220,
+    "website": "https://www.friendsofallangardens.ca/saturday-farmers-market",
+    "phone": null,
+    "email": "info@friendsofallangardens.ca",
+    "tags": [
+      "produce",
+      "bakery",
+      "meat",
+      "seafood",
+      "flowers",
+      "honey",
+      "prepared-food",
+      "crafts",
+      "indoor",
+      "outdoor",
+      "year-round",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 6,
+        "opens_at": "10:00",
+        "closes_at": "14:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "Year-round."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.friendsofallangardens.ca/saturday-farmers-market",
+      "https://www.friendsofallangardens.ca/the-childrens-conservatory",
+      "https://www.google.com/maps/place/Allan+Gardens+Farmers%E2%80%99+Market/data=!4m7!3m6!1s0x89d4cb003862508f:0xc6c9f819cccd1429!8m2!3d43.6619028!4d-79.3754708!16s%2Fg%2F11m6j_f85s"
+    ],
+    "gaps": [
+      "postal_code",
+      "phone"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Cabbagetown Farmers’ Market",
+    "name": "Cabbagetown Farmers’ Market",
+    "slug": "cabbagetown-farmers-market",
+    "about": "A seasonal park market bringing together more than 30 southern Ontario vendors selling produce, artisan goods and street food. It operates in Riverdale Park West outside the gates of Riverdale Farm.",
+    "address": "191 Winchester Street",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M4X 1V4",
+    "lat": 43.66695,
+    "lng": -79.36271,
+    "geofence_radius_m": 220,
+    "website": "https://www.cabbagetownmarket.ca/",
+    "phone": null,
+    "email": "info@cabbagetownmarket.ca",
+    "tags": [
+      "produce",
+      "organic",
+      "bakery",
+      "cheese",
+      "seafood",
+      "honey",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 2,
+        "opens_at": "15:00",
+        "closes_at": "19:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "Season runs May–October; the precise 2026 first and last dates are not reliably published on the official page."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.cabbagetownmarket.ca/the-market",
+      "https://www.cabbagetownmarket.ca/get-in-touch",
+      "https://maps.app.goo.gl/Z2EshX9rz2r6As737"
+    ],
+    "gaps": [
+      "phone",
+      "season_start",
+      "season_end",
+      "The official page's “Next market: May 20th” label does not fall on a Tuesday in 2026, so it was not used as the opening date."
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "East York Farmers’ Market",
+    "name": "East York Farmers’ Market",
+    "slug": "east-york-farmers-market",
+    "about": "A seasonal market at the East York Civic Centre offering Ontario produce, honey, preserves, smoked meats, cheese, baking and other locally made products.",
+    "address": "850 Coxwell Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M4C 5R1",
+    "lat": 43.6916609,
+    "lng": -79.3286438,
+    "geofence_radius_m": 250,
+    "website": "https://www.facebook.com/EastYorkFarmersMarket/",
+    "phone": "519-955-1434",
+    "email": "eastyorkmarket26@gmail.com",
+    "tags": [
+      "produce",
+      "bakery",
+      "cheese",
+      "meat",
+      "honey",
+      "preserves",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 2,
+        "opens_at": "08:00",
+        "closes_at": "14:00",
+        "season_start": "05-12",
+        "season_end": "10-27",
+        "notes": "2026 season at the East York Civic Centre."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.councillorpaulafletcher.ca/2026_farmers_markets",
+      "https://www.farmersmarketsontario.com/view-market/?market_id=east_york_farmers_market",
+      "https://maps.app.goo.gl/BdoJPoR25WjnVzy79"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Eglinton Way Farmers’ Market",
+    "name": "Eglinton Way BIA Farmers’ Market",
+    "slug": "eglinton-way-bia-farmers-market",
+    "about": "A weekly community market supporting local farms, businesses and food security. It features fresh goods, prepared food, handmade crafts, live music and children’s activities.",
+    "address": "125 Burnaby Boulevard",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": null,
+    "lat": 43.7043176,
+    "lng": -79.4126572,
+    "geofence_radius_m": 220,
+    "website": "https://www.theeglintonway.com/farmersmarket",
+    "phone": "647-376-3294",
+    "email": "farmersmarket@theeglintonway.com",
+    "tags": [
+      "produce",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "parking",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 0,
+        "opens_at": "08:00",
+        "closes_at": "13:00",
+        "season_start": "06-07",
+        "season_end": "10-25",
+        "notes": "2026 season; rain or shine."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.theeglintonway.com/farmersmarket",
+      "https://www.theeglintonway.com/_files/ugd/a2777e_59a4e92b844c4bb8a14e891f8e8b5967.pdf",
+      "https://www.google.com/maps/place/Eglinton+Way+BIA+Farmers%E2%80%99+Market/@43.7043176,-79.4126572,17z/data=!3m1!4b1!4m6!3m5!1s0x882b3336793a27e5:0xce4ecc6f5ffebde4!8m2!3d43.7043176!4d-79.4126572!16s%2Fg%2F11jj48grj0"
+    ],
+    "gaps": [
+      "postal_code"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Humber Bay Shores Farmers Market",
+    "name": "Humber Bay Shores Farmers Market",
+    "slug": "humber-bay-shores-farmers-market",
+    "about": "A seasonal waterfront market organized by the Humber Bay Shores Condominium Association. Ontario farmers and producers offer produce, meat, cheese, flowers, preserves, baking and prepared food.",
+    "address": "2195 Lake Shore Boulevard West",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M8V 3X7",
+    "lat": 43.6202314,
+    "lng": -79.4809687,
+    "geofence_radius_m": 250,
+    "website": "https://hbsca.ca/events/humber-bay-shores-farmers-market/",
+    "phone": null,
+    "email": "zweingarten@gmail.com",
+    "tags": [
+      "produce",
+      "organic",
+      "bakery",
+      "cheese",
+      "meat",
+      "flowers",
+      "honey",
+      "preserves",
+      "prepared-food",
+      "coffee",
+      "outdoor",
+      "seasonal",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 6,
+        "opens_at": "09:00",
+        "closes_at": "14:00",
+        "season_start": "05-30",
+        "season_end": "10-10",
+        "notes": "2026 season in Humber Bay Park West."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://hbsca.ca/events/humber-bay-shores-farmers-market/",
+      "https://hbsca.ca/events/",
+      "https://www.farmersmarketsontario.com/view-market/?market_id=humber_bay_shores_farmers_market",
+      "https://www.laprimaverafarms.com/farmers-markets.html",
+      "https://www.google.com/maps/place/Humber+Bay+Shores+Farmers'+Market/@43.6202314,-79.4809687,17z/data=!3m1!4b1!4m6!3m5!1s0x882b360558af0a13:0x126dd22cab8d0abe!8m2!3d43.6202314!4d-79.4809687!16s%2Fg%2F11dzdcdfxr"
+    ],
+    "gaps": [
+      "phone"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Scarborough Farmers’ Market",
+    "name": "Scarborough Farmers’ Market",
+    "slug": "scarborough-farmers-market",
+    "about": "A seasonal market providing affordable, culturally appropriate Ontario produce and artisan products. It operates in Cynthia Lai Park, formerly known as Rosebank Park.",
+    "address": "1051 Progress Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M1B 5Z6",
+    "lat": 43.7929706,
+    "lng": -79.2334845,
+    "geofence_radius_m": 220,
+    "website": "https://www.scarboroughfarmersmarket.ca/",
+    "phone": null,
+    "email": "scarboroughfarmersmarket@gmail.com",
+    "tags": [
+      "produce",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 2,
+        "opens_at": "15:30",
+        "closes_at": "19:30",
+        "season_start": "06-02",
+        "season_end": "10-06",
+        "notes": "2026 season at Cynthia Lai Park, formerly Rosebank Park."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.scarboroughfarmersmarket.ca/",
+      "https://www.volunteertoronto.ca/networking/apply_now.aspx?id=1096378&view=2",
+      "https://myhighlandcreek.org/event/scarborough-farmers-market/",
+      "https://www.toronto.ca/explore-enjoy/parks-recreation/places-spaces/parks-and-recreation-facilities/playground-listings/",
+      "https://www.google.com/maps/place/Scarborough+Farmers'+Market+-+Rosebank+Park/@43.7929706,-79.2334845,17z/data=!3m1!4b1!4m6!3m5!1s0x89d4d1bf66ffd119:0xe0c1238420296f0e!8m2!3d43.7929706!4d-79.2334845!16s%2Fg%2F11qgb28yxx"
+    ],
+    "gaps": [
+      "phone"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "North York Farmers’ Market",
+    "name": "North York Farmers’ Market",
+    "slug": "north-york-farmers-market",
+    "about": "A longstanding seasonal market bringing Ontario produce and farm products to Willowdale. Products include fruits, vegetables, honey, flowers, baking, cheese and cured meat.",
+    "address": "5100 Yonge Street",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M2N 5V7",
+    "lat": 43.7679485,
+    "lng": -79.4132948,
+    "geofence_radius_m": 250,
+    "website": "https://northyorkfarmersmarket.ca/",
+    "phone": null,
+    "email": "info@northyorkfarmersmarket.ca",
+    "tags": [
+      "produce",
+      "bakery",
+      "cheese",
+      "meat",
+      "flowers",
+      "honey",
+      "preserves",
+      "outdoor",
+      "seasonal",
+      "transit",
+      "accessible"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 4,
+        "opens_at": "08:00",
+        "closes_at": "14:00",
+        "season_start": "05-28",
+        "season_end": "10-08",
+        "notes": "2026 season at Mel Lastman Square."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://northyorkfarmersmarket.ca/",
+      "https://mlsquare.ca/events/nyfarmersmarket/",
+      "https://nowtoronto.com/event/north-york-farmers-market/",
+      "https://www.google.com/maps/place/North+York+Farmers'+Market/@43.7679485,-79.4132948,17z/data=!3m1!4b1!4m6!3m5!1s0x882b2d6fc5cd0957:0xb692058cf8c0533e!8m2!3d43.7679485!4d-79.4132948!16s%2Fg%2F11b7xmh569"
+    ],
+    "gaps": [
+      "phone"
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "The Farmers Market at SickKids",
+    "name": "SickKids Market",
+    "slug": "sickkids-market",
+    "about": "An Appletree market serving hospital families, staff and the surrounding neighbourhood with farm-fresh products and lunchtime options. This record represents the weekly outdoor market on the hospital’s University Avenue front driveway.",
+    "address": "555 University Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M5G 1X8",
+    "lat": 43.6569299,
+    "lng": -79.3873858,
+    "geofence_radius_m": 250,
+    "website": "https://www.appletreemarkets.ca/markets",
+    "phone": "416-899-1990",
+    "email": null,
+    "tags": [
+      "produce",
+      "bakery",
+      "cheese",
+      "honey",
+      "prepared-food",
+      "outdoor",
+      "seasonal",
+      "transit",
+      "accessible",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 2,
+        "opens_at": "10:00",
+        "closes_at": "14:00",
+        "season_start": "05-05",
+        "season_end": "10-27",
+        "notes": "2026 weekly outdoor season on the hospital’s University Avenue front driveway."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.appletreemarkets.ca/markets",
+      "https://www.appletreemarkets.ca/appletreegroup",
+      "https://www.sickkids.ca/en/about/contact/",
+      "https://www.sickkids.ca/en/patients-visitors/planning-visit/map-directions/",
+      "https://www.google.com/maps/search/?api=1&query=43.6569299,-79.3873858"
+    ],
+    "gaps": [
+      "Organizer email is not published.",
+      "The biweekly indoor winter mini-market is excluded because a weekly schedule row cannot encode alternate Tuesdays."
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Davisville Village Market",
+    "name": "Davisville Village Market",
+    "slug": "davisville-village-market",
+    "about": "A weekly Appletree community market in June Rowlands Park featuring rural farmers, local producers, artisans and prepared foods. The market operates outdoors on Tuesday afternoons.",
+    "address": "220 Davisville Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": null,
+    "lat": 43.70012,
+    "lng": -79.3892438,
+    "geofence_radius_m": 220,
+    "website": "https://www.appletreemarkets.ca/markets",
+    "phone": "416-899-1990",
+    "email": null,
+    "tags": [
+      "produce",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "transit",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 2,
+        "opens_at": "15:00",
+        "closes_at": "19:00",
+        "season_start": "05-12",
+        "season_end": "10-06",
+        "notes": "2026 outdoor season in June Rowlands Park."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.appletreemarkets.ca/markets",
+      "https://www.appletreemarkets.ca/appletreegroup",
+      "https://www.toronto.ca/wp-content/uploads/2021/09/95ae-PollinateTOPre-Approved-City-Parks-List.pdf",
+      "https://yongeeglintoncc.com/events/farmers-market-2026-07-07-2026-07-14/",
+      "https://www.google.com/maps/search/?api=1&query=43.70012,-79.3892438"
+    ],
+    "gaps": [
+      "Organizer email not published.",
+      "Postal code omitted because public listings for the park conflict."
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Bloor-Borden Farmers’ Market",
+    "name": "Bloor.Borden Farmers’ Market",
+    "slug": "bloor-borden-farmers-market",
+    "about": "A volunteer-run, Farmers’ Markets Ontario partner market offering local produce, meat, dairy, seafood, baked goods and prepared foods. It operates rain or shine in the Green P lot south of Bloor Street.",
+    "address": "300 Borden Street",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M5S 2N5",
+    "lat": 43.6650982,
+    "lng": -79.4087268,
+    "geofence_radius_m": 180,
+    "website": "https://bloorborden.com/",
+    "phone": "613-475-4769",
+    "email": "bloorbordenmarket@gmail.com",
+    "tags": [
+      "produce",
+      "organic",
+      "bakery",
+      "cheese",
+      "meat",
+      "seafood",
+      "honey",
+      "preserves",
+      "prepared-food",
+      "outdoor",
+      "seasonal",
+      "parking",
+      "transit",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 3,
+        "opens_at": "15:00",
+        "closes_at": "19:00",
+        "season_start": "06-03",
+        "season_end": "10-21",
+        "notes": "2026 season; rain or shine."
+      }
+    ],
+    "confidence": "inferred",
+    "sources": [
+      "https://bloorborden.com/",
+      "https://www.farmersmarketsontario.com/view-market/?market_id=bloorborden_farmers_market",
+      "https://blog.parkindigo.ca/2026/07/13/23-best-farmers-markets-across-canada-to-visit-this-summer/",
+      "https://www.google.com/maps/search/?api=1&query=43.6650982,-79.4087268"
+    ],
+    "gaps": [
+      "The official market site still displays the 2025 season. The 2026 dates come from a current dated guide and current operating listings."
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Annette Village Farmers’ Market",
+    "name": "Annette Village Farmers’ Market",
+    "slug": "annette-village-farmers-market",
+    "about": "A weekly neighbourhood market bringing together local farmers, food producers, artists, crafters and makers. It includes live music, children’s activities and seasonal community events.",
+    "address": "680 Annette Street",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M6S 2C5",
+    "lat": 43.6591747,
+    "lng": -79.4848367,
+    "geofence_radius_m": 180,
+    "website": "https://www.annettevillagemarket.com/",
+    "phone": null,
+    "email": "annettevillagefarmersmrkt@gmail.com",
+    "tags": [
+      "produce",
+      "organic",
+      "bakery",
+      "cheese",
+      "meat",
+      "flowers",
+      "honey",
+      "preserves",
+      "prepared-food",
+      "coffee",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "parking",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 3,
+        "opens_at": "15:00",
+        "closes_at": "19:00",
+        "season_start": "06-03",
+        "season_end": "10-07",
+        "notes": "2026 season in the Runnymede Presbyterian Church parking lot; rain or shine."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.annettevillagemarket.com/about",
+      "https://www.annettevillagemarket.com/contact",
+      "https://www.annettevillagemarket.com/vendors",
+      "https://www.google.com/maps/search/?api=1&query=43.6591747,-79.4848367"
+    ],
+    "gaps": [
+      "Organizer phone not published."
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Montgomery’s Inn Farmers’ Market",
+    "name": "Montgomery’s Inn Farmers’ Market",
+    "slug": "montgomerys-inn-farmers-market",
+    "about": "A City of Toronto market connecting Montgomery’s Inn’s agricultural history with local farmers and small food producers. Offerings include seasonal produce, baked goods, prepared foods and bread baked in the Inn’s wood-burning oven.",
+    "address": "4709 Dundas Street West",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M9A 1A8",
+    "lat": 43.6517556,
+    "lng": -79.5257514,
+    "geofence_radius_m": 220,
+    "website": "https://www.toronto.ca/explore-enjoy/history-art-culture/museums/montgomerys-inn/?accordion=farmers-market",
+    "phone": "416-394-8113",
+    "email": "montinn@toronto.ca",
+    "tags": [
+      "produce",
+      "bakery",
+      "prepared-food",
+      "indoor",
+      "outdoor",
+      "year-round",
+      "parking",
+      "transit",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 3,
+        "opens_at": "14:00",
+        "closes_at": "18:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "Year-round weekly market. The City currently lists the market as outdoors; its location may move seasonally."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.toronto.ca/explore-enjoy/history-art-culture/museums/montgomerys-inn/?accordion=farmers-market",
+      "https://www.toronto.ca/wp-content/uploads/2019/12/8df1-edc-cultural-loops-guide-etobicoke-2019-web.pdf",
+      "https://www.google.com/maps/search/?api=1&query=43.6517556,-79.5257514"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Weston Village Farmers’ Market",
+    "name": "Weston Village Farmers’ Market",
+    "slug": "weston-village-farmers-market",
+    "about": "A long-running community market operated by the Weston Village BIA. Its 2026 season features local produce, prepared foods, artisan goods, entertainment and free children’s activities.",
+    "address": "34 John Street",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M9N 0B2",
+    "lat": 43.7020223,
+    "lng": -79.5174008,
+    "geofence_radius_m": 220,
+    "website": "https://westonvillagebia.com/",
+    "phone": "416-249-0691",
+    "email": "admin@westonvillagebia.com",
+    "tags": [
+      "produce",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "transit",
+      "accessible",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 4,
+        "opens_at": "14:00",
+        "closes_at": "19:00",
+        "season_start": "06-04",
+        "season_end": "10-29",
+        "notes": "The market changed to Thursday afternoons for the 2026 season."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.toronto-bia.com/event/2026-season-opener-of-the-weston-farmers-market-weston-village/",
+      "https://rivertorail.ca/early-summer-updates-2026/",
+      "https://www.toronto.ca/business-economy/business-operation-growth/business-improvement-areas/bia-list/bia-list-q-y/",
+      "https://www.toronto-bia.com/wp-content/uploads/2026/01/WVBIA-Farmers-Market-Event-Management-RFP-2025-1-1-2.pdf",
+      "https://www.google.com/maps/search/?api=1&query=43.7020223,-79.5174008"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Flemo Farmers’ Market",
+    "name": "Flemo Farmers’ Market",
+    "slug": "flemo-farmers-market",
+    "about": "A weekly market at Flemo Farm selling culturally diverse produce grown by Flemingdon Park community farmers. Local residents and organizations may also offer prepared food, crafts and community activities.",
+    "address": "150 Grenoble Drive",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M3C 1B9",
+    "lat": 43.7135431,
+    "lng": -79.3264436,
+    "geofence_radius_m": 220,
+    "website": "https://flemofarm.ca/",
+    "phone": "416-230-6984",
+    "email": "flemofarm@gmail.com",
+    "tags": [
+      "produce",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "transit",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 4,
+        "opens_at": "15:00",
+        "closes_at": "18:00",
+        "season_start": "06-25",
+        "season_end": "10-15",
+        "notes": "2026 weekly market at Flemo Farm."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://flemofarm.ca/",
+      "https://flemofarm.ca/contact-us/",
+      "https://flemofarm.ca/about-the-project/",
+      "https://www.google.com/maps/search/?api=1&query=43.7135431,-79.3264436"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Malvern Farmers’ Market",
+    "name": "Malvern Urban Farm Farmers Market",
+    "slug": "malvern-urban-farm-farmers-market",
+    "about": "A weekly public market organized by Malvern Family Resource Centre. Community farmers sell produce grown at Malvern Urban Farm, alongside baked goods, beverages, hot food and other local vendors.",
+    "address": "90 Littles Road",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M1B 5E2",
+    "lat": 43.818474,
+    "lng": -79.2054483,
+    "geofence_radius_m": 220,
+    "website": "https://www.mfrc.org/urban-agriculture-and-food-programs",
+    "phone": "416-284-4184 ext. 221",
+    "email": "cperttula@mfrc.org",
+    "tags": [
+      "produce",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 3,
+        "opens_at": "16:00",
+        "closes_at": "19:00",
+        "season_start": "06-10",
+        "season_end": "10-14",
+        "notes": "2026 season; rain or shine; no registration required to shop."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.mfrc.org/urban-agriculture-and-food-programs",
+      "https://www.google.com/maps/search/?api=1&query=43.818474,-79.2054483"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Courtyard Farmers’ Market",
+    "name": "Courtyard Farmers’ Market",
+    "slug": "courtyard-farmers-market",
+    "about": "A weekly neighbourhood market offering Ontario-grown produce, culturally appropriate foods and artisanal products in Robertson Parkette.",
+    "address": "1549 Danforth Avenue",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M4J 1N8",
+    "lat": 43.6830539,
+    "lng": -79.3240825,
+    "geofence_radius_m": 200,
+    "website": "https://www.courtyardfarmersmkt.ca/",
+    "phone": "647-835-4064",
+    "email": "jmforde709@gmail.com",
+    "tags": [
+      "produce",
+      "bakery",
+      "preserves",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 3,
+        "opens_at": "15:30",
+        "closes_at": "19:30",
+        "season_start": "06-03",
+        "season_end": "10-07",
+        "notes": "2026 season."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://www.councillorpaulafletcher.ca/2026_farmers_markets",
+      "https://www.volunteertoronto.ca/networking/apply_now.aspx?id=1096378&view=2",
+      "https://beachmetro.com/event/courtyard-farmers-market-8/",
+      "https://www.google.com/maps/search/?api=1&query=43.6830539%2C-79.3240825"
+    ],
+    "gaps": [],
+    "replaces": null
+  },
+  {
+    "source_name": "Afro-Caribbean Farmers’ Market",
+    "name": "Afro-Caribbean Farmers’ Market",
+    "slug": "afro-caribbean-farmers-market",
+    "about": "This culturally specific market connects Black farmers, growers and food businesses with the Little Jamaica community. Its offerings include culturally appropriate produce, baked goods, bread, juices, preserves, sauces and artisan products.",
+    "address": "1815 Eglinton Avenue West",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M6E 2H6",
+    "lat": 43.69558,
+    "lng": -79.449921,
+    "geofence_radius_m": 220,
+    "website": "https://afrocaribbeanfarmersmarket.com/",
+    "phone": null,
+    "email": null,
+    "tags": [
+      "produce",
+      "bakery",
+      "preserves",
+      "prepared-food",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "transit",
+      "accessible",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 0,
+        "opens_at": "11:00",
+        "closes_at": "16:00",
+        "season_start": "07-05",
+        "season_end": "10-04",
+        "notes": "2026 season at the outdoor plaza beside Fairbank Station."
+      }
+    ],
+    "confidence": "inferred",
+    "sources": [
+      "https://afrocaribbeanfarmersmarket.com/",
+      "https://afrocaribbeanfarmersmarket.com/about",
+      "https://www.shedoesthecity.com/every-farmers-market-you-can-visit-in-toronto-this-summer/",
+      "https://www.ttc.ca/subway-stations/fairbank-station",
+      "https://www.google.com/maps/search/?api=1&query=43.69558%2C-79.449921"
+    ],
+    "gaps": [
+      "Organizer phone",
+      "Organizer email",
+      "The official market site publishes the dates and weekday but not the hours; 11:00–16:00 is from a current 2026 market guide."
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Etobicoke Civic Centre Farmers’ Market",
+    "name": "Etobicoke Civic Centre Farmers’ Market",
+    "slug": "etobicoke-civic-centre-farmers-market",
+    "about": "A longstanding seasonal market held in the front parking area of Etobicoke Civic Centre. Current listings describe Ontario produce alongside baked goods, cheese, flowers and crafts.",
+    "address": "399 The West Mall",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M9C 2Y2",
+    "lat": 43.64373,
+    "lng": -79.56638,
+    "geofence_radius_m": 300,
+    "website": "https://www.toronto.ca/services-payments/venues-facilities-bookings/booking-city-facilities/civic-centres/",
+    "phone": null,
+    "email": null,
+    "tags": [
+      "produce",
+      "bakery",
+      "cheese",
+      "flowers",
+      "crafts",
+      "outdoor",
+      "seasonal",
+      "parking",
+      "accessible",
+      "family-friendly"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 6,
+        "opens_at": "08:00",
+        "closes_at": "14:00",
+        "season_start": "06-06",
+        "season_end": "10-31",
+        "notes": "2026 dates are from a current event listing; the City has not published a dedicated 2026 market page."
+      }
+    ],
+    "confidence": "inferred",
+    "sources": [
+      "https://www.toronto.ca/services-payments/venues-facilities-bookings/booking-city-facilities/civic-centres/",
+      "https://vendorsmap.com/events/27084",
+      "https://www.loc8nearme.com/ontario/etobicoke/etobicoke-civic-centre-farmers-market/9552169/",
+      "https://www.google.com/maps/search/?api=1&query=43.64373%2C-79.56638"
+    ],
+    "gaps": [
+      "Dedicated official 2026 market page",
+      "Organizer phone",
+      "Organizer email",
+      "The pin is placed on the front parking area from the mapped site layout because the market has no separate place pin."
+    ],
+    "replaces": null
+  },
+  {
+    "source_name": "Regenesis YUM! Market at York University",
+    "name": "YUM! Market",
+    "slug": "yum-market",
+    "about": "Regenesis operates this weekly York University market to improve access to fresh, locally sourced food and sustainable products.",
+    "address": "88 The Pond Road",
+    "city": "Toronto",
+    "province": "ON",
+    "postal_code": "M3J 2S5",
+    "lat": 43.7718935,
+    "lng": -79.5012108,
+    "geofence_radius_m": 180,
+    "website": "https://regenesis.eco/en/yumarket",
+    "phone": null,
+    "email": null,
+    "tags": [
+      "produce",
+      "organic",
+      "prepared-food",
+      "crafts",
+      "indoor",
+      "transit",
+      "accessible"
+    ],
+    "featured": false,
+    "schedules": [
+      {
+        "weekday": 3,
+        "opens_at": "11:00",
+        "closes_at": "16:00",
+        "season_start": null,
+        "season_end": null,
+        "notes": "Current York University page lists a weekly Wednesday market; season dates are not published."
+      }
+    ],
+    "confidence": "confirmed",
+    "sources": [
+      "https://regenesis.eco/en/yumarket",
+      "https://students.yorku.ca/sustainability-race",
+      "https://students.yorku.ca/food",
+      "https://www.google.com/maps/place/Victor+Phillip+Dahdaleh+Building/@43.7718935,-79.5012108,17z"
+    ],
+    "gaps": [
+      "Current season start and end dates are not published.",
+      "A recent Regenesis-associated LinkedIn post says 10:00–16:00; the official York University page says 11:00–16:00, which was used.",
+      "Current market-specific phone and email are not published.",
+      "Pin is the host building; the precise table position inside the building is not published."
+    ],
+    "replaces": null
+  }
+]
