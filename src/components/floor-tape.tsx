@@ -55,7 +55,7 @@ function TapeCard({ item, stalls }: { item: FloorItem; stalls: StallRef[] }) {
           {item.tags.map((tag) => (
             <li
               key={tag}
-              className="rounded-md bg-foreground/90 px-2 py-0.5 text-sm text-receipt"
+              className="rounded-none bg-foreground/90 px-2 py-0.5 text-sm text-receipt stall-chip-sm"
             >
               {tag}
             </li>

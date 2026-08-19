@@ -30,7 +30,7 @@ export function SearchForm({
         <select
           name="weekday"
           defaultValue={defaults?.weekday ?? ""}
-          className="h-8 rounded-lg border border-input bg-card px-2.5 text-sm"
+          className="h-8 rounded-none border border-input bg-card px-2.5 text-sm"
         >
           <option value="">Any day</option>
           {WEEKDAYS.map((day, i) => (
@@ -42,7 +42,7 @@ export function SearchForm({
         <select
           name="setup"
           defaultValue={defaults?.setup ?? ""}
-          className="h-8 rounded-lg border border-input bg-card px-2.5 text-sm"
+          className="h-8 rounded-none border border-input bg-card px-2.5 text-sm"
         >
           <option value="">Indoor or outdoor</option>
           {FIND_SETUP.map((tag) => (
@@ -69,7 +69,7 @@ export function SearchForm({
         {PRODUCT_TAGS.map((tag) => (
           <label
             key={tag}
-            className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-card px-2.5 text-sm"
+            className="inline-flex h-8 cursor-pointer items-center gap-1.5 stall-chip-sm border border-input bg-card px-2.5 text-sm"
           >
             <input
               type="checkbox"

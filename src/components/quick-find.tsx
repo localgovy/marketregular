@@ -26,9 +26,9 @@ function weekdayInToronto() {
 }
 
 const chipIdle =
-  "inline-flex h-10 items-center rounded-md border border-primary-foreground/30 px-3 text-base text-primary-foreground hover:bg-primary-foreground/10";
+  "stall-chip inline-flex h-10 items-center border-0 px-3 text-base text-primary-foreground shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--primary-foreground)_32%,transparent)] hover:bg-primary-foreground/10";
 const chipOn =
-  "inline-flex h-10 items-center rounded-md bg-card px-3 text-base font-medium text-primary hover:bg-card/90";
+  "stall-chip inline-flex h-10 items-center bg-card px-3 text-base font-medium text-primary hover:bg-card/90";
 
 function ToggleChip({
   pressed,
@@ -43,7 +43,7 @@ function ToggleChip({
 }) {
   const selected =
     tone === "open"
-      ? "inline-flex h-10 items-center rounded-md bg-ticket px-3 text-base font-medium text-receipt hover:bg-ticket/90"
+      ? "stall-chip inline-flex h-10 items-center bg-ticket px-3 text-base font-medium text-receipt hover:bg-ticket/90"
       : chipOn;
   return (
     <button
@@ -130,7 +130,7 @@ export function QuickFind({ markets }: { markets: Market[] }) {
             setAreaQ((current) => (current && next.trim() !== current ? null : current));
           }}
           placeholder="A market name, neighbourhood, or food — Wychwood, peaches…"
-          className="h-12 border-transparent bg-card text-base text-foreground focus-visible:border-foreground/20 focus-visible:ring-foreground/20"
+          className="h-12 border-transparent bg-card text-base text-foreground stall-chip focus-visible:border-foreground/20 focus-visible:ring-foreground/20"
           autoComplete="off"
         />
         {query ? <input type="hidden" name="q" value={query} /> : null}
@@ -239,7 +239,7 @@ export function QuickFind({ markets }: { markets: Market[] }) {
       <div className="border-t border-primary-foreground/25 pt-4">
         <button
           type="submit"
-          className="find-go inline-flex min-h-[3.35rem] w-full cursor-pointer items-center justify-between gap-4 rounded-sm px-5 py-3 text-left text-receipt outline-none transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-receipt active:translate-y-px"
+          className="find-go stall-chip inline-flex min-h-[3.35rem] w-full cursor-pointer items-center justify-between gap-4 px-5 py-3 text-left text-receipt outline-none transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-receipt active:translate-y-px"
         >
           <span className="font-heading text-lg font-semibold tracking-tight sm:text-xl">
             {query || whenId || productTags.length || setupTag || near

@@ -179,7 +179,7 @@ export function FloorComposer({
       {rating || market || tagged || tags.length ? (
         <ul className="mt-1.5 flex flex-wrap gap-1 px-1">
           {rating ? (
-            <li className="inline-flex overflow-hidden rounded-full bg-ticket text-receipt">
+            <li className="stall-chip-sm inline-flex overflow-hidden bg-ticket text-receipt">
               <button
                 type="button"
                 onClick={() => setExtra("stars")}
@@ -198,7 +198,7 @@ export function FloorComposer({
             </li>
           ) : null}
           {market ? (
-            <li className="inline-flex overflow-hidden rounded-full bg-board text-chalk">
+            <li className="stall-chip-sm inline-flex overflow-hidden bg-board text-chalk">
               <button
                 type="button"
                 onClick={() => setExtra("place")}
@@ -220,7 +220,7 @@ export function FloorComposer({
             </li>
           ) : null}
           {tagged ? (
-            <li className="inline-flex overflow-hidden rounded-full bg-foreground text-receipt">
+            <li className="stall-chip-sm inline-flex overflow-hidden bg-foreground text-receipt">
               <button
                 type="button"
                 onClick={() => setExtra("place")}
@@ -239,7 +239,7 @@ export function FloorComposer({
             </li>
           ) : null}
           {tags.map((tag) => (
-            <li key={tag} className="inline-flex overflow-hidden rounded-full bg-primary text-primary-foreground">
+            <li key={tag} className="stall-chip-sm inline-flex overflow-hidden bg-primary text-primary-foreground">
               <button
                 type="button"
                 onClick={() => setExtra("tags")}
@@ -438,7 +438,7 @@ export function FloorComposer({
                   type="button"
                   onClick={() => toggleTag(tag)}
                   className={cn(
-                    "rounded-full px-2 py-1 text-sm",
+                    "stall-chip-sm px-2 py-1 text-sm",
                     on ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground",
                   )}
                 >

@@ -87,7 +87,7 @@ export function HomePanel({
   return (
     <section
       id={id}
-      className={cn("scroll-mt-24 overflow-hidden rounded-lg", t.shell, className)}
+      className={cn("scroll-mt-24 overflow-hidden stall-panel", t.shell, className)}
     >
       <div
         className={cn(
@@ -98,7 +98,7 @@ export function HomePanel({
         <div className="flex min-w-0 items-start gap-3">
           <span
             className={cn(
-              "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md",
+              "mt-0.5 flex size-9 shrink-0 items-center justify-center stall-chip-sm",
               t.mark,
             )}
           >

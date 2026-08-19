@@ -61,7 +61,7 @@ export function SavedRail({
               <li key={vendor.id} className="flex items-center gap-1.5">
                 <Link
                   href={`/vendors/${vendor.slug}`}
-                  className="inline-flex min-h-10 items-center rounded-md border border-border bg-background px-3 py-1.5 text-base hover:bg-secondary"
+                  className="inline-flex min-h-10 items-center stall-chip-sm border border-border bg-background px-3 py-1.5 text-base hover:bg-secondary"
                 >
                   {vendor.name}
                 </Link>

@@ -97,7 +97,7 @@
   --chart-3: #9e4a3e;
   --chart-4: #1c1916;
   --chart-5: #5e5a53;
-  --radius: 0.35rem;
+  --radius: 0.125rem;
   --sidebar: #f4f1ea;
   --sidebar-foreground: #1c1916;
   --sidebar-primary: #3a6558;
@@ -196,6 +196,49 @@
   background-repeat: repeat-x;
   background-position: 0 0;
   animation: awning-ticker 0.85s linear infinite;
+}
+
+/* Cut-corner stall plate — enamel sign, not a SaaS pill. */
+@utility stall-chip {
+  border-radius: 0;
+  clip-path: polygon(
+    7px 0,
+    calc(100% - 7px) 0,
+    100% 7px,
+    100% calc(100% - 7px),
+    calc(100% - 7px) 100%,
+    7px 100%,
+    0 calc(100% - 7px),
+    0 7px
+  );
+}
+
+@utility stall-chip-sm {
+  border-radius: 0;
+  clip-path: polygon(
+    4px 0,
+    calc(100% - 4px) 0,
+    100% 4px,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    4px 100%,
+    0 calc(100% - 4px),
+    0 4px
+  );
+}
+
+@utility stall-panel {
+  border-radius: 0;
+  clip-path: polygon(
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    14px 100%,
+    0 calc(100% - 14px),
+    0 14px
+  );
 }
 
 /* Enamel hall plate: bolted to the find board, gold pinstripe. */
