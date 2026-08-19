@@ -3,10 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ClaimForm } from "@/components/claim-form";
 import { SaveButton } from "@/components/save-button";
+import { StallMenu } from "@/components/stall-menu";
 import { TagList } from "@/components/tag-list";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
-import { formatPhone, formatPrice } from "@/lib/format";
+import { formatPhone } from "@/lib/format";
 import { WEEKDAYS } from "@/lib/constants";
 
 export async function generateMetadata({
@@ -52,25 +53,7 @@ export default async function VendorPage({
           </section>
           <section>
             <h2>Menu</h2>
-            <ul className="mt-3 divide-y divide-border rounded-xl bg-card ring-1 ring-foreground/10">
-              {vendor.menus.map((item) => (
-                <li key={item.id} className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    {item.description ? (
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
-                    ) : null}
-                    {item.season ? (
-                      <p className="text-xs text-muted-foreground">{item.season}</p>
-                    ) : null}
-                  </div>
-                  <p className="text-sm">{formatPrice(item.price_cents) ?? ""}</p>
-                </li>
-              ))}
-              {!vendor.menus.length ? (
-                <li className="px-4 py-3 text-sm text-muted-foreground">Menu not listed yet.</li>
-              ) : null}
-            </ul>
+            <StallMenu items={vendor.menus} />
           </section>
           <section>
             <h2>Reviews</h2>
