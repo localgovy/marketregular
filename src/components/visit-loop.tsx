@@ -1,5 +1,5 @@
-import { Map, Search } from "lucide-react";
 import { FloorStrip } from "@/components/floor-strip";
+import { BlocksMark, SlatsMark } from "@/components/marks";
 import { HomePanel } from "@/components/home-panel";
 import { VendorsTodayPanel, VendorsWeekPanel } from "@/components/home-vendors";
 import { SavedRail } from "@/components/saved-rail";
@@ -45,7 +45,7 @@ export function HomeMosaic({
           <HomePanel
             id="find"
             tone="find"
-            icon={Search}
+            icon={SlatsMark}
             kicker="When, where, or what"
             title="Find a market"
             how="Choose when, a neighbourhood, or what they sell. Press Search when the list looks right."
@@ -59,7 +59,7 @@ export function HomeMosaic({
           <HomePanel
             id="map"
             tone="map"
-            icon={Map}
+            icon={BlocksMark}
             kicker="Around the city"
             title="Map of Toronto markets"
             how="Tap a pin, then tap the market name in the popup to open its page."

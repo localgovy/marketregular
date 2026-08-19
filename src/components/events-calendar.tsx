@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeftMark, CaretRightMark } from "@/components/marks";
 import { Button } from "@/components/ui/button";
 import { WEEKDAYS } from "@/lib/constants";
 import {
@@ -161,7 +161,7 @@ export function EventsCalendar({
               aria-label="Previous month"
               onClick={() => goMonth(-1)}
             >
-              <ChevronLeft />
+              <CaretLeftMark />
             </Button>
             <p className="type-column min-w-[12.5rem] text-center">{monthLabel(year, month)}</p>
             <Button
@@ -171,7 +171,7 @@ export function EventsCalendar({
               aria-label="Next month"
               onClick={() => goMonth(1)}
             >
-              <ChevronRight />
+              <CaretRightMark />
             </Button>
           </div>
           <div className="flex items-center gap-3">

@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
+import type { MarkProps } from "@/components/marks";
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
 
 export type PanelTone =
   | "find"
@@ -75,7 +75,7 @@ export function HomePanel({
 }: {
   id?: string;
   tone: PanelTone;
-  icon: LucideIcon;
+  icon: ComponentType<MarkProps>;
   kicker: string;
   title: string;
   how: ReactNode;
@@ -109,7 +109,7 @@ export function HomePanel({
               t.mark,
             )}
           >
-            <Icon className={rail ? "size-3.5" : "size-4"} aria-hidden />
+            <Icon className={rail ? "size-4" : "size-5"} />
           </span>
           <div className="min-w-0">
             <p

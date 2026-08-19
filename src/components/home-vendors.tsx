@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Award, Store } from "lucide-react";
 import { HomePanel } from "@/components/home-panel";
+import { CrateMark, TallyMark } from "@/components/marks";
 import { SaveButton } from "@/components/save-button";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 
@@ -19,7 +19,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
       id="vendors-today"
       place="rail"
       tone="vendors"
-      icon={Store}
+      icon={CrateMark}
       kicker="On a stall today"
       title="Selling today"
       how={
@@ -77,7 +77,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
       id="vendors-week"
       place="rail"
       tone="menus"
-      icon={Award}
+      icon={TallyMark}
       kicker="This week's stalls"
       title="Top 5 this week"
       how="The five vendors in the Toronto market game this week. Tap a name to learn more about them."

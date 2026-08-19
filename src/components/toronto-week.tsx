@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { CalendarClock } from "lucide-react";
 import { HomePanel } from "@/components/home-panel";
+import { WeekMark } from "@/components/marks";
 import { cn } from "@/lib/utils";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { UpcomingGroup, UpcomingSlot } from "@/lib/upcoming";
@@ -56,7 +56,7 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
     <HomePanel
       id="week"
       tone="open"
-      icon={CalendarClock}
+      icon={WeekMark}
       kicker={`${LAUNCH_CITY} this week`}
       title="Upcoming markets"
       how="Gold means open right now. Tap a name for vendors and the map."

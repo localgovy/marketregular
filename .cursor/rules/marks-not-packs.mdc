@@ -1,0 +1,22 @@
+---
+description: Use Market Regular enamel marks, never Lucide or other icon packs
+alwaysApply: true
+---
+
+# Marks, not pack icons
+
+Do not import from `lucide-react`, Heroicons, Phosphor, Radix Icons, Font Awesome, or similar packs. Those glyphs show up on every generated site.
+
+Draw or reuse filled stamps from `src/components/marks.tsx`. Same language as the stall plate: cut corners, crate slats, chalk tallies, punched tickets, street blocks. `currentColor`, `viewBox="0 0 24 24"`. No 24px rounded stroke-2 clones of Lucide.
+
+If a new meaning appears, add a mark there. Chevrons, close, and checks also come from that file. If a shadcn add reintroduces `lucide-react`, replace those icons with marks and drop the import.
+
+```tsx
+// BAD
+import { Store, Award, Search } from "lucide-react";
+<HomePanel icon={Store} />
+
+// GOOD
+import { CrateMark, TallyMark, SlatsMark } from "@/components/marks";
+<HomePanel icon={CrateMark} />
+```

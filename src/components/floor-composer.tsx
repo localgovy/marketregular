@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { Hash, MapPin, Star, Store } from "lucide-react";
 import { composeFloorNote } from "@/app/actions/presence";
 import { useGeo } from "@/components/geo-provider";
+import { AsteriskMark, CrateMark, PlateMark, TagMark } from "@/components/marks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -265,21 +265,21 @@ export function FloorComposer({
           open={extra === "stars"}
           onClick={() => setExtra((current) => (current === "stars" ? null : "stars"))}
         >
-          <Star className={cn("size-4", rating ? "fill-ticket text-ticket" : "")} />
+          <AsteriskMark className={cn("size-4", rating ? "text-ticket" : "")} />
         </ExtraButton>
         <ExtraButton
           label="Market"
           open={extra === "place"}
           onClick={() => setExtra((current) => (current === "place" ? null : "place"))}
         >
-          <MapPin className={cn("size-4", market ? "text-primary" : "")} />
+          <PlateMark className={cn("size-4", market ? "text-primary" : "")} />
         </ExtraButton>
         <ExtraButton
           label="Topic"
           open={extra === "tags"}
           onClick={() => setExtra((current) => (current === "tags" ? null : "tags"))}
         >
-          <Hash className="size-4" />
+          <TagMark className="size-4" />
         </ExtraButton>
         <div className="ml-auto flex min-w-0 items-center gap-1">
           {!demo && !signedIn ? (
@@ -391,7 +391,7 @@ export function FloorComposer({
                 </div>
               )}
               <p className="flex items-center gap-1.5 text-sm font-medium">
-                <Store className="size-3.5" aria-hidden />
+                <CrateMark className="size-3.5" />
                 Vendor at this market
               </p>
               <p className="mb-2 text-sm text-muted-foreground">Optional. Skip this if the note is about the market.</p>

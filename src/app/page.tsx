@@ -1,3 +1,4 @@
+import { CrateMark, RulesMark } from "@/components/marks";
 import { FloorTape } from "@/components/floor-tape";
 import { HomeGeo } from "@/components/home-geo";
 import { HomePanel } from "@/components/home-panel";
@@ -15,7 +16,6 @@ import {
 } from "@/lib/data/catalog";
 import { upcomingByDay } from "@/lib/upcoming";
 import { topVendorsThisWeek, vendorsSellingToday } from "@/lib/vendor-week";
-import { List, Store } from "lucide-react";
 import Link from "next/link";
 
 export default async function HomePage() {
@@ -72,7 +72,7 @@ export default async function HomePage() {
           <HomePanel
             id="directory"
             tone="directory"
-            icon={List}
+            icon={RulesMark}
             kicker="The full list"
             title="All Toronto markets"
             how="Every market we list in the city. Tap a name, then save the ones you actually go to."
@@ -97,7 +97,7 @@ export default async function HomePage() {
 
           <HomePanel
             tone="vendors"
-            icon={Store}
+            icon={CrateMark}
             kicker="Name list"
             title="Vendors"
             how="Every stall in the directory. Save the ones you buy from."

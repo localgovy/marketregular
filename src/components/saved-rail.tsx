@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Bookmark } from "lucide-react";
 import { HomePanel } from "@/components/home-panel";
+import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
 import type { Market, Vendor } from "@/types/database";
 
@@ -24,7 +24,7 @@ export function SavedRail({
       id="saved"
       place="rail"
       tone="here"
-      icon={Bookmark}
+      icon={TicketMark}
       kicker="On your list"
       title="Saved"
       how="Markets and stalls you saved. They stay in this browser."
