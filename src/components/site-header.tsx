@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NavLink } from "@/components/nav-link";
 import { SiteMark } from "@/components/site-mark";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,15 +46,14 @@ export async function SiteHeader() {
             </form>
           </div>
           <nav className="flex shrink-0 items-center gap-3 text-sm font-medium">
-            <Link href="/markets" className="hidden hover:underline sm:inline">
+            <NavLink href="/markets" className="hidden sm:inline">
               Markets
-            </Link>
-            <Link href="/vendors" className="hidden hover:underline sm:inline">
+            </NavLink>
+            <NavLink href="/events">Events</NavLink>
+            <NavLink href="/vendors" className="hidden sm:inline">
               Vendors
-            </Link>
-            <Link href="/saved" className="hover:underline">
-              Saved
-            </Link>
+            </NavLink>
+            <NavLink href="/saved">Saved</NavLink>
             <Link
               href="/search"
               className={cn(buttonVariants({ variant: "ghost" }), "md:hidden")}

@@ -78,9 +78,40 @@ export function shiftMonth(year: number, month: number, delta: number) {
 }
 
 export function shiftDay(year: number, month: number, day: number, delta: number) {
-  const next = new Date(Date.UTC(year, month - 1, day + delta, 16, 0, 0));
-  const [y, m, d] = torontoYmd(next).split("-").map(Number);
-  return { year: y, month: m, day: d };
+  const next = new Date(Date.UTC(year, month - 1, day + delta));
+  return {
+    year: next.getUTCFullYear(),
+    month: next.getUTCMonth() + 1,
+    day: next.getUTCDate(),
+  };
+}
+
+export function findMarketDay(
+  from: { year: number; month: number; day: number },
+  direction: 1 | -1,
+  markets: EventMarket[],
+  schedules: MarketSchedule[],
+  now = new Date(),
+  limitMonths = 14,
+): CalendarCell | null {
+  let year = from.year;
+  let month = from.month;
+  let beyond = from.day;
+
+  for (let i = 0; i < limitMonths; i += 1) {
+    const days = monthGrid(year, month, markets, schedules, now).filter((cell) => cell.inMonth);
+    const hit =
+      direction === 1
+        ? days.find((cell) => cell.day > beyond && cell.events.length > 0)
+        : [...days].reverse().find((cell) => cell.day < beyond && cell.events.length > 0);
+    if (hit) return hit;
+    const next = shiftMonth(year, month, direction);
+    year = next.year;
+    month = next.month;
+    beyond = direction === 1 ? 0 : 32;
+  }
+
+  return null;
 }
 
 function eventsForCivilDate(
@@ -93,7 +124,7 @@ function eventsForCivilDate(
 ): CalendarEvent[] {
   const when = torontoNoon(year, month, day);
   const tz = LAUNCH_TZ;
-  const { weekday, minutes } = zonedParts(when, tz);
+  const { weekday } = zonedParts(when, tz);
   const todayIso = torontoYmd(now);
   const iso = isoDate(year, month, day);
   const isToday = iso === todayIso;

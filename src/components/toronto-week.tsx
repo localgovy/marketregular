@@ -61,6 +61,11 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
       title="Upcoming markets"
       how="Gold means open right now. Tap a name for vendors and the map."
       className="xl:shrink-0"
+      action={
+        <Link href="/events" className="hover:underline">
+          Month calendar
+        </Link>
+      }
     >
       {!groups.length ? (
         <p className="text-base text-muted-foreground">

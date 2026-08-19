@@ -42,6 +42,9 @@ export function FloorStrip({ openNow }: { openNow: Market[] }) {
         <a href="#tape" className="text-primary hover:underline">
           Tape
         </a>
+        <Link href="/events" className="text-primary hover:underline">
+          Events
+        </Link>
         <Link href="/saved" className="text-primary hover:underline">
           Saved{savedCount ? ` · ${savedCount}` : ""}
         </Link>
