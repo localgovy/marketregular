@@ -41,38 +41,41 @@ export function HomeMosaic({
         <JumpChip href="#tape" tone="notes" label="Today's notes" hint="What shoppers posted today" />
       </nav>
 
-      <TorontoWeek groups={week} />
+      <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20vw)] xl:items-start">
+        <div className="contents xl:flex xl:min-w-0 xl:flex-col xl:gap-5">
+          <TorontoWeek groups={week} />
 
-      <HomePanel
-        id="find"
-        tone="find"
-        icon={Search}
-        kicker="When, where, or what"
-        title="Find a market"
-        how="Choose when, a neighbourhood, or what they sell. Stay here until you press Search at the bottom."
-        className="mt-5"
-      >
-        <QuickFind markets={markets} />
-      </HomePanel>
+          <HomePanel
+            id="find"
+            tone="find"
+            icon={Search}
+            kicker="When, where, or what"
+            title="Find a market"
+            how="Choose when, a neighbourhood, or what they sell. Stay here until you press Search at the bottom."
+          >
+            <QuickFind markets={markets} />
+          </HomePanel>
 
-      <div className="mt-5 grid items-start gap-5 xl:grid-cols-2">
-        <VendorsTodayPanel rows={sellingToday} />
-        <VendorsWeekPanel picks={weekVendors} />
+          <HomePanel
+            tone="map"
+            icon={Map}
+            kicker="Around the city"
+            title="Map of Toronto markets"
+            how="Tap a pin, then tap the market name in the popup to open its page."
+            className="order-last xl:order-none"
+            flush
+          >
+            <MarketMapLazy
+              markets={markets}
+              className="h-56 w-full overflow-hidden xl:h-72"
+            />
+          </HomePanel>
+        </div>
 
-        <HomePanel
-          tone="map"
-          icon={Map}
-          kicker="Around the city"
-          title="Map of Toronto markets"
-          how="Tap a pin, then tap the market name in the popup to open its page."
-          className="xl:col-span-2"
-          flush
-        >
-          <MarketMapLazy
-            markets={markets}
-            className="h-56 w-full overflow-hidden xl:h-72"
-          />
-        </HomePanel>
+        <div className="flex min-w-0 flex-col gap-5">
+          <VendorsTodayPanel rows={sellingToday} />
+          <VendorsWeekPanel picks={weekVendors} />
+        </div>
       </div>
     </div>
   );

@@ -169,9 +169,9 @@ export function JumpChip({
 }) {
   const shells = {
     open: "bg-[color-mix(in_srgb,var(--primary)_9%,white)] text-foreground hover:bg-[color-mix(in_srgb,var(--primary)_14%,white)]",
-    find: "awning-leaf overflow-hidden pt-4 text-primary-foreground hover:brightness-[1.05]",
+    find: "awning-leaf overflow-hidden pt-3 text-primary-foreground hover:brightness-[1.05]",
     vendors: "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-    notes: "awning-board overflow-hidden pt-4 text-chalk hover:brightness-[1.08]",
+    notes: "awning-board overflow-hidden pt-3 text-chalk hover:brightness-[1.08]",
   } as const;
   const hints = {
     open: "text-muted-foreground",

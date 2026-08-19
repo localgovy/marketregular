@@ -172,34 +172,38 @@ export function FloorTape({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="awning-board shrink-0 px-3 pt-6 pb-3 text-chalk">
-        <p className="flex items-center gap-2 text-sm font-medium text-chalk/80">
-          <span className="live-dot size-2 rounded-full bg-chalk" />
-          Live notes
-        </p>
-        <p className="font-heading text-lg leading-tight">The group chat from the stalls</p>
-        <p className="mt-1 text-sm leading-snug text-chalk/80">
-          The peaches, the line, the loaf that already sold out. Read it here — and if you&apos;re
-          actually at the market, add yours. Tote optional.
-        </p>
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="awning-board px-3 pt-4 pb-3 text-chalk">
+          <p className="flex items-center gap-2 text-sm font-medium text-chalk/80">
+            <span className="live-dot size-2 rounded-full bg-chalk" />
+            Live notes
+          </p>
+          <p className="font-heading text-lg leading-tight">The group chat from the stalls</p>
+          <p className="mt-1 text-sm leading-snug text-chalk/80">
+            The peaches, the line, the loaf that already sold out. Read it here — and if you&apos;re
+            actually at the market, add yours. Tote optional.
+          </p>
+        </div>
+        <div className="sticky top-0 z-10">
+          <FloorComposer
+            signedIn={signedIn}
+            stalls={stalls}
+            markets={markets}
+            onPosted={(item) => setItems((current) => [item, ...current].slice(0, 30))}
+          />
+        </div>
+        {items.length ? (
+          <ol className="pb-4">
+            {items.map((item) => (
+              <TapeCard key={`${item.kind}-${item.id}`} item={item} stalls={stalls} />
+            ))}
+          </ol>
+        ) : (
+          <p className="px-3 py-4 text-base text-muted-foreground">
+            No notes yet. If you are at a market, you can write the first one in the box above.
+          </p>
+        )}
       </div>
-      <FloorComposer
-        signedIn={signedIn}
-        stalls={stalls}
-        markets={markets}
-        onPosted={(item) => setItems((current) => [item, ...current].slice(0, 30))}
-      />
-      {items.length ? (
-        <ol className="min-h-0 flex-1 overflow-y-auto pb-4">
-          {items.map((item) => (
-            <TapeCard key={`${item.kind}-${item.id}`} item={item} stalls={stalls} />
-          ))}
-        </ol>
-      ) : (
-        <p className="px-3 py-4 text-base text-muted-foreground">
-          No notes yet. If you are at a market, you can write the first one in the box above.
-        </p>
-      )}
     </div>
   );
 }

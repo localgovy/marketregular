@@ -152,6 +152,10 @@
   .live-dot {
     animation: none;
   }
+  .awning-leaf,
+  .awning-board {
+    animation: none;
+  }
 }
 
 /* Header awning: beige–green–beige on the board, inverse on paper. */
@@ -169,23 +173,29 @@
     0 6px 0 var(--board);
 }
 
+@keyframes awning-ticker {
+  to {
+    background-position-x: -11.314px;
+  }
+}
+
 /*
-  Diagonal tent valance along the top edge only.
-  Tile width is the 45° period (16px × √2) so stripes meet, not dash.
-  Fill stays solid so body text never sits on the stripes.
+  Thin diagonal valance, scrolling like a ticker.
+  Tile width is the 45° period (8px × √2) so the loop has no hitch.
 */
 @utility awning-leaf {
   background-color: var(--primary);
   background-image: repeating-linear-gradient(
     45deg,
     var(--chalk) 0,
-    var(--chalk) 6px,
-    var(--primary) 7px,
-    var(--primary) 16px
+    var(--chalk) 3px,
+    var(--primary) 3.5px,
+    var(--primary) 8px
   );
-  background-size: 22.627px 14px;
+  background-size: 11.314px 7px;
   background-repeat: repeat-x;
   background-position: 0 0;
+  animation: awning-ticker 0.85s linear infinite;
 }
 
 @utility awning-board {
@@ -193,11 +203,12 @@
   background-image: repeating-linear-gradient(
     45deg,
     var(--chalk) 0,
-    var(--chalk) 6px,
-    var(--board) 7px,
-    var(--board) 16px
+    var(--chalk) 3px,
+    var(--board) 3.5px,
+    var(--board) 8px
   );
-  background-size: 22.627px 14px;
+  background-size: 11.314px 7px;
   background-repeat: repeat-x;
   background-position: 0 0;
+  animation: awning-ticker 0.85s linear infinite;
 }
