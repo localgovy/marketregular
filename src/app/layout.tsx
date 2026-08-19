@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Schibsted_Grotesk, Young_Serif } from "next/font/google";
+import { Mona_Sans, Schibsted_Grotesk } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -12,11 +12,11 @@ const grotesk = Schibsted_Grotesk({
   display: "swap",
 });
 
-const display = Young_Serif({
+const display = Mona_Sans({
   subsets: ["latin"],
-  weight: "400",
   variable: "--font-display",
   display: "swap",
+  axes: ["wdth"],
 });
 
 export const metadata: Metadata = {

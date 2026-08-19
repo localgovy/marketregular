@@ -119,9 +119,16 @@
     @apply font-sans;
   }
   h1, h2, h3, .font-heading {
-    font-family: var(--font-heading), "Iowan Old Style", Palatino, serif;
-    font-weight: 400;
-    letter-spacing: -0.02em;
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.03em;
+  }
+  h1, h2, h3 {
+    font-weight: 600;
+    font-stretch: 97%;
+  }
+  h1 {
+    letter-spacing: -0.04em;
+    font-stretch: 94%;
   }
 }
 
