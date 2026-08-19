@@ -3,9 +3,7 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { buttonVariants } from "@/components/ui/button";
 import { useGeo } from "@/components/geo-provider";
-import { cn } from "@/lib/utils";
 import { WEEKDAYS } from "@/lib/constants";
 import { formatDistance } from "@/lib/geo";
 import { distanceMeters } from "@/lib/geo";
@@ -108,12 +106,12 @@ export function QuickFind({ markets }: { markets: Market[] }) {
   }
 
   function toggleNear() {
-    if (!coords) {
-      request();
-      setNear(true);
+    if (near) {
+      setNear(false);
       return;
     }
-    setNear((current) => !current);
+    setNear(true);
+    if (!coords) request();
   }
 
   return (
@@ -230,15 +228,24 @@ export function QuickFind({ markets }: { markets: Market[] }) {
       {product ? <input type="hidden" name="tag" value={product} /> : null}
       {setupTag ? <input type="hidden" name="setup" value={setupTag} /> : null}
 
-      <button
-        type="submit"
-        className={cn(
-          buttonVariants({ size: "lg" }),
-          "h-12 w-full bg-card px-6 text-base text-primary hover:bg-card/90 sm:w-auto sm:justify-self-start",
-        )}
-      >
-        {query || whenId || product || setupTag || near ? "Search with these" : "Search all markets"}
-      </button>
+      <div className="border-t border-primary-foreground/25 pt-4">
+        <button
+          type="submit"
+          className="find-go inline-flex min-h-[3.35rem] w-full cursor-pointer items-center justify-between gap-4 rounded-sm px-5 py-3 text-left text-receipt outline-none transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-receipt active:translate-y-px"
+        >
+          <span className="font-heading text-lg font-semibold tracking-tight sm:text-xl">
+            {query || whenId || product || setupTag || near
+              ? "Search with these"
+              : "Search all markets"}
+          </span>
+          <span
+            aria-hidden
+            className="shrink-0 font-mono text-[11px] font-semibold tracking-[0.22em] text-ticket"
+          >
+            GO
+          </span>
+        </button>
+      </div>
     </form>
   );
 }

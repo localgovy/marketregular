@@ -198,6 +198,15 @@
   animation: awning-ticker 0.85s linear infinite;
 }
 
+/* Enamel hall plate: bolted to the find board, gold pinstripe. */
+@utility find-go {
+  background-color: var(--foreground);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--ticket) 78%, white),
+    inset 0 0 0 3px var(--foreground),
+    0 3px 0 rgba(23, 22, 20, 0.38);
+}
+
 @utility awning-board {
   background-color: var(--board);
   background-image: repeating-linear-gradient(
