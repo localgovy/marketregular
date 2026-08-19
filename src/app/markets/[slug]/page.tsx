@@ -51,7 +51,7 @@ export default async function MarketPage({
       </p>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{market.name}</h1>
-        <SaveButton kind="market" slug={market.slug} name={market.name} size="md" />
+        <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
       </div>
       <TagList className="mt-4" tags={market.tags} />
 

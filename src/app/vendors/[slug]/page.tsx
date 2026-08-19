@@ -41,7 +41,7 @@ export default async function VendorPage({
       <p className="type-kicker text-muted-foreground">Stall</p>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{vendor.name}</h1>
-        <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="md" />
+        <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
       </div>
       <TagList className="mt-4" tags={vendor.tags} />
 

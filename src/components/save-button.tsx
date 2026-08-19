@@ -24,7 +24,7 @@ export function SaveButton({
   kind: SaveKind;
   slug: string;
   name?: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
 }) {
   const saves = useSaves();
   const saved = isSaved(kind, slug, saves);
@@ -41,8 +41,12 @@ export function SaveButton({
         toggleSave(kind, slug);
       }}
       className={cn(
-        "inline-flex shrink-0 cursor-pointer items-center justify-center stall-chip-sm font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
-        size === "md" ? "h-10 px-3 text-base" : "h-8 px-2.5 text-sm",
+        "inline-flex shrink-0 cursor-pointer items-center justify-center font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+        size === "lg"
+          ? "stall-chip h-14 min-w-[6.5rem] px-6 text-lg"
+          : size === "md"
+            ? "stall-chip-sm h-10 px-3 text-base"
+            : "stall-chip-sm h-8 px-2.5 text-sm",
         saved
           ? "bg-foreground text-receipt"
           : "border border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground",
