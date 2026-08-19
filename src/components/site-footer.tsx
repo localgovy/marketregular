@@ -12,11 +12,11 @@ export function SiteFooter() {
           <Link href="/search" className="hover:text-foreground">
             Find a market
           </Link>
-          <Link href="/markets" className="hover:text-foreground">
-            Markets
-          </Link>
           <Link href="/events" className="hover:text-foreground">
             Events
+          </Link>
+          <Link href="/markets" className="hover:text-foreground">
+            Markets
           </Link>
           <Link href="/vendors" className="hover:text-foreground">
             Vendors

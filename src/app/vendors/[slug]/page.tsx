@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ClaimForm } from "@/components/claim-form";
 import { SaveButton } from "@/components/save-button";
+import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
 import { TagList } from "@/components/tag-list";
 import { buttonVariants } from "@/components/ui/button";
@@ -57,19 +58,18 @@ export default async function VendorPage({
           </section>
           <section>
             <h2>Reviews</h2>
-            <ul className="mt-4 grid gap-3">
-              {vendor.reviews.map((review) => (
-                <li key={review.id} className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-                  <p className="text-sm font-medium">
-                    {review.author_name} · {review.rating}/5
-                  </p>
-                  <p className="mt-1 text-sm">{review.body}</p>
-                </li>
-              ))}
-              {!vendor.reviews.length ? (
-                <p className="text-sm text-muted-foreground">No reviews yet.</p>
-              ) : null}
-            </ul>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Anything written about this stall, including from the live tape.
+            </p>
+            {vendor.feed.length ? (
+              <ol className="mt-4 flex flex-col gap-2">
+                {vendor.feed.map((item) => (
+                  <ReviewCard key={item.id} item={item} />
+                ))}
+              </ol>
+            ) : (
+              <p className="mt-4 text-base text-muted-foreground">No reviews yet.</p>
+            )}
           </section>
         </div>
         <aside className="flex flex-col gap-6">

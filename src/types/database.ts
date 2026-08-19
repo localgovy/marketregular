@@ -104,6 +104,10 @@ export type Review = {
   flagged: boolean;
   created_at: string;
   author_name?: string | null;
+  market_name?: string | null;
+  market_slug?: string | null;
+  vendor_name?: string | null;
+  vendor_slug?: string | null;
 };
 
 export type ClaimRequest = {
@@ -124,12 +128,14 @@ export type MarketDetail = Market & {
   vendors: (Vendor & { stall: string | null; days: number[] })[];
   reviews: Review[];
   posts: Post[];
+  feed: FloorItem[];
 };
 
 export type VendorDetail = Vendor & {
   menus: MenuItem[];
   markets: (Market & { stall: string | null; days: number[] })[];
   reviews: Review[];
+  feed: FloorItem[];
 };
 
 export type FloorItem = {
@@ -145,6 +151,7 @@ export type FloorItem = {
   rating: number | null;
   verified_on_site: boolean;
   tags: string[];
+  photos: string[];
 };
 
 export type StallRef = {

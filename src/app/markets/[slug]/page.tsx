@@ -9,7 +9,6 @@ import { ScheduleList } from "@/components/schedule-list";
 import { TagList } from "@/components/tag-list";
 import { VendorCard } from "@/components/vendor-card";
 import { buttonVariants } from "@/components/ui/button";
-import { WEEKDAYS } from "@/lib/constants";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { formatPhone } from "@/lib/format";
 
@@ -39,9 +38,10 @@ export default async function MarketPage({
   ]);
   if (!market) notFound();
 
+  const avgRated = market.feed.filter((item) => item.rating != null);
   const avg =
-    market.reviews.length > 0
-      ? market.reviews.reduce((sum, r) => sum + r.rating, 0) / market.reviews.length
+    avgRated.length > 0
+      ? avgRated.reduce((sum, item) => sum + (item.rating ?? 0), 0) / avgRated.length
       : null;
 
   return (
@@ -66,17 +66,12 @@ export default async function MarketPage({
             <h2>Vendors</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               {market.vendors.map((vendor) => (
-                <div key={vendor.id}>
-                  <VendorCard vendor={vendor} />
-                  {vendor.stall ? (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Stall {vendor.stall}
-                      {vendor.days.length
-                        ? ` · ${vendor.days.map((d) => WEEKDAYS[d]?.slice(0, 3)).join(", ")}`
-                        : ""}
-                    </p>
-                  ) : null}
-                </div>
+                <VendorCard
+                  key={vendor.id}
+                  vendor={vendor}
+                  stall={vendor.stall}
+                  days={vendor.days}
+                />
               ))}
               {!market.vendors.length ? (
                 <p className="text-sm text-muted-foreground">Vendor list is being filled in.</p>
@@ -87,24 +82,20 @@ export default async function MarketPage({
             <h2>Reviews</h2>
             {avg ? (
               <p className="mt-1 text-sm text-muted-foreground">
-                {avg.toFixed(1)} / 5 · {market.reviews.length}{" "}
-                {market.reviews.length === 1 ? "review" : "reviews"}
+                {avg.toFixed(1)} / 5
+                {avgRated.length ? ` from ${avgRated.length} rated` : ""}
+                {market.feed.length
+                  ? ` · ${market.feed.length} ${market.feed.length === 1 ? "review" : "reviews"}`
+                  : ""}
               </p>
-            ) : null}
-            <ul className="mt-4 grid gap-3">
-              {market.reviews.map((review) => (
-                <li key={review.id} className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
-                  <p className="text-sm font-medium">
-                    {review.author_name} · {review.rating}/5
-                  </p>
-                  <p className="mt-1 text-sm leading-relaxed">{review.body}</p>
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section>
-            <h2 className="mb-3">From the floor</h2>
-            <LiveFeed initialPosts={market.posts} />
+            ) : (
+              <p className="mt-1 text-sm text-muted-foreground">
+                Same reviews as the live tape. A score is optional.
+              </p>
+            )}
+            <div className="mt-4">
+              <LiveFeed initialItems={market.feed} marketId={market.id} />
+            </div>
           </section>
         </div>
         <aside className="flex flex-col gap-6">

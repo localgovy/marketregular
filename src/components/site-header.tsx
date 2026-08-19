@@ -46,10 +46,10 @@ export async function SiteHeader() {
             </form>
           </div>
           <nav className="flex shrink-0 items-center gap-3 text-sm font-medium">
+            <NavLink href="/events">Events</NavLink>
             <NavLink href="/markets" className="hidden sm:inline">
               Markets
             </NavLink>
-            <NavLink href="/events">Events</NavLink>
             <NavLink href="/vendors" className="hidden sm:inline">
               Vendors
             </NavLink>

@@ -72,14 +72,15 @@ export async function createPost(input: {
   photos?: string[];
   tags?: string[];
   vendorSlug?: string;
+  rating?: number;
 }) {
-  const body = encodeFloorBody(input.body, input.tags ?? [], input.vendorSlug);
+  const body = encodeFloorBody(input.body, input.tags ?? [], input.vendorSlug, input.rating);
   if (input.body.trim().length < 3) return { error: "Write a little more." };
-  if (body.length > 2000) return { error: "Posts are limited to 2,000 characters." };
+  if (body.length > 2000) return { error: "Reviews are limited to 2,000 characters." };
 
   const { supabase, user, demo } = await requireUser();
   if (demo) return { error: null, demo: true };
-  if (!supabase || !user) return { error: "Sign in to post." };
+  if (!supabase || !user) return { error: "Sign in to review." };
 
   const onSite = await onSiteIfShared(supabase, input.marketId, input.lat, input.lng);
 
@@ -89,7 +90,7 @@ export async function createPost(input: {
     .eq("user_id", user.id)
     .gte("created_at", new Date(Date.now() - 24 * 3600 * 1000).toISOString());
   if ((count ?? 0) >= 10) {
-    return { error: "Daily post limit reached. See you tomorrow." };
+    return { error: "Daily review limit reached. See you tomorrow." };
   }
 
   const { error } = await supabase.from("posts").insert({
@@ -101,8 +102,15 @@ export async function createPost(input: {
   });
   if (error) return { error: error.message };
 
+  const { data: market } = await supabase
+    .from("markets")
+    .select("slug")
+    .eq("id", input.marketId)
+    .maybeSingle();
   revalidatePath("/");
   revalidatePath("/search");
+  if (market?.slug) revalidatePath(`/markets/${market.slug}`);
+  if (input.vendorSlug) revalidatePath(`/vendors/${input.vendorSlug}`);
   return { error: null, demo: false };
 }
 
@@ -173,22 +181,9 @@ export async function composeFloorNote(input: {
     lng: input.lng,
     tags: input.tags,
     vendorSlug: input.vendorSlug,
+    rating: input.rating >= 1 ? input.rating : undefined,
   });
   if (post.error) return post;
-
-  if (input.rating >= 1) {
-    const review = await createReview({
-      marketId: input.vendorId ? input.marketId : input.marketId,
-      vendorId: input.vendorId,
-      rating: input.rating,
-      body: input.body,
-      lat: input.lat,
-      lng: input.lng,
-    });
-    if (review.error && !review.error.includes("already reviewed")) {
-      return review;
-    }
-  }
 
   return { error: null, demo: post.demo };
 }

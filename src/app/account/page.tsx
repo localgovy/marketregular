@@ -36,7 +36,7 @@ export default async function AccountPage() {
           ? "You can edit the directory."
           : profile.role === "vendor"
             ? "You can update listings you claim."
-            : "Posts and reviews are yours. Location is optional when you write them."}
+            : "Reviews you write show on the tape and on the market or stall."}
       </p>
       <form action={updateProfile} className="mt-8 grid gap-3">
         <Label htmlFor="display_name">Display name</Label>
@@ -59,7 +59,7 @@ export default async function AccountPage() {
         Same list as on the floor. It lives in this browser for now.
       </p>
       <SavedDesk markets={markets} vendors={vendors} />
-      <h2 className="mt-12">Your posts</h2>
+      <h2 className="mt-12">Your reviews</h2>
       <ul className="mt-3 grid gap-2">
         {(posts ?? []).map((post) => (
           <li key={post.id} className="rounded-lg bg-card p-3 text-sm ring-1 ring-foreground/10">
@@ -67,7 +67,7 @@ export default async function AccountPage() {
           </li>
         ))}
         {!posts?.length ? (
-          <li className="text-sm text-muted-foreground">Nothing from the floor yet.</li>
+          <li className="text-sm text-muted-foreground">Nothing written yet.</li>
         ) : null}
       </ul>
     </div>

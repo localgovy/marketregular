@@ -10,7 +10,7 @@ import {
   toPublicVendor,
 } from "@/data/directory";
 import { distanceMeters } from "@/lib/geo";
-import { decodeFloorBody } from "@/lib/floor-note";
+import { decodeFloorBody, mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { isLaunchCity } from "@/lib/launch";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import type {
@@ -98,6 +98,54 @@ export function localSearch(filters: SearchFilters) {
   return { markets, vendors };
 }
 
+function withReviewPlace(row: (typeof seedReviews)[number]) {
+  const market = seedMarkets.find((m) => m.id === row.market_id);
+  const vendor = seedVendors.find((v) => v.id === row.vendor_id);
+  return reviewFromReview({
+    ...row,
+    market_name: market?.name ?? null,
+    market_slug: market?.slug ?? null,
+    vendor_name: vendor?.name ?? null,
+    vendor_slug: vendor?.slug ?? null,
+  });
+}
+
+function feedForMarket(marketId: string): FloorItem[] {
+  const vendorIds = new Set(
+    seedMarketVendors.filter((link) => link.market_id === marketId).map((link) => link.vendor_id),
+  );
+  const stalls = localStalls();
+  const fromPosts = seedPosts
+    .filter((post) => !post.flagged && post.market_id === marketId)
+    .map((post) => reviewFromPost(post, stalls));
+  const fromReviews = seedReviews
+    .filter((row) => {
+      if (row.flagged) return false;
+      if (row.market_id === marketId) return true;
+      return Boolean(row.vendor_id && vendorIds.has(row.vendor_id));
+    })
+    .map(withReviewPlace);
+  return mergeReviews([...fromPosts, ...fromReviews]);
+}
+
+function feedForVendor(vendorId: string, slug: string): FloorItem[] {
+  const stalls = localStalls();
+  const marketIds = new Set(
+    seedMarketVendors.filter((link) => link.vendor_id === vendorId).map((link) => link.market_id),
+  );
+  const fromReviews = seedReviews
+    .filter((row) => !row.flagged && row.vendor_id === vendorId)
+    .map(withReviewPlace);
+  const fromPosts = seedPosts
+    .filter((post) => {
+      if (post.flagged || !marketIds.has(post.market_id)) return false;
+      const decoded = decodeFloorBody(post.body);
+      return post.vendor_slug === slug || decoded.vendorSlug === slug;
+    })
+    .map((post) => reviewFromPost(post, stalls));
+  return mergeReviews([...fromPosts, ...fromReviews]);
+}
+
 export function localMarketBySlug(slug: string): MarketDetail | null {
   const seed = seedMarkets.find((m) => m.slug === slug);
   if (!seed || !isLaunchCity(seed.city)) return null;
@@ -108,12 +156,15 @@ export function localMarketBySlug(slug: string): MarketDetail | null {
     if (!v) return [];
     return [{ ...toPublicVendor(v), stall: link.stall, days: link.days }];
   });
+  const posts = seedPosts.filter((p) => p.market_id === market.id && !p.flagged);
+  const reviews = seedReviews.filter((r) => r.market_id === market.id && !r.flagged);
   return {
     ...market,
     schedules: schedulesFor(market.id),
     vendors,
-    reviews: seedReviews.filter((r) => r.market_id === market.id && !r.flagged),
-    posts: seedPosts.filter((p) => p.market_id === market.id && !p.flagged),
+    reviews,
+    posts,
+    feed: feedForMarket(market.id),
   };
 }
 
@@ -133,6 +184,7 @@ export function localVendorBySlug(slug: string): VendorDetail | null {
     menus: menusFor(vendor.id),
     markets,
     reviews: seedReviews.filter((r) => r.vendor_id === vendor.id && !r.flagged),
+    feed: feedForVendor(vendor.id, vendor.slug),
   };
 }
 
@@ -211,54 +263,18 @@ export function localTablePeek(vendorIds: string[]) {
 
 export function localFloorTape(limit = 24): FloorItem[] {
   const ids = launchMarketIds();
-  const posts: FloorItem[] = seedPosts
+  const stalls = localStalls();
+  const posts = seedPosts
     .filter((p) => !p.flagged && ids.has(p.market_id))
-    .map((p) => {
-      const decoded = decodeFloorBody(p.body);
-      const tagged = localStalls().find((s) => s.slug === (p.vendor_slug ?? decoded.vendorSlug));
-      return {
-        id: p.id,
-        kind: "post" as const,
-        body: decoded.body,
-        created_at: p.created_at,
-        author_name: p.author_name ?? null,
-        market_name: p.market_name ?? null,
-        market_slug: p.market_slug ?? null,
-        vendor_name: p.vendor_name ?? tagged?.name ?? null,
-        vendor_slug: p.vendor_slug ?? tagged?.slug ?? decoded.vendorSlug,
-        rating: null,
-        verified_on_site: p.verified_on_site,
-        tags: p.tags?.length ? p.tags : decoded.tags,
-      };
-    });
-
-  const reviews: FloorItem[] = seedReviews
+    .map((p) => reviewFromPost(p, stalls));
+  const reviews = seedReviews
     .filter((r) => {
       if (r.flagged) return false;
       if (r.market_id) return ids.has(r.market_id);
       if (!r.vendor_id) return false;
       return seedMarketVendors.some((link) => link.vendor_id === r.vendor_id && ids.has(link.market_id));
     })
-    .map((r) => {
-      const market = seedMarkets.find((m) => m.id === r.market_id);
-      const vendor = seedVendors.find((v) => v.id === r.vendor_id);
-      return {
-        id: r.id,
-        kind: "review" as const,
-        body: r.body,
-        created_at: r.created_at,
-        author_name: r.author_name ?? null,
-        market_name: market?.name ?? null,
-        market_slug: market?.slug ?? null,
-        vendor_name: vendor?.name ?? null,
-        vendor_slug: vendor?.slug ?? null,
-        rating: r.rating,
-        verified_on_site: r.verified_on_site,
-        tags: decodeFloorBody(r.body).tags,
-      };
-    });
+    .map(withReviewPlace);
 
-  return [...posts, ...reviews]
-    .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
-    .slice(0, limit);
+  return mergeReviews([...posts, ...reviews]).slice(0, limit);
 }

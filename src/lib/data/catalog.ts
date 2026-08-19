@@ -17,7 +17,7 @@ import {
   localVendors,
 } from "@/lib/data/local";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
-import { decodeFloorBody } from "@/lib/floor-note";
+import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
   FloorItem,
@@ -242,8 +242,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
       supabase.from("market_vendors").select("*").eq("market_id", market.id),
       supabase
         .from("reviews")
-        .select("*, profiles(display_name)")
-        .eq("market_id", market.id)
+        .select("*, profiles(display_name), vendors(name, slug), markets(name, slug)")
         .eq("flagged", false)
         .order("created_at", { ascending: false }),
       supabase
@@ -252,38 +251,64 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
         .eq("market_id", market.id)
         .eq("flagged", false)
         .order("created_at", { ascending: false })
-        .limit(20),
+        .limit(40),
     ]);
 
-  const vendorIds = (links ?? []).map((l: { vendor_id: string }) => l.vendor_id);
+  const vendorIdList = (links ?? []).map((l: { vendor_id: string }) => l.vendor_id);
   const { data: vendors } =
-    vendorIds.length > 0
-      ? await supabase.from("vendors").select("*").in("id", vendorIds)
+    vendorIdList.length > 0
+      ? await supabase.from("vendors").select("*").in("id", vendorIdList)
       : { data: [] };
 
   const vendorMap = new Map((vendors ?? []).map((v: Vendor) => [v.id, v]));
+  const vendorIds = new Set(vendorIdList);
+
+  const mappedReviews = (
+    (reviews ?? []) as Array<
+      Review & {
+        profiles?: { display_name: string | null };
+        vendors?: { name: string; slug: string } | null;
+        markets?: { name: string; slug: string } | null;
+      }
+    >
+  )
+    .filter((row) => row.market_id === market.id || (row.vendor_id && vendorIds.has(row.vendor_id)))
+    .map((r) => ({
+      ...r,
+      author_name: r.profiles?.display_name ?? "Regular",
+      market_name: r.markets?.name ?? market.name,
+      market_slug: r.markets?.slug ?? market.slug,
+      vendor_name: r.vendors?.name ?? null,
+      vendor_slug: r.vendors?.slug ?? null,
+    }));
+
+  const mappedPosts = (
+    (posts ?? []) as Array<Post & { profiles?: { display_name: string | null; avatar_url: string | null } }>
+  ).map((p) => ({
+    ...p,
+    author_name: p.profiles?.display_name ?? "Regular",
+    author_avatar: p.profiles?.avatar_url,
+    market_name: market.name,
+    market_slug: market.slug,
+    market_city: market.city,
+  }));
+
+  const vendorList = (links ?? []).flatMap((link: { vendor_id: string; stall: string | null; days: number[] }) => {
+    const v = vendorMap.get(link.vendor_id);
+    if (!v) return [];
+    return [{ ...v, stall: link.stall, days: link.days }];
+  });
 
   return {
     ...(market as Market),
     schedules: (schedules ?? []) as MarketSchedule[],
-    vendors: (links ?? []).flatMap((link: { vendor_id: string; stall: string | null; days: number[] }) => {
-      const v = vendorMap.get(link.vendor_id);
-      if (!v) return [];
-      return [{ ...v, stall: link.stall, days: link.days }];
-    }),
-    reviews: ((reviews ?? []) as Array<Review & { profiles?: { display_name: string | null } }>).map(
-      (r) => ({ ...r, author_name: r.profiles?.display_name ?? "Regular" }),
-    ),
-    posts: ((posts ?? []) as Array<Post & { profiles?: { display_name: string | null; avatar_url: string | null } }>).map(
-      (p) => ({
-        ...p,
-        author_name: p.profiles?.display_name ?? "Regular",
-        author_avatar: p.profiles?.avatar_url,
-        market_name: market.name,
-        market_slug: market.slug,
-        market_city: market.city,
-      }),
-    ),
+    vendors: vendorList,
+    reviews: mappedReviews,
+    posts: mappedPosts,
+    feed: mergeReviews([
+      ...mappedPosts.map((post) => reviewFromPost(post)),
+      ...mappedReviews.map((row) => reviewFromReview(row)),
+    ]),
   };
 }
 
@@ -298,15 +323,21 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
     .maybeSingle();
   if (!vendor) return localVendorBySlug(slug);
 
-  const [{ data: menus }, { data: links }, { data: reviews }] = await Promise.all([
+  const [{ data: menus }, { data: links }, { data: reviews }, { data: posts }] = await Promise.all([
     supabase.from("vendor_menus").select("*").eq("vendor_id", vendor.id),
     supabase.from("market_vendors").select("*").eq("vendor_id", vendor.id),
     supabase
       .from("reviews")
-      .select("*, profiles(display_name)")
+      .select("*, profiles(display_name), markets(name, slug), vendors(name, slug)")
       .eq("vendor_id", vendor.id)
       .eq("flagged", false)
       .order("created_at", { ascending: false }),
+    supabase
+      .from("posts")
+      .select("*, profiles(display_name), markets(name, slug, city)")
+      .eq("flagged", false)
+      .order("created_at", { ascending: false })
+      .limit(80),
   ]);
 
   const marketIds = (links ?? []).map((l: { market_id: string }) => l.market_id);
@@ -323,13 +354,60 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
   });
   if (!vendorMarkets.length) return localVendorBySlug(slug);
 
+  const marketIdSet = new Set(vendorMarkets.map((m) => m.id));
+  const mappedReviews = (
+    (reviews ?? []) as Array<
+      Review & {
+        profiles?: { display_name: string | null };
+        markets?: { name: string; slug: string } | null;
+        vendors?: { name: string; slug: string } | null;
+      }
+    >
+  ).map((r) => ({
+    ...r,
+    author_name: r.profiles?.display_name ?? "Regular",
+    market_name: r.markets?.name ?? null,
+    market_slug: r.markets?.slug ?? null,
+    vendor_name: r.vendors?.name ?? (vendor as Vendor).name,
+    vendor_slug: r.vendors?.slug ?? (vendor as Vendor).slug,
+  }));
+
+  const mappedPosts = (
+    (posts ?? []) as Array<
+      Post & {
+        profiles?: { display_name: string | null };
+        markets?: { name: string; slug: string; city: string };
+      }
+    >
+  )
+    .filter((p) => marketIdSet.has(p.market_id))
+    .filter((p) => {
+      const decoded = reviewFromPost({
+        ...p,
+        author_name: p.profiles?.display_name ?? "Regular",
+        market_name: p.markets?.name,
+        market_slug: p.markets?.slug,
+      });
+      return decoded.vendor_slug === slug;
+    })
+    .map((p) => ({
+      ...p,
+      author_name: p.profiles?.display_name ?? "Regular",
+      market_name: p.markets?.name,
+      market_slug: p.markets?.slug,
+      vendor_name: (vendor as Vendor).name,
+      vendor_slug: (vendor as Vendor).slug,
+    }));
+
   return {
     ...(vendor as Vendor),
     menus: (menus ?? []) as MenuItem[],
     markets: vendorMarkets,
-    reviews: ((reviews ?? []) as Array<Review & { profiles?: { display_name: string | null } }>).map(
-      (r) => ({ ...r, author_name: r.profiles?.display_name ?? "Regular" }),
-    ),
+    reviews: mappedReviews,
+    feed: mergeReviews([
+      ...mappedPosts.map((post) => reviewFromPost(post)),
+      ...mappedReviews.map((row) => reviewFromReview(row)),
+    ]),
   };
 }
 
@@ -369,7 +447,7 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
     await Promise.all([
       supabase
         .from("posts")
-        .select("*, profiles(display_name), markets(name, slug)")
+        .select("*, profiles(display_name), markets(name, slug, city)")
         .eq("flagged", false)
         .order("created_at", { ascending: false })
         .limit(limit),
@@ -383,32 +461,25 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
 
   if (postError && reviewError) return localFloorTape(limit);
 
-  const fromPosts: FloorItem[] = (
+  const fromPosts = (
     (posts ?? []) as Array<
       Post & {
         profiles?: { display_name: string | null };
-        markets?: { name: string; slug: string };
+        markets?: { name: string; slug: string; city?: string };
       }
     >
-  ).map((p) => {
-    const decoded = decodeFloorBody(p.body);
-    return {
-      id: p.id,
-      kind: "post" as const,
-      body: decoded.body,
-      created_at: p.created_at,
-      author_name: p.profiles?.display_name ?? "Regular",
-      market_name: p.markets?.name ?? null,
-      market_slug: p.markets?.slug ?? null,
-      vendor_name: null,
-      vendor_slug: decoded.vendorSlug,
-      rating: null,
-      verified_on_site: p.verified_on_site,
-      tags: decoded.tags,
-    };
-  });
+  )
+    .filter((p) => !p.markets?.city || isLaunchCity(p.markets.city))
+    .map((p) =>
+      reviewFromPost({
+        ...p,
+        author_name: p.profiles?.display_name ?? "Regular",
+        market_name: p.markets?.name ?? null,
+        market_slug: p.markets?.slug ?? null,
+      }),
+    );
 
-  const fromReviews: FloorItem[] = (
+  const fromReviews = (
     (reviews ?? []) as Array<
       Review & {
         profiles?: { display_name: string | null };
@@ -416,27 +487,18 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
         vendors?: { name: string; slug: string };
       }
     >
-  ).map((r) => {
-    const decoded = decodeFloorBody(r.body);
-    return {
-      id: r.id,
-      kind: "review" as const,
-      body: decoded.body,
-      created_at: r.created_at,
+  ).map((r) =>
+    reviewFromReview({
+      ...r,
       author_name: r.profiles?.display_name ?? "Regular",
       market_name: r.markets?.name ?? null,
       market_slug: r.markets?.slug ?? null,
       vendor_name: r.vendors?.name ?? null,
-      vendor_slug: r.vendors?.slug ?? decoded.vendorSlug,
-      rating: r.rating,
-      verified_on_site: r.verified_on_site,
-      tags: decoded.tags,
-    };
-  });
-
-  const merged = [...fromPosts, ...fromReviews].sort(
-    (a, b) => +new Date(b.created_at) - +new Date(a.created_at),
+      vendor_slug: r.vendors?.slug ?? null,
+    }),
   );
+
+  const merged = mergeReviews([...fromPosts, ...fromReviews]);
   if (!merged.length) return localFloorTape(limit);
   return merged.slice(0, limit);
 }

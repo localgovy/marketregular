@@ -118,10 +118,6 @@ export function FloorComposer({
       setMessage("Search for a market first. Vendor is optional.");
       return;
     }
-    if (rating > 0 && body.trim().length < 8) {
-      setMessage("Give the next person a little more than a shrug.");
-      return;
-    }
     start(async () => {
       const result = await composeFloorNote({
         marketId: market.id,
@@ -138,7 +134,7 @@ export function FloorComposer({
       }
       onPosted({
         id: `local-${Date.now()}`,
-        kind: rating > 0 ? "review" : "post",
+        kind: "review",
         body: body.trim(),
         created_at: new Date().toISOString(),
         author_name: "You",
@@ -149,12 +145,13 @@ export function FloorComposer({
         rating: rating > 0 ? rating : null,
         verified_on_site: onSite,
         tags,
+        photos: [],
       });
       setBody("");
       setRating(0);
       setVendorId("");
       setTags([]);
-      setMessage(result.demo ? "Your note is on the list for now." : "Your note is posted.");
+      setMessage(result.demo ? "Your review is on the list for now." : "Your review is up.");
     });
   }
 
@@ -164,7 +161,7 @@ export function FloorComposer({
       className="relative z-10 shrink-0 border-b border-border bg-card px-2 py-2"
     >
       <label className="sr-only" htmlFor="floor-note">
-        Write a note or review
+        Write a review
       </label>
       <Textarea
         id="floor-note"
@@ -296,14 +293,14 @@ export function FloorComposer({
               onClick={submit}
               disabled={pending || body.trim().length < 3 || !canWrite || !market}
             >
-              {pending ? "…" : rating ? "Review" : "Post"}
+              {pending ? "…" : "Review"}
             </Button>
           )}
         </div>
       </div>
 
       {extra === "stars" ? (
-        <ExtraPanel title="Star rating" hint="Click outside the box to save it on this note.">
+        <ExtraPanel title="Score" hint="Optional. Click outside the box to keep it on this review.">
           <div className="flex gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
@@ -321,7 +318,7 @@ export function FloorComposer({
             ))}
           </div>
           <p className="mt-2 text-sm text-muted-foreground">
-            {rating ? `${rating} out of 5 — this posts as a review` : "Optional. Leave at 0 for a plain note."}
+            {rating ? `${rating} out of 5` : "Optional. Leave off if you just have something to say."}
           </p>
         </ExtraPanel>
       ) : null}
