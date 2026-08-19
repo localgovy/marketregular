@@ -43,6 +43,19 @@ export function tagLabel(tag: string) {
   return tag.charAt(0).toUpperCase() + tag.slice(1);
 }
 
+/** Repeated or comma-separated `?tag=` values from a search URL. */
+export function queryList(value: string | string[] | undefined): string[] {
+  if (value == null || value === "") return [];
+  return [
+    ...new Set(
+      (Array.isArray(value) ? value : [value])
+        .flatMap((part) => part.split(","))
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
 export function whenOptions(today: number) {
   const chips: Array<{
     id: string;

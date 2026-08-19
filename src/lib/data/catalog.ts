@@ -177,9 +177,9 @@ export async function searchDirectory(filters: SearchFilters) {
   }
   if (filters.province) marketQuery = marketQuery.eq("province", filters.province);
   if (filters.city) marketQuery = marketQuery.ilike("city", filters.city);
-  if (filters.tag) {
-    marketQuery = marketQuery.contains("tags", [filters.tag]);
-    vendorQuery = vendorQuery.contains("tags", [filters.tag]);
+  if (filters.tags?.length) {
+    marketQuery = marketQuery.overlaps("tags", filters.tags);
+    vendorQuery = vendorQuery.overlaps("tags", filters.tags);
   }
   if (filters.setup) {
     marketQuery = marketQuery.contains("tags", [filters.setup]);

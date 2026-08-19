@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KeepButton } from "@/components/keep-button";
 import { TagList } from "@/components/tag-list";
 import { nextOpenLabel } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
@@ -15,30 +16,35 @@ export function MarketCard({
     ? nextOpenLabel(schedules, market.province)
     : null;
   return (
-    <Link href={`/markets/${market.slug}`} className="block h-full">
-      <Card className="h-full transition-shadow hover:shadow-md">
-        <CardHeader>
-          <p className="text-xs tracking-wide text-muted-foreground uppercase">
-            {market.address}
-          </p>
-          <CardTitle className="font-heading text-xl leading-snug">
-            {market.name}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <p className="line-clamp-3 text-sm text-muted-foreground">
-            {market.about}
-          </p>
-          {when ? (
-            <p
-              className={`text-sm font-medium ${when === "Open now" ? "text-ticket" : "text-primary"}`}
-            >
-              {when}
+    <div className="relative h-full">
+      <Link href={`/markets/${market.slug}`} className="block h-full">
+        <Card className="h-full transition-shadow hover:shadow-md">
+          <CardHeader className="pr-16">
+            <p className="text-xs tracking-wide text-muted-foreground uppercase">
+              {market.address}
             </p>
-          ) : null}
-          <TagList tags={market.tags.slice(0, 4)} />
-        </CardContent>
-      </Card>
-    </Link>
+            <CardTitle className="font-heading text-xl leading-snug">
+              {market.name}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <p className="line-clamp-3 text-sm text-muted-foreground">
+              {market.about}
+            </p>
+            {when ? (
+              <p
+                className={`text-sm font-medium ${when === "Open now" ? "text-ticket" : "text-primary"}`}
+              >
+                {when}
+              </p>
+            ) : null}
+            <TagList tags={market.tags.slice(0, 4)} />
+          </CardContent>
+        </Card>
+      </Link>
+      <span className="absolute top-4 right-4">
+        <KeepButton kind="market" slug={market.slug} name={market.name} />
+      </span>
+    </div>
   );
 }

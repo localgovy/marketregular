@@ -73,9 +73,9 @@ export function localSearch(filters: SearchFilters) {
     const city = filters.city.toLowerCase();
     markets = markets.filter((m) => m.city.toLowerCase() === city);
   }
-  if (filters.tag) {
-    markets = markets.filter((m) => m.tags.includes(filters.tag!));
-    vendors = vendors.filter((v) => v.tags.includes(filters.tag!));
+  if (filters.tags?.length) {
+    markets = markets.filter((m) => filters.tags!.some((tag) => m.tags.includes(tag)));
+    vendors = vendors.filter((v) => filters.tags!.some((tag) => v.tags.includes(tag)));
   }
   if (filters.setup) {
     markets = markets.filter((m) => m.tags.includes(filters.setup!));

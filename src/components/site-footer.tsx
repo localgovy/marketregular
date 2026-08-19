@@ -8,12 +8,18 @@ export function SiteFooter() {
         <p>
           {SITE_NAME} — Toronto farmers&apos; markets, this week.
         </p>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <Link href="/search" className="hover:text-foreground">
             Find a market
           </Link>
-          <Link href="/login" className="hover:text-foreground">
+          <Link href="/markets" className="hover:text-foreground">
+            Markets
+          </Link>
+          <Link href="/vendors" className="hover:text-foreground">
             Vendors
+          </Link>
+          <Link href="/kept" className="hover:text-foreground">
+            Kept
           </Link>
         </div>
       </div>

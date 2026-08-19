@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Award, Store } from "lucide-react";
 import { HomePanel } from "@/components/home-panel";
+import { KeepButton } from "@/components/keep-button";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 
 function tagLine(tags: string[]) {
@@ -26,11 +27,11 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
           {rows.map((row) => (
             <li
               key={`${row.vendorSlug}-${row.marketSlug}`}
-              className="border-b border-border last:border-b-0"
+              className="flex items-stretch border-b border-border last:border-b-0"
             >
               <Link
                 href={`/vendors/${row.vendorSlug}`}
-                className="flex items-start justify-between gap-3 px-3 py-3 hover:bg-primary/[0.045]"
+                className="flex min-w-0 flex-1 items-start justify-between gap-3 px-3 py-3 hover:bg-primary/[0.045]"
               >
                 <span className="min-w-0">
                   <span className="block truncate text-base font-medium">{row.vendorName}</span>
@@ -51,6 +52,9 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
                   )}
                 </span>
               </Link>
+              <span className="flex items-center pr-2">
+                <KeepButton kind="vendor" slug={row.vendorSlug} name={row.vendorName} />
+              </span>
             </li>
           ))}
         </ul>
@@ -83,7 +87,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
               <span className="w-5 shrink-0 pt-0.5 font-mono text-sm text-muted-foreground">
                 {index + 1}
               </span>
-              <span className="min-w-0">
+              <span className="min-w-0 flex-1">
                 <Link href={`/vendors/${pick.vendorSlug}`} className="text-base font-medium hover:underline">
                   {pick.vendorName}
                 </Link>
@@ -103,6 +107,9 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
                     </span>
                   ))}
                 </span>
+              </span>
+              <span className="shrink-0 self-start">
+                <KeepButton kind="vendor" slug={pick.vendorSlug} name={pick.vendorName} />
               </span>
             </li>
           ))}

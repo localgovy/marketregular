@@ -3,6 +3,7 @@ import { HomeGeo } from "@/components/home-geo";
 import { HomePanel } from "@/components/home-panel";
 import { HomeMosaic } from "@/components/visit-loop";
 import { MarketRow } from "@/components/market-row";
+import { VendorRow } from "@/components/vendor-row";
 import {
   getCurrentProfile,
   getFloorTape,
@@ -57,8 +58,11 @@ export default async function HomePage() {
             <HomeMosaic
               week={week}
               markets={markets}
+              vendors={vendors}
+              openNow={openNow}
               sellingToday={sellingToday}
               weekVendors={weekVendors}
+              signedIn={signedIn}
             />
           ) : (
             <p className="text-sm text-muted-foreground">Directory is empty.</p>
@@ -72,8 +76,12 @@ export default async function HomePage() {
             icon={List}
             kicker="The full list"
             title="All Toronto markets"
-            how="Every market we list in the city. Tap a name to see hours, vendors, and the map."
-            action={<span>{markets.length} listed</span>}
+            how="Every market we list in the city. Tap a name, then Keep the ones you actually go to."
+            action={
+              <Link href="/markets" className="hover:underline">
+                {markets.length} listed
+              </Link>
+            }
           >
             <div className="overflow-hidden rounded-md bg-card ring-1 ring-border">
               {markets.map((market) => (
@@ -93,21 +101,19 @@ export default async function HomePage() {
             icon={Store}
             kicker="Name list"
             title="Vendors"
-            how="Tap a name to see their stall."
+            how="Every stall in the directory. Keep the ones you buy from."
             className="mt-5"
+            action={
+              <Link href="/vendors" className="hover:underline">
+                All {vendors.length}
+              </Link>
+            }
           >
-            <ul className="flex flex-wrap gap-2">
-              {vendors.slice(0, 16).map((vendor) => (
-                <li key={vendor.id}>
-                  <Link
-                    href={`/vendors/${vendor.slug}`}
-                    className="inline-flex min-h-10 items-center rounded-md border border-border bg-background px-3 py-1.5 text-base hover:bg-secondary"
-                  >
-                    {vendor.name}
-                  </Link>
-                </li>
+            <div className="overflow-hidden rounded-md bg-card ring-1 ring-border">
+              {vendors.map((vendor) => (
+                <VendorRow key={vendor.id} vendor={vendor} />
               ))}
-            </ul>
+            </div>
           </HomePanel>
         </div>
       </div>

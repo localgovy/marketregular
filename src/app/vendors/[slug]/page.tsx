@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckInIsland } from "@/components/check-in-island";
 import { ClaimForm } from "@/components/claim-form";
+import { KeepButton } from "@/components/keep-button";
 import { TagList } from "@/components/tag-list";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
@@ -38,7 +39,10 @@ export default async function VendorPage({
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <p className="text-sm tracking-wide text-muted-foreground uppercase">Vendor</p>
-      <h1 className="mt-1 font-heading text-4xl sm:text-5xl">{vendor.name}</h1>
+      <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
+        <h1 className="font-heading text-4xl sm:text-5xl">{vendor.name}</h1>
+        <KeepButton kind="vendor" slug={vendor.slug} name={vendor.name} size="md" />
+      </div>
       <TagList className="mt-4" tags={vendor.tags} />
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
@@ -91,17 +95,20 @@ export default async function VendorPage({
             <h2 className="font-heading text-xl">Find them</h2>
             <ul className="mt-3 grid gap-3">
               {vendor.markets.map((market) => (
-                <li key={market.id}>
-                  <Link href={`/markets/${market.slug}`} className="font-medium hover:underline">
-                    {market.name}
-                  </Link>
-                  <p className="text-sm text-muted-foreground">
-                    {market.address}
-                    {market.stall ? ` · ${market.stall}` : ""}
-                    {market.days.length
-                      ? ` · ${market.days.map((d) => WEEKDAYS[d]?.slice(0, 3)).join(", ")}`
-                      : ""}
-                  </p>
+                <li key={market.id} className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <Link href={`/markets/${market.slug}`} className="font-medium hover:underline">
+                      {market.name}
+                    </Link>
+                    <p className="text-sm text-muted-foreground">
+                      {market.address}
+                      {market.stall ? ` · ${market.stall}` : ""}
+                      {market.days.length
+                        ? ` · ${market.days.map((d) => WEEKDAYS[d]?.slice(0, 3)).join(", ")}`
+                        : ""}
+                    </p>
+                  </div>
+                  <KeepButton kind="market" slug={market.slug} name={market.name} />
                 </li>
               ))}
             </ul>

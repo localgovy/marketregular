@@ -5,6 +5,7 @@ import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
 import { VendorCard } from "@/components/vendor-card";
 import { searchDirectory } from "@/lib/data/catalog";
+import { queryList } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
 
 export const metadata: Metadata = {
@@ -19,7 +20,7 @@ export default async function SearchPage({
     province?: string;
     city?: string;
     weekday?: string;
-    tag?: string;
+    tag?: string | string[];
     setup?: string;
     openNow?: string;
     lat?: string;
@@ -31,10 +32,11 @@ export default async function SearchPage({
   const lat = params.lat === undefined || params.lat === "" ? Number.NaN : Number(params.lat);
   const lng = params.lng === undefined || params.lng === "" ? Number.NaN : Number(params.lng);
   const near = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : undefined;
+  const tags = queryList(params.tag);
   const { markets, vendors } = await searchDirectory({
     q: params.q,
     weekday: Number.isFinite(weekday) ? weekday : undefined,
-    tag: params.tag || undefined,
+    tags: tags.length ? tags : undefined,
     setup: params.setup || undefined,
     openNow: params.openNow === "1",
     near,
@@ -60,7 +62,7 @@ export default async function SearchPage({
         defaults={{
           q: params.q,
           weekday: params.weekday,
-          tag: params.tag,
+          tags,
           setup: params.setup,
           openNow: params.openNow === "1",
         }}

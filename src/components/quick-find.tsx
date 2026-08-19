@@ -76,14 +76,14 @@ export function QuickFind({ markets }: { markets: Market[] }) {
   const today = weekdayInToronto();
   const { coords, error, request } = useGeo();
   const areas = areasForMarkets(markets);
-  const products = tagsPresent(markets, FIND_PRODUCTS);
+  const sellOptions = tagsPresent(markets, FIND_PRODUCTS);
   const setup = tagsPresent(markets, FIND_SETUP);
   const when = whenOptions(today);
 
   const [q, setQ] = useState("");
   const [whenId, setWhenId] = useState<string | null>(null);
   const [areaQ, setAreaQ] = useState<string | null>(null);
-  const [product, setProduct] = useState<string | null>(null);
+  const [productTags, setProductTags] = useState<string[]>([]);
   const [setupTag, setSetupTag] = useState<string | null>(null);
   const [near, setNear] = useState(false);
 
@@ -198,13 +198,19 @@ export function QuickFind({ markets }: { markets: Market[] }) {
         </>
       ) : null}
 
-      {products.length ? (
+      {sellOptions.length ? (
         <FindGroup label="What they sell">
-          {products.map((item) => (
+          {sellOptions.map((item) => (
             <ToggleChip
               key={item}
-              pressed={product === item}
-              onClick={() => setProduct((current) => (current === item ? null : item))}
+              pressed={productTags.includes(item)}
+              onClick={() =>
+                setProductTags((current) =>
+                  current.includes(item)
+                    ? current.filter((tag) => tag !== item)
+                    : [...current, item],
+                )
+              }
             >
               {tagLabel(item)}
             </ToggleChip>
@@ -225,7 +231,9 @@ export function QuickFind({ markets }: { markets: Market[] }) {
           ))}
         </FindGroup>
       ) : null}
-      {product ? <input type="hidden" name="tag" value={product} /> : null}
+      {productTags.map((tag) => (
+        <input key={tag} type="hidden" name="tag" value={tag} />
+      ))}
       {setupTag ? <input type="hidden" name="setup" value={setupTag} /> : null}
 
       <div className="border-t border-primary-foreground/25 pt-4">
@@ -234,7 +242,7 @@ export function QuickFind({ markets }: { markets: Market[] }) {
           className="find-go inline-flex min-h-[3.35rem] w-full cursor-pointer items-center justify-between gap-4 rounded-sm px-5 py-3 text-left text-receipt outline-none transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-receipt active:translate-y-px"
         >
           <span className="font-heading text-lg font-semibold tracking-tight sm:text-xl">
-            {query || whenId || product || setupTag || near
+            {query || whenId || productTags.length || setupTag || near
               ? "Search with these"
               : "Search all markets"}
           </span>

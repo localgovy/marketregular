@@ -27,7 +27,7 @@ export async function SiteHeader() {
               <Input
                 name="q"
                 type="search"
-                placeholder="Search Toronto markets or vendors"
+                placeholder="Market, vendor, neighbourhood, or tomato"
                 className="bg-card"
                 autoComplete="off"
               />
@@ -36,9 +36,15 @@ export async function SiteHeader() {
               </button>
             </form>
           </div>
-          <nav className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <Link href="/" className={cn(buttonVariants({ variant: "ghost" }))}>
-              Home
+          <nav className="flex shrink-0 items-center gap-3 text-sm font-medium">
+            <Link href="/markets" className="hidden hover:underline sm:inline">
+              Markets
+            </Link>
+            <Link href="/vendors" className="hidden hover:underline sm:inline">
+              Vendors
+            </Link>
+            <Link href="/kept" className="hover:underline">
+              Kept
             </Link>
             <Link
               href="/search"
@@ -47,8 +53,8 @@ export async function SiteHeader() {
               Search
             </Link>
             {profile?.role === "admin" ? (
-              <Link href="/admin" className={buttonVariants({ variant: "ghost" })}>
-                Admin
+              <Link href="/admin" className="hover:underline">
+                Desk
               </Link>
             ) : null}
             {profile ? (
