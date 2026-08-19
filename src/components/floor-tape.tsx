@@ -179,7 +179,7 @@ export function FloorTape({
             Live notes
           </p>
           <h2 className="type-column">The group chat from the stalls</h2>
-          <p className="type-kicker mt-1 leading-snug text-chalk/80">
+          <p className="mt-1 text-base leading-snug text-chalk/80">
             The peaches, the line, the loaf that already sold out. Read it here, and add yours
             if you want. Location is optional.
           </p>
