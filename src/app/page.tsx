@@ -93,7 +93,6 @@ export default async function HomePage() {
     scheduleMap.set(row.market_id, list);
   }
 
-  const tags = [...new Set(markets.flatMap((m) => m.tags))].sort();
   const week = upcomingByDay(markets, scheduleMap);
   const nextUp = week.flatMap((group) => group.slots)[0]?.market;
   const showcase = openNow[0] ?? nextUp ?? markets[0];
@@ -133,7 +132,6 @@ export default async function HomePage() {
         <div className="order-1 min-w-0 px-4 py-5 lg:px-6 lg:py-6">
           {showcase ? (
             <HomeMosaic
-              tags={tags}
               week={week}
               showcase={showcase}
               attending={attending}

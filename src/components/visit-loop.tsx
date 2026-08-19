@@ -61,7 +61,6 @@ function StallNames({ stalls }: { stalls: StallRef[] }) {
 }
 
 export function HomeMosaic({
-  tags,
   week,
   showcase,
   attending,
@@ -73,7 +72,6 @@ export function HomeMosaic({
   spotlightSlug,
   otherHalls,
 }: {
-  tags: string[];
   week: UpcomingGroup[];
   showcase: Market;
   attending: StallRef[];
@@ -98,7 +96,7 @@ export function HomeMosaic({
 
       <nav aria-label="Jump to a part of this page" className="mb-6 flex flex-wrap gap-2">
         <JumpChip href="#week" tone="open" label="This week" hint="Upcoming markets in Toronto" />
-        <JumpChip href="#find" tone="find" label="Search" hint="A name, food, or neighbourhood" />
+        <JumpChip href="#find" tone="find" label="Search" hint="When, where, or what they sell" />
         <JumpChip href="#here" tone="here" label="I am shopping" hint="Share location, then post" />
         <JumpChip href="#tape" tone="notes" label="Today's notes" hint="What shoppers posted today" />
       </nav>
@@ -109,12 +107,12 @@ export function HomeMosaic({
         id="find"
         tone="find"
         icon={Search}
-        kicker="Look it up"
-        title="Search Toronto markets"
-        how="Type a market name, a neighbourhood, or a food, then press Search. Or tap a day."
+        kicker="When, where, or what"
+        title="Find a market"
+        how="If you know the name, type it. If not, start with when you can go, then a neighbourhood."
         className="mt-5"
       >
-        <QuickFind tags={tags} />
+        <QuickFind markets={markets} />
       </HomePanel>
 
       <div className="mt-5 grid items-start gap-5 xl:grid-cols-2">

@@ -1,4 +1,5 @@
 import { isSupabaseConfigured } from "@/lib/constants";
+import { distanceMeters } from "@/lib/geo";
 import { LAUNCH_CITY, isLaunchCity } from "@/lib/launch";
 import {
   localCities,
@@ -206,6 +207,14 @@ export async function searchDirectory(filters: SearchFilters) {
   if (filters.openNow) {
     markets = markets.filter((m) =>
       isMarketOpen(schedulesByMarket.get(m.id) ?? [], m.province),
+    );
+  }
+  if (filters.near) {
+    const here = filters.near;
+    markets = [...markets].sort(
+      (a, b) =>
+        distanceMeters(here, { lat: a.lat, lng: a.lng }) -
+        distanceMeters(here, { lat: b.lat, lng: b.lng }),
     );
   }
 

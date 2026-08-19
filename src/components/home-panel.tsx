@@ -12,18 +12,27 @@ export type PanelTone =
   | "more"
   | "directory";
 
-const quiet = {
-  shell: "bg-card ring-1 ring-border",
-  featured: false,
+type ToneStyle = {
+  shell: string;
+  ink: "paper" | "leaf";
 };
 
-const featured = {
-  shell: "bg-card ring-1 ring-border shadow-sm border-l-[3px] border-l-primary",
-  featured: true,
+const quiet: ToneStyle = {
+  shell: "bg-card text-card-foreground ring-1 ring-border",
+  ink: "paper",
 };
 
-const tones: Record<PanelTone, { shell: string; featured: boolean }> = {
-  find: featured,
+const featured: ToneStyle = {
+  shell:
+    "bg-card text-card-foreground ring-1 ring-border shadow-sm border-l-[3px] border-l-primary",
+  ink: "paper",
+};
+
+const tones: Record<PanelTone, ToneStyle> = {
+  find: {
+    shell: "bg-panel-find text-primary-foreground",
+    ink: "leaf",
+  },
   open: featured,
   vendors: quiet,
   menus: quiet,
@@ -58,6 +67,7 @@ export function HomePanel({
   flush?: boolean;
 }) {
   const t = tones[tone];
+  const leaf = t.ink === "leaf";
   return (
     <section
       id={id}
@@ -65,28 +75,61 @@ export function HomePanel({
     >
       <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4 pb-1">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground">
+          <span
+            className={cn(
+              "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md",
+              leaf
+                ? "bg-primary-foreground/15 text-primary-foreground"
+                : "bg-secondary text-muted-foreground"
+            )}
+          >
             <Icon className="size-4" aria-hidden />
           </span>
           <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">{kicker}</p>
+            <p
+              className={cn(
+                "text-sm",
+                leaf ? "text-primary-foreground/75" : "text-muted-foreground"
+              )}
+            >
+              {kicker}
+            </p>
             <h2 className="font-heading text-2xl leading-tight">{title}</h2>
           </div>
         </div>
         {action ? (
-          <div className="shrink-0 text-base font-medium text-primary [&_a]:underline [&_a]:underline-offset-4">
+          <div
+            className={cn(
+              "shrink-0 text-base font-medium [&_a]:underline [&_a]:underline-offset-4",
+              leaf ? "text-primary-foreground" : "text-primary"
+            )}
+          >
             {action}
           </div>
         ) : null}
       </div>
       {flush ? (
         <>
-          <p className="px-4 pt-2 pb-3 text-base text-muted-foreground">{how}</p>
+          <p
+            className={cn(
+              "px-4 pt-2 pb-3 text-base",
+              leaf ? "text-primary-foreground/75" : "text-muted-foreground"
+            )}
+          >
+            {how}
+          </p>
           {children}
         </>
       ) : (
         <div className="px-4 pt-2 pb-4">
-          <p className="mb-4 text-base text-muted-foreground">{how}</p>
+          <p
+            className={cn(
+              "mb-4 text-base",
+              leaf ? "text-primary-foreground/75" : "text-muted-foreground"
+            )}
+          >
+            {how}
+          </p>
           {children}
         </div>
       )}

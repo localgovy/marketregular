@@ -83,13 +83,17 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
           ) : null}
 
           {rest.length ? (
-            <div className="grid items-start gap-3 sm:grid-cols-2">
+            <div className="columns-1 gap-3 sm:columns-2">
               {rest.map((group) => (
-                <DayCard
+                <div
                   key={group.id}
-                  group={group}
-                  titleClass="font-heading text-lg leading-tight"
-                />
+                  className="mb-3 inline-block w-full break-inside-avoid"
+                >
+                  <DayCard
+                    group={group}
+                    titleClass="font-heading text-lg leading-tight"
+                  />
+                </div>
               ))}
             </div>
           ) : null}
