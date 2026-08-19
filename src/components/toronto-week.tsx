@@ -60,6 +60,7 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
       kicker={`${LAUNCH_CITY} this week`}
       title="Upcoming markets"
       how="Gold means open right now. Tap a name for vendors and the map."
+      className="xl:shrink-0"
     >
       {!groups.length ? (
         <p className="text-base text-muted-foreground">

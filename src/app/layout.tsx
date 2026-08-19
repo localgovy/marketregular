@@ -29,11 +29,20 @@ export const metadata: Metadata = {
     "Find Toronto farmers' markets and their vendors: this week's hours, maps, menus, reviews, and a live floor feed.",
   icons: {
     icon: "/favicon.svg",
+    apple: "/apple-touch-icon.png",
   },
   openGraph: {
     type: "website",
     locale: "en_CA",
     siteName: SITE_NAME,
+    images: [
+      {
+        url: "/brand/market-regular-logo.png",
+        width: 400,
+        height: 400,
+        alt: SITE_NAME,
+      },
+    ],
   },
 };
 

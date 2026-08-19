@@ -1,13 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="2" fill="#3A6558"/>
+  <defs>
+    <pattern id="mr-awning" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#2C4A40"/>
+      <rect width="4" height="8" fill="#F3EEE4"/>
+    </pattern>
+    <clipPath id="mr-plate">
+      <path d="M5 0H27L32 5V27L27 32H5L0 27V5Z"/>
+    </clipPath>
+  </defs>
+  <path d="M5 0H27L32 5V27L27 32H5L0 27V5Z" fill="#2C4A40"/>
+  <rect width="32" height="7" fill="url(#mr-awning)" clip-path="url(#mr-plate)"/>
+  <path
+    d="M6.2 1.6H25.8L30.4 6.2V25.8L25.8 30.4H6.2L1.6 25.8V6.2Z"
+    stroke="#B07F2A"
+    stroke-width="1.15"
+  />
   <text
     x="16"
-    y="21.5"
+    y="22.5"
     text-anchor="middle"
-    fill="#F4F1EA"
-    font-family="ui-monospace, SFMono-Regular, Menlo, monospace"
+    fill="#F3EEE4"
+    font-family="ui-sans-serif, system-ui, sans-serif"
     font-size="11"
     font-weight="600"
-    letter-spacing="0.8"
-  >MR</text>
+    letter-spacing="0.4"
+  >mr</text>
 </svg>

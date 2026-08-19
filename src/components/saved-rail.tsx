@@ -22,6 +22,7 @@ export function SavedRail({
   return (
     <HomePanel
       id="saved"
+      place="rail"
       tone="here"
       icon={Bookmark}
       kicker="On your list"
@@ -35,17 +36,17 @@ export function SavedRail({
     >
       <div className="grid gap-3">
         {savedMarkets.length ? (
-          <ul className="overflow-hidden rounded-md ring-1 ring-border">
+          <ul className="ring-1 ring-border">
             {savedMarkets.map((market) => (
               <li
                 key={market.id}
-                className="flex items-center gap-2 border-b border-border last:border-b-0"
+                className="flex items-start gap-2 border-b border-border last:border-b-0"
               >
                 <Link
                   href={`/markets/${market.slug}`}
                   className="min-w-0 flex-1 px-3 py-2.5 hover:bg-secondary/50"
                 >
-                  <span className="block truncate text-base font-medium">{market.name}</span>
+                  <span className="block text-base font-medium">{market.name}</span>
                   <span className="text-sm text-muted-foreground">{market.address}</span>
                 </Link>
                 <span className="pr-2">

@@ -71,6 +71,7 @@ export function HomePanel({
   children,
   className,
   flush,
+  place = "page",
 }: {
   id?: string;
   tone: PanelTone;
@@ -82,9 +83,11 @@ export function HomePanel({
   children: React.ReactNode;
   className?: string;
   flush?: boolean;
+  place?: "page" | "rail";
 }) {
   const t = tones[tone];
   const leaf = t.ink === "leaf";
+  const rail = place === "rail";
   return (
     <section
       id={id}
@@ -92,18 +95,21 @@ export function HomePanel({
     >
       <div
         className={cn(
-          "flex flex-wrap items-end justify-between gap-3 px-4 pt-4 pb-1",
+          rail
+            ? "flex flex-col gap-1 px-4 pt-4 pb-2"
+            : "flex flex-wrap items-end justify-between gap-3 px-4 pt-4 pb-1",
           t.band,
         )}
       >
         <div className="flex min-w-0 items-start gap-3">
           <span
             className={cn(
-              "mt-0.5 flex size-9 shrink-0 items-center justify-center stall-chip-sm",
+              "mt-0.5 flex shrink-0 items-center justify-center stall-chip-sm",
+              rail ? "size-8" : "size-9",
               t.mark,
             )}
           >
-            <Icon className="size-4" aria-hidden />
+            <Icon className={rail ? "size-3.5" : "size-4"} aria-hidden />
           </span>
           <div className="min-w-0">
             <p
@@ -113,11 +119,22 @@ export function HomePanel({
               )}
             >
               {kicker}
+              {rail && action ? (
+                <span
+                  className={cn(
+                    leaf ? "text-primary-foreground" : "text-primary",
+                    "[&_a]:underline [&_a]:underline-offset-4",
+                  )}
+                >
+                  {" "}
+                  · {action}
+                </span>
+              ) : null}
             </p>
-            <h2>{title}</h2>
+            <h2 className={rail ? "type-column" : undefined}>{title}</h2>
           </div>
         </div>
-        {action ? (
+        {!rail && action ? (
           <div
             className={cn(
               "shrink-0 text-base font-medium [&_a]:underline [&_a]:underline-offset-4",
@@ -132,24 +149,25 @@ export function HomePanel({
         <>
           <p
             className={cn(
-              "px-4 pt-2 pb-3 text-base",
+              "shrink-0 px-4 pt-2 pb-3",
+              rail ? "text-sm leading-relaxed" : "text-base",
               leaf ? "text-primary-foreground/75" : "text-muted-foreground"
             )}
           >
             {how}
           </p>
-          {children}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
         </>
       ) : (
-        <div className="px-4 pt-2 pb-4">
-          <p
+        <div className={cn("px-4 pt-2 pb-4", rail && "px-3")}>
+          <div
             className={cn(
-              "mb-4 text-base",
+              rail ? "mb-3 text-sm leading-relaxed" : "mb-4 text-base",
               leaf ? "text-primary-foreground/75" : "text-muted-foreground"
             )}
           >
             {how}
-          </p>
+          </div>
           {children}
         </div>
       )}

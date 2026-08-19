@@ -46,7 +46,15 @@ export function MarketMap({
       map.fitBounds(bounds, { padding: 48, maxZoom: 13, duration: 0 });
     }
 
-    return () => map.remove();
+    const resize = () => map.resize();
+    map.on("load", resize);
+    const observer = new ResizeObserver(resize);
+    observer.observe(ref.current);
+
+    return () => {
+      observer.disconnect();
+      map.remove();
+    };
   }, [markets]);
 
   return (

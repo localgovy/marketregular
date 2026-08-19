@@ -172,7 +172,7 @@ export function FloorTape({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="tape-scroll min-h-0 flex-1 overflow-y-auto">
         <div className="awning-board px-3 pt-4 pb-3 text-chalk">
           <p className="type-kicker flex items-center gap-2 text-chalk/80">
             <span className="live-dot size-2 rounded-full bg-chalk" />
