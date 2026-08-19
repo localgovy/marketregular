@@ -170,17 +170,20 @@
 }
 
 /*
-  Diagonal tent valance: the chalk/leaf rhythm, only along the top edge.
-  Fill stays solid so body text never sits on high-contrast stripes.
+  Diagonal tent valance along the top edge only.
+  Tile width is the 45° period (16px × √2) so stripes meet, not dash.
+  Fill stays solid so body text never sits on the stripes.
 */
 @utility awning-leaf {
   background-color: var(--primary);
   background-image: repeating-linear-gradient(
-    148deg,
-    var(--chalk) 0 3px,
-    var(--primary) 3px 9px
+    45deg,
+    var(--chalk) 0,
+    var(--chalk) 6px,
+    var(--primary) 7px,
+    var(--primary) 16px
   );
-  background-size: 18px 8px;
+  background-size: 22.627px 14px;
   background-repeat: repeat-x;
   background-position: 0 0;
 }
@@ -188,11 +191,13 @@
 @utility awning-board {
   background-color: var(--board);
   background-image: repeating-linear-gradient(
-    148deg,
-    var(--chalk) 0 3px,
-    var(--board) 3px 9px
+    45deg,
+    var(--chalk) 0,
+    var(--chalk) 6px,
+    var(--board) 7px,
+    var(--board) 16px
   );
-  background-size: 18px 8px;
+  background-size: 22.627px 14px;
   background-repeat: repeat-x;
   background-position: 0 0;
 }

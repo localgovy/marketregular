@@ -49,7 +49,7 @@ export function HomeMosaic({
         icon={Search}
         kicker="When, where, or what"
         title="Find a market"
-        how="If you know the name, type it. If not, start with when you can go, then a neighbourhood."
+        how="Choose when, a neighbourhood, or what they sell. Stay here until you press Search at the bottom."
         className="mt-5"
       >
         <QuickFind markets={markets} />

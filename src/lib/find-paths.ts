@@ -43,20 +43,24 @@ export function tagLabel(tag: string) {
   return tag.charAt(0).toUpperCase() + tag.slice(1);
 }
 
-export function whenLinks(today: number) {
-  const chips: Array<{ href: string; label: string; tone?: "open" }> = [
-    { href: "/search?openNow=1", label: "Open now", tone: "open" },
-  ];
+export function whenOptions(today: number) {
+  const chips: Array<{
+    id: string;
+    label: string;
+    weekday?: number;
+    openNow?: boolean;
+    tone?: "open";
+  }> = [{ id: "open", label: "Open now", openNow: true, tone: "open" }];
   if (today < 0) return chips;
 
-  chips.push({ href: `/search?weekday=${today}`, label: "Today" });
+  chips.push({ id: "today", label: "Today", weekday: today });
   const tomorrow = (today + 1) % 7;
-  chips.push({ href: `/search?weekday=${tomorrow}`, label: "Tomorrow" });
+  chips.push({ id: "tomorrow", label: "Tomorrow", weekday: tomorrow });
   if (today !== 6 && tomorrow !== 6) {
-    chips.push({ href: "/search?weekday=6", label: "Saturday" });
+    chips.push({ id: "saturday", label: "Saturday", weekday: 6 });
   }
   if (today !== 0 && tomorrow !== 0) {
-    chips.push({ href: "/search?weekday=0", label: "Sunday" });
+    chips.push({ id: "sunday", label: "Sunday", weekday: 0 });
   }
   return chips;
 }
