@@ -15,29 +15,44 @@ export type PanelTone =
 type ToneStyle = {
   shell: string;
   ink: "paper" | "leaf";
+  mark: string;
+  band?: string;
 };
 
 const quiet: ToneStyle = {
   shell: "bg-card text-card-foreground ring-1 ring-border",
   ink: "paper",
-};
-
-const featured: ToneStyle = {
-  shell:
-    "bg-card text-card-foreground ring-1 ring-border shadow-sm border-l-[3px] border-l-primary",
-  ink: "paper",
+  mark: "bg-secondary text-muted-foreground",
 };
 
 const tones: Record<PanelTone, ToneStyle> = {
   find: {
     shell: "bg-panel-find text-primary-foreground",
     ink: "leaf",
+    mark: "bg-primary-foreground/15 text-primary-foreground",
   },
-  open: featured,
-  vendors: quiet,
-  menus: quiet,
+  open: {
+    shell: "bg-card text-card-foreground ring-1 ring-border",
+    ink: "paper",
+    mark: "bg-primary text-primary-foreground",
+    band: "bg-[color-mix(in_srgb,var(--primary)_9%,var(--card))]",
+  },
+  vendors: {
+    shell: "bg-card text-card-foreground ring-1 ring-border",
+    ink: "paper",
+    mark: "bg-ticket/15 text-ticket",
+  },
+  menus: {
+    shell: "bg-card text-card-foreground ring-1 ring-border",
+    ink: "paper",
+    mark: "bg-foreground text-receipt",
+  },
   here: quiet,
-  map: quiet,
+  map: {
+    shell: "bg-card text-card-foreground ring-1 ring-border",
+    ink: "paper",
+    mark: "bg-secondary text-primary",
+  },
   back: quiet,
   more: quiet,
   directory: quiet,
@@ -73,14 +88,17 @@ export function HomePanel({
       id={id}
       className={cn("scroll-mt-24 overflow-hidden rounded-lg", t.shell, className)}
     >
-      <div className="flex flex-wrap items-end justify-between gap-3 px-4 pt-4 pb-1">
+      <div
+        className={cn(
+          "flex flex-wrap items-end justify-between gap-3 px-4 pt-4 pb-1",
+          t.band,
+        )}
+      >
         <div className="flex min-w-0 items-start gap-3">
           <span
             className={cn(
               "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md",
-              leaf
-                ? "bg-primary-foreground/15 text-primary-foreground"
-                : "bg-secondary text-muted-foreground"
+              t.mark,
             )}
           >
             <Icon className="size-4" aria-hidden />
@@ -146,23 +164,31 @@ export function JumpChip({
   href: string;
   label: string;
   hint: string;
-  tone: "find" | "open" | "here" | "notes";
+  tone: "find" | "open" | "vendors" | "notes";
 }) {
-  const featuredChip = tone === "open" || tone === "find";
+  const shells = {
+    open: "bg-[color-mix(in_srgb,var(--primary)_9%,white)] text-foreground hover:bg-[color-mix(in_srgb,var(--primary)_14%,white)]",
+    find: "bg-primary text-primary-foreground hover:bg-primary/90",
+    vendors: "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+    notes: "bg-board text-chalk hover:bg-[color-mix(in_srgb,white_8%,var(--board))]",
+  } as const;
+  const hints = {
+    open: "text-muted-foreground",
+    find: "text-primary-foreground/75",
+    vendors: "text-muted-foreground",
+    notes: "text-chalk/75",
+  } as const;
+
   return (
     <a
       href={href}
       className={cn(
         "flex min-h-12 min-w-[9.5rem] flex-1 flex-col justify-center rounded-md px-3 py-2 no-underline transition-colors",
-        featuredChip
-          ? "bg-primary text-primary-foreground hover:bg-primary/90"
-          : "bg-card text-foreground ring-1 ring-border hover:bg-secondary"
+        shells[tone],
       )}
     >
       <span className="text-base font-medium">{label}</span>
-      <span className={cn("text-sm", featuredChip ? "opacity-80" : "text-muted-foreground")}>
-        {hint}
-      </span>
+      <span className={cn("text-sm", hints[tone])}>{hint}</span>
     </a>
   );
 }

@@ -7,73 +7,15 @@ import {
   getCurrentProfile,
   getFloorTape,
   getOpenToday,
-  getTablePeek,
   listMarkets,
   listSchedules,
   listStalls,
   listVendors,
 } from "@/lib/data/catalog";
-import { WEEKDAYS } from "@/lib/constants";
 import { upcomingByDay } from "@/lib/upcoming";
-import type { Market, StallRef } from "@/types/database";
+import { topVendorsThisWeek, vendorsSellingToday } from "@/lib/vendor-week";
 import { List, Store } from "lucide-react";
 import Link from "next/link";
-
-function weekdayInToronto() {
-  const name = new Intl.DateTimeFormat("en-CA", {
-    weekday: "long",
-    timeZone: "America/Toronto",
-  }).format(new Date());
-  return WEEKDAYS.findIndex((d) => d === name);
-}
-
-function nextWhen(days: number[]) {
-  if (!days.length) return null;
-  const today = weekdayInToronto();
-  if (today < 0) return WEEKDAYS[days[0]]?.slice(0, 3) ?? null;
-  for (let i = 0; i < 7; i += 1) {
-    const day = (today + i) % 7;
-    if (days.includes(day)) {
-      if (i === 0) return "Today";
-      if (i === 1) return "Tomorrow";
-      return WEEKDAYS[day].slice(0, 3);
-    }
-  }
-  return null;
-}
-
-function nextRank(days: number[]) {
-  const today = weekdayInToronto();
-  if (today < 0 || !days.length) return 9;
-  let best = 8;
-  for (const day of days) {
-    const delta = (day - today + 7) % 7;
-    if (delta < best) best = delta;
-  }
-  return best;
-}
-
-function returningRows(stalls: StallRef[], markets: Market[]) {
-  const seen = new Set<string>();
-  const ranked = [...stalls].sort((a, b) => nextRank(a.days) - nextRank(b.days));
-  const rows = [];
-  for (const stall of ranked) {
-    if (seen.has(stall.id)) continue;
-    const market = markets.find((m) => m.id === stall.market_id);
-    const when = nextWhen(stall.days);
-    if (!market || !when) continue;
-    seen.add(stall.id);
-    rows.push({
-      vendorName: stall.name,
-      vendorSlug: stall.slug,
-      marketName: market.name,
-      marketSlug: market.slug,
-      when,
-    });
-    if (rows.length >= 3) break;
-  }
-  return rows;
-}
 
 export default async function HomePage() {
   const [tape, openNow, markets, vendors, stalls, schedules, profile] = await Promise.all([
@@ -94,27 +36,8 @@ export default async function HomePage() {
   }
 
   const week = upcomingByDay(markets, scheduleMap);
-  const nextUp = week.flatMap((group) => group.slots)[0]?.market;
-  const showcase = openNow[0] ?? nextUp ?? markets[0];
-  const attending = showcase
-    ? stalls.filter((s) => s.market_id === showcase.id).slice(0, 6)
-    : [];
-  const tablePeek = await getTablePeek(attending.map((s) => s.id));
-  const returning = returningRows(stalls, markets);
-  const spotlight = returning[0] ?? null;
-  const otherHalls = spotlight
-    ? stalls
-        .filter((s) => s.slug === spotlight.vendorSlug && s.market_id !== (
-          markets.find((m) => m.slug === spotlight.marketSlug)?.id
-        ))
-        .flatMap((s) => {
-          const market = markets.find((m) => m.id === s.market_id);
-          if (!market) return [];
-          return [{ name: market.name, slug: market.slug, city: market.city }];
-        })
-        .filter((hall, i, all) => all.findIndex((h) => h.slug === hall.slug) === i)
-        .slice(0, 5)
-    : [];
+  const sellingToday = vendorsSellingToday(stalls, markets, vendors, scheduleMap);
+  const weekVendors = topVendorsThisWeek(stalls, markets, vendors, scheduleMap, tape);
 
   const openIds = new Set(openNow.map((m) => m.id));
   const signedIn = Boolean(profile);
@@ -126,22 +49,16 @@ export default async function HomePage() {
           id="tape"
           className="order-2 h-[70vh] scroll-mt-20 overflow-hidden border-y border-board lg:order-1 lg:row-span-2 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:border-y-0 lg:border-r lg:border-board"
         >
-          <FloorTape initialItems={tape} signedIn={signedIn} stalls={stalls} />
+          <FloorTape initialItems={tape} signedIn={signedIn} stalls={stalls} markets={markets} />
         </aside>
 
         <div className="order-1 min-w-0 px-4 py-5 lg:px-6 lg:py-6">
-          {showcase ? (
+          {markets.length ? (
             <HomeMosaic
               week={week}
-              showcase={showcase}
-              attending={attending}
-              tablePeek={tablePeek}
               markets={markets}
-              signedIn={signedIn}
-              returning={returning}
-              spotlightName={spotlight?.vendorName ?? null}
-              spotlightSlug={spotlight?.vendorSlug ?? null}
-              otherHalls={otherHalls}
+              sellingToday={sellingToday}
+              weekVendors={weekVendors}
             />
           ) : (
             <p className="text-sm text-muted-foreground">Directory is empty.</p>

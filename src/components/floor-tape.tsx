@@ -6,7 +6,7 @@ import { FloorComposer } from "@/components/floor-composer";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { decodeFloorBody, floorKicker, scrapStyle } from "@/lib/floor-note";
 import { timeAgo } from "@/lib/format";
-import type { FloorItem, StallRef } from "@/types/database";
+import type { FloorItem, Market, StallRef } from "@/types/database";
 
 function TapeCard({ item, stalls }: { item: FloorItem; stalls: StallRef[] }) {
   const vendor =
@@ -75,10 +75,12 @@ export function FloorTape({
   initialItems,
   signedIn,
   stalls,
+  markets,
 }: {
   initialItems: FloorItem[];
   signedIn: boolean;
   stalls: StallRef[];
+  markets: Market[];
 }) {
   const [items, setItems] = useState(initialItems);
 
@@ -184,6 +186,7 @@ export function FloorTape({
       <FloorComposer
         signedIn={signedIn}
         stalls={stalls}
+        markets={markets}
         onPosted={(item) => setItems((current) => [item, ...current].slice(0, 30))}
       />
       {items.length ? (

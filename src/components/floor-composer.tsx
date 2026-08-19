@@ -2,33 +2,39 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { Hash, Star, Store } from "lucide-react";
+import { Hash, MapPin, Star, Store } from "lucide-react";
 import { composeFloorNote } from "@/app/actions/presence";
 import { useGeo } from "@/components/geo-provider";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FLOOR_TAGS, isSupabaseConfigured } from "@/lib/constants";
 import { NOTE_PROMPTS } from "@/lib/floor-note";
 import { cn } from "@/lib/utils";
-import type { FloorItem, StallRef } from "@/types/database";
+import type { FloorItem, Market, StallRef } from "@/types/database";
 
-type Extra = "stars" | "vendor" | "tags" | null;
+type Extra = "stars" | "place" | "tags" | null;
 
 export function FloorComposer({
   signedIn,
   stalls,
+  markets,
   onPosted,
 }: {
   signedIn: boolean;
   stalls: StallRef[];
+  markets: Market[];
   onPosted: (item: FloorItem) => void;
 }) {
   const { nearby, coords, error, request } = useGeo();
-  const market = nearby[0];
+  const here = nearby[0];
   const demo = !isSupabaseConfigured();
   const [body, setBody] = useState("");
   const [rating, setRating] = useState(0);
+  const [marketId, setMarketId] = useState<string | null>(null);
   const [vendorId, setVendorId] = useState("");
+  const [marketQuery, setMarketQuery] = useState("");
+  const [vendorQuery, setVendorQuery] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [extra, setExtra] = useState<Extra>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -36,14 +42,45 @@ export function FloorComposer({
   const wrapRef = useRef<HTMLDivElement>(null);
   const prompt = NOTE_PROMPTS[Math.floor(Date.now() / 3_600_000) % NOTE_PROMPTS.length];
 
+  const picked = marketId ? markets.find((m) => m.id === marketId) ?? null : null;
+  const market = marketId === "" ? null : (picked ?? here ?? null);
+
   const stallOptions = useMemo(() => {
-    if (market) return stalls.filter((s) => s.market_id === market.id);
-    return stalls;
+    if (!market) return [];
+    return stalls.filter((s) => s.market_id === market.id);
   }, [market, stalls]);
 
   const tagged = stallOptions.find((s) => s.id === vendorId);
-  const marketId = market?.id ?? tagged?.market_id;
   const canWrite = demo || (signedIn && Boolean(market && coords));
+
+  const marketMatches = useMemo(() => {
+    const q = marketQuery.trim().toLowerCase();
+    const list = q
+      ? markets.filter((m) =>
+          `${m.name} ${m.address}`.toLowerCase().includes(q),
+        )
+      : markets;
+    return [...list].sort((a, b) => {
+      if (here) {
+        if (a.id === here.id) return -1;
+        if (b.id === here.id) return 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [here, marketQuery, markets]);
+
+  const vendorMatches = useMemo(() => {
+    const q = vendorQuery.trim().toLowerCase();
+    if (!q) return stallOptions;
+    return stallOptions.filter((s) =>
+      `${s.name} ${s.stall ?? ""}`.toLowerCase().includes(q),
+    );
+  }, [stallOptions, vendorQuery]);
+
+  useEffect(() => {
+    if (extra !== "place") return;
+    document.getElementById("floor-market-search")?.focus();
+  }, [extra]);
 
   useEffect(() => {
     if (!extra) return;
@@ -61,6 +98,12 @@ export function FloorComposer({
     };
   }, [extra]);
 
+  function pickMarket(id: string) {
+    setMarketId(id);
+    setVendorId("");
+    setVendorQuery("");
+  }
+
   function toggleTag(tag: string) {
     setTags((current) =>
       current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag],
@@ -70,8 +113,8 @@ export function FloorComposer({
   function submit() {
     setMessage(null);
     setExtra(null);
-    if (!marketId) {
-      setMessage("Pick a vendor, or share your location so we know which market.");
+    if (!market) {
+      setMessage("Search for a market first. Vendor is optional.");
       return;
     }
     if (rating > 0 && body.trim().length < 8) {
@@ -81,7 +124,7 @@ export function FloorComposer({
     start(async () => {
       const pin = coords ?? { lat: 0, lng: 0 };
       const result = await composeFloorNote({
-        marketId,
+        marketId: market.id,
         body,
         lat: pin.lat,
         lng: pin.lng,
@@ -100,12 +143,12 @@ export function FloorComposer({
         body: body.trim(),
         created_at: new Date().toISOString(),
         author_name: "You",
-        market_name: market?.name ?? null,
-        market_slug: market?.slug ?? null,
+        market_name: market.name,
+        market_slug: market.slug,
         vendor_name: tagged?.name ?? null,
         vendor_slug: tagged?.slug ?? null,
         rating: rating > 0 ? rating : null,
-        verified_on_site: Boolean(market),
+        verified_on_site: Boolean(coords && here?.id === market.id),
         tags,
       });
       setBody("");
@@ -133,7 +176,7 @@ export function FloorComposer({
         placeholder={prompt}
       />
 
-      {rating || tagged || tags.length ? (
+      {rating || market || tagged || tags.length ? (
         <ul className="mt-1.5 flex flex-wrap gap-1 px-1">
           {rating ? (
             <li className="inline-flex overflow-hidden rounded-full bg-ticket text-receipt">
@@ -154,11 +197,33 @@ export function FloorComposer({
               </button>
             </li>
           ) : null}
+          {market ? (
+            <li className="inline-flex overflow-hidden rounded-full bg-board text-chalk">
+              <button
+                type="button"
+                onClick={() => setExtra("place")}
+                className="px-2 py-0.5 text-sm"
+              >
+                {market.name}
+              </button>
+              <button
+                type="button"
+                aria-label="Remove market"
+                onClick={() => {
+                  setMarketId("");
+                  setVendorId("");
+                }}
+                className="px-1.5 text-sm opacity-80 hover:opacity-100"
+              >
+                ×
+              </button>
+            </li>
+          ) : null}
           {tagged ? (
             <li className="inline-flex overflow-hidden rounded-full bg-foreground text-receipt">
               <button
                 type="button"
-                onClick={() => setExtra("vendor")}
+                onClick={() => setExtra("place")}
                 className="px-2 py-0.5 text-sm"
               >
                 {tagged.name}
@@ -204,11 +269,11 @@ export function FloorComposer({
           <Star className={cn("size-4", rating ? "fill-ticket text-ticket" : "")} />
         </ExtraButton>
         <ExtraButton
-          label="Vendor"
-          open={extra === "vendor"}
-          onClick={() => setExtra((current) => (current === "vendor" ? null : "vendor"))}
+          label="Market"
+          open={extra === "place"}
+          onClick={() => setExtra((current) => (current === "place" ? null : "place"))}
         >
-          <Store className="size-4" />
+          <MapPin className={cn("size-4", market ? "text-primary" : "")} />
         </ExtraButton>
         <ExtraButton
           label="Topic"
@@ -229,14 +294,14 @@ export function FloorComposer({
             <Button type="button" size="sm" onClick={request}>
               Share location
             </Button>
-          ) : !demo && !market ? (
+          ) : !demo && !here ? (
             <p className="truncate text-xs text-muted-foreground">At a market to post</p>
           ) : (
             <Button
               type="button"
               size="sm"
               onClick={submit}
-              disabled={pending || body.trim().length < 3 || !canWrite}
+              disabled={pending || body.trim().length < 3 || !canWrite || !market}
             >
               {pending ? "…" : rating ? "Review" : "Post"}
             </Button>
@@ -268,36 +333,97 @@ export function FloorComposer({
         </ExtraPanel>
       ) : null}
 
-      {extra === "vendor" ? (
-        <ExtraPanel title="Which stall?" hint="Pick one, then click outside the box to save it.">
-          <div className="max-h-36 overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => setVendorId("")}
-              className={cn(
-                "block w-full rounded-md px-2 py-1.5 text-left text-sm",
-                !vendorId ? "bg-foreground text-receipt" : "hover:bg-secondary",
-              )}
-            >
-              The market in general
-            </button>
-            {stallOptions.map((stall) => (
-              <button
-                key={`${stall.market_id}-${stall.id}`}
-                type="button"
-                onClick={() => setVendorId(stall.id)}
-                className={cn(
-                  "block w-full rounded-md px-2 py-1.5 text-left text-sm",
-                  vendorId === stall.id ? "bg-foreground text-receipt" : "hover:bg-secondary",
-                )}
-              >
-                {stall.name}
-                {stall.stall ? (
-                  <span className="ml-1 text-muted-foreground">Stall {stall.stall}</span>
-                ) : null}
-              </button>
-            ))}
+      {extra === "place" ? (
+        <ExtraPanel
+          title="Which market?"
+          hint="Search for the market first. A vendor is optional."
+        >
+          <Input
+            id="floor-market-search"
+            type="search"
+            value={marketQuery}
+            onChange={(e) => setMarketQuery(e.target.value)}
+            placeholder="Wychwood, Junction, St. Lawrence…"
+            className="h-9 bg-background text-base"
+          />
+          <div className="mt-2 max-h-36 overflow-y-auto">
+            {marketMatches.length ? (
+              marketMatches.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => pickMarket(item.id)}
+                  className={cn(
+                    "block w-full rounded-md px-2 py-1.5 text-left text-sm",
+                    market?.id === item.id ? "bg-foreground text-receipt" : "hover:bg-secondary",
+                  )}
+                >
+                  <span className="block font-medium">{item.name}</span>
+                  <span
+                    className={cn(
+                      "block text-xs",
+                      market?.id === item.id ? "text-receipt/80" : "text-muted-foreground",
+                    )}
+                  >
+                    {item.address}
+                    {here?.id === item.id ? " · near you" : ""}
+                  </span>
+                </button>
+              ))
+            ) : (
+              <p className="px-2 py-1.5 text-sm text-muted-foreground">No markets match that.</p>
+            )}
           </div>
+
+          {market ? (
+            <div className="mt-3 border-t border-border pt-3">
+              <p className="flex items-center gap-1.5 text-sm font-medium">
+                <Store className="size-3.5" aria-hidden />
+                Vendor at this market
+              </p>
+              <p className="mb-2 text-sm text-muted-foreground">Optional. Skip this if the note is about the market.</p>
+              {stallOptions.length > 5 ? (
+                <Input
+                  type="search"
+                  value={vendorQuery}
+                  onChange={(e) => setVendorQuery(e.target.value)}
+                  placeholder="Search a stall"
+                  className="mb-2 h-9 bg-background text-base"
+                />
+              ) : null}
+              <div className="max-h-32 overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={() => setVendorId("")}
+                  className={cn(
+                    "block w-full rounded-md px-2 py-1.5 text-left text-sm",
+                    !vendorId ? "bg-foreground text-receipt" : "hover:bg-secondary",
+                  )}
+                >
+                  Just the market
+                </button>
+                {vendorMatches.map((stall) => (
+                  <button
+                    key={`${stall.market_id}-${stall.id}`}
+                    type="button"
+                    onClick={() => setVendorId(stall.id)}
+                    className={cn(
+                      "block w-full rounded-md px-2 py-1.5 text-left text-sm",
+                      vendorId === stall.id ? "bg-foreground text-receipt" : "hover:bg-secondary",
+                    )}
+                  >
+                    {stall.name}
+                    {stall.stall ? (
+                      <span className="ml-1 text-muted-foreground">· {stall.stall}</span>
+                    ) : null}
+                  </button>
+                ))}
+                {!vendorMatches.length ? (
+                  <p className="px-2 py-1.5 text-sm text-muted-foreground">No stalls match that.</p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </ExtraPanel>
       ) : null}
 

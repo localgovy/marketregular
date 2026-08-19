@@ -44,7 +44,7 @@ function DayCard({
 }) {
   return (
     <div className="overflow-hidden rounded-md bg-[color-mix(in_srgb,var(--foreground)_3%,var(--card))] ring-1 ring-border/70">
-      <div className="flex items-baseline justify-between gap-2 border-b border-border/60 bg-[color-mix(in_srgb,var(--primary)_7%,white)] px-3 py-2">
+      <div className="flex items-baseline justify-between gap-2 border-b border-border/60 bg-card px-3 py-2">
         <h3 className={titleClass}>{group.label}</h3>
         <p className="text-sm font-medium text-primary">{group.date}</p>
       </div>
