@@ -15,9 +15,26 @@ export type UpcomingGroup = {
   id: string;
   label: string;
   hint: string;
+  date: string;
   open: boolean;
   slots: UpcomingSlot[];
 };
+
+function torontoDateLabel(now: Date, offset: number, tz: string) {
+  const ymd = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  const [year, month, day] = ymd.split("-").map(Number);
+  const utc = Date.UTC(year, month - 1, day + offset);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(utc));
+}
 
 function rowForDay(rows: MarketSchedule[], weekday: number, now: Date, tz: string) {
   return rows.find(
@@ -66,7 +83,8 @@ export function upcomingByDay(
     rest.push({
       id: `day-${day}`,
       label: offset === 1 ? "Tomorrow" : WEEKDAYS[day],
-      hint: offset === 1 ? WEEKDAYS[day] : `${slots.length} market${slots.length === 1 ? "" : "s"}`,
+      hint: `${slots.length} market${slots.length === 1 ? "" : "s"}`,
+      date: torontoDateLabel(now, offset, tz),
       open: false,
       slots,
     });
@@ -78,6 +96,7 @@ export function upcomingByDay(
       id: "open",
       label: "Open now",
       hint: "Doors are open this minute",
+      date: torontoDateLabel(now, 0, tz),
       open: true,
       slots: openNow,
     });
@@ -87,6 +106,7 @@ export function upcomingByDay(
       id: "later",
       label: "Later today",
       hint: WEEKDAYS[weekday],
+      date: torontoDateLabel(now, 0, tz),
       open: false,
       slots: laterToday,
     });

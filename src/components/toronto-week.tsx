@@ -28,7 +28,7 @@ function SlotRow({
             Open · until {slot.until}
           </span>
         ) : (
-          <span className="font-mono text-sm text-muted-foreground">{slot.hours}</span>
+          <span className="font-mono text-sm font-medium text-primary">{slot.hours}</span>
         )}
       </span>
     </Link>
@@ -58,7 +58,7 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
             <div className="overflow-hidden rounded-md ring-1 ring-border">
               <div className="flex items-baseline justify-between gap-2 border-b border-border px-3 py-2">
                 <h3 className="font-heading text-xl leading-tight">{open.label}</h3>
-                <p className="text-sm text-muted-foreground">{open.hint}</p>
+                <p className="text-sm font-medium text-primary">{open.date}</p>
               </div>
               <ul className="divide-y divide-border">
                 {open.slots.map((slot) => (
@@ -79,7 +79,7 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
                 >
                   <div className="flex items-baseline justify-between gap-2 border-b border-border px-3 py-2">
                     <h3 className="font-heading text-lg leading-tight">{group.label}</h3>
-                    <p className="text-sm text-muted-foreground">{group.hint}</p>
+                    <p className="text-sm font-medium text-primary">{group.date}</p>
                   </div>
                   <ul className="divide-y divide-border">
                     {group.slots.map((slot) => (
