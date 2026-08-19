@@ -172,7 +172,7 @@ export function FloorTape({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="shrink-0 bg-board px-3 pt-6 pb-3 text-chalk">
+      <div className="awning-board shrink-0 px-3 pt-6 pb-3 text-chalk">
         <p className="flex items-center gap-2 text-sm font-medium text-chalk/80">
           <span className="live-dot size-2 rounded-full bg-chalk" />
           Live notes

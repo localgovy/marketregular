@@ -168,3 +168,31 @@
     0 4px 0 var(--chalk),
     0 6px 0 var(--board);
 }
+
+/*
+  Diagonal tent valance: the chalk/leaf rhythm, only along the top edge.
+  Fill stays solid so body text never sits on high-contrast stripes.
+*/
+@utility awning-leaf {
+  background-color: var(--primary);
+  background-image: repeating-linear-gradient(
+    148deg,
+    var(--chalk) 0 3px,
+    var(--primary) 3px 9px
+  );
+  background-size: 18px 8px;
+  background-repeat: repeat-x;
+  background-position: 0 0;
+}
+
+@utility awning-board {
+  background-color: var(--board);
+  background-image: repeating-linear-gradient(
+    148deg,
+    var(--chalk) 0 3px,
+    var(--board) 3px 9px
+  );
+  background-size: 18px 8px;
+  background-repeat: repeat-x;
+  background-position: 0 0;
+}

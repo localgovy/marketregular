@@ -30,6 +30,7 @@ const tones: Record<PanelTone, ToneStyle> = {
     shell: "bg-panel-find text-primary-foreground",
     ink: "leaf",
     mark: "bg-primary-foreground/15 text-primary-foreground",
+    band: "awning-leaf",
   },
   open: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
@@ -168,9 +169,9 @@ export function JumpChip({
 }) {
   const shells = {
     open: "bg-[color-mix(in_srgb,var(--primary)_9%,white)] text-foreground hover:bg-[color-mix(in_srgb,var(--primary)_14%,white)]",
-    find: "bg-primary text-primary-foreground hover:bg-primary/90",
+    find: "awning-leaf overflow-hidden pt-3 text-primary-foreground hover:brightness-[1.05]",
     vendors: "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-    notes: "bg-board text-chalk hover:bg-[color-mix(in_srgb,white_8%,var(--board))]",
+    notes: "awning-board overflow-hidden pt-3 text-chalk hover:brightness-[1.08]",
   } as const;
   const hints = {
     open: "text-muted-foreground",
