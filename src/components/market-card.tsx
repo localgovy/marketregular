@@ -20,7 +20,7 @@ export function MarketCard({
       <Link href={`/markets/${market.slug}`} className="block h-full">
         <Card className="h-full transition-shadow hover:shadow-md">
           <CardHeader className="pr-16">
-            <p className="text-xs tracking-wide text-muted-foreground uppercase">
+            <p className="text-sm text-muted-foreground">
               {market.address}
             </p>
             <CardTitle className="font-heading text-xl leading-snug">

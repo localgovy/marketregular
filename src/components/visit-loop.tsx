@@ -43,37 +43,35 @@ export function HomeMosaic({
 
       <FloorStrip openNow={openNow} />
 
-      <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20vw)] xl:items-start">
-        <div className="contents xl:flex xl:min-w-0 xl:flex-col xl:gap-5">
-          <HomePanel
-            id="find"
-            tone="find"
-            icon={Search}
-            kicker="When, where, or what"
-            title="Find a market"
-            how="Choose when, a neighbourhood, or what they sell. Press Search when the list looks right."
-          >
-            <QuickFind markets={markets} />
-          </HomePanel>
+      <HomePanel
+        id="find"
+        tone="find"
+        icon={Search}
+        kicker="When, where, or what"
+        title="Find a market"
+        how="Choose when, a neighbourhood, or what they sell. Press Search when the list looks right."
+        className="mb-5"
+      >
+        <QuickFind markets={markets} />
+      </HomePanel>
 
-          <TorontoWeek groups={week} />
+      <TorontoWeek groups={week} />
 
-          <HomePanel
-            id="map"
-            tone="map"
-            icon={Map}
-            kicker="Around the city"
-            title="Map of Toronto markets"
-            how="Tap a pin, then tap the market name in the popup to open its page."
-            className="order-last xl:order-none"
-            flush
-          >
-            <MarketMapLazy
-              markets={markets}
-              className="h-56 w-full overflow-hidden xl:h-72"
-            />
-          </HomePanel>
-        </div>
+      <div className="mt-5 flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] xl:items-start">
+        <HomePanel
+          id="map"
+          tone="map"
+          icon={Map}
+          kicker="Around the city"
+          title="Map of Toronto markets"
+          how="Tap a pin, then tap the market name in the popup to open its page."
+          flush
+        >
+          <MarketMapLazy
+            markets={markets}
+            className="h-56 w-full overflow-hidden xl:h-72"
+          />
+        </HomePanel>
 
         <div className="flex min-w-0 flex-col gap-5">
           <SavedRail markets={markets} vendors={vendors} />

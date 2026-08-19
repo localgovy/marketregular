@@ -248,9 +248,9 @@ export function QuickFind({ markets }: { markets: Market[] }) {
           </span>
           <span
             aria-hidden
-            className="shrink-0 font-mono text-[11px] font-semibold tracking-[0.22em] text-ticket"
+            className="shrink-0 text-base font-medium text-ticket"
           >
-            GO
+            Go
           </span>
         </button>
       </div>

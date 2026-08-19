@@ -1,0 +1,29 @@
+---
+description: Ban generic AI eyebrow labels (tiny tracked-out uppercase)
+alwaysApply: true
+---
+
+# No AI eyebrow type
+
+Do not style labels, kickers, badges, or status text as tiny tracked-out caps. That look is banned on this site.
+
+Never combine these (or close variants):
+
+- `uppercase`
+- wide tracking (`tracking-wide`, `tracking-widest`, `tracking-[0.1em]` or looser)
+- micro type (`text-[9px]`, `text-[10px]`, `text-[11px]`, `text-xs` used as a section kicker)
+- `font-mono` used for a UI label rather than a time, price, stall number, or province code
+
+```tsx
+// BAD
+<p className="font-mono text-[11px] font-semibold tracking-[0.16em] text-ticket uppercase">
+  Open now
+</p>
+
+// GOOD
+<p className="text-base font-medium text-ticket">Open now</p>
+```
+
+Write labels in sentence case at `text-sm` or `text-base`. Use the same fonts as surrounding copy. Mono is only for times (`08:00`), prices (`$8.50`), stall numbers, and province codes (`ON`) — with tight tracking, not fashion-wide.
+
+Status chips (open now, selling now) may use the ticket plate color. They still read as normal words: `Open now`, not `OPEN NOW`.

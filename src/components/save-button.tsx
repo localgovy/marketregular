@@ -41,8 +41,8 @@ export function SaveButton({
         toggleSave(kind, slug);
       }}
       className={cn(
-        "inline-flex shrink-0 cursor-pointer items-center justify-center stall-chip-sm font-mono font-semibold tracking-[0.14em] uppercase outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
-        size === "md" ? "h-10 px-3 text-[11px]" : "h-8 px-2.5 text-[10px]",
+        "inline-flex shrink-0 cursor-pointer items-center justify-center stall-chip-sm font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+        size === "md" ? "h-10 px-3 text-base" : "h-8 px-2.5 text-sm",
         saved
           ? "bg-foreground text-receipt"
           : "border border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground",

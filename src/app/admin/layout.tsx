@@ -31,7 +31,7 @@ export default async function AdminLayout({
   ] as const;
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      <p className="text-xs tracking-wide text-primary uppercase">Directory desk</p>
+      <p className="text-sm text-primary">Directory desk</p>
       <h1 className="font-heading text-3xl">Admin</h1>
       <nav className="mt-4 mb-8 flex flex-wrap gap-2">
         {links.map(([href, label]) => (

@@ -87,7 +87,7 @@ export function HomePanel({
   return (
     <section
       id={id}
-      className={cn("scroll-mt-24 overflow-hidden stall-panel", t.shell, className)}
+      className={cn("scroll-mt-24", t.shell, className)}
     >
       <div
         className={cn(

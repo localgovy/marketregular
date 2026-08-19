@@ -47,7 +47,7 @@ export default async function MarketPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <p className="text-sm tracking-wide text-muted-foreground uppercase">
+      <p className="text-sm text-muted-foreground">
         {market.address}
       </p>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">

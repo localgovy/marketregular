@@ -16,7 +16,7 @@ export async function SiteHeader() {
             <span className="text-xl font-medium tracking-[-0.04em] text-foreground lg:text-chalk">
               {SITE_NAME}
             </span>
-            <span className="hidden text-xs tracking-[0.18em] text-muted-foreground uppercase sm:inline lg:text-chalk/70">
+            <span className="hidden text-sm text-muted-foreground sm:inline lg:text-chalk/70">
               Toronto
             </span>
           </Link>

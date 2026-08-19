@@ -77,7 +77,7 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
                   </>
                 ) : null}
               </p>
-              <time className="text-[11px] text-muted-foreground" dateTime={post.created_at}>
+              <time className="text-sm text-muted-foreground" dateTime={post.created_at}>
                 {timeAgo(post.created_at)}
               </time>
             </div>
@@ -87,7 +87,7 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
                 {decoded.tags.map((tag) => (
                   <li
                     key={tag}
-                    className="rounded-[2px] bg-foreground/90 px-1.5 py-px text-[9px] tracking-[0.12em] text-receipt uppercase"
+                    className="bg-foreground/90 px-1.5 py-0.5 text-sm text-receipt stall-chip-sm"
                   >
                     {tag}
                   </li>
@@ -108,7 +108,7 @@ export function LiveFeed({ initialPosts }: { initialPosts: Post[] }) {
               </div>
             ) : null}
             {post.verified_on_site ? (
-              <p className="mt-2 inline-block -rotate-[2deg] border border-stamp px-1.5 py-px text-[9px] font-medium tracking-[0.16em] text-stamp uppercase">
+              <p className="mt-2 inline-block -rotate-[2deg] border border-stamp px-1.5 py-0.5 text-sm text-stamp">
                 On site
               </p>
             ) : null}
