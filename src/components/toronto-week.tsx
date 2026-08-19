@@ -12,7 +12,7 @@ function SlotRow({
   return (
     <Link
       href={`/markets/${slot.market.slug}`}
-      className="flex items-start justify-between gap-3 px-3 py-3 hover:bg-secondary/60"
+      className="flex items-start justify-between gap-3 px-3 py-3 hover:bg-foreground/5"
     >
       <span className="min-w-0">
         <span className="block truncate text-base font-medium">{slot.market.name}</span>
@@ -28,7 +28,7 @@ function SlotRow({
             Open · until {slot.until}
           </span>
         ) : (
-          <span className="font-mono text-sm font-medium text-primary">{slot.hours}</span>
+          <span className="font-mono text-sm text-muted-foreground">{slot.hours}</span>
         )}
       </span>
     </Link>
@@ -56,11 +56,11 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
         <div className="grid gap-4">
           {open ? (
             <div className="overflow-hidden rounded-md ring-1 ring-border">
-              <div className="flex items-baseline justify-between gap-2 border-b border-border px-3 py-2">
+              <div className="flex items-baseline justify-between gap-2 border-b border-border bg-card px-3 py-2">
                 <h3 className="font-heading text-xl leading-tight">{open.label}</h3>
                 <p className="text-sm font-medium text-primary">{open.date}</p>
               </div>
-              <ul className="divide-y divide-border">
+              <ul className="divide-y divide-border bg-secondary">
                 {open.slots.map((slot) => (
                   <li key={slot.market.id}>
                     <SlotRow slot={slot} />
@@ -77,11 +77,11 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
                   key={group.id}
                   className="overflow-hidden rounded-md ring-1 ring-border"
                 >
-                  <div className="flex items-baseline justify-between gap-2 border-b border-border px-3 py-2">
+                  <div className="flex items-baseline justify-between gap-2 border-b border-border bg-card px-3 py-2">
                     <h3 className="font-heading text-lg leading-tight">{group.label}</h3>
                     <p className="text-sm font-medium text-primary">{group.date}</p>
                   </div>
-                  <ul className="divide-y divide-border">
+                  <ul className="divide-y divide-border bg-secondary">
                     {group.slots.map((slot) => (
                       <li key={slot.market.id}>
                         <SlotRow slot={slot} />
