@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 
@@ -76,7 +77,7 @@ export function HomePanel({
   icon: LucideIcon;
   kicker: string;
   title: string;
-  how: string;
+  how: ReactNode;
   action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;

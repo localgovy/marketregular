@@ -61,7 +61,7 @@ async function onSiteIfShared(
   lng?: number,
 ) {
   if (!hasCoords(lat, lng)) return false;
-  return verifyOnSite(supabase, marketId, lat, lng);
+  return verifyOnSite(supabase, marketId, lat!, lng!);
 }
 
 export async function createPost(input: {

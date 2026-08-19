@@ -9,6 +9,10 @@ Home panels, timetables, and market/vendor lists must show every name and every 
 
 Never put `overflow-hidden`, `truncate`, or `clip-path` on a container that holds a schedule, table, or wrapping list. Cut-corner (`stall-chip`) is only for small controls (filter chips, Save). Not for panels.
 
+Do not use CSS `columns` masonry for the week view — it clips hours. A two-column CSS grid of day cards is fine. Keep hours in an auto column that cannot shrink.
+
+The upcoming-markets panel sits in the main column beside the saved/vendor rail. Compact name + hours rows are the point; do not stretch it full-page as a long timetable.
+
 ```tsx
 // BAD — masonry columns + clip + truncate hide hours
 <div className="overflow-hidden stall-panel">
@@ -18,11 +22,9 @@ Never put `overflow-hidden`, `truncate`, or `clip-path` on a container that hold
   </div>
 </div>
 
-// GOOD — full-width timetable, hours in an auto column that cannot shrink
-<div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-x-4">
+// GOOD — compact row, hours in an auto column that cannot shrink
+<div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3">
   <span>{market.name}</span>
   <span className="whitespace-nowrap tabular-nums">{hours}</span>
 </div>
 ```
-
-The week view is a day-by-day timetable across the full content width. Do not park it in a sidebar column or a CSS `columns` masonry.

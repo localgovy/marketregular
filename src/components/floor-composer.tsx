@@ -52,7 +52,7 @@ export function FloorComposer({
 
   const tagged = stallOptions.find((s) => s.id === vendorId);
   const canWrite = demo || signedIn;
-  const onSite = Boolean(coords && here?.id === market?.id);
+  const onSite = Boolean(market && nearby.some((item) => item.id === market.id));
 
   const marketMatches = useMemo(() => {
     const q = marketQuery.trim().toLowerCase();
@@ -383,7 +383,7 @@ export function FloorComposer({
                     I&apos;m at this market
                   </Button>
                   {error ? <p className="mt-1 text-sm text-destructive">{error}</p> : null}
-                  {coords && here && here.id !== market.id ? (
+                  {coords && !onSite ? (
                     <p className="mt-1 text-sm text-muted-foreground">
                       You&apos;re not close enough for that stamp. You can still post.
                     </p>

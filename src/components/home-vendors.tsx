@@ -11,6 +11,15 @@ function tagLine(tags: string[]) {
     .join(" · ");
 }
 
+function SellingNowMark() {
+  return (
+    <span className="inline-flex items-center gap-1.5 align-middle stall-chip-sm bg-ticket px-2 py-1 text-sm text-receipt">
+      <span className="live-dot size-1.5 rounded-full bg-receipt" aria-hidden />
+      Selling now
+    </span>
+  );
+}
+
 export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
   return (
     <HomePanel
@@ -19,11 +28,17 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
       icon={Store}
       kicker="On a stall today"
       title="Vendors selling today"
-      how="Who is on a Toronto stall today. Gold means they are selling right now. Tap a name for the menu."
+      how={
+        <>
+          Who is on a Toronto stall today.{" "}
+          <SellingNowMark /> is what you see when they are at their stall this minute. Tap a
+          name for the menu.
+        </>
+      }
       action={<span>{rows.length} today</span>}
     >
       {rows.length ? (
-        <ul className="overflow-hidden rounded-md ring-1 ring-border">
+        <ul className="rounded-md ring-1 ring-border">
           {rows.map((row) => (
             <li
               key={`${row.vendorSlug}-${row.marketSlug}`}
@@ -31,24 +46,28 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
             >
               <Link
                 href={`/vendors/${row.vendorSlug}`}
-                className="flex min-w-0 flex-1 items-start justify-between gap-3 px-3 py-3 hover:bg-primary/[0.045]"
+                className="grid min-w-0 flex-1 grid-cols-1 items-start gap-x-3 gap-y-1 px-3 py-3 hover:bg-primary/[0.045] sm:grid-cols-[minmax(0,1fr)_auto]"
               >
                 <span className="min-w-0">
-                  <span className="block truncate text-base font-medium">{row.vendorName}</span>
+                  <span className="block text-base font-medium">{row.vendorName}</span>
                   <span className="text-sm text-muted-foreground">
                     <span className="text-foreground/80">{row.marketName}</span>
                     {row.stall ? ` · ${row.stall}` : null}
                     {tagLine(row.tags) ? ` · ${tagLine(row.tags)}` : null}
                   </span>
                 </span>
-                <span className="shrink-0 text-right">
+                <span className="shrink-0 text-left sm:text-right">
                   {row.open ? (
-                    <span className="inline-flex items-center gap-1.5 stall-chip-sm bg-ticket px-2 py-1 text-sm text-receipt">
-                      <span className="live-dot size-1.5 rounded-full bg-receipt" />
-                      Selling now
+                    <span className="flex flex-col items-start gap-1 sm:items-end">
+                      <SellingNowMark />
+                      <span className="font-mono text-sm whitespace-nowrap tabular-nums text-muted-foreground">
+                        {row.hours}
+                      </span>
                     </span>
                   ) : (
-                    <span className="font-mono text-sm text-muted-foreground">{row.hours}</span>
+                    <span className="font-mono text-sm whitespace-nowrap tabular-nums text-muted-foreground">
+                      {row.hours}
+                    </span>
                   )}
                 </span>
               </Link>
@@ -75,7 +94,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
       icon={Award}
       kicker="This week's stalls"
       title="Top 5 vendors this week"
-      how="The five vendors on the most Toronto stall days in the next seven days. Tap a name for what they sell."
+      how="The five vendors in the Toronto market game this week. Tap a name to learn more about them."
     >
       {picks.length ? (
         <ol className="overflow-hidden rounded-md ring-1 ring-border">

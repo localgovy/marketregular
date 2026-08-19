@@ -26,7 +26,7 @@ function weekdayInToronto() {
 }
 
 const chipIdle =
-  "stall-chip inline-flex h-10 items-center border-0 px-3 text-base text-primary-foreground shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--primary-foreground)_32%,transparent)] hover:bg-primary-foreground/10";
+  "stall-chip inline-flex h-10 items-center border-0 bg-board px-3 text-base font-medium text-primary-foreground shadow-[inset_0_0_0_2px_color-mix(in_srgb,var(--primary-foreground)_72%,transparent)] hover:bg-[color-mix(in_srgb,var(--board)_82%,white)]";
 const chipOn =
   "stall-chip inline-flex h-10 items-center bg-card px-3 text-base font-medium text-primary hover:bg-card/90";
 

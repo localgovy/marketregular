@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 import { HomePanel } from "@/components/home-panel";
+import { cn } from "@/lib/utils";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { UpcomingGroup, UpcomingSlot } from "@/lib/upcoming";
 
@@ -8,51 +9,55 @@ function SlotRow({ slot }: { slot: UpcomingSlot }) {
   return (
     <Link
       href={`/markets/${slot.market.slug}`}
-      className="grid grid-cols-1 items-baseline gap-x-4 py-2.5 hover:bg-primary/[0.045] sm:grid-cols-[minmax(0,1fr)_auto]"
+      className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-3 py-1.5 hover:bg-primary/[0.045]"
     >
-      <span className="min-w-0">
-        <span className="block text-base font-medium">{slot.market.name}</span>
-        <span className="block text-sm text-muted-foreground">{slot.market.address}</span>
-        {slot.notes ? (
-          <span className="mt-0.5 block text-sm text-muted-foreground">{slot.notes}</span>
-        ) : null}
-      </span>
-      <span className="shrink-0 pt-1 font-mono text-sm whitespace-nowrap tabular-nums text-muted-foreground sm:pt-0 sm:text-right">
-        {slot.open ? (
-          <span className="inline-flex items-center gap-1.5 bg-ticket px-2 py-1 text-sm text-receipt">
-            <span className="live-dot size-1.5 rounded-full bg-receipt" />
-            Open · until {slot.until}
-          </span>
-        ) : (
-          slot.hours
+      <span className="min-w-0 text-base font-medium">{slot.market.name}</span>
+      <span
+        className={cn(
+          "shrink-0 whitespace-nowrap font-mono text-sm tabular-nums",
+          slot.open ? "text-ticket" : "text-muted-foreground",
         )}
+      >
+        {slot.open ? (
+          <span className="mr-1.5 inline-flex items-center gap-1 bg-ticket px-1.5 py-0.5 font-sans text-sm text-receipt">
+            <span className="live-dot size-1.5 rounded-full bg-receipt" aria-hidden />
+            Open
+          </span>
+        ) : null}
+        {slot.hours}
       </span>
     </Link>
   );
 }
 
-function DayBlock({ group }: { group: UpcomingGroup }) {
+function DayCard({
+  group,
+  titleClass,
+}: {
+  group: UpcomingGroup;
+  titleClass: string;
+}) {
   return (
-    <section>
-      <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-1">
-        <h3 className="font-heading text-lg leading-tight">{group.label}</h3>
-        <p className="text-sm text-muted-foreground">
-          {group.date}
-          {group.hint ? ` · ${group.hint}` : null}
-        </p>
-      </header>
-      <ul className="divide-y divide-border/60">
+    <div className="rounded-md bg-[color-mix(in_srgb,var(--foreground)_3%,var(--card))] ring-1 ring-border/70">
+      <div className="flex items-baseline justify-between gap-2 border-b border-border/60 bg-card px-3 py-1.5">
+        <h3 className={titleClass}>{group.label}</h3>
+        <p className="shrink-0 text-sm font-medium text-primary">{group.date}</p>
+      </div>
+      <ul className="divide-y divide-border/50">
         {group.slots.map((slot) => (
           <li key={slot.market.id}>
             <SlotRow slot={slot} />
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 }
 
 export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
+  const open = groups.find((g) => g.open);
+  const rest = groups.filter((g) => !g.open);
+
   return (
     <HomePanel
       id="week"
@@ -60,17 +65,29 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
       icon={CalendarClock}
       kicker={`${LAUNCH_CITY} this week`}
       title="Upcoming markets"
-      how="The next seven days. Gold means open right now. Hours sit on the right — tap a name for vendors and the map."
+      how="Gold means open right now. Tap a name for vendors and the map."
     >
       {!groups.length ? (
         <p className="text-base text-muted-foreground">
           No Toronto markets are on the calendar for the next seven days.
         </p>
       ) : (
-        <div className="grid gap-6">
-          {groups.map((group) => (
-            <DayBlock key={group.id} group={group} />
-          ))}
+        <div className="grid gap-3">
+          {open ? (
+            <DayCard group={open} titleClass="font-heading text-xl leading-tight" />
+          ) : null}
+
+          {rest.length ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {rest.map((group) => (
+                <DayCard
+                  key={group.id}
+                  group={group}
+                  titleClass="font-heading text-lg leading-tight"
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       )}
     </HomePanel>
