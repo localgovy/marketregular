@@ -9,9 +9,9 @@ export async function SiteHeader() {
   const profile = await getCurrentProfile();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-md lg:border-board/40">
-      <div className="flex h-16 w-full items-center gap-3 px-4 lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)] lg:gap-0 lg:px-0">
-        <div className="flex h-16 items-center lg:bg-board lg:px-4">
+    <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
+      <div className="header-stripe-paper flex h-16 w-full items-center gap-3 px-4 lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)] lg:gap-0 lg:px-0 lg:shadow-none">
+        <div className="flex h-16 items-center lg:header-stripe-board lg:bg-board lg:px-4">
           <Link href="/" className="flex shrink-0 items-baseline gap-2">
             <span className="font-heading text-xl tracking-tight text-foreground lg:text-chalk">
               {SITE_NAME}
@@ -21,7 +21,7 @@ export async function SiteHeader() {
             </span>
           </Link>
         </div>
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 lg:justify-between lg:px-6">
+        <div className="flex h-16 min-w-0 flex-1 items-center justify-end gap-2 lg:header-stripe-paper lg:justify-between lg:px-6">
           <div className="hidden min-w-0 flex-1 items-center gap-3 md:flex">
             <form action="/search" className="flex min-w-0 max-w-lg flex-1 items-center gap-2">
               <Input

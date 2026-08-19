@@ -144,3 +144,18 @@
     animation: none;
   }
 }
+
+/* Header awning: beige–green–beige on the board, inverse on paper. */
+@utility header-stripe-board {
+  box-shadow:
+    0 2px 0 var(--chalk),
+    0 4px 0 var(--board),
+    0 6px 0 var(--chalk);
+}
+
+@utility header-stripe-paper {
+  box-shadow:
+    0 2px 0 var(--board),
+    0 4px 0 var(--chalk),
+    0 6px 0 var(--board);
+}
