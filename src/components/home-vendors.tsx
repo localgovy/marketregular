@@ -1,8 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { HomePanel } from "@/components/home-panel";
 import { CrateMark, TallyMark } from "@/components/marks";
 import { SaveButton } from "@/components/save-button";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
+
+const TODAY_STALL_CAP = 40;
 
 function SellingNowMark() {
   return (
@@ -14,6 +19,10 @@ function SellingNowMark() {
 }
 
 export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
+  const [showAll, setShowAll] = useState(false);
+  const capped = rows.length > TODAY_STALL_CAP && !showAll;
+  const visible = capped ? rows.slice(0, TODAY_STALL_CAP) : rows;
+
   return (
     <HomePanel
       id="vendors-today"
@@ -35,7 +44,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
     >
       {rows.length ? (
         <ul className="ring-1 ring-border">
-          {rows.map((row) => (
+          {visible.map((row) => (
             <li
               key={`${row.vendorSlug}-${row.marketSlug}`}
               className="flex items-start gap-2 border-b border-border px-3 py-3 last:border-b-0"
@@ -61,6 +70,17 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
               </span>
             </li>
           ))}
+          {capped ? (
+            <li className="border-border">
+              <button
+                type="button"
+                onClick={() => setShowAll(true)}
+                className="w-full px-3 py-3 text-left text-base font-medium text-primary hover:bg-muted"
+              >
+                See all {rows.length}
+              </button>
+            </li>
+          ) : null}
         </ul>
       ) : (
         <p className="text-sm leading-relaxed text-muted-foreground">
