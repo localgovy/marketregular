@@ -5,7 +5,7 @@ import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { SaveButton } from "@/components/save-button";
 import { LiveFeed } from "@/components/live-feed";
-import { MarketMapLazy } from "@/components/market-map-lazy";
+import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
 import { MarketVendors } from "@/components/market-vendors";
 import { ScheduleList } from "@/components/schedule-list";
 import { TagList } from "@/components/tag-list";
@@ -59,7 +59,7 @@ export default async function MarketPage({
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">
-          <MarketMapLazy markets={[market]} className="h-72 w-full overflow-hidden rounded-xl ring-1 ring-foreground/10" />
+          <MarketMapLazy markets={[market]} className={MARKET_PROFILE_MAP} />
           <section>
             <h2>About</h2>
             <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>

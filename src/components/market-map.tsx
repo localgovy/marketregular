@@ -60,7 +60,7 @@ export function MarketMap({
   return (
     <div
       ref={ref}
-      className={className ?? "h-80 w-full overflow-hidden rounded-xl ring-1 ring-foreground/10"}
+      className={className}
     />
   );
 }
