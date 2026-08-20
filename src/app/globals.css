@@ -244,6 +244,23 @@
   animation: cal-prev 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+@keyframes floor-ticker {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.floor-ticker-track {
+  animation: floor-ticker var(--floor-ticker-duration, 28s) linear infinite;
+  will-change: transform;
+}
+
+.floor-ticker:hover .floor-ticker-track,
+.floor-ticker:focus-within .floor-ticker-track,
+.floor-ticker:active .floor-ticker-track {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .live-dot {
     animation: none;
@@ -256,6 +273,10 @@
   .awning-leaf,
   .awning-board {
     animation: none;
+  }
+  .floor-ticker-track {
+    animation: none;
+    will-change: auto;
   }
 }
 
