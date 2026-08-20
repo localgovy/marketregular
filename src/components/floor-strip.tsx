@@ -212,14 +212,11 @@ export function FloorStrip({ openNow }: { openNow: Market[] }) {
         <div className="flex min-w-0 flex-wrap items-center gap-2.5">
           <p className="inline-flex items-center gap-1.5 text-base font-medium text-ticket">
             <span className="live-dot size-1.5 rounded-full bg-ticket" aria-hidden />
-            Open now
+            <span>
+              <span className="font-mono tabular-nums">{openNow.length}</span>
+              {` ${countLabel} open now`}
+            </span>
           </p>
-          {openNow.length ? (
-            <p className="stall-chip-sm inline-flex items-baseline gap-1.5 bg-ticket px-2.5 py-1 text-receipt">
-              <span className="font-mono text-lg tabular-nums leading-none">{openNow.length}</span>
-              <span className="text-sm font-medium">{countLabel}</span>
-            </p>
-          ) : null}
         </div>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
           {moving ? <SpeedControls value={speed} onChange={setSpeed} /> : null}
