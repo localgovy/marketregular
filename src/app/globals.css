@@ -259,14 +259,21 @@
   animation: speed-unfold 0.18s ease-out;
 }
 
-@keyframes now-sheen {
-  0%,
-  68% {
-    transform: translate3d(-140%, 0, 0);
+@keyframes now-plate {
+  from {
+    background-position: 0% 50%;
   }
-  82%,
-  100% {
-    transform: translate3d(140%, 0, 0);
+  to {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes now-flow {
+  from {
+    transform: translate3d(-160%, 0, 0);
+  }
+  to {
+    transform: translate3d(160%, 0, 0);
   }
 }
 
@@ -276,18 +283,33 @@
   overflow: hidden;
 }
 
+.now-shimmer.bg-ticket {
+  background-image: linear-gradient(
+    105deg,
+    var(--ticket) 0%,
+    color-mix(in srgb, var(--ticket) 58%, white) 42%,
+    color-mix(in srgb, var(--ticket) 78%, white) 50%,
+    color-mix(in srgb, var(--ticket) 58%, white) 58%,
+    var(--ticket) 100%
+  );
+  background-size: 220% 100%;
+  animation: now-plate 2.2s ease-in-out infinite alternate;
+}
+
 .now-shimmer::after {
   content: "";
   position: absolute;
-  inset: 0;
+  inset: -30% -70%;
   background: linear-gradient(
-    105deg,
-    transparent 38%,
-    rgb(255 248 235 / 0.5) 50%,
-    transparent 62%
+    115deg,
+    transparent 28%,
+    rgb(255 248 235 / 0.2) 44%,
+    rgb(255 255 255 / 0.78) 50%,
+    rgb(255 248 235 / 0.2) 56%,
+    transparent 72%
   );
-  transform: translate3d(-140%, 0, 0);
-  animation: now-sheen 3.8s ease-in-out infinite;
+  transform: translate3d(-160%, 0, 0);
+  animation: now-flow 1.7s linear infinite;
   pointer-events: none;
 }
 
@@ -308,9 +330,12 @@
   .speed-menu {
     animation: none;
   }
+  .now-shimmer.bg-ticket,
+  .now-shimmer::after {
+    animation: none;
+  }
   .now-shimmer::after {
     content: none;
-    animation: none;
   }
 }
 
