@@ -59,10 +59,7 @@ export function FloorTape({
     <div className="flex h-full min-h-0 flex-col bg-background">
       <div className="tape-scroll min-h-0 flex-1 overflow-y-auto">
         <div className="awning-board px-3 pt-4 pb-3 text-chalk">
-          <p className="type-kicker flex items-center gap-2 text-chalk/80">
-            <span className="live-dot size-2 rounded-full bg-chalk" />
-            Live reviews
-          </p>
+          <p className="type-kicker text-chalk/80">On the board</p>
           <h2 className="type-column">Reviews from shoppers</h2>
           <p className="mt-1 text-base leading-snug text-chalk/80">
             Short notes about Toronto markets and stalls, posted as people write them. Add yours

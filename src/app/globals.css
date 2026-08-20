@@ -183,22 +183,6 @@
   @apply text-lg leading-tight;
 }
 
-@keyframes live-dot {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.35;
-    transform: scale(0.7);
-  }
-}
-
-.live-dot {
-  animation: live-dot 1.6s ease-in-out infinite;
-}
-
 @keyframes cal-in {
   from {
     opacity: 0;
@@ -261,10 +245,40 @@
   animation-play-state: paused;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .live-dot {
-    animation: none;
+@keyframes speed-unfold {
+  0% {
+    transform: translateY(-10px) scale(0.68) rotate(-4deg);
+    clip-path: inset(0 0 88% 62%);
   }
+  58% {
+    transform: translateY(3px) scale(1.05) rotate(0.6deg);
+    clip-path: inset(0 -4% -6% -4%);
+  }
+  100% {
+    transform: none;
+    clip-path: inset(0);
+  }
+}
+
+@keyframes speed-chip-in {
+  0% {
+    transform: translateX(14px);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.speed-menu {
+  transform-origin: top right;
+  animation: speed-unfold 0.38s cubic-bezier(0.22, 1.35, 0.32, 1) both;
+}
+
+.speed-menu-chip {
+  animation: speed-chip-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
   .cal-in,
   .cal-next,
   .cal-prev {
@@ -277,6 +291,10 @@
   .floor-ticker-track {
     animation: none;
     will-change: auto;
+  }
+  .speed-menu,
+  .speed-menu-chip {
+    animation: none;
   }
 }
 

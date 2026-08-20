@@ -6,14 +6,14 @@ import { HomePanel } from "@/components/home-panel";
 import { Hours } from "@/components/hours";
 import { CrateMark, TallyMark } from "@/components/marks";
 import { SaveButton } from "@/components/save-button";
+import { tagLabel } from "@/lib/find-paths";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 
-const TODAY_STALL_CAP = 40;
+const TODAY_STALL_CAP = 20;
 
 function SellingNowMark() {
   return (
-    <span className="inline-flex items-center gap-1 align-middle bg-ticket px-1.5 py-0.5 text-sm text-receipt">
-      <span className="live-dot size-1.5 rounded-full bg-receipt" aria-hidden />
+    <span className="bg-ticket px-1.5 py-0.5 text-sm text-receipt">
       Selling now
     </span>
   );
@@ -63,6 +63,18 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
                   {row.open ? <SellingNowMark /> : null}
                   <Hours value={row.hours} className="text-muted-foreground" />
                 </span>
+                {row.tags.length ? (
+                  <ul className="flex flex-wrap gap-1">
+                    {row.tags.slice(0, 2).map((tag) => (
+                      <li
+                        key={tag}
+                        className="bg-secondary px-1.5 py-0.5 text-sm text-muted-foreground"
+                      >
+                        {tagLabel(tag)}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
               </Link>
               <span className="shrink-0 pt-0.5">
                 <SaveButton kind="vendor" slug={row.vendorSlug} name={row.vendorName} />

@@ -42,6 +42,12 @@ export default async function HomePage() {
 
   const openIds = new Set(openNow.map((m) => m.id));
   const signedIn = Boolean(profile);
+  const DIRECTORY_CAP = 10;
+  const directory = [...openNow, ...markets.filter((market) => !openIds.has(market.id))].slice(
+    0,
+    DIRECTORY_CAP,
+  );
+  const vendorPreview = vendors.slice(0, DIRECTORY_CAP);
 
   return (
     <HomeGeo markets={markets}>
@@ -73,17 +79,17 @@ export default async function HomePage() {
             id="directory"
             tone="directory"
             icon={RulesMark}
-            kicker="The full list"
-            title="All Toronto markets"
-            how="Every market we list in the city. Tap a name, then save the ones you actually go to."
+            kicker="A short list"
+            title="Toronto markets"
+            how="Open ones first. Tap a name, then save the ones you actually go to."
             action={
               <Link href="/markets" className="hover:underline">
                 {markets.length} listed
               </Link>
             }
           >
-            <div className="overflow-hidden rounded-md bg-card ring-1 ring-border">
-              {markets.map((market) => (
+            <div className="rounded-md bg-card ring-1 ring-border">
+              {directory.map((market) => (
                 <MarketRow
                   key={market.id}
                   market={market}
@@ -100,7 +106,7 @@ export default async function HomePage() {
             icon={CrateMark}
             kicker="Name list"
             title="Vendors"
-            how="Every stall in the directory. Save the ones you buy from."
+            how="Ten stalls to start. Save the ones you buy from."
             className="mt-5"
             action={
               <Link href="/vendors" className="hover:underline">
@@ -108,8 +114,8 @@ export default async function HomePage() {
               </Link>
             }
           >
-            <div className="overflow-hidden rounded-md bg-card ring-1 ring-border">
-              {vendors.map((vendor) => (
+            <div className="rounded-md bg-card ring-1 ring-border">
+              {vendorPreview.map((vendor) => (
                 <VendorRow key={vendor.id} vendor={vendor} />
               ))}
             </div>

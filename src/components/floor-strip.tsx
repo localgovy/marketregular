@@ -3,12 +3,14 @@
 import Link from "next/link";
 import {
   useCallback,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
   type CSSProperties,
 } from "react";
+import { CaretDownMark } from "@/components/marks";
 import { useSaves } from "@/components/save-button";
 import { cn } from "@/lib/utils";
 import type { Market } from "@/types/database";
@@ -165,31 +167,80 @@ function SpeedControls({
   value: SpeedId;
   onChange: (id: SpeedId) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const current = SPEEDS.find((speed) => speed.id === value) ?? SPEEDS[1];
+
+  useEffect(() => {
+    if (!open) return;
+    function close(event: PointerEvent) {
+      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
   return (
-    <div
-      role="group"
-      aria-label="How fast the names move"
-      className="flex items-center gap-1"
-    >
-      {SPEEDS.map((speed) => {
-        const on = speed.id === value;
-        return (
-          <button
-            key={speed.id}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onChange(speed.id)}
-            className={cn(
-              "stall-chip-sm h-8 px-2.5 text-sm font-medium",
-              on
-                ? "bg-ticket text-receipt"
-                : "bg-secondary text-foreground hover:bg-muted",
-            )}
-          >
-            {speed.label}
-          </button>
-        );
-      })}
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="true"
+        aria-controls="floor-speed-menu"
+        aria-label={`How fast the names move, ${current.label}`}
+        onClick={() => setOpen((was) => !was)}
+        className={cn(
+          "stall-chip-sm inline-flex h-8 items-center gap-1 px-2.5 text-sm font-medium",
+          open
+            ? "bg-ticket text-receipt"
+            : "bg-secondary text-foreground hover:bg-muted",
+        )}
+      >
+        {current.label}
+        <CaretDownMark
+          className={cn("size-3.5 transition-transform duration-200 ease-out", open && "rotate-180")}
+        />
+      </button>
+      {open ? (
+        <div
+          id="floor-speed-menu"
+          role="menu"
+          aria-label="How fast the names move"
+          className="speed-menu absolute top-[calc(100%+0.35rem)] right-0 z-30 min-w-28 rounded-md bg-card p-1 shadow-md ring-1 ring-border"
+        >
+          {SPEEDS.map((speed, index) => {
+            const on = speed.id === value;
+            return (
+              <button
+                key={speed.id}
+                type="button"
+                role="menuitemradio"
+                aria-checked={on}
+                onClick={() => {
+                  onChange(speed.id);
+                  setOpen(false);
+                }}
+                style={{ animationDelay: `${50 + index * 55}ms` }}
+                className={cn(
+                  "speed-menu-chip stall-chip-sm flex h-8 w-full items-center px-2.5 text-sm font-medium",
+                  on
+                    ? "bg-ticket text-receipt"
+                    : "text-foreground hover:bg-muted",
+                )}
+              >
+                {speed.label}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -209,15 +260,10 @@ export function FloorStrip({ openNow }: { openNow: Market[] }) {
       className="mb-5 bg-card shadow-[inset_4px_0_0_var(--ticket)] ring-1 ring-border"
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 sm:px-4">
-        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-          <p className="inline-flex items-center gap-1.5 text-base font-medium text-ticket">
-            <span className="live-dot size-1.5 rounded-full bg-ticket" aria-hidden />
-            <span>
-              <span className="font-mono tabular-nums">{openNow.length}</span>
-              {` ${countLabel} open now`}
-            </span>
-          </p>
-        </div>
+        <p className="min-w-0 text-base font-medium text-ticket">
+          <span className="font-mono tabular-nums">{openNow.length}</span>
+          {` ${countLabel} open now`}
+        </p>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
           {moving ? <SpeedControls value={speed} onChange={setSpeed} /> : null}
           <p className="flex flex-wrap items-baseline gap-x-3 text-sm font-medium">

@@ -14,10 +14,7 @@ function SlotRow({ slot }: { slot: UpcomingSlot }) {
       <span className="min-w-0 text-base font-medium">{slot.market.name}</span>
       <span className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-1.5">
         {slot.open ? (
-          <span className="inline-flex items-center gap-1 bg-ticket px-1.5 py-0.5 text-sm text-receipt">
-            <span className="live-dot size-1.5 rounded-full bg-receipt" aria-hidden />
-            Open
-          </span>
+          <span className="bg-ticket px-1.5 py-0.5 text-sm text-receipt">Open</span>
         ) : null}
         <Hours
           value={slot.hours}

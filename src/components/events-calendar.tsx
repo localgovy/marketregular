@@ -254,7 +254,6 @@ export function EventsCalendar({
             {cells.map((cell) => {
               const on = cell.iso === selected;
               const count = cell.events.length;
-              const openNow = count > 0 && cell.events.some((event) => event.open);
               return (
                 <button
                   key={cell.iso}
@@ -282,21 +281,14 @@ export function EventsCalendar({
                     !cell.inMonth && !on && "text-muted-foreground/55",
                   )}
                 >
-                  <span className="flex w-full items-center justify-between gap-2">
-                    <span
-                      className={cn(
-                        "font-mono text-sm tabular-nums",
-                        on && "text-chalk",
-                        cell.isToday && !on && "font-medium text-ticket",
-                      )}
-                    >
-                      {cell.day}
-                    </span>
-                    {cell.isToday ? (
-                      <span className="live-dot size-1.5 rounded-full bg-ticket" aria-hidden />
-                    ) : openNow ? (
-                      <span className="live-dot size-1.5 rounded-full bg-ticket" aria-hidden />
-                    ) : null}
+                  <span
+                    className={cn(
+                      "font-mono text-sm tabular-nums",
+                      on && "text-chalk",
+                      cell.isToday && !on && "font-medium text-ticket",
+                    )}
+                  >
+                    {cell.day}
                   </span>
                   <MarketPips count={count} on={on} />
                 </button>
@@ -346,10 +338,7 @@ export function EventsCalendar({
                   </span>
                   <span className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-1.5">
                     {event.open ? (
-                      <span className="inline-flex items-center gap-1 bg-ticket px-1.5 py-0.5 text-sm text-receipt">
-                        <span className="live-dot size-1.5 rounded-full bg-receipt" aria-hidden />
-                        Open
-                      </span>
+                      <span className="bg-ticket px-1.5 py-0.5 text-sm text-receipt">Open</span>
                     ) : null}
                     <Hours value={event.hours} className="text-muted-foreground" />
                   </span>

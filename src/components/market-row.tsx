@@ -37,8 +37,7 @@ export function MarketRow({
         </span>
         <span className="shrink-0 text-right text-sm">
           {open ? (
-            <span className="inline-flex items-center gap-1.5 stall-chip-sm bg-ticket px-2 py-1 text-sm text-receipt">
-              <span className="live-dot size-1.5 rounded-full bg-receipt" />
+            <span className="stall-chip-sm bg-ticket px-2 py-1 text-sm text-receipt">
               Open now
             </span>
           ) : (

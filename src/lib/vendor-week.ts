@@ -1,6 +1,7 @@
 import { WEEKDAYS } from "@/lib/constants";
 import { LAUNCH_TZ } from "@/lib/launch";
 import { formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
+import { vendorProductTags } from "@/lib/vendor-tags";
 import type { FloorItem, Market, MarketSchedule, StallRef, Vendor } from "@/types/database";
 
 export type VendorTodayRow = {
@@ -62,7 +63,7 @@ export function vendorsSellingToday(
     rows.push({
       vendorName: stall.name,
       vendorSlug: stall.slug,
-      tags: vendor?.tags ?? [],
+      tags: vendorProductTags(stall.name, vendor?.tags),
       marketName: market.name,
       marketSlug: market.slug,
       stall: stall.stall,
@@ -123,7 +124,7 @@ export function topVendorsThisWeek(
         name: vendor?.name ?? stall.name,
         slug: vendor?.slug ?? stall.slug,
         about: vendor?.about ?? null,
-        tags: vendor?.tags ?? [],
+        tags: vendorProductTags(vendor?.name ?? stall.name, vendor?.tags),
         appearances: 0,
         markets: new Set<string>(),
         where: [],
