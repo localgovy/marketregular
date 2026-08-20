@@ -26,7 +26,7 @@ export function SiteMark({ className }: { className?: string }) {
         width="32"
         height="7"
         fill="url(#mr-mark-awning)"
-        clip-path="url(#mr-mark-plate)"
+        clipPath="url(#mr-mark-plate)"
       />
       <path
         d="M6.2 1.6H25.8L30.4 6.2V25.8L25.8 30.4H6.2L1.6 25.8V6.2Z"

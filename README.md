@@ -53,7 +53,7 @@ Sign in with an `ADMIN_EMAILS` address, then open `/admin` to edit markets/vendo
 
 ## What is seeded
 
-31 Toronto farmers’ markets from `seed batches/toronto_markets_seed.json`, plus fictional example vendors and menus (so we are not publishing real stall-holders without consent). Swap those for real vendors from `/admin`.
+31 Toronto farmers’ markets from `seed batches/toronto_markets_seed.json`, plus published vendor names from `seed batches/toronto_markets_vendor_names.json` where a roster exists. Menus and bios are left empty until we have them. Do not invent stall-holder details.
 
 ```bash
 npm run seed:import   # refresh src/data/directory.ts from the JSON

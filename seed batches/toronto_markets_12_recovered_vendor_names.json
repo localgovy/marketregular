@@ -1,0 +1,240 @@
+[
+  {
+    "name": "Evergreen Brick Works Saturday Farmers Market",
+    "slug": "evergreen-brick-works-saturday-farmers-market",
+    "vendor_list_status": "recovered_2026_confirmed_partial",
+    "vendor_list_sources": [
+      "https://www.evergreen.ca/evergreen-brick-work/activities/saturday-farmers-market/",
+      "https://wheelbarrowfarm.com/farmers-markets",
+      "https://joyfullyorganicfarm.ca/our-markets",
+      "https://wholesome-deelights.square.site/find-us",
+      "https://monforteonline.ca/pages/location-list",
+      "https://www.knotbakery.ca/pop-ups/",
+      "https://www.mollybglutenfree.com/event-calender",
+      "https://lawoti.com/pages/farmers-market",
+      "https://earthhaven.ca/events/list/",
+      "https://naturaljapaneats.ca/"
+    ],
+    "vendors": [
+      "Wheelbarrow Farm",
+      "Joyfully Organic Farm",
+      "Wholesome DeeLights",
+      "Monforte Dairy",
+      "Knot Bakery",
+      "Molly B's Gluten-Free Kitchen",
+      "Lawoti Farms",
+      "Earth Haven Farm",
+      "Natural Japaneats",
+      "Verano Foods",
+      "Basoli Sauces",
+      "Sade's Hot Sauce",
+      "Sweet Jinger",
+      "Scorched Bonnets",
+      "Date The Bar"
+    ]
+  },
+  {
+    "name": "East York Farmers’ Market",
+    "slug": "east-york-farmers-market",
+    "vendor_list_status": "recovered_2026_confirmed_partial",
+    "vendor_list_sources": [
+      "https://www.councillorpaulafletcher.ca/farmers_markets_2026",
+      "https://shegrowscoffee.com/market/",
+      "https://waymacfarms.ca/pages/about-us",
+      "https://willowtreefarm.ca/farmers-markets/",
+      "https://rhmcgregorfair.com/food/"
+    ],
+    "vendors": [
+      "She Grows Coffee",
+      "Waymac Farms",
+      "Willowtree Farm",
+      "Link Haus"
+    ]
+  },
+  {
+    "name": "Scarborough Farmers’ Market",
+    "slug": "scarborough-farmers-market",
+    "vendor_list_status": "recovered_organizer_linked_2022_directory_not_2026_verified",
+    "vendor_list_sources": [
+      "https://linktr.ee/farmers.market",
+      "https://www.scarboroughfarmersmarket.ca/vendors",
+      "https://freshfind.ca/p/m/scarborough/vendors",
+      "https://freshfind.ca/p/m/scarborough"
+    ],
+    "vendors": [
+      "Anabolic Eats",
+      "candlesandpalms",
+      "Courtyard and Scarborough Farmer’s Market Produce Boxes in Collaboration with FoodShare Toronto!",
+      "Healthy Belly Food",
+      "Honey Guru Inc",
+      "La Mermaid Noir",
+      "Left Field Brewery",
+      "Malvern Urban Farm",
+      "Michelle’s Catering",
+      "MomFlavor Inc.",
+      "Nora's Bakery",
+      "Nutilicious Foods",
+      "Pfenning’s Farms",
+      "Prevailing Organic Essentials",
+      "PriZurv Inc.",
+      "Pure Maya Mexican Vegan",
+      "Samosa Delight",
+      "San Jose Mexican foods",
+      "Tej Essentials",
+      "The Paleo Palate Café",
+      "Vzzz’s Caribbean Catering",
+      "Wander Nut Butters",
+      "Winnie's Fine Foods"
+    ]
+  },
+  {
+    "name": "SickKids Market",
+    "slug": "sickkids-market",
+    "vendor_list_status": "recovered_2026_confirmed_partial",
+    "vendor_list_sources": [
+      "https://www.appletreemarkets.ca/markets",
+      "https://lexspantry.com/blogs/news/farmers-markets-events-2026",
+      "https://katesscoop.com/"
+    ],
+    "vendors": [
+      "From Lex's Pantry",
+      "Kate's Scoop"
+    ]
+  },
+  {
+    "name": "Davisville Village Market",
+    "slug": "davisville-village-market",
+    "vendor_list_status": "recovered_2026_confirmed_partial",
+    "vendor_list_sources": [
+      "https://www.appletreemarkets.ca/markets",
+      "https://katesscoop.com/"
+    ],
+    "vendors": [
+      "Kate's Scoop"
+    ]
+  },
+  {
+    "name": "Montgomery’s Inn Farmers’ Market",
+    "slug": "montgomerys-inn-farmers-market",
+    "vendor_list_status": "recovered_2026_confirmed_partial",
+    "vendor_list_sources": [
+      "https://montgomerysinnovators.ca/come-to-the-market/",
+      "https://www.somethingsweetbysarah.com/"
+    ],
+    "vendors": [
+      "Something Sweet by Sarah",
+      "INNovator Bread"
+    ]
+  },
+  {
+    "name": "Weston Village Farmers’ Market",
+    "slug": "weston-village-farmers-market",
+    "vendor_list_status": "recovered_2026_confirmed_partial",
+    "vendor_list_sources": [
+      "https://westonvillagebia.com/",
+      "https://www.somethingsweetbysarah.com/",
+      "https://www.fetchandreleash.ca/events",
+      "https://tunuphotsauce.com/pages/events"
+    ],
+    "vendors": [
+      "Something Sweet by Sarah",
+      "Fetch + Releash Dog Rescue",
+      "Tun Up Hot Sauce"
+    ]
+  },
+  {
+    "name": "Flemo Farmers’ Market",
+    "slug": "flemo-farmers-market",
+    "vendor_list_status": "official_named_market_booths_only_individual_vendor_names_not_published",
+    "vendor_list_sources": [
+      "https://flemofarm.ca/",
+      "https://flemofarm.ca/wp-content/uploads/2024/05/rules-for-vendors-at-flemo-farmers-market.-review-2024.04.30.pdf"
+    ],
+    "vendors": [
+      "FoodShare Booth",
+      "The Communal Farm Plot Booth",
+      "Welcome Booth"
+    ]
+  },
+  {
+    "name": "Malvern Urban Farm Farmers Market",
+    "slug": "malvern-urban-farm-farmers-market",
+    "vendor_list_status": "individual_vendor_names_not_publicly_published_after_extended_search",
+    "vendor_list_sources": [
+      "https://www.mfrc.org/urban-agriculture-and-food-programs",
+      "https://www.mfrc.org/meet-the-farmers"
+    ],
+    "vendors": []
+  },
+  {
+    "name": "Courtyard Farmers’ Market",
+    "slug": "courtyard-farmers-market",
+    "vendor_list_status": "recovered_organizer_linked_2022_directory_not_2026_verified",
+    "vendor_list_sources": [
+      "https://linktr.ee/farmers.market",
+      "https://www.courtyardfarmersmkt.ca/vendors",
+      "https://www.freshfind.ca/p/m/courtyard-farmers-market/vendors",
+      "https://freshfind.ca/p/m/courtyard-farmers-market"
+    ],
+    "vendors": [
+      "Anabolic Eats",
+      "candlesandpalms",
+      "Courtyard and Scarborough Farmer’s Market Produce Boxes in Collaboration with FoodShare Toronto!",
+      "Honey Guru Inc",
+      "La Mermaid Noir",
+      "Left Field Brewery",
+      "Malvern Urban Farm",
+      "Michelle’s Catering",
+      "MomFlavor Inc.",
+      "Nora's Bakery",
+      "Nutilicious Foods",
+      "Pfenning’s Farms",
+      "Prevailing Organic Essentials",
+      "PriZurv Inc.",
+      "Pure Maya Mexican Vegan",
+      "Samosa Delight",
+      "Tej Essentials",
+      "The Paleo Palate Café",
+      "Toronto Microgreens",
+      "Vzzz’s Caribbean Catering",
+      "Wander Nut Butters",
+      "Winnie's Fine Foods"
+    ]
+  },
+  {
+    "name": "Etobicoke Civic Centre Farmers’ Market",
+    "slug": "etobicoke-civic-centre-farmers-market",
+    "vendor_list_status": "recovered_current_and_2026_confirmed_partial",
+    "vendor_list_sources": [
+      "https://www.besleycountrymarket.ca/markets-and-more",
+      "https://www.erikaeatseverything.com/toronto"
+    ],
+    "vendors": [
+      "Fresh and Tasty Mushrooms",
+      "Mateus & Sons",
+      "Thames River Melons"
+    ]
+  },
+  {
+    "name": "YUM! Market",
+    "slug": "yum-market",
+    "vendor_list_status": "recovered_official_2019_vendor_list_not_2026_verified",
+    "vendor_list_sources": [
+      "https://regenesis.eco/en/yumarket",
+      "https://www.yorku.ca/laps/sppa/wp-content/uploads/sites/215/2020/11/February-2019_Volume-7_Issue-3.pdf"
+    ],
+    "vendors": [
+      "Organic Chef Foods",
+      "Chiamigos",
+      "Ontario Honey Creations",
+      "Albion Hills",
+      "G-Free Sweets",
+      "Crown Valley Bakery",
+      "Spahket",
+      "Eastend Vegan",
+      "Fresco Foods",
+      "Hot Yoga Wellness",
+      "De La Terre Bakery"
+    ]
+  }
+]

@@ -117,11 +117,11 @@
     "schedules": [
       {
         "weekday": 6,
-        "opens_at": "09:00",
+        "opens_at": "08:00",
         "closes_at": "13:00",
         "season_start": null,
         "season_end": null,
-        "notes": "Outdoor Pavilions May–October; indoor TD Future Cities Centre November–April"
+        "notes": "Outdoor pavilions May–October; indoor TD Future Cities Centre November–April. Local food court until 14:00."
       }
     ],
     "confidence": "confirmed",
@@ -198,7 +198,7 @@
     "lng": -79.433563,
     "geofence_radius_m": 220,
     "website": "https://www.dufferingrovemarket.ca/",
-    "phone": null,
+    "phone": "416-458-4747",
     "email": "info@dufferingrovemarket.ca",
     "tags": [
       "produce",
@@ -230,9 +230,7 @@
       "https://www.dufferingrovemarket.ca/vendor/",
       "https://maps.app.goo.gl/XMufqKwfyear9s2R9"
     ],
-    "gaps": [
-      "phone: no organizer phone was found on the official site"
-    ],
+    "gaps": [],
     "replaces": null
   },
   {
@@ -273,10 +271,10 @@
         "closes_at": "19:00",
         "season_start": null,
         "season_end": null,
-        "notes": "The current official page lists every Monday at Sorauren Avenue Park, including statutory holidays."
+        "notes": "Every Monday, including statutory holidays."
       }
     ],
-    "confidence": "inferred",
+    "confidence": "confirmed",
     "sources": [
       "https://www.soraurenmarket.com/",
       "https://www.soraurenmarket.com/vendor-application-forms",
@@ -329,7 +327,7 @@
         "closes_at": "14:00",
         "season_start": "05-10",
         "season_end": "10-25",
-        "notes": "2026 outdoor season at Greenwood Park."
+        "notes": "Outdoor season at Greenwood Park."
       }
     ],
     "confidence": "confirmed",
@@ -378,7 +376,7 @@
         "closes_at": "13:00",
         "season_start": "05-30",
         "season_end": "10-17",
-        "notes": "2026 season; rain or shine"
+        "notes": "Rain or shine."
       }
     ],
     "confidence": "confirmed",
@@ -423,7 +421,7 @@
         "closes_at": "19:00",
         "season_start": "05-05",
         "season_end": "10-27",
-        "notes": "2026 season; rain or shine."
+        "notes": "Rain or shine."
       }
     ],
     "confidence": "confirmed",
@@ -451,7 +449,7 @@
     "lng": -79.4625,
     "geofence_radius_m": 220,
     "website": "https://junctionmarket.ca/",
-    "phone": null,
+    "phone": "647-828-5570",
     "email": "info@junctionmarket.ca",
     "tags": [
       "produce",
@@ -476,7 +474,7 @@
         "closes_at": "13:00",
         "season_start": "05-16",
         "season_end": "10-31",
-        "notes": "2026 season in Baird Park."
+        "notes": "Baird Park."
       }
     ],
     "confidence": "confirmed",
@@ -487,9 +485,7 @@
       "https://junctionmarket.ca/contact-us/",
       "https://maps.app.goo.gl/aBPq3sgS6nuZ75Ga8"
     ],
-    "gaps": [
-      "phone"
-    ],
+    "gaps": [],
     "replaces": null
   },
   {
@@ -533,7 +529,7 @@
         "closes_at": "15:00",
         "season_start": null,
         "season_end": null,
-        "notes": "Year-round; statutory-holiday substitutions or closures may apply."
+        "notes": "Year-round. Holiday substitutions may apply."
       }
     ],
     "confidence": "confirmed",
@@ -554,7 +550,7 @@
     "address": "29 Lower River Street",
     "city": "Toronto",
     "province": "ON",
-    "postal_code": null,
+    "postal_code": "M5A 1M6",
     "lat": 43.6555674,
     "lng": -79.3549712,
     "geofence_radius_m": 220,
@@ -577,7 +573,7 @@
         "closes_at": "19:30",
         "season_start": "05-14",
         "season_end": "10-15",
-        "notes": "2026 season; rain or shine."
+        "notes": "Rain or shine."
       }
     ],
     "confidence": "confirmed",
@@ -587,7 +583,6 @@
       "https://maps.app.goo.gl/8suhwvUJfhgN4gLm6"
     ],
     "gaps": [
-      "postal_code",
       "phone"
     ],
     "replaces": null
@@ -627,7 +622,7 @@
         "closes_at": "19:00",
         "season_start": "06-04",
         "season_end": "10-08",
-        "notes": "2026 season."
+        "notes": null
       }
     ],
     "confidence": "confirmed",
@@ -647,12 +642,12 @@
     "address": "19 Horticultural Avenue",
     "city": "Toronto",
     "province": "ON",
-    "postal_code": null,
+    "postal_code": "M5A 2P2",
     "lat": 43.6619028,
     "lng": -79.3754708,
     "geofence_radius_m": 220,
     "website": "https://www.friendsofallangardens.ca/saturday-farmers-market",
-    "phone": null,
+    "phone": "416-886-3334",
     "email": "info@friendsofallangardens.ca",
     "tags": [
       "produce",
@@ -685,10 +680,7 @@
       "https://www.friendsofallangardens.ca/the-childrens-conservatory",
       "https://www.google.com/maps/place/Allan+Gardens+Farmers%E2%80%99+Market/data=!4m7!3m6!1s0x89d4cb003862508f:0xc6c9f819cccd1429!8m2!3d43.6619028!4d-79.3754708!16s%2Fg%2F11m6j_f85s"
     ],
-    "gaps": [
-      "postal_code",
-      "phone"
-    ],
+    "gaps": [],
     "replaces": null
   },
   {
@@ -725,9 +717,9 @@
         "weekday": 2,
         "opens_at": "15:00",
         "closes_at": "19:00",
-        "season_start": null,
-        "season_end": null,
-        "notes": "Season runs May–October; the precise 2026 first and last dates are not reliably published on the official page."
+        "season_start": "05-20",
+        "season_end": "10-28",
+        "notes": "Riverdale Park West."
       }
     ],
     "confidence": "confirmed",
@@ -738,8 +730,6 @@
     ],
     "gaps": [
       "phone",
-      "season_start",
-      "season_end",
       "The official page's “Next market: May 20th” label does not fall on a Tuesday in 2026, so it was not used as the opening date."
     ],
     "replaces": null
@@ -779,7 +769,7 @@
         "closes_at": "14:00",
         "season_start": "05-12",
         "season_end": "10-27",
-        "notes": "2026 season at the East York Civic Centre."
+        "notes": "East York Civic Centre."
       }
     ],
     "confidence": "confirmed",
@@ -799,7 +789,7 @@
     "address": "125 Burnaby Boulevard",
     "city": "Toronto",
     "province": "ON",
-    "postal_code": null,
+    "postal_code": "M5N 1G5",
     "lat": 43.7043176,
     "lng": -79.4126572,
     "geofence_radius_m": 220,
@@ -823,7 +813,7 @@
         "closes_at": "13:00",
         "season_start": "06-07",
         "season_end": "10-25",
-        "notes": "2026 season; rain or shine."
+        "notes": "Rain or shine."
       }
     ],
     "confidence": "confirmed",
@@ -832,9 +822,7 @@
       "https://www.theeglintonway.com/_files/ugd/a2777e_59a4e92b844c4bb8a14e891f8e8b5967.pdf",
       "https://www.google.com/maps/place/Eglinton+Way+BIA+Farmers%E2%80%99+Market/@43.7043176,-79.4126572,17z/data=!3m1!4b1!4m6!3m5!1s0x882b3336793a27e5:0xce4ecc6f5ffebde4!8m2!3d43.7043176!4d-79.4126572!16s%2Fg%2F11jj48grj0"
     ],
-    "gaps": [
-      "postal_code"
-    ],
+    "gaps": [],
     "replaces": null
   },
   {
@@ -850,7 +838,7 @@
     "lng": -79.4809687,
     "geofence_radius_m": 250,
     "website": "https://hbsca.ca/events/humber-bay-shores-farmers-market/",
-    "phone": null,
+    "phone": "416-357-3899",
     "email": "zweingarten@gmail.com",
     "tags": [
       "produce",
@@ -875,7 +863,7 @@
         "closes_at": "14:00",
         "season_start": "05-30",
         "season_end": "10-10",
-        "notes": "2026 season in Humber Bay Park West."
+        "notes": "Humber Bay Park West."
       }
     ],
     "confidence": "confirmed",
@@ -886,9 +874,7 @@
       "https://www.laprimaverafarms.com/farmers-markets.html",
       "https://www.google.com/maps/place/Humber+Bay+Shores+Farmers'+Market/@43.6202314,-79.4809687,17z/data=!3m1!4b1!4m6!3m5!1s0x882b360558af0a13:0x126dd22cab8d0abe!8m2!3d43.6202314!4d-79.4809687!16s%2Fg%2F11dzdcdfxr"
     ],
-    "gaps": [
-      "phone"
-    ],
+    "gaps": [],
     "replaces": null
   },
   {
@@ -922,7 +908,7 @@
         "closes_at": "19:30",
         "season_start": "06-02",
         "season_end": "10-06",
-        "notes": "2026 season at Cynthia Lai Park, formerly Rosebank Park."
+        "notes": "Cynthia Lai Park."
       }
     ],
     "confidence": "confirmed",
@@ -951,8 +937,8 @@
     "lng": -79.4132948,
     "geofence_radius_m": 250,
     "website": "https://northyorkfarmersmarket.ca/",
-    "phone": null,
-    "email": "info@northyorkfarmersmarket.ca",
+    "phone": "905-260-1856",
+    "email": "redonionevents1@gmail.com",
     "tags": [
       "produce",
       "bakery",
@@ -974,7 +960,7 @@
         "closes_at": "14:00",
         "season_start": "05-28",
         "season_end": "10-08",
-        "notes": "2026 season at Mel Lastman Square."
+        "notes": "Mel Lastman Square."
       }
     ],
     "confidence": "confirmed",
@@ -984,9 +970,7 @@
       "https://nowtoronto.com/event/north-york-farmers-market/",
       "https://www.google.com/maps/place/North+York+Farmers'+Market/@43.7679485,-79.4132948,17z/data=!3m1!4b1!4m6!3m5!1s0x882b2d6fc5cd0957:0xb692058cf8c0533e!8m2!3d43.7679485!4d-79.4132948!16s%2Fg%2F11b7xmh569"
     ],
-    "gaps": [
-      "phone"
-    ],
+    "gaps": [],
     "replaces": null
   },
   {
@@ -1024,7 +1008,7 @@
         "closes_at": "14:00",
         "season_start": "05-05",
         "season_end": "10-27",
-        "notes": "2026 weekly outdoor season on the hospital’s University Avenue front driveway."
+        "notes": "University Avenue front driveway."
       }
     ],
     "confidence": "confirmed",
@@ -1073,7 +1057,7 @@
         "closes_at": "19:00",
         "season_start": "05-12",
         "season_end": "10-06",
-        "notes": "2026 outdoor season in June Rowlands Park."
+        "notes": "June Rowlands Park."
       }
     ],
     "confidence": "confirmed",
@@ -1129,7 +1113,7 @@
         "closes_at": "19:00",
         "season_start": "06-03",
         "season_end": "10-21",
-        "notes": "2026 season; rain or shine."
+        "notes": "Rain or shine."
       }
     ],
     "confidence": "inferred",
@@ -1157,7 +1141,7 @@
     "lng": -79.4848367,
     "geofence_radius_m": 180,
     "website": "https://www.annettevillagemarket.com/",
-    "phone": null,
+    "phone": "416-458-9393",
     "email": "annettevillagefarmersmrkt@gmail.com",
     "tags": [
       "produce",
@@ -1184,7 +1168,7 @@
         "closes_at": "19:00",
         "season_start": "06-03",
         "season_end": "10-07",
-        "notes": "2026 season in the Runnymede Presbyterian Church parking lot; rain or shine."
+        "notes": "Runnymede Presbyterian Church parking lot. Rain or shine."
       }
     ],
     "confidence": "confirmed",
@@ -1194,9 +1178,7 @@
       "https://www.annettevillagemarket.com/vendors",
       "https://www.google.com/maps/search/?api=1&query=43.6591747,-79.4848367"
     ],
-    "gaps": [
-      "Organizer phone not published."
-    ],
+    "gaps": [],
     "replaces": null
   },
   {
@@ -1220,10 +1202,10 @@
       "prepared-food",
       "indoor",
       "outdoor",
-      "year-round",
       "parking",
       "transit",
-      "family-friendly"
+      "family-friendly",
+      "seasonal"
     ],
     "featured": false,
     "schedules": [
@@ -1231,9 +1213,9 @@
         "weekday": 3,
         "opens_at": "14:00",
         "closes_at": "18:00",
-        "season_start": null,
-        "season_end": null,
-        "notes": "Year-round weekly market. The City currently lists the market as outdoors; its location may move seasonally."
+        "season_start": "05-27",
+        "season_end": "10-21",
+        "notes": "Outdoor season. Bread from the Inn oven."
       }
     ],
     "confidence": "confirmed",
@@ -1278,7 +1260,7 @@
         "closes_at": "19:00",
         "season_start": "06-04",
         "season_end": "10-29",
-        "notes": "The market changed to Thursday afternoons for the 2026 season."
+        "notes": "Thursday afternoons."
       }
     ],
     "confidence": "confirmed",
@@ -1324,7 +1306,7 @@
         "closes_at": "18:00",
         "season_start": "06-25",
         "season_end": "10-15",
-        "notes": "2026 weekly market at Flemo Farm."
+        "notes": "At Flemo Farm."
       }
     ],
     "confidence": "confirmed",
@@ -1350,7 +1332,7 @@
     "lng": -79.2054483,
     "geofence_radius_m": 220,
     "website": "https://www.mfrc.org/urban-agriculture-and-food-programs",
-    "phone": "416-284-4184 ext. 221",
+    "phone": "416-284-4184 x221",
     "email": "cperttula@mfrc.org",
     "tags": [
       "produce",
@@ -1368,7 +1350,7 @@
         "closes_at": "19:00",
         "season_start": "06-10",
         "season_end": "10-14",
-        "notes": "2026 season; rain or shine; no registration required to shop."
+        "notes": "Rain or shine. No registration needed to shop."
       }
     ],
     "confidence": "confirmed",
@@ -1412,7 +1394,7 @@
         "closes_at": "19:30",
         "season_start": "06-03",
         "season_end": "10-07",
-        "notes": "2026 season."
+        "notes": null
       }
     ],
     "confidence": "confirmed",
@@ -1460,10 +1442,10 @@
         "closes_at": "16:00",
         "season_start": "07-05",
         "season_end": "10-04",
-        "notes": "2026 season at the outdoor plaza beside Fairbank Station."
+        "notes": "Fairbank Station plaza."
       }
     ],
-    "confidence": "inferred",
+    "confidence": "confirmed",
     "sources": [
       "https://afrocaribbeanfarmersmarket.com/",
       "https://afrocaribbeanfarmersmarket.com/about",
@@ -1473,8 +1455,7 @@
     ],
     "gaps": [
       "Organizer phone",
-      "Organizer email",
-      "The official market site publishes the dates and weekday but not the hours; 11:00–16:00 is from a current 2026 market guide."
+      "Organizer email"
     ],
     "replaces": null
   },
@@ -1490,7 +1471,7 @@
     "lat": 43.64373,
     "lng": -79.56638,
     "geofence_radius_m": 300,
-    "website": "https://www.toronto.ca/services-payments/venues-facilities-bookings/booking-city-facilities/civic-centres/",
+    "website": "https://www.toronto.ca/business-economy/industry-sector-support/public-markets/public-markets-in-toronto/",
     "phone": null,
     "email": null,
     "tags": [
@@ -1513,7 +1494,7 @@
         "closes_at": "14:00",
         "season_start": "06-06",
         "season_end": "10-31",
-        "notes": "2026 dates are from a current event listing; the City has not published a dedicated 2026 market page."
+        "notes": "Civic Centre parking lot."
       }
     ],
     "confidence": "inferred",
@@ -1563,7 +1544,7 @@
         "closes_at": "16:00",
         "season_start": null,
         "season_end": null,
-        "notes": "Current York University page lists a weekly Wednesday market; season dates are not published."
+        "notes": "Weekly on campus. Season dates are not published."
       }
     ],
     "confidence": "confirmed",

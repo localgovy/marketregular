@@ -54,7 +54,11 @@ export default async function VendorPage({
         <div className="flex flex-col gap-8">
           <section>
             <h2>About</h2>
-            <p className="mt-2 leading-relaxed text-muted-foreground">{vendor.about}</p>
+            {vendor.about ? (
+              <p className="mt-2 leading-relaxed text-muted-foreground">{vendor.about}</p>
+            ) : (
+              <p className="mt-2 text-base text-muted-foreground">About not listed yet.</p>
+            )}
           </section>
           <section>
             <h2>Menu</h2>

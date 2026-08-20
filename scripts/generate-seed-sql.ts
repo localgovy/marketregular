@@ -38,9 +38,11 @@ lines.push(
       (m) =>
         `  (${sqlStr(m.id)}, ${sqlStr(m.slug)}, ${sqlStr(m.name)}, ${sqlStr(m.about)}, ${sqlStr(m.address)}, ${sqlStr(m.city)}, ${sqlStr(m.province)}, ${sqlStr(m.postal_code)}, ${m.lat}, ${m.lng}, ${m.geofence_radius_m}, ${sqlStr(m.website)}, ${sqlStr(m.phone)}, ${sqlStr(m.email ?? null)}, ${sqlArr(m.tags)}, 'published', ${m.featured})`,
     )
-    .join(",\n") + "\non conflict (id) do nothing;\n",
+    .join(",\n") +
+    "\non conflict (id) do update set slug = excluded.slug, name = excluded.name, about = excluded.about, address = excluded.address, city = excluded.city, province = excluded.province, postal_code = excluded.postal_code, lat = excluded.lat, lng = excluded.lng, geofence_radius_m = excluded.geofence_radius_m, website = excluded.website, phone = excluded.phone, email = excluded.email, tags = excluded.tags, status = excluded.status, featured = excluded.featured;\n",
 );
 
+lines.push("delete from public.market_schedules;\n");
 lines.push(
   "insert into public.market_schedules (market_id, weekday, opens_at, closes_at, season_start, season_end, notes) values",
 );
@@ -54,17 +56,23 @@ for (const m of launchMarkets) {
 }
 lines.push(scheduleRows.join(",\n") + ";\n");
 
-lines.push(
-  "insert into public.vendors (id, slug, name, about, website, phone, tags, status) values",
-);
-lines.push(
-  launchVendors
-    .map(
-      (v) =>
-        `  (${sqlStr(v.id)}, ${sqlStr(v.slug)}, ${sqlStr(v.name)}, ${sqlStr(v.about)}, ${sqlStr(v.website)}, ${sqlStr(v.phone)}, ${sqlArr(v.tags)}, 'published')`,
-    )
-    .join(",\n") + "\non conflict (id) do nothing;\n",
-);
+lines.push("delete from public.market_vendors;");
+lines.push("delete from public.vendor_menus;");
+lines.push("delete from public.vendors;\n");
+
+if (launchVendors.length) {
+  lines.push(
+    "insert into public.vendors (id, slug, name, about, website, phone, tags, status) values",
+  );
+  lines.push(
+    launchVendors
+      .map(
+        (v) =>
+          `  (${sqlStr(v.id)}, ${sqlStr(v.slug)}, ${sqlStr(v.name)}, ${sqlStr(v.about)}, ${sqlStr(v.website)}, ${sqlStr(v.phone)}, ${sqlArr(v.tags)}, 'published')`,
+      )
+      .join(",\n") + "\non conflict (id) do nothing;\n",
+  );
+}
 
 const menuRows: string[] = [];
 for (const v of launchVendors) {
@@ -74,22 +82,26 @@ for (const v of launchVendors) {
     );
   }
 }
-lines.push(
-  "insert into public.vendor_menus (vendor_id, name, description, price_cents, season, dietary) values",
-);
-lines.push(menuRows.join(",\n") + ";\n");
+if (menuRows.length) {
+  lines.push(
+    "insert into public.vendor_menus (vendor_id, name, description, price_cents, season, dietary) values",
+  );
+  lines.push(menuRows.join(",\n") + ";\n");
+}
 
-lines.push(
-  "insert into public.market_vendors (market_id, vendor_id, stall, days) values",
-);
-lines.push(
-  launchLinks
-    .map(
-      (mv) =>
-        `  (${sqlStr(mv.market_id)}, ${sqlStr(mv.vendor_id)}, ${sqlStr(mv.stall)}, ${sqlArr(mv.days)})`,
-    )
-    .join(",\n") + "\non conflict (market_id, vendor_id) do nothing;\n",
-);
+if (launchLinks.length) {
+  lines.push(
+    "insert into public.market_vendors (market_id, vendor_id, stall, days) values",
+  );
+  lines.push(
+    launchLinks
+      .map(
+        (mv) =>
+          `  (${sqlStr(mv.market_id)}, ${sqlStr(mv.vendor_id)}, ${sqlStr(mv.stall)}, ${sqlArr(mv.days)})`,
+      )
+      .join(",\n") + "\non conflict (market_id, vendor_id) do nothing;\n",
+  );
+}
 
 const out = join(dirname(fileURLToPath(import.meta.url)), "..", "supabase", "seed.sql");
 writeFileSync(out, lines.join("\n"));
