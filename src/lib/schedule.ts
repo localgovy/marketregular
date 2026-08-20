@@ -73,14 +73,36 @@ export function isOpenOnWeekday(schedules: ScheduleRow[], weekday: number) {
   return schedules.some((row) => row.weekday === weekday);
 }
 
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+export function formatMonthDay(value: string) {
+  const [month, day] = value.split("-").map(Number);
+  if (!month || !day || month < 1 || month > 12) return value;
+  return `${MONTHS_SHORT[month - 1]} ${day}`;
+}
+
+export function formatSeasonRange(start: string | null, end: string | null) {
+  if (!start || !end) return "Year-round";
+  return `${formatMonthDay(start)} to ${formatMonthDay(end)}`;
+}
+
 export function formatSchedule(row: ScheduleRow) {
   const day = WEEKDAYS[row.weekday] ?? "Day";
   const hours = `${row.opens_at.slice(0, 5)}–${row.closes_at.slice(0, 5)}`;
-  const season =
-    row.season_start && row.season_end
-      ? `${row.season_start} to ${row.season_end}`
-      : "Year-round";
-  return { day, hours, season, notes: row.notes };
+  return { day, hours, season: formatSeasonRange(row.season_start, row.season_end), notes: row.notes };
 }
 
 export function nextOpenLabel(schedules: ScheduleRow[], province: string) {

@@ -14,8 +14,8 @@ export function ScheduleList({ schedules }: { schedules: MarketSchedule[] }) {
           <li key={row.id} className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
             <span className="font-medium">{formatted.day}</span>
             <span className="text-muted-foreground">
-              {formatted.hours}
-              <span className="ml-2 text-xs">{formatted.season}</span>
+              <span className="tabular-nums">{formatted.hours}</span>
+              <span className="ml-2">{formatted.season}</span>
             </span>
             {formatted.notes ? (
               <p className="w-full text-xs text-muted-foreground">{formatted.notes}</p>
