@@ -84,7 +84,7 @@ export default async function HomePage() {
             how="Open ones first. Tap a name, then save the ones you actually go to."
             action={
               <Link href="/markets" className="hover:underline">
-                {markets.length} listed
+                See all
               </Link>
             }
           >

@@ -10,11 +10,11 @@ export function NowLabel({
   return (
     <span
       className={cn(
-        "now-open stall-chip-sm inline-flex items-center gap-1.5 bg-ticket px-2 py-0.5 text-sm text-receipt",
+        "now-open stall-chip-sm inline-flex items-center gap-1.5 bg-receipt px-2 py-0.5 text-sm font-medium text-stamp shadow-[inset_3px_0_0_var(--stamp)]",
         className,
       )}
     >
-      <span className="now-open-punch" aria-hidden />
+      <span className="now-open-stamp" aria-hidden />
       {children}
     </span>
   );

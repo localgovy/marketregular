@@ -19,7 +19,7 @@ function SlotRow({ slot }: { slot: UpcomingSlot }) {
         ) : null}
         <Hours
           value={slot.hours}
-          className={slot.open ? "text-ticket" : "text-muted-foreground"}
+          className={slot.open ? "text-stamp" : "text-muted-foreground"}
         />
       </span>
     </Link>
@@ -55,7 +55,7 @@ export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
       icon={WeekMark}
       kicker={`${LAUNCH_CITY} this week`}
       title="Upcoming markets"
-      how="Gold means open right now. Tap a name for vendors and the map."
+      how="A stamp means open right now. Tap a name for vendors and the map."
       className="xl:shrink-0"
       action={
         <Link href="/events" className="hover:underline">
