@@ -77,7 +77,7 @@ export function FloorTape({
         {items.length ? (
           <ol className="pb-4">
             {items.map((item) => (
-              <ReviewCard key={item.id} item={item} stalls={stalls} className="mx-2 my-2 px-3" />
+              <ReviewCard key={item.id} item={item} stalls={stalls} className="mx-2 my-2" />
             ))}
           </ol>
         ) : (
