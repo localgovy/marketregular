@@ -149,6 +149,7 @@ export type FloorItem = {
   vendor_name: string | null;
   vendor_slug: string | null;
   rating: number | null;
+  price_level: number | null;
   verified_on_site: boolean;
   tags: string[];
   photos: string[];

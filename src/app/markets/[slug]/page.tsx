@@ -6,9 +6,9 @@ import { ClaimForm } from "@/components/claim-form";
 import { SaveButton } from "@/components/save-button";
 import { LiveFeed } from "@/components/live-feed";
 import { MarketMapLazy } from "@/components/market-map-lazy";
+import { MarketVendors } from "@/components/market-vendors";
 import { ScheduleList } from "@/components/schedule-list";
 import { TagList } from "@/components/tag-list";
-import { VendorCard } from "@/components/vendor-card";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { formatPhone } from "@/lib/format";
@@ -64,22 +64,7 @@ export default async function MarketPage({
             <h2>About</h2>
             <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>
           </section>
-          <section>
-            <h2>Vendors</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              {market.vendors.map((vendor) => (
-                <VendorCard
-                  key={vendor.id}
-                  vendor={vendor}
-                  stall={vendor.stall}
-                  days={vendor.days}
-                />
-              ))}
-              {!market.vendors.length ? (
-                <p className="text-sm text-muted-foreground">Vendor list is being filled in.</p>
-              ) : null}
-            </div>
-          </section>
+          <MarketVendors vendors={market.vendors} />
           <section>
             <h2>Reviews</h2>
             {avg ? (

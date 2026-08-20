@@ -17,6 +17,11 @@ export function formatPrice(cents: number | null) {
   }).format(cents / 100);
 }
 
+export function formatPriceLevel(level: number | null | undefined) {
+  if (!level || level < 1 || level > 3) return null;
+  return "$".repeat(level);
+}
+
 export function formatPhone(phone: string) {
   const digits = phone.replace(/\D/g, "");
   if (digits.length === 10) {

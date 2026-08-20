@@ -73,8 +73,15 @@ export async function createPost(input: {
   tags?: string[];
   vendorSlug?: string;
   rating?: number;
+  priceLevel?: number;
 }) {
-  const body = encodeFloorBody(input.body, input.tags ?? [], input.vendorSlug, input.rating);
+  const body = encodeFloorBody(
+    input.body,
+    input.tags ?? [],
+    input.vendorSlug,
+    input.rating,
+    input.vendorSlug ? input.priceLevel : undefined,
+  );
   if (input.body.trim().length < 3) return { error: "Write a little more." };
   if (body.length > 2000) return { error: "Reviews are limited to 2,000 characters." };
 
@@ -173,6 +180,7 @@ export async function composeFloorNote(input: {
   vendorId?: string;
   vendorSlug?: string;
   tags: string[];
+  priceLevel?: number;
 }) {
   const post = await createPost({
     marketId: input.marketId,
@@ -182,6 +190,10 @@ export async function composeFloorNote(input: {
     tags: input.tags,
     vendorSlug: input.vendorSlug,
     rating: input.rating >= 1 ? input.rating : undefined,
+    priceLevel:
+      input.vendorId && input.priceLevel && input.priceLevel >= 1 && input.priceLevel <= 3
+        ? input.priceLevel
+        : undefined,
   });
   if (post.error) return post;
 

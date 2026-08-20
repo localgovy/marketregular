@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { scrapStyle } from "@/lib/floor-note";
-import { timeAgo } from "@/lib/format";
+import { formatPriceLevel, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { FloorItem, StallRef } from "@/types/database";
 
@@ -36,6 +36,14 @@ export function ReviewCard({
             <>
               {" "}
               <span className="font-mono tabular-nums text-ticket">{item.rating}/5</span>
+            </>
+          ) : null}
+          {item.price_level ? (
+            <>
+              {" "}
+              <span className="font-mono tabular-nums text-ticket">
+                {formatPriceLevel(item.price_level)}
+              </span>
             </>
           ) : null}
           {place ? (

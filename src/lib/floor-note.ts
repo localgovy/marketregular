@@ -5,11 +5,13 @@ export function encodeFloorBody(
   tags: string[],
   vendorSlug?: string,
   rating?: number,
+  priceLevel?: number,
 ) {
   const bits = [text.trim()];
   if (tags.length) bits.push(tags.map((t) => `#${t.replaceAll(/\s+/g, "-")}`).join(" "));
   if (vendorSlug) bits.push(`@${vendorSlug}`);
   if (rating && rating >= 1 && rating <= 5) bits.push(`★${rating}`);
+  if (priceLevel && priceLevel >= 1 && priceLevel <= 3) bits.push(`$:${priceLevel}`);
   return bits.join("\n");
 }
 
@@ -17,6 +19,7 @@ export function decodeFloorBody(raw: string) {
   const tags: string[] = [];
   let vendorSlug: string | null = null;
   let rating: number | null = null;
+  let priceLevel: number | null = null;
   const kept: string[] = [];
   for (const line of raw.split("\n")) {
     const trimmed = line.trim();
@@ -27,6 +30,11 @@ export function decodeFloorBody(raw: string) {
     const star = /^★([1-5])$/.exec(trimmed) ?? /^rating:([1-5])$/i.exec(trimmed);
     if (star) {
       rating = Number(star[1]);
+      continue;
+    }
+    const bucks = /^\$:([1-3])$/.exec(trimmed);
+    if (bucks) {
+      priceLevel = Number(bucks[1]);
       continue;
     }
     const stripped = trimmed
@@ -43,6 +51,7 @@ export function decodeFloorBody(raw: string) {
     tags: [...new Set(tags)],
     vendorSlug,
     rating,
+    priceLevel,
   };
 }
 
@@ -84,6 +93,7 @@ export function reviewFromPost(
     vendor_name: post.vendor_name ?? tagged?.name ?? null,
     vendor_slug: slug ?? tagged?.slug ?? null,
     rating: decoded.rating,
+    price_level: decoded.priceLevel,
     verified_on_site: post.verified_on_site,
     tags: post.tags?.length ? post.tags : decoded.tags,
     photos: post.photos ?? [],
@@ -103,6 +113,7 @@ export function reviewFromReview(row: Review): FloorItem {
     vendor_name: row.vendor_name ?? null,
     vendor_slug: row.vendor_slug ?? decoded.vendorSlug,
     rating: row.rating,
+    price_level: decoded.priceLevel,
     verified_on_site: row.verified_on_site,
     tags: decoded.tags,
     photos: [],
@@ -123,6 +134,9 @@ export function mergeReviews(items: FloorItem[]): FloorItem[] {
     }
     if (current.rating == null && item.rating != null) {
       byKey.set(key, { ...current, rating: item.rating });
+    }
+    if (current.price_level == null && item.price_level != null) {
+      byKey.set(key, { ...byKey.get(key)!, price_level: item.price_level });
     }
     if (!current.vendor_slug && item.vendor_slug) {
       byKey.set(key, {
