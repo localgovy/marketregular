@@ -97,7 +97,7 @@ export function HomePanel({
         className={cn(
           rail
             ? "flex flex-col gap-1 px-4 pt-4 pb-2"
-            : "flex flex-wrap items-end justify-between gap-3 px-4 pt-4 pb-1",
+            : "flex flex-wrap items-end justify-between gap-3 px-4 pt-3 pb-3",
           t.band,
         )}
       >
