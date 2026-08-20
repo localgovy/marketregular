@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CaretLeftMark, CaretRightMark } from "@/components/marks";
 import { Hours } from "@/components/hours";
+import { NowLabel } from "@/components/now-label";
 import { Button } from "@/components/ui/button";
 import { WEEKDAYS } from "@/lib/constants";
 import {
@@ -338,7 +339,7 @@ export function EventsCalendar({
                   </span>
                   <span className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-1.5">
                     {event.open ? (
-                      <span className="bg-ticket px-1.5 py-0.5 text-sm text-receipt">Open</span>
+                      <NowLabel>Open</NowLabel>
                     ) : null}
                     <Hours value={event.hours} className="text-muted-foreground" />
                   </span>

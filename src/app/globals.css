@@ -259,6 +259,38 @@
   animation: speed-unfold 0.18s ease-out;
 }
 
+@keyframes now-sheen {
+  0%,
+  68% {
+    transform: translate3d(-140%, 0, 0);
+  }
+  82%,
+  100% {
+    transform: translate3d(140%, 0, 0);
+  }
+}
+
+.now-shimmer {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.now-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgb(255 248 235 / 0.5) 50%,
+    transparent 62%
+  );
+  transform: translate3d(-140%, 0, 0);
+  animation: now-sheen 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cal-in,
   .cal-next,
@@ -274,6 +306,10 @@
     will-change: auto;
   }
   .speed-menu {
+    animation: none;
+  }
+  .now-shimmer::after {
+    content: none;
     animation: none;
   }
 }

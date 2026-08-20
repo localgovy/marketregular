@@ -5,19 +5,12 @@ import Link from "next/link";
 import { HomePanel } from "@/components/home-panel";
 import { Hours } from "@/components/hours";
 import { CrateMark, TallyMark } from "@/components/marks";
+import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { tagLabel } from "@/lib/find-paths";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 
-const TODAY_STALL_CAP = 20;
-
-function SellingNowMark() {
-  return (
-    <span className="bg-ticket px-1.5 py-0.5 text-sm text-receipt">
-      Selling now
-    </span>
-  );
-}
+const TODAY_STALL_CAP = 15;
 
 export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
   const [showAll, setShowAll] = useState(false);
@@ -36,7 +29,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
         <>
           Tap a name for the menu.
           <span className="mt-2 flex flex-wrap items-center gap-2">
-            <SellingNowMark />
+            <NowLabel>Selling now</NowLabel>
             <span>At the stall this minute.</span>
           </span>
         </>
@@ -60,7 +53,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
                   {row.stall ? ` · ${row.stall}` : null}
                 </span>
                 <span className="flex flex-wrap items-center gap-2">
-                  {row.open ? <SellingNowMark /> : null}
+                  {row.open ? <NowLabel>Selling now</NowLabel> : null}
                   <Hours value={row.hours} className="text-muted-foreground" />
                 </span>
                 {row.tags.length ? (

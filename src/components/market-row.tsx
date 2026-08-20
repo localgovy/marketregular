@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { nextOpenLabel } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
@@ -37,9 +38,7 @@ export function MarketRow({
         </span>
         <span className="shrink-0 text-right text-sm">
           {open ? (
-            <span className="stall-chip-sm bg-ticket px-2 py-1 text-sm text-receipt">
-              Open now
-            </span>
+            <NowLabel className="stall-chip-sm px-2 py-1">Open now</NowLabel>
           ) : (
             <span className="text-muted-foreground">{when ?? "Hours"}</span>
           )}

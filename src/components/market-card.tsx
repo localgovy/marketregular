@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { nextOpenLabel } from "@/lib/schedule";
@@ -31,12 +32,12 @@ export function MarketCard({
             <p className="line-clamp-3 text-sm text-muted-foreground">
               {market.about}
             </p>
-            {when ? (
-              <p
-                className={`text-sm font-medium ${when === "Open now" ? "text-ticket" : "text-primary"}`}
-              >
+            {when === "Open now" ? (
+              <NowLabel className="bg-transparent px-0 py-0 font-medium text-ticket">
                 {when}
-              </p>
+              </NowLabel>
+            ) : when ? (
+              <p className="text-sm font-medium text-primary">{when}</p>
             ) : null}
             <TagList tags={market.tags.slice(0, 4)} />
           </CardContent>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HomePanel } from "@/components/home-panel";
 import { Hours } from "@/components/hours";
 import { WeekMark } from "@/components/marks";
+import { NowLabel } from "@/components/now-label";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { UpcomingGroup, UpcomingSlot } from "@/lib/upcoming";
 
@@ -14,7 +15,7 @@ function SlotRow({ slot }: { slot: UpcomingSlot }) {
       <span className="min-w-0 text-base font-medium">{slot.market.name}</span>
       <span className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-1.5">
         {slot.open ? (
-          <span className="bg-ticket px-1.5 py-0.5 text-sm text-receipt">Open</span>
+          <NowLabel>Open</NowLabel>
         ) : null}
         <Hours
           value={slot.hours}
