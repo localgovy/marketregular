@@ -1,13 +1,38 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { VendorRow } from "@/components/vendor-row";
-import { listVendors } from "@/lib/data/catalog";
+import { VendorsDirectory, type VendorDirectoryRow } from "@/components/vendors-directory";
+import { listMarkets, listStalls, listVendors } from "@/lib/data/catalog";
 import { LAUNCH_CITY } from "@/lib/launch";
 
 export const metadata: Metadata = { title: `${LAUNCH_CITY} vendors` };
 
 export default async function VendorsIndexPage() {
-  const vendors = await listVendors();
+  const [vendors, stalls, markets] = await Promise.all([
+    listVendors(),
+    listStalls(),
+    listMarkets(),
+  ]);
+  const marketById = new Map(markets.map((market) => [market.id, market]));
+  const stallsByVendor = new Map<string, typeof stalls>();
+  for (const stall of stalls) {
+    const list = stallsByVendor.get(stall.id) ?? [];
+    list.push(stall);
+    stallsByVendor.set(stall.id, list);
+  }
+  const rows: VendorDirectoryRow[] = vendors.map((vendor) => {
+    const at = stallsByVendor.get(vendor.id) ?? [];
+    return {
+      ...vendor,
+      where: [
+        ...new Set(
+          at
+            .map((stall) => marketById.get(stall.market_id)?.name)
+            .filter((name): name is string => Boolean(name)),
+        ),
+      ],
+      stalls: at.map((stall) => stall.stall).filter((stall): stall is string => Boolean(stall)),
+      days: [...new Set(at.flatMap((stall) => stall.days))],
+    };
+  });
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
@@ -16,17 +41,7 @@ export default async function VendorsIndexPage() {
         Stalls in the {LAUNCH_CITY} directory. Tap a name for the menu and which markets they stand
         at. Save a stall to put it on your list.
       </p>
-      <p className="mb-6 text-sm">
-        <Link href="/search" className="font-medium text-primary hover:underline">
-          Search by food or neighbourhood
-        </Link>
-      </p>
-      <p className="mb-3 text-sm text-muted-foreground">{vendors.length} listed</p>
-      <div className="overflow-hidden rounded-md bg-card ring-1 ring-border">
-        {vendors.map((vendor) => (
-          <VendorRow key={vendor.id} vendor={vendor} />
-        ))}
-      </div>
+      <VendorsDirectory vendors={rows} />
     </div>
   );
 }

@@ -11,7 +11,6 @@ import {
   type CSSProperties,
 } from "react";
 import { CaretDownMark } from "@/components/marks";
-import { useSaves } from "@/components/save-button";
 import { cn } from "@/lib/utils";
 import type { Market } from "@/types/database";
 
@@ -205,7 +204,7 @@ function SpeedControls({
       >
         {current.label}
         <CaretDownMark
-          className={cn("size-3.5 transition-transform duration-200 ease-out", open && "rotate-180")}
+          className={cn("size-3.5 transition-transform duration-150 ease-out", open && "rotate-180")}
         />
       </button>
       {open ? (
@@ -215,7 +214,7 @@ function SpeedControls({
           aria-label="How fast the names move"
           className="speed-menu absolute top-[calc(100%+0.35rem)] right-0 z-30 min-w-28 rounded-md bg-card p-1 shadow-md ring-1 ring-border"
         >
-          {SPEEDS.map((speed, index) => {
+          {SPEEDS.map((speed) => {
             const on = speed.id === value;
             return (
               <button
@@ -227,9 +226,8 @@ function SpeedControls({
                   onChange(speed.id);
                   setOpen(false);
                 }}
-                style={{ animationDelay: `${50 + index * 55}ms` }}
                 className={cn(
-                  "speed-menu-chip stall-chip-sm flex h-8 w-full items-center px-2.5 text-sm font-medium",
+                  "stall-chip-sm flex h-8 w-full items-center px-2.5 text-sm font-medium",
                   on
                     ? "bg-ticket text-receipt"
                     : "text-foreground hover:bg-muted",
@@ -246,8 +244,6 @@ function SpeedControls({
 }
 
 export function FloorStrip({ openNow }: { openNow: Market[] }) {
-  const saves = useSaves();
-  const savedCount = saves.markets.length + saves.vendors.length;
   const reduceMotion = usePrefersReducedMotion();
   const [speed, setSpeed] = useState<SpeedId>("regular");
   const moving = openNow.length > 0 && !reduceMotion;
@@ -264,24 +260,11 @@ export function FloorStrip({ openNow }: { openNow: Market[] }) {
           <span className="font-mono tabular-nums">{openNow.length}</span>
           {` ${countLabel} open now`}
         </p>
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
-          {moving ? <SpeedControls value={speed} onChange={setSpeed} /> : null}
-          <p className="flex flex-wrap items-baseline gap-x-3 text-sm font-medium">
-            <span className="text-muted-foreground">Jump to:</span>
-            <a href="#find" className="text-primary hover:underline">
-              Find
-            </a>
-            <a href="#reviews" className="text-primary hover:underline">
-              Reviews
-            </a>
-            <Link href="/events" className="text-primary hover:underline">
-              Events
-            </Link>
-            <Link href="/saved" className="text-primary hover:underline">
-              Saved{savedCount ? ` · ${savedCount}` : ""}
-            </Link>
-          </p>
-        </div>
+        {moving ? (
+          <div className="ml-auto">
+            <SpeedControls value={speed} onChange={setSpeed} />
+          </div>
+        ) : null}
       </div>
       {openNow.length ? (
         <div className="border-t border-border bg-[color-mix(in_srgb,var(--ticket)_7%,var(--card))] px-2 py-2 sm:px-3">
