@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed:sql": "node --experimental-strip-types scripts/generate-seed-sql.ts"
+    "seed:sql": "node --experimental-strip-types scripts/generate-seed-sql.ts",
+    "seed:import": "node --experimental-strip-types scripts/import-toronto-markets.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

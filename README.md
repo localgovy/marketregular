@@ -1,6 +1,6 @@
 # Market Regular
 
-Canada-wide farmers’ market hub: search markets and vendors (schedules, menus, contact, tags), leave on-site reviews and posts, and follow a live floor feed.
+Toronto farmers’ market hub: search markets and vendors (schedules, menus, contact, tags), leave on-site reviews and posts, and follow a live floor feed.
 
 Web first at [marketregular.com](https://marketregular.com). Source: [github.com/localgovy/marketregular](https://github.com/localgovy/marketregular). The same Supabase backend is meant to serve an iOS app later.
 
@@ -11,7 +11,7 @@ Web first at [marketregular.com](https://marketregular.com). Source: [github.com
 - Supabase (Postgres, Auth, Realtime, Storage, PostGIS)
 - MapLibre via OpenFreeMap
 
-The public directory works from the bundled Canadian seed data until a Supabase project is connected. Auth, live posts, reviews, photos, admin, and vendor claims require Supabase.
+The public directory works from the bundled Toronto seed data until a Supabase project is connected. Auth, live posts, reviews, photos, admin, and vendor claims require Supabase.
 
 ## Local development
 
@@ -27,9 +27,7 @@ See [DOMAIN.md](DOMAIN.md) for NamesLink → Vercel DNS (A on `@`, CNAME on `www
 
 ## Supabase
 
-This account already has two free projects, so a third `marketregular` project could not be created automatically. Either pause/upgrade an existing project, or create `marketregular` after a slot is free (Canada region `ca-central-1` if available).
-
-Then:
+Create a `marketregular` project in the Canada region (`ca-central-1` if available). Then:
 
 ```bash
 npx supabase link --project-ref <project-ref>
@@ -55,4 +53,9 @@ Sign in with an `ADMIN_EMAILS` address, then open `/admin` to edit markets/vendo
 
 ## What is seeded
 
-22 markets from St. John’s to Whitehorse, plus fictional example vendors and menus (so we are not publishing real stall-holders without consent). Swap those for real vendors from `/admin`.
+31 Toronto farmers’ markets from `seed batches/toronto_markets_seed.json`, plus fictional example vendors and menus (so we are not publishing real stall-holders without consent). Swap those for real vendors from `/admin`.
+
+```bash
+npm run seed:import   # refresh src/data/directory.ts from the JSON
+npm run seed:sql      # regenerate supabase/seed.sql
+```

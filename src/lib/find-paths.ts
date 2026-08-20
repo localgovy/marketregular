@@ -15,16 +15,16 @@ export const FIND_PRODUCTS = [
 export const FIND_SETUP = ["indoor", "outdoor", "year-round"] as const;
 
 export const FIND_AREAS: Array<{ label: string; q: string; slugs: string[] }> = [
-  { label: "St. Lawrence", q: "St. Lawrence", slugs: ["st-lawrence-market"] },
-  { label: "City Hall", q: "Nathan Phillips", slugs: ["nathan-phillips-square"] },
-  { label: "Wychwood", q: "Wychwood", slugs: ["wychwood-barns"] },
-  { label: "Dufferin Grove", q: "Dufferin Grove", slugs: ["dufferin-grove"] },
-  { label: "Junction", q: "Junction", slugs: ["junction-farmers-market"] },
-  { label: "Leslieville", q: "Leslieville", slugs: ["leslieville-farmers-market"] },
-  { label: "East York", q: "East York", slugs: ["east-york-civic-centre"] },
-  { label: "Withrow", q: "Withrow", slugs: ["withrow-park"] },
-  { label: "Sorauren", q: "Sorauren", slugs: ["sorauren-park"] },
-  { label: "Brick Works", q: "Brick Works", slugs: ["evergreen-brick-works"] },
+  { label: "St. Lawrence", q: "St. Lawrence", slugs: ["st-lawrence-market", "st-lawrence-farmers-market"] },
+  { label: "Wychwood", q: "Wychwood", slugs: ["the-stops-farmers-market"] },
+  { label: "Dufferin Grove", q: "Dufferin Grove", slugs: ["dufferin-grove-organic-farmers-market"] },
+  { label: "Junction", q: "Junction", slugs: ["the-junction-farmers-market"] },
+  { label: "Leslieville", q: "Leslieville", slugs: ["the-leslieville-farmers-market"] },
+  { label: "East York", q: "East York", slugs: ["east-york-farmers-market"] },
+  { label: "Withrow", q: "Withrow", slugs: ["withrow-park-farmers-market"] },
+  { label: "Sorauren", q: "Sorauren", slugs: ["sorauren-farmers-market"] },
+  { label: "Brick Works", q: "Brick Works", slugs: ["evergreen-brick-works-saturday-farmers-market"] },
+  { label: "North York", q: "North York", slugs: ["north-york-farmers-market"] },
 ];
 
 export function areasForMarkets(markets: Market[]) {
