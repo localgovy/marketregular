@@ -259,17 +259,41 @@
   animation: speed-unfold 0.18s ease-out;
 }
 
-@keyframes now-punch {
-  from {
-    transform: scale(0);
-  }
-  to {
+@keyframes now-validate {
+  0%,
+  62% {
     transform: scale(1);
+  }
+  68% {
+    transform: scale(0.15);
+  }
+  76% {
+    transform: scale(1.25);
+  }
+  84%,
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes now-press {
+  0%,
+  62% {
+    transform: translateY(0);
+  }
+  68% {
+    transform: translateY(1px) scale(0.97);
+  }
+  76%,
+  100% {
+    transform: translateY(0);
   }
 }
 
 .now-open {
   position: relative;
+  transform-origin: 50% 50%;
+  animation: now-press 2.4s ease-in-out infinite;
 }
 
 .now-open-punch {
@@ -281,16 +305,17 @@
   background: var(--card);
   box-shadow: inset 0 0.5px 0 rgb(23 22 20 / 0.2);
   transform-origin: 50% 50%;
-  animation: now-punch 0.28s cubic-bezier(0.2, 1.2, 0.32, 1) both;
+  animation: now-validate 2.4s ease-in-out infinite;
 }
 
-.now-open.bg-transparent {
-  gap: 0;
-  clip-path: none;
+li:nth-child(3n + 2) .now-open,
+li:nth-child(3n + 2) .now-open-punch {
+  animation-delay: 0.35s;
 }
 
-.now-open.bg-transparent .now-open-punch {
-  display: none;
+li:nth-child(3n + 3) .now-open,
+li:nth-child(3n + 3) .now-open-punch {
+  animation-delay: 0.7s;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -310,6 +335,7 @@
   .speed-menu {
     animation: none;
   }
+  .now-open,
   .now-open-punch {
     animation: none;
   }

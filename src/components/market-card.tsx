@@ -33,9 +33,7 @@ export function MarketCard({
               {market.about}
             </p>
             {when === "Open now" ? (
-              <NowLabel className="bg-transparent px-0 py-0 font-medium text-ticket">
-                {when}
-              </NowLabel>
+              <NowLabel>{when}</NowLabel>
             ) : when ? (
               <p className="text-sm font-medium text-primary">{when}</p>
             ) : null}
