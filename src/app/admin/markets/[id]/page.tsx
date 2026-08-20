@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { MarketForm } from "@/components/admin/market-form";
 import { requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured, WEEKDAYS } from "@/lib/constants";
+import { formatHours } from "@/lib/schedule";
 import { deleteMarket, deleteSchedule, linkVendorToMarket, saveSchedule } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +38,7 @@ export default async function EditMarketPage({
           {((schedules ?? []) as MarketSchedule[]).map((row) => (
             <li key={row.id} className="flex items-center justify-between py-2 text-sm">
               <span>
-                {WEEKDAYS[row.weekday]} {String(row.opens_at).slice(0, 5)}–{String(row.closes_at).slice(0, 5)}
+                {WEEKDAYS[row.weekday]} {formatHours(String(row.opens_at), String(row.closes_at))}
               </span>
               <form
                 action={async () => {

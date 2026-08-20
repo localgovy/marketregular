@@ -132,7 +132,7 @@ export const seedMarkets: SeedMarket[] = [
         closes_at: "13:00",
         season_start: null,
         season_end: null,
-        notes: "Outdoor pavilions May–October; indoor TD Future Cities Centre November–April. Local food court until 14:00.",
+        notes: "Outdoor pavilions May–October; indoor TD Future Cities Centre November–April. Local food court until 2 PM.",
       },
     ],
   },

@@ -129,7 +129,7 @@ function eventsForCivilDate(
   const iso = isoDate(year, month, day);
   const isToday = iso === todayIso;
   const nowParts = zonedParts(now, tz);
-  const events: CalendarEvent[] = [];
+  const events: Array<CalendarEvent & { opensMinutes: number }> = [];
 
   for (const market of markets) {
     const rows = scheduleMap.get(market.id) ?? [];
@@ -151,13 +151,14 @@ function eventsForCivilDate(
       hours: formatHours(row.opens_at, row.closes_at),
       notes: row.notes,
       open,
+      opensMinutes: parseHm(row.opens_at),
     });
   }
 
   events.sort(
-    (a, b) => a.hours.localeCompare(b.hours) || a.marketName.localeCompare(b.marketName),
+    (a, b) => a.opensMinutes - b.opensMinutes || a.marketName.localeCompare(b.marketName),
   );
-  return events;
+  return events.map(({ opensMinutes: _opensMinutes, ...event }) => event);
 }
 
 export function monthGrid(

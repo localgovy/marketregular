@@ -6,9 +6,9 @@ import type { Market, MarketSchedule } from "@/types/database";
 export type UpcomingSlot = {
   market: Market;
   hours: string;
-  until: string;
   open: boolean;
   notes: string | null;
+  opensMinutes: number;
 };
 
 export type UpcomingGroup = {
@@ -66,12 +66,12 @@ export function upcomingByDay(
       slots.push({
         market,
         hours: formatHours(row.opens_at, row.closes_at),
-        until: row.closes_at.slice(0, 5),
         open,
         notes: row.notes,
+        opensMinutes: opens,
       });
     }
-    slots.sort((a, b) => a.hours.localeCompare(b.hours) || a.market.name.localeCompare(b.market.name));
+    slots.sort((a, b) => a.opensMinutes - b.opensMinutes || a.market.name.localeCompare(b.market.name));
     if (!slots.length) continue;
 
     if (offset === 0) {

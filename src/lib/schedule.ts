@@ -14,8 +14,18 @@ export function parseHm(value: string) {
   return (h ?? 0) * 60 + (m ?? 0);
 }
 
+export function formatTime(value: string) {
+  const [h, m] = value.split(":").map(Number);
+  const hour24 = Number.isFinite(h) ? h : 0;
+  const minute = Number.isFinite(m) ? m : 0;
+  const period = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 || 12;
+  if (minute === 0) return `${hour12} ${period}`;
+  return `${hour12}:${String(minute).padStart(2, "0")} ${period}`;
+}
+
 export function formatHours(opensAt: string, closesAt: string) {
-  return `${opensAt.slice(0, 5)}–${closesAt.slice(0, 5)}`;
+  return `${formatTime(opensAt)}–${formatTime(closesAt)}`;
 }
 
 export function inSeason(now: Date, start: string | null, end: string | null, tz: string) {
@@ -101,8 +111,21 @@ export function formatSeasonRange(start: string | null, end: string | null) {
 
 export function formatSchedule(row: ScheduleRow) {
   const day = WEEKDAYS[row.weekday] ?? "Day";
-  const hours = `${row.opens_at.slice(0, 5)}–${row.closes_at.slice(0, 5)}`;
-  return { day, hours, season: formatSeasonRange(row.season_start, row.season_end), notes: row.notes };
+  const hours = formatHours(row.opens_at, row.closes_at);
+  const season = formatSeasonRange(row.season_start, row.season_end);
+  let notes = row.notes?.trim() || null;
+  if (notes && season === "Year-round") {
+    notes = notes.replace(/^Year-round\.?\s*/i, "") || null;
+  }
+  const detail =
+    season === "Year-round"
+      ? notes
+        ? `Year-round. ${notes}`
+        : "Year-round"
+      : notes
+        ? `${season}. ${notes}`
+        : season;
+  return { day, hours, detail };
 }
 
 export function nextOpenLabel(schedules: ScheduleRow[], province: string) {
@@ -113,9 +136,9 @@ export function nextOpenLabel(schedules: ScheduleRow[], province: string) {
     const day = (weekday + i) % 7;
     const row = schedules.find((s) => s.weekday === day);
     if (!row) continue;
-    if (i === 0) return `Later today ${row.opens_at.slice(0, 5)}`;
-    if (i === 1) return `Tomorrow ${row.opens_at.slice(0, 5)}`;
-    return `${WEEKDAYS[day]} ${row.opens_at.slice(0, 5)}`;
+    if (i === 0) return `Later today ${formatTime(row.opens_at)}`;
+    if (i === 1) return `Tomorrow ${formatTime(row.opens_at)}`;
+    return `${WEEKDAYS[day]} ${formatTime(row.opens_at)}`;
   }
   return "See schedule";
 }

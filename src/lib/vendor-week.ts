@@ -49,7 +49,7 @@ export function vendorsSellingToday(
   const tz = LAUNCH_TZ;
   const { weekday, minutes } = zonedParts(now, tz);
   const byId = new Map(vendors.map((v) => [v.id, v]));
-  const rows: VendorTodayRow[] = [];
+  const rows: Array<VendorTodayRow & { opensMinutes: number }> = [];
 
   for (const stall of stalls) {
     if (!stall.days.includes(weekday)) continue;
@@ -68,14 +68,15 @@ export function vendorsSellingToday(
       stall: stall.stall,
       hours: formatHours(row.opens_at, row.closes_at),
       open,
+      opensMinutes: parseHm(row.opens_at),
     });
   }
 
   rows.sort((a, b) => {
     if (a.open !== b.open) return a.open ? -1 : 1;
-    return a.hours.localeCompare(b.hours) || a.vendorName.localeCompare(b.vendorName);
+    return a.opensMinutes - b.opensMinutes || a.vendorName.localeCompare(b.vendorName);
   });
-  return rows;
+  return rows.map(({ opensMinutes: _opensMinutes, ...row }) => row);
 }
 
 export function topVendorsThisWeek(

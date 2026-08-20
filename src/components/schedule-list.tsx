@@ -1,3 +1,4 @@
+import { Hours } from "@/components/hours";
 import { formatSchedule } from "@/lib/schedule";
 import type { MarketSchedule } from "@/types/database";
 
@@ -11,14 +12,13 @@ export function ScheduleList({ schedules }: { schedules: MarketSchedule[] }) {
       {rows.map((row) => {
         const formatted = formatSchedule(row);
         return (
-          <li key={row.id} className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
-            <span className="font-medium">{formatted.day}</span>
-            <span className="text-muted-foreground">
-              <span className="tabular-nums">{formatted.hours}</span>
-              <span className="ml-2">{formatted.season}</span>
-            </span>
-            {formatted.notes ? (
-              <p className="w-full text-xs text-muted-foreground">{formatted.notes}</p>
+          <li key={row.id} className="flex flex-col gap-1 py-2.5">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3">
+              <span className="font-medium">{formatted.day}</span>
+              <Hours value={formatted.hours} className="text-muted-foreground" />
+            </div>
+            {formatted.detail ? (
+              <p className="text-sm text-muted-foreground">{formatted.detail}</p>
             ) : null}
           </li>
         );

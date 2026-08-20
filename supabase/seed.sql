@@ -42,7 +42,7 @@ insert into public.market_schedules (market_id, weekday, opens_at, closes_at, se
   ('00000000-0000-0000-0000-000000000001', 4, '09:00', '19:00', null, null, 'South Market'),
   ('00000000-0000-0000-0000-000000000001', 5, '09:00', '19:00', null, null, 'South Market'),
   ('00000000-0000-0000-0000-000000000001', 6, '07:00', '17:00', null, null, 'South Market; separate from the Saturday Farmers’ Market in the North Market'),
-  ('00000000-0000-0000-0000-000000000002', 6, '08:00', '13:00', null, null, 'Outdoor pavilions May–October; indoor TD Future Cities Centre November–April. Local food court until 14:00.'),
+  ('00000000-0000-0000-0000-000000000002', 6, '08:00', '13:00', null, null, 'Outdoor pavilions May–October; indoor TD Future Cities Centre November–April. Local food court until 2 PM.'),
   ('00000000-0000-0000-0000-000000000003', 6, '08:00', '13:00', null, null, 'Outdoor along the Barns’ walkways May–October; inside the main Barn November–April'),
   ('00000000-0000-0000-0000-000000000004', 4, '15:00', '19:00', null, null, 'At the new Dufferin Grove Clubhouse at the northwest corner of the park'),
   ('00000000-0000-0000-0000-000000000005', 1, '15:00', '19:00', null, null, 'Every Monday, including statutory holidays.'),

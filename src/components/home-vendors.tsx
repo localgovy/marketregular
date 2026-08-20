@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { HomePanel } from "@/components/home-panel";
+import { Hours } from "@/components/hours";
 import { CrateMark, TallyMark } from "@/components/marks";
 import { SaveButton } from "@/components/save-button";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
@@ -60,9 +61,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
                 </span>
                 <span className="flex flex-wrap items-center gap-2">
                   {row.open ? <SellingNowMark /> : null}
-                  <span className="font-mono text-sm whitespace-nowrap tabular-nums text-muted-foreground">
-                    {row.hours}
-                  </span>
+                  <Hours value={row.hours} className="text-muted-foreground" />
                 </span>
               </Link>
               <span className="shrink-0 pt-0.5">

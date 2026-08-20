@@ -24,6 +24,6 @@ Never combine these (or close variants):
 <p className="text-base font-medium text-ticket">Open now</p>
 ```
 
-Write labels in sentence case at `text-sm` or `text-base`. Use the same fonts as surrounding copy. Mono is only for times (`08:00`), prices (`$8.50`), stall numbers, and province codes (`ON`) — with tight tracking, not fashion-wide.
+Write labels in sentence case at `text-sm` or `text-base`. Use the same fonts as surrounding copy. Mono is only for times (`8 AM`), prices (`$8.50`), stall numbers, and province codes (`ON`) — with tight tracking, not fashion-wide.
 
 Status chips (open now, selling now) may use the ticket plate color. They still read as normal words: `Open now`, not `OPEN NOW`.

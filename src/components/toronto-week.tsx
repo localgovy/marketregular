@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HomePanel } from "@/components/home-panel";
+import { Hours } from "@/components/hours";
 import { WeekMark } from "@/components/marks";
-import { cn } from "@/lib/utils";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { UpcomingGroup, UpcomingSlot } from "@/lib/upcoming";
 
@@ -12,19 +12,17 @@ function SlotRow({ slot }: { slot: UpcomingSlot }) {
       className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-3 py-1.5 hover:bg-primary/[0.045]"
     >
       <span className="min-w-0 text-base font-medium">{slot.market.name}</span>
-      <span
-        className={cn(
-          "shrink-0 whitespace-nowrap font-mono text-sm tabular-nums",
-          slot.open ? "text-ticket" : "text-muted-foreground",
-        )}
-      >
+      <span className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-1.5">
         {slot.open ? (
-          <span className="mr-1.5 inline-flex items-center gap-1 bg-ticket px-1.5 py-0.5 font-sans text-sm text-receipt">
+          <span className="inline-flex items-center gap-1 bg-ticket px-1.5 py-0.5 text-sm text-receipt">
             <span className="live-dot size-1.5 rounded-full bg-receipt" aria-hidden />
             Open
           </span>
         ) : null}
-        {slot.hours}
+        <Hours
+          value={slot.hours}
+          className={slot.open ? "text-ticket" : "text-muted-foreground"}
+        />
       </span>
     </Link>
   );

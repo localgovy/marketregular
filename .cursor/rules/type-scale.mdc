@@ -17,7 +17,7 @@ Two families only: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotes
 | Lede | Grotesk | `type-lede` (`text-lg`) | Sentence under an h1 |
 | How / body | Grotesk | `text-base` | Choose when, a neighbourhood… |
 | List names | Grotesk | `text-base font-medium` | Wychwood Barns in a row |
-| Times / prices / stalls | Mono | `text-sm` tabular | `08:00–14:00` |
+| Times / prices / stalls | Mono | `text-sm` tabular | `8 AM–2 PM` |
 
 Use real heading tags and let the base sizes apply. Do not add `text-4xl`, `text-5xl`, `text-[13px]`, or `font-heading` on paragraphs.
 
