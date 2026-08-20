@@ -40,6 +40,19 @@ function dayLabel(offset: number, weekday: number) {
   return WEEKDAYS[weekday];
 }
 
+function shuffled<T>(items: T[]): T[] {
+  const next = items.slice();
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const a = next[i];
+    const b = next[j];
+    if (a === undefined || b === undefined) continue;
+    next[i] = b;
+    next[j] = a;
+  }
+  return next;
+}
+
 export function vendorsSellingToday(
   stalls: StallRef[],
   markets: Market[],
@@ -50,7 +63,7 @@ export function vendorsSellingToday(
   const tz = LAUNCH_TZ;
   const { weekday, minutes } = zonedParts(now, tz);
   const byId = new Map(vendors.map((v) => [v.id, v]));
-  const rows: Array<VendorTodayRow & { opensMinutes: number }> = [];
+  const rows: VendorTodayRow[] = [];
 
   for (const stall of stalls) {
     if (!stall.days.includes(weekday)) continue;
@@ -69,15 +82,10 @@ export function vendorsSellingToday(
       stall: stall.stall,
       hours: formatHours(row.opens_at, row.closes_at),
       open,
-      opensMinutes: parseHm(row.opens_at),
     });
   }
 
-  rows.sort((a, b) => {
-    if (a.open !== b.open) return a.open ? -1 : 1;
-    return a.opensMinutes - b.opensMinutes || a.vendorName.localeCompare(b.vendorName);
-  });
-  return rows.map(({ opensMinutes: _opensMinutes, ...row }) => row);
+  return [...shuffled(rows.filter((row) => row.open)), ...shuffled(rows.filter((row) => !row.open))];
 }
 
 export function topVendorsThisWeek(

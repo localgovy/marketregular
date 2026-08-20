@@ -6,8 +6,8 @@ import { HomePanel } from "@/components/home-panel";
 import { Hours } from "@/components/hours";
 import { CrateMark, TallyMark } from "@/components/marks";
 import { NowLabel } from "@/components/now-label";
+import { ProductTag } from "@/components/product-tag";
 import { SaveButton } from "@/components/save-button";
-import { tagLabel } from "@/lib/find-paths";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 
 const TODAY_STALL_CAP = 15;
@@ -23,18 +23,18 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
       place="rail"
       tone="vendors"
       icon={CrateMark}
-      kicker="On a stall today"
-      title="Selling today"
+      kicker="Vendors at market"
+      title="Vendors today"
       how={
         <>
-          Tap a name for the menu.
+          Tap a vendor for the menu.
           <span className="mt-2 flex flex-wrap items-center gap-2">
             <NowLabel>Selling now</NowLabel>
             <span>At the stall this minute.</span>
           </span>
         </>
       }
-      action={<span>{rows.length}</span>}
+      action={<span>{rows.length} listed</span>}
     >
       {rows.length ? (
         <ul className="ring-1 ring-border">
@@ -59,12 +59,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
                 {row.tags.length ? (
                   <ul className="flex flex-wrap gap-1">
                     {row.tags.slice(0, 2).map((tag) => (
-                      <li
-                        key={tag}
-                        className="bg-secondary px-1.5 py-0.5 text-sm text-muted-foreground"
-                      >
-                        {tagLabel(tag)}
-                      </li>
+                      <ProductTag key={tag} tag={tag} />
                     ))}
                   </ul>
                 ) : null}
