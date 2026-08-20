@@ -19,7 +19,7 @@ export function SearchForm({
 }) {
   const selected = new Set(defaults?.tags ?? []);
   return (
-    <form action="/search" className="grid gap-3">
+    <form action="/markets" className="grid gap-3">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <Input
           name="q"

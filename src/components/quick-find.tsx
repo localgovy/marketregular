@@ -115,7 +115,7 @@ export function QuickFind({ markets }: { markets: Market[] }) {
   }
 
   return (
-    <form action="/search" className="grid gap-4">
+    <form action="/markets" className="grid gap-4">
       <div>
         <label className="sr-only" htmlFor="home-search">
           Search for a Toronto market, vendor, or neighbourhood

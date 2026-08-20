@@ -32,7 +32,7 @@ export async function SiteHeader() {
         </div>
         <div className="flex h-16 min-w-0 flex-1 items-center justify-end gap-2 lg:header-stripe-paper lg:justify-between lg:px-6">
           <div className="hidden min-w-0 flex-1 items-center gap-3 md:flex">
-            <form action="/search" className="flex min-w-0 max-w-lg flex-1 items-center gap-2">
+            <form action="/markets" className="flex min-w-0 max-w-lg flex-1 items-center gap-2">
               <Input
                 name="q"
                 type="search"
@@ -47,19 +47,11 @@ export async function SiteHeader() {
           </div>
           <nav className="flex shrink-0 items-center gap-3 text-sm font-medium">
             <NavLink href="/events">Events</NavLink>
-            <NavLink href="/markets" className="hidden sm:inline">
-              Markets
-            </NavLink>
+            <NavLink href="/markets">Markets</NavLink>
             <NavLink href="/vendors" className="hidden sm:inline">
               Vendors
             </NavLink>
             <NavLink href="/saved">Saved</NavLink>
-            <Link
-              href="/search"
-              className={cn(buttonVariants({ variant: "ghost" }), "md:hidden")}
-            >
-              Search
-            </Link>
             {profile?.role === "admin" ? (
               <Link href="/admin" className="hover:underline">
                 Desk

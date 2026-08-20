@@ -8,7 +8,13 @@ export function NowLabel({
   className?: string;
 }) {
   return (
-    <span className={cn("now-shimmer bg-ticket px-1.5 py-0.5 text-sm text-receipt", className)}>
+    <span
+      className={cn(
+        "now-open stall-chip-sm inline-flex items-center gap-1.5 bg-ticket px-2 py-0.5 text-sm text-receipt",
+        className,
+      )}
+    >
+      <span className="now-open-punch" aria-hidden />
       {children}
     </span>
   );

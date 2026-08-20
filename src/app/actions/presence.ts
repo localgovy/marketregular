@@ -115,7 +115,7 @@ export async function createPost(input: {
     .eq("id", input.marketId)
     .maybeSingle();
   revalidatePath("/");
-  revalidatePath("/search");
+  revalidatePath("/markets");
   if (market?.slug) revalidatePath(`/markets/${market.slug}`);
   if (input.vendorSlug) revalidatePath(`/vendors/${input.vendorSlug}`);
   return { error: null, demo: false };

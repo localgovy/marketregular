@@ -9,14 +9,11 @@ export function SiteFooter() {
           {SITE_NAME} — Toronto farmers&apos; markets, this week.
         </p>
         <div className="flex flex-wrap gap-4">
-          <Link href="/search" className="hover:text-foreground">
-            Find a market
+          <Link href="/markets" className="hover:text-foreground">
+            Markets
           </Link>
           <Link href="/events" className="hover:text-foreground">
             Events
-          </Link>
-          <Link href="/markets" className="hover:text-foreground">
-            Markets
           </Link>
           <Link href="/vendors" className="hover:text-foreground">
             Vendors

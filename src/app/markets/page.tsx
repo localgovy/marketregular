@@ -1,51 +1,90 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { MarketCard } from "@/components/market-card";
 import { MarketMapLazy } from "@/components/market-map-lazy";
-import { MarketRow } from "@/components/market-row";
-import { getOpenToday, listMarkets, listSchedules } from "@/lib/data/catalog";
+import { SearchForm } from "@/components/search-form";
+import { VendorCard } from "@/components/vendor-card";
+import { searchDirectory } from "@/lib/data/catalog";
+import { queryList } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
 
-export const metadata: Metadata = { title: `All ${LAUNCH_CITY} markets` };
+export const metadata: Metadata = {
+  title: `${LAUNCH_CITY} markets`,
+};
 
-export default async function MarketsIndexPage() {
-  const [markets, schedules, openNow] = await Promise.all([
-    listMarkets(),
-    listSchedules(),
-    getOpenToday(),
-  ]);
-  const scheduleMap = new Map<string, typeof schedules>();
-  for (const row of schedules) {
-    const list = scheduleMap.get(row.market_id) ?? [];
-    list.push(row);
-    scheduleMap.set(row.market_id, list);
-  }
-  const openIds = new Set(openNow.map((market) => market.id));
+export default async function MarketsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    q?: string;
+    province?: string;
+    city?: string;
+    weekday?: string;
+    tag?: string | string[];
+    setup?: string;
+    openNow?: string;
+    lat?: string;
+    lng?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const weekday =
+    params.weekday === undefined || params.weekday === "" ? undefined : Number(params.weekday);
+  const lat = params.lat === undefined || params.lat === "" ? Number.NaN : Number(params.lat);
+  const lng = params.lng === undefined || params.lng === "" ? Number.NaN : Number(params.lng);
+  const near = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : undefined;
+  const tags = queryList(params.tag);
+  const { markets, vendors } = await searchDirectory({
+    q: params.q,
+    weekday: Number.isFinite(weekday) ? weekday : undefined,
+    tags: tags.length ? tags : undefined,
+    setup: params.setup || undefined,
+    openNow: params.openNow === "1",
+    near,
+  });
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <h1>Markets</h1>
       <p className="type-lede mt-2 mb-6 text-muted-foreground">
-        Every {LAUNCH_CITY} hall we list. Tap a name for hours, vendors, and the map. Save the ones
-        you actually go to.
+        {near
+          ? "Closest to you first. You can still filter by day or what they sell."
+          : "Filter by day, what they sell, or whether the doors are open right now."}
       </p>
-      <p className="mb-6 text-sm">
-        <Link href="/search" className="font-medium text-primary hover:underline">
-          Filter by day or what they sell
-        </Link>
-      </p>
-      <MarketMapLazy markets={markets} className="mb-8 h-64 w-full overflow-hidden rounded-md" />
-      <p className="mb-3 text-sm text-muted-foreground">{markets.length} listed</p>
-      <div className="overflow-hidden rounded-md bg-card ring-1 ring-border">
-        {markets.map((market) => (
-          <MarketRow
-            key={market.id}
-            market={market}
-            schedules={scheduleMap.get(market.id)}
-            open={openIds.has(market.id)}
-            inset
-          />
-        ))}
+      <SearchForm
+        defaults={{
+          q: params.q,
+          weekday: params.weekday,
+          tags,
+          setup: params.setup,
+          openNow: params.openNow === "1",
+        }}
+      />
+      <div className="mt-8">
+        <MarketMapLazy markets={markets} />
       </div>
+      <p className="mt-6 text-sm text-muted-foreground">
+        {markets.length} markets · {vendors.length} vendors
+      </p>
+      <h2 className="mt-8 mb-4">Markets</h2>
+      {markets.length ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {markets.map((market) => (
+            <MarketCard key={market.id} market={market} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground">No markets match those filters.</p>
+      )}
+      <h2 className="mt-12 mb-4">Vendors</h2>
+      {vendors.length ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {vendors.map((vendor) => (
+            <VendorCard key={vendor.id} vendor={vendor} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground">No vendors match those filters.</p>
+      )}
     </div>
   );
 }

@@ -44,7 +44,7 @@ export async function saveMarket(formData: FormData) {
     if (error) fail(error.message);
   }
   revalidatePath("/");
-  revalidatePath("/search");
+  revalidatePath("/markets");
   revalidatePath("/admin");
   redirect("/admin/markets");
 }

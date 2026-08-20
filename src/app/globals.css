@@ -259,58 +259,38 @@
   animation: speed-unfold 0.18s ease-out;
 }
 
-@keyframes now-plate {
+@keyframes now-punch {
   from {
-    background-position: 0% 50%;
+    transform: scale(0);
   }
   to {
-    background-position: 100% 50%;
+    transform: scale(1);
   }
 }
 
-@keyframes now-flow {
-  from {
-    transform: translate3d(-160%, 0, 0);
-  }
-  to {
-    transform: translate3d(160%, 0, 0);
-  }
-}
-
-.now-shimmer {
+.now-open {
   position: relative;
-  display: inline-block;
-  overflow: hidden;
 }
 
-.now-shimmer.bg-ticket {
-  background-image: linear-gradient(
-    105deg,
-    var(--ticket) 0%,
-    color-mix(in srgb, var(--ticket) 58%, white) 42%,
-    color-mix(in srgb, var(--ticket) 78%, white) 50%,
-    color-mix(in srgb, var(--ticket) 58%, white) 58%,
-    var(--ticket) 100%
-  );
-  background-size: 220% 100%;
-  animation: now-plate 2.2s ease-in-out infinite alternate;
+.now-open-punch {
+  display: block;
+  width: 0.4rem;
+  height: 0.4rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: inset 0 0.5px 0 rgb(23 22 20 / 0.2);
+  transform-origin: 50% 50%;
+  animation: now-punch 0.28s cubic-bezier(0.2, 1.2, 0.32, 1) both;
 }
 
-.now-shimmer::after {
-  content: "";
-  position: absolute;
-  inset: -30% -70%;
-  background: linear-gradient(
-    115deg,
-    transparent 28%,
-    rgb(255 248 235 / 0.2) 44%,
-    rgb(255 255 255 / 0.78) 50%,
-    rgb(255 248 235 / 0.2) 56%,
-    transparent 72%
-  );
-  transform: translate3d(-160%, 0, 0);
-  animation: now-flow 1.7s linear infinite;
-  pointer-events: none;
+.now-open.bg-transparent {
+  gap: 0;
+  clip-path: none;
+}
+
+.now-open.bg-transparent .now-open-punch {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -330,12 +310,8 @@
   .speed-menu {
     animation: none;
   }
-  .now-shimmer.bg-ticket,
-  .now-shimmer::after {
+  .now-open-punch {
     animation: none;
-  }
-  .now-shimmer::after {
-    content: none;
   }
 }
 

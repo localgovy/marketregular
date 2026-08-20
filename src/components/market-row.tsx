@@ -38,7 +38,7 @@ export function MarketRow({
         </span>
         <span className="shrink-0 text-right text-sm">
           {open ? (
-            <NowLabel className="stall-chip-sm px-2 py-1">Open now</NowLabel>
+            <NowLabel>Open now</NowLabel>
           ) : (
             <span className="text-muted-foreground">{when ?? "Hours"}</span>
           )}
