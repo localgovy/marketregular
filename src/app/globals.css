@@ -297,21 +297,7 @@
 }
 
 .now-open-stamp {
-  display: block;
-  width: 0.5rem;
-  height: 0.5rem;
   flex-shrink: 0;
-  background: var(--stamp);
-  clip-path: polygon(
-    2px 0,
-    calc(100% - 2px) 0,
-    100% 2px,
-    100% calc(100% - 2px),
-    calc(100% - 2px) 100%,
-    2px 100%,
-    0 calc(100% - 2px),
-    0 2px
-  );
   transform-origin: 50% 50%;
   animation: now-validate 2.4s ease-in-out infinite;
 }
