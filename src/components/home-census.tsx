@@ -1,4 +1,50 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef } from "react";
+
+function formatCount(value: number) {
+  return value.toLocaleString("en-CA");
+}
+
+function CensusValue({ value }: { value: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.textContent = formatCount(value);
+      return;
+    }
+
+    let frame = 0;
+    const started = performance.now();
+    const duration = 1100;
+    el.textContent = "0";
+
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - started) / duration);
+      const eased = 1 - (1 - t) ** 4;
+      el.textContent = formatCount(Math.round(value * eased));
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+
+  return (
+    <span
+      ref={ref}
+      aria-hidden
+      className="inline-block font-mono text-3xl leading-none tabular-nums tracking-tight"
+      style={{ minWidth: `${formatCount(value).length}ch` }}
+    >
+      {formatCount(value)}
+    </span>
+  );
+}
 
 function CensusLink({
   href,
@@ -9,19 +55,14 @@ function CensusLink({
   value: number;
   word: string;
 }) {
-  const count = value.toLocaleString("en-CA");
   return (
     <Link
       href={href}
-      aria-label={`${count} ${word}`}
-      className="group flex shrink-0 items-baseline gap-2.5 outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ticket"
+      aria-label={`${formatCount(value)} ${word}`}
+      className="flex min-w-0 items-baseline gap-2.5 px-4 py-3.5 text-receipt outline-none transition-colors hover:bg-black/10 focus-visible:bg-black/10"
     >
-      <span className="census-plate stall-chip-sm inline-flex min-w-[2.85rem] items-center justify-center px-2.5 py-1 font-mono text-2xl leading-none tabular-nums tracking-tight text-chalk transition-[filter] group-hover:brightness-110">
-        {count}
-      </span>
-      <span className="text-base font-medium group-hover:underline group-hover:underline-offset-4">
-        {word}
-      </span>
+      <CensusValue value={value} />
+      <span className="text-base font-medium">{word}</span>
     </Link>
   );
 }
@@ -36,22 +77,20 @@ export function HomeCensus({
   return (
     <nav
       aria-label="On the directory"
-      className="cal-in mt-4 flex items-center gap-3"
+      className="-mx-4 -mt-5 mb-5 bg-ticket lg:-mx-6 lg:-mt-6"
     >
-      <CensusLink
-        href="/markets"
-        value={markets}
-        word={markets === 1 ? "market" : "markets"}
-      />
-      <span
-        aria-hidden
-        className="h-[2px] min-w-6 flex-1 bg-[repeating-linear-gradient(to_right,color-mix(in_srgb,var(--ticket)_55%,transparent)_0_3px,transparent_3px_9px)]"
-      />
-      <CensusLink
-        href="/vendors"
-        value={vendors}
-        word={vendors === 1 ? "vendor" : "vendors"}
-      />
+      <div className="grid grid-cols-2 divide-x divide-receipt/25">
+        <CensusLink
+          href="/markets"
+          value={markets}
+          word={markets === 1 ? "market" : "markets"}
+        />
+        <CensusLink
+          href="/vendors"
+          value={vendors}
+          word={vendors === 1 ? "vendor" : "vendors"}
+        />
+      </div>
     </nav>
   );
 }
