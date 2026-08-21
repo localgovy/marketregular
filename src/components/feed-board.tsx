@@ -178,28 +178,38 @@ export function FeedBoard({
             Find
           </button>
         </form>
-        {topics.length ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {topics.map((tag) => {
-              const on = query.tag === tag;
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => go({ ...query, tag: on ? "" : tag })}
-                  className={cn(
-                    "stall-chip-sm px-2.5 py-1 text-sm",
-                    on
-                      ? "bg-primary text-primary-foreground"
-                      : "border border-input bg-card text-foreground",
-                  )}
-                >
-                  {tagLabel(tag)}
-                </button>
-              );
-            })}
-          </div>
-        ) : null}
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => go({ ...query, onSite: !query.onSite })}
+            className={cn(
+              "stall-chip-sm px-2.5 py-1 text-sm",
+              query.onSite
+                ? "bg-primary text-primary-foreground"
+                : "border border-input bg-card text-foreground",
+            )}
+          >
+            On site
+          </button>
+          {topics.map((tag) => {
+            const on = query.tag === tag;
+            return (
+              <button
+                key={tag}
+                type="button"
+                onClick={() => go({ ...query, tag: on ? "" : tag })}
+                className={cn(
+                  "stall-chip-sm px-2.5 py-1 text-sm",
+                  on
+                    ? "bg-primary text-primary-foreground"
+                    : "border border-input bg-card text-foreground",
+                )}
+              >
+                {tagLabel(tag)}
+              </button>
+            );
+          })}
+        </div>
         <p className="mt-3 text-sm text-muted-foreground">
           {visible.length} {visible.length === 1 ? "note" : "notes"}
           {query.q ? ` for “${query.q}”` : null}
@@ -249,6 +259,7 @@ export function FeedBoard({
                 <li key={place.slug}>
                   <Link
                     href={feedSearchString({ ...query, market: place.slug, vendor: "" })}
+                    scroll={false}
                     className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 text-sm hover:text-primary"
                   >
                     <span>
@@ -277,6 +288,7 @@ export function FeedBoard({
                 <li key={place.slug}>
                   <Link
                     href={feedSearchString({ ...query, vendor: place.slug, market: "" })}
+                    scroll={false}
                     className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 text-sm hover:text-primary"
                   >
                     <span className="font-medium">{place.name}</span>
@@ -297,6 +309,7 @@ export function FeedBoard({
                 <li key={place.slug}>
                   <Link
                     href={feedSearchString({ ...query, market: place.slug, vendor: "" })}
+                    scroll={false}
                     className="flex items-baseline gap-2 py-1.5 text-sm hover:text-primary"
                   >
                     <span className="font-medium">{place.name}</span>

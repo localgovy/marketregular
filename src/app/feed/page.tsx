@@ -29,7 +29,7 @@ export default async function FeedPage() {
         do not have to share your location.
       </p>
       <Suspense fallback={<p className="mt-8 text-base text-muted-foreground">Loading notes…</p>}>
-        <FeedBoard>
+        <FeedBoard
           initialItems={tape}
           signedIn={Boolean(profile)}
           stalls={stalls}
