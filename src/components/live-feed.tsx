@@ -57,7 +57,7 @@ export function LiveFeed({
   }
 
   return (
-    <ol className="flex flex-col gap-2">
+    <ol>
       {items.map((item) => (
         <ReviewCard key={item.id} item={item} />
       ))}

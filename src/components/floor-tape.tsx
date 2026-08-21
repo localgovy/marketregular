@@ -58,15 +58,13 @@ export function FloorTape({
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
       <div className="tape-scroll min-h-0 flex-1 overflow-y-auto">
-        <div className="awning-board px-3 pt-4 pb-3 text-chalk">
-          <p className="type-kicker text-chalk/80">On the board</p>
-          <h2 className="type-column">Reviews from shoppers</h2>
-          <p className="mt-1 text-base leading-snug text-chalk/80">
-            Short notes about Toronto markets and stalls, posted as people write them. Add yours
-            below. You do not have to share your location.
-          </p>
-        </div>
-        <div className="sticky top-0 z-10">
+        <div className="sticky top-0 z-10 bg-background">
+          <header className="border-b border-border px-3 py-3">
+            <h2 className="type-column">Reviews</h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Short notes from Toronto markets. You do not have to share your location.
+            </p>
+          </header>
           <FloorComposer
             signedIn={signedIn}
             stalls={stalls}
@@ -75,9 +73,9 @@ export function FloorTape({
           />
         </div>
         {items.length ? (
-          <ol className="pb-4">
+          <ol>
             {items.map((item) => (
-              <ReviewCard key={item.id} item={item} stalls={stalls} className="mx-2 my-2" />
+              <ReviewCard key={item.id} item={item} stalls={stalls} />
             ))}
           </ol>
         ) : (

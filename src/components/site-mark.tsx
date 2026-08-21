@@ -6,46 +6,26 @@ export function SiteMark({ className }: { className?: string }) {
       aria-hidden
       focusable="false"
     >
-      <defs>
-        <pattern
-          id="mr-mark-awning"
-          width="8"
-          height="8"
-          patternUnits="userSpaceOnUse"
-          patternTransform="rotate(45)"
-        >
-          <rect width="8" height="8" fill="var(--board)" />
-          <rect width="4" height="8" fill="var(--chalk)" />
-        </pattern>
-        <clipPath id="mr-mark-plate">
-          <path d="M5 0H27L32 5V27L27 32H5L0 27V5Z" />
-        </clipPath>
-      </defs>
-      <path d="M5 0H27L32 5V27L27 32H5L0 27V5Z" fill="var(--board)" />
-      <rect
-        width="32"
-        height="7"
-        fill="url(#mr-mark-awning)"
-        clipPath="url(#mr-mark-plate)"
-      />
+      <path d="M3.4 0H28.6L32 3.4V28.6L28.6 32H3.4L0 28.6V3.4Z" fill="var(--board)" />
       <path
-        d="M6.2 1.6H25.8L30.4 6.2V25.8L25.8 30.4H6.2L1.6 25.8V6.2Z"
+        d="M5.15 1.7H26.85L30.3 5.15V26.85L26.85 30.3H5.15L1.7 26.85V5.15Z"
         fill="none"
         stroke="var(--ticket)"
-        strokeWidth="1.15"
+        strokeWidth="0.6"
+        strokeLinejoin="miter"
       />
-      <text
-        x="16"
-        y="22.5"
-        textAnchor="middle"
-        fill="var(--chalk)"
-        fontFamily="var(--font-sans), ui-sans-serif, system-ui, sans-serif"
-        fontSize="11"
-        fontWeight="600"
-        letterSpacing="0.4"
+      <g
+        fill="none"
+        stroke="var(--chalk)"
+        strokeWidth="1.2"
+        strokeLinecap="butt"
+        strokeLinejoin="miter"
+        strokeMiterlimit={4}
       >
-        mr
-      </text>
+        <path d="M7.95 23.5V11.3L11.4 20.55 14.85 11.3V23.5" />
+        <path d="M17.65 23.5V11.3H22.75L24.25 12.8V15.55L22.75 17.05H17.65" />
+        <path d="M20.25 17.05 24.45 23.5" />
+      </g>
     </svg>
   );
 }

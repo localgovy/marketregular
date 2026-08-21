@@ -1,4 +1,5 @@
 import { FloorStrip } from "@/components/floor-strip";
+import { HomeCensus } from "@/components/home-census";
 import { BlocksMark, SlatsMark } from "@/components/marks";
 import { HomePanel } from "@/components/home-panel";
 import { VendorsTodayPanel, VendorsWeekPanel } from "@/components/home-vendors";
@@ -28,13 +29,16 @@ export function HomeMosaic({
 }) {
   return (
     <div>
-      <header className="mb-4 max-w-2xl">
-        <h1>
-          {LAUNCH_CITY} farmers&apos; markets
-        </h1>
-        <p className="type-lede mt-2 text-muted-foreground">
-          Find a hall, save the stalls you actually buy from, then read what people wrote.
-        </p>
+      <header className="mb-4">
+        <div className="max-w-2xl">
+          <h1>
+            {LAUNCH_CITY} farmers&apos; markets
+          </h1>
+          <p className="type-lede mt-2 text-muted-foreground">
+            Find a hall, save the stalls you actually buy from, then read what people wrote.
+          </p>
+        </div>
+        <HomeCensus markets={markets.length} vendors={vendors.length} />
       </header>
 
       <FloorStrip openNow={openNow} />

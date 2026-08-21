@@ -208,22 +208,22 @@ export function FloorComposer({
   return (
     <div
       ref={wrapRef}
-      className="relative z-10 shrink-0 border-b border-border bg-card px-2 py-2"
+      className="relative z-10 shrink-0 border-b border-border bg-background px-3 pt-3 pb-2"
     >
       <label className="sr-only" htmlFor="floor-note">
         Write a review
       </label>
       <Textarea
         id="floor-note"
-        className="min-h-10 max-h-24 resize-none bg-transparent px-2 py-1.5 text-base shadow-none"
-        rows={2}
+        className="min-h-[4.5rem] max-h-40 resize-none border-0 bg-transparent px-0 py-1 text-lg shadow-none md:text-lg focus-visible:border-transparent focus-visible:ring-0"
+        rows={3}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder={prompt}
       />
 
       {rating || market || tagged || tags.length ? (
-        <ul className="mt-1.5 flex flex-wrap gap-1 px-1">
+        <ul className="mt-1.5 flex flex-wrap gap-1">
           {rating ? (
             <li className="stall-chip-sm inline-flex overflow-hidden bg-ticket text-receipt">
               <button
@@ -307,7 +307,7 @@ export function FloorComposer({
         </ul>
       ) : null}
 
-      <div className="mt-1.5 flex flex-wrap items-center gap-1 px-1">
+      <div className="mt-1.5 flex flex-wrap items-center gap-1">
         <ExtraButton
           label="Stars"
           open={extra === "stars"}
@@ -344,7 +344,7 @@ export function FloorComposer({
                     setPrice((current) => (current === choice.level ? 0 : choice.level))
                   }
                   className={cn(
-                    "flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 font-mono text-sm tabular-nums",
+                    "flex h-8 min-w-8 items-center justify-center rounded-full px-1.5 font-mono text-sm tabular-nums",
                     on
                       ? "bg-ticket text-receipt"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -360,7 +360,7 @@ export function FloorComposer({
           {!demo && !signedIn ? (
             <Link
               href="/login"
-              className="inline-flex h-8 items-center rounded-md bg-primary px-2 text-sm font-medium text-primary-foreground"
+              className="inline-flex h-8 items-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground"
             >
               Sign in
             </Link>
@@ -370,6 +370,7 @@ export function FloorComposer({
               size="sm"
               onClick={submit}
               disabled={pending || body.trim().length < 3 || !canWrite || !market}
+              className="h-8 rounded-full px-4"
             >
               {pending ? "…" : "Review"}
             </Button>
@@ -739,8 +740,8 @@ function ExtraButton({
       aria-expanded={open}
       onClick={onClick}
       className={cn(
-        "flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground",
-        open && "bg-secondary text-foreground",
+        "flex size-9 items-center justify-center rounded-full text-muted-foreground hover:bg-primary/10 hover:text-primary",
+        open && "bg-primary/10 text-primary",
       )}
     >
       {children}

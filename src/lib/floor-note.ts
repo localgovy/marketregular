@@ -55,26 +55,6 @@ export function decodeFloorBody(raw: string) {
   };
 }
 
-export function scrapStyle(id: string) {
-  let n = 0;
-  for (const ch of id) n = (n + ch.charCodeAt(0) * 17) % 97;
-  const papers = [
-    "bg-[#f7f3ea]",
-    "bg-[#f4efe4]",
-    "bg-[#f6f1e6]",
-    "bg-[#f3eee3]",
-    "bg-[#f8f4eb]",
-  ];
-  const tilts = [
-    "-rotate-[0.7deg]",
-    "rotate-[0.55deg]",
-    "-rotate-[0.35deg]",
-    "rotate-[0.8deg]",
-    "-rotate-[0.9deg]",
-  ];
-  return `${papers[n % papers.length]} ${tilts[n % tilts.length]}`;
-}
-
 export function reviewFromPost(
   post: Post,
   stalls: StallRef[] = [],

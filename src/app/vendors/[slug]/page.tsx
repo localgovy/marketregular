@@ -70,7 +70,7 @@ export default async function VendorPage({
               Anything written about this stall, including from the live reviews.
             </p>
             {vendor.feed.length ? (
-              <ol className="mt-4 flex flex-col gap-2">
+              <ol className="mt-4">
                 {vendor.feed.map((item) => (
                   <ReviewCard key={item.id} item={item} />
                 ))}

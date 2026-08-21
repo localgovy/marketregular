@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { AsteriskMark, TagMark } from "@/components/marks";
-import { scrapStyle } from "@/lib/floor-note";
+import { AsteriskMark } from "@/components/marks";
 import { tagLabel } from "@/lib/find-paths";
 import { formatPriceLevel, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -39,77 +38,70 @@ export function ReviewCard({
   const score = item.rating != null && item.rating >= 1 ? item.rating : null;
 
   return (
-    <li className={cn("floor-scrap", scrapStyle(item.id), className)}>
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="min-w-0 text-base font-medium">
+    <li className={cn("border-b border-border px-3 py-3 hover:bg-muted/50", className)}>
+      <p className="flex flex-wrap items-baseline gap-x-1 text-sm leading-snug text-muted-foreground">
+        <span className="text-base font-medium text-foreground">
           {item.author_name ?? "A shopper"}
-        </p>
-        <time
-          className="shrink-0 font-mono text-sm tabular-nums text-muted-foreground"
-          dateTime={item.created_at}
-        >
-          {timeAgo(item.created_at)}
-        </time>
-      </div>
-
-      {vendor || market ? (
-        <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
-          {vendor ? <PlaceLink href={vendorHref}>{vendor}</PlaceLink> : null}
-          {vendor && market ? " · " : null}
-          {market ? <PlaceLink href={marketHref}>{market}</PlaceLink> : null}
-        </p>
-      ) : null}
-
-      {score || price ? (
-        <p className="mt-2 flex flex-wrap items-center gap-2">
-          {score ? (
+        </span>
+        {vendor ? (
+          <>
+            <span aria-hidden>·</span>
+            <PlaceLink href={vendorHref}>{vendor}</PlaceLink>
+          </>
+        ) : null}
+        {market ? (
+          <>
+            <span aria-hidden>·</span>
+            <PlaceLink href={marketHref}>{market}</PlaceLink>
+          </>
+        ) : null}
+        {score ? (
+          <>
+            <span aria-hidden>·</span>
             <span className="inline-flex items-center gap-px" aria-label={`${score} out of 5`}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <AsteriskMark
                   key={n}
-                  className={cn(
-                    "size-3.5",
-                    n <= score ? "text-stamp" : "text-foreground/20",
-                  )}
+                  className={cn("size-3", n <= score ? "text-stamp" : "text-foreground/20")}
                 />
               ))}
             </span>
-          ) : null}
-          {price ? (
-            <span className="font-mono text-sm tabular-nums text-stamp">{price}</span>
-          ) : null}
+          </>
+        ) : null}
+        {price ? (
+          <>
+            <span aria-hidden>·</span>
+            <span className="font-mono tabular-nums text-stamp">{price}</span>
+          </>
+        ) : null}
+        {item.verified_on_site ? (
+          <>
+            <span aria-hidden>·</span>
+            <span>On site</span>
+          </>
+        ) : null}
+        <span aria-hidden>·</span>
+        <time className="font-mono tabular-nums" dateTime={item.created_at}>
+          {timeAgo(item.created_at)}
+        </time>
+      </p>
+      <p className="mt-1 text-base leading-snug">{item.body}</p>
+      {item.tags.length ? (
+        <p className="mt-1 text-sm">
+          {item.tags.map((tag, index) => (
+            <span key={tag}>
+              {index > 0 ? " " : null}
+              <span className="text-primary">{tagLabel(tag)}</span>
+            </span>
+          ))}
         </p>
       ) : null}
-
-      <p className="mt-2 text-base leading-relaxed">{item.body}</p>
-
       {item.photos?.length ? (
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-2 grid grid-cols-2 gap-2">
           {item.photos.map((src) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={src} src={src} alt="" className="h-32 w-full object-cover" />
           ))}
-        </div>
-      ) : null}
-
-      {item.tags.length || item.verified_on_site ? (
-        <div className="mt-3 flex flex-wrap items-end gap-2">
-          {item.tags.length ? (
-            <ul className="flex min-w-0 flex-wrap gap-1">
-              {item.tags.map((tag) => (
-                <li
-                  key={tag}
-                  className="stall-chip-sm inline-flex items-center gap-1 bg-primary px-1.5 py-0.5 text-sm text-primary-foreground"
-                >
-                  <TagMark className="size-3" />
-                  {tagLabel(tag)}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {item.verified_on_site ? (
-            <p className="ml-auto -rotate-[2deg] text-sm font-medium text-stamp">On site</p>
-          ) : null}
         </div>
       ) : null}
     </li>

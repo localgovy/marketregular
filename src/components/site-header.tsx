@@ -17,9 +17,9 @@ export async function SiteHeader() {
           <Link
             href="/"
             aria-label={`${SITE_NAME} home`}
-            className="flex min-w-0 shrink-0 items-center gap-2"
+            className="flex min-w-0 shrink-0 items-center gap-1.5"
           >
-            <SiteMark className="size-9 shrink-0" />
+            <SiteMark className="size-8 shrink-0" />
             <span className="min-w-0 leading-none">
               <span className="type-wordmark block text-foreground lg:text-chalk">
                 marketregular
