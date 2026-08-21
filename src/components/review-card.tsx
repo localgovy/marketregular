@@ -91,7 +91,9 @@ export function ReviewCard({
           {item.tags.map((tag, index) => (
             <span key={tag}>
               {index > 0 ? " " : null}
-              <span className="text-primary">{tagLabel(tag)}</span>
+              <Link href={`/feed?tag=${encodeURIComponent(tag)}`} className="text-primary hover:underline">
+                {tagLabel(tag)}
+              </Link>
             </span>
           ))}
         </p>

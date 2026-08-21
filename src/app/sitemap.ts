@@ -4,7 +4,7 @@ import { listMarkets, listVendors } from "@/lib/data/catalog";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [markets, vendors] = await Promise.all([listMarkets(), listVendors()]);
-  const staticRoutes = ["", "/markets", "/events", "/vendors", "/saved", "/login"].map((path) => ({
+  const staticRoutes = ["", "/markets", "/feed", "/events", "/vendors", "/saved", "/login"].map((path) => ({
     url: `${SITE_URL}${path}`,
     lastModified: new Date(),
   }));

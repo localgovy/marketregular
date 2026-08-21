@@ -48,6 +48,7 @@ export async function SiteHeader() {
           <nav className="flex shrink-0 items-center gap-3 text-sm font-medium">
             <NavLink href="/events">Events</NavLink>
             <NavLink href="/markets">Markets</NavLink>
+            <NavLink href="/feed">Feed</NavLink>
             <NavLink href="/vendors" className="hidden sm:inline">
               Vendors
             </NavLink>
