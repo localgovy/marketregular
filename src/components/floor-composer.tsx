@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import Link from "next/link";
 import { composeFloorNote } from "@/app/actions/presence";
 import { useGeo } from "@/components/geo-provider";
 import { AsteriskMark, CloseMark, PlateMark, TagMark } from "@/components/marks";
@@ -357,24 +356,15 @@ export function FloorComposer({
           </div>
         ) : null}
         <div className="ml-auto flex min-w-0 items-center gap-1">
-          {!demo && !signedIn ? (
-            <Link
-              href="/login"
-              className="inline-flex h-8 items-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground"
-            >
-              Sign in
-            </Link>
-          ) : (
-            <Button
-              type="button"
-              size="sm"
-              onClick={submit}
-              disabled={pending || body.trim().length < 3 || !canWrite || !market}
-              className="h-8 rounded-full px-4"
-            >
-              {pending ? "…" : "Review"}
-            </Button>
-          )}
+          <Button
+            type="button"
+            size="sm"
+            onClick={submit}
+            disabled={pending || body.trim().length < 3 || !canWrite || !market}
+            className="h-8 rounded-full px-4"
+          >
+            {pending ? "…" : "Review"}
+          </Button>
         </div>
       </div>
 

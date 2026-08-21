@@ -5,14 +5,20 @@ import { Label } from "@/components/ui/label";
 import { SavedDesk } from "@/components/saved-rail";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Account" };
+export const metadata: Metadata = pageMeta({
+  title: "Account",
+  path: "/account",
+  description: "Your Market Regular account.",
+  index: false,
+});
 
 export default async function AccountPage() {
   const profile = await getCurrentProfile();
-  if (!profile) redirect("/login?next=/account");
+  if (!profile) redirect("/");
 
   const supabase = await createServerSupabaseClient();
   const [{ data: posts }, markets, vendors] = await Promise.all([

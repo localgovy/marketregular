@@ -1,90 +1,68 @@
-# Point marketregular.com at Vercel (NamesLink)
+# Domain, DNS, and Google Search
 
-Keep DNS at NamesLink. Do **not** change nameservers (`ns1.nameslink.com` / `ns2.nameslink.com` are already set). Do **not** enable NamesLink Proxy / SA on these records — that breaks Vercel SSL.
+Keep DNS at NamesLink. Do **not** change nameservers (`ns1.nameslink.com` / `ns2.nameslink.com`). Do **not** enable NamesLink Proxy / SA on these records — that breaks Vercel SSL.
 
-## 1. Create a lasting Vercel project from GitHub
+Live canonical host is **www.marketregular.com**. Apex (`marketregular.com`) 308s to `www`. Sitemap URLs, Open Graph, and canonical tags must use `www`.
+
+## 1. Vercel project and domains
 
 The app lives at [github.com/localgovy/marketregular](https://github.com/localgovy/marketregular).
 
-1. Log in at [vercel.com](https://vercel.com) (GitHub is fine)
-2. **Add New… → Project** → import `localgovy/marketregular`
-3. Framework: Next.js (detected). Deploy
-4. Later, add env vars from `.env.example` once Supabase exists
+1. Log in at [vercel.com](https://vercel.com)
+2. Import `localgovy/marketregular` and deploy
+3. Settings → **Domains** → add `marketregular.com` and `www.marketregular.com`
+4. Set **www.marketregular.com** as the primary domain so apex redirects to `www`
+5. Env: `NEXT_PUBLIC_SITE_URL=https://www.marketregular.com` (and the Supabase keys from `.env.example`)
 
-A one-off preview was also published as an anonymous Vercel deployment; import-from-GitHub is the one that stays up and auto-deploys on push.
+Copy the exact A / CNAME values from the Vercel domain card. They change. Do not reuse an old IP from a gist.
 
-## 2. Add the domain in Vercel
+## 2. NamesLink records
 
-Project → **Settings** → **Domains** → add:
-
-- `marketregular.com`
-- `www.marketregular.com`
-
-Set **marketregular.com** as the primary domain and redirect `www` → apex.
-
-Copy the exact values from the Vercel domain card. They are usually:
+1. NamesLink → **Domain Management** → `marketregular.com` → **Manage** → **DNS Records**
+2. Delete leftover parking A/CNAME records for `@` and `www` if they conflict
+3. Add the records Vercel prints, typically:
 
 | Host | Type | Value |
 | --- | --- | --- |
-| `@` | A | `10.0.1.2` |
-| `www` | CNAME | `cname.vercel-dns.com` (or a `*.vercel-dns-*.com` host Vercel prints) |
+| `@` | A | *(from the Vercel domain card)* |
+| `www` | CNAME | `cname.vercel-dns.com` or the `*.vercel-dns-*.com` host Vercel prints |
 
-## 3. Add records in NamesLink
-
-1. Log in to NamesLink → **Domain Management** → **My Domains** → `marketregular.com` → **Manage** → **DNS Records**
-2. Delete leftover parking A/CNAME records for `@` and `www` if they conflict
-3. Add the two records above
 4. TTL 300–600 while you verify
 5. Leave **Proxy** off
-
-## 4. Verify
 
 ```bash
 dig A marketregular.com +short
 dig CNAME www.marketregular.com +short
 ```
 
-The Vercel domain card should flip to **Valid Configuration**. A brand-new domain can take minutes to a day at the registry.
+The Vercel domain card should flip to **Valid Configuration**.
 
-Right now the zone uses NamesLink nameservers and has no A/CNAME for the site yet — that's expected until you add the records above.
+## 3. Google Search Console
 
-## Email later
+Use a **Domain** property so Google tracks both `www` and apex in one place.
 
-When you add email (NamesLink Business Email or Google Workspace), add MX/TXT at NamesLink. Do not put a CNAME on `@` — it cannot coexist with MX.
-
-## 2. Add the domain in Vercel
-
-Project → **Settings** → **Domains** → add:
-
-- `marketregular.com`
-- `www.marketregular.com`
-
-Set **marketregular.com** as the primary domain and redirect `www` → apex.
-
-Copy the exact values from the Vercel domain card. They are usually:
+1. Open [Google Search Console](https://search.google.com/search-console)
+2. **Add property** → **Domain** → `marketregular.com`
+3. Copy the TXT value. It looks like `google-site-verification=…`
+4. NamesLink DNS → add a TXT record:
 
 | Host | Type | Value |
 | --- | --- | --- |
-| `@` | A | `10.0.1.2` |
-| `www` | CNAME | `cname.vercel-dns.com` (or a `*.vercel-dns-*.com` host Vercel prints) |
+| `@` | TXT | the full string Google gave you |
 
-## 3. Add records in NamesLink
+5. Wait a few minutes (sometimes longer), then click **Verify**
+6. **Indexing → Sitemaps** → submit `https://www.marketregular.com/sitemap.xml`
+7. **URL inspection** → `https://www.marketregular.com/` → **Request indexing**
 
-1. Log in to NamesLink → **Domain Management** → **My Domains** → `marketregular.com` → **Manage** → **DNS Records**
-2. Delete leftover parking A/CNAME records for `@` and `www` if they conflict
-3. Add the two records above
-4. TTL 300–600 while you verify
-5. Leave **Proxy** off
+Do not paste the TXT string into the app. DNS is the Domain-property method.
 
-## 4. Verify
+Optional backup: a URL-prefix property (`https://www.marketregular.com`) can also use an HTML meta tag. Put the token (the part after `content=`) in Vercel as `GOOGLE_SITE_VERIFICATION` and redeploy. The app already emits that meta tag when the env var is set.
 
-```bash
-dig A marketregular.com +short
-dig CNAME www.marketregular.com +short
-```
+Public crawl files after deploy:
 
-The Vercel domain card should flip to **Valid Configuration**. A brand-new domain can take minutes to a day at the registry.
+- `https://www.marketregular.com/robots.txt`
+- `https://www.marketregular.com/sitemap.xml`
 
 ## Email later
 
-When you add email (NamesLink Business Email or Google Workspace), add MX/TXT at NamesLink. Do not put a CNAME on `@` — it cannot coexist with MX.
+When you add email (NamesLink Business Email or Google Workspace), add MX/TXT at NamesLink. Do not put a CNAME on `@` — it cannot coexist with MX. The existing A record on `@` is fine next to MX.

@@ -62,11 +62,7 @@ export async function SiteHeader() {
               <Link href="/account" className={buttonVariants({ variant: "outline" })}>
                 {profile.display_name ?? "Account"}
               </Link>
-            ) : (
-              <Link href="/login" className={buttonVariants()}>
-                Sign in
-              </Link>
-            )}
+            ) : null}
           </nav>
         </div>
       </div>

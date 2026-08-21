@@ -12,7 +12,21 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
-    return [{ source: "/search", destination: "/markets", permanent: true }];
+    return [
+      { source: "/search", destination: "/markets", permanent: true },
+      { source: "/login", destination: "/", permanent: false },
+    ];
+  },
+  async headers() {
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+    return [
+      { source: "/admin", headers: noindex },
+      { source: "/admin/:path*", headers: noindex },
+      { source: "/account", headers: noindex },
+      { source: "/auth/:path*", headers: noindex },
+      { source: "/saved", headers: noindex },
+      { source: "/kept", headers: noindex },
+    ];
   },
 };
 

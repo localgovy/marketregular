@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { noIndex } from "@/lib/seo";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Not found",
+  robots: noIndex,
+};
 
 export default function NotFound() {
   return (

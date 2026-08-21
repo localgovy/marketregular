@@ -3,7 +3,9 @@ import { Mona_Sans, Schibsted_Grotesk } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { JsonLd } from "@/components/json-ld";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/constants";
+import { SITE_DESCRIPTION, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
 
 const grotesk = Schibsted_Grotesk({
@@ -25,8 +27,8 @@ export const metadata: Metadata = {
     default: `${SITE_NAME} — ${SITE_TAGLINE}`,
     template: `%s · ${SITE_NAME}`,
   },
-  description:
-    "Find Toronto farmers' markets and their vendors: this week's hours, maps, menus, reviews, and a live floor feed.",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
   icons: {
     icon: "/favicon.svg",
     apple: "/apple-touch-icon.png",
@@ -44,6 +46,9 @@ export const metadata: Metadata = {
       },
     ],
   },
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -53,6 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${grotesk.variable} ${display.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
+        <JsonLd data={websiteJsonLd()} />
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />

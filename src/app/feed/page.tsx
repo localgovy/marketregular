@@ -9,8 +9,13 @@ import {
   listStalls,
 } from "@/lib/data/catalog";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = { title: `${LAUNCH_CITY} feed` };
+export const metadata: Metadata = pageMeta({
+  title: `${LAUNCH_CITY} feed`,
+  path: "/feed",
+  description: `Notes from ${LAUNCH_CITY} markets. What's on the tables this week.`,
+});
 
 export default async function FeedPage() {
   const [tape, markets, stalls, openNow, profile] = await Promise.all([

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
+import { JsonLd } from "@/components/json-ld";
 import { SaveButton } from "@/components/save-button";
 import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
@@ -12,6 +12,7 @@ import { TagList } from "@/components/tag-list";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { formatPhone } from "@/lib/format";
+import { marketJsonLd, pageMeta } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -21,10 +22,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const market = await getMarketBySlug(slug);
   if (!market) return { title: "Market" };
-  return {
+  const description =
+    market.about ?? `${market.name} in ${market.city}, ${market.province}`;
+  return pageMeta({
     title: market.name,
-    description: market.about ?? `${market.name} in ${market.city}, ${market.province}`,
-  };
+    description,
+    path: `/markets/${market.slug}`,
+  });
 }
 
 export default async function MarketPage({
@@ -47,6 +51,7 @@ export default async function MarketPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
+      <JsonLd data={marketJsonLd(market)} />
       <div className="flex items-center gap-1">
         <BackButton href="/markets" />
         <p className="type-kicker text-muted-foreground">{market.address}</p>
@@ -112,19 +117,15 @@ export default async function MarketPage({
               </a>
             ) : null}
           </div>
-          <div className="rounded-xl bg-secondary/50 p-5">
-            <p className="font-medium">Do you run this market?</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Claim it to update hours, vendors, and contact details.
-            </p>
-            {profile ? (
+          {profile ? (
+            <div className="rounded-xl bg-secondary/50 p-5">
+              <p className="font-medium">Do you run this market?</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Claim it to update hours, vendors, and contact details.
+              </p>
               <ClaimForm targetType="market" targetId={market.id} signedIn />
-            ) : (
-              <Link href="/login" className={buttonVariants({ variant: "outline", className: "mt-3" })}>
-                Sign in to claim
-              </Link>
-            )}
-          </div>
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>

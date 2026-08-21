@@ -6,10 +6,13 @@ import { VendorCard } from "@/components/vendor-card";
 import { searchDirectory } from "@/lib/data/catalog";
 import { queryList } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: `${LAUNCH_CITY} markets`,
-};
+  path: "/markets",
+  description: `${LAUNCH_CITY} farmers' markets with this week's hours, maps, and who's on the floor.`,
+});
 
 export default async function MarketsPage({
   searchParams,

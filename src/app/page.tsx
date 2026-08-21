@@ -17,8 +17,15 @@ import {
 } from "@/lib/data/catalog";
 import { upcomingByDay } from "@/lib/upcoming";
 import { topVendorsThisWeek, vendorsSellingToday } from "@/lib/vendor-week";
+import { pageMeta, SITE_DESCRIPTION } from "@/lib/seo";
 import { connection } from "next/server";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = pageMeta({
+  path: "/",
+  description: SITE_DESCRIPTION,
+});
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

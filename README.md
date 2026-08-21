@@ -2,7 +2,7 @@
 
 Toronto farmers’ market hub: search markets and vendors (schedules, menus, contact, tags), leave on-site reviews and posts, and follow a live floor feed.
 
-Web first at [marketregular.com](https://marketregular.com). Source: [github.com/localgovy/marketregular](https://github.com/localgovy/marketregular). The same Supabase backend is meant to serve an iOS app later.
+Web first at [www.marketregular.com](https://www.marketregular.com). Source: [github.com/localgovy/marketregular](https://github.com/localgovy/marketregular). The same Supabase backend is meant to serve an iOS app later.
 
 ## Stack
 
@@ -23,7 +23,7 @@ npm run dev
 
 ## Domain
 
-See [DOMAIN.md](DOMAIN.md) for NamesLink → Vercel DNS (A on `@`, CNAME on `www`, Proxy off). Import the GitHub repo into Vercel first so you have a project to attach the domain to.
+See [DOMAIN.md](DOMAIN.md) for NamesLink → Vercel DNS (A on `@`, CNAME on `www`, Proxy off) and Google Search Console. Import the GitHub repo into Vercel first so you have a project to attach the domain to.
 
 ## Supabase
 
@@ -37,7 +37,7 @@ npx supabase db query --linked < supabase/seed.sql
 
 (`db query` command names vary by CLI version; you can also paste `supabase/seed.sql` into the SQL editor.)
 
-Enable Email auth (and Google later). Add the site URL and `https://marketregular.com/auth/callback` to Auth redirect URLs.
+Enable Email auth (and Google later). Add the site URL and both `https://www.marketregular.com/auth/callback` and `https://marketregular.com/auth/callback` to Auth redirect URLs.
 
 Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars. Set `ADMIN_EMAILS` to your login email.
 
@@ -49,7 +49,7 @@ node --experimental-strip-types scripts/generate-seed-sql.ts
 
 ## Admin
 
-Sign in with an `ADMIN_EMAILS` address, then open `/admin` to edit markets/vendors, moderate the feed, and approve listing claims.
+`/admin` edits markets and vendors, moderates the feed, and approves listing claims. Public sign-in is off for now; the desk only shows if you already have an admin session.
 
 ## What is seeded
 

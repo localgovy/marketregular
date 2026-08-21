@@ -3,14 +3,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
+import { JsonLd } from "@/components/json-ld";
 import { SaveButton } from "@/components/save-button";
 import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
 import { TagList } from "@/components/tag-list";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
-import { formatPhone } from "@/lib/format";
 import { WEEKDAYS } from "@/lib/constants";
+import { formatPhone } from "@/lib/format";
+import { pageMeta, vendorJsonLd } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -20,10 +22,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) return { title: "Vendor" };
-  return {
+  const description = vendor.about ?? `${vendor.name} at Toronto farmers' markets`;
+  return pageMeta({
     title: vendor.name,
-    description: vendor.about ?? `${vendor.name} at Toronto farmers' markets`,
-  };
+    description,
+    path: `/vendors/${vendor.slug}`,
+  });
 }
 
 export default async function VendorPage({
@@ -40,6 +44,7 @@ export default async function VendorPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
+      <JsonLd data={vendorJsonLd(vendor)} />
       <div className="flex items-center gap-1">
         <BackButton href="/vendors" />
         <p className="type-kicker text-muted-foreground">Stall</p>
@@ -118,16 +123,12 @@ export default async function VendorPage({
               </a>
             ) : null}
           </div>
-          <div className="rounded-xl bg-secondary/50 p-5">
-            <p className="font-medium">Is this your stall?</p>
-            {profile ? (
+          {profile ? (
+            <div className="rounded-xl bg-secondary/50 p-5">
+              <p className="font-medium">Is this your stall?</p>
               <ClaimForm targetType="vendor" targetId={vendor.id} signedIn />
-            ) : (
-              <Link href="/login" className={buttonVariants({ variant: "outline", className: "mt-3" })}>
-                Sign in to claim
-              </Link>
-            )}
-          </div>
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>

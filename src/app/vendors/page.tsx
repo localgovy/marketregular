@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { VendorsDirectory, type VendorDirectoryRow } from "@/components/vendors-directory";
 import { listMarkets, listStalls, listVendors } from "@/lib/data/catalog";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = { title: `${LAUNCH_CITY} vendors` };
+export const metadata: Metadata = pageMeta({
+  title: `${LAUNCH_CITY} vendors`,
+  path: "/vendors",
+  description: `Stalls at ${LAUNCH_CITY} farmers' markets: menus, hours, and which halls they stand at.`,
+});
 
 export default async function VendorsIndexPage() {
   const [vendors, stalls, markets] = await Promise.all([

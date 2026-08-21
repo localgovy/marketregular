@@ -33,8 +33,8 @@ export async function updateSession(request: NextRequest) {
   const needsAuth = path.startsWith("/account") || path.startsWith("/admin");
   if (needsAuth && !user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
-    redirectUrl.searchParams.set("next", path);
+    redirectUrl.pathname = "/";
+    redirectUrl.search = "";
     return NextResponse.redirect(redirectUrl);
   }
 

@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import { EventsCalendar } from "@/components/events-calendar";
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = { title: `${LAUNCH_CITY} market events` };
+export const metadata: Metadata = pageMeta({
+  title: `${LAUNCH_CITY} market events`,
+  path: "/events",
+  description: `Every ${LAUNCH_CITY} market day, month by month. Names and hours for each day.`,
+});
 
 export default async function EventsPage({
   searchParams,

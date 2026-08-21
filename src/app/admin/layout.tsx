@@ -1,8 +1,15 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/constants";
+import { noIndex } from "@/lib/seo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin",
+  robots: noIndex,
+};
 
 export default async function AdminLayout({
   children,

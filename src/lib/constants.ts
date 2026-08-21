@@ -1,7 +1,23 @@
 export const SITE_NAME = "Market Regular";
 export const SITE_TAGLINE = "Toronto farmers' markets, this week.";
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://marketregular.com";
+
+function canonicalSiteUrl() {
+  const raw = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.marketregular.com").replace(
+    /\/$/,
+    "",
+  );
+  try {
+    const url = new URL(raw);
+    // Live Vercel sends apex → www. Sitemap and canonicals must match the final host.
+    if (url.hostname === "marketregular.com") url.hostname = "www.marketregular.com";
+    if (url.hostname.endsWith("marketregular.com")) url.protocol = "https:";
+    return url.origin;
+  } catch {
+    return "https://www.marketregular.com";
+  }
+}
+
+export const SITE_URL = canonicalSiteUrl();
 
 export const PROVINCES = [
   { code: "AB", name: "Alberta", tz: "America/Edmonton" },
