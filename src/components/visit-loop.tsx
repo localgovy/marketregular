@@ -7,6 +7,7 @@ import { SavedRail } from "@/components/saved-rail";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { QuickFind } from "@/components/quick-find";
 import { TorontoWeek } from "@/components/toronto-week";
+import type { DirectoryCensus } from "@/lib/data/catalog";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
@@ -19,6 +20,7 @@ export function HomeMosaic({
   openNow,
   sellingToday,
   weekVendors,
+  census,
 }: {
   week: UpcomingGroup[];
   markets: Market[];
@@ -26,10 +28,11 @@ export function HomeMosaic({
   openNow: Market[];
   sellingToday: VendorTodayRow[];
   weekVendors: VendorWeekPick[];
+  census: DirectoryCensus;
 }) {
   return (
     <div>
-      <HomeCensus markets={markets.length} vendors={vendors.length} />
+      <HomeCensus markets={census.markets} vendors={census.vendors} />
 
       <header className="mb-4 max-w-2xl">
         <h1>

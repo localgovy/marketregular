@@ -60,6 +60,40 @@ async function fetchAllRows<T>(
   }
 }
 
+export type DirectoryCensus = {
+  markets: number;
+  vendors: number;
+  talliedAt: string | null;
+};
+
+export async function getDirectoryCensus(): Promise<DirectoryCensus> {
+  const supabase = publicDb();
+  if (!supabase) {
+    return {
+      markets: localMarkets().length,
+      vendors: localVendors().length,
+      talliedAt: null,
+    };
+  }
+  const { data, error } = await supabase
+    .from("directory_census")
+    .select("markets, vendors, tallied_at")
+    .eq("id", LAUNCH_CITY.toLowerCase())
+    .maybeSingle();
+  if (error || !data) {
+    return {
+      markets: localMarkets().length,
+      vendors: localVendors().length,
+      talliedAt: null,
+    };
+  }
+  return {
+    markets: data.markets,
+    vendors: data.vendors,
+    talliedAt: data.tallied_at,
+  };
+}
+
 export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = await db();
   if (!supabase) return null;

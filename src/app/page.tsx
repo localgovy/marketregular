@@ -7,6 +7,7 @@ import { MarketRow } from "@/components/market-row";
 import { VendorRow } from "@/components/vendor-row";
 import {
   getCurrentProfile,
+  getDirectoryCensus,
   getFloorTape,
   getOpenToday,
   listMarkets,
@@ -24,7 +25,7 @@ export const revalidate = 0;
 
 export default async function HomePage() {
   await connection();
-  const [tape, openNow, markets, vendors, stalls, schedules, profile] = await Promise.all([
+  const [tape, openNow, markets, vendors, stalls, schedules, profile, census] = await Promise.all([
     getFloorTape(),
     getOpenToday(),
     listMarkets(),
@@ -32,6 +33,7 @@ export default async function HomePage() {
     listStalls(),
     listSchedules(),
     getCurrentProfile(),
+    getDirectoryCensus(),
   ]);
 
   const scheduleMap = new Map<string, typeof schedules>();
@@ -78,6 +80,7 @@ export default async function HomePage() {
               openNow={openNow}
               sellingToday={sellingToday}
               weekVendors={weekVendors}
+              census={census}
             />
           ) : (
             <p className="text-base text-muted-foreground">Directory is empty.</p>
@@ -94,7 +97,7 @@ export default async function HomePage() {
             how="Open ones first. Tap a name, then save the ones you actually go to."
             action={
               <Link href="/markets" className="hover:underline">
-                All {markets.length}
+                All {census.markets}
               </Link>
             }
           >
@@ -120,7 +123,7 @@ export default async function HomePage() {
             className="mt-5"
             action={
               <Link href="/vendors" className="hover:underline">
-                All {torontoVendors.length}
+                All {census.vendors}
               </Link>
             }
           >
