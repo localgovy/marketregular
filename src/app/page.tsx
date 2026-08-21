@@ -40,6 +40,11 @@ export default async function HomePage() {
   const sellingToday = vendorsSellingToday(stalls, markets, vendors, scheduleMap);
   const weekVendors = topVendorsThisWeek(stalls, markets, vendors, scheduleMap, tape);
 
+  const marketIds = new Set(markets.map((market) => market.id));
+  const vendorIds = new Set(
+    stalls.filter((stall) => marketIds.has(stall.market_id)).map((stall) => stall.id),
+  );
+  const torontoVendors = vendors.filter((vendor) => vendorIds.has(vendor.id));
   const openIds = new Set(openNow.map((m) => m.id));
   const signedIn = Boolean(profile);
   const DIRECTORY_CAP = 10;
@@ -47,7 +52,7 @@ export default async function HomePage() {
     0,
     DIRECTORY_CAP,
   );
-  const vendorPreview = vendors.slice(0, DIRECTORY_CAP);
+  const vendorPreview = torontoVendors.slice(0, DIRECTORY_CAP);
 
   return (
     <HomeGeo markets={markets}>
@@ -64,7 +69,7 @@ export default async function HomePage() {
             <HomeMosaic
               week={week}
               markets={markets}
-              vendors={vendors}
+              vendors={torontoVendors}
               openNow={openNow}
               sellingToday={sellingToday}
               weekVendors={weekVendors}
@@ -84,7 +89,7 @@ export default async function HomePage() {
             how="Open ones first. Tap a name, then save the ones you actually go to."
             action={
               <Link href="/markets" className="hover:underline">
-                See all
+                All {markets.length}
               </Link>
             }
           >
@@ -106,11 +111,11 @@ export default async function HomePage() {
             icon={CrateMark}
             kicker="Name list"
             title="Vendors"
-            how="Ten stalls to start. Save the ones you buy from."
+            how="A short list. Save the ones you buy from."
             className="mt-5"
             action={
               <Link href="/vendors" className="hover:underline">
-                All {vendors.length}
+                All {torontoVendors.length}
               </Link>
             }
           >

@@ -39,6 +39,24 @@ async function db() {
   return createServerSupabaseClient();
 }
 
+const PAGE = 1000;
+
+async function fetchAllRows<T>(
+  run: (from: number, to: number) => PromiseLike<{
+    data: T[] | null;
+    error: { message?: string } | null;
+  }>,
+): Promise<{ data: T[]; error: { message?: string } | null }> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await run(from, from + PAGE - 1);
+    if (error) return { data: rows, error };
+    const chunk = data ?? [];
+    rows.push(...chunk);
+    if (chunk.length < PAGE) return { data: rows, error: null };
+  }
+}
+
 export async function getCurrentProfile(): Promise<Profile | null> {
   const supabase = await db();
   if (!supabase) return null;
@@ -63,35 +81,51 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 export async function listMarkets(): Promise<Market[]> {
   const supabase = await db();
   if (!supabase) return localMarkets();
-  const { data, error } = await supabase
-    .from("markets")
-    .select("*")
-    .eq("status", "published")
-    .ilike("city", LAUNCH_CITY)
-    .order("name");
-  if (error || !data?.length) return localMarkets();
-  return data as Market[];
+  const { data, error } = await fetchAllRows<Market>((from, to) =>
+    supabase
+      .from("markets")
+      .select("*")
+      .eq("status", "published")
+      .ilike("city", LAUNCH_CITY)
+      .order("name")
+      .range(from, to),
+  );
+  if (error) return localMarkets();
+  return data;
 }
 
 export async function listVendors(): Promise<Vendor[]> {
   const supabase = await db();
   if (!supabase) return localVendors();
-  const { data, error } = await supabase
-    .from("vendors")
-    .select("*")
-    .eq("status", "published")
-    .order("name");
-  if (error || !data?.length) return localVendors();
-  return data as Vendor[];
+  const { data, error } = await fetchAllRows<Vendor>((from, to) =>
+    supabase
+      .from("vendors")
+      .select("*")
+      .eq("status", "published")
+      .order("name")
+      .range(from, to),
+  );
+  if (error) return localVendors();
+  return data;
 }
 
 export async function listStalls(): Promise<StallRef[]> {
   const supabase = await db();
   if (!supabase) return localStalls();
-  const { data, error } = await supabase
-    .from("market_vendors")
-    .select("market_id, stall, days, vendors(id, name, slug, status)");
-  if (error || !data?.length) return localStalls();
+  const { data, error } = await fetchAllRows<{
+    market_id: string;
+    stall: string | null;
+    days?: number[];
+    vendors?: unknown;
+  }>((from, to) =>
+    supabase
+      .from("market_vendors")
+      .select("market_id, stall, days, vendors(id, name, slug, status)")
+      .order("market_id")
+      .order("vendor_id")
+      .range(from, to),
+  );
+  if (error) return localStalls();
   return data.flatMap((row) => {
     const raw = (row as { vendors?: unknown }).vendors;
     const vendor = Array.isArray(raw) ? raw[0] : raw;
@@ -539,9 +573,11 @@ export async function getCities() {
 export async function listSchedules(): Promise<MarketSchedule[]> {
   const supabase = await db();
   if (!supabase) return localSchedules();
-  const { data, error } = await supabase.from("market_schedules").select("*");
-  if (error || !data?.length) return localSchedules();
-  return data as MarketSchedule[];
+  const { data, error } = await fetchAllRows<MarketSchedule>((from, to) =>
+    supabase.from("market_schedules").select("*").order("id").range(from, to),
+  );
+  if (error) return localSchedules();
+  return data;
 }
 
 export async function getSchedules(marketId: string) {
