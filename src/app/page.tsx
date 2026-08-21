@@ -16,9 +16,14 @@ import {
 } from "@/lib/data/catalog";
 import { upcomingByDay } from "@/lib/upcoming";
 import { topVendorsThisWeek, vendorsSellingToday } from "@/lib/vendor-week";
+import { connection } from "next/server";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function HomePage() {
+  await connection();
   const [tape, openNow, markets, vendors, stalls, schedules, profile] = await Promise.all([
     getFloorTape(),
     getOpenToday(),

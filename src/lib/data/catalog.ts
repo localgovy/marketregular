@@ -2,12 +2,10 @@ import { isSupabaseConfigured } from "@/lib/constants";
 import { distanceMeters } from "@/lib/geo";
 import { LAUNCH_CITY, isLaunchCity } from "@/lib/launch";
 import {
-  localCities,
   localFeatured,
   localFloorTape,
   localMarketBySlug,
   localMarkets,
-  localOpenToday,
   localPosts,
   localSchedules,
   localSearch,
@@ -18,6 +16,7 @@ import {
 } from "@/lib/data/local";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
+import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type {
   FloorItem,
@@ -37,6 +36,10 @@ import type {
 async function db() {
   if (!isSupabaseConfigured()) return null;
   return createServerSupabaseClient();
+}
+
+function publicDb() {
+  return createPublicSupabaseClient();
 }
 
 const PAGE = 1000;
@@ -79,7 +82,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 }
 
 export async function listMarkets(): Promise<Market[]> {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localMarkets();
   const { data, error } = await fetchAllRows<Market>((from, to) =>
     supabase
@@ -95,7 +98,7 @@ export async function listMarkets(): Promise<Market[]> {
 }
 
 export async function listVendors(): Promise<Vendor[]> {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localVendors();
   const { data, error } = await fetchAllRows<Vendor>((from, to) =>
     supabase
@@ -110,7 +113,7 @@ export async function listVendors(): Promise<Vendor[]> {
 }
 
 export async function listStalls(): Promise<StallRef[]> {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localStalls();
   const { data, error } = await fetchAllRows<{
     market_id: string;
@@ -157,7 +160,7 @@ export type TablePeek = {
 
 export async function getTablePeek(vendorIds: string[]): Promise<TablePeek[]> {
   if (!vendorIds.length) return [];
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localTablePeek(vendorIds);
   const { data, error } = await supabase
     .from("vendor_menus")
@@ -192,7 +195,7 @@ export async function getTablePeek(vendorIds: string[]): Promise<TablePeek[]> {
 }
 
 export async function searchDirectory(filters: SearchFilters) {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localSearch(filters);
 
   let marketQuery = supabase
@@ -259,7 +262,7 @@ export async function searchDirectory(filters: SearchFilters) {
 }
 
 export async function getMarketBySlug(slug: string): Promise<MarketDetail | null> {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localMarketBySlug(slug);
 
   const { data: market } = await supabase
@@ -347,7 +350,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
 }
 
 export async function getVendorBySlug(slug: string): Promise<VendorDetail | null> {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localVendorBySlug(slug);
 
   const { data: vendor } = await supabase
@@ -446,7 +449,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
 }
 
 export async function getLivePosts(limit = 20): Promise<Post[]> {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localPosts(limit);
   const { data, error } = await supabase
     .from("posts")
@@ -474,7 +477,7 @@ export async function getLivePosts(limit = 20): Promise<Post[]> {
 }
 
 export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localFloorTape(limit);
 
   const [{ data: posts, error: postError }, { data: reviews, error: reviewError }] =
@@ -538,7 +541,7 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
 }
 
 export async function getFeaturedMarkets() {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localFeatured();
   const { data } = await supabase
     .from("markets")
@@ -552,12 +555,9 @@ export async function getFeaturedMarkets() {
 }
 
 export async function getOpenToday() {
-  const markets = await listMarkets();
-  const supabase = await db();
-  if (!supabase) return localOpenToday();
-  const { data: schedules } = await supabase.from("market_schedules").select("*");
+  const [markets, schedules] = await Promise.all([listMarkets(), listSchedules()]);
   const byMarket = new Map<string, MarketSchedule[]>();
-  for (const row of (schedules ?? []) as MarketSchedule[]) {
+  for (const row of schedules) {
     const list = byMarket.get(row.market_id) ?? [];
     list.push(row);
     byMarket.set(row.market_id, list);
@@ -571,7 +571,7 @@ export async function getCities() {
 }
 
 export async function listSchedules(): Promise<MarketSchedule[]> {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) return localSchedules();
   const { data, error } = await fetchAllRows<MarketSchedule>((from, to) =>
     supabase.from("market_schedules").select("*").order("id").range(from, to),
@@ -581,7 +581,7 @@ export async function listSchedules(): Promise<MarketSchedule[]> {
 }
 
 export async function getSchedules(marketId: string) {
-  const supabase = await db();
+  const supabase = publicDb();
   if (!supabase) {
     const m = localMarketBySlug(
       localMarkets().find((x) => x.id === marketId)?.slug ?? "",
