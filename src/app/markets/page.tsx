@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { MarketCard } from "@/components/market-card";
+import { DirectoryResults } from "@/components/directory-results";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
-import { VendorCard } from "@/components/vendor-card";
 import { searchDirectory } from "@/lib/data/catalog";
 import { queryList } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
@@ -68,32 +67,19 @@ export default async function MarketsPage({
       <p className="mt-6 text-sm text-muted-foreground">
         {markets.length} markets · {vendors.length} vendors
       </p>
-      <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-x-8">
-        <section>
-          <h2 className="mb-4">Markets</h2>
-          {markets.length ? (
-            <div className="grid gap-4">
-              {markets.map((market) => (
-                <MarketCard key={market.id} market={market} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No markets match those filters.</p>
-          )}
-        </section>
-        <section>
-          <h2 className="mb-4">Vendors</h2>
-          {vendors.length ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {vendors.map((vendor) => (
-                <VendorCard key={vendor.id} vendor={vendor} />
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No vendors match those filters.</p>
-          )}
-        </section>
-      </div>
+      <DirectoryResults
+        key={[
+          params.q,
+          params.weekday,
+          tags.join(","),
+          params.setup,
+          params.openNow,
+          params.lat,
+          params.lng,
+        ].join("|")}
+        markets={markets}
+        vendors={vendors}
+      />
     </div>
   );
 }
