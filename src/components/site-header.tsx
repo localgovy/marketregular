@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentProfile } from "@/lib/data/catalog";
 import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
 export async function SiteHeader() {
@@ -46,13 +47,15 @@ export async function SiteHeader() {
             </form>
           </div>
           <nav className="flex shrink-0 items-center gap-3 text-sm font-medium">
-            <NavLink href="/events">Events</NavLink>
-            <NavLink href="/markets">Markets</NavLink>
-            <NavLink href="/feed">Feed</NavLink>
-            <NavLink href="/vendors" className="hidden sm:inline">
-              Vendors
-            </NavLink>
-            <NavLink href="/saved">Saved</NavLink>
+            {SITE_NAV.map((item) => (
+              <NavLink
+                key={item.href}
+                href={item.href}
+                className={"compact" in item && item.compact ? "hidden sm:inline" : undefined}
+              >
+                {item.label}
+              </NavLink>
+            ))}
             {profile?.role === "admin" ? (
               <Link href="/admin" className="hover:underline">
                 Desk

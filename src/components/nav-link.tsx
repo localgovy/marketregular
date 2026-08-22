@@ -19,7 +19,11 @@ export function NavLink({
   return (
     <Link
       href={href}
-      className={cn("hover:underline", on && "text-ticket", className)}
+      className={cn(
+        "hover:underline",
+        on && "text-ticket underline decoration-ticket decoration-1 underline-offset-8",
+        className,
+      )}
       aria-current={on ? "page" : undefined}
     >
       {children}

@@ -28,7 +28,7 @@ export default async function FeedPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <h1>Feed</h1>
+      <h1>Notes</h1>
       <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
         Notes from {LAUNCH_CITY} markets. Filter by hall, stall, or what&apos;s on the table. You
         do not have to share your location.

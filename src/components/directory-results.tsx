@@ -24,8 +24,8 @@ export function DirectoryResults({
 
   return (
     <>
-      <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-x-8">
-        <section>
+      <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-x-8">
+        <section id="directory-markets" className="scroll-mt-24">
           <h2 className="mb-4">Markets</h2>
           {markets.length ? (
             <div className="grid gap-4">
@@ -37,7 +37,7 @@ export function DirectoryResults({
             <p className="text-muted-foreground">No markets match those filters.</p>
           )}
         </section>
-        <section>
+        <section id="directory-vendors" className="scroll-mt-24">
           <h2 className="mb-4">Vendors</h2>
           {vendors.length ? (
             <div className="grid gap-4 sm:grid-cols-2">

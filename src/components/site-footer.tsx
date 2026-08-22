@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAV } from "@/lib/nav";
 
 export function SiteFooter() {
   return (
@@ -9,21 +10,11 @@ export function SiteFooter() {
           {SITE_NAME} — Toronto farmers&apos; markets, this week.
         </p>
         <div className="flex flex-wrap gap-4">
-          <Link href="/markets" className="hover:text-foreground">
-            Markets
-          </Link>
-          <Link href="/feed" className="hover:text-foreground">
-            Feed
-          </Link>
-          <Link href="/events" className="hover:text-foreground">
-            Events
-          </Link>
-          <Link href="/vendors" className="hover:text-foreground">
-            Vendors
-          </Link>
-          <Link href="/saved" className="hover:text-foreground">
-            Saved
-          </Link>
+          {SITE_NAV.map((item) => (
+            <Link key={item.href} href={item.href} className="hover:text-foreground">
+              {item.label}
+            </Link>
+          ))}
         </div>
       </div>
     </footer>
