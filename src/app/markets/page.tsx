@@ -68,26 +68,32 @@ export default async function MarketsPage({
       <p className="mt-6 text-sm text-muted-foreground">
         {markets.length} markets · {vendors.length} vendors
       </p>
-      <h2 className="mt-8 mb-4">Markets</h2>
-      {markets.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {markets.map((market) => (
-            <MarketCard key={market.id} market={market} />
-          ))}
-        </div>
-      ) : (
-        <p className="text-muted-foreground">No markets match those filters.</p>
-      )}
-      <h2 className="mt-12 mb-4">Vendors</h2>
-      {vendors.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {vendors.map((vendor) => (
-            <VendorCard key={vendor.id} vendor={vendor} />
-          ))}
-        </div>
-      ) : (
-        <p className="text-muted-foreground">No vendors match those filters.</p>
-      )}
+      <div className="mt-8 grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-x-8">
+        <section>
+          <h2 className="mb-4">Markets</h2>
+          {markets.length ? (
+            <div className="grid gap-4">
+              {markets.map((market) => (
+                <MarketCard key={market.id} market={market} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No markets match those filters.</p>
+          )}
+        </section>
+        <section>
+          <h2 className="mb-4">Vendors</h2>
+          {vendors.length ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {vendors.map((vendor) => (
+                <VendorCard key={vendor.id} vendor={vendor} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No vendors match those filters.</p>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
