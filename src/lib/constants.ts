@@ -19,6 +19,7 @@ function canonicalSiteUrl() {
 }
 
 export const SITE_URL = canonicalSiteUrl();
+export const SITE_LOGO = "/brand/market-regular-logo.png";
 
 export const PROVINCES = [
   { code: "AB", name: "Alberta", tz: "America/Edmonton" },

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_NAME, SITE_URL, WEEKDAYS } from "@/lib/constants";
+import { SITE_NAME, SITE_URL, SITE_LOGO, WEEKDAYS } from "@/lib/constants";
 import type { Market, MarketSchedule, Vendor } from "@/types/database";
 
 export const SITE_DESCRIPTION =
@@ -46,7 +46,7 @@ export function websiteJsonLd() {
         "@id": `${SITE_URL}/#org`,
         name: SITE_NAME,
         url: SITE_URL,
-        logo: `${SITE_URL}/brand/market-regular-logo.png`,
+        logo: `${SITE_URL}${SITE_LOGO}`,
       },
       {
         "@type": "WebSite",

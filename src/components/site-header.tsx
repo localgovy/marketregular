@@ -20,7 +20,7 @@ export async function SiteHeader() {
             aria-label={`${SITE_NAME} home`}
             className="flex min-w-0 shrink-0 items-center gap-2.5"
           >
-            <SiteMark className="size-8 shrink-0" />
+            <SiteMark className="size-8 shrink-0" priority />
             <span className="min-w-0 leading-none">
               <span className="type-wordmark block text-foreground lg:text-chalk">
                 {SITE_NAME}

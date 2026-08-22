@@ -1,16 +1,24 @@
+import Image from "next/image";
+import { SITE_LOGO } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-/** One enamel plate. Letters are the site Grotesk, not a custom monogram. */
-export function SiteMark({ className }: { className?: string }) {
+export function SiteMark({
+  className,
+  priority = false,
+}: {
+  className?: string;
+  priority?: boolean;
+}) {
   return (
-    <span
-      className={cn(
-        "inline-flex items-center justify-center rounded-[3px] bg-board font-sans text-[0.8125rem] font-semibold leading-none tracking-[-0.05em] text-chalk",
-        className,
-      )}
+    <Image
+      src={SITE_LOGO}
+      alt=""
+      width={96}
+      height={96}
+      sizes="32px"
+      priority={priority}
       aria-hidden
-    >
-      MR
-    </span>
+      className={cn("size-8 shrink-0 rounded-[3px]", className)}
+    />
   );
 }
