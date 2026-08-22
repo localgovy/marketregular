@@ -79,6 +79,15 @@ export function MarketForm({ market }: { market?: Market }) {
         <Label htmlFor="lng">Longitude</Label>
         <Input id="lng" name="lng" type="number" step="any" required defaultValue={market?.lng} />
       </div>
+      <div className="grid gap-1.5 sm:col-span-2">
+        <Label htmlFor="logo_url">Logo URL</Label>
+        <Input
+          id="logo_url"
+          name="logo_url"
+          defaultValue={market?.logo_url ?? ""}
+          placeholder="Storage public URL"
+        />
+      </div>
       <div className="grid gap-1.5">
         <Label htmlFor="website">Website</Label>
         <Input id="website" name="website" defaultValue={market?.website ?? ""} />

@@ -119,7 +119,7 @@ export function SearchForm({
 
   return (
     <form
-      className="grid gap-4"
+      className="bg-secondary shadow-[inset_4px_0_0_var(--ticket)] ring-1 ring-border"
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -128,7 +128,7 @@ export function SearchForm({
         setPanelOpen(false);
       }}
     >
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+      <div className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-stretch sm:px-4">
         <Input
           name="q"
           defaultValue={defaults?.q}
@@ -137,12 +137,15 @@ export function SearchForm({
           aria-label="Search markets and stalls"
           autoComplete="off"
         />
-        <Button type="submit" className="h-10 shrink-0 px-5">
+        <button
+          type="submit"
+          className="find-go stall-chip-sm inline-flex h-10 shrink-0 items-center px-5 text-sm font-medium text-receipt outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+        >
           Find
-        </Button>
+        </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-border px-3 py-3 sm:px-4">
         <p className="text-sm text-muted-foreground">Browse by</p>
         <select
           aria-label="Day"
@@ -223,26 +226,17 @@ export function SearchForm({
           aria-pressed={live.openNow}
           onClick={() => update({ openNow: !live.openNow })}
           className={cn(
-            "inline-flex h-9 items-center px-3 text-sm font-medium",
+            "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
             live.openNow
-              ? "bg-primary text-primary-foreground"
+              ? "bg-ticket text-receipt"
               : "border border-input bg-card text-foreground hover:bg-muted",
           )}
         >
           Open now
         </button>
-        <button
-          type="button"
-          className="ml-auto text-sm underline underline-offset-4 hover:text-foreground"
-          aria-expanded={panelOpen}
-          aria-controls="all-filters"
-          onClick={openPanel}
-        >
-          All filters
-        </button>
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-2">
+      <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-border px-3 py-3 sm:px-4">
         {FIND_PRODUCTS.map((tag) => {
           const on = live.tags.includes(tag);
           return (
@@ -252,16 +246,25 @@ export function SearchForm({
               aria-pressed={on}
               onClick={() => update({ tags: toggleIn(live.tags, tag) })}
               className={cn(
-                "text-sm",
+                "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
                 on
-                  ? "font-medium text-primary underline decoration-2 underline-offset-8"
-                  : "text-foreground hover:text-primary",
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-input bg-card text-foreground hover:bg-muted",
               )}
             >
               {tagLabel(tag)}
             </button>
           );
         })}
+        <button
+          type="button"
+          className="ml-auto text-sm font-medium underline underline-offset-4 hover:text-foreground"
+          aria-expanded={panelOpen}
+          aria-controls="all-filters"
+          onClick={openPanel}
+        >
+          All filters
+        </button>
       </div>
 
       {panelOpen ? (
@@ -321,7 +324,7 @@ function AllFilters({
     resultCount === 1 ? "Show 1 market" : `Show ${resultCount} markets`;
 
   return (
-    <div id="all-filters" className="border border-border bg-card p-4 sm:p-5">
+    <div id="all-filters" className="border-t border-border bg-card p-4 sm:p-5">
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         <FilterColumn title="When">
           {WEEKDAYS.map((day, index) => (

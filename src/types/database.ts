@@ -25,6 +25,7 @@ export type Market = {
   website: string | null;
   phone: string | null;
   email: string | null;
+  logo_url: string | null;
   tags: string[];
   status: ListingStatus;
   featured: boolean;
@@ -51,6 +52,7 @@ export type Vendor = {
   about: string | null;
   website: string | null;
   phone: string | null;
+  logo_url: string | null;
   tags: string[];
   status: ListingStatus;
   claimed_by: string | null;

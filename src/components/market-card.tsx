@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListingMark } from "@/components/listing-mark";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
@@ -18,17 +19,21 @@ export function MarketCard({
     ? nextOpenLabel(schedules, market.province)
     : null;
   return (
-    <div className="relative h-full">
-      <Link href={`/markets/${market.slug}`} className="block h-full">
-        <Card className="h-full transition-shadow hover:shadow-md">
-          <CardHeader className="pr-16">
-            <p className="type-kicker text-muted-foreground">
+    <div className="h-full">
+      <Card className="h-full overflow-visible transition-shadow hover:shadow-md">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <SaveButton kind="market" slug={market.slug} name={market.name} />
+            <p className="type-kicker min-w-0 flex-1 text-muted-foreground">
               {market.address}
             </p>
-            <CardTitle className="type-column">
-              {market.name}
-            </CardTitle>
-          </CardHeader>
+            <ListingMark src={market.logo_url} />
+          </div>
+        </CardHeader>
+        <Link href={`/markets/${market.slug}`} className="flex flex-col gap-(--card-spacing)">
+          <CardTitle className="type-column px-(--card-spacing)">
+            {market.name}
+          </CardTitle>
           <CardContent className="flex flex-col gap-3">
             <p className="line-clamp-3 text-sm text-muted-foreground">
               {market.about}
@@ -40,11 +45,8 @@ export function MarketCard({
             ) : null}
             <TagList tags={sortTagsForDisplay(market.tags).slice(0, 4)} />
           </CardContent>
-        </Card>
-      </Link>
-      <span className="absolute top-4 right-4">
-        <SaveButton kind="market" slug={market.slug} name={market.name} />
-      </span>
+        </Link>
+      </Card>
     </div>
   );
 }

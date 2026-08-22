@@ -28,6 +28,7 @@ export async function saveMarket(formData: FormData) {
     website: String(formData.get("website") ?? "") || null,
     phone: String(formData.get("phone") ?? "") || null,
     email: String(formData.get("email") ?? "") || null,
+    logo_url: String(formData.get("logo_url") ?? "").trim() || null,
     tags: String(formData.get("tags") ?? "")
       .split(",")
       .map((t) => t.trim())
@@ -69,6 +70,7 @@ export async function saveVendor(formData: FormData) {
     about: String(formData.get("about") ?? "") || null,
     website: String(formData.get("website") ?? "") || null,
     phone: String(formData.get("phone") ?? "") || null,
+    logo_url: String(formData.get("logo_url") ?? "").trim() || null,
     tags: String(formData.get("tags") ?? "")
       .split(",")
       .map((t) => t.trim())
@@ -83,6 +85,9 @@ export async function saveVendor(formData: FormData) {
     if (error) fail(error.message);
   }
   revalidatePath("/admin/vendors");
+  revalidatePath("/markets");
+  revalidatePath("/vendors");
+  revalidatePath(`/vendors/${payload.slug}`);
   redirect("/admin/vendors");
 }
 

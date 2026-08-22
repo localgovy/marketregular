@@ -295,12 +295,14 @@ const directory = `import type {
   Vendor,
 } from "@/types/database";
 
-type SeedMarket = Omit<Market, "status" | "claimed_by" | "email"> & {
+type SeedMarket = Omit<Market, "status" | "claimed_by" | "email" | "logo_url"> & {
   email?: string;
+  logo_url?: string | null;
   schedules: Omit<MarketSchedule, "id" | "market_id">[];
 };
 
-type SeedVendor = Omit<Vendor, "status" | "claimed_by"> & {
+type SeedVendor = Omit<Vendor, "status" | "claimed_by" | "logo_url"> & {
+  logo_url?: string | null;
   menus: Omit<MenuItem, "id" | "vendor_id">[];
 };
 
@@ -408,6 +410,7 @@ export function toPublicMarket(m: SeedMarket): Market {
     website: m.website,
     phone: m.phone,
     email: m.email ?? null,
+    logo_url: m.logo_url ?? null,
     tags: m.tags,
     status: "published",
     featured: m.featured,
@@ -433,6 +436,7 @@ export function toPublicVendor(v: SeedVendor): Vendor {
     about: v.about,
     website: v.website,
     phone: v.phone,
+    logo_url: v.logo_url ?? null,
     tags: v.tags,
     status: "published",
     claimed_by: null,

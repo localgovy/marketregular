@@ -34,6 +34,15 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
         <Label htmlFor="about">About</Label>
         <Textarea id="about" name="about" rows={5} defaultValue={vendor?.about ?? ""} />
       </div>
+      <div className="grid gap-1.5 sm:col-span-2">
+        <Label htmlFor="logo_url">Logo URL</Label>
+        <Input
+          id="logo_url"
+          name="logo_url"
+          defaultValue={vendor?.logo_url ?? ""}
+          placeholder="Storage public URL"
+        />
+      </div>
       <div className="grid gap-1.5">
         <Label htmlFor="website">Website</Label>
         <Input id="website" name="website" defaultValue={vendor?.website ?? ""} />

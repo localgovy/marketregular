@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ListingMark } from "@/components/listing-mark";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { WEEKDAYS } from "@/lib/constants";
@@ -21,11 +22,17 @@ export function VendorCard({
     .join(", ");
 
   return (
-    <div className="relative h-full">
-      <Link href={`/vendors/${vendor.slug}`} className="block h-full">
-        <Card className="h-full overflow-visible transition-shadow hover:shadow-md">
-          <CardHeader className="pr-16">
-            <p className="type-kicker text-muted-foreground">Stall</p>
+    <div className="h-full">
+      <Card className="h-full overflow-visible transition-shadow hover:shadow-md">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
+            <p className="type-kicker min-w-0 flex-1 text-muted-foreground">Stall</p>
+            <ListingMark src={vendor.logo_url} />
+          </div>
+        </CardHeader>
+        <Link href={`/vendors/${vendor.slug}`} className="flex flex-col gap-(--card-spacing)">
+          <div className="px-(--card-spacing)">
             <CardTitle className="type-column">{vendor.name}</CardTitle>
             {stall || dayLabel ? (
               <p className="mt-1 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 text-sm text-muted-foreground">
@@ -39,18 +46,15 @@ export function VendorCard({
                 ) : null}
               </p>
             ) : null}
-          </CardHeader>
+          </div>
           <CardContent className="flex flex-col gap-3">
             {vendor.about ? (
               <p className="text-sm leading-relaxed text-muted-foreground">{vendor.about}</p>
             ) : null}
             <TagList tags={sortTagsForDisplay(vendor.tags)} />
           </CardContent>
-        </Card>
-      </Link>
-      <span className="absolute top-4 right-4">
-        <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
-      </span>
+        </Link>
+      </Card>
     </div>
   );
 }
