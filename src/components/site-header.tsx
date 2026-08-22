@@ -17,12 +17,12 @@ export async function SiteHeader() {
           <Link
             href="/"
             aria-label={`${SITE_NAME} home`}
-            className="flex min-w-0 shrink-0 items-center gap-1.5"
+            className="flex min-w-0 shrink-0 items-center gap-2.5"
           >
             <SiteMark className="size-8 shrink-0" />
             <span className="min-w-0 leading-none">
               <span className="type-wordmark block text-foreground lg:text-chalk">
-                marketregular
+                Market Regular
               </span>
               <span className="type-kicker mt-0.5 hidden text-muted-foreground sm:block lg:text-chalk/70">
                 Toronto
