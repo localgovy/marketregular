@@ -79,7 +79,6 @@ export default async function MarketsPage({
       <h1>Markets</h1>
       <p className="type-kicker mt-2 mb-6 text-muted-foreground">{status}</p>
       <SearchForm
-        key={formKey}
         resultCount={markets.length}
         defaults={{
           q: params.q,

@@ -130,6 +130,7 @@ export function SearchForm({
     >
       <div className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-stretch sm:px-4">
         <Input
+          key={defaults?.q ?? ""}
           name="q"
           defaultValue={defaults?.q}
           placeholder="Market, vendor, neighbourhood, or tomato"

@@ -1,3 +1,4 @@
+import { marketReviewStats, vendorReviewStats } from "@/data/review-stats";
 import type {
   Market,
   MarketSchedule,
@@ -8,14 +9,21 @@ import type {
   Vendor,
 } from "@/types/database";
 
-type SeedMarket = Omit<Market, "status" | "claimed_by" | "email" | "logo_url"> & {
+type SeedMarket = Omit<
+  Market,
+  "status" | "claimed_by" | "email" | "logo_url" | "review_count" | "rating_avg"
+> & {
   email?: string;
   logo_url?: string | null;
+  review_count?: number;
+  rating_avg?: number | null;
   schedules: Omit<MarketSchedule, "id" | "market_id">[];
 };
 
-type SeedVendor = Omit<Vendor, "status" | "claimed_by" | "logo_url"> & {
+type SeedVendor = Omit<Vendor, "status" | "claimed_by" | "logo_url" | "review_count" | "rating_avg"> & {
   logo_url?: string | null;
+  review_count?: number;
+  rating_avg?: number | null;
   menus: Omit<MenuItem, "id" | "vendor_id">[];
 };
 
@@ -14823,6 +14831,7 @@ export const seedReviews: Review[] = [
 ];
 
 export function toPublicMarket(m: SeedMarket): Market {
+  const stats = marketReviewStats[m.slug];
   return {
     id: m.id,
     slug: m.slug,
@@ -14842,6 +14851,8 @@ export function toPublicMarket(m: SeedMarket): Market {
     tags: m.tags,
     status: "published",
     featured: m.featured,
+    review_count: m.review_count ?? stats?.review_count ?? 0,
+    rating_avg: m.rating_avg ?? stats?.rating_avg ?? null,
     claimed_by: null,
   };
 }
@@ -14857,6 +14868,7 @@ export function schedulesFor(marketId: string): MarketSchedule[] {
 }
 
 export function toPublicVendor(v: SeedVendor): Vendor {
+  const stats = vendorReviewStats[v.slug];
   return {
     id: v.id,
     slug: v.slug,
@@ -14867,6 +14879,8 @@ export function toPublicVendor(v: SeedVendor): Vendor {
     logo_url: v.logo_url ?? null,
     tags: v.tags,
     status: "published",
+    review_count: v.review_count ?? stats?.review_count ?? 0,
+    rating_avg: v.rating_avg ?? stats?.rating_avg ?? null,
     claimed_by: null,
   };
 }

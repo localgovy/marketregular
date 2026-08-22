@@ -17,6 +17,7 @@ import {
 import { applyDirectoryTags, searchWeekdays } from "@/lib/find-paths";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
+import { withListingStats } from "@/lib/listing-score";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
@@ -131,7 +132,7 @@ export async function listMarkets(): Promise<Market[]> {
       .range(from, to),
   );
   if (error) return localMarkets();
-  return data;
+  return data.map(withListingStats);
 }
 
 export async function listVendors(): Promise<Vendor[]> {
@@ -146,7 +147,7 @@ export async function listVendors(): Promise<Vendor[]> {
       .range(from, to),
   );
   if (error) return localVendors();
-  return data;
+  return data.map(withListingStats);
 }
 
 export async function listStalls(): Promise<StallRef[]> {
@@ -314,8 +315,8 @@ export async function searchDirectory(filters: SearchFilters) {
     schedulesByMarket.set(row.market_id, list);
   }
 
-  let markets = (marketRows ?? []) as Market[];
-  let vendors = (vendorRows ?? []) as Vendor[];
+  let markets = ((marketRows ?? []) as Market[]).map(withListingStats);
+  let vendors = ((vendorRows ?? []) as Vendor[]).map(withListingStats);
   const days = searchWeekdays(filters);
   if (days.length) {
     markets = markets.filter((m) =>
@@ -392,7 +393,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
     hallsByVendorIds(vendorIdList),
   ]);
 
-  const vendorMap = new Map((vendors ?? []).map((v: Vendor) => [v.id, v]));
+  const vendorMap = new Map((vendors ?? []).map((v: Vendor) => [v.id, withListingStats(v)]));
   const vendorIds = new Set(vendorIdList);
 
   const mappedReviews = (
@@ -432,7 +433,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
   });
 
   return {
-    ...(market as Market),
+    ...withListingStats(market as Market),
     schedules: (schedules ?? []) as MarketSchedule[],
     vendors: vendorList,
     reviews: mappedReviews,
@@ -477,7 +478,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
     marketIds.length > 0
       ? await supabase.from("markets").select("*").in("id", marketIds)
       : { data: [] };
-  const marketMap = new Map((markets ?? []).map((m: Market) => [m.id, m]));
+  const marketMap = new Map((markets ?? []).map((m: Market) => [m.id, withListingStats(m)]));
 
   const vendorMarkets = (links ?? []).flatMap((link: { market_id: string; stall: string | null; days: number[] }) => {
     const m = marketMap.get(link.market_id);
@@ -532,7 +533,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
     }));
 
   return {
-    ...(vendor as Vendor),
+    ...withListingStats(vendor as Vendor),
     menus: (menus ?? []) as MenuItem[],
     markets: vendorMarkets,
     reviews: mappedReviews,
@@ -646,7 +647,7 @@ export async function getFeaturedMarkets() {
     .ilike("city", LAUNCH_CITY)
     .order("name");
   if (!data?.length) return localFeatured();
-  return data as Market[];
+  return (data as Market[]).map(withListingStats);
 }
 
 export async function getOpenToday() {
