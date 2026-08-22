@@ -6,7 +6,11 @@ const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
 const HINTS: Array<{ tag: (typeof PRODUCT_TAGS)[number]; needles: string[] }> = [
   {
     tag: "seafood",
-    needles: ["seafood", "sea cove", "fish", "caviar", "prawn", "lobster", "oyster", "salmon"],
+    needles: ["seafood", "sea cove", "fish", "caviar", "prawn", "lobster", "oyster", "salmon", "trout"],
+  },
+  {
+    tag: "jewelry",
+    needles: ["jewellery", "jewelry", "beads"],
   },
   {
     tag: "meat",
@@ -14,7 +18,11 @@ const HINTS: Array<{ tag: (typeof PRODUCT_TAGS)[number]; needles: string[] }> = 
   },
   {
     tag: "cheese",
-    needles: ["cheesemonger", "cheese", "cheddar", "dairy"],
+    needles: ["cheesemonger", "cheese", "cheddar"],
+  },
+  {
+    tag: "dairy",
+    needles: ["dairy", "creamery", "gelato", "ice cream", "butter"],
   },
   {
     tag: "bakery",
@@ -35,26 +43,60 @@ const HINTS: Array<{ tag: (typeof PRODUCT_TAGS)[number]; needles: string[] }> = 
   },
   {
     tag: "coffee",
-    needles: ["coffee", "cafe", "café", "espresso", "brewing"],
+    needles: ["coffee", "cafe", "café", "espresso"],
+  },
+  {
+    tag: "beer",
+    needles: ["brewery", "brewing", "beer"],
+  },
+  {
+    tag: "cider",
+    needles: ["cider", "cidery"],
+  },
+  {
+    tag: "wine",
+    needles: ["wine", "winery", "vineyard"],
   },
   {
     tag: "honey",
-    needles: ["honey"],
+    needles: ["honey", "apiary"],
+  },
+  {
+    tag: "maple",
+    needles: ["maple", "sugarshack"],
   },
   {
     tag: "flowers",
     needles: ["flower", "bloom", "bouquet", "florist"],
   },
   {
+    tag: "plants",
+    needles: ["plant", "nursery", "lavender"],
+  },
+  {
+    tag: "mushrooms",
+    needles: ["mushroom"],
+  },
+  {
+    tag: "eggs",
+    needles: ["egg"],
+  },
+  {
     tag: "preserves",
-    needles: ["preserve", "jam", "mustard", "pickle", "chutney"],
+    needles: ["preserve", "jam", "mustard", "pickle", "chutney", "kimchi"],
+  },
+  {
+    tag: "gluten-free",
+    needles: ["gluten-free", "gluten free", "g-free"],
+  },
+  {
+    tag: "vegan",
+    needles: ["vegan"],
   },
   {
     tag: "crafts",
     needles: [
       "accessor",
-      "jewellery",
-      "jewelry",
       "craft",
       "pottery",
       "ceramic",
@@ -63,6 +105,7 @@ const HINTS: Array<{ tag: (typeof PRODUCT_TAGS)[number]; needles: string[] }> = 
       "textile",
       "gift",
       "wares",
+      "candle",
     ],
   },
   {
@@ -81,8 +124,6 @@ const HINTS: Array<{ tag: (typeof PRODUCT_TAGS)[number]; needles: string[] }> = 
       "juice",
       "gourmet",
       "eatery",
-      "cafe",
-      "café",
     ],
   },
   {
@@ -91,7 +132,7 @@ const HINTS: Array<{ tag: (typeof PRODUCT_TAGS)[number]; needles: string[] }> = 
   },
   {
     tag: "produce",
-    needles: ["produce", "vegetable", "fruit", "orchard", "greengrocer", "farm"],
+    needles: ["produce", "vegetable", "fruit", "orchard", "greengrocer", "farm", "microgreen"],
   },
 ];
 

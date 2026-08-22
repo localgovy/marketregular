@@ -12,6 +12,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { WEEKDAYS } from "@/lib/constants";
 import { formatPhone } from "@/lib/format";
+import { sortTagsForDisplay } from "@/lib/find-paths";
 import { pageMeta, vendorJsonLd } from "@/lib/seo";
 
 export async function generateMetadata({
@@ -53,7 +54,7 @@ export default async function VendorPage({
         <h1>{vendor.name}</h1>
         <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
       </div>
-      <TagList className="mt-4" tags={vendor.tags} />
+      <TagList className="mt-4" tags={sortTagsForDisplay(vendor.tags)} />
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">

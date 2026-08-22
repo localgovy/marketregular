@@ -33,18 +33,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.stlawrencemarket.com/",
     phone: "416-392-7219",
     email: "stlawrencemarket@toronto.ca",
-    tags: [
-      "produce",
-      "bakery",
-      "cheese",
-      "meat",
-      "seafood",
-      "prepared-food",
-      "crafts",
-      "indoor",
-      "year-round",
-      "accessible",
-    ],
+    tags: ["bakery", "cheese", "meat", "seafood", "prepared-food", "crafts", "indoor", "year-round", "accessible"],
     featured: true,
     schedules: [
       {
@@ -112,18 +101,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.evergreen.ca/evergreen-brick-work/activities/saturday-farmers-market/",
     phone: "416-596-7670",
     email: "info@evergreen.ca",
-    tags: [
-      "produce",
-      "bakery",
-      "meat",
-      "prepared-food",
-      "indoor",
-      "outdoor",
-      "year-round",
-      "parking",
-      "transit",
-      "accessible",
-    ],
+    tags: ["bakery", "meat", "prepared-food", "indoor", "outdoor", "year-round", "parking", "transit", "accessible"],
     featured: true,
     schedules: [
       {
@@ -151,20 +129,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.thestop.org/farmersmarket/",
     phone: "416-652-7867",
     email: "farmersmarket@thestop.org",
-    tags: [
-      "produce",
-      "meat",
-      "cheese",
-      "preserves",
-      "prepared-food",
-      "crafts",
-      "indoor",
-      "outdoor",
-      "year-round",
-      "accessible",
-      "card-accepted",
-      "atm",
-    ],
+    tags: ["meat", "cheese", "preserves", "prepared-food", "crafts", "indoor", "outdoor", "year-round", "accessible", "card-accepted", "atm"],
     featured: true,
     schedules: [
       {
@@ -192,19 +157,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.dufferingrovemarket.ca/",
     phone: "416-458-4747",
     email: "info@dufferingrovemarket.ca",
-    tags: [
-      "produce",
-      "organic",
-      "bakery",
-      "cheese",
-      "meat",
-      "seafood",
-      "honey",
-      "preserves",
-      "prepared-food",
-      "year-round",
-      "accessible",
-    ],
+    tags: ["organic", "bakery", "cheese", "meat", "seafood", "honey", "preserves", "prepared-food", "year-round", "accessible"],
     featured: false,
     schedules: [
       {
@@ -231,21 +184,7 @@ export const seedMarkets: SeedMarket[] = [
     geofence_radius_m: 220,
     website: "https://www.soraurenmarket.com/",
     phone: null,
-    tags: [
-      "produce",
-      "organic",
-      "bakery",
-      "cheese",
-      "meat",
-      "seafood",
-      "flowers",
-      "honey",
-      "preserves",
-      "prepared-food",
-      "outdoor",
-      "year-round",
-      "family-friendly",
-    ],
+    tags: ["organic", "bakery", "cheese", "meat", "seafood", "flowers", "honey", "preserves", "prepared-food", "outdoor", "year-round"],
     featured: false,
     schedules: [
       {
@@ -273,22 +212,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.leslievillemarket.com/",
     phone: "647-381-4555",
     email: "alexa@leslievillemarket.com",
-    tags: [
-      "produce",
-      "bakery",
-      "honey",
-      "preserves",
-      "prepared-food",
-      "coffee",
-      "crafts",
-      "outdoor",
-      "parking",
-      "transit",
-      "accessible",
-      "card-accepted",
-      "family-friendly",
-      "seasonal",
-    ],
+    tags: ["bakery", "honey", "preserves", "prepared-food", "coffee", "crafts", "outdoor", "parking", "transit", "accessible", "card-accepted", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -316,17 +240,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://withrowmarket.ca/",
     phone: "647-852-9275",
     email: "manager@withrowmarket.ca",
-    tags: [
-      "produce",
-      "bakery",
-      "meat",
-      "flowers",
-      "prepared-food",
-      "outdoor",
-      "seasonal",
-      "accessible",
-      "family-friendly",
-    ],
+    tags: ["bakery", "meat", "flowers", "prepared-food", "outdoor", "seasonal", "accessible"],
     featured: false,
     schedules: [
       {
@@ -354,16 +268,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.tbfm.ca/",
     phone: null,
     email: "hello@tbfm.ca",
-    tags: [
-      "produce",
-      "organic",
-      "prepared-food",
-      "outdoor",
-      "seasonal",
-      "transit",
-      "accessible",
-      "family-friendly",
-    ],
+    tags: ["organic", "prepared-food", "outdoor", "seasonal", "transit", "accessible"],
     featured: false,
     schedules: [
       {
@@ -391,21 +296,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://junctionmarket.ca/",
     phone: "647-828-5570",
     email: "info@junctionmarket.ca",
-    tags: [
-      "produce",
-      "organic",
-      "bakery",
-      "cheese",
-      "meat",
-      "flowers",
-      "honey",
-      "prepared-food",
-      "coffee",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "family-friendly",
-    ],
+    tags: ["organic", "bakery", "cheese", "meat", "flowers", "honey", "prepared-food", "coffee", "crafts", "outdoor", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -433,24 +324,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.stlawrencemarket.com/",
     phone: "416-392-7219",
     email: "stlawrencemarket@toronto.ca",
-    tags: [
-      "produce",
-      "organic",
-      "bakery",
-      "cheese",
-      "meat",
-      "seafood",
-      "flowers",
-      "honey",
-      "preserves",
-      "prepared-food",
-      "coffee",
-      "indoor",
-      "year-round",
-      "parking",
-      "transit",
-      "accessible",
-    ],
+    tags: ["organic", "bakery", "cheese", "meat", "seafood", "flowers", "honey", "preserves", "prepared-food", "coffee", "indoor", "year-round", "parking", "transit", "accessible"],
     featured: false,
     schedules: [
       {
@@ -478,14 +352,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://underpassparkmarket.com/",
     phone: null,
     email: "manager.upfm@gmail.com",
-    tags: [
-      "produce",
-      "bakery",
-      "prepared-food",
-      "outdoor",
-      "seasonal",
-      "card-accepted",
-    ],
+    tags: ["bakery", "prepared-food", "outdoor", "seasonal", "card-accepted"],
     featured: false,
     schedules: [
       {
@@ -513,18 +380,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.eastlynnparkfarmersmarket.ca/",
     phone: "613-475-4769",
     email: "teamfmo@farmersmarketsontario.com",
-    tags: [
-      "produce",
-      "bakery",
-      "cheese",
-      "meat",
-      "seafood",
-      "honey",
-      "prepared-food",
-      "outdoor",
-      "seasonal",
-      "family-friendly",
-    ],
+    tags: ["bakery", "cheese", "meat", "seafood", "honey", "prepared-food", "outdoor", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -552,20 +408,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.friendsofallangardens.ca/saturday-farmers-market",
     phone: "416-886-3334",
     email: "info@friendsofallangardens.ca",
-    tags: [
-      "produce",
-      "bakery",
-      "meat",
-      "seafood",
-      "flowers",
-      "honey",
-      "prepared-food",
-      "crafts",
-      "indoor",
-      "outdoor",
-      "year-round",
-      "family-friendly",
-    ],
+    tags: ["bakery", "meat", "seafood", "flowers", "honey", "prepared-food", "crafts", "indoor", "outdoor", "year-round"],
     featured: false,
     schedules: [
       {
@@ -593,19 +436,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.cabbagetownmarket.ca/",
     phone: null,
     email: "info@cabbagetownmarket.ca",
-    tags: [
-      "produce",
-      "organic",
-      "bakery",
-      "cheese",
-      "seafood",
-      "honey",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "family-friendly",
-    ],
+    tags: ["organic", "bakery", "cheese", "seafood", "honey", "prepared-food", "crafts", "outdoor", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -633,18 +464,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.facebook.com/EastYorkFarmersMarket/",
     phone: "519-955-1434",
     email: "eastyorkmarket26@gmail.com",
-    tags: [
-      "produce",
-      "bakery",
-      "cheese",
-      "meat",
-      "honey",
-      "preserves",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-    ],
+    tags: ["bakery", "cheese", "meat", "honey", "preserves", "prepared-food", "crafts", "outdoor", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -672,15 +492,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.theeglintonway.com/farmersmarket",
     phone: "647-376-3294",
     email: "farmersmarket@theeglintonway.com",
-    tags: [
-      "produce",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "parking",
-      "family-friendly",
-    ],
+    tags: ["prepared-food", "crafts", "outdoor", "seasonal", "parking"],
     featured: false,
     schedules: [
       {
@@ -708,21 +520,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://hbsca.ca/events/humber-bay-shores-farmers-market/",
     phone: "416-357-3899",
     email: "zweingarten@gmail.com",
-    tags: [
-      "produce",
-      "organic",
-      "bakery",
-      "cheese",
-      "meat",
-      "flowers",
-      "honey",
-      "preserves",
-      "prepared-food",
-      "coffee",
-      "outdoor",
-      "seasonal",
-      "family-friendly",
-    ],
+    tags: ["organic", "bakery", "cheese", "meat", "flowers", "honey", "preserves", "prepared-food", "coffee", "outdoor", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -750,14 +548,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.scarboroughfarmersmarket.ca/",
     phone: null,
     email: "scarboroughfarmersmarket@gmail.com",
-    tags: [
-      "produce",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "family-friendly",
-    ],
+    tags: ["prepared-food", "crafts", "outdoor", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -785,19 +576,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://northyorkfarmersmarket.ca/",
     phone: "905-260-1856",
     email: "redonionevents1@gmail.com",
-    tags: [
-      "produce",
-      "bakery",
-      "cheese",
-      "meat",
-      "flowers",
-      "honey",
-      "preserves",
-      "outdoor",
-      "seasonal",
-      "transit",
-      "accessible",
-    ],
+    tags: ["bakery", "cheese", "meat", "flowers", "honey", "preserves", "outdoor", "seasonal", "transit", "accessible"],
     featured: false,
     schedules: [
       {
@@ -824,18 +603,7 @@ export const seedMarkets: SeedMarket[] = [
     geofence_radius_m: 250,
     website: "https://www.appletreemarkets.ca/markets",
     phone: "416-899-1990",
-    tags: [
-      "produce",
-      "bakery",
-      "cheese",
-      "honey",
-      "prepared-food",
-      "outdoor",
-      "seasonal",
-      "transit",
-      "accessible",
-      "family-friendly",
-    ],
+    tags: ["bakery", "cheese", "honey", "prepared-food", "outdoor", "seasonal", "transit", "accessible"],
     featured: false,
     schedules: [
       {
@@ -862,15 +630,7 @@ export const seedMarkets: SeedMarket[] = [
     geofence_radius_m: 220,
     website: "https://www.appletreemarkets.ca/markets",
     phone: "416-899-1990",
-    tags: [
-      "produce",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "transit",
-      "family-friendly",
-    ],
+    tags: ["prepared-food", "crafts", "outdoor", "seasonal", "transit"],
     featured: false,
     schedules: [
       {
@@ -898,22 +658,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://bloorborden.com/",
     phone: "613-475-4769",
     email: "bloorbordenmarket@gmail.com",
-    tags: [
-      "produce",
-      "organic",
-      "bakery",
-      "cheese",
-      "meat",
-      "seafood",
-      "honey",
-      "preserves",
-      "prepared-food",
-      "outdoor",
-      "seasonal",
-      "parking",
-      "transit",
-      "family-friendly",
-    ],
+    tags: ["organic", "bakery", "cheese", "meat", "seafood", "honey", "preserves", "prepared-food", "outdoor", "seasonal", "parking", "transit"],
     featured: false,
     schedules: [
       {
@@ -941,23 +686,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.annettevillagemarket.com/",
     phone: "416-458-9393",
     email: "annettevillagefarmersmrkt@gmail.com",
-    tags: [
-      "produce",
-      "organic",
-      "bakery",
-      "cheese",
-      "meat",
-      "flowers",
-      "honey",
-      "preserves",
-      "prepared-food",
-      "coffee",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "parking",
-      "family-friendly",
-    ],
+    tags: ["organic", "bakery", "cheese", "meat", "flowers", "honey", "preserves", "prepared-food", "coffee", "crafts", "outdoor", "seasonal", "parking"],
     featured: false,
     schedules: [
       {
@@ -985,17 +714,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.toronto.ca/explore-enjoy/history-art-culture/museums/montgomerys-inn/?accordion=farmers-market",
     phone: "416-394-8113",
     email: "montinn@toronto.ca",
-    tags: [
-      "produce",
-      "bakery",
-      "prepared-food",
-      "indoor",
-      "outdoor",
-      "parking",
-      "transit",
-      "family-friendly",
-      "seasonal",
-    ],
+    tags: ["bakery", "prepared-food", "indoor", "outdoor", "parking", "transit", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -1023,16 +742,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://westonvillagebia.com/",
     phone: "416-249-0691",
     email: "admin@westonvillagebia.com",
-    tags: [
-      "produce",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "transit",
-      "accessible",
-      "family-friendly",
-    ],
+    tags: ["prepared-food", "crafts", "outdoor", "seasonal", "transit", "accessible"],
     featured: false,
     schedules: [
       {
@@ -1060,15 +770,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://flemofarm.ca/",
     phone: "416-230-6984",
     email: "flemofarm@gmail.com",
-    tags: [
-      "produce",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "transit",
-      "family-friendly",
-    ],
+    tags: ["prepared-food", "crafts", "outdoor", "seasonal", "transit"],
     featured: false,
     schedules: [
       {
@@ -1096,14 +798,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.mfrc.org/urban-agriculture-and-food-programs",
     phone: "416-284-4184 x221",
     email: "cperttula@mfrc.org",
-    tags: [
-      "produce",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "family-friendly",
-    ],
+    tags: ["prepared-food", "crafts", "outdoor", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -1131,16 +826,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.courtyardfarmersmkt.ca/",
     phone: "647-835-4064",
     email: "jmforde709@gmail.com",
-    tags: [
-      "produce",
-      "bakery",
-      "preserves",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "family-friendly",
-    ],
+    tags: ["bakery", "preserves", "prepared-food", "crafts", "outdoor", "seasonal"],
     featured: false,
     schedules: [
       {
@@ -1167,18 +853,7 @@ export const seedMarkets: SeedMarket[] = [
     geofence_radius_m: 220,
     website: "https://afrocaribbeanfarmersmarket.com/",
     phone: null,
-    tags: [
-      "produce",
-      "bakery",
-      "preserves",
-      "prepared-food",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "transit",
-      "accessible",
-      "family-friendly",
-    ],
+    tags: ["bakery", "preserves", "prepared-food", "crafts", "outdoor", "seasonal", "transit", "accessible"],
     featured: false,
     schedules: [
       {
@@ -1205,18 +880,7 @@ export const seedMarkets: SeedMarket[] = [
     geofence_radius_m: 300,
     website: "https://www.toronto.ca/business-economy/industry-sector-support/public-markets/public-markets-in-toronto/",
     phone: null,
-    tags: [
-      "produce",
-      "bakery",
-      "cheese",
-      "flowers",
-      "crafts",
-      "outdoor",
-      "seasonal",
-      "parking",
-      "accessible",
-      "family-friendly",
-    ],
+    tags: ["bakery", "cheese", "flowers", "crafts", "outdoor", "seasonal", "parking", "accessible"],
     featured: false,
     schedules: [
       {
@@ -1243,15 +907,7 @@ export const seedMarkets: SeedMarket[] = [
     geofence_radius_m: 180,
     website: "https://regenesis.eco/en/yumarket",
     phone: null,
-    tags: [
-      "produce",
-      "organic",
-      "prepared-food",
-      "crafts",
-      "indoor",
-      "transit",
-      "accessible",
-    ],
+    tags: ["organic", "prepared-food", "crafts", "indoor", "transit", "accessible"],
     featured: false,
     schedules: [
       {
@@ -1274,7 +930,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese"],
     menus: [],
   },
   {
@@ -1284,7 +940,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -1294,7 +950,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -1304,7 +960,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -1314,7 +970,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -1324,7 +980,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food", "seafood"],
     menus: [],
   },
   {
@@ -1334,7 +990,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -1344,7 +1000,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food"],
     menus: [],
   },
   {
@@ -1354,7 +1010,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -1364,7 +1020,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese"],
     menus: [],
   },
   {
@@ -1374,7 +1030,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "prepared-food"],
     menus: [],
   },
   {
@@ -1384,7 +1040,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1394,7 +1050,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -1414,7 +1070,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1424,7 +1080,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -1434,7 +1090,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee"],
     menus: [],
   },
   {
@@ -1444,7 +1100,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["mushrooms", "produce"],
     menus: [],
   },
   {
@@ -1454,7 +1110,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -1464,7 +1120,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "maple"],
     menus: [],
   },
   {
@@ -1474,7 +1130,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -1484,7 +1140,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -1494,7 +1150,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -1504,7 +1160,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -1514,7 +1170,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -1534,7 +1190,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -1554,7 +1210,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee"],
     menus: [],
   },
   {
@@ -1564,7 +1220,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce", "organic", "flowers"],
     menus: [],
   },
   {
@@ -1574,7 +1230,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -1584,7 +1240,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese"],
     menus: [],
   },
   {
@@ -1594,7 +1250,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1604,7 +1260,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee", "prepared-food"],
     menus: [],
   },
   {
@@ -1614,7 +1270,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic"],
     menus: [],
   },
   {
@@ -1624,7 +1280,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -1634,7 +1290,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -1644,7 +1300,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -1654,7 +1310,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1664,7 +1320,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free"],
     menus: [],
   },
   {
@@ -1674,7 +1330,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese", "prepared-food"],
     menus: [],
   },
   {
@@ -1684,7 +1340,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -1694,7 +1350,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -1704,7 +1360,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1714,7 +1370,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["dairy", "prepared-food"],
     menus: [],
   },
   {
@@ -1724,7 +1380,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -1734,7 +1390,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -1744,7 +1400,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -1754,7 +1410,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1764,7 +1420,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "organic"],
     menus: [],
   },
   {
@@ -1774,7 +1430,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -1784,7 +1440,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "prepared-food"],
     menus: [],
   },
   {
@@ -1794,7 +1450,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1804,7 +1460,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["wine"],
     menus: [],
   },
   {
@@ -1814,7 +1470,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1824,7 +1480,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1834,7 +1490,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -1844,7 +1500,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves"],
     menus: [],
   },
   {
@@ -1854,7 +1510,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -1864,7 +1520,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "prepared-food"],
     menus: [],
   },
   {
@@ -1874,7 +1530,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -1894,7 +1550,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -1924,7 +1580,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee", "organic", "prepared-food"],
     menus: [],
   },
   {
@@ -1944,7 +1600,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese", "organic"],
     menus: [],
   },
   {
@@ -1954,7 +1610,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1974,7 +1630,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -1984,7 +1640,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -1994,7 +1650,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "organic", "produce"],
     menus: [],
   },
   {
@@ -2004,7 +1660,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -2014,7 +1670,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2024,7 +1680,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2034,7 +1690,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -2054,7 +1710,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey", "maple", "mushrooms", "organic", "preserves", "produce"],
     menus: [],
   },
   {
@@ -2064,7 +1720,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["mushrooms", "organic", "produce"],
     menus: [],
   },
   {
@@ -2074,7 +1730,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "flowers", "organic"],
     menus: [],
   },
   {
@@ -2084,7 +1740,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free"],
     menus: [],
   },
   {
@@ -2094,7 +1750,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free"],
     menus: [],
   },
   {
@@ -2104,7 +1760,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer", "organic"],
     menus: [],
   },
   {
@@ -2114,7 +1770,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2124,7 +1780,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -2134,7 +1790,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2144,7 +1800,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2154,7 +1810,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["wine"],
     menus: [],
   },
   {
@@ -2164,7 +1820,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free"],
     menus: [],
   },
   {
@@ -2174,7 +1830,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2204,7 +1860,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -2214,7 +1870,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -2224,7 +1880,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2234,7 +1890,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2244,7 +1900,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic"],
     menus: [],
   },
   {
@@ -2254,7 +1910,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food"],
     menus: [],
   },
   {
@@ -2264,7 +1920,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2274,7 +1930,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2284,7 +1940,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs", "meat", "organic", "produce"],
     menus: [],
   },
   {
@@ -2294,7 +1950,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2304,7 +1960,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2324,7 +1980,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "meat", "organic", "produce"],
     menus: [],
   },
   {
@@ -2344,7 +2000,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free", "preserves"],
     menus: [],
   },
   {
@@ -2354,7 +2010,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free"],
     menus: [],
   },
   {
@@ -2364,7 +2020,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese"],
     menus: [],
   },
   {
@@ -2374,7 +2030,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["plants", "preserves", "produce"],
     menus: [],
   },
   {
@@ -2384,7 +2040,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2394,7 +2050,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs", "meat", "prepared-food", "produce"],
     menus: [],
   },
   {
@@ -2404,7 +2060,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["vegan"],
     menus: [],
   },
   {
@@ -2414,7 +2070,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2424,7 +2080,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2434,7 +2090,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2444,7 +2100,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs", "meat", "prepared-food"],
     menus: [],
   },
   {
@@ -2454,7 +2110,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -2464,7 +2120,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -2474,7 +2130,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food", "preserves"],
     menus: [],
   },
   {
@@ -2484,7 +2140,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2494,7 +2150,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2504,7 +2160,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2514,7 +2170,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2524,7 +2180,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -2534,7 +2190,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free", "vegan"],
     menus: [],
   },
   {
@@ -2544,7 +2200,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "produce"],
     menus: [],
   },
   {
@@ -2554,7 +2210,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -2564,7 +2220,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "organic", "prepared-food", "produce"],
     menus: [],
   },
   {
@@ -2574,7 +2230,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "organic"],
     menus: [],
   },
   {
@@ -2584,7 +2240,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "organic"],
     menus: [],
   },
   {
@@ -2594,7 +2250,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -2604,7 +2260,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "organic", "prepared-food"],
     menus: [],
   },
   {
@@ -2614,7 +2270,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2624,7 +2280,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -2634,7 +2290,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2644,7 +2300,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free"],
     menus: [],
   },
   {
@@ -2654,7 +2310,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "organic"],
     menus: [],
   },
   {
@@ -2664,7 +2320,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2674,7 +2330,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese"],
     menus: [],
   },
   {
@@ -2684,7 +2340,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2694,7 +2350,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2704,7 +2360,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "flowers"],
     menus: [],
   },
   {
@@ -2714,7 +2370,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "produce"],
     menus: [],
   },
   {
@@ -2734,7 +2390,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2744,7 +2400,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -2754,7 +2410,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cider", "produce"],
     menus: [],
   },
   {
@@ -2764,7 +2420,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -2774,7 +2430,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2794,7 +2450,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "prepared-food", "produce"],
     menus: [],
   },
   {
@@ -2814,7 +2470,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2824,7 +2480,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -2834,7 +2490,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -2844,7 +2500,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -2854,7 +2510,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey", "meat", "produce"],
     menus: [],
   },
   {
@@ -2864,7 +2520,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs", "honey", "meat", "organic", "produce"],
     menus: [],
   },
   {
@@ -2874,7 +2530,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -2884,7 +2540,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "produce"],
     menus: [],
   },
   {
@@ -2894,7 +2550,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "organic", "prepared-food"],
     menus: [],
   },
   {
@@ -2904,7 +2560,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cider", "organic", "produce"],
     menus: [],
   },
   {
@@ -2914,7 +2570,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2924,7 +2580,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "produce"],
     menus: [],
   },
   {
@@ -2934,7 +2590,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -2944,7 +2600,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee"],
     menus: [],
   },
   {
@@ -2954,7 +2610,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -2964,7 +2620,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic"],
     menus: [],
   },
   {
@@ -2974,7 +2630,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs", "meat", "organic", "produce"],
     menus: [],
   },
   {
@@ -2984,7 +2640,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -2994,7 +2650,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["mushrooms"],
     menus: [],
   },
   {
@@ -3004,7 +2660,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -3024,7 +2680,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "prepared-food"],
     menus: [],
   },
   {
@@ -3034,7 +2690,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -3044,7 +2700,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "produce"],
     menus: [],
   },
   {
@@ -3054,7 +2710,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "organic"],
     menus: [],
   },
   {
@@ -3064,7 +2720,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -3084,7 +2740,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "plants"],
     menus: [],
   },
   {
@@ -3094,7 +2750,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -3104,7 +2760,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -3114,7 +2770,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "produce"],
     menus: [],
   },
   {
@@ -3124,7 +2780,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese", "organic"],
     menus: [],
   },
   {
@@ -3134,7 +2790,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "organic", "produce"],
     menus: [],
   },
   {
@@ -3144,7 +2800,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -3154,7 +2810,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -3164,7 +2820,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["mushrooms", "produce"],
     menus: [],
   },
   {
@@ -3174,7 +2830,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -3184,7 +2840,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "mushrooms", "produce"],
     menus: [],
   },
   {
@@ -3194,7 +2850,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food", "produce"],
     menus: [],
   },
   {
@@ -3204,7 +2860,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -3214,7 +2870,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -3224,7 +2880,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -3234,7 +2890,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -3244,7 +2900,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -3254,7 +2910,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["maple", "preserves"],
     menus: [],
   },
   {
@@ -3264,7 +2920,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "organic"],
     menus: [],
   },
   {
@@ -3274,7 +2930,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -3284,7 +2940,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free", "organic", "prepared-food"],
     menus: [],
   },
   {
@@ -3294,7 +2950,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -3304,7 +2960,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -3314,7 +2970,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -3324,7 +2980,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cider", "wine"],
     menus: [],
   },
   {
@@ -3334,7 +2990,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -3344,7 +3000,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -3354,7 +3010,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -3364,7 +3020,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -3374,7 +3030,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -3384,7 +3040,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -3394,7 +3050,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -3404,7 +3060,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -3414,7 +3070,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -3424,7 +3080,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -3434,7 +3090,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cider", "produce"],
     menus: [],
   },
   {
@@ -3444,7 +3100,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["wine"],
     menus: [],
   },
   {
@@ -3454,7 +3110,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free", "prepared-food"],
     menus: [],
   },
   {
@@ -3464,7 +3120,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -3474,7 +3130,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese"],
     menus: [],
   },
   {
@@ -3484,7 +3140,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves", "produce"],
     menus: [],
   },
   {
@@ -3494,7 +3150,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -3504,7 +3160,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food"],
     menus: [],
   },
   {
@@ -3514,7 +3170,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "organic", "produce"],
     menus: [],
   },
   {
@@ -3524,7 +3180,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves"],
     menus: [],
   },
   {
@@ -3534,7 +3190,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["wine"],
     menus: [],
   },
   {
@@ -3544,7 +3200,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -3554,7 +3210,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -3564,7 +3220,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -3574,7 +3230,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "organic"],
     menus: [],
   },
   {
@@ -3584,7 +3240,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -3594,7 +3250,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -3604,7 +3260,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -3614,7 +3270,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -3624,7 +3280,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "produce"],
     menus: [],
   },
   {
@@ -3634,7 +3290,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -3644,7 +3300,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -3654,7 +3310,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -3664,7 +3320,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -3674,7 +3330,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "plants", "prepared-food", "preserves"],
     menus: [],
   },
   {
@@ -3684,7 +3340,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "vegan"],
     menus: [],
   },
   {
@@ -3704,7 +3360,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -3724,7 +3380,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -3754,7 +3410,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "coffee", "prepared-food"],
     menus: [],
   },
   {
@@ -3774,7 +3430,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["dairy"],
     menus: [],
   },
   {
@@ -3784,7 +3440,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -3794,7 +3450,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free"],
     menus: [],
   },
   {
@@ -3804,7 +3460,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "organic"],
     menus: [],
   },
   {
@@ -3814,7 +3470,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee"],
     menus: [],
   },
   {
@@ -3824,7 +3480,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -3844,7 +3500,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["dairy"],
     menus: [],
   },
   {
@@ -3854,7 +3510,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -3864,7 +3520,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -3874,7 +3530,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -3884,7 +3540,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -3894,7 +3550,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer", "organic"],
     menus: [],
   },
   {
@@ -3914,7 +3570,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -3924,7 +3580,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cider"],
     menus: [],
   },
   {
@@ -3934,7 +3590,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -3944,7 +3600,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -3954,7 +3610,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -3964,7 +3620,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -3974,7 +3630,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -3984,7 +3640,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4004,7 +3660,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4014,7 +3670,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4044,7 +3700,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4054,7 +3710,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -4064,7 +3720,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4074,7 +3730,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -4084,7 +3740,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "organic"],
     menus: [],
   },
   {
@@ -4094,7 +3750,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -4104,7 +3760,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "organic", "plants", "produce"],
     menus: [],
   },
   {
@@ -4114,7 +3770,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["vegan"],
     menus: [],
   },
   {
@@ -4124,7 +3780,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4134,7 +3790,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["maple", "produce"],
     menus: [],
   },
   {
@@ -4144,7 +3800,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -4164,7 +3820,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -4174,7 +3830,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -4184,7 +3840,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4194,7 +3850,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -4204,7 +3860,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry", "plants"],
     menus: [],
   },
   {
@@ -4214,7 +3870,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4224,7 +3880,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["wine"],
     menus: [],
   },
   {
@@ -4234,7 +3890,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves"],
     menus: [],
   },
   {
@@ -4244,7 +3900,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -4254,7 +3910,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4264,7 +3920,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4274,7 +3930,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -4284,7 +3940,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4294,7 +3950,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -4304,7 +3960,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free", "organic", "vegan"],
     menus: [],
   },
   {
@@ -4314,7 +3970,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -4324,7 +3980,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "prepared-food"],
     menus: [],
   },
   {
@@ -4334,7 +3990,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4344,7 +4000,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4354,7 +4010,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -4364,7 +4020,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -4374,7 +4030,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["plants"],
     menus: [],
   },
   {
@@ -4384,7 +4040,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -4394,7 +4050,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -4404,7 +4060,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4414,7 +4070,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4424,7 +4080,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -4444,7 +4100,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -4454,7 +4110,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["plants"],
     menus: [],
   },
   {
@@ -4464,7 +4120,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4474,7 +4130,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves"],
     menus: [],
   },
   {
@@ -4484,7 +4140,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -4494,7 +4150,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food"],
     menus: [],
   },
   {
@@ -4504,7 +4160,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "organic"],
     menus: [],
   },
   {
@@ -4514,7 +4170,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4524,7 +4180,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4534,7 +4190,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -4544,7 +4200,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -4554,7 +4210,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -4564,7 +4220,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -4574,7 +4230,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -4584,7 +4240,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs", "maple", "meat", "organic", "preserves", "produce"],
     menus: [],
   },
   {
@@ -4594,7 +4250,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["mushrooms"],
     menus: [],
   },
   {
@@ -4604,7 +4260,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -4614,7 +4270,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -4624,7 +4280,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["wine"],
     menus: [],
   },
   {
@@ -4634,7 +4290,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["wine"],
     menus: [],
   },
   {
@@ -4644,7 +4300,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -4654,7 +4310,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4674,7 +4330,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -4694,7 +4350,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -4704,7 +4360,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4724,7 +4380,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -4734,7 +4390,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -4744,7 +4400,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "prepared-food"],
     menus: [],
   },
   {
@@ -4754,7 +4410,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -4764,7 +4420,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -4774,7 +4430,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -4784,7 +4440,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -4824,7 +4480,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee"],
     menus: [],
   },
   {
@@ -4834,7 +4490,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves"],
     menus: [],
   },
   {
@@ -4844,7 +4500,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["mushrooms"],
     menus: [],
   },
   {
@@ -4854,7 +4510,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "vegan"],
     menus: [],
   },
   {
@@ -4874,7 +4530,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free", "vegan"],
     menus: [],
   },
   {
@@ -4884,7 +4540,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -4894,7 +4550,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -4904,7 +4560,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -4914,7 +4570,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -4924,7 +4580,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["vegan"],
     menus: [],
   },
   {
@@ -4944,7 +4600,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food", "preserves"],
     menus: [],
   },
   {
@@ -4954,7 +4610,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -4964,7 +4620,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -4984,7 +4640,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -4994,7 +4650,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic"],
     menus: [],
   },
   {
@@ -5004,7 +4660,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5014,7 +4670,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["maple"],
     menus: [],
   },
   {
@@ -5024,7 +4680,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -5034,7 +4690,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5044,7 +4700,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "organic"],
     menus: [],
   },
   {
@@ -5054,7 +4710,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5064,7 +4720,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -5074,7 +4730,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5084,7 +4740,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -5104,7 +4760,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -5114,7 +4770,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -5124,7 +4780,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce", "flowers"],
     menus: [],
   },
   {
@@ -5134,7 +4790,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5144,7 +4800,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -5154,7 +4810,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer", "organic"],
     menus: [],
   },
   {
@@ -5164,7 +4820,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5174,7 +4830,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -5184,7 +4840,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5194,7 +4850,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["dairy"],
     menus: [],
   },
   {
@@ -5204,7 +4860,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -5214,7 +4870,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs"],
     menus: [],
   },
   {
@@ -5224,7 +4880,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat", "organic"],
     menus: [],
   },
   {
@@ -5234,7 +4890,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["mushrooms"],
     menus: [],
   },
   {
@@ -5244,7 +4900,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5254,7 +4910,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5264,7 +4920,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["plants"],
     menus: [],
   },
   {
@@ -5274,7 +4930,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -5284,7 +4940,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5294,7 +4950,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -5304,7 +4960,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5314,7 +4970,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -5324,7 +4980,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "coffee"],
     menus: [],
   },
   {
@@ -5334,7 +4990,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5344,7 +5000,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves"],
     menus: [],
   },
   {
@@ -5384,7 +5040,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -5394,7 +5050,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -5404,7 +5060,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5414,7 +5070,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -5424,7 +5080,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "produce"],
     menus: [],
   },
   {
@@ -5434,7 +5090,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves", "produce"],
     menus: [],
   },
   {
@@ -5444,7 +5100,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5454,7 +5110,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5464,7 +5120,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5474,7 +5130,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5484,7 +5140,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["seafood"],
     menus: [],
   },
   {
@@ -5504,7 +5160,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -5514,7 +5170,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -5524,7 +5180,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -5534,7 +5190,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -5544,7 +5200,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5554,7 +5210,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -5584,7 +5240,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -5614,7 +5270,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -5624,7 +5280,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5634,7 +5290,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5644,7 +5300,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic"],
     menus: [],
   },
   {
@@ -5654,7 +5310,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -5664,7 +5320,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -5684,7 +5340,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -5694,7 +5350,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cider", "wine"],
     menus: [],
   },
   {
@@ -5704,7 +5360,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic"],
     menus: [],
   },
   {
@@ -5724,7 +5380,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey", "meat", "produce"],
     menus: [],
   },
   {
@@ -5734,7 +5390,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -5744,7 +5400,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -5754,7 +5410,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee"],
     menus: [],
   },
   {
@@ -5764,7 +5420,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -5774,7 +5430,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -5784,7 +5440,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -5794,7 +5450,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic"],
     menus: [],
   },
   {
@@ -5814,7 +5470,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -5824,7 +5480,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee", "organic"],
     menus: [],
   },
   {
@@ -5834,7 +5490,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "meat", "produce"],
     menus: [],
   },
   {
@@ -5854,7 +5510,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey"],
     menus: [],
   },
   {
@@ -5864,7 +5520,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -5874,7 +5530,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -5884,7 +5540,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "plants"],
     menus: [],
   },
   {
@@ -5894,7 +5550,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -5904,7 +5560,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese", "produce"],
     menus: [],
   },
   {
@@ -5914,7 +5570,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["vegan"],
     menus: [],
   },
   {
@@ -5924,7 +5580,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -5944,7 +5600,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee"],
     menus: [],
   },
   {
@@ -5974,7 +5630,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -5984,7 +5640,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["dairy"],
     menus: [],
   },
   {
@@ -6014,7 +5670,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -6024,7 +5680,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -6034,7 +5690,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6044,7 +5700,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs"],
     menus: [],
   },
   {
@@ -6094,7 +5750,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6114,7 +5770,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers"],
     menus: [],
   },
   {
@@ -6134,7 +5790,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free", "vegan"],
     menus: [],
   },
   {
@@ -6164,7 +5820,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["coffee"],
     menus: [],
   },
   {
@@ -6174,7 +5830,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "honey"],
     menus: [],
   },
   {
@@ -6184,7 +5840,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["maple", "meat", "produce"],
     menus: [],
   },
   {
@@ -6194,7 +5850,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6214,7 +5870,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6224,7 +5880,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6234,7 +5890,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -6244,7 +5900,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free", "vegan"],
     menus: [],
   },
   {
@@ -6254,7 +5910,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6264,7 +5920,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey", "produce"],
     menus: [],
   },
   {
@@ -6284,7 +5940,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey", "maple"],
     menus: [],
   },
   {
@@ -6304,7 +5960,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6314,7 +5970,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6324,7 +5980,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["wine"],
     menus: [],
   },
   {
@@ -6334,7 +5990,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -6344,7 +6000,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "wine"],
     menus: [],
   },
   {
@@ -6354,7 +6010,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food"],
     menus: [],
   },
   {
@@ -6364,7 +6020,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "cider", "produce"],
     menus: [],
   },
   {
@@ -6374,7 +6030,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -6384,7 +6040,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6394,7 +6050,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -6404,7 +6060,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6424,7 +6080,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -6444,7 +6100,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -6454,7 +6110,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -6464,7 +6120,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6474,7 +6130,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6484,7 +6140,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves"],
     menus: [],
   },
   {
@@ -6494,7 +6150,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free", "vegan"],
     menus: [],
   },
   {
@@ -6504,7 +6160,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["vegan"],
     menus: [],
   },
   {
@@ -6514,7 +6170,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -6524,7 +6180,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -6534,7 +6190,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["preserves"],
     menus: [],
   },
   {
@@ -6544,7 +6200,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free", "prepared-food", "vegan"],
     menus: [],
   },
   {
@@ -6554,7 +6210,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6564,7 +6220,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6574,7 +6230,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free", "vegan"],
     menus: [],
   },
   {
@@ -6584,7 +6240,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["gluten-free", "prepared-food", "seafood"],
     menus: [],
   },
   {
@@ -6614,7 +6270,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "preserves"],
     menus: [],
   },
   {
@@ -6624,7 +6280,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6634,7 +6290,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6644,7 +6300,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6654,7 +6310,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6664,7 +6320,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -6674,7 +6330,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["mushrooms"],
     menus: [],
   },
   {
@@ -6694,7 +6350,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "honey"],
     menus: [],
   },
   {
@@ -6704,7 +6360,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese", "meat"],
     menus: [],
   },
   {
@@ -6714,7 +6370,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6724,7 +6380,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["dairy"],
     menus: [],
   },
   {
@@ -6744,7 +6400,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -6754,7 +6410,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs", "meat", "mushrooms", "organic", "plants", "produce"],
     menus: [],
   },
   {
@@ -6764,7 +6420,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "cider", "preserves", "produce"],
     menus: [],
   },
   {
@@ -6774,7 +6430,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -6784,7 +6440,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -6794,7 +6450,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -6804,7 +6460,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -6814,7 +6470,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["beer"],
     menus: [],
   },
   {
@@ -6824,7 +6480,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey", "wine"],
     menus: [],
   },
   {
@@ -6834,7 +6490,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6844,7 +6500,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -6854,7 +6510,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food"],
     menus: [],
   },
   {
@@ -6864,7 +6520,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["cheese", "eggs", "meat"],
     menus: [],
   },
   {
@@ -6874,7 +6530,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "gluten-free", "vegan"],
     menus: [],
   },
   {
@@ -6884,7 +6540,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -6894,7 +6550,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "honey", "produce"],
     menus: [],
   },
   {
@@ -6904,7 +6560,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -6914,7 +6570,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -6924,7 +6580,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -6934,7 +6590,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -6954,7 +6610,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["meat"],
     menus: [],
   },
   {
@@ -6964,7 +6620,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -6974,7 +6630,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -6994,7 +6650,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -7014,7 +6670,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic"],
     menus: [],
   },
   {
@@ -7024,7 +6680,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -7034,7 +6690,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -7054,7 +6710,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7064,7 +6720,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7074,7 +6730,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "produce"],
     menus: [],
   },
   {
@@ -7084,7 +6740,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -7094,7 +6750,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7104,7 +6760,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["flowers", "produce"],
     menus: [],
   },
   {
@@ -7114,7 +6770,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7124,7 +6780,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7134,7 +6790,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7144,7 +6800,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7154,7 +6810,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7164,7 +6820,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7174,7 +6830,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7184,7 +6840,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7194,7 +6850,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7204,7 +6860,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7214,7 +6870,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["produce"],
     menus: [],
   },
   {
@@ -7224,7 +6880,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -7234,7 +6890,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -7244,7 +6900,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -7254,7 +6910,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic", "produce"],
     menus: [],
   },
   {
@@ -7264,7 +6920,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -7274,7 +6930,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food"],
     menus: [],
   },
   {
@@ -7284,7 +6940,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -7294,7 +6950,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts", "jewelry"],
     menus: [],
   },
   {
@@ -7304,7 +6960,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery", "prepared-food"],
     menus: [],
   },
   {
@@ -7314,7 +6970,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -7334,7 +6990,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["organic"],
     menus: [],
   },
   {
@@ -7344,7 +7000,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["eggs", "meat", "mushrooms", "produce"],
     menus: [],
   },
   {
@@ -7354,7 +7010,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["honey", "preserves", "produce"],
     menus: [],
   },
   {
@@ -7374,7 +7030,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["bakery"],
     menus: [],
   },
   {
@@ -7384,7 +7040,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {
@@ -7404,7 +7060,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["prepared-food"],
     menus: [],
   },
   {
@@ -7414,7 +7070,7 @@ export const seedVendors: SeedVendor[] = [
     about: null,
     website: null,
     phone: null,
-    tags: [],
+    tags: ["crafts"],
     menus: [],
   },
   {

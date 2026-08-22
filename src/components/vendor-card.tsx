@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { WEEKDAYS } from "@/lib/constants";
+import { sortTagsForDisplay } from "@/lib/find-paths";
 import type { Vendor } from "@/types/database";
 
 export function VendorCard({
@@ -43,7 +44,7 @@ export function VendorCard({
             {vendor.about ? (
               <p className="text-sm leading-relaxed text-muted-foreground">{vendor.about}</p>
             ) : null}
-            <TagList tags={vendor.tags} />
+            <TagList tags={sortTagsForDisplay(vendor.tags)} />
           </CardContent>
         </Card>
       </Link>

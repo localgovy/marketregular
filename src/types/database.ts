@@ -169,6 +169,7 @@ export type SearchFilters = {
   province?: string;
   city?: string;
   weekday?: number;
+  weekdays?: number[];
   tags?: string[];
   setup?: string;
   openNow?: boolean;

@@ -1,4 +1,4 @@
-import { AMENITY_TAGS, PRODUCT_TAGS, PROVINCES } from "@/lib/constants";
+import { AMENITY_TAGS, PRODUCT_TAGS, PROVINCES, RECORD_TAGS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,7 @@ import { saveMarket } from "@/app/actions/admin";
 import type { Market } from "@/types/database";
 
 export function MarketForm({ market }: { market?: Market }) {
-  const tags = [...PRODUCT_TAGS, ...AMENITY_TAGS];
+  const tags = [...PRODUCT_TAGS, ...AMENITY_TAGS, ...RECORD_TAGS];
   return (
     <form action={saveMarket} className="grid gap-4 sm:grid-cols-2">
       {market ? <input type="hidden" name="id" value={market.id} /> : null}

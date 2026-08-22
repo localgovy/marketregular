@@ -56,7 +56,7 @@ export function HomeMosaic({
             how="Choose when, a neighbourhood, or what they sell. Press Search when the list looks right."
             className="xl:shrink-0"
           >
-            <QuickFind markets={markets} />
+            <QuickFind markets={markets} vendors={vendors} />
           </HomePanel>
 
           <TorontoWeek groups={week} />

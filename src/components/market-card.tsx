@@ -4,6 +4,7 @@ import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { nextOpenLabel } from "@/lib/schedule";
+import { sortTagsForDisplay } from "@/lib/find-paths";
 import type { Market, MarketSchedule } from "@/types/database";
 
 export function MarketCard({
@@ -37,7 +38,7 @@ export function MarketCard({
             ) : when ? (
               <p className="text-sm font-medium text-primary">{when}</p>
             ) : null}
-            <TagList tags={market.tags.slice(0, 4)} />
+            <TagList tags={sortTagsForDisplay(market.tags).slice(0, 4)} />
           </CardContent>
         </Card>
       </Link>

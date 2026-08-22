@@ -14,6 +14,7 @@ import {
   localVendorBySlug,
   localVendors,
 } from "@/lib/data/local";
+import { applyDirectoryTags, searchWeekdays } from "@/lib/find-paths";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
@@ -248,10 +249,6 @@ export async function searchDirectory(filters: SearchFilters) {
   }
   if (filters.province) marketQuery = marketQuery.eq("province", filters.province);
   if (filters.city) marketQuery = marketQuery.ilike("city", filters.city);
-  if (filters.tags?.length) {
-    marketQuery = marketQuery.overlaps("tags", filters.tags);
-    vendorQuery = vendorQuery.overlaps("tags", filters.tags);
-  }
   if (filters.setup) {
     marketQuery = marketQuery.contains("tags", [filters.setup]);
   }
@@ -273,15 +270,30 @@ export async function searchDirectory(filters: SearchFilters) {
   }
 
   let markets = (marketRows ?? []) as Market[];
-  if (filters.weekday != null) {
+  let vendors = (vendorRows ?? []) as Vendor[];
+  const days = searchWeekdays(filters);
+  if (days.length) {
     markets = markets.filter((m) =>
-      isOpenOnWeekday(schedulesByMarket.get(m.id) ?? [], filters.weekday!),
+      days.some((day) => isOpenOnWeekday(schedulesByMarket.get(m.id) ?? [], day)),
     );
   }
   if (filters.openNow) {
     markets = markets.filter((m) =>
       isMarketOpen(schedulesByMarket.get(m.id) ?? [], m.province),
     );
+  }
+  if (filters.tags?.length) {
+    const stalls = await listStalls();
+    const tagged = applyDirectoryTags(
+      markets,
+      vendors,
+      stalls
+        .filter((stall) => !days.length || stall.days.some((day) => days.includes(day)))
+        .map((stall) => ({ market_id: stall.market_id, vendor_id: stall.id })),
+      filters.tags,
+    );
+    markets = tagged.markets;
+    vendors = tagged.vendors;
   }
   if (filters.near) {
     const here = filters.near;
@@ -292,7 +304,7 @@ export async function searchDirectory(filters: SearchFilters) {
     );
   }
 
-  return { markets, vendors: (vendorRows ?? []) as Vendor[] };
+  return { markets, vendors };
 }
 
 export async function getMarketBySlug(slug: string): Promise<MarketDetail | null> {

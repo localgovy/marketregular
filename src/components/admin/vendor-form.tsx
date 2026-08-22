@@ -1,3 +1,4 @@
+import { PRODUCT_TAGS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,7 +44,12 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
         <Label htmlFor="tags">Tags (comma separated)</Label>
-        <Input id="tags" name="tags" defaultValue={vendor?.tags.join(", ")} />
+        <Input
+          id="tags"
+          name="tags"
+          defaultValue={vendor?.tags.join(", ")}
+          placeholder={PRODUCT_TAGS.slice(0, 6).join(", ")}
+        />
       </div>
       <Button type="submit" className="w-fit">
         Save vendor

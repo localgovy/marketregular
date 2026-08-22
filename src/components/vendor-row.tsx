@@ -1,12 +1,10 @@
 import Link from "next/link";
 import { SaveButton } from "@/components/save-button";
+import { tagLabel, sortTagsForDisplay } from "@/lib/find-paths";
 import type { Vendor } from "@/types/database";
 
 function tagLine(tags: string[]) {
-  return tags
-    .slice(0, 3)
-    .map((tag) => tag.replaceAll("-", " "))
-    .join(" · ");
+  return sortTagsForDisplay(tags).slice(0, 3).map(tagLabel).join(" · ");
 }
 
 export function VendorRow({

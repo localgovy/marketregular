@@ -3,7 +3,7 @@ import { DirectoryResults } from "@/components/directory-results";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
 import { searchDirectory } from "@/lib/data/catalog";
-import { queryList } from "@/lib/find-paths";
+import { filterMarketsByAreas, queryList } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 
@@ -20,8 +20,9 @@ export default async function MarketsPage({
     q?: string;
     province?: string;
     city?: string;
-    weekday?: string;
+    weekday?: string | string[];
     tag?: string | string[];
+    area?: string | string[];
     setup?: string;
     openNow?: string;
     lat?: string;
@@ -29,20 +30,23 @@ export default async function MarketsPage({
   }>;
 }) {
   const params = await searchParams;
-  const weekday =
-    params.weekday === undefined || params.weekday === "" ? undefined : Number(params.weekday);
+  const weekdays = queryList(params.weekday)
+    .map(Number)
+    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6);
   const lat = params.lat === undefined || params.lat === "" ? Number.NaN : Number(params.lat);
   const lng = params.lng === undefined || params.lng === "" ? Number.NaN : Number(params.lng);
   const near = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : undefined;
   const tags = queryList(params.tag);
-  const { markets, vendors } = await searchDirectory({
+  const areas = queryList(params.area);
+  const { markets: foundMarkets, vendors } = await searchDirectory({
     q: params.q,
-    weekday: Number.isFinite(weekday) ? weekday : undefined,
+    weekdays: weekdays.length ? weekdays : undefined,
     tags: tags.length ? tags : undefined,
     setup: params.setup || undefined,
     openNow: params.openNow === "1",
     near,
   });
+  const markets = filterMarketsByAreas(foundMarkets, areas);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -53,12 +57,16 @@ export default async function MarketsPage({
           : "Filter by day, what they sell, or whether the doors are open right now."}
       </p>
       <SearchForm
+        resultCount={markets.length}
         defaults={{
           q: params.q,
-          weekday: params.weekday,
+          weekdays,
           tags,
+          areas,
           setup: params.setup,
           openNow: params.openNow === "1",
+          lat: params.lat,
+          lng: params.lng,
         }}
       />
       <div className="mt-8">
@@ -70,8 +78,9 @@ export default async function MarketsPage({
       <DirectoryResults
         key={[
           params.q,
-          params.weekday,
+          weekdays.join(","),
           tags.join(","),
+          areas.join(","),
           params.setup,
           params.openNow,
           params.lat,

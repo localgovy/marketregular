@@ -11,6 +11,7 @@ import {
 } from "@/data/directory";
 import { distanceMeters } from "@/lib/geo";
 import { decodeFloorBody, mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
+import { applyDirectoryTags, searchWeekdays } from "@/lib/find-paths";
 import { isLaunchCity } from "@/lib/launch";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import type {
@@ -73,20 +74,32 @@ export function localSearch(filters: SearchFilters) {
     const city = filters.city.toLowerCase();
     markets = markets.filter((m) => m.city.toLowerCase() === city);
   }
-  if (filters.tags?.length) {
-    markets = markets.filter((m) => filters.tags!.some((tag) => m.tags.includes(tag)));
-    vendors = vendors.filter((v) => filters.tags!.some((tag) => v.tags.includes(tag)));
-  }
   if (filters.setup) {
     markets = markets.filter((m) => m.tags.includes(filters.setup!));
   }
-  if (filters.weekday != null) {
+  const days = searchWeekdays(filters);
+  if (days.length) {
     markets = markets.filter((m) =>
-      isOpenOnWeekday(schedulesFor(m.id), filters.weekday!),
+      days.some((day) => isOpenOnWeekday(schedulesFor(m.id), day)),
     );
   }
   if (filters.openNow) {
     markets = markets.filter((m) => isMarketOpen(schedulesFor(m.id), m.province));
+  }
+  if (filters.tags?.length) {
+    const tagged = applyDirectoryTags(
+      markets,
+      vendors,
+      seedMarketVendors
+        .filter((link) => !days.length || link.days.some((day) => days.includes(day)))
+        .map((link) => ({
+          market_id: link.market_id,
+          vendor_id: link.vendor_id,
+        })),
+      filters.tags,
+    );
+    markets = tagged.markets;
+    vendors = tagged.vendors;
   }
   if (filters.near) {
     markets = markets

@@ -15,7 +15,7 @@ import {
   tagsPresent,
   whenOptions,
 } from "@/lib/find-paths";
-import type { Market } from "@/types/database";
+import type { Market, Vendor } from "@/types/database";
 
 function weekdayInToronto() {
   const name = new Intl.DateTimeFormat("en-CA", {
@@ -72,11 +72,17 @@ function FindGroup({
   );
 }
 
-export function QuickFind({ markets }: { markets: Market[] }) {
+export function QuickFind({
+  markets,
+  vendors = [],
+}: {
+  markets: Market[];
+  vendors?: Vendor[];
+}) {
   const today = weekdayInToronto();
   const { coords, error, request } = useGeo();
   const areas = areasForMarkets(markets);
-  const sellOptions = tagsPresent(markets, FIND_PRODUCTS);
+  const sellOptions = tagsPresent([...markets, ...vendors], FIND_PRODUCTS);
   const setup = tagsPresent(markets, FIND_SETUP);
   const when = whenOptions(today);
 

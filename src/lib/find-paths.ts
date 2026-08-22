@@ -1,14 +1,24 @@
+import { AMENITY_TAGS, PRODUCT_TAGS, RECORD_TAGS, WEEKDAYS } from "@/lib/constants";
+import { LAUNCH_TZ } from "@/lib/launch";
 import type { Market } from "@/types/database";
+
+const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
+const SETUP_SET = new Set(["indoor", "outdoor", "year-round", "seasonal"]);
 
 /** Product tags people actually shop by, in the order they tend to ask. */
 export const FIND_PRODUCTS = [
+  "produce",
   "organic",
   "bakery",
-  "cheese",
   "meat",
+  "cheese",
+  "vegan",
+  "gluten-free",
   "flowers",
   "prepared-food",
-  "produce",
+  "crafts",
+  "coffee",
+  "beer",
 ] as const;
 
 /** Weather and season, after time and place. */
@@ -32,15 +42,161 @@ export function areasForMarkets(markets: Market[]) {
   return FIND_AREAS.filter((area) => area.slugs.some((slug) => slugs.has(slug)));
 }
 
-export function tagsPresent(markets: Market[], wanted: readonly string[]) {
-  const have = new Set(markets.flatMap((m) => m.tags));
+export function tagsPresent(rows: Array<{ tags: string[] }>, wanted: readonly string[]) {
+  const have = new Set(rows.flatMap((row) => row.tags));
   return wanted.filter((tag) => have.has(tag));
 }
 
+/** Identity and access tags for the all-filters “on the record” column. */
+export const FIND_RECORD = [
+  ...RECORD_TAGS,
+  ...AMENITY_TAGS.filter((tag) => !SETUP_SET.has(tag)),
+] as const;
+
+const TAG_LABELS: Record<string, string> = {
+  "year-round": "Year-round",
+  "prepared-food": "Prepared food",
+  "card-accepted": "Takes cards",
+  atm: "ATM",
+  "gluten-free": "Gluten-free",
+  "black-owned": "Black-owned",
+  jewelry: "Jewellery",
+};
+
 export function tagLabel(tag: string) {
-  if (tag === "year-round") return "Year-round";
-  if (tag === "prepared-food") return "Prepared food";
-  return tag.charAt(0).toUpperCase() + tag.slice(1);
+  return TAG_LABELS[tag] ?? tag.charAt(0).toUpperCase() + tag.slice(1);
+}
+
+export function isProductTag(tag: string) {
+  return PRODUCT_SET.has(tag);
+}
+
+const RECORD_SET = new Set<string>(RECORD_TAGS);
+
+export function sortTagsForDisplay(tags: string[]) {
+  const rank = (tag: string) => {
+    if (PRODUCT_SET.has(tag)) return 0;
+    if (RECORD_SET.has(tag)) return 1;
+    return 2;
+  };
+  return [...tags].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+}
+
+export function applyDirectoryTags<
+  M extends { id: string; tags: string[] },
+  V extends { id: string; tags: string[] },
+>(
+  markets: M[],
+  vendors: V[],
+  links: Array<{ market_id: string; vendor_id: string }>,
+  tags: string[],
+) {
+  if (!tags.length) return { markets, vendors };
+
+  const product = tags.filter((tag) => isProductTag(tag));
+  const place = tags.filter((tag) => !isProductTag(tag));
+
+  let nextMarkets = markets;
+  let nextVendors = vendors;
+
+  if (place.length) {
+    nextMarkets = nextMarkets.filter((market) =>
+      place.some((tag) => market.tags.includes(tag)),
+    );
+  }
+
+  if (product.length) {
+    nextVendors = nextVendors.filter((vendor) =>
+      product.some((tag) => vendor.tags.includes(tag)),
+    );
+    const matchingVendorIds = new Set(nextVendors.map((vendor) => vendor.id));
+    const hostIds = new Set(
+      links
+        .filter((link) => matchingVendorIds.has(link.vendor_id))
+        .map((link) => link.market_id),
+    );
+    nextMarkets = nextMarkets.filter(
+      (market) => hostIds.has(market.id) || product.some((tag) => market.tags.includes(tag)),
+    );
+  }
+
+  const marketIds = new Set(nextMarkets.map((market) => market.id));
+  const atThoseHalls = new Set(
+    links.filter((link) => marketIds.has(link.market_id)).map((link) => link.vendor_id),
+  );
+  nextVendors = nextVendors.filter((vendor) => atThoseHalls.has(vendor.id));
+
+  return { markets: nextMarkets, vendors: nextVendors };
+}
+
+export function weekdayInToronto(now = new Date()) {
+  const name = new Intl.DateTimeFormat("en-CA", {
+    weekday: "long",
+    timeZone: LAUNCH_TZ,
+  }).format(now);
+  return WEEKDAYS.findIndex((day) => day === name);
+}
+
+export type MarketsSearch = {
+  q?: string;
+  weekdays?: number[];
+  setup?: string;
+  areas?: string[];
+  openNow?: boolean;
+  tags?: string[];
+  lat?: string;
+  lng?: string;
+};
+
+export function marketsHref(search: MarketsSearch) {
+  const query = new URLSearchParams();
+  const q = search.q?.trim();
+  if (q) query.set("q", q);
+  for (const day of search.weekdays ?? []) {
+    if (day >= 0 && day <= 6) query.append("weekday", String(day));
+  }
+  if (search.setup) query.set("setup", search.setup);
+  for (const area of search.areas ?? []) {
+    if (area) query.append("area", area);
+  }
+  if (search.openNow) query.set("openNow", "1");
+  for (const tag of search.tags ?? []) query.append("tag", tag);
+  if (search.lat && search.lng) {
+    query.set("lat", search.lat);
+    query.set("lng", search.lng);
+  }
+  const qs = query.toString();
+  return qs ? `/markets?${qs}` : "/markets";
+}
+
+export function filterMarketsByAreas(markets: Market[], areaKeys: string[]) {
+  if (!areaKeys.length) return markets;
+  const slugs = new Set(
+    FIND_AREAS.filter((area) => areaKeys.includes(area.q)).flatMap((area) => area.slugs),
+  );
+  if (!slugs.size) return markets;
+  return markets.filter((market) => slugs.has(market.slug));
+}
+
+export function marketsCrumbs(search: {
+  weekdays?: number[];
+  setup?: string;
+  areas?: string[];
+  tags?: string[];
+  openNow?: boolean;
+  near?: boolean;
+}) {
+  const crumbs: string[] = [];
+  if (search.near) crumbs.push("closest first");
+  for (const day of search.weekdays ?? []) {
+    const name = WEEKDAYS[day];
+    if (name) crumbs.push(name);
+  }
+  if (search.openNow) crumbs.push("open now");
+  if (search.setup) crumbs.push(tagLabel(search.setup));
+  for (const area of search.areas ?? []) crumbs.push(area);
+  for (const tag of search.tags ?? []) crumbs.push(tagLabel(tag));
+  return crumbs;
 }
 
 /** Repeated or comma-separated `?tag=` values from a search URL. */
@@ -54,6 +210,12 @@ export function queryList(value: string | string[] | undefined): string[] {
         .filter(Boolean),
     ),
   ];
+}
+
+export function searchWeekdays(filters: { weekday?: number; weekdays?: number[] }) {
+  if (filters.weekdays?.length) return filters.weekdays;
+  if (filters.weekday != null && Number.isFinite(filters.weekday)) return [filters.weekday];
+  return [];
 }
 
 export function whenOptions(today: number) {

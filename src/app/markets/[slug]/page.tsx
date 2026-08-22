@@ -12,6 +12,7 @@ import { TagList } from "@/components/tag-list";
 import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { formatPhone } from "@/lib/format";
+import { sortTagsForDisplay } from "@/lib/find-paths";
 import { marketJsonLd, pageMeta } from "@/lib/seo";
 
 export async function generateMetadata({
@@ -60,7 +61,7 @@ export default async function MarketPage({
         <h1>{market.name}</h1>
         <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
       </div>
-      <TagList className="mt-4" tags={market.tags} />
+      <TagList className="mt-4" tags={sortTagsForDisplay(market.tags)} />
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">

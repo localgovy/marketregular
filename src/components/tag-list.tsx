@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { tagLabel } from "@/lib/find-paths";
 import { cn } from "@/lib/utils";
 
 export function TagList({
@@ -13,8 +14,8 @@ export function TagList({
     <ul className={cn("flex flex-wrap gap-1.5", className)}>
       {tags.map((tag) => (
         <li key={tag}>
-          <Badge variant="secondary" className="font-normal capitalize">
-            {tag.replaceAll("-", " ")}
+          <Badge variant="secondary" className="font-normal">
+            {tagLabel(tag)}
           </Badge>
         </li>
       ))}

@@ -54,12 +54,23 @@ export const PRODUCT_TAGS = [
   "cheese",
   "meat",
   "seafood",
+  "eggs",
+  "dairy",
+  "mushrooms",
+  "maple",
   "flowers",
+  "plants",
   "honey",
   "preserves",
   "prepared-food",
   "coffee",
+  "beer",
+  "cider",
+  "wine",
+  "vegan",
+  "gluten-free",
   "crafts",
+  "jewelry",
 ] as const;
 
 export const AMENITY_TAGS = [
@@ -72,8 +83,9 @@ export const AMENITY_TAGS = [
   "accessible",
   "card-accepted",
   "atm",
-  "family-friendly",
 ] as const;
+
+export const RECORD_TAGS = ["black-owned", "indigenous", "campus"] as const;
 
 export const FLOOR_TAGS = [
   "peaches",
