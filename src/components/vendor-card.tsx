@@ -3,18 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListingMark } from "@/components/listing-mark";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
+import { VendorHallsKicker } from "@/components/vendor-halls-kicker";
 import { WEEKDAYS } from "@/lib/constants";
 import { sortTagsForDisplay } from "@/lib/find-paths";
-import type { Vendor } from "@/types/database";
+import type { Vendor, VendorHall } from "@/types/database";
+
+const NO_HALLS: VendorHall[] = [];
 
 export function VendorCard({
   vendor,
   stall,
   days = [],
+  halls = NO_HALLS,
 }: {
   vendor: Vendor;
   stall?: string | null;
   days?: number[];
+  halls?: VendorHall[];
 }) {
   const dayLabel = days
     .map((d) => WEEKDAYS[d]?.slice(0, 3))
@@ -27,7 +32,7 @@ export function VendorCard({
         <CardHeader>
           <div className="flex items-center gap-2">
             <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
-            <p className="type-kicker min-w-0 flex-1 text-muted-foreground">Stall</p>
+            <VendorHallsKicker halls={halls} />
             <ListingMark src={vendor.logo_url} />
           </div>
         </CardHeader>

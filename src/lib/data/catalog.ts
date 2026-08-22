@@ -19,6 +19,7 @@ import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
 import type {
   FloorItem,
   Market,
@@ -32,6 +33,7 @@ import type {
   StallRef,
   Vendor,
   VendorDetail,
+  VendorHall,
 } from "@/types/database";
 
 async function db() {
@@ -185,6 +187,47 @@ export async function listStalls(): Promise<StallRef[]> {
   });
 }
 
+async function hallsByVendorIds(vendorIds: string[]): Promise<Map<string, VendorHall[]>> {
+  if (!vendorIds.length) return new Map();
+  const supabase = publicDb();
+  if (!supabase) return groupVendorHalls(localStalls(), localMarkets());
+
+  const { data, error } = await supabase
+    .from("market_vendors")
+    .select("vendor_id, markets(id, slug, name, city, status)")
+    .in("vendor_id", vendorIds);
+  if (error) return groupVendorHalls(localStalls(), localMarkets());
+  if (!data?.length) return new Map();
+
+  const stalls: StallRef[] = [];
+  const markets: Pick<Market, "id" | "slug" | "name">[] = [];
+  const seenMarket = new Set<string>();
+  for (const row of data as Array<{
+    vendor_id: string;
+    markets:
+      | { id: string; slug: string; name: string; city: string; status: string }
+      | { id: string; slug: string; name: string; city: string; status: string }[]
+      | null;
+  }>) {
+    const raw = row.markets;
+    const market = Array.isArray(raw) ? raw[0] : raw;
+    if (!market || market.status !== "published" || !isLaunchCity(market.city)) continue;
+    stalls.push({
+      id: row.vendor_id,
+      name: "",
+      slug: "",
+      market_id: market.id,
+      stall: null,
+      days: [],
+    });
+    if (!seenMarket.has(market.id)) {
+      seenMarket.add(market.id);
+      markets.push({ id: market.id, slug: market.slug, name: market.name });
+    }
+  }
+  return groupVendorHalls(stalls, markets);
+}
+
 export type TablePeek = {
   vendorName: string;
   vendorSlug: string;
@@ -253,11 +296,13 @@ export async function searchDirectory(filters: SearchFilters) {
     marketQuery = marketQuery.contains("tags", [filters.setup]);
   }
 
-  const [{ data: marketRows }, { data: vendorRows }, { data: scheduleRows }] =
+  const [{ data: marketRows }, { data: vendorRows }, { data: scheduleRows }, stalls, allMarkets] =
     await Promise.all([
       marketQuery.order("name"),
       vendorQuery.order("name"),
       supabase.from("market_schedules").select("*"),
+      listStalls(),
+      listMarkets(),
     ]);
 
   if (!marketRows?.length && !vendorRows?.length) return localSearch(filters);
@@ -283,7 +328,6 @@ export async function searchDirectory(filters: SearchFilters) {
     );
   }
   if (filters.tags?.length) {
-    const stalls = await listStalls();
     const tagged = applyDirectoryTags(
       markets,
       vendors,
@@ -304,7 +348,10 @@ export async function searchDirectory(filters: SearchFilters) {
     );
   }
 
-  return { markets, vendors };
+  return {
+    markets,
+    vendors: withVendorHalls(vendors, groupVendorHalls(stalls, allMarkets)),
+  };
 }
 
 export async function getMarketBySlug(slug: string): Promise<MarketDetail | null> {
@@ -338,10 +385,12 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
     ]);
 
   const vendorIdList = (links ?? []).map((l: { vendor_id: string }) => l.vendor_id);
-  const { data: vendors } =
+  const [{ data: vendors }, hallsMap] = await Promise.all([
     vendorIdList.length > 0
-      ? await supabase.from("vendors").select("*").in("id", vendorIdList)
-      : { data: [] };
+      ? supabase.from("vendors").select("*").in("id", vendorIdList)
+      : Promise.resolve({ data: [] as Vendor[] }),
+    hallsByVendorIds(vendorIdList),
+  ]);
 
   const vendorMap = new Map((vendors ?? []).map((v: Vendor) => [v.id, v]));
   const vendorIds = new Set(vendorIdList);
@@ -379,7 +428,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
   const vendorList = (links ?? []).flatMap((link: { vendor_id: string; stall: string | null; days: number[] }) => {
     const v = vendorMap.get(link.vendor_id);
     if (!v) return [];
-    return [{ ...v, stall: link.stall, days: link.days }];
+    return [{ ...v, stall: link.stall, days: link.days, halls: hallsMap.get(v.id) ?? [] }];
   });
 
   return {

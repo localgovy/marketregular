@@ -89,6 +89,7 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
                   vendor={vendor}
                   stall={vendor.stall}
                   days={vendor.days}
+                  halls={vendor.halls}
                 />
               ))}
             </div>

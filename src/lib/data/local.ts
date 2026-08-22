@@ -14,6 +14,7 @@ import { decodeFloorBody, mergeReviews, reviewFromPost, reviewFromReview } from 
 import { applyDirectoryTags, searchWeekdays } from "@/lib/find-paths";
 import { isLaunchCity } from "@/lib/launch";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
+import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
 import type {
   FloorItem,
   Market,
@@ -108,7 +109,10 @@ export function localSearch(filters: SearchFilters) {
       .map((x) => x.m);
   }
 
-  return { markets, vendors };
+  return {
+    markets,
+    vendors: withVendorHalls(vendors, groupVendorHalls(localStalls(), localMarkets())),
+  };
 }
 
 function withReviewPlace(row: (typeof seedReviews)[number]) {
@@ -164,10 +168,18 @@ export function localMarketBySlug(slug: string): MarketDetail | null {
   if (!seed || !isLaunchCity(seed.city)) return null;
   const market = toPublicMarket(seed);
   const vendorLinks = seedMarketVendors.filter((mv) => mv.market_id === market.id);
+  const hallsMap = groupVendorHalls(localStalls(), localMarkets());
   const vendors = vendorLinks.flatMap((link) => {
     const v = seedVendors.find((x) => x.id === link.vendor_id);
     if (!v) return [];
-    return [{ ...toPublicVendor(v), stall: link.stall, days: link.days }];
+    return [
+      {
+        ...toPublicVendor(v),
+        stall: link.stall,
+        days: link.days,
+        halls: hallsMap.get(v.id) ?? [],
+      },
+    ];
   });
   const posts = seedPosts.filter((p) => p.market_id === market.id && !p.flagged);
   const reviews = seedReviews.filter((r) => r.market_id === market.id && !r.flagged);

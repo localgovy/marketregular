@@ -125,9 +125,14 @@ export type ClaimRequest = {
   target_name?: string | null;
 };
 
+export type VendorHall = {
+  slug: string;
+  name: string;
+};
+
 export type MarketDetail = Market & {
   schedules: MarketSchedule[];
-  vendors: (Vendor & { stall: string | null; days: number[] })[];
+  vendors: (Vendor & { stall: string | null; days: number[]; halls: VendorHall[] })[];
   reviews: Review[];
   posts: Post[];
   feed: FloorItem[];

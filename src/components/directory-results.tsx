@@ -5,7 +5,8 @@ import { MarketCard } from "@/components/market-card";
 import { VendorCard } from "@/components/vendor-card";
 import { CaretUpMark } from "@/components/marks";
 import { cn } from "@/lib/utils";
-import type { Market, Vendor } from "@/types/database";
+import type { DirectoryVendor } from "@/lib/vendor-halls";
+import type { Market } from "@/types/database";
 
 const PAGE = 15;
 
@@ -14,7 +15,7 @@ export function DirectoryResults({
   vendors,
 }: {
   markets: Market[];
-  vendors: Vendor[];
+  vendors: DirectoryVendor[];
 }) {
   const [pages, setPages] = useState(1);
   const shownMarkets = markets.slice(0, pages * PAGE);
@@ -42,7 +43,7 @@ export function DirectoryResults({
           {vendors.length ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {shownVendors.map((vendor) => (
-                <VendorCard key={vendor.id} vendor={vendor} />
+                <VendorCard key={vendor.id} vendor={vendor} halls={vendor.halls} />
               ))}
             </div>
           ) : (
