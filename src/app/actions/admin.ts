@@ -9,6 +9,18 @@ function fail(message: string): never {
   throw new Error(message);
 }
 
+function parseReviewStats(formData: FormData) {
+  const countRaw = String(formData.get("review_count") ?? "").trim();
+  const avgRaw = String(formData.get("rating_avg") ?? "").trim();
+  const review_count = countRaw === "" ? 0 : Math.max(0, Math.floor(Number(countRaw)));
+  const avg = avgRaw === "" ? Number.NaN : Number(avgRaw);
+  return {
+    review_count: Number.isFinite(review_count) ? review_count : 0,
+    rating_avg:
+      Number.isFinite(avg) && avg >= 1 && avg <= 5 ? Math.round(avg * 100) / 100 : null,
+  };
+}
+
 export async function saveMarket(formData: FormData) {
   const { supabase, error: adminError } = await requireAdmin();
   if (!supabase) fail(adminError === "supabase" ? "Supabase is not configured yet." : "Admins only.");
@@ -35,6 +47,7 @@ export async function saveMarket(formData: FormData) {
       .filter(Boolean),
     status: String(formData.get("status") ?? "draft") as "draft" | "published",
     featured: formData.get("featured") === "on",
+    ...parseReviewStats(formData),
   };
 
   if (id) {
@@ -76,6 +89,7 @@ export async function saveVendor(formData: FormData) {
       .map((t) => t.trim())
       .filter(Boolean),
     status: String(formData.get("status") ?? "draft") as "draft" | "published",
+    ...parseReviewStats(formData),
   };
   if (id) {
     const { error } = await supabase.from("vendors").update(payload).eq("id", id);

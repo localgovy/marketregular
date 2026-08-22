@@ -89,6 +89,30 @@ export function MarketForm({ market }: { market?: Market }) {
         />
       </div>
       <div className="grid gap-1.5">
+        <Label htmlFor="rating_avg">Public score</Label>
+        <Input
+          id="rating_avg"
+          name="rating_avg"
+          type="number"
+          min="1"
+          max="5"
+          step="0.01"
+          defaultValue={market?.rating_avg ?? ""}
+          placeholder="4.55"
+        />
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="review_count">Public reviews</Label>
+        <Input
+          id="review_count"
+          name="review_count"
+          type="number"
+          min="0"
+          step="1"
+          defaultValue={market?.review_count ?? 0}
+        />
+      </div>
+      <div className="grid gap-1.5">
         <Label htmlFor="website">Website</Label>
         <Input id="website" name="website" defaultValue={market?.website ?? ""} />
       </div>

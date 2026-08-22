@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListingMark } from "@/components/listing-mark";
+import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
@@ -35,6 +36,7 @@ export function MarketCard({
             {market.name}
           </CardTitle>
           <CardContent className="flex flex-col gap-3">
+            <ListingScore ratingAvg={market.rating_avg} reviewCount={market.review_count} />
             <p className="line-clamp-3 text-sm text-muted-foreground">
               {market.about}
             </p>

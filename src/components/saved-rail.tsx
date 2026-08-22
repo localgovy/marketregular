@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { HomePanel } from "@/components/home-panel";
+import { ListingScore } from "@/components/listing-score";
 import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
 import type { Market, Vendor } from "@/types/database";
@@ -47,7 +48,15 @@ export function SavedRail({
                   className="min-w-0 flex-1 px-3 py-2.5 hover:bg-secondary/50"
                 >
                   <span className="block text-base font-medium">{market.name}</span>
-                  <span className="text-sm text-muted-foreground">{market.address}</span>
+                  <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
+                    <span>{market.address}</span>
+                    <ListingScore
+                      ratingAvg={market.rating_avg}
+                      reviewCount={market.review_count}
+                      compact
+                      className="text-foreground"
+                    />
+                  </span>
                 </Link>
                 <span className="pr-2">
                   <SaveButton kind="market" slug={market.slug} name={market.name} />
@@ -109,8 +118,16 @@ export function SavedDesk({
                   href={`/markets/${market.slug}`}
                   className="min-w-0 flex-1 px-3 py-3 hover:bg-secondary/50"
                 >
-                  <span className="block truncate text-base font-medium">{market.name}</span>
-                  <span className="text-sm text-muted-foreground">{market.address}</span>
+                  <span className="block text-base font-medium">{market.name}</span>
+                  <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
+                    <span>{market.address}</span>
+                    <ListingScore
+                      ratingAvg={market.rating_avg}
+                      reviewCount={market.review_count}
+                      compact
+                      className="text-foreground"
+                    />
+                  </span>
                 </Link>
                 <span className="pr-3">
                   <SaveButton kind="market" slug={market.slug} name={market.name} />
@@ -135,12 +152,18 @@ export function SavedDesk({
                   href={`/vendors/${vendor.slug}`}
                   className="min-w-0 flex-1 px-3 py-3 hover:bg-secondary/50"
                 >
-                  <span className="block truncate text-base font-medium">{vendor.name}</span>
-                  {vendor.about ? (
-                    <span className="line-clamp-1 text-sm text-muted-foreground">
-                      {vendor.about}
-                    </span>
-                  ) : null}
+                  <span className="block text-base font-medium">{vendor.name}</span>
+                  <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
+                    {vendor.about ? (
+                      <span className="line-clamp-1 min-w-0">{vendor.about}</span>
+                    ) : null}
+                    <ListingScore
+                      ratingAvg={vendor.rating_avg}
+                      reviewCount={vendor.review_count}
+                      compact
+                      className="text-foreground"
+                    />
+                  </span>
                 </Link>
                 <span className="pr-3">
                   <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />

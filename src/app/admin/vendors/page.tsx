@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
+import { ListingScore } from "@/components/listing-score";
 import { buttonVariants } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/constants";
+import { withListingStats } from "@/lib/listing-score";
 import type { Vendor } from "@/types/database";
 
 export default async function AdminVendorsPage() {
@@ -9,7 +11,7 @@ export default async function AdminVendorsPage() {
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
   const { data } = await supabase.from("vendors").select("*").order("name");
-  const vendors = (data ?? []) as Vendor[];
+  const vendors = ((data ?? []) as Vendor[]).map(withListingStats);
   return (
     <div>
       <div className="mb-4 flex justify-end">
@@ -22,7 +24,12 @@ export default async function AdminVendorsPage() {
           <li key={v.id} className="flex items-center justify-between gap-3 px-4 py-3">
             <div>
               <p className="font-medium">{v.name}</p>
-              <p className="text-xs text-muted-foreground">{v.status}</p>
+              <p className="text-sm text-muted-foreground">{v.status}</p>
+              <ListingScore
+                className="mt-1"
+                ratingAvg={v.rating_avg}
+                reviewCount={v.review_count}
+              />
             </div>
             <Link href={`/admin/vendors/${v.id}`} className={buttonVariants({ variant: "outline" })}>
               Edit

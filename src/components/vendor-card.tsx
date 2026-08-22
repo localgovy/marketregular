@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListingMark } from "@/components/listing-mark";
+import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { VendorHallsKicker } from "@/components/vendor-halls-kicker";
@@ -53,6 +54,7 @@ export function VendorCard({
             ) : null}
           </div>
           <CardContent className="flex flex-col gap-3">
+            <ListingScore ratingAvg={vendor.rating_avg} reviewCount={vendor.review_count} />
             {vendor.about ? (
               <p className="text-sm leading-relaxed text-muted-foreground">{vendor.about}</p>
             ) : null}

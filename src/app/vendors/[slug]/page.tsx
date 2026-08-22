@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
+import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
 import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
@@ -54,6 +55,11 @@ export default async function VendorPage({
         <h1>{vendor.name}</h1>
         <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
       </div>
+      <ListingScore
+        className="mt-3 text-base"
+        ratingAvg={vendor.rating_avg}
+        reviewCount={vendor.review_count}
+      />
       <TagList className="mt-4" tags={sortTagsForDisplay(vendor.tags)} />
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
@@ -73,7 +79,7 @@ export default async function VendorPage({
           <section>
             <h2>Reviews</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Anything written about this stall, including from the live reviews.
+              Anything written about this stall on the live list. The public score above is separate.
             </p>
             {vendor.feed.length ? (
               <ol className="mt-4">
@@ -82,7 +88,7 @@ export default async function VendorPage({
                 ))}
               </ol>
             ) : (
-              <p className="mt-4 text-base text-muted-foreground">No reviews yet.</p>
+              <p className="mt-4 text-base text-muted-foreground">No notes yet.</p>
             )}
           </section>
         </div>

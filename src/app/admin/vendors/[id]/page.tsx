@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { VendorForm } from "@/components/admin/vendor-form";
 import { requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/constants";
+import { withListingStats } from "@/lib/listing-score";
 import { deleteVendor, saveMenuItem } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ export default async function EditVendorPage({
 
   return (
     <div className="grid gap-10">
-      <VendorForm vendor={vendor as Vendor} />
+      <VendorForm vendor={withListingStats(vendor as Vendor)} />
       <section>
         <h2>Menu items</h2>
         <ul className="mt-3 divide-y divide-border">

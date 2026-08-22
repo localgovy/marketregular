@@ -20,11 +20,13 @@ export function listingScore(
 }
 
 export function formatRatingAvg(avg: number) {
-  return avg.toFixed(1);
+  const hundredths = Math.round(avg * 100) / 100;
+  return (Math.round(hundredths * 10) / 10).toFixed(1);
 }
 
 export function formatReviewCount(count: number) {
-  return count.toLocaleString("en-CA");
+  const digits = String(Math.trunc(Math.abs(count)));
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 export function listingScoreLabel(score: ListingScoreValue) {

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL, SITE_LOGO, WEEKDAYS } from "@/lib/constants";
+import { listingScore } from "@/lib/listing-score";
 import type { Market, MarketSchedule, Vendor } from "@/types/database";
 
 export const SITE_DESCRIPTION =
@@ -73,7 +74,23 @@ function clock(value: string) {
   return value.slice(0, 5);
 }
 
+function aggregateRatingJsonLd(row: {
+  rating_avg?: number | string | null;
+  review_count?: number | null;
+}) {
+  const score = listingScore(row.rating_avg, row.review_count);
+  if (!score) return undefined;
+  return {
+    "@type": "AggregateRating",
+    ratingValue: Number(score.avg.toFixed(2)),
+    bestRating: 5,
+    worstRating: 1,
+    reviewCount: score.count,
+  };
+}
+
 export function marketJsonLd(market: Market & { schedules: MarketSchedule[] }) {
+  const aggregateRating = aggregateRatingJsonLd(market);
   return {
     "@context": "https://schema.org",
     "@type": "FarmersMarket",
@@ -101,10 +118,12 @@ export function marketJsonLd(market: Market & { schedules: MarketSchedule[] }) {
       opens: clock(row.opens_at),
       closes: clock(row.closes_at),
     })),
+    ...(aggregateRating ? { aggregateRating } : {}),
   };
 }
 
 export function vendorJsonLd(vendor: Vendor) {
+  const aggregateRating = aggregateRatingJsonLd(vendor);
   return {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -114,5 +133,6 @@ export function vendorJsonLd(vendor: Vendor) {
     telephone: vendor.phone ?? undefined,
     sameAs: vendor.website ?? undefined,
     areaServed: { "@type": "City", name: "Toronto" },
+    ...(aggregateRating ? { aggregateRating } : {}),
   };
 }

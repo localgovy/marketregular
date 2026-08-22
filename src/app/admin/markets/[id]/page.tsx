@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { MarketForm } from "@/components/admin/market-form";
 import { requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured, WEEKDAYS } from "@/lib/constants";
+import { withListingStats } from "@/lib/listing-score";
 import { formatHours } from "@/lib/schedule";
 import { deleteMarket, deleteSchedule, linkVendorToMarket, saveSchedule } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export default async function EditMarketPage({
 
   return (
     <div className="grid gap-10">
-      <MarketForm market={market as Market} />
+      <MarketForm market={withListingStats(market as Market)} />
       <section>
         <h2>Hours</h2>
         <ul className="mt-3 divide-y divide-border">

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
+import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
 import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
@@ -61,6 +62,11 @@ export default async function MarketPage({
         <h1>{market.name}</h1>
         <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
       </div>
+      <ListingScore
+        className="mt-3 text-base"
+        ratingAvg={market.rating_avg}
+        reviewCount={market.review_count}
+      />
       <TagList className="mt-4" tags={sortTagsForDisplay(market.tags)} />
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
@@ -75,15 +81,14 @@ export default async function MarketPage({
             <h2>Reviews</h2>
             {avg ? (
               <p className="mt-1 text-sm text-muted-foreground">
-                {avg.toFixed(1)} / 5
-                {avgRated.length ? ` from ${avgRated.length} rated` : ""}
+                Floor notes average {avg.toFixed(1)} / 5 from {avgRated.length} rated
                 {market.feed.length
-                  ? ` · ${market.feed.length} ${market.feed.length === 1 ? "review" : "reviews"}`
+                  ? ` · ${market.feed.length} ${market.feed.length === 1 ? "note" : "notes"}`
                   : ""}
               </p>
             ) : (
               <p className="mt-1 text-sm text-muted-foreground">
-                Same reviews as the live list. A score is optional.
+                Same notes as the live list. A score is optional.
               </p>
             )}
             <div className="mt-4">
