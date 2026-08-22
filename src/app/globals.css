@@ -377,6 +377,8 @@ li:nth-child(3n + 3) .now-open-stamp {
 
 /* Cut-corner stall plate — enamel sign, not a SaaS pill. */
 @utility stall-chip {
+  --stall-cut: 7px;
+  --stall-stroke: 2px;
   border-radius: 0;
   clip-path: polygon(
     7px 0,
@@ -391,6 +393,8 @@ li:nth-child(3n + 3) .now-open-stamp {
 }
 
 @utility stall-chip-sm {
+  --stall-cut: 4px;
+  --stall-stroke: 2px;
   border-radius: 0;
   clip-path: polygon(
     4px 0,
@@ -401,6 +405,26 @@ li:nth-child(3n + 3) .now-open-stamp {
     4px 100%,
     0 calc(100% - 4px),
     0 4px
+  );
+}
+
+/*
+  Even cut-corner rule. A CSS border is sheared by clip-path, so the
+  diagonals go thin. Paint the plate, then inset a matching fill.
+*/
+@utility stall-chip-fill {
+  position: absolute;
+  inset: var(--stall-stroke);
+  background-color: var(--card);
+  clip-path: polygon(
+    calc(var(--stall-cut) - var(--stall-stroke)) 0,
+    calc(100% - var(--stall-cut) + var(--stall-stroke)) 0,
+    100% calc(var(--stall-cut) - var(--stall-stroke)),
+    100% calc(100% - var(--stall-cut) + var(--stall-stroke)),
+    calc(100% - var(--stall-cut) + var(--stall-stroke)) 100%,
+    calc(var(--stall-cut) - var(--stall-stroke)) 100%,
+    0 calc(100% - var(--stall-cut) + var(--stall-stroke)),
+    0 calc(var(--stall-cut) - var(--stall-stroke))
   );
 }
 

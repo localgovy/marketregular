@@ -41,7 +41,7 @@ export function SaveButton({
         toggleSave(kind, slug);
       }}
       className={cn(
-        "inline-flex shrink-0 cursor-pointer items-center justify-center font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+        "relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
         size === "lg"
           ? "stall-chip h-14 min-w-[6.5rem] px-6 text-lg"
           : size === "md"
@@ -49,10 +49,11 @@ export function SaveButton({
             : "stall-chip-sm h-8 px-2.5 text-sm",
         saved
           ? "bg-foreground text-receipt"
-          : "border border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground",
+          : "bg-foreground/45 text-muted-foreground hover:bg-foreground hover:text-foreground",
       )}
     >
-      {saved ? "Saved" : "Save"}
+      {saved ? null : <span aria-hidden className="stall-chip-fill" />}
+      <span className="relative">{saved ? "Saved" : "Save"}</span>
     </button>
   );
 }
