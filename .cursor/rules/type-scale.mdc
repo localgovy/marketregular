@@ -9,7 +9,7 @@ Two families only: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotes
 
 | Role | Face | Size | Example |
 | --- | --- | --- | --- |
-| Wordmark | Grotesk | `type-wordmark` (`text-xl font-medium tracking-[-0.04em]`) | Market Regular |
+| Wordmark | Grotesk | `type-wordmark` (`text-xl font-medium tracking-[-0.04em]`) | MarketRegular |
 | Kicker | Grotesk | `type-kicker` (`text-sm`) | Toronto, Live notes, When, where, or what |
 | Page title | Mona | `h1` (`text-3xl sm:text-4xl leading-tight`) | Toronto farmers' markets |
 | Panel / section | Mona | `h2` (`text-2xl leading-tight`) | Find a market |

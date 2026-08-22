@@ -1,4 +1,4 @@
-# Market Regular — Google Stitch brief
+# MarketRegular — Google Stitch brief
 
 Paste **Part A** into every Stitch prompt. Then paste **one screen from Part C** at a time. Export desktop **and** mobile for each screen. Do not ask Stitch to invent a new product — it is restyling an existing web app.
 
@@ -8,13 +8,13 @@ When you bring the exports back, I will implement them in the Next.js app. Expor
 
 ## Part A — paste this first, every time
 
-You are designing **Market Regular**, a Canadian public-market floor guide. Not a grocery app, not a farm-to-table restaurant, not a CSA startup, not Airbnb for farms.
+You are designing **MarketRegular**, a Canadian public-market floor guide. Not a grocery app, not a farm-to-table restaurant, not a CSA startup, not Airbnb for farms.
 
 It is the thing a regular would keep open on their phone while walking a shed: who is here, what is on the tables, whether to bother crossing town, and a live tape of people who are physically at a stall right now.
 
 **Product in one sentence:** A Canada-wide directory of farmers’ markets and vendors (hours, maps, menus, phones, tags) plus on-site-only posts and reviews that appear on a live homepage feed.
 
-**Brand name:** Market Regular  
+**Brand name:** MarketRegular  
 **Canonical URL:** www.marketregular.com  
 **Tone of voice (UI copy must follow):** dry, specific, municipal-meets-chalkboard. Short sentences. Name the fruit. Name the city. Never “discover”, “journey”, “seamless”, “your community”, “farm-to-table made easy”, “freshness you can trust”, or “join thousands”.
 
@@ -85,10 +85,10 @@ Plain does **not** mean empty. Every screen should feel like there is too much m
 
 ### Logo / chrome
 
-- Wordmark: **Market** in Plex Serif regular, **Regular** in Plex Serif italic. No icon required.
+- Wordmark: **MarketRegular** as one word. No space. No icon required.
 - Optional mark: a square enamel plate `MR` in Plex Mono, white on Plate. Not a leaf.
 - Header, left to right: wordmark · season line · Search · Sign in. No hamburger on desktop.
-- Footer: one line, small: `Market Regular — a floor guide for Canadian public markets.` plus Find a market · Vendors.
+- Footer: one line, small: `MarketRegular — a floor guide for Canadian public markets.` plus Find a market · Vendors.
 - Favicon: the `MR` plate.
 
 ### Interaction language (name things like a market, not a SaaS)

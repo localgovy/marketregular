@@ -1,4 +1,4 @@
-# Market Regular
+# MarketRegular
 
 Toronto farmers’ market hub: search markets and vendors (schedules, menus, contact, tags), leave on-site reviews and posts, and follow a live floor feed.
 

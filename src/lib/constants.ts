@@ -1,4 +1,5 @@
-export const SITE_NAME = "Market Regular";
+/** One word. Never “Market Regular”. */
+export const SITE_NAME = "MarketRegular";
 export const SITE_TAGLINE = "Toronto farmers' markets, this week.";
 
 function canonicalSiteUrl() {

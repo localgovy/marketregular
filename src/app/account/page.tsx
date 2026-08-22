@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { SavedDesk } from "@/components/saved-rail";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { SITE_NAME } from "@/lib/constants";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -12,7 +13,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = pageMeta({
   title: "Account",
   path: "/account",
-  description: "Your Market Regular account.",
+  description: `Your ${SITE_NAME} account.`,
   index: false,
 });
 

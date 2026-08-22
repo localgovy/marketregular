@@ -23,7 +23,7 @@ export async function SiteHeader() {
             <SiteMark className="size-8 shrink-0" />
             <span className="min-w-0 leading-none">
               <span className="type-wordmark block text-foreground lg:text-chalk">
-                Market Regular
+                {SITE_NAME}
               </span>
               <span className="type-kicker mt-0.5 hidden text-muted-foreground sm:block lg:text-chalk/70">
                 Toronto

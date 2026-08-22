@@ -1,0 +1,12 @@
+---
+description: Brand name is MarketRegular, one word
+alwaysApply: true
+---
+
+# Brand name
+
+The product is **MarketRegular** — one word, camel case. Never “Market Regular”.
+
+User-facing brand copy (wordmark, titles, metadata, footer, alt text) must use `SITE_NAME` from `@/lib/constants`. Do not hardcode a spaced name.
+
+The domain `marketregular.com` is already one word. “Regular” as a person (regulars, a regular) is fine.

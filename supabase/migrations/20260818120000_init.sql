@@ -1,4 +1,4 @@
--- Market Regular schema: directory, presence, moderation, claims
+-- MarketRegular schema: directory, presence, moderation, claims
 create extension if not exists postgis;
 create extension if not exists pg_trgm;
 
