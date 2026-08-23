@@ -511,3 +511,12 @@ li:nth-child(3n + 3) .now-open-stamp {
   background-position: 0 0;
   animation: awning-ticker 0.85s linear infinite;
 }
+
+@media (max-width: 639px) {
+  .awning-leaf,
+  .awning-board {
+    animation: none;
+    background-image: none;
+    background-color: color-mix(in srgb, var(--chalk) 42%, var(--primary));
+  }
+}

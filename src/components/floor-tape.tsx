@@ -24,9 +24,9 @@ export function FloorTape({
   }, [initialItems]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background">
-      <div className="tape-scroll min-h-0 flex-1 overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-background">
+    <div className="flex min-h-0 flex-col bg-background lg:h-full">
+      <div className="min-h-0 lg:tape-scroll lg:flex-1 lg:overflow-y-auto">
+        <div className="bg-background lg:sticky lg:top-0 lg:z-10">
           <header className="flex items-center justify-between gap-3 border-b border-border px-3 py-3">
             <h2 className="type-column">Reviews</h2>
             <Link

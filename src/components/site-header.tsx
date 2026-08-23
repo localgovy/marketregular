@@ -11,10 +11,28 @@ import { cn } from "@/lib/utils";
 export async function SiteHeader() {
   const profile = await getCurrentProfile();
 
+  const account = (
+    <>
+      {profile?.role === "admin" ? (
+        <Link href="/admin" className="shrink-0 text-sm font-medium hover:underline">
+          Desk
+        </Link>
+      ) : null}
+      {profile ? (
+        <Link
+          href="/account"
+          className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}
+        >
+          {profile.display_name ?? "Account"}
+        </Link>
+      ) : null}
+    </>
+  );
+
   return (
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
-      <div className="header-stripe-paper flex h-16 w-full items-center gap-3 px-4 lg:grid lg:grid-cols-[minmax(18rem,26%)_minmax(0,1fr)] lg:gap-0 lg:px-0 lg:shadow-none">
-        <div className="flex h-16 items-center lg:header-stripe-board lg:awning-board lg:px-4">
+      <div className="flex h-14 w-full items-center gap-3 px-4 lg:header-stripe-paper lg:grid lg:h-16 lg:grid-cols-[minmax(18rem,26%)_minmax(0,1fr)] lg:gap-0 lg:px-0 lg:shadow-none">
+        <div className="flex min-w-0 flex-1 items-center lg:h-16 lg:flex-none lg:header-stripe-board lg:awning-board lg:px-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Link href="/" aria-label={`${SITE_NAME} home`} className="shrink-0">
               <SiteMark className="size-8" priority />
@@ -43,10 +61,10 @@ export async function SiteHeader() {
             </span>
           </div>
         </div>
-        <div className="flex h-16 min-w-0 flex-1 items-center justify-end gap-3 lg:header-stripe-paper lg:justify-start lg:px-6">
+        <div className="flex min-w-0 items-center justify-end gap-3 lg:h-16 lg:header-stripe-paper lg:justify-start lg:px-6">
           <nav
             aria-label="Primary"
-            className="flex h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary"
+            className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary lg:flex"
           >
             {SITE_NAV.map((item) => (
               <NavLink key={item.href} href={item.href} variant="tab">
@@ -69,21 +87,24 @@ export async function SiteHeader() {
               Find
             </button>
           </form>
-          {profile?.role === "admin" ? (
-            <Link href="/admin" className="shrink-0 text-sm font-medium hover:underline">
-              Desk
-            </Link>
-          ) : null}
-          {profile ? (
-            <Link
-              href="/account"
-              className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}
-            >
-              {profile.display_name ?? "Account"}
-            </Link>
-          ) : null}
+          {account}
         </div>
       </div>
+      <nav
+        aria-label="Primary"
+        className="header-stripe-paper grid grid-cols-5 divide-x divide-border border-t border-border bg-secondary lg:hidden"
+      >
+        {SITE_NAV.map((item) => (
+          <NavLink
+            key={item.href}
+            href={item.href}
+            variant="tab"
+            className="min-h-11 w-full min-w-0 justify-center px-1"
+          >
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
     </header>
   );
 }

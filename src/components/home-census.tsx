@@ -38,7 +38,7 @@ function CensusValue({ value }: { value: number }) {
     <span
       ref={ref}
       aria-hidden
-      className="inline-block font-mono text-3xl leading-none tabular-nums tracking-tight"
+      className="inline-block font-mono text-2xl leading-none tabular-nums tracking-tight sm:text-3xl"
       style={{ minWidth: `${formatCount(value).length}ch` }}
     >
       {formatCount(value)}
@@ -57,7 +57,7 @@ function CensusCell({
 }) {
   const label = `${formatCount(value)} ${word}`;
   const className =
-    "flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5 px-3 py-3.5 text-foreground sm:px-4";
+    "flex min-w-0 flex-col items-start gap-0.5 px-3 py-3 text-foreground sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2.5 sm:px-4 sm:py-3.5";
   const inner = (
     <>
       <CensusValue value={value} />

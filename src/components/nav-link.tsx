@@ -24,7 +24,7 @@ export function NavLink({
       href={href}
       className={cn(
         tab
-          ? "inline-flex h-full shrink-0 items-center px-5 text-base font-medium whitespace-nowrap text-muted-foreground hover:bg-card hover:text-foreground"
+          ? "inline-flex h-full min-w-0 shrink-0 items-center px-5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-card hover:text-foreground"
           : "hover:underline",
         on &&
           (tab

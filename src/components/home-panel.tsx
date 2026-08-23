@@ -88,17 +88,19 @@ export function HomePanel({
   const t = tones[tone];
   const leaf = t.ink === "leaf";
   const rail = place === "rail";
+  const awning = t.band === "awning-leaf" || t.band === "awning-board";
   return (
     <section
       id={id}
-      className={cn("scroll-mt-24", t.shell, className)}
+      className={cn("scroll-mt-28 lg:scroll-mt-24", t.shell, className)}
     >
+      {awning ? <div className={cn("h-[7px] w-full", t.band)} aria-hidden /> : null}
       <div
         className={cn(
           rail
             ? "flex flex-col gap-1 px-4 pt-4 pb-2"
             : "flex flex-wrap items-end justify-between gap-3 px-4 pt-3 pb-3",
-          t.band,
+          !awning && t.band,
         )}
       >
         <div className="flex min-w-0 items-start gap-3">
@@ -160,12 +162,12 @@ export function HomePanel({
         </>
       ) : (
         <div className={cn("px-4 pt-2 pb-4", rail && "px-3")}>
-          <div
-            className={cn(
-              rail ? "mb-3 text-sm leading-relaxed" : "mb-4 text-base",
-              leaf ? "text-chalk" : "text-muted-foreground"
-            )}
-          >
+        <div
+          className={cn(
+            rail ? "mb-3 text-sm leading-relaxed" : "mb-3 text-base sm:mb-4",
+            leaf ? "text-chalk" : "text-muted-foreground"
+          )}
+        >
             {how}
           </div>
           {children}
