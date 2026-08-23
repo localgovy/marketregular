@@ -65,7 +65,7 @@ export default async function HomePage() {
 
   return (
     <HomeGeo markets={geoMarkets}>
-      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)]">
+      <div className="flex flex-col lg:grid lg:site-rail">
         <div className="min-w-0 px-4 py-5 lg:col-start-2 lg:row-start-1 lg:px-6 lg:py-6">
           {markets.length ? (
             <HomeMosaic
@@ -84,7 +84,7 @@ export default async function HomePage() {
 
         <aside
           id="reviews"
-          className="scroll-mt-28 border-y border-board lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:scroll-mt-24 lg:border-y-0 lg:border-r lg:border-board"
+          className="scroll-mt-28 border-y border-board lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-header-lg lg:h-below-header-lg lg:overflow-hidden lg:scroll-mt-24 lg:border-y-0 lg:border-r lg:border-board"
         >
           <FloorTape initialItems={tape} />
         </aside>

@@ -9,10 +9,9 @@ import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
 import { MarketVendors } from "@/components/market-vendors";
 import { ScheduleList } from "@/components/schedule-list";
+import { ListingPhone, ListingWebsite } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
-import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
-import { formatPhone } from "@/lib/format";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { marketJsonLd, pageMeta } from "@/lib/seo";
 
@@ -86,23 +85,8 @@ export default async function MarketPage({
               <br />
               {market.city}, {market.province} {market.postal_code}
             </address>
-            {market.phone ? (
-              <p className="mt-2 text-sm">
-                <a className="hover:underline" href={`tel:${market.phone}`}>
-                  {formatPhone(market.phone)}
-                </a>
-              </p>
-            ) : null}
-            {market.website ? (
-              <a
-                className={buttonVariants({ variant: "outline", className: "mt-4 w-full" })}
-                href={market.website}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Website
-              </a>
-            ) : null}
+            <ListingPhone phone={market.phone} />
+            <ListingWebsite href={market.website} />
           </div>
           {profile ? (
             <div className="rounded-xl bg-secondary/50 p-5">

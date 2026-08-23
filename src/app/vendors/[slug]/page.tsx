@@ -8,11 +8,10 @@ import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
 import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
+import { ListingPhone, ListingWebsite } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
-import { buttonVariants } from "@/components/ui/button";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { WEEKDAYS } from "@/lib/constants";
-import { formatPhone } from "@/lib/format";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { pageMeta, vendorJsonLd } from "@/lib/seo";
 
@@ -92,7 +91,15 @@ export default async function VendorPage({
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
             <h3>Find them</h3>
-            <ul className="mt-3 grid gap-3">
+            <ListingPhone phone={vendor.phone} />
+            <ListingWebsite href={vendor.website} />
+            <ul
+              className={
+                vendor.phone || vendor.website
+                  ? "mt-4 grid gap-3 border-t border-border pt-4"
+                  : "mt-3 grid gap-3"
+              }
+            >
               {vendor.markets.map((market) => (
                 <li key={market.id} className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -111,21 +118,6 @@ export default async function VendorPage({
                 </li>
               ))}
             </ul>
-            {vendor.phone ? (
-              <p className="mt-4 text-sm">
-                <a href={`tel:${vendor.phone}`}>{formatPhone(vendor.phone)}</a>
-              </p>
-            ) : null}
-            {vendor.website ? (
-              <a
-                className={buttonVariants({ variant: "outline", className: "mt-4 w-full" })}
-                href={vendor.website}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Website
-              </a>
-            ) : null}
           </div>
           {profile ? (
             <div className="rounded-xl bg-secondary/50 p-5">

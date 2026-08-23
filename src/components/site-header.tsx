@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
-      <div className="flex h-14 w-full items-center gap-3 px-4 lg:header-stripe-paper lg:grid lg:h-16 lg:grid-cols-[minmax(18rem,26%)_minmax(0,1fr)] lg:gap-0 lg:px-0 lg:shadow-none">
-        <div className="flex min-w-0 flex-1 items-center lg:h-16 lg:flex-none lg:header-stripe-board lg:awning-board lg:px-4">
+      <div className="flex h-14 w-full items-center gap-3 px-4 lg:grid lg:h-16 lg:site-rail lg:gap-0 lg:px-0">
+        <div className="flex min-w-0 flex-1 items-center lg:h-16 lg:flex-none lg:border-r lg:border-board lg:awning-board lg:px-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Link href="/" prefetch={false} aria-label={`${SITE_NAME} home`} className="shrink-0">
               <SiteMark className="size-8" />
@@ -37,7 +37,7 @@ export function SiteHeader() {
             </span>
           </div>
         </div>
-        <div className="flex min-w-0 items-center justify-end gap-3 lg:h-16 lg:header-stripe-paper lg:justify-start lg:px-6">
+        <div className="flex min-w-0 items-center justify-end gap-3 lg:h-16 lg:justify-start lg:px-6">
           <nav
             aria-label="Primary"
             className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary lg:flex"
@@ -65,6 +65,13 @@ export function SiteHeader() {
           </form>
           <HeaderAccount />
         </div>
+      </div>
+      <div
+        aria-hidden
+        className="hidden lg:grid lg:h-header-stripe lg:site-rail"
+      >
+        <div className="border-r border-board header-stripe-fill-board" />
+        <div className="header-stripe-fill-paper" />
       </div>
       <nav
         aria-label="Primary"

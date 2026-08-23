@@ -62,6 +62,10 @@
 }
 
 :root {
+  /* Shared header + homepage rail so the brand column and reviews column meet. */
+  --header-bar-lg: 4rem;
+  --header-stripe: 6px;
+  --header-lg: calc(var(--header-bar-lg) + var(--header-stripe));
   /* Warm paper, quiet leaf, honey only for "open now". */
   --background: #f4f1ea;
   --foreground: #1c1916;
@@ -364,6 +368,23 @@ li:nth-child(3n + 3) .now-open-stamp {
   }
 }
 
+/* Header + homepage: one column template so the green brand and reviews rail share an edge. */
+@utility site-rail {
+  grid-template-columns: minmax(18rem, 26%) minmax(0, 1fr);
+}
+
+@utility top-header-lg {
+  top: var(--header-lg);
+}
+
+@utility h-below-header-lg {
+  height: calc(100vh - var(--header-lg));
+}
+
+@utility h-header-stripe {
+  height: var(--header-stripe);
+}
+
 /* Header awning: beige–green–beige on the board, inverse on paper. */
 @utility header-stripe-board {
   box-shadow:
@@ -377,6 +398,24 @@ li:nth-child(3n + 3) .now-open-stamp {
     0 2px 0 var(--board),
     0 4px 0 var(--chalk),
     0 6px 0 var(--board);
+}
+
+@utility header-stripe-fill-board {
+  background-image: linear-gradient(
+    to bottom,
+    var(--chalk) 0 2px,
+    var(--board) 2px 4px,
+    var(--chalk) 4px 6px
+  );
+}
+
+@utility header-stripe-fill-paper {
+  background-image: linear-gradient(
+    to bottom,
+    var(--board) 0 2px,
+    var(--chalk) 2px 4px,
+    var(--board) 4px 6px
+  );
 }
 
 @keyframes awning-ticker {
