@@ -146,6 +146,30 @@ export function TagMark(props: MarkProps) {
   );
 }
 
+/** Stall board with rules — website. */
+export function SignMark(props: MarkProps) {
+  return (
+    <Mark {...props}>
+      <path
+        fillRule="evenodd"
+        d={`${plate(3, 3, 18, 18, 2.4)}M7 7.2h10v2.4H7zm0 3.8h10v2.4H7zm0 3.8h7.2v2.4H7z`}
+      />
+    </Mark>
+  );
+}
+
+/** Punched photo plate — Instagram. */
+export function ShotMark(props: MarkProps) {
+  return (
+    <Mark {...props}>
+      <path
+        fillRule="evenodd"
+        d={`${plate(3, 3, 18, 18, 2.6)}M12 7.2a4.8 4.8 0 1 0 0 9.6 4.8 4.8 0 1 0 0-9.6Z`}
+      />
+    </Mark>
+  );
+}
+
 export function CaretLeftMark(props: MarkProps) {
   return (
     <Mark {...props}>
