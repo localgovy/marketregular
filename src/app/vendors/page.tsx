@@ -41,7 +41,7 @@ export default async function VendorsIndexPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
-      <h1>Stalls</h1>
+      <h1>Vendors</h1>
       <p className="type-lede mt-2 mb-6 text-muted-foreground">
         Stalls in the {LAUNCH_CITY} directory. Tap a name for the menu and which markets they stand
         at. Save a stall to put it on your list.
