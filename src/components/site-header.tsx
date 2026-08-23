@@ -48,11 +48,7 @@ export async function SiteHeader() {
           </div>
           <nav className="flex shrink-0 items-center gap-3 text-sm font-medium">
             {SITE_NAV.map((item) => (
-              <NavLink
-                key={item.href}
-                href={item.href}
-                className={"compact" in item && item.compact ? "hidden sm:inline" : undefined}
-              >
+              <NavLink key={item.href} href={item.href}>
                 {item.label}
               </NavLink>
             ))}

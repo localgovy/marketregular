@@ -48,7 +48,7 @@ export default async function VendorPage({
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <JsonLd data={vendorJsonLd(vendor)} />
       <div className="flex items-center gap-1">
-        <BackButton href="/vendors" />
+        <BackButton href="/markets" />
         <p className="type-kicker text-muted-foreground">Stall</p>
       </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
