@@ -71,7 +71,7 @@ export function HomeMosaic({
           {LAUNCH_CITY} farmers&apos; markets
         </h1>
         <p className="type-lede mt-2 text-muted-foreground">
-          Find a hall, save the stalls you actually buy from, then read what people wrote.
+          Find out everything you want to know about markets near or in Toronto.
         </p>
       </header>
 
