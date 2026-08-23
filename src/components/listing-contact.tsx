@@ -1,5 +1,5 @@
 import { buttonVariants } from "@/components/ui/button";
-import { formatPhone } from "@/lib/format";
+import { externalHref, formatPhone } from "@/lib/format";
 
 export function ListingPhone({ phone }: { phone: string | null }) {
   if (!phone) return null;
@@ -12,16 +12,25 @@ export function ListingPhone({ phone }: { phone: string | null }) {
   );
 }
 
-export function ListingWebsite({ href }: { href: string | null }) {
-  if (!href) return null;
+function ListingOutbound({ href, label }: { href: string | null; label: string }) {
+  const url = externalHref(href);
+  if (!url) return null;
   return (
     <a
       className={buttonVariants({ variant: "outline", className: "mt-4 w-full" })}
-      href={href}
+      href={url}
       target="_blank"
       rel="noreferrer"
     >
-      Website
+      {label}
     </a>
   );
+}
+
+export function ListingWebsite({ href }: { href: string | null }) {
+  return <ListingOutbound href={href} label="Website" />;
+}
+
+export function ListingInstagram({ href }: { href: string | null }) {
+  return <ListingOutbound href={href} label="Instagram" />;
 }

@@ -8,7 +8,7 @@ import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
 import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
-import { ListingPhone, ListingWebsite } from "@/components/listing-contact";
+import { ListingPhone, ListingWebsite, ListingInstagram } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { WEEKDAYS } from "@/lib/constants";
@@ -93,9 +93,10 @@ export default async function VendorPage({
             <h3>Find them</h3>
             <ListingPhone phone={vendor.phone} />
             <ListingWebsite href={vendor.website} />
+            <ListingInstagram href={vendor.instagram} />
             <ul
               className={
-                vendor.phone || vendor.website
+                vendor.phone || vendor.website || vendor.instagram
                   ? "mt-4 grid gap-3 border-t border-border pt-4"
                   : "mt-3 grid gap-3"
               }

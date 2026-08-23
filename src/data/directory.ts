@@ -11,19 +11,24 @@ import type {
 
 type SeedMarket = Omit<
   Market,
-  "status" | "claimed_by" | "email" | "logo_url" | "review_count" | "rating_avg"
+  "status" | "claimed_by" | "email" | "logo_url" | "review_count" | "rating_avg" | "instagram"
 > & {
   email?: string;
   logo_url?: string | null;
   review_count?: number;
   rating_avg?: number | null;
+  instagram?: string | null;
   schedules: Omit<MarketSchedule, "id" | "market_id">[];
 };
 
-type SeedVendor = Omit<Vendor, "status" | "claimed_by" | "logo_url" | "review_count" | "rating_avg"> & {
+type SeedVendor = Omit<
+  Vendor,
+  "status" | "claimed_by" | "logo_url" | "review_count" | "rating_avg" | "instagram"
+> & {
   logo_url?: string | null;
   review_count?: number;
   rating_avg?: number | null;
+  instagram?: string | null;
   menus: Omit<MenuItem, "id" | "vendor_id">[];
 };
 
@@ -14845,6 +14850,7 @@ export function toPublicMarket(m: SeedMarket): Market {
     lng: m.lng,
     geofence_radius_m: m.geofence_radius_m,
     website: m.website,
+    instagram: m.instagram ?? null,
     phone: m.phone,
     email: m.email ?? null,
     logo_url: m.logo_url ?? null,
@@ -14875,6 +14881,7 @@ export function toPublicVendor(v: SeedVendor): Vendor {
     name: v.name,
     about: v.about,
     website: v.website,
+    instagram: v.instagram ?? null,
     phone: v.phone,
     logo_url: v.logo_url ?? null,
     tags: v.tags,

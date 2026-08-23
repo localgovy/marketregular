@@ -38,6 +38,7 @@ export async function saveMarket(formData: FormData) {
     lng: Number(formData.get("lng")),
     geofence_radius_m: Number(formData.get("geofence_radius_m") || 250),
     website: String(formData.get("website") ?? "") || null,
+    instagram: String(formData.get("instagram") ?? "") || null,
     phone: String(formData.get("phone") ?? "") || null,
     email: String(formData.get("email") ?? "") || null,
     logo_url: String(formData.get("logo_url") ?? "").trim() || null,
@@ -82,6 +83,7 @@ export async function saveVendor(formData: FormData) {
     slug: String(formData.get("slug") ?? "") || slugify(name),
     about: String(formData.get("about") ?? "") || null,
     website: String(formData.get("website") ?? "") || null,
+    instagram: String(formData.get("instagram") ?? "") || null,
     phone: String(formData.get("phone") ?? "") || null,
     logo_url: String(formData.get("logo_url") ?? "").trim() || null,
     tags: String(formData.get("tags") ?? "")

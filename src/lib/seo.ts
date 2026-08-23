@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_NAME, SITE_URL, SITE_LOGO, WEEKDAYS } from "@/lib/constants";
 import { listingScore } from "@/lib/listing-score";
+import { externalHref } from "@/lib/format";
 import type { Market, MarketSchedule, Vendor } from "@/types/database";
 
 export const SITE_DESCRIPTION =
@@ -89,6 +90,12 @@ function aggregateRatingJsonLd(row: {
   };
 }
 
+function sameAsLinks(...urls: Array<string | null | undefined>) {
+  const list = urls.map((url) => externalHref(url)).filter((url): url is string => Boolean(url));
+  if (!list.length) return undefined;
+  return list.length === 1 ? list[0] : list;
+}
+
 export function marketJsonLd(market: Market & { schedules: MarketSchedule[] }) {
   const aggregateRating = aggregateRatingJsonLd(market);
   return {
@@ -98,7 +105,7 @@ export function marketJsonLd(market: Market & { schedules: MarketSchedule[] }) {
     description: market.about ?? undefined,
     url: absoluteUrl(`/markets/${market.slug}`),
     telephone: market.phone ?? undefined,
-    sameAs: market.website ?? undefined,
+    sameAs: sameAsLinks(market.website, market.instagram),
     address: {
       "@type": "PostalAddress",
       streetAddress: market.address,
@@ -131,7 +138,7 @@ export function vendorJsonLd(vendor: Vendor) {
     description: vendor.about ?? undefined,
     url: absoluteUrl(`/vendors/${vendor.slug}`),
     telephone: vendor.phone ?? undefined,
-    sameAs: vendor.website ?? undefined,
+    sameAs: sameAsLinks(vendor.website, vendor.instagram),
     areaServed: { "@type": "City", name: "Toronto" },
     ...(aggregateRating ? { aggregateRating } : {}),
   };

@@ -33,6 +33,12 @@ export function formatPhone(phone: string) {
   return phone;
 }
 
+export function externalHref(href: string | null | undefined) {
+  const value = href?.trim();
+  if (!value) return null;
+  return value.replace(/([^:])\/{2,}/g, "$1/");
+}
+
 export function timeAgo(iso: string) {
   const delta = Date.now() - new Date(iso).getTime();
   const min = Math.round(delta / 60000);
