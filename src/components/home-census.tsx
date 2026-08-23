@@ -46,23 +46,38 @@ function CensusValue({ value }: { value: number }) {
   );
 }
 
-function CensusLink({
+function CensusCell({
   href,
   value,
   word,
 }: {
-  href: string;
+  href?: string;
   value: number;
   word: string;
 }) {
+  const label = `${formatCount(value)} ${word}`;
+  const className =
+    "flex min-w-0 items-baseline gap-2.5 px-4 py-3.5 text-receipt";
+  const inner = (
+    <>
+      <CensusValue value={value} />
+      <span className="text-base font-medium">{word}</span>
+    </>
+  );
+  if (!href) {
+    return (
+      <p aria-label={label} className={className}>
+        {inner}
+      </p>
+    );
+  }
   return (
     <Link
       href={href}
-      aria-label={`${formatCount(value)} ${word}`}
-      className="flex min-w-0 items-baseline gap-2.5 px-4 py-3.5 text-receipt outline-none transition-colors hover:bg-black/10 focus-visible:bg-black/10"
+      aria-label={label}
+      className={`${className} outline-none transition-colors hover:bg-black/10 focus-visible:bg-black/10`}
     >
-      <CensusValue value={value} />
-      <span className="text-base font-medium">{word}</span>
+      {inner}
     </Link>
   );
 }
@@ -80,13 +95,12 @@ export function HomeCensus({
       className="-mx-4 -mt-5 mb-5 bg-ticket lg:-mx-6 lg:-mt-6"
     >
       <div className="grid grid-cols-2 divide-x divide-receipt/25">
-        <CensusLink
+        <CensusCell
           href="/markets"
           value={markets}
           word={markets === 1 ? "market" : "markets"}
         />
-        <CensusLink
-          href="/vendors"
+        <CensusCell
           value={vendors}
           word={vendors === 1 ? "vendor" : "vendors"}
         />

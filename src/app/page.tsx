@@ -1,10 +1,9 @@
-import { CrateMark, RulesMark } from "@/components/marks";
+import { RulesMark } from "@/components/marks";
 import { FloorTape } from "@/components/floor-tape";
 import { HomeGeo } from "@/components/home-geo";
 import { HomePanel } from "@/components/home-panel";
 import { HomeMosaic } from "@/components/visit-loop";
 import { MarketRow } from "@/components/market-row";
-import { VendorRow } from "@/components/vendor-row";
 import {
   getCurrentProfile,
   getDirectoryCensus,
@@ -66,7 +65,6 @@ export default async function HomePage() {
     0,
     DIRECTORY_CAP,
   );
-  const vendorPreview = torontoVendors.slice(0, DIRECTORY_CAP);
 
   return (
     <HomeGeo markets={markets}>
@@ -117,26 +115,6 @@ export default async function HomePage() {
                   open={openIds.has(market.id)}
                   inset
                 />
-              ))}
-            </div>
-          </HomePanel>
-
-          <HomePanel
-            tone="vendors"
-            icon={CrateMark}
-            kicker="Name list"
-            title="Vendors"
-            how="A short list. Save the ones you buy from."
-            className="mt-5"
-            action={
-              <Link href="/vendors" className="hover:underline">
-                All {census.vendors}
-              </Link>
-            }
-          >
-            <div className="rounded-md bg-card ring-1 ring-border">
-              {vendorPreview.map((vendor) => (
-                <VendorRow key={vendor.id} vendor={vendor} />
               ))}
             </div>
           </HomePanel>

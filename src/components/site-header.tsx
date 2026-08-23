@@ -46,23 +46,36 @@ export async function SiteHeader() {
               </button>
             </form>
           </div>
-          <nav className="flex shrink-0 items-center gap-3 text-sm font-medium">
-            {SITE_NAV.map((item) => (
-              <NavLink key={item.href} href={item.href}>
-                {item.label}
-              </NavLink>
-            ))}
+          <div className="flex min-w-0 items-center gap-3 lg:shrink-0">
+            <nav
+              aria-label="Primary"
+              className="flex h-11 min-w-0 items-stretch overflow-x-auto border border-border bg-secondary"
+            >
+              {SITE_NAV.map((item, index) => (
+                <NavLink
+                  key={item.href}
+                  href={item.href}
+                  variant="tab"
+                  className={index > 0 ? "border-l border-border" : undefined}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
             {profile?.role === "admin" ? (
-              <Link href="/admin" className="hover:underline">
+              <Link href="/admin" className="shrink-0 text-sm font-medium hover:underline">
                 Desk
               </Link>
             ) : null}
             {profile ? (
-              <Link href="/account" className={buttonVariants({ variant: "outline" })}>
+              <Link
+                href="/account"
+                className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}
+              >
                 {profile.display_name ?? "Account"}
               </Link>
             ) : null}
-          </nav>
+          </div>
         </div>
       </div>
     </header>

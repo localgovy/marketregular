@@ -99,7 +99,7 @@ export default async function MarketsPage({
           href="#directory-markets"
           className="text-base font-medium underline decoration-primary decoration-2 underline-offset-8"
         >
-          Markets
+          Search Results
         </a>
         <p className="text-sm text-muted-foreground">{summary}</p>
       </div>
