@@ -7,7 +7,7 @@ alwaysApply: true
 
 Do not write “← Toronto farmers' markets” or any destination-labelled back crumb. That reads as generated.
 
-Primary pages (Events, Markets, Vendors, Saved, Search) have no back link. The header wordmark and nav are how you leave.
+Primary pages (Events, Markets, Feed, Saved) have no back link. The header wordmark and nav are how you leave.
 
 Nested pages (a market, a stall) use `BackButton`: round hit target, `CaretLeftMark`, `aria-label="Back"`, no visible label. Same-origin referrer calls `router.back()`; otherwise go to the parent index.
 

@@ -100,7 +100,6 @@ export async function saveVendor(formData: FormData) {
   }
   revalidatePath("/admin/vendors");
   revalidatePath("/markets");
-  revalidatePath("/vendors");
   revalidatePath(`/vendors/${payload.slug}`);
   redirect("/admin/vendors");
 }
