@@ -1,49 +1,7 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useRef } from "react";
 
 function formatCount(value: number) {
   return value.toLocaleString("en-CA");
-}
-
-function CensusValue({ value }: { value: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      el.textContent = formatCount(value);
-      return;
-    }
-
-    let frame = 0;
-    const started = performance.now();
-    const duration = 1100;
-    el.textContent = "0";
-
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - started) / duration);
-      const eased = 1 - (1 - t) ** 4;
-      el.textContent = formatCount(Math.round(value * eased));
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [value]);
-
-  return (
-    <span
-      ref={ref}
-      aria-hidden
-      className="inline-block font-mono text-2xl leading-none tabular-nums tracking-tight sm:text-3xl"
-      style={{ minWidth: `${formatCount(value).length}ch` }}
-    >
-      {formatCount(value)}
-    </span>
-  );
 }
 
 function CensusCell({
@@ -60,7 +18,13 @@ function CensusCell({
     "flex min-w-0 flex-col items-start gap-0.5 px-3 py-3 text-foreground sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2.5 sm:px-4 sm:py-3.5";
   const inner = (
     <>
-      <CensusValue value={value} />
+      <span
+        aria-hidden
+        className="inline-block font-mono text-2xl leading-none tabular-nums tracking-tight sm:text-3xl"
+        style={{ minWidth: `${formatCount(value).length}ch` }}
+      >
+        {formatCount(value)}
+      </span>
       <span className="text-base font-medium">{word}</span>
     </>
   );

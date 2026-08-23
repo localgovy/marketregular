@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AsteriskMark } from "@/components/marks";
+import { ReviewScore } from "@/components/listing-score";
 import { tagLabel } from "@/lib/find-paths";
 import { formatPriceLevel, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ function PlaceLink({
 }) {
   if (!href) return children;
   return (
-    <Link href={href} className="text-primary hover:underline">
+    <Link href={href} prefetch={false} className="text-primary hover:underline">
       {children}
     </Link>
   );
@@ -58,17 +58,7 @@ export function ReviewCard({
         {score ? (
           <>
             <span aria-hidden>·</span>
-            <span className="inline-flex items-center gap-px">
-              <span className="sr-only">{score} out of 5</span>
-              <span aria-hidden className="inline-flex items-center gap-px">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <AsteriskMark
-                    key={n}
-                    className={cn("size-3", n <= score ? "text-stamp" : "text-foreground/20")}
-                  />
-                ))}
-              </span>
-            </span>
+            <ReviewScore value={score} />
           </>
         ) : null}
         {price ? (

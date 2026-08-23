@@ -1,4 +1,5 @@
 import { flagItem, unflagItem } from "@/app/actions/presence";
+import { ReviewScore } from "@/components/listing-score";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/constants";
@@ -44,8 +45,9 @@ export default async function ModerationPage() {
         <ul className="mt-3 grid gap-3">
           {(reviews ?? []).map((review) => (
             <li key={review.id} className="rounded-xl bg-card p-4 text-sm ring-1 ring-foreground/10">
-              <p>
-                {review.rating}/5 — {review.body}
+              <p className="flex flex-wrap items-center gap-2">
+                <ReviewScore value={review.rating} />
+                <span>{review.body}</span>
               </p>
               <form
                 className="mt-2"

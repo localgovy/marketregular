@@ -1,21 +1,13 @@
-"use client";
-
-import { useState } from "react";
-import Link from "next/link";
 import { HomePanel } from "@/components/home-panel";
-import { Hours } from "@/components/hours";
+import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item";
+import { VendorsTodayMore } from "@/components/home-vendors-more";
 import { CrateMark, TallyMark } from "@/components/marks";
 import { NowLabel } from "@/components/now-label";
-import { ProductTag } from "@/components/product-tag";
-import { SaveButton } from "@/components/save-button";
-import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
-
-const TODAY_STALL_CAP = 15;
+import { TODAY_STALL_CAP, type VendorTodayRow, type VendorWeekPick } from "@/lib/vendor-week";
 
 export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
-  const [showAll, setShowAll] = useState(false);
-  const capped = rows.length > TODAY_STALL_CAP && !showAll;
-  const visible = capped ? rows.slice(0, TODAY_STALL_CAP) : rows;
+  const first = rows.slice(0, TODAY_STALL_CAP);
+  const capped = rows.length > first.length;
 
   return (
     <HomePanel
@@ -38,48 +30,10 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
     >
       {rows.length ? (
         <ul className="ring-1 ring-border">
-          {visible.map((row) => (
-            <li
-              key={`${row.vendorSlug}-${row.marketSlug}`}
-              className="flex items-start gap-2 border-b border-border px-3 py-3 last:border-b-0"
-            >
-              <Link
-                href={`/vendors/${row.vendorSlug}`}
-                className="grid min-w-0 flex-1 gap-1 hover:text-primary"
-              >
-                <span className="text-base font-medium">{row.vendorName}</span>
-                <span className="text-sm text-muted-foreground">
-                  {row.marketName}
-                  {row.stall ? ` · ${row.stall}` : null}
-                </span>
-                <span className="flex flex-wrap items-center gap-2">
-                  {row.open ? <NowLabel>Selling now</NowLabel> : null}
-                  <Hours value={row.hours} className="text-muted-foreground" />
-                </span>
-                {row.tags.length ? (
-                  <ul className="flex flex-wrap gap-1">
-                    {row.tags.slice(0, 2).map((tag) => (
-                      <ProductTag key={tag} tag={tag} />
-                    ))}
-                  </ul>
-                ) : null}
-              </Link>
-              <span className="shrink-0 pt-0.5">
-                <SaveButton kind="vendor" slug={row.vendorSlug} name={row.vendorName} />
-              </span>
-            </li>
+          {first.map((row) => (
+            <VendorTodayItem key={`${row.vendorSlug}-${row.marketSlug}`} row={row} />
           ))}
-          {capped ? (
-            <li className="border-border">
-              <button
-                type="button"
-                onClick={() => setShowAll(true)}
-                className="w-full px-3 py-3 text-left text-base font-medium text-primary hover:bg-muted"
-              >
-                See all {rows.length}
-              </button>
-            </li>
-          ) : null}
+          {capped ? <VendorsTodayMore total={rows.length} /> : null}
         </ul>
       ) : (
         <p className="text-sm leading-relaxed text-muted-foreground">
@@ -104,36 +58,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
       {picks.length ? (
         <ol className="ring-1 ring-border">
           {picks.map((pick, index) => (
-            <li
-              key={pick.vendorSlug}
-              className="flex gap-3 border-b border-border px-3 py-3 last:border-b-0"
-            >
-              <span className="w-5 shrink-0 pt-0.5 font-mono text-sm text-muted-foreground">
-                {index + 1}
-              </span>
-              <span className="min-w-0 flex-1">
-                <Link href={`/vendors/${pick.vendorSlug}`} className="text-base font-medium hover:underline">
-                  {pick.vendorName}
-                </Link>
-                <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
-                  {pick.where.map((place, i) => (
-                    <span key={`${place.when}-${place.marketSlug}`}>
-                      {i > 0 ? " · " : null}
-                      {place.when} at{" "}
-                      <Link
-                        href={`/markets/${place.marketSlug}`}
-                        className="font-medium text-ticket-ink underline underline-offset-2 hover:text-foreground"
-                      >
-                        {place.marketName}
-                      </Link>
-                    </span>
-                  ))}
-                </span>
-              </span>
-              <span className="shrink-0 self-start">
-                <SaveButton kind="vendor" slug={pick.vendorSlug} name={pick.vendorName} />
-              </span>
-            </li>
+            <VendorWeekItem key={pick.vendorSlug} pick={pick} index={index} />
           ))}
         </ol>
       ) : (

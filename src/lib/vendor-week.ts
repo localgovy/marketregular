@@ -4,6 +4,8 @@ import { formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
 import { vendorProductTags } from "@/lib/vendor-tags";
 import type { FloorItem, Market, MarketSchedule, StallRef, Vendor } from "@/types/database";
 
+export const TODAY_STALL_CAP = 15;
+
 export type VendorTodayRow = {
   vendorName: string;
   vendorSlug: string;

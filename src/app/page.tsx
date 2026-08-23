@@ -5,7 +5,6 @@ import { HomePanel } from "@/components/home-panel";
 import { HomeMosaic } from "@/components/visit-loop";
 import { MarketRow } from "@/components/market-row";
 import {
-  getCurrentProfile,
   getDirectoryCensus,
   getFloorTape,
   getOpenToday,
@@ -16,8 +15,8 @@ import {
 } from "@/lib/data/catalog";
 import { upcomingByDay } from "@/lib/upcoming";
 import { topVendorsThisWeek, vendorsSellingToday } from "@/lib/vendor-week";
+import { toGeoMarket } from "@/lib/geo";
 import { pageMeta, SITE_DESCRIPTION } from "@/lib/seo";
-import { connection } from "next/server";
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -26,19 +25,16 @@ export const metadata: Metadata = pageMeta({
   description: SITE_DESCRIPTION,
 });
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 120;
 
 export default async function HomePage() {
-  await connection();
-  const [tape, openNow, markets, vendors, stalls, schedules, profile, census] = await Promise.all([
+  const [tape, openNow, markets, vendors, stalls, schedules, census] = await Promise.all([
     getFloorTape(),
     getOpenToday(),
     listMarkets(),
     listVendors(),
     listStalls(),
     listSchedules(),
-    getCurrentProfile(),
     getDirectoryCensus(),
   ]);
 
@@ -59,24 +55,18 @@ export default async function HomePage() {
   );
   const torontoVendors = vendors.filter((vendor) => vendorIds.has(vendor.id));
   const openIds = new Set(openNow.map((m) => m.id));
-  const signedIn = Boolean(profile);
   const DIRECTORY_CAP = 10;
   const directory = [...openNow, ...markets.filter((market) => !openIds.has(market.id))].slice(
     0,
     DIRECTORY_CAP,
   );
 
-  return (
-    <HomeGeo markets={markets}>
-      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)]">
-        <aside
-          id="reviews"
-          className="order-2 scroll-mt-28 border-y border-board lg:order-1 lg:row-span-2 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:scroll-mt-24 lg:border-y-0 lg:border-r lg:border-board"
-        >
-          <FloorTape initialItems={tape} signedIn={signedIn} stalls={stalls} markets={markets} />
-        </aside>
+  const geoMarkets = markets.map(toGeoMarket);
 
-        <div className="order-1 min-w-0 px-4 py-5 lg:px-6 lg:py-6">
+  return (
+    <HomeGeo markets={geoMarkets}>
+      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)]">
+        <div className="min-w-0 px-4 py-5 lg:col-start-2 lg:row-start-1 lg:px-6 lg:py-6">
           {markets.length ? (
             <HomeMosaic
               week={week}
@@ -92,7 +82,14 @@ export default async function HomePage() {
           )}
         </div>
 
-        <div className="order-3 min-w-0 px-4 pb-8 lg:px-6 lg:pt-6">
+        <aside
+          id="reviews"
+          className="scroll-mt-28 border-y border-board lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:overflow-hidden lg:scroll-mt-24 lg:border-y-0 lg:border-r lg:border-board"
+        >
+          <FloorTape initialItems={tape} />
+        </aside>
+
+        <div className="min-w-0 px-4 pb-8 lg:col-start-2 lg:row-start-2 lg:px-6 lg:pt-6">
           <HomePanel
             id="directory"
             tone="directory"

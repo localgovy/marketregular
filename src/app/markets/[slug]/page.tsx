@@ -71,7 +71,7 @@ export default async function MarketPage({
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">
-          <MarketMapLazy markets={[market]} className={MARKET_PROFILE_MAP} />
+          <MarketMapLazy markets={[market]} load="visible" className={MARKET_PROFILE_MAP} />
           <section>
             <h2>About</h2>
             <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>

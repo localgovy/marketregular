@@ -92,7 +92,7 @@ export default async function MarketsPage({
         }}
       />
       <div className="mt-8">
-        <MarketMapLazy markets={markets} />
+        <MarketMapLazy markets={markets} load="visible" />
       </div>
       <div className="mt-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-border pb-2">
         <a

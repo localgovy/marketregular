@@ -9,16 +9,14 @@ import type { Market, Vendor } from "@/types/database";
 
 export function SavedRail({
   markets,
-  vendors,
 }: {
-  markets: Market[];
-  vendors: Vendor[];
+  markets: Array<Pick<Market, "id" | "slug" | "name" | "address" | "rating_avg" | "review_count">>;
 }) {
   const saves = useSaves();
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
-  const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
+  const vendorCount = saves.vendors.length;
 
-  if (!savedMarkets.length && !savedVendors.length) return null;
+  if (!savedMarkets.length && !vendorCount) return null;
 
   return (
     <HomePanel
@@ -65,20 +63,12 @@ export function SavedRail({
             ))}
           </ul>
         ) : null}
-        {savedVendors.length ? (
-          <ul className="flex flex-wrap gap-2">
-            {savedVendors.map((vendor) => (
-              <li key={vendor.id} className="flex items-center gap-1.5">
-                <Link
-                  href={`/vendors/${vendor.slug}`}
-                  className="inline-flex min-h-10 items-center stall-chip-sm border border-border bg-background px-3 py-1.5 text-base hover:bg-secondary"
-                >
-                  {vendor.name}
-                </Link>
-                <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
-              </li>
-            ))}
-          </ul>
+        {vendorCount ? (
+          <p className="text-sm text-muted-foreground">
+            <Link href="/saved" className="font-medium text-primary hover:underline">
+              {vendorCount === 1 ? "1 saved stall" : `${vendorCount} saved stalls`}
+            </Link>
+          </p>
         ) : null}
       </div>
     </HomePanel>

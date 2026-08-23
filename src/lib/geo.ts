@@ -29,3 +29,27 @@ export function formatDistance(meters: number) {
   if (meters < 1000) return `${Math.round(meters)} m`;
   return `${(meters / 1000).toFixed(1)} km`;
 }
+
+export type GeoMarket = {
+  id: string;
+  name: string;
+  slug: string;
+  lat: number;
+  lng: number;
+  geofence_radius_m: number;
+  address: string;
+  city: string;
+};
+
+export function toGeoMarket(market: GeoMarket): GeoMarket {
+  return {
+    id: market.id,
+    name: market.name,
+    slug: market.slug,
+    lat: market.lat,
+    lng: market.lng,
+    geofence_radius_m: market.geofence_radius_m,
+    address: market.address,
+    city: market.city,
+  };
+}

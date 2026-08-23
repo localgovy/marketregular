@@ -18,13 +18,14 @@ const display = Mona_Sans({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
-  axes: ["wdth"],
+  preload: false,
 });
 
 const ticket = Azeret_Mono({
   subsets: ["latin"],
   variable: "--font-ticket",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

@@ -7,16 +7,14 @@ import { useGeo } from "@/components/geo-provider";
 import { WEEKDAYS } from "@/lib/constants";
 import { formatDistance } from "@/lib/geo";
 import { distanceMeters } from "@/lib/geo";
-import {
-  FIND_PRODUCTS,
-  FIND_SETUP,
-  areasForMarkets,
-  tagLabel,
-  tagsPresent,
-  whenOptions,
-} from "@/lib/find-paths";
+import { tagLabel, whenOptions } from "@/lib/find-paths";
 import { cn } from "@/lib/utils";
-import type { Market, Vendor } from "@/types/database";
+
+type NearMarket = {
+  name: string;
+  lat: number;
+  lng: number;
+};
 
 function weekdayInToronto() {
   const name = new Intl.DateTimeFormat("en-CA", {
@@ -87,16 +85,17 @@ function FindGroup({
 
 export function QuickFind({
   markets,
-  vendors = [],
+  areas,
+  sellOptions,
+  setup,
 }: {
-  markets: Market[];
-  vendors?: Vendor[];
+  markets: NearMarket[];
+  areas: Array<{ label: string; q: string }>;
+  sellOptions: string[];
+  setup: string[];
 }) {
   const today = weekdayInToronto();
   const { coords, error, request } = useGeo();
-  const areas = areasForMarkets(markets);
-  const sellOptions = tagsPresent([...markets, ...vendors], FIND_PRODUCTS);
-  const setup = tagsPresent(markets, FIND_SETUP);
   const when = whenOptions(today);
 
   const [q, setQ] = useState("");

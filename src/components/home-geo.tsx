@@ -1,13 +1,13 @@
 "use client";
 
 import { GeoProvider } from "@/components/geo-provider";
-import type { Market } from "@/types/database";
+import type { GeoMarket } from "@/lib/geo";
 
 export function HomeGeo({
   markets,
   children,
 }: {
-  markets: Market[];
+  markets: GeoMarket[];
   children: React.ReactNode;
 }) {
   return <GeoProvider markets={markets}>{children}</GeoProvider>;

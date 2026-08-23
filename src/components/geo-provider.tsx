@@ -1,13 +1,14 @@
 "use client";
 
 import { createContext, useContext, useMemo, useState } from "react";
-import { distanceMeters } from "@/lib/geo";
-import type { Market } from "@/types/database";
+import { distanceMeters, type GeoMarket } from "@/lib/geo";
+
+export type { GeoMarket };
 
 type GeoState = {
   coords: { lat: number; lng: number } | null;
   error: string | null;
-  nearby: Array<Market & { distance: number }>;
+  nearby: Array<GeoMarket & { distance: number }>;
   request: () => void;
 };
 
@@ -17,7 +18,7 @@ export function GeoProvider({
   markets,
   children,
 }: {
-  markets: Market[];
+  markets: GeoMarket[];
   children: React.ReactNode;
 }) {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -62,7 +63,7 @@ export function useGeo() {
     return {
       coords: null,
       error: null,
-      nearby: [] as Array<Market & { distance: number }>,
+      nearby: [] as Array<GeoMarket & { distance: number }>,
       request: () => undefined,
     };
   }

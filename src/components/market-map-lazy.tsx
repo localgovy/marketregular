@@ -1,6 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useEffect, useRef, useState } from "react";
+import { BlocksMark } from "@/components/marks";
 import { cn } from "@/lib/utils";
 import type { Market } from "@/types/database";
 
@@ -15,16 +17,55 @@ export const MARKET_PROFILE_MAP =
 const MARKET_MAP_DEFAULT =
   "h-80 w-full overflow-hidden rounded-xl ring-1 ring-foreground/10";
 
+function MapPlaceholder({ onShow }: { onShow: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onShow}
+      className="flex h-full w-full flex-col items-center justify-center gap-2 bg-muted px-4 text-base font-medium text-foreground outline-none hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+    >
+      <BlocksMark className="size-6 text-muted-foreground" />
+      Show map
+    </button>
+  );
+}
+
 export function MarketMapLazy({
   markets,
   className,
+  load = "click",
 }: {
   markets: Array<Pick<Market, "id" | "name" | "slug" | "lat" | "lng" | "city" | "address">>;
   className?: string;
+  load?: "click" | "visible";
 }) {
+  const [ready, setReady] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (load !== "visible" || ready) return;
+    const node = wrapRef.current;
+    if (!node || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setReady(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "80px" },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, [load, ready]);
+
   return (
-    <div className={cn(className ?? MARKET_MAP_DEFAULT)}>
-      <Inner markets={markets} className="h-full w-full" />
+    <div ref={wrapRef} className={cn(className ?? MARKET_MAP_DEFAULT)}>
+      {ready ? (
+        <Inner markets={markets} className="h-full w-full" />
+      ) : (
+        <MapPlaceholder onShow={() => setReady(true)} />
+      )}
     </div>
   );
 }

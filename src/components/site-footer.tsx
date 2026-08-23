@@ -15,7 +15,7 @@ export function SiteFooter() {
         </p>
         <div className="flex flex-wrap gap-4">
           {SITE_NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="hover:text-foreground">
+            <Link key={item.href} href={item.href} prefetch={false} className="hover:text-foreground">
               {item.label}
             </Link>
           ))}

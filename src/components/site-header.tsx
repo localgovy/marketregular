@@ -1,45 +1,26 @@
 import Link from "next/link";
+import { HeaderAccount } from "@/components/header-account";
 import { NavLink } from "@/components/nav-link";
 import { SiteMark, StudioMark } from "@/components/site-mark";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getCurrentProfile } from "@/lib/data/catalog";
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
 import { SITE_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
-export async function SiteHeader() {
-  const profile = await getCurrentProfile();
-
-  const account = (
-    <>
-      {profile?.role === "admin" ? (
-        <Link href="/admin" className="shrink-0 text-sm font-medium hover:underline">
-          Desk
-        </Link>
-      ) : null}
-      {profile ? (
-        <Link
-          href="/account"
-          className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}
-        >
-          {profile.display_name ?? "Account"}
-        </Link>
-      ) : null}
-    </>
-  );
-
+export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
       <div className="flex h-14 w-full items-center gap-3 px-4 lg:header-stripe-paper lg:grid lg:h-16 lg:grid-cols-[minmax(18rem,26%)_minmax(0,1fr)] lg:gap-0 lg:px-0 lg:shadow-none">
         <div className="flex min-w-0 flex-1 items-center lg:h-16 lg:flex-none lg:header-stripe-board lg:awning-board lg:px-4">
           <div className="flex min-w-0 items-center gap-2.5">
-            <Link href="/" aria-label={`${SITE_NAME} home`} className="shrink-0">
-              <SiteMark className="size-8" priority />
+            <Link href="/" prefetch={false} aria-label={`${SITE_NAME} home`} className="shrink-0">
+              <SiteMark className="size-8" />
             </Link>
             <span className="min-w-0 leading-none">
               <Link
                 href="/"
+                prefetch={false}
                 className="type-wordmark block text-foreground lg:text-chalk"
               >
                 {SITE_NAME}
@@ -87,7 +68,7 @@ export async function SiteHeader() {
               Find
             </button>
           </form>
-          {account}
+          <HeaderAccount />
         </div>
       </div>
       <nav

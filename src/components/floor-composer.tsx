@@ -3,15 +3,18 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { composeFloorNote } from "@/app/actions/presence";
 import { useGeo } from "@/components/geo-provider";
-import { AsteriskMark, CloseMark, PlateMark, TagMark } from "@/components/marks";
+import { ScorePlate } from "@/components/listing-score";
+import { CloseMark, PlateMark, TagMark } from "@/components/marks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FLOOR_TAGS, isSupabaseConfigured } from "@/lib/constants";
 import { formatPriceLevel } from "@/lib/format";
 import { NOTE_PROMPTS } from "@/lib/floor-note";
+import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
 import { cn } from "@/lib/utils";
-import type { FloorItem, Market, StallRef } from "@/types/database";
+import type { FloorItem, StallRef } from "@/types/database";
+import type { GeoMarket } from "@/lib/geo";
 
 type Extra = "stars" | "place" | "tags" | null;
 type PlaceStep = "market" | "vendor";
@@ -32,19 +35,22 @@ function fold(value: string) {
 }
 
 export function FloorComposer({
-  signedIn,
+  signedIn: signedInProp = false,
   stalls,
   markets,
   onPosted,
+  autoFocus = false,
 }: {
-  signedIn: boolean;
-  stalls: StallRef[];
-  markets: Market[];
+  signedIn?: boolean;
+  stalls: Array<Pick<StallRef, "id" | "name" | "slug" | "market_id" | "stall">>;
+  markets: GeoMarket[];
   onPosted: (item: FloorItem) => void;
+  autoFocus?: boolean;
 }) {
   const { nearby, coords, error, request } = useGeo();
   const here = nearby[0];
   const demo = !isSupabaseConfigured();
+  const [signedIn, setSignedIn] = useState(signedInProp);
   const [body, setBody] = useState("");
   const [rating, setRating] = useState(0);
   const [price, setPrice] = useState(0);
@@ -96,6 +102,28 @@ export function FloorComposer({
       return tokens.every((token) => hay.includes(token));
     });
   }, [manyStalls, stallOptions, vendorQuery]);
+
+  useEffect(() => {
+    const hasCookie = document.cookie.split(";").some((part) => {
+      const name = part.trim().split("=")[0];
+      return cookieLooksLikeSupabaseAuth(name);
+    });
+    if (!hasCookie) {
+      setSignedIn(false);
+      return;
+    }
+    let cancelled = false;
+    void import("@/lib/supabase/client").then(({ createBrowserSupabaseClient }) => {
+      const supabase = createBrowserSupabaseClient();
+      if (!supabase || cancelled) return;
+      return supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!cancelled) setSignedIn(Boolean(session?.user));
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (extra !== "place") return;
@@ -216,6 +244,7 @@ export function FloorComposer({
         id="floor-post"
         className="min-h-[4.5rem] max-h-40 resize-none border-0 bg-transparent px-0 py-1 text-lg shadow-none md:text-lg focus-visible:border-transparent focus-visible:ring-0"
         rows={3}
+        autoFocus={autoFocus}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder={prompt}
@@ -228,13 +257,13 @@ export function FloorComposer({
               <button
                 type="button"
                 onClick={() => setExtra("stars")}
-                className="px-2 py-0.5 text-sm"
+                className="px-2 py-0.5 font-mono text-sm tabular-nums tracking-tight"
               >
-                {rating} / 5
+                {rating}
               </button>
               <button
                 type="button"
-                aria-label="Remove rating"
+                aria-label="Remove score"
                 onClick={() => setRating(0)}
                 className="px-1.5 text-sm opacity-80 hover:opacity-100"
               >
@@ -307,13 +336,20 @@ export function FloorComposer({
       ) : null}
 
       <div className="mt-1.5 flex flex-wrap items-center gap-1">
-        <ExtraButton
-          label="Stars"
-          open={extra === "stars"}
+        <button
+          type="button"
+          aria-label="Score"
+          aria-expanded={extra === "stars"}
           onClick={() => setExtra((current) => (current === "stars" ? null : "stars"))}
+          className={cn(
+            "stall-chip-sm inline-flex h-8 min-w-8 items-center justify-center px-2 font-mono text-sm tabular-nums tracking-tight",
+            extra === "stars" || rating
+              ? "bg-ticket text-foreground"
+              : "bg-secondary text-muted-foreground hover:bg-muted",
+          )}
         >
-          <AsteriskMark className={cn("size-4", rating ? "text-ticket" : "")} />
-        </ExtraButton>
+          {rating || "–"}
+        </button>
         <ExtraButton
           label="Market"
           open={extra === "place"}
@@ -370,19 +406,24 @@ export function FloorComposer({
 
       {extra === "stars" ? (
         <ExtraPanel title="Score" hint="Optional. Click outside the box to keep it on this review.">
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1.5">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
                 key={n}
                 type="button"
                 onClick={() => setRating((current) => (current === n ? 0 : n))}
-                className={cn(
-                  "flex size-9 items-center justify-center rounded-md text-sm",
-                  n <= rating ? "bg-ticket text-foreground" : "bg-secondary text-muted-foreground",
-                )}
-                aria-label={`${n} star${n === 1 ? "" : "s"}`}
+                aria-pressed={n === rating}
+                aria-label={`${n} out of 5`}
               >
-                {n}
+                <ScorePlate
+                  className={
+                    n === rating
+                      ? undefined
+                      : "bg-secondary text-muted-foreground"
+                  }
+                >
+                  {n}
+                </ScorePlate>
               </button>
             ))}
           </div>
@@ -472,9 +513,9 @@ function MarketStep({
   query: string;
   onQuery: (value: string) => void;
   searchRef: React.RefObject<HTMLInputElement | null>;
-  here?: Market;
-  current: Market | null;
-  matches: Market[];
+  here?: GeoMarket;
+  current: GeoMarket | null;
+  matches: GeoMarket[];
   onPick: (id: string) => void;
   onKeep?: () => void;
 }) {
@@ -546,7 +587,7 @@ function VendorStep({
   onQuery: (value: string) => void;
   searchRef: React.RefObject<HTMLInputElement | null>;
   many: boolean;
-  matches: StallRef[];
+  matches: Array<Pick<StallRef, "id" | "name" | "slug" | "market_id" | "stall">>;
   taggedId?: string;
   taggedName?: string;
   stallCount: number;
