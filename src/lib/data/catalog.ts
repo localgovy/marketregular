@@ -479,6 +479,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
     .from("vendors")
     .select(VENDOR_PUBLIC)
     .eq("slug", slug)
+    .eq("status", "published")
     .maybeSingle();
   if (!vendor) return localVendorBySlug(slug);
 

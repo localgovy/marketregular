@@ -65,10 +65,6 @@ export const marketReviewStats: Record<string, ReviewStats> = {
     "review_count": 5,
     "rating_avg": 3.8
   },
-  "sickkids-market-indoor-winter": {
-    "review_count": 5,
-    "rating_avg": 3.8
-  },
   "sorauren-farmers-market": {
     "review_count": 186,
     "rating_avg": 4.71

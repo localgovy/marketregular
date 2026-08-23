@@ -59,7 +59,7 @@ export default async function VendorPage({
         <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
       </div>
       {vendor.markets.length ? (
-        <p className="type-lede mt-2 text-muted-foreground">
+        <p className="type-lede mt-2 max-w-3xl text-pretty text-muted-foreground">
           {vendor.markets.map((market, index) => (
             <span key={market.id}>
               {index === 0 ? "At " : index === vendor.markets.length - 1 ? " and " : ", "}

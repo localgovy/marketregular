@@ -8,13 +8,14 @@ import { SaveButton } from "@/components/save-button";
 import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
 import { MarketVendors } from "@/components/market-vendors";
+import { NowLabel } from "@/components/now-label";
 import { ScheduleList } from "@/components/schedule-list";
 import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { sortTagsForDisplay } from "@/lib/find-paths";
-import { hoursLine, marketPageDescription, marketPageTitle } from "@/lib/listing-copy";
-import { Hours } from "@/components/hours";
+import { marketPageDescription, marketPageTitle } from "@/lib/listing-copy";
+import { nextOpenLabel } from "@/lib/schedule";
 import { marketJsonLd, pageMeta } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -52,7 +53,9 @@ export default async function MarketPage({
   ]);
   if (!market) notFound();
 
-  const hours = hoursLine(market.schedules);
+  const when = market.schedules.length
+    ? nextOpenLabel(market.schedules, market.province)
+    : null;
   const avgRated = market.feed.filter((item) => item.rating != null);
   const avg =
     avgRated.length > 0
@@ -70,10 +73,10 @@ export default async function MarketPage({
         <h1>{market.name}</h1>
         <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
       </div>
-      {hours ? (
-        <p className="mt-2 text-muted-foreground">
-          <Hours value={hours} />
-        </p>
+      {when === "Open now" ? (
+        <NowLabel className="mt-2">{when}</NowLabel>
+      ) : when ? (
+        <p className="mt-2 text-base font-medium text-primary">{when}</p>
       ) : null}
       <ListingScore
         className="mt-3 text-base"

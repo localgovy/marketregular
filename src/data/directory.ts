@@ -610,7 +610,7 @@ export const seedMarkets: SeedMarket[] = [
     id: "00000000-0000-0000-0000-000000000020",
     slug: "sickkids-market",
     name: "SickKids Market",
-    about: "An Appletree market serving hospital families, staff and the surrounding neighbourhood with farm-fresh products and lunchtime options. This record represents the weekly outdoor market on the hospital’s University Avenue front driveway.",
+    about: "An Appletree market at SickKids Hospital for families, staff, and the neighbourhood. Outdoors Tuesdays 10 AM–2 PM, May through October, on the University Avenue driveway. Indoors every second Tuesday 11 AM–2 PM, January through April, in the atrium off the Elizabeth Street entrance.",
     address: "555 University Avenue",
     city: "Toronto",
     province: "ON",
@@ -620,7 +620,7 @@ export const seedMarkets: SeedMarket[] = [
     geofence_radius_m: 250,
     website: "https://www.appletreemarkets.ca/markets",
     phone: "416-899-1990",
-    tags: ["bakery", "cheese", "honey", "prepared-food", "outdoor", "seasonal", "transit", "accessible"],
+    tags: ["bakery", "cheese", "honey", "prepared-food", "outdoor", "indoor", "seasonal", "transit", "accessible"],
     featured: false,
     schedules: [
       {
@@ -630,6 +630,14 @@ export const seedMarkets: SeedMarket[] = [
         season_start: "05-05",
         season_end: "10-27",
         notes: "University Avenue front driveway.",
+      },
+      {
+        weekday: 2,
+        opens_at: "11:00",
+        closes_at: "14:00",
+        season_start: "01-13",
+        season_end: "04-21",
+        notes: "Indoor atrium off the Elizabeth Street entrance. Every second Tuesday.",
       },
     ],
   },
@@ -2291,16 +2299,6 @@ export const seedVendors: SeedVendor[] = [
     menus: [],
   },
   {
-    id: "00000000-0000-0000-0000-000000000236",
-    slug: "the-agrarian-kitchen-the-strong-earth-company",
-    name: "The Agrarian Kitchen & The Strong Earth Company",
-    about: null,
-    website: null,
-    phone: null,
-    tags: ["bakery"],
-    menus: [],
-  },
-  {
     id: "00000000-0000-0000-0000-000000000237",
     slug: "the-cutting-veg",
     name: "Cutting Veg Toronto",
@@ -3343,8 +3341,8 @@ export const seedVendors: SeedVendor[] = [
   {
     id: "00000000-0000-0000-0000-000000000341",
     slug: "agrarian-kitchen",
-    name: "Agrarian Kitchen/Strong Food Company",
-    about: null,
+    name: "Agrarian Kitchen & The Strong Earth Company",
+    about: "Agrarian Kitchen makes small-batch preserves, cakes, pickles, pies, and made-to-order sourdough pizza with a three-day fermented crust, using peak-season produce from local farmers and fellow market vendors. Its sister stall, The Strong Earth Company, grows seedlings, annuals, and perennials from urban Toronto gardens and sells houseplants and terrariums. At Evergreen Brick Works they are known for sticky toffee pudding, maple crème brûlée, and sticky buns made with maple from more than 20 years of tapping trees at a family cottage.",
     website: null,
     phone: null,
     tags: ["bakery", "plants", "prepared-food", "preserves"],
@@ -8475,7 +8473,7 @@ export const seedMarketVendors: MarketVendor[] = [
   },
   {
     market_id: "00000000-0000-0000-0000-000000000002",
-    vendor_id: "00000000-0000-0000-0000-000000000236",
+    vendor_id: "00000000-0000-0000-0000-000000000341",
     stall: null,
     days: [
       6,
@@ -10779,7 +10777,7 @@ export const seedMarketVendors: MarketVendor[] = [
   },
   {
     market_id: "00000000-0000-0000-0000-000000000007",
-    vendor_id: "00000000-0000-0000-0000-000000000236",
+    vendor_id: "00000000-0000-0000-0000-000000000341",
     stall: null,
     days: [
       6,

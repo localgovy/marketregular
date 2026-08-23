@@ -59,10 +59,11 @@ export function marketPageDescription({
   if (about?.trim()) return clipMeta(about);
   const hours = hoursLine(schedules);
   return hours
-    ? `${name} in ${city}, ${province}. ${hours}.`
+    ? clipMeta(`${name} in ${city}, ${province}. ${hours}.`)
     : `${name} in ${city}, ${province}.`;
 }
 
+/** Meta descriptions only. Do not render as page copy — the Hours list is the schedule. */
 export function hoursLine(schedules: MarketSchedule[]) {
   return schedules
     .map((row) => {
