@@ -25,7 +25,7 @@ export function DirectoryResults({
 
   return (
     <>
-      <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-x-8">
+      <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)] lg:gap-x-4">
         <section id="directory-markets" className="scroll-mt-24">
           <h2 className="mb-4">Markets</h2>
           {markets.length ? (
@@ -38,6 +38,7 @@ export function DirectoryResults({
             <p className="text-muted-foreground">No markets match those filters.</p>
           )}
         </section>
+        <div aria-hidden data-directory-rule className="hidden w-0.5 self-stretch bg-board lg:block" />
         <section id="directory-vendors" className="scroll-mt-24">
           <h2 className="mb-4">Vendors</h2>
           {vendors.length ? (

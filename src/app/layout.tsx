@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Mona_Sans, Schibsted_Grotesk } from "next/font/google";
+import { Azeret_Mono, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -19,6 +19,12 @@ const display = Mona_Sans({
   variable: "--font-display",
   display: "swap",
   axes: ["wdth"],
+});
+
+const ticket = Azeret_Mono({
+  subsets: ["latin"],
+  variable: "--font-ticket",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -55,7 +61,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-CA"
-      className={`${grotesk.variable} ${display.variable} h-full antialiased`}
+      className={`${grotesk.variable} ${display.variable} ${ticket.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <JsonLd data={websiteJsonLd()} />
