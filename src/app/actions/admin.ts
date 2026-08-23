@@ -60,7 +60,9 @@ export async function saveMarket(formData: FormData) {
   }
   revalidatePath("/");
   revalidatePath("/markets");
+  revalidatePath(`/markets/${payload.slug}`);
   revalidatePath("/admin");
+  revalidatePath("/admin/markets");
   redirect("/admin/markets");
 }
 
