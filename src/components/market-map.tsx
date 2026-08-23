@@ -17,6 +17,15 @@ import type { Market } from "@/types/database";
 // next to its shared chunk so the map does not load index.html as a module.
 setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function pinElement() {
   const el = document.createElement("div");
   el.className = "market-map-pin";
@@ -51,8 +60,10 @@ export function MarketMap({
     const bounds = new LngLatBounds();
     for (const market of markets) {
       bounds.extend([market.lng, market.lat]);
+      const href = `/markets/${encodeURIComponent(market.slug)}`;
+      const place = market.address ?? market.city;
       const popup = new Popup({ offset: 16 }).setHTML(
-        `<a href="/markets/${market.slug}" style="font-weight:600;color:#1a1714">${market.name}</a><div style="color:#5e5a53">${market.address ?? market.city}</div>`,
+        `<a href="${escapeHtml(href)}" style="font-weight:600;color:#1a1714">${escapeHtml(market.name)}</a><div style="color:#5e5a53">${escapeHtml(place)}</div>`,
       );
       const marker = new Marker({ element: pinElement(), anchor: "bottom" })
         .setLngLat([market.lng, market.lat])

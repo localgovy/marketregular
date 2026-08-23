@@ -49,6 +49,12 @@ function publicDb() {
 
 const PAGE = 1000;
 
+/** Anon cannot SELECT * (email / claimed_by are revoked). */
+const MARKET_PUBLIC =
+  "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, phone, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok";
+const VENDOR_PUBLIC =
+  "id, slug, name, about, website, phone, tags, status, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok";
+
 async function fetchAllRows<T>(
   run: (from: number, to: number) => PromiseLike<{
     data: T[] | null;
@@ -130,7 +136,7 @@ export async function listMarkets(): Promise<Market[]> {
   const { data, error } = await fetchAllRows<Market>((from, to) =>
     supabase
       .from("markets")
-      .select("*")
+      .select(MARKET_PUBLIC)
       .eq("status", "published")
       .ilike("city", LAUNCH_CITY)
       .order("name")
@@ -146,7 +152,7 @@ export async function listVendors(): Promise<Vendor[]> {
   const { data, error } = await fetchAllRows<Vendor>((from, to) =>
     supabase
       .from("vendors")
-      .select("*")
+      .select(VENDOR_PUBLIC)
       .eq("status", "published")
       .order("name")
       .range(from, to),
@@ -284,10 +290,10 @@ export async function searchDirectory(filters: SearchFilters) {
 
   let marketQuery = supabase
     .from("markets")
-    .select("*")
+    .select(MARKET_PUBLIC)
     .eq("status", "published")
     .ilike("city", LAUNCH_CITY);
-  let vendorQuery = supabase.from("vendors").select("*").eq("status", "published");
+  let vendorQuery = supabase.from("vendors").select(VENDOR_PUBLIC).eq("status", "published");
 
   if (filters.q?.trim()) {
     const q = `%${filters.q.trim()}%`;
@@ -366,7 +372,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
 
   const { data: market } = await supabase
     .from("markets")
-    .select("*")
+    .select(MARKET_PUBLIC)
     .eq("slug", slug)
     .maybeSingle();
   if (!market) return localMarketBySlug(slug);
@@ -393,7 +399,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
   const vendorIdList = (links ?? []).map((l: { vendor_id: string }) => l.vendor_id);
   const [{ data: vendors }, hallsMap] = await Promise.all([
     vendorIdList.length > 0
-      ? supabase.from("vendors").select("*").in("id", vendorIdList)
+      ? supabase.from("vendors").select(VENDOR_PUBLIC).in("id", vendorIdList)
       : Promise.resolve({ data: [] as Vendor[] }),
     hallsByVendorIds(vendorIdList),
   ]);
@@ -456,7 +462,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
 
   const { data: vendor } = await supabase
     .from("vendors")
-    .select("*")
+    .select(VENDOR_PUBLIC)
     .eq("slug", slug)
     .maybeSingle();
   if (!vendor) return localVendorBySlug(slug);
@@ -481,7 +487,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
   const marketIds = (links ?? []).map((l: { market_id: string }) => l.market_id);
   const { data: markets } =
     marketIds.length > 0
-      ? await supabase.from("markets").select("*").in("id", marketIds)
+      ? await supabase.from("markets").select(MARKET_PUBLIC).in("id", marketIds)
       : { data: [] };
   const marketMap = new Map((markets ?? []).map((m: Market) => [m.id, withListingStats(m)]));
 
@@ -646,7 +652,7 @@ export async function getFeaturedMarkets() {
   if (!supabase) return localFeatured();
   const { data } = await supabase
     .from("markets")
-    .select("*")
+    .select(MARKET_PUBLIC)
     .eq("status", "published")
     .eq("featured", true)
     .ilike("city", LAUNCH_CITY)

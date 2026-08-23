@@ -2,6 +2,7 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { slugify } from "@/lib/format";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -194,7 +195,17 @@ export async function decideClaim(id: string, status: "approved" | "rejected", n
   if (status === "approved") {
     const table = claim.target_type === "market" ? "markets" : "vendors";
     await supabase.from(table).update({ claimed_by: claim.user_id }).eq("id", claim.target_id);
-    await supabase.from("profiles").update({ role: "vendor" }).eq("id", claim.user_id);
+    const service = createServiceClient();
+    if (service) {
+      const { data: profile } = await service
+        .from("profiles")
+        .select("role")
+        .eq("id", claim.user_id)
+        .maybeSingle();
+      if (profile?.role !== "admin") {
+        await service.from("profiles").update({ role: "vendor" }).eq("id", claim.user_id);
+      }
+    }
   }
   revalidatePath("/admin/claims");
 }

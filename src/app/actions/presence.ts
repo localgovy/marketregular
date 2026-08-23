@@ -1,9 +1,11 @@
 "use server";
 
-import { isWithinGeofence } from "@/lib/geo";
 import { encodeFloorBody } from "@/lib/floor-note";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+
+const FLAG_TABLES = new Set(["posts", "reviews"] as const);
+type FlagTable = typeof FLAG_TABLES extends Set<infer T> ? T : never;
 
 async function getClient() {
   return createServerSupabaseClient();
@@ -28,40 +30,8 @@ function hasCoords(lat?: number, lng?: number) {
   );
 }
 
-async function verifyOnSite(
-  supabase: NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>,
-  marketId: string,
-  lat: number,
-  lng: number,
-) {
-  const { data: rpc } = await supabase.rpc("is_within_market", {
-    p_market_id: marketId,
-    p_lat: lat,
-    p_lng: lng,
-  });
-  if (rpc === true) return true;
-
-  const { data: market } = await supabase
-    .from("markets")
-    .select("lat, lng, geofence_radius_m, status")
-    .eq("id", marketId)
-    .maybeSingle();
-  if (!market || market.status !== "published") return false;
-  return isWithinGeofence(
-    { lat, lng },
-    { lat: market.lat, lng: market.lng },
-    market.geofence_radius_m,
-  );
-}
-
-async function onSiteIfShared(
-  supabase: NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>,
-  marketId: string,
-  lat?: number,
-  lng?: number,
-) {
-  if (!hasCoords(lat, lng)) return false;
-  return verifyOnSite(supabase, marketId, lat!, lng!);
+function isFlagTable(table: string): table is FlagTable {
+  return FLAG_TABLES.has(table as FlagTable);
 }
 
 export async function createPost(input: {
@@ -89,8 +59,6 @@ export async function createPost(input: {
   if (demo) return { error: null, demo: true };
   if (!supabase || !user) return { error: "Sign in to review." };
 
-  const onSite = await onSiteIfShared(supabase, input.marketId, input.lat, input.lng);
-
   const { count } = await supabase
     .from("posts")
     .select("id", { count: "exact", head: true })
@@ -100,14 +68,26 @@ export async function createPost(input: {
     return { error: "Daily review limit reached. See you tomorrow." };
   }
 
-  const { error } = await supabase.from("posts").insert({
-    user_id: user.id,
-    market_id: input.marketId,
-    body,
-    photos: input.photos ?? [],
-    verified_on_site: onSite,
-  });
+  const { data: inserted, error } = await supabase
+    .from("posts")
+    .insert({
+      user_id: user.id,
+      market_id: input.marketId,
+      body,
+      photos: input.photos ?? [],
+      verified_on_site: false,
+    })
+    .select("id")
+    .single();
   if (error) return { error: error.message };
+
+  if (inserted && hasCoords(input.lat, input.lng)) {
+    await supabase.rpc("confirm_on_site", {
+      p_post_id: inserted.id,
+      p_lat: input.lat,
+      p_lng: input.lng,
+    });
+  }
 
   const { data: market } = await supabase
     .from("markets")
@@ -150,21 +130,31 @@ export async function createReview(input: {
   }
   if (!marketId) return { error: "Could not match this vendor to a market." };
 
-  const onSite = await onSiteIfShared(supabase, marketId, input.lat, input.lng);
-
-  const { error } = await supabase.from("reviews").insert({
-    user_id: user.id,
-    market_id: input.vendorId ? input.marketId ?? null : marketId,
-    vendor_id: input.vendorId ?? null,
-    rating: input.rating,
-    body,
-    verified_on_site: onSite,
-  });
+  const { data: inserted, error } = await supabase
+    .from("reviews")
+    .insert({
+      user_id: user.id,
+      market_id: input.vendorId ? input.marketId ?? null : marketId,
+      vendor_id: input.vendorId ?? null,
+      rating: input.rating,
+      body,
+      verified_on_site: false,
+    })
+    .select("id")
+    .single();
   if (error) {
     if (error.code === "23505") {
       return { error: "You already reviewed this. One review per listing." };
     }
     return { error: error.message };
+  }
+
+  if (inserted && hasCoords(input.lat, input.lng)) {
+    await supabase.rpc("confirm_review_on_site", {
+      p_review_id: inserted.id,
+      p_lat: input.lat,
+      p_lng: input.lng,
+    });
   }
 
   revalidatePath("/");
@@ -201,6 +191,7 @@ export async function composeFloorNote(input: {
 }
 
 export async function flagItem(table: "posts" | "reviews", id: string) {
+  if (!isFlagTable(table)) return { error: "Admins only." };
   const { supabase, user, demo } = await requireUser();
   if (demo || !supabase || !user) return { error: "Admins only." };
   const { data: profile } = await supabase
@@ -217,6 +208,7 @@ export async function flagItem(table: "posts" | "reviews", id: string) {
 }
 
 export async function unflagItem(table: "posts" | "reviews", id: string) {
+  if (!isFlagTable(table)) return { error: "Admins only." };
   const { supabase, user, demo } = await requireUser();
   if (demo || !supabase || !user) return { error: "Admins only." };
   const { data: profile } = await supabase

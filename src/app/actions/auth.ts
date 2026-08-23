@@ -1,26 +1,18 @@
 "use server";
 
+import { authOrigin, safePath } from "@/lib/auth-redirect";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-
-async function originFromHeaders() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  if (!host) return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  return `${proto}://${host}`;
-}
 
 export async function signInWithPassword(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { error: "Supabase is not configured yet." };
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const next = String(formData.get("next") ?? "/account");
+  const next = safePath(formData.get("next"));
   const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw new Error(error.message);
-    redirect(next || "/account");
+    redirect(next);
 }
 
 export async function signUpWithPassword(formData: FormData) {
@@ -29,7 +21,7 @@ export async function signUpWithPassword(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
   const displayName = String(formData.get("display_name") ?? "");
-  const origin = await originFromHeaders();
+  const origin = authOrigin();
   const { error } = await supabase.auth.signUp({
     email,
     password,
@@ -46,7 +38,7 @@ export async function signInWithMagicLink(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { error: "Supabase is not configured yet." };
   const email = String(formData.get("email") ?? "");
-  const origin = await originFromHeaders();
+  const origin = authOrigin();
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: `${origin}/auth/callback` },
@@ -58,11 +50,12 @@ export async function signInWithMagicLink(formData: FormData) {
 export async function signInWithGoogle(next = "/account") {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { error: "Supabase is not configured yet." };
-  const origin = await originFromHeaders();
+  const origin = authOrigin();
+  const path = safePath(next);
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(path)}`,
     },
   });
   if (error || !data.url) return { error: error?.message ?? "OAuth failed" };

@@ -26,14 +26,14 @@ export type Market = {
   instagram: string | null;
   tiktok: string | null;
   phone: string | null;
-  email: string | null;
+  email?: string | null;
   logo_url: string | null;
   tags: string[];
   status: ListingStatus;
   featured: boolean;
   review_count: number;
   rating_avg: number | null;
-  claimed_by: string | null;
+  claimed_by?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -63,7 +63,7 @@ export type Vendor = {
   status: ListingStatus;
   review_count: number;
   rating_avg: number | null;
-  claimed_by: string | null;
+  claimed_by?: string | null;
   created_at?: string;
 };
 

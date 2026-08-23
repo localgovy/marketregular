@@ -13,6 +13,16 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      {
+        source: "/vendors/the-agrarian-kitchen-the-strong-earth-company",
+        destination: "/vendors/agrarian-kitchen",
+        permanent: true,
+      },
+      {
+        source: "/markets/sickkids-market-indoor-winter",
+        destination: "/markets/sickkids-market",
+        permanent: true,
+      },
       { source: "/search", destination: "/markets", permanent: true },
       { source: "/vendors", destination: "/markets", permanent: true },
       { source: "/login", destination: "/", permanent: false },
@@ -20,6 +30,21 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.openfreemap.org",
+      "font-src 'self' data: https://*.openfreemap.org",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.openfreemap.org",
+      "worker-src 'self' blob:",
+      "child-src 'self' blob:",
+      "frame-ancestors 'self'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "object-src 'none'",
+      "upgrade-insecure-requests",
+    ].join("; ");
     const security = [
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -27,6 +52,11 @@ const nextConfig: NextConfig = {
       {
         key: "Strict-Transport-Security",
         value: "max-age=63072000; includeSubDomains; preload",
+      },
+      { key: "Content-Security-Policy", value: csp },
+      {
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=(self), payment=(), usb=()",
       },
     ];
     return [

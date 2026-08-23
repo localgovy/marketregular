@@ -36,7 +36,18 @@ export function formatPhone(phone: string) {
 export function externalHref(href: string | null | undefined) {
   const value = href?.trim();
   if (!value) return null;
-  return value.replace(/([^:])\/{2,}/g, "$1/");
+  const collapsed = value.replace(/([^:])\/{2,}/g, "$1/");
+  const withScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(collapsed)
+    ? collapsed
+    : `https://${collapsed}`;
+  try {
+    const url = new URL(withScheme);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (url.username || url.password) return null;
+    return url.href;
+  } catch {
+    return null;
+  }
 }
 
 export function timeAgo(iso: string) {

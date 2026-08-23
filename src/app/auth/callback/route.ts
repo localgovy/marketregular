@@ -1,15 +1,16 @@
-import { NextResponse } from "next/server";
+import { authOrigin, safePath } from "@/lib/auth-redirect";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/account";
+  const next = safePath(searchParams.get("next"));
   if (code) {
     const supabase = await createServerSupabaseClient();
     if (supabase) {
       await supabase.auth.exchangeCodeForSession(code);
     }
   }
-  return NextResponse.redirect(`${origin}${next}`);
+  return NextResponse.redirect(new URL(next, authOrigin()));
 }

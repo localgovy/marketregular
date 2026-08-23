@@ -17,6 +17,10 @@ export async function requireAdmin() {
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
+  if (profile?.role === "admin") {
+    return { supabase, user, error: null };
+  }
+
   const allowList = (process.env.ADMIN_EMAILS ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
@@ -25,16 +29,12 @@ export async function requireAdmin() {
     ? allowList.includes(user.email.toLowerCase())
     : false;
 
-  if (profile?.role !== "admin" && isAllowListed) {
-    const service = createServiceClient();
-    if (service) {
-      await service.from("profiles").update({ role: "admin" }).eq("id", user.id);
-    } else {
-      await supabase.from("profiles").update({ role: "admin" }).eq("id", user.id);
-    }
-  } else if (profile?.role !== "admin" && !isAllowListed) {
-    redirect("/");
-  }
+  if (!isAllowListed) redirect("/");
+
+  const service = createServiceClient();
+  if (!service) redirect("/");
+  const { error } = await service.from("profiles").update({ role: "admin" }).eq("id", user.id);
+  if (error) redirect("/");
 
   return { supabase, user, error: null };
 }
