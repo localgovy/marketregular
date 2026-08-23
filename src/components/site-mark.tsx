@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { SITE_LOGO, STUDIO_LOGO } from "@/lib/constants";
+import { SITE_LOGO, STUDIO_WORDMARK } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export function SiteMark({
@@ -23,16 +23,18 @@ export function SiteMark({
   );
 }
 
-export function StudioMark({ className }: { className?: string }) {
+export function StudioWordmark({ className }: { className?: string }) {
   return (
-    <Image
-      src={STUDIO_LOGO}
-      alt=""
-      width={192}
-      height={192}
-      sizes="20px"
+    <span
       aria-hidden
-      className={cn("size-5 shrink-0 rounded-[2px]", className)}
+      className={cn(
+        "studio-wordmark text-primary lg:text-[#8fc9b4]",
+        className,
+      )}
+      style={{
+        WebkitMaskImage: `url(${STUDIO_WORDMARK})`,
+        maskImage: `url(${STUDIO_WORDMARK})`,
+      }}
     />
   );
 }

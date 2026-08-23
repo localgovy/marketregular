@@ -183,6 +183,21 @@
   @apply text-sm;
 }
 
+/* localgovy lockup: glyph mask, color from currentColor. */
+@utility studio-wordmark {
+  display: inline-block;
+  height: 0.95em;
+  width: 4.27em;
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
 /* Sentence under a page title. */
 @utility type-lede {
   @apply text-lg leading-snug;

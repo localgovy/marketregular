@@ -25,6 +25,7 @@ export const SITE_LOGO = "/brand/market-regular-logo.png";
 export const STUDIO_NAME = "localgovy";
 export const STUDIO_URL = "https://localgovy.com";
 export const STUDIO_LOGO = "/brand/localgovy-mark.png";
+export const STUDIO_WORDMARK = "/brand/localgovy-wordmark.png";
 
 export const PROVINCES = [
   { code: "AB", name: "Alberta", tz: "America/Edmonton" },

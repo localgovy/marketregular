@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { HeaderAccount } from "@/components/header-account";
 import { NavLink } from "@/components/nav-link";
-import { SiteMark, StudioMark } from "@/components/site-mark";
+import { SiteMark, StudioWordmark } from "@/components/site-mark";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
@@ -25,18 +25,15 @@ export function SiteHeader() {
               >
                 {SITE_NAME}
               </Link>
-              <span className="type-kicker mt-0.5 flex items-center gap-1.5 text-muted-foreground lg:text-chalk/70">
-                <span className="hidden sm:inline">Toronto</span>
-                <span className="hidden sm:inline" aria-hidden>
-                  ·
-                </span>
+              <span className="type-kicker mt-0.5 flex items-center gap-1 text-muted-foreground lg:text-chalk/70">
                 <a
                   href={STUDIO_URL}
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1 outline-none hover:text-foreground hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:hover:text-chalk"
+                  aria-label={`by ${STUDIO_NAME}`}
+                  className="inline-flex items-center gap-1 outline-none hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                 >
-                  <StudioMark />
-                  <span>by {STUDIO_NAME}</span>
+                  <span>by</span>
+                  <StudioWordmark />
                 </a>
               </span>
             </span>

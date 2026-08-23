@@ -67,10 +67,12 @@ export function HomeCensus({
           word={markets === 1 ? "market" : "markets"}
         />
         <CensusCell
+          href="/markets"
           value={vendors}
           word={vendors === 1 ? "vendor" : "vendors"}
         />
         <CensusCell
+          href="/markets"
           value={menus}
           word={menus === 1 ? "menu item" : "menu items"}
         />
