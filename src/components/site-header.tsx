@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { NavLink } from "@/components/nav-link";
-import { SiteMark } from "@/components/site-mark";
+import { SiteMark, StudioMark } from "@/components/site-mark";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCurrentProfile } from "@/lib/data/catalog";
-import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
 import { SITE_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
@@ -13,23 +13,35 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
-      <div className="header-stripe-paper flex h-16 w-full items-center gap-3 px-4 lg:grid lg:grid-cols-[minmax(240px,25%)_minmax(0,1fr)] lg:gap-0 lg:px-0 lg:shadow-none">
+      <div className="header-stripe-paper flex h-16 w-full items-center gap-3 px-4 lg:grid lg:grid-cols-[minmax(18rem,26%)_minmax(0,1fr)] lg:gap-0 lg:px-0 lg:shadow-none">
         <div className="flex h-16 items-center lg:header-stripe-board lg:awning-board lg:px-4">
-          <Link
-            href="/"
-            aria-label={`${SITE_NAME} home`}
-            className="flex min-w-0 shrink-0 items-center gap-2.5"
-          >
-            <SiteMark className="size-8 shrink-0" priority />
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Link href="/" aria-label={`${SITE_NAME} home`} className="shrink-0">
+              <SiteMark className="size-8" priority />
+            </Link>
             <span className="min-w-0 leading-none">
-              <span className="type-wordmark block text-foreground lg:text-chalk">
+              <Link
+                href="/"
+                className="type-wordmark block text-foreground lg:text-chalk"
+              >
                 {SITE_NAME}
-              </span>
-              <span className="type-kicker mt-0.5 hidden text-muted-foreground sm:block lg:text-chalk/70">
-                Toronto
+              </Link>
+              <span className="type-kicker mt-0.5 flex items-center gap-1.5 text-muted-foreground lg:text-chalk/70">
+                <span className="hidden sm:inline">Toronto</span>
+                <span className="hidden sm:inline" aria-hidden>
+                  ·
+                </span>
+                <a
+                  href={STUDIO_URL}
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 outline-none hover:text-foreground hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:hover:text-chalk"
+                >
+                  <StudioMark />
+                  <span>by {STUDIO_NAME}</span>
+                </a>
               </span>
             </span>
-          </Link>
+          </div>
         </div>
         <div className="flex h-16 min-w-0 flex-1 items-center justify-end gap-3 lg:header-stripe-paper lg:justify-start lg:px-6">
           <nav

@@ -21,6 +21,11 @@ function canonicalSiteUrl() {
 export const SITE_URL = canonicalSiteUrl();
 export const SITE_LOGO = "/brand/market-regular-logo.png";
 
+/** Studio that builds MarketRegular. Wordmark is lowercase. */
+export const STUDIO_NAME = "localgovy";
+export const STUDIO_URL = "https://localgovy.com";
+export const STUDIO_LOGO = "/brand/localgovy-mark.png";
+
 export const PROVINCES = [
   { code: "AB", name: "Alberta", tz: "America/Edmonton" },
   { code: "BC", name: "British Columbia", tz: "America/Vancouver" },
