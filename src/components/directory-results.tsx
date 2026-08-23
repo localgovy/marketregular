@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
 import type { DirectoryVendor } from "@/lib/vendor-halls";
 import type { Market } from "@/types/database";
 
-const PAGE = 15;
+const MARKET_PAGE = 10;
+const VENDOR_PAGE = 15;
 
 export function DirectoryResults({
   markets,
@@ -17,11 +18,10 @@ export function DirectoryResults({
   markets: Market[];
   vendors: DirectoryVendor[];
 }) {
-  const [pages, setPages] = useState(1);
-  const shownMarkets = markets.slice(0, pages * PAGE);
-  const shownVendors = vendors.slice(0, pages * PAGE);
-  const more =
-    shownMarkets.length < markets.length || shownVendors.length < vendors.length;
+  const [marketPages, setMarketPages] = useState(1);
+  const [vendorPages, setVendorPages] = useState(1);
+  const shownMarkets = markets.slice(0, marketPages * MARKET_PAGE);
+  const shownVendors = vendors.slice(0, vendorPages * VENDOR_PAGE);
 
   return (
     <>
@@ -37,6 +37,12 @@ export function DirectoryResults({
           ) : (
             <p className="text-muted-foreground">No markets match those filters.</p>
           )}
+          <ShowMore
+            shown={shownMarkets.length}
+            total={markets.length}
+            noun="markets"
+            onMore={() => setMarketPages((n) => n + 1)}
+          />
         </section>
         <div aria-hidden data-directory-rule className="hidden w-0.5 self-stretch bg-board lg:block" />
         <section id="directory-vendors" className="scroll-mt-24">
@@ -50,25 +56,44 @@ export function DirectoryResults({
           ) : (
             <p className="text-muted-foreground">No vendors match those filters.</p>
           )}
+          <ShowMore
+            shown={shownVendors.length}
+            total={vendors.length}
+            noun="vendors"
+            onMore={() => setVendorPages((n) => n + 1)}
+          />
         </section>
       </div>
-      {more ? (
-        <div className="mt-10 flex flex-col items-start gap-2">
-          <button
-            type="button"
-            onClick={() => setPages((n) => n + 1)}
-            className="stall-chip inline-flex h-11 min-w-[10rem] cursor-pointer items-center justify-center bg-primary px-5 text-sm font-medium text-primary-foreground outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-foreground"
-          >
-            Show more
-          </button>
-          <p className="text-sm text-muted-foreground">
-            {shownMarkets.length} of {markets.length} markets · {shownVendors.length} of{" "}
-            {vendors.length} vendors
-          </p>
-        </div>
-      ) : null}
       <BackToTop />
     </>
+  );
+}
+
+function ShowMore({
+  shown,
+  total,
+  noun,
+  onMore,
+}: {
+  shown: number;
+  total: number;
+  noun: string;
+  onMore: () => void;
+}) {
+  if (shown >= total) return null;
+  return (
+    <div className="mt-6 flex flex-col items-start gap-2">
+      <button
+        type="button"
+        onClick={onMore}
+        className="stall-chip inline-flex h-11 min-w-[10rem] cursor-pointer items-center justify-center bg-primary px-5 text-sm font-medium text-primary-foreground outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-foreground"
+      >
+        Show more
+      </button>
+      <p className="text-sm text-muted-foreground">
+        {shown} of {total} {noun}
+      </p>
+    </div>
   );
 }
 

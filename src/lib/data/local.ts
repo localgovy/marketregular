@@ -48,6 +48,10 @@ export function localVendors(): Vendor[] {
   return seedVendors.filter((v) => vendorIds.has(v.id)).map(toPublicVendor);
 }
 
+export function localMenuCount() {
+  return localVendors().reduce((n, vendor) => n + menusFor(vendor.id).length, 0);
+}
+
 export function localSearch(filters: SearchFilters) {
   const q = filters.q?.trim().toLowerCase();
   let markets = localMarkets();

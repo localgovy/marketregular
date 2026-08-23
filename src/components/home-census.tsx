@@ -57,7 +57,7 @@ function CensusCell({
 }) {
   const label = `${formatCount(value)} ${word}`;
   const className =
-    "flex min-w-0 items-baseline gap-2.5 px-4 py-3.5 text-foreground";
+    "flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-0.5 px-3 py-3.5 text-foreground sm:px-4";
   const inner = (
     <>
       <CensusValue value={value} />
@@ -85,16 +85,18 @@ function CensusCell({
 export function HomeCensus({
   markets,
   vendors,
+  menus,
 }: {
   markets: number;
   vendors: number;
+  menus: number;
 }) {
   return (
     <nav
       aria-label="On the directory"
       className="-mx-4 -mt-5 mb-5 bg-ticket lg:-mx-6 lg:-mt-6"
     >
-      <div className="grid grid-cols-2 divide-x divide-receipt/25">
+      <div className="grid grid-cols-3 divide-x divide-receipt/25">
         <CensusCell
           href="/markets"
           value={markets}
@@ -103,6 +105,10 @@ export function HomeCensus({
         <CensusCell
           value={vendors}
           word={vendors === 1 ? "vendor" : "vendors"}
+        />
+        <CensusCell
+          value={menus}
+          word={menus === 1 ? "menu item" : "menu items"}
         />
       </div>
     </nav>

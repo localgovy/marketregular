@@ -6,6 +6,7 @@ import {
   localFloorTape,
   localMarketBySlug,
   localMarkets,
+  localMenuCount,
   localPosts,
   localSchedules,
   localSearch,
@@ -67,6 +68,7 @@ async function fetchAllRows<T>(
 export type DirectoryCensus = {
   markets: number;
   vendors: number;
+  menus: number;
   talliedAt: string | null;
 };
 
@@ -76,24 +78,27 @@ export async function getDirectoryCensus(): Promise<DirectoryCensus> {
     return {
       markets: localMarkets().length,
       vendors: localVendors().length,
+      menus: localMenuCount(),
       talliedAt: null,
     };
   }
   const { data, error } = await supabase
     .from("directory_census")
-    .select("markets, vendors, tallied_at")
+    .select("markets, vendors, menus, tallied_at")
     .eq("id", LAUNCH_CITY.toLowerCase())
     .maybeSingle();
   if (error || !data) {
     return {
       markets: localMarkets().length,
       vendors: localVendors().length,
+      menus: localMenuCount(),
       talliedAt: null,
     };
   }
   return {
     markets: data.markets,
     vendors: data.vendors,
+    menus: data.menus ?? 0,
     talliedAt: data.tallied_at,
   };
 }

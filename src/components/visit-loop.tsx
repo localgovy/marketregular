@@ -32,7 +32,7 @@ export function HomeMosaic({
 }) {
   return (
     <div>
-      <HomeCensus markets={census.markets} vendors={census.vendors} />
+      <HomeCensus markets={census.markets} vendors={census.vendors} menus={census.menus} />
 
       <header className="mb-4 max-w-2xl">
         <h1>
