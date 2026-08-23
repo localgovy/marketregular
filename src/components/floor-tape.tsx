@@ -4,9 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FloorComposer } from "@/components/floor-composer";
 import { ReviewCard } from "@/components/review-card";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { reviewFromPost } from "@/lib/floor-note";
-import type { FloorItem, Market, Post, StallRef } from "@/types/database";
+import type { FloorItem, Market, StallRef } from "@/types/database";
 
 export function FloorTape({
   initialItems,
@@ -24,37 +22,6 @@ export function FloorTape({
   useEffect(() => {
     setItems(initialItems);
   }, [initialItems]);
-
-  useEffect(() => {
-    const supabase = createBrowserSupabaseClient();
-    if (!supabase) return;
-    const channel = supabase
-      .channel("floor-tape")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "posts" },
-        (payload) => {
-          const row = payload.new as Post;
-          if (row.flagged) return;
-          const item = reviewFromPost(
-            {
-              ...row,
-              author_name: "Someone on the floor",
-              photos: row.photos ?? [],
-            },
-            stalls,
-          );
-          setItems((current) => {
-            if (current.some((p) => p.id === item.id)) return current;
-            return [item, ...current].slice(0, 30);
-          });
-        },
-      )
-      .subscribe();
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [stalls]);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">

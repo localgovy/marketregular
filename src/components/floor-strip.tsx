@@ -198,7 +198,7 @@ function SpeedControls({
         className={cn(
           "stall-chip-sm inline-flex h-8 items-center gap-1 px-2.5 text-sm font-medium",
           open
-            ? "bg-ticket text-receipt"
+            ? "bg-ticket text-foreground"
             : "bg-secondary text-foreground hover:bg-muted",
         )}
       >
@@ -229,7 +229,7 @@ function SpeedControls({
                 className={cn(
                   "stall-chip-sm flex h-8 w-full items-center px-2.5 text-sm font-medium",
                   on
-                    ? "bg-ticket text-receipt"
+                    ? "bg-ticket text-foreground"
                     : "text-foreground hover:bg-muted",
                 )}
               >
@@ -256,7 +256,7 @@ export function FloorStrip({ openNow }: { openNow: Market[] }) {
       className="mb-5 bg-card shadow-[inset_4px_0_0_var(--ticket)] ring-1 ring-border"
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 sm:px-4">
-        <p className="min-w-0 text-base font-medium text-ticket">
+        <p className="min-w-0 text-base font-medium text-ticket-ink">
           <span className="font-mono tabular-nums">{openNow.length}</span>
           {` ${countLabel} open now`}
         </p>

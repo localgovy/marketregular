@@ -1,0 +1,14 @@
+# MarketRegular
+
+> Find Toronto farmers' markets and their vendors: this week's hours, maps, menus, reviews, and a live floor feed.
+
+MarketRegular is a directory of Toronto farmers' markets. Use it to see who is open, what stalls sell, and notes from the floor.
+
+## Pages
+
+- [Home](https://www.marketregular.com/): this week's markets, a map, and recent reviews
+- [Events](https://www.marketregular.com/events): calendar of market days
+- [Markets](https://www.marketregular.com/markets): searchable directory
+- [Feed](https://www.marketregular.com/feed): notes from the stalls
+
+Do not crawl /admin, /account, or /auth.

@@ -224,7 +224,7 @@ export function FloorComposer({
       {rating || market || tagged || tags.length ? (
         <ul className="mt-1.5 flex flex-wrap gap-1">
           {rating ? (
-            <li className="stall-chip-sm inline-flex overflow-hidden bg-ticket text-receipt">
+            <li className="stall-chip-sm inline-flex overflow-hidden bg-ticket text-foreground">
               <button
                 type="button"
                 onClick={() => setExtra("stars")}
@@ -345,7 +345,7 @@ export function FloorComposer({
                   className={cn(
                     "flex h-8 min-w-8 items-center justify-center rounded-full px-1.5 font-mono text-sm tabular-nums",
                     on
-                      ? "bg-ticket text-receipt"
+                      ? "bg-ticket text-foreground"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
@@ -378,7 +378,7 @@ export function FloorComposer({
                 onClick={() => setRating((current) => (current === n ? 0 : n))}
                 className={cn(
                   "flex size-9 items-center justify-center rounded-md text-sm",
-                  n <= rating ? "bg-ticket text-receipt" : "bg-secondary text-muted-foreground",
+                  n <= rating ? "bg-ticket text-foreground" : "bg-secondary text-muted-foreground",
                 )}
                 aria-label={`${n} star${n === 1 ? "" : "s"}`}
               >

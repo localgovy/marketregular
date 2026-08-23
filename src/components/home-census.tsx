@@ -57,7 +57,7 @@ function CensusCell({
 }) {
   const label = `${formatCount(value)} ${word}`;
   const className =
-    "flex min-w-0 items-baseline gap-2.5 px-4 py-3.5 text-receipt";
+    "flex min-w-0 items-baseline gap-2.5 px-4 py-3.5 text-foreground";
   const inner = (
     <>
       <CensusValue value={value} />

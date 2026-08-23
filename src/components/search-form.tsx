@@ -229,7 +229,7 @@ export function SearchForm({
           className={cn(
             "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
             live.openNow
-              ? "bg-ticket text-receipt"
+              ? "bg-ticket text-foreground"
               : "border border-input bg-card text-foreground hover:bg-muted",
           )}
         >

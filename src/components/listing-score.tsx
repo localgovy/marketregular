@@ -3,7 +3,6 @@ import {
   formatRatingAvg,
   formatReviewCount,
   listingScore,
-  listingScoreLabel,
 } from "@/lib/listing-score";
 import { cn } from "@/lib/utils";
 
@@ -26,11 +25,8 @@ export function ListingScore({
   const noun = score.count === 1 ? "review" : "reviews";
 
   return (
-    <span
-      className={cn("inline-flex items-baseline gap-1.5 text-sm", className)}
-      aria-label={listingScoreLabel(score)}
-    >
-      <AsteriskMark className="size-3 shrink-0 self-center text-ticket" />
+    <span className={cn("inline-flex items-baseline gap-1.5 text-sm", className)}>
+      <AsteriskMark aria-hidden className="size-3 shrink-0 self-center text-ticket" />
       <span className="font-mono tabular-nums tracking-tight">{avg}</span>
       {compact ? null : (
         <span className="text-muted-foreground">

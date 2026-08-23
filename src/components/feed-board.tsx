@@ -131,7 +131,7 @@ export function FeedBoard({
               onClick={() => go({ ...query, onSite: !query.onSite })}
               className={cn(
                 "hover:text-foreground",
-                query.onSite ? "font-medium text-ticket" : "text-muted-foreground",
+                query.onSite ? "font-medium text-ticket-ink" : "text-muted-foreground",
               )}
             >
               On site

@@ -122,7 +122,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
                       {place.when} at{" "}
                       <Link
                         href={`/markets/${place.marketSlug}`}
-                        className="font-medium text-ticket underline underline-offset-2 hover:text-ticket/80"
+                        className="font-medium text-ticket-ink underline underline-offset-2 hover:text-foreground"
                       >
                         {place.marketName}
                       </Link>

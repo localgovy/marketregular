@@ -26,7 +26,7 @@ function weekdayInToronto() {
 }
 
 const chipIdle =
-  "find-chip inline-flex h-10 items-center border border-[color-mix(in_srgb,var(--chalk)_78%,transparent)] bg-[color-mix(in_srgb,var(--chalk)_18%,var(--primary))] px-3.5 text-base font-medium text-primary-foreground hover:bg-[color-mix(in_srgb,var(--chalk)_26%,var(--primary))]";
+  "find-chip inline-flex h-10 items-center border border-[color-mix(in_srgb,var(--chalk)_78%,transparent)] bg-[color-mix(in_srgb,var(--chalk)_8%,var(--primary))] px-3.5 text-base font-medium text-primary-foreground hover:brightness-110";
 const chipOn =
   "find-chip inline-flex h-10 items-center border border-[color-mix(in_srgb,var(--foreground)_22%,transparent)] bg-card px-3.5 text-base font-medium text-primary hover:bg-card";
 
@@ -43,7 +43,7 @@ function ToggleChip({
 }) {
   const selected =
     tone === "open"
-      ? "find-chip inline-flex h-10 items-center border border-[color-mix(in_srgb,var(--foreground)_35%,var(--ticket))] bg-ticket px-3.5 text-base font-medium text-receipt hover:bg-ticket"
+      ? "find-chip inline-flex h-10 items-center border border-[color-mix(in_srgb,var(--foreground)_35%,var(--ticket))] bg-ticket px-3.5 text-base font-medium text-foreground hover:bg-ticket"
       : chipOn;
   return (
     <button
@@ -66,7 +66,7 @@ function FindGroup({
 }) {
   return (
     <div>
-      <p className="type-kicker text-primary-foreground/80">{label}</p>
+      <p className="type-kicker text-chalk">{label}</p>
       <div className="mt-1.5 flex flex-wrap gap-2">{children}</div>
     </div>
   );
@@ -160,7 +160,7 @@ export function QuickFind({
       ) : null}
 
       <div>
-        <p className="type-kicker text-primary-foreground/80">Where in the city</p>
+        <p className="type-kicker text-chalk">Where in the city</p>
         <div className="mt-1.5 grid gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <ToggleChip pressed={near} onClick={toggleNear}>
@@ -168,12 +168,12 @@ export function QuickFind({
             </ToggleChip>
             {!coords ? (
               near ? (
-                <span className="text-sm text-primary-foreground/70">
+                <span className="text-sm text-chalk">
                   {error ?? "Uses your location to sort the list."}
                 </span>
               ) : null
             ) : near && nearest.length ? (
-              <span className="text-sm text-primary-foreground/80">
+              <span className="text-sm text-chalk">
                 Closest: {nearest.map((row) => `${row.market.name} ${formatDistance(row.distance)}`).join(" · ")}
               </span>
             ) : null}

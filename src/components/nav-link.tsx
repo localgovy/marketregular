@@ -29,7 +29,7 @@ export function NavLink({
         on &&
           (tab
             ? "bg-card text-foreground shadow-[inset_0_-3px_0_0_var(--primary)]"
-            : "text-ticket underline decoration-ticket decoration-1 underline-offset-8"),
+            : "text-ticket-ink underline decoration-ticket decoration-1 underline-offset-8"),
         className,
       )}
       aria-current={on ? "page" : undefined}

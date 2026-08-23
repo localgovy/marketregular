@@ -41,6 +41,7 @@
   --color-card: var(--card);
   --color-stamp: var(--stamp);
   --color-ticket: var(--ticket);
+  --color-ticket-ink: var(--ticket-ink);
   --color-board: var(--board);
   --color-chalk: var(--chalk);
   --color-receipt: var(--receipt);
@@ -78,6 +79,8 @@
   --accent-foreground: #1c1916;
   --stamp: #9e4a3e;
   --ticket: #b07f2a;
+  /* Darker honey for type on paper. Fill gold stays --ticket (3.3:1 vs cream). */
+  --ticket-ink: #7a5414;
   --board: #2c4a40;
   --chalk: #f3eee4;
   --receipt: #faf7f0;
@@ -109,6 +112,13 @@
 }
 
 @layer base {
+  .market-map-pin {
+    width: 14px;
+    height: 14px;
+    background: var(--primary);
+    box-shadow: inset 0 0 0 2px var(--chalk), 0 1px 2px rgba(28, 25, 22, 0.35);
+    pointer-events: auto;
+  }
   * {
     @apply border-border outline-ring/50;
   }

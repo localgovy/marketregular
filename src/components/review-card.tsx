@@ -58,13 +58,16 @@ export function ReviewCard({
         {score ? (
           <>
             <span aria-hidden>·</span>
-            <span className="inline-flex items-center gap-px" aria-label={`${score} out of 5`}>
-              {[1, 2, 3, 4, 5].map((n) => (
-                <AsteriskMark
-                  key={n}
-                  className={cn("size-3", n <= score ? "text-stamp" : "text-foreground/20")}
-                />
-              ))}
+            <span className="inline-flex items-center gap-px">
+              <span className="sr-only">{score} out of 5</span>
+              <span aria-hidden className="inline-flex items-center gap-px">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <AsteriskMark
+                    key={n}
+                    className={cn("size-3", n <= score ? "text-stamp" : "text-foreground/20")}
+                  />
+                ))}
+              </span>
             </span>
           </>
         ) : null}

@@ -39,7 +39,7 @@ function MarketPips({ count, on }: { count: number; on: boolean }) {
         />
       ))}
       {count > 3 ? (
-        <span className={cn("font-mono text-sm tabular-nums", on ? "text-chalk" : "text-ticket")}>
+        <span className={cn("font-mono text-sm tabular-nums", on ? "text-chalk" : "text-ticket-ink")}>
           {count}
         </span>
       ) : null}
@@ -279,14 +279,14 @@ export function EventsCalendar({
                         : count
                           ? "bg-ticket/[0.07] text-foreground hover:bg-ticket/14"
                           : "bg-background/35 text-foreground hover:bg-card/80",
-                    !cell.inMonth && !on && "text-muted-foreground/55",
+                    !cell.inMonth && !on && "text-muted-foreground",
                   )}
                 >
                   <span
                     className={cn(
                       "font-mono text-sm tabular-nums",
                       on && "text-chalk",
-                      cell.isToday && !on && "font-medium text-ticket",
+                      cell.isToday && !on && "font-medium text-ticket-ink",
                     )}
                   >
                     {cell.day}
@@ -329,7 +329,7 @@ export function EventsCalendar({
                   className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3"
                 >
                   <span className="min-w-0">
-                    <span className="block text-base font-medium text-ticket underline-offset-2 hover:underline">
+                    <span className="block text-base font-medium text-ticket-ink underline-offset-2 hover:underline">
                       {event.marketName}
                     </span>
                     <span className="block text-sm text-muted-foreground">{event.address}</span>

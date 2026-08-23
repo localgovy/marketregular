@@ -67,7 +67,7 @@ export function HomeMosaic({
             icon={BlocksMark}
             kicker="Around the city"
             title="Map of Toronto markets"
-            how="Tap a pin, then tap the market name in the popup to open its page."
+            how="Click a pin for the name and address. Every market is also in the list below."
             className="order-last xl:order-none xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
             flush
           >

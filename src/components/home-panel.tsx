@@ -115,7 +115,7 @@ export function HomePanel({
             <p
               className={cn(
                 "type-kicker",
-                leaf ? "text-primary-foreground/75" : "text-muted-foreground"
+                leaf ? "text-chalk" : "text-muted-foreground"
               )}
             >
               {kicker}
@@ -151,7 +151,7 @@ export function HomePanel({
             className={cn(
               "shrink-0 px-4 pt-2 pb-3",
               rail ? "text-sm leading-relaxed" : "text-base",
-              leaf ? "text-primary-foreground/75" : "text-muted-foreground"
+              leaf ? "text-chalk" : "text-muted-foreground"
             )}
           >
             {how}
@@ -163,7 +163,7 @@ export function HomePanel({
           <div
             className={cn(
               rail ? "mb-3 text-sm leading-relaxed" : "mb-4 text-base",
-              leaf ? "text-primary-foreground/75" : "text-muted-foreground"
+              leaf ? "text-chalk" : "text-muted-foreground"
             )}
           >
             {how}

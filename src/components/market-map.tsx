@@ -7,10 +7,22 @@ import {
   Marker,
   NavigationControl,
   Popup,
+  setWorkerUrl,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LAUNCH_CENTER, LAUNCH_ZOOM } from "@/lib/launch";
 import type { Market } from "@/types/database";
+
+// Bundled MapLibre points the worker at this origin's HTML. Host the ESM worker
+// next to its shared chunk so the map does not load index.html as a module.
+setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
+
+function pinElement() {
+  const el = document.createElement("div");
+  el.className = "market-map-pin";
+  el.setAttribute("aria-hidden", "true");
+  return el;
+}
 
 export function MarketMap({
   markets,
@@ -35,12 +47,17 @@ export function MarketMap({
     for (const market of markets) {
       bounds.extend([market.lng, market.lat]);
       const popup = new Popup({ offset: 16 }).setHTML(
-        `<a href="/markets/${market.slug}" style="font-weight:600;color:#1a1714">${market.name}</a><div style="color:#6a6358">${market.address ?? market.city}</div>`,
+        `<a href="/markets/${market.slug}" style="font-weight:600;color:#1a1714">${market.name}</a><div style="color:#5e5a53">${market.address ?? market.city}</div>`,
       );
-      new Marker({ color: "#3a6558" })
+      const marker = new Marker({ element: pinElement(), anchor: "center" })
         .setLngLat([market.lng, market.lat])
         .setPopup(popup)
         .addTo(map);
+      const node = marker.getElement();
+      node.removeAttribute("tabindex");
+      node.removeAttribute("role");
+      node.removeAttribute("aria-label");
+      node.setAttribute("aria-hidden", "true");
     }
     if (markets.length > 1) {
       map.fitBounds(bounds, { padding: 48, maxZoom: 13, duration: 0 });
@@ -57,10 +74,5 @@ export function MarketMap({
     };
   }, [markets]);
 
-  return (
-    <div
-      ref={ref}
-      className={className}
-    />
-  );
+  return <div ref={ref} className={className} />;
 }
