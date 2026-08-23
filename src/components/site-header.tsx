@@ -31,51 +31,45 @@ export async function SiteHeader() {
             </span>
           </Link>
         </div>
-        <div className="flex h-16 min-w-0 flex-1 items-center justify-end gap-2 lg:header-stripe-paper lg:justify-between lg:px-6">
-          <div className="hidden min-w-0 flex-1 items-center gap-3 md:flex">
-            <form action="/markets" className="flex min-w-0 max-w-lg flex-1 items-center gap-2">
-              <Input
-                name="q"
-                type="search"
-                placeholder="Search market, vendor, location, food"
-                className="bg-card"
-                autoComplete="off"
-              />
-              <button type="submit" className={cn(buttonVariants({ size: "sm" }), "shrink-0")}>
-                Find
-              </button>
-            </form>
-          </div>
-          <div className="flex min-w-0 items-center gap-3 lg:shrink-0">
-            <nav
-              aria-label="Primary"
-              className="flex h-11 min-w-0 items-stretch overflow-x-auto border border-border bg-secondary"
+        <div className="flex h-16 min-w-0 flex-1 items-center justify-end gap-3 lg:header-stripe-paper lg:justify-start lg:px-6">
+          <nav
+            aria-label="Primary"
+            className="flex h-11 min-w-0 items-stretch divide-x divide-border overflow-x-auto border border-border bg-secondary"
+          >
+            {SITE_NAV.map((item) => (
+              <NavLink key={item.href} href={item.href} variant="tab">
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+          <form
+            action="/markets"
+            className="hidden min-w-0 max-w-md flex-1 items-center gap-2 md:flex"
+          >
+            <Input
+              name="q"
+              type="search"
+              placeholder="Search market, vendor, location, food"
+              className="bg-card"
+              autoComplete="off"
+            />
+            <button type="submit" className={cn(buttonVariants({ size: "sm" }), "shrink-0")}>
+              Find
+            </button>
+          </form>
+          {profile?.role === "admin" ? (
+            <Link href="/admin" className="shrink-0 text-sm font-medium hover:underline">
+              Desk
+            </Link>
+          ) : null}
+          {profile ? (
+            <Link
+              href="/account"
+              className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}
             >
-              {SITE_NAV.map((item, index) => (
-                <NavLink
-                  key={item.href}
-                  href={item.href}
-                  variant="tab"
-                  className={index > 0 ? "border-l border-border" : undefined}
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-            {profile?.role === "admin" ? (
-              <Link href="/admin" className="shrink-0 text-sm font-medium hover:underline">
-                Desk
-              </Link>
-            ) : null}
-            {profile ? (
-              <Link
-                href="/account"
-                className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}
-              >
-                {profile.display_name ?? "Account"}
-              </Link>
-            ) : null}
-          </div>
+              {profile.display_name ?? "Account"}
+            </Link>
+          ) : null}
         </div>
       </div>
     </header>

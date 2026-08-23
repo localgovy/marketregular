@@ -76,25 +76,6 @@ export default async function MarketPage({
             <h2>About</h2>
             <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>
           </section>
-          <MarketVendors vendors={market.vendors} />
-          <section>
-            <h2>Reviews</h2>
-            {avg ? (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Floor notes average {avg.toFixed(1)} / 5 from {avgRated.length} rated
-                {market.feed.length
-                  ? ` · ${market.feed.length} ${market.feed.length === 1 ? "note" : "notes"}`
-                  : ""}
-              </p>
-            ) : (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Same notes as the live list. A score is optional.
-              </p>
-            )}
-            <div className="mt-4">
-              <LiveFeed initialItems={market.feed} marketId={market.id} />
-            </div>
-          </section>
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
@@ -133,6 +114,27 @@ export default async function MarketPage({
             </div>
           ) : null}
         </aside>
+        <div className="lg:col-span-2">
+          <MarketVendors vendors={market.vendors} />
+        </div>
+        <section className="lg:col-span-2">
+          <h2>Reviews</h2>
+          {avg ? (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Floor notes average {avg.toFixed(1)} / 5 from {avgRated.length} rated
+              {market.feed.length
+                ? ` · ${market.feed.length} ${market.feed.length === 1 ? "note" : "notes"}`
+                : ""}
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Same notes as the live list. A score is optional.
+            </p>
+          )}
+          <div className="mt-4">
+            <LiveFeed initialItems={market.feed} marketId={market.id} />
+          </div>
+        </section>
       </div>
     </div>
   );

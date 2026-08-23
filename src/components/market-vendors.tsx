@@ -82,7 +82,7 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
             ) : null}
           </div>
           {matches.length ? (
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {matches.map((vendor) => (
                 <VendorCard
                   key={vendor.id}
