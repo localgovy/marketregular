@@ -170,6 +170,18 @@ export function ShotMark(props: MarkProps) {
   );
 }
 
+/** Vertical clip plate — TikTok. */
+export function ClipMark(props: MarkProps) {
+  return (
+    <Mark {...props}>
+      <path
+        fillRule="evenodd"
+        d={`${plate(6, 3, 12, 18, 2)}M9.4 8.2 16.4 12 9.4 15.8Z`}
+      />
+    </Mark>
+  );
+}
+
 export function CaretLeftMark(props: MarkProps) {
   return (
     <Mark {...props}>

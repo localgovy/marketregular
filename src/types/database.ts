@@ -24,6 +24,7 @@ export type Market = {
   geofence_radius_m: number;
   website: string | null;
   instagram: string | null;
+  tiktok: string | null;
   phone: string | null;
   email: string | null;
   logo_url: string | null;
@@ -55,6 +56,7 @@ export type Vendor = {
   about: string | null;
   website: string | null;
   instagram: string | null;
+  tiktok: string | null;
   phone: string | null;
   logo_url: string | null;
   tags: string[];

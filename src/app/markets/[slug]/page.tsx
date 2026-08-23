@@ -9,7 +9,7 @@ import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
 import { MarketVendors } from "@/components/market-vendors";
 import { ScheduleList } from "@/components/schedule-list";
-import { ListingPhone, ListingWebsite, ListingInstagram } from "@/components/listing-contact";
+import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { sortTagsForDisplay } from "@/lib/find-paths";
@@ -88,6 +88,7 @@ export default async function MarketPage({
             <ListingPhone phone={market.phone} />
             <ListingWebsite href={market.website} />
             <ListingInstagram href={market.instagram} />
+            <ListingTiktok href={market.tiktok} />
           </div>
           {profile ? (
             <div className="rounded-xl bg-secondary/50 p-5">

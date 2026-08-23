@@ -62,13 +62,13 @@ lines.push("delete from public.vendors;\n");
 
 if (launchVendors.length) {
   lines.push(
-    "insert into public.vendors (id, slug, name, about, website, instagram, phone, tags, status) values",
+    "insert into public.vendors (id, slug, name, about, website, instagram, tiktok, phone, tags, status) values",
   );
   lines.push(
     launchVendors
       .map(
         (v) =>
-          `  (${sqlStr(v.id)}, ${sqlStr(v.slug)}, ${sqlStr(v.name)}, ${sqlStr(v.about)}, ${sqlStr(v.website)}, ${sqlStr(v.instagram ?? null)}, ${sqlStr(v.phone)}, ${sqlArr(v.tags)}, 'published')`,
+          `  (${sqlStr(v.id)}, ${sqlStr(v.slug)}, ${sqlStr(v.name)}, ${sqlStr(v.about)}, ${sqlStr(v.website)}, ${sqlStr(v.instagram ?? null)}, ${sqlStr(v.tiktok ?? null)}, ${sqlStr(v.phone)}, ${sqlArr(v.tags)}, 'published')`,
       )
       .join(",\n") + "\non conflict (id) do nothing;\n",
   );

@@ -121,6 +121,10 @@ export function MarketForm({ market }: { market?: Market }) {
         <Input id="instagram" name="instagram" defaultValue={market?.instagram ?? ""} />
       </div>
       <div className="grid gap-1.5">
+        <Label htmlFor="tiktok">TikTok</Label>
+        <Input id="tiktok" name="tiktok" defaultValue={market?.tiktok ?? ""} />
+      </div>
+      <div className="grid gap-1.5">
         <Label htmlFor="phone">Phone</Label>
         <Input id="phone" name="phone" defaultValue={market?.phone ?? ""} />
       </div>
