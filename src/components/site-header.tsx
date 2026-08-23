@@ -34,7 +34,7 @@ export async function SiteHeader() {
         <div className="flex h-16 min-w-0 flex-1 items-center justify-end gap-3 lg:header-stripe-paper lg:justify-start lg:px-6">
           <nav
             aria-label="Primary"
-            className="flex h-12 min-w-0 items-stretch divide-x divide-border overflow-x-auto overflow-y-hidden border border-border bg-secondary [scrollbar-width:none] lg:shrink-0 lg:overflow-visible [&::-webkit-scrollbar]:hidden"
+            className="flex h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary"
           >
             {SITE_NAV.map((item) => (
               <NavLink key={item.href} href={item.href} variant="tab">

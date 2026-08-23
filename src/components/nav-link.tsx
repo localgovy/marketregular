@@ -28,7 +28,7 @@ export function NavLink({
           : "hover:underline",
         on &&
           (tab
-            ? "bg-card text-foreground shadow-[inset_0_-3px_0_0_var(--ticket)]"
+            ? "bg-card text-foreground shadow-[inset_0_-3px_0_0_var(--primary)]"
             : "text-ticket underline decoration-ticket decoration-1 underline-offset-8"),
         className,
       )}
