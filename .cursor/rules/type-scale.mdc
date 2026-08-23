@@ -5,12 +5,12 @@ alwaysApply: true
 
 # Type scale
 
-Two sans families: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotesk** (`font-sans`) for everything else. **Azeret Mono** (`font-mono`) is only for times, prices, stall numbers, and province codes. Do not put Mona on body copy, kickers, notes, empty states, or the site name.
+Two sans families: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotesk** (`font-sans`) for everything else. **Azeret Mono** (`font-mono`) is only for times, prices, stall numbers, and province codes. Do not put Mona on body copy, kickers, posts, empty states, or the site name.
 
 | Role | Face | Size | Example |
 | --- | --- | --- | --- |
 | Wordmark | Grotesk | `type-wordmark` (`text-xl font-medium tracking-[-0.04em]`) | MarketRegular |
-| Kicker | Grotesk | `type-kicker` (`text-sm`) | Toronto, Live notes, When, where, or what |
+| Kicker | Grotesk | `type-kicker` (`text-sm`) | Toronto, Live posts, When, where, or what |
 | Page title | Mona | `h1` (`text-3xl sm:text-4xl leading-tight`) | Toronto farmers' markets |
 | Panel / section | Mona | `h2` (`text-2xl leading-tight`) | Find a market |
 | Narrow column / day / card | Mona | `h3` or `type-column` (`text-lg leading-tight`) | The group chat from the stalls |

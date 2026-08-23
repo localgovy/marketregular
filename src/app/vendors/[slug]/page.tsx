@@ -85,7 +85,7 @@ export default async function VendorPage({
                 ))}
               </ol>
             ) : (
-              <p className="mt-4 text-base text-muted-foreground">No notes yet.</p>
+              <p className="mt-4 text-base text-muted-foreground">No posts yet.</p>
             )}
           </section>
         </div>

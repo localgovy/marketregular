@@ -209,11 +209,11 @@ export function FloorComposer({
       ref={wrapRef}
       className="relative z-10 shrink-0 border-b border-border bg-background px-3 pt-3 pb-2"
     >
-      <label className="sr-only" htmlFor="floor-note">
+      <label className="sr-only" htmlFor="floor-post">
         Write a review
       </label>
       <Textarea
-        id="floor-note"
+        id="floor-post"
         className="min-h-[4.5rem] max-h-40 resize-none border-0 bg-transparent px-0 py-1 text-lg shadow-none md:text-lg focus-visible:border-transparent focus-visible:ring-0"
         rows={3}
         value={body}
@@ -574,7 +574,7 @@ function VendorStep({
       </p>
       <p className="mt-3 text-base font-medium">A stall?</p>
       <p className="mb-2 text-sm text-muted-foreground">
-        {stallCount ? "Optional. Skip if this note is about the market." : "No stalls listed yet."}
+        {stallCount ? "Optional. Skip if this post is about the market." : "No stalls listed yet."}
       </p>
       {stallCount ? (
         <>

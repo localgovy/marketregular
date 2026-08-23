@@ -33,7 +33,7 @@ export function FloorTape({
               href="/feed"
               className="shrink-0 text-sm font-medium text-primary hover:underline"
             >
-              All notes
+              All posts
             </Link>
           </header>
           <FloorComposer

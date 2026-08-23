@@ -121,14 +121,14 @@ export default async function MarketPage({
           <h2>Reviews</h2>
           {avg ? (
             <p className="mt-1 text-sm text-muted-foreground">
-              Floor notes average {avg.toFixed(1)} / 5 from {avgRated.length} rated
+              Floor posts average {avg.toFixed(1)} / 5 from {avgRated.length} rated
               {market.feed.length
-                ? ` · ${market.feed.length} ${market.feed.length === 1 ? "note" : "notes"}`
+                ? ` · ${market.feed.length} ${market.feed.length === 1 ? "post" : "posts"}`
                 : ""}
             </p>
           ) : (
             <p className="mt-1 text-sm text-muted-foreground">
-              Same notes as the live list. A score is optional.
+              Same posts as the live list. A score is optional.
             </p>
           )}
           <div className="mt-4">

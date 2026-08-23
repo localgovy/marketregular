@@ -121,7 +121,7 @@ export function FeedBoard({
                 filtered ? "text-muted-foreground" : "font-medium text-foreground",
               )}
             >
-              All notes
+              All posts
             </Link>
             <span aria-hidden className="text-muted-foreground">
               ·
@@ -140,7 +140,7 @@ export function FeedBoard({
               ·
             </span>
             <label className="inline-flex items-baseline gap-1 text-muted-foreground">
-              <span className="sr-only">Sort notes</span>
+              <span className="sr-only">Sort posts</span>
               <select
                 value={query.sort}
                 onChange={(event) =>
@@ -166,10 +166,10 @@ export function FeedBoard({
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Note, author, market, or stall"
+            placeholder="Post, author, market, or stall"
             className="min-w-0 flex-1 bg-card"
             autoComplete="off"
-            aria-label="Find notes"
+            aria-label="Find posts"
           />
           <button
             type="submit"
@@ -211,7 +211,7 @@ export function FeedBoard({
           })}
         </div>
         <p className="mt-3 text-sm text-muted-foreground">
-          {visible.length} {visible.length === 1 ? "note" : "notes"}
+          {visible.length} {visible.length === 1 ? "post" : "posts"}
           {query.q ? ` for “${query.q}”` : null}
           {marketName ? ` at ${marketName}` : null}
           {vendorName ? ` about ${vendorName}` : null}
@@ -240,7 +240,7 @@ export function FeedBoard({
             </ol>
           ) : (
             <p className="px-3 py-4 text-base text-muted-foreground">
-              No notes match that. Clear the search or pick a place from the rail.
+              No posts match that. Clear the search or pick a place from the rail.
             </p>
           )}
         </div>
@@ -249,7 +249,7 @@ export function FeedBoard({
       <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
         <h2 className="type-column">In this feed</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Halls and stalls these notes name. Tap one to stay on Feed.
+          Halls and stalls these posts name. Tap one to stay on Feed.
         </p>
         {mentions.markets.length ? (
           <section className="mt-5">
@@ -322,7 +322,7 @@ export function FeedBoard({
         ) : null}
         {!mentions.markets.length && !mentions.vendors.length ? (
           <p className="mt-4 text-sm text-muted-foreground">
-            No halls or stalls on these notes yet.
+            No halls or stalls on these posts yet.
           </p>
         ) : null}
       </aside>
