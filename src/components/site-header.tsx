@@ -17,25 +17,23 @@ export function SiteHeader() {
             <Link href="/" prefetch={false} aria-label={`${SITE_NAME} home`} className="shrink-0">
               <SiteMark className="size-8" />
             </Link>
-            <span className="min-w-0 leading-none">
+            <span className="flex min-w-0 items-baseline gap-2 leading-none">
               <Link
                 href="/"
                 prefetch={false}
-                className="type-wordmark block text-foreground lg:text-chalk"
+                className="type-wordmark shrink-0 text-foreground lg:text-chalk"
               >
                 {SITE_NAME}
               </Link>
-              <span className="type-kicker mt-0.5 flex items-center gap-1 text-muted-foreground lg:text-chalk/70">
-                <a
-                  href={STUDIO_URL}
-                  rel="noreferrer"
-                  aria-label={`by ${STUDIO_NAME}`}
-                  className="inline-flex items-center gap-1 outline-none hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
-                >
-                  <span>by</span>
-                  <StudioWordmark />
-                </a>
-              </span>
+              <a
+                href={STUDIO_URL}
+                rel="noreferrer"
+                aria-label={`by ${STUDIO_NAME}`}
+                className="type-kicker inline-flex shrink-0 items-center gap-1 text-muted-foreground outline-none hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk/70"
+              >
+                <span>by</span>
+                <StudioWordmark />
+              </a>
             </span>
           </div>
         </div>
