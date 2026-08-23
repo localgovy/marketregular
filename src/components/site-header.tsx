@@ -37,7 +37,7 @@ export function SiteHeader() {
             </span>
           </div>
         </div>
-        <div className="flex min-w-0 items-center justify-end gap-3 lg:h-16 lg:justify-start lg:px-6">
+        <div className="flex min-w-0 items-center justify-end gap-3 lg:h-16 lg:px-6">
           <nav
             aria-label="Primary"
             className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary lg:flex"
@@ -50,7 +50,7 @@ export function SiteHeader() {
           </nav>
           <form
             action="/markets"
-            className="hidden min-w-0 max-w-md flex-1 items-center gap-2 md:flex"
+            className="hidden min-w-0 w-full max-w-md items-center gap-2 md:flex lg:ml-auto"
           >
             <Input
               name="q"
