@@ -6,11 +6,7 @@ function tagWords(tags: string[]) {
 }
 
 export function StallMenu({ items }: { items: MenuItem[] }) {
-  if (!items.length) {
-    return (
-      <p className="mt-3 text-base text-muted-foreground">Menu not listed yet.</p>
-    );
-  }
+  if (!items.length) return null;
 
   return (
     <ul className="mt-3 bg-receipt ring-1 ring-border shadow-[inset_3px_0_0_var(--ticket)]">

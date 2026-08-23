@@ -13,7 +13,11 @@ import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok } from "@
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { sortTagsForDisplay } from "@/lib/find-paths";
+import { hoursLine, marketPageDescription, marketPageTitle } from "@/lib/listing-copy";
+import { Hours } from "@/components/hours";
 import { marketJsonLd, pageMeta } from "@/lib/seo";
+
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
@@ -23,11 +27,15 @@ export async function generateMetadata({
   const { slug } = await params;
   const market = await getMarketBySlug(slug);
   if (!market) return { title: "Market" };
-  const description =
-    market.about ?? `${market.name} in ${market.city}, ${market.province}`;
   return pageMeta({
-    title: market.name,
-    description,
+    title: marketPageTitle(market.name, market.city),
+    description: marketPageDescription({
+      name: market.name,
+      about: market.about,
+      city: market.city,
+      province: market.province,
+      schedules: market.schedules,
+    }),
     path: `/markets/${market.slug}`,
   });
 }
@@ -44,6 +52,7 @@ export default async function MarketPage({
   ]);
   if (!market) notFound();
 
+  const hours = hoursLine(market.schedules);
   const avgRated = market.feed.filter((item) => item.rating != null);
   const avg =
     avgRated.length > 0
@@ -61,6 +70,11 @@ export default async function MarketPage({
         <h1>{market.name}</h1>
         <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
       </div>
+      {hours ? (
+        <p className="mt-2 text-muted-foreground">
+          <Hours value={hours} />
+        </p>
+      ) : null}
       <ListingScore
         className="mt-3 text-base"
         ratingAvg={market.rating_avg}
@@ -71,10 +85,12 @@ export default async function MarketPage({
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">
           <MarketMapLazy markets={[market]} load="visible" className={MARKET_PROFILE_MAP} />
-          <section>
-            <h2>About</h2>
-            <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>
-          </section>
+          {market.about ? (
+            <section>
+              <h2>About</h2>
+              <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>
+            </section>
+          ) : null}
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">

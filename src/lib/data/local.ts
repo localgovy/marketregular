@@ -48,6 +48,12 @@ export function localVendors(): Vendor[] {
   return seedVendors.filter((v) => vendorIds.has(v.id)).map(toPublicVendor);
 }
 
+export function localSitemapVendors(): Vendor[] {
+  return localVendors().filter(
+    (vendor) => Boolean(vendor.about?.trim()) || menusFor(vendor.id).length > 0,
+  );
+}
+
 export function localMenuCount() {
   return localVendors().reduce((n, vendor) => n + menusFor(vendor.id).length, 0);
 }

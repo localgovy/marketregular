@@ -10,6 +10,7 @@ import {
   localPosts,
   localSchedules,
   localSearch,
+  localSitemapVendors,
   localStalls,
   localTablePeek,
   localVendorBySlug,
@@ -159,6 +160,19 @@ export async function listVendors(): Promise<Vendor[]> {
   );
   if (error) return localVendors();
   return data.map(withListingStats);
+}
+
+export async function listSitemapVendors(): Promise<Vendor[]> {
+  const supabase = publicDb();
+  if (!supabase) return localSitemapVendors();
+  const [vendors, menuRows] = await Promise.all([
+    listVendors(),
+    fetchAllRows<{ vendor_id: string }>((from, to) =>
+      supabase.from("vendor_menus").select("vendor_id").range(from, to),
+    ),
+  ]);
+  const withMenu = new Set((menuRows.data ?? []).map((row) => row.vendor_id));
+  return vendors.filter((vendor) => Boolean(vendor.about?.trim()) || withMenu.has(vendor.id));
 }
 
 export async function listStalls(): Promise<StallRef[]> {
@@ -374,6 +388,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
     .from("markets")
     .select(MARKET_PUBLIC)
     .eq("slug", slug)
+    .eq("status", "published")
     .maybeSingle();
   if (!market) return localMarketBySlug(slug);
   if (!isLaunchCity((market as Market).city)) return null;

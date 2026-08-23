@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
-import { listMarkets, listVendors } from "@/lib/data/catalog";
+import { listMarkets, listSitemapVendors } from "@/lib/data/catalog";
 
 export const revalidate = 3600;
 
@@ -12,7 +12,7 @@ function loc(path: string, lastModified?: string) {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [markets, vendors] = await Promise.all([listMarkets(), listVendors()]);
+  const [markets, vendors] = await Promise.all([listMarkets(), listSitemapVendors()]);
   return [
     loc("/"),
     loc("/markets"),

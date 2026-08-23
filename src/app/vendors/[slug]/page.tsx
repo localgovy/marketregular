@@ -13,7 +13,10 @@ import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { WEEKDAYS } from "@/lib/constants";
 import { sortTagsForDisplay } from "@/lib/find-paths";
+import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { pageMeta, vendorJsonLd } from "@/lib/seo";
+
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,
@@ -23,10 +26,14 @@ export async function generateMetadata({
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) return { title: "Vendor" };
-  const description = vendor.about ?? `${vendor.name} at Toronto farmers' markets`;
+  const marketNames = vendor.markets.map((market) => market.name);
   return pageMeta({
-    title: vendor.name,
-    description,
+    title: vendorPageTitle(vendor.name, marketNames),
+    description: vendorPageDescription({
+      name: vendor.name,
+      about: vendor.about,
+      marketNames,
+    }),
     path: `/vendors/${vendor.slug}`,
   });
 }
@@ -51,6 +58,22 @@ export default async function VendorPage({
         <h1>{vendor.name}</h1>
         <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
       </div>
+      {vendor.markets.length ? (
+        <p className="type-lede mt-2 text-muted-foreground">
+          {vendor.markets.map((market, index) => (
+            <span key={market.id}>
+              {index === 0 ? "At " : index === vendor.markets.length - 1 ? " and " : ", "}
+              <Link href={`/markets/${market.slug}`} className="font-medium text-foreground hover:underline">
+                {market.name}
+              </Link>
+              {market.days.length
+                ? ` (${market.days.map((day) => WEEKDAYS[day]?.slice(0, 3)).join(", ")})`
+                : ""}
+            </span>
+          ))}
+          .
+        </p>
+      ) : null}
       <ListingScore
         className="mt-3 text-base"
         ratingAvg={vendor.rating_avg}
@@ -60,33 +83,31 @@ export default async function VendorPage({
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">
-          <section>
-            <h2>About</h2>
-            {vendor.about ? (
+          {vendor.about ? (
+            <section>
+              <h2>About</h2>
               <p className="mt-2 leading-relaxed text-muted-foreground">{vendor.about}</p>
-            ) : (
-              <p className="mt-2 text-base text-muted-foreground">About not listed yet.</p>
-            )}
-          </section>
-          <section>
-            <h2>Menu</h2>
-            <StallMenu items={vendor.menus} />
-          </section>
-          <section>
-            <h2>Reviews</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Anything written about this stall on the live list. The public score above is separate.
-            </p>
-            {vendor.feed.length ? (
+            </section>
+          ) : null}
+          {vendor.menus.length ? (
+            <section>
+              <h2>Menu</h2>
+              <StallMenu items={vendor.menus} />
+            </section>
+          ) : null}
+          {vendor.feed.length ? (
+            <section>
+              <h2>Reviews</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Anything written about this stall on the live list. The public score above is separate.
+              </p>
               <ol className="mt-4">
                 {vendor.feed.map((item) => (
                   <ReviewCard key={item.id} item={item} />
                 ))}
               </ol>
-            ) : (
-              <p className="mt-4 text-base text-muted-foreground">No posts yet.</p>
-            )}
-          </section>
+            </section>
+          ) : null}
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
