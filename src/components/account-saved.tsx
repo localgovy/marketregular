@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ListingScore } from "@/components/listing-score";
-import { SaveButton, useSaves } from "@/components/save-button";
-import { getSaves, replaceSaves, type Saves } from "@/lib/saves";
+import { SaveButton } from "@/components/save-button";
+import { useHydratedSaves } from "@/lib/use-hydrated-saves";
+import type { Saves } from "@/lib/saves";
 import type { Market, Vendor } from "@/types/database";
 
 export function AccountSavedLists({
@@ -20,21 +20,7 @@ export function AccountSavedLists({
   vendorWhen: Record<string, string>;
   initialSaves: Saves;
 }) {
-  const live = useSaves();
-  const [hydrated, setHydrated] = useState(false);
-  const marketKey = initialSaves.markets.join("\0");
-  const vendorKey = initialSaves.vendors.join("\0");
-
-  useEffect(() => {
-    const current = getSaves();
-    replaceSaves({
-      markets: [...new Set([...initialSaves.markets, ...current.markets])],
-      vendors: [...new Set([...initialSaves.vendors, ...current.vendors])],
-    });
-    setHydrated(true);
-  }, [marketKey, vendorKey, initialSaves.markets, initialSaves.vendors]);
-
-  const saves = hydrated ? live : initialSaves;
+  const saves = useHydratedSaves(initialSaves);
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
   const empty = !savedMarkets.length && !savedVendors.length;
@@ -112,9 +98,7 @@ export function AccountSavedLists({
                 >
                   <span className="block text-base font-medium">{vendor.name}</span>
                   <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
-                    {vendorWhen[vendor.slug] ? (
-                      <span>{vendorWhen[vendor.slug]}</span>
-                    ) : null}
+                    {vendorWhen[vendor.slug] ? <span>{vendorWhen[vendor.slug]}</span> : null}
                     <ListingScore
                       ratingAvg={vendor.rating_avg}
                       reviewCount={vendor.review_count}

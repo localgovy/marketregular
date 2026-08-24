@@ -7,6 +7,7 @@ import {
   listVendors,
 } from "@/lib/data/catalog";
 import { loadAccountDesk } from "@/lib/data/account";
+import { unionSaves } from "@/lib/saves";
 import { toGeoMarket } from "@/lib/geo";
 import { nextOpenLabel } from "@/lib/schedule";
 import { upcomingByDay } from "@/lib/upcoming";
@@ -17,6 +18,8 @@ import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import type { MarketSchedule } from "@/types/database";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
   title: "Account",
@@ -51,22 +54,27 @@ export default async function AccountPage() {
     if (hours) nextHours[market.slug] = hours;
   }
 
+  const saves = unionSaves(desk.saves, {
+    markets: profile.favorite_market_slugs ?? [],
+    vendors: [],
+  });
+
   const stallWeek = savedVendorsThisWeek(
-    desk.saves.vendors,
+    saves.vendors,
     stalls,
     markets,
     vendors,
     scheduleMap,
   );
   const sellingToday = savedVendorsSellingToday(
-    desk.saves.vendors,
+    saves.vendors,
     stalls,
     markets,
     vendors,
     scheduleMap,
   );
 
-  const weekSlugs = new Set(desk.saves.markets);
+  const weekSlugs = new Set(saves.markets);
   for (const pick of stallWeek) {
     for (const place of pick.where) weekSlugs.add(place.marketSlug);
   }
@@ -79,7 +87,15 @@ export default async function AccountPage() {
     if (first) vendorWhen[pick.vendorSlug] = `${first.when} · ${first.marketName}`;
   }
 
-  const savedMarket = markets.find((market) => desk.saves.markets.includes(market.slug));
+  const marketById = new Map(markets.map((market) => [market.id, market]));
+  const posts = desk.posts.map((post) => {
+    const market = marketById.get(post.market_id);
+    return {
+      ...post,
+      markets: market ? { name: market.name, slug: market.slug } : null,
+    };
+  });
+  const savedMarket = markets.find((market) => saves.markets.includes(market.slug));
 
   return (
     <AccountDesk
@@ -95,9 +111,9 @@ export default async function AccountPage() {
       geoMarkets={markets.map(toGeoMarket)}
       stalls={stalls}
       initialMarketId={savedMarket?.id}
-      posts={desk.posts}
+      posts={posts}
       claims={desk.claims}
-      saves={desk.saves}
+      saves={saves}
       reviewCount={desk.reviewCount}
     />
   );

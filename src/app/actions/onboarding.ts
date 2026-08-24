@@ -63,6 +63,13 @@ export async function completeOnboarding(formData: FormData) {
   const taken = await usernameAvailable(username);
   if (!taken.available) return { error: taken.error ?? "That handle is taken." };
 
+  const rows = slugs.map((slug) => ({ user_id: user.id, kind: "market" as const, slug }));
+  const { error: saveError } = await supabase.from("saves").upsert(rows, {
+    onConflict: "user_id,kind,slug",
+    ignoreDuplicates: true,
+  });
+  if (saveError) return { error: saveError.message };
+
   const { error } = await supabase
     .from("profiles")
     .update({
@@ -75,13 +82,6 @@ export async function completeOnboarding(formData: FormData) {
     if (error.code === "23505") return { error: "That handle is taken." };
     return { error: error.message };
   }
-
-  const rows = slugs.map((slug) => ({ user_id: user.id, kind: "market" as const, slug }));
-  const { error: saveError } = await supabase.from("saves").upsert(rows, {
-    onConflict: "user_id,kind,slug",
-    ignoreDuplicates: true,
-  });
-  if (saveError) return { error: saveError.message };
 
   revalidatePath("/account");
   revalidatePath("/saved");

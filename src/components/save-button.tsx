@@ -54,17 +54,21 @@ export function SaveButton({
         }
         const nextSaved = !saved;
         toggleSave(kind, slug);
-        void persistSave(kind, slug, nextSaved).then((canonical) => {
-          if (canonical) {
-            replaceSaves(canonical);
-            if (pathname === "/account" || pathname.startsWith("/account/")) {
-              router.refresh();
+        void persistSave(kind, slug, nextSaved)
+          .then((canonical) => {
+            if (canonical) {
+              replaceSaves(canonical);
+              if (pathname === "/account" || pathname.startsWith("/account/")) {
+                router.refresh();
+              }
+              return;
             }
-            return;
-          }
-          toggleSave(kind, slug);
-          router.push(loginHref);
-        });
+            toggleSave(kind, slug);
+            router.push(loginHref);
+          })
+          .catch(() => {
+            toggleSave(kind, slug);
+          });
       }}
       className={cn(
         "relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",

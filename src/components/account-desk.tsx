@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { signOut, updateProfile } from "@/app/actions/auth";
 import { deleteOwnPost } from "@/app/actions/presence";
+import { AccountCensus } from "@/components/account-census";
 import { AccountHandleForm } from "@/components/account-handle-form";
 import { AccountSavedLists } from "@/components/account-saved";
 import { DeleteAccountForm } from "@/components/delete-account-form";
@@ -33,48 +34,16 @@ import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { ClaimRequest, Market, Profile, StallRef, Vendor } from "@/types/database";
 import type { AccountPost } from "@/lib/data/account";
 
-function formatCount(value: number) {
-  return value.toLocaleString("en-CA");
-}
-
-function CensusCell({
-  href,
-  value,
-  word,
-}: {
-  href: string;
-  value: number;
-  word: string;
-}) {
-  return (
-    <Link
-      href={href}
-      aria-label={`${formatCount(value)} ${word}`}
-      className="flex min-w-0 flex-col items-start gap-0.5 px-3 py-3 text-foreground outline-none transition-colors hover:bg-black/10 focus-visible:bg-black/10 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2.5 sm:px-4 sm:py-3.5"
-    >
-      <span
-        aria-hidden
-        className="inline-block font-mono text-2xl leading-none tabular-nums tracking-tight sm:text-3xl"
-      >
-        {formatCount(value)}
-      </span>
-      <span className="text-base font-medium">{word}</span>
-    </Link>
-  );
-}
-
 function marketFromPost(markets: AccountPost["markets"]) {
-  if (!markets) return null;
-  const row = Array.isArray(markets) ? markets[0] : markets;
   if (
-    row &&
-    typeof row === "object" &&
-    "slug" in row &&
-    "name" in row &&
-    typeof row.slug === "string" &&
-    typeof row.name === "string"
+    markets &&
+    typeof markets === "object" &&
+    "slug" in markets &&
+    "name" in markets &&
+    typeof markets.slug === "string" &&
+    typeof markets.name === "string"
   ) {
-    return row;
+    return markets;
   }
   return null;
 }
@@ -127,8 +96,6 @@ export function AccountDesk({
   saves: { markets: string[]; vendors: string[] };
   reviewCount: number;
 }) {
-  const savedMarketCount = saves.markets.length;
-  const savedVendorCount = saves.vendors.length;
   const name = profile.display_name?.trim() || "Regular";
   const handle = profile.username ? `@${profile.username}` : null;
   const visitSlugs =
@@ -152,25 +119,7 @@ export function AccountDesk({
 
   return (
     <div>
-      <nav aria-label="On this account" className="bg-ticket">
-        <div className="mx-auto grid max-w-6xl grid-cols-3 divide-x divide-receipt/25">
-          <CensusCell
-            href="#saved"
-            value={savedMarketCount}
-            word={savedMarketCount === 1 ? "market" : "markets"}
-          />
-          <CensusCell
-            href="#saved"
-            value={savedVendorCount}
-            word={savedVendorCount === 1 ? "stall" : "stalls"}
-          />
-          <CensusCell
-            href="#reviews"
-            value={reviewCount}
-            word={reviewCount === 1 ? "review" : "reviews"}
-          />
-        </div>
-      </nav>
+      <AccountCensus initialSaves={saves} reviewCount={reviewCount} />
 
       <div className="mx-auto w-full max-w-6xl px-4 py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] lg:items-start lg:gap-5 lg:px-6">
         <div className="grid min-w-0 gap-5">

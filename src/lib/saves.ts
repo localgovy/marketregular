@@ -83,3 +83,10 @@ export function replaceSaves(next: Saves) {
     vendors: [...new Set(next.vendors.filter((item) => typeof item === "string" && item))],
   });
 }
+
+export function unionSaves(left: Saves, right: Saves): Saves {
+  return {
+    markets: [...new Set([...left.markets, ...right.markets])],
+    vendors: [...new Set([...left.vendors, ...right.vendors])],
+  };
+}

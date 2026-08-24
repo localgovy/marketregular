@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { takeGoogleOAuthHandoff } from "@/lib/google-oauth";
+import { mergeSaves } from "@/app/actions/saves";
+import { getSaves } from "@/lib/saves";
 import { safePath } from "@/lib/auth-redirect";
 
 type CallbackPayload = {
@@ -70,6 +72,12 @@ export function GoogleCallbackClient() {
       if (result.error) {
         if (!cancelled) setError(result.error.message);
         return;
+      }
+
+      try {
+        await mergeSaves(getSaves());
+      } catch {
+        /* Account hydrator retries. */
       }
 
       if (cancelled) return;

@@ -43,11 +43,8 @@ export async function persistSave(kind: SaveKind, slug: string, saved: boolean):
   if (!user) return null;
 
   if (saved) {
-    const { error } = await supabase.from("saves").upsert(
-      { user_id: user.id, kind, slug },
-      { onConflict: "user_id,kind,slug", ignoreDuplicates: true },
-    );
-    if (error) throw new Error(error.message);
+    const { error } = await supabase.from("saves").insert({ user_id: user.id, kind, slug });
+    if (error && error.code !== "23505") throw new Error(error.message);
   } else {
     const { error } = await supabase
       .from("saves")
