@@ -64,7 +64,7 @@
 :root {
   /* Shared header + homepage rail so the brand column and reviews column meet. */
   --header-bar-lg: 4rem;
-  --header-stripe: 6px;
+  --header-stripe: 2px;
   --header-lg: calc(var(--header-bar-lg) + var(--header-stripe));
   /* Warm paper, quiet leaf, honey only for "open now". */
   --background: #f4f1ea;

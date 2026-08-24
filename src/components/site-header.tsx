@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md lg:border-b-2 lg:border-board">
       <div className="flex h-14 w-full items-center gap-3 px-4 lg:grid lg:h-16 lg:site-rail lg:gap-0 lg:px-0">
-        <div className="flex min-w-0 flex-1 items-center lg:h-16 lg:flex-none lg:border-r lg:border-board lg:awning-board lg:px-4">
+        <div className="flex min-w-0 flex-1 items-center lg:h-16 lg:flex-none lg:border-r lg:border-board lg:bg-board lg:px-4">
           <div className="flex min-w-0 items-center gap-2.5">
             <Link href="/" prefetch={false} aria-label={`${SITE_NAME} home`} className="shrink-0">
               <SiteMark className="size-8" />
@@ -67,13 +67,6 @@ export function SiteHeader() {
           <SavesHydrator />
           <HeaderAccount />
         </div>
-      </div>
-      <div
-        aria-hidden
-        className="hidden lg:grid lg:h-header-stripe lg:site-rail"
-      >
-        <div className="border-r border-board header-stripe-fill-board" />
-        <div className="header-stripe-fill-paper" />
       </div>
       <nav
         aria-label="Primary"
