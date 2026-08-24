@@ -51,13 +51,17 @@ export function AccountCensus({
         <CensusCell
           href="#saved"
           value={markets}
-          word={markets === 1 ? "market" : "markets"}
+          word={markets === 1 ? "saved market" : "saved markets"}
         />
-        <CensusCell href="#saved" value={stalls} word={stalls === 1 ? "stall" : "stalls"} />
+        <CensusCell
+          href="#saved"
+          value={stalls}
+          word={stalls === 1 ? "saved vendor" : "saved vendors"}
+        />
         <CensusCell
           href="#reviews"
           value={reviewCount}
-          word={reviewCount === 1 ? "review" : "reviews"}
+          word={reviewCount === 1 ? "saved review" : "saved reviews"}
         />
       </div>
     </nav>
