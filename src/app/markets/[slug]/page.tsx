@@ -87,23 +87,27 @@ export default async function MarketPage({
         reviewCount={market.review_count}
       />
       <TagList className="mt-4" tags={sortTagsForDisplay(market.tags)} />
-      {market.vendors.length ? (
-        <a
-          href="#vendors"
-          className="mt-4 inline-flex items-center gap-1 text-sm font-medium underline underline-offset-4 hover:text-foreground"
-        >
-          Scroll down to see vendors
-          <CaretDownMark className="size-3.5" />
-        </a>
-      ) : null}
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">
           <MarketMapLazy markets={[market]} load="visible" className={MARKET_PROFILE_MAP} />
-          {market.about ? (
+          {market.about || market.vendors.length ? (
             <section>
-              <h2>About</h2>
-              <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>
+              {market.about ? (
+                <>
+                  <h2>About</h2>
+                  <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>
+                </>
+              ) : null}
+              {market.vendors.length ? (
+                <a
+                  href="#vendors"
+                  className="stall-chip mt-4 inline-flex h-11 items-center gap-2 bg-primary px-5 text-base font-medium text-primary-foreground outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-foreground"
+                >
+                  Scroll down to see vendors
+                  <CaretDownMark className="size-4" />
+                </a>
+              ) : null}
             </section>
           ) : null}
         </div>
