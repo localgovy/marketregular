@@ -26,8 +26,11 @@ export async function signUpWithPassword(formData: FormData) {
   if (!supabase) return { error: "Supabase is not configured yet." };
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const displayName = String(formData.get("display_name") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+  const displayName = String(formData.get("display_name") ?? "").trim();
   const next = safePath(formData.get("next"));
+  if (password.length < 8) return { error: "Use at least 8 characters." };
+  if (password !== confirm) return { error: "Those passwords do not match." };
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -39,18 +42,6 @@ export async function signUpWithPassword(formData: FormData) {
   if (error) return { error: error.message };
   if (data.session) redirect(next);
   return { error: null, message: "Check your email to confirm your account." };
-}
-
-export async function signInWithMagicLink(formData: FormData) {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return { error: "Supabase is not configured yet." };
-  const email = String(formData.get("email") ?? "");
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: callbackUrl(formData.get("next")) },
-  });
-  if (error) return { error: error.message };
-  return { error: null, message: "Magic link sent. Check your inbox." };
 }
 
 export async function signInWithGoogle(next = "/account") {
