@@ -1,7 +1,8 @@
-import { createServerClient } from "@supabase/ssr";
 import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
+import { onboardingExemptPath, onboardingHref } from "@/lib/onboarding";
 import { safePath } from "@/lib/auth-redirect";
 import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 function loginRedirect(request: NextRequest) {
   const next = safePath(`${request.nextUrl.pathname}${request.nextUrl.search}`);
@@ -9,6 +10,13 @@ function loginRedirect(request: NextRequest) {
   redirectUrl.pathname = "/login";
   redirectUrl.search = `?next=${encodeURIComponent(next)}`;
   return NextResponse.redirect(redirectUrl);
+}
+
+function copyCookies(from: NextResponse, to: NextResponse) {
+  from.cookies.getAll().forEach((cookie) => {
+    to.cookies.set(cookie.name, cookie.value);
+  });
+  return to;
 }
 
 export async function updateSession(request: NextRequest) {
@@ -25,7 +33,13 @@ export async function updateSession(request: NextRequest) {
     .some((cookie) => cookieLooksLikeSupabaseAuth(cookie.name));
 
   if (!hasAuthCookie) {
-    if (!needsAuth) return supabaseResponse;
+    if (!needsAuth && path !== "/onboarding") return supabaseResponse;
+    if (path === "/onboarding") {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/login";
+      redirectUrl.search = "?next=%2Fonboarding";
+      return NextResponse.redirect(redirectUrl);
+    }
     return loginRedirect(request);
   }
 
@@ -51,7 +65,19 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (needsAuth && !user) {
-    return loginRedirect(request);
+    return copyCookies(supabaseResponse, loginRedirect(request));
+  }
+
+  if (user && !onboardingExemptPath(path)) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("onboarded_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!error && !data?.onboarded_at) {
+      const dest = new URL(onboardingHref(`${path}${request.nextUrl.search}`), request.nextUrl.origin);
+      return copyCookies(supabaseResponse, NextResponse.redirect(dest));
+    }
   }
 
   return supabaseResponse;

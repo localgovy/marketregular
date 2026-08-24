@@ -8,6 +8,9 @@ export type Profile = {
   display_name: string | null;
   avatar_url: string | null;
   role: UserRole;
+  username: string | null;
+  favorite_market_slugs: string[];
+  onboarded_at: string | null;
 };
 
 export type Market = {

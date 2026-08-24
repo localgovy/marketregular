@@ -66,3 +66,5 @@ Public crawl files after deploy:
 ## Email later
 
 When you add email (NamesLink Business Email or Google Workspace), add MX/TXT at NamesLink. Do not put a CNAME on `@` — it cannot coexist with MX. The existing A record on `@` is fine next to MX.
+
+**Sending** “this week’s hours” from the app uses [Resend](https://resend.com). That needs DKIM CNAMEs Resend prints for `marketregular.com` (not MX). Until the domain is verified, Resend only delivers to the email that owns the API key. Set `RESEND_API_KEY` and `RESEND_FROM` (for example `MarketRegular <hello@marketregular.com>`) in Vercel after verify.

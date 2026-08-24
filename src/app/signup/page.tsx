@@ -2,6 +2,7 @@ import { BackButton } from "@/components/back-button";
 import { SignupForm } from "@/components/signup-form";
 import { safePath } from "@/lib/auth-redirect";
 import { getCurrentProfile } from "@/lib/data/catalog";
+import { needsOnboarding, onboardingHref } from "@/lib/onboarding";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -20,7 +21,7 @@ export default async function SignupPage({
 }) {
   const [{ next: raw }, profile] = await Promise.all([searchParams, getCurrentProfile()]);
   const next = safePath(raw);
-  if (profile) redirect(next);
+  if (profile) redirect(needsOnboarding(profile) ? onboardingHref(next) : next);
 
   const loginHref =
     next && next !== "/account" ? `/login?next=${encodeURIComponent(next)}` : "/login";

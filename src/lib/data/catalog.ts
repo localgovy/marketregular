@@ -119,15 +119,26 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   if (!user) return null;
   const { data } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, role")
+    .select(
+      "id, display_name, avatar_url, role, username, favorite_market_slugs, onboarded_at",
+    )
     .eq("id", user.id)
     .maybeSingle();
-  if (data) return data as Profile;
+  if (data) {
+    const row = data as Profile;
+    return {
+      ...row,
+      favorite_market_slugs: row.favorite_market_slugs ?? [],
+    };
+  }
   return {
     id: user.id,
     display_name: user.email?.split("@")[0] ?? "You",
     avatar_url: null,
     role: "user",
+    username: null,
+    favorite_market_slugs: [],
+    onboarded_at: null,
   };
 }
 

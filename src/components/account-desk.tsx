@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { signOut, updateProfile } from "@/app/actions/auth";
 import { deleteOwnPost } from "@/app/actions/presence";
+import { AccountHandleForm } from "@/components/account-handle-form";
 import { AccountSavedLists } from "@/components/account-saved";
 import { DeleteAccountForm } from "@/components/delete-account-form";
+import { EmailVisitButton } from "@/components/email-visit-button";
 import { HomePanel } from "@/components/home-panel";
 import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item";
 import { ListingComposer } from "@/components/listing-composer";
@@ -128,6 +130,11 @@ export function AccountDesk({
   const savedMarketCount = saves.markets.length;
   const savedVendorCount = saves.vendors.length;
   const name = profile.display_name?.trim() || "Regular";
+  const handle = profile.username ? `@${profile.username}` : null;
+  const visitSlugs =
+    (profile.favorite_market_slugs ?? []).length > 0
+      ? profile.favorite_market_slugs
+      : saves.markets.slice(0, 3);
   const vendorBySlug = new Map(vendors.map((vendor) => [vendor.slug, vendor]));
   const listingName = new Map<string, { name: string; href: string }>();
   for (const market of markets) {
@@ -235,6 +242,9 @@ export function AccountDesk({
               vendorWhen={vendorWhen}
               initialSaves={saves}
             />
+            {visitSlugs.length ? (
+              <EmailVisitButton className="mt-4" slugs={visitSlugs} />
+            ) : null}
           </HomePanel>
 
           <HomePanel
@@ -357,7 +367,7 @@ export function AccountDesk({
             icon={PlateMark}
             kicker="On posts"
             title="Name and sign-in"
-            how="This name sits on your reviews. Sign-in stays on this device until you sign out."
+            how="The name sits on reviews. The handle is unique on this site. Sign-in stays on this device until you sign out."
           >
             <div className="flex items-center gap-3 pb-4">
               {profile.avatar_url ? (
@@ -377,6 +387,9 @@ export function AccountDesk({
               )}
               <div className="min-w-0">
                 <p className="text-base font-medium text-primary-foreground">{name}</p>
+                {handle ? (
+                  <p className="text-sm text-chalk">{handle}</p>
+                ) : null}
                 {email ? (
                   <p className="break-all text-sm text-chalk">{email}</p>
                 ) : null}
@@ -398,6 +411,9 @@ export function AccountDesk({
                 Save name
               </Button>
             </form>
+            <div className="mt-4">
+              <AccountHandleForm username={profile.username} />
+            </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
                 href="/account/password"

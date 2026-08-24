@@ -69,6 +69,7 @@ const nextConfig: NextConfig = {
       { source: "/account/:path*", headers: noindex },
       { source: "/login", headers: noindex },
       { source: "/signup", headers: noindex },
+      { source: "/onboarding", headers: noindex },
       { source: "/auth/:path*", headers: noindex },
       { source: "/saved", headers: noindex },
       { source: "/kept", headers: noindex },

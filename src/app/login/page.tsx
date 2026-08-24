@@ -2,6 +2,7 @@ import { BackButton } from "@/components/back-button";
 import { LoginForm } from "@/components/login-form";
 import { safePath } from "@/lib/auth-redirect";
 import { getCurrentProfile } from "@/lib/data/catalog";
+import { needsOnboarding, onboardingHref } from "@/lib/onboarding";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -23,7 +24,7 @@ export default async function LoginPage({
     getCurrentProfile(),
   ]);
   const next = safePath(raw);
-  if (profile) redirect(next);
+  if (profile) redirect(needsOnboarding(profile) ? onboardingHref(next) : next);
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">

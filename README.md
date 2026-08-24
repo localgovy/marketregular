@@ -66,6 +66,8 @@ On that same Web client, keep the Supabase callback and add the MarketRegular ca
 
 Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars. Set `ADMIN_EMAILS` to your login email.
 
+New accounts (and existing ones without a handle) go to `/onboarding` after sign-in: unique `@handle`, three favorite markets, then a short how-to. Optional visit-plan mail uses `RESEND_API_KEY` and `RESEND_FROM` — see [DOMAIN.md](DOMAIN.md).
+
 Regenerate seed SQL after editing `src/data/directory.ts`:
 
 ```bash

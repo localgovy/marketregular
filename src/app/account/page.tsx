@@ -12,6 +12,7 @@ import { nextOpenLabel } from "@/lib/schedule";
 import { upcomingByDay } from "@/lib/upcoming";
 import { savedVendorsSellingToday, savedVendorsThisWeek } from "@/lib/vendor-week";
 import { SITE_NAME } from "@/lib/constants";
+import { needsOnboarding, onboardingHref } from "@/lib/onboarding";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -27,6 +28,7 @@ export const metadata: Metadata = pageMeta({
 export default async function AccountPage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login?next=/account");
+  if (needsOnboarding(profile)) redirect(onboardingHref("/account"));
 
   const [desk, markets, vendors, stalls, schedules] = await Promise.all([
     loadAccountDesk(profile.id),
