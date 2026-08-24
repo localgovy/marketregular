@@ -37,7 +37,9 @@ npx supabase db query --linked < supabase/seed.sql
 
 (`db query` command names vary by CLI version; you can also paste `supabase/seed.sql` into the SQL editor.)
 
-Enable Email auth (and Google later). Add the site URL and both `https://www.marketregular.com/auth/callback` and `https://marketregular.com/auth/callback` to Auth redirect URLs.
+Enable Email auth. Add the site URL and both `https://www.marketregular.com/auth/callback` and `https://marketregular.com/auth/callback` to Auth redirect URLs. For local Google sign-in also allow `http://localhost:3000/auth/callback`.
+
+To turn on Continue with Google: create a Google Cloud OAuth 2.0 Web client, set the authorized redirect URI to `https://<project-ref>.supabase.co/auth/v1/callback`, then enable the Google provider in Supabase Auth with that client ID and secret.
 
 Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars. Set `ADMIN_EMAILS` to your login email.
 

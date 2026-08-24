@@ -30,7 +30,7 @@ export default async function SignupPage({
       <BackButton href={loginHref} />
       <h1>Create an account</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        A name for posts, then email and a password. At least 8 characters.
+        A name for posts, then email and a password — or continue with Google.
       </p>
       <SignupForm next={next} />
     </div>

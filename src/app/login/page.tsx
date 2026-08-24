@@ -16,9 +16,12 @@ export const metadata: Metadata = pageMeta({
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; error?: string }>;
 }) {
-  const [{ next: raw }, profile] = await Promise.all([searchParams, getCurrentProfile()]);
+  const [{ next: raw, error: oauthError }, profile] = await Promise.all([
+    searchParams,
+    getCurrentProfile(),
+  ]);
   const next = safePath(raw);
   if (profile) redirect(next);
 
@@ -29,7 +32,10 @@ export default async function LoginPage({
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
         Saved markets and reviews follow this account. Browsing stays open.
       </p>
-      <LoginForm next={next} />
+      <LoginForm
+        next={next}
+        oauthError={oauthError?.trim() ? oauthError.trim().slice(0, 280) : undefined}
+      />
     </div>
   );
 }

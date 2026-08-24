@@ -44,19 +44,6 @@ export async function signUpWithPassword(formData: FormData) {
   return { error: null, message: "Check your email to confirm your account." };
 }
 
-export async function signInWithGoogle(next = "/account") {
-  const supabase = await createServerSupabaseClient();
-  if (!supabase) return { error: "Supabase is not configured yet." };
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: callbackUrl(next),
-    },
-  });
-  if (error || !data.url) return { error: error?.message ?? "OAuth failed" };
-  redirect(data.url);
-}
-
 export async function requestPasswordReset(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { error: "Supabase is not configured yet." };

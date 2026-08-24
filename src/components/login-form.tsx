@@ -2,7 +2,8 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { requestPasswordReset, signInWithGoogle, signInWithPassword } from "@/app/actions/auth";
+import { requestPasswordReset, signInWithPassword } from "@/app/actions/auth";
+import { GoogleSignIn } from "@/components/google-sign-in";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +15,13 @@ function signupHref(next: string) {
   return next && next !== "/account" ? `/signup?next=${encodeURIComponent(next)}` : "/signup";
 }
 
-export function LoginForm({ next = "/account" }: { next?: string }) {
+export function LoginForm({
+  next = "/account",
+  oauthError,
+}: {
+  next?: string;
+  oauthError?: string;
+}) {
   const configured = isSupabaseConfigured();
   const [forgot, setForgot] = useState(false);
 
@@ -100,15 +107,7 @@ export function LoginForm({ next = "/account" }: { next?: string }) {
         ) : null}
       </form>
 
-      <form
-        action={async () => {
-          await signInWithGoogle(next);
-        }}
-      >
-        <Button type="submit" variant="outline" className="w-full">
-          Continue with Google
-        </Button>
-      </form>
+      <GoogleSignIn next={next} error={oauthError} />
 
       <p className="text-sm text-muted-foreground">
         No account?{" "}

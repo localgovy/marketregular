@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { signUpWithPassword } from "@/app/actions/auth";
+import { GoogleSignIn } from "@/components/google-sign-in";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,6 +77,8 @@ export function SignupForm({ next = "/account" }: { next?: string }) {
           <p className="text-sm text-primary">{state.message}</p>
         ) : null}
       </form>
+
+      <GoogleSignIn next={next} />
 
       <p className="text-sm text-muted-foreground">
         Already have an account?{" "}
