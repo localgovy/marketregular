@@ -163,12 +163,10 @@ export default async function VendorPage({
           </div>
           <div className="rounded-xl bg-secondary/50 p-5">
             <p className="font-medium">Is this your stall?</p>
-            <ClaimForm
-              targetType="vendor"
-              targetId={vendor.id}
-              signedIn={Boolean(profile)}
-              nextPath={`/vendors/${vendor.slug}`}
-            />
+            <p className="mt-1 text-sm text-muted-foreground">
+              Claim it to update hours, the menu, and how people find you.
+            </p>
+            <ClaimForm targetType="vendor" targetId={vendor.id} />
           </div>
         </aside>
       </div>

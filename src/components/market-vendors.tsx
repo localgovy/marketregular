@@ -142,7 +142,7 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
   }
 
   return (
-    <section id="vendors">
+    <section id="vendors" className="scroll-mt-28 lg:scroll-mt-24">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <h2>Vendors</h2>
         {vendors.length ? (

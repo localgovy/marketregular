@@ -8,6 +8,7 @@ import { SaveButton } from "@/components/save-button";
 import { ListingComposer } from "@/components/listing-composer";
 import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
+import { CaretDownMark } from "@/components/marks";
 import { MarketVendors } from "@/components/market-vendors";
 import { NowLabel } from "@/components/now-label";
 import { ScheduleList } from "@/components/schedule-list";
@@ -86,6 +87,15 @@ export default async function MarketPage({
         reviewCount={market.review_count}
       />
       <TagList className="mt-4" tags={sortTagsForDisplay(market.tags)} />
+      {market.vendors.length ? (
+        <a
+          href="#vendors"
+          className="mt-4 inline-flex items-center gap-1 text-sm font-medium underline underline-offset-4 hover:text-foreground"
+        >
+          Scroll down to see vendors
+          <CaretDownMark className="size-3.5" />
+        </a>
+      ) : null}
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">
@@ -116,12 +126,7 @@ export default async function MarketPage({
             <p className="mt-1 text-sm text-muted-foreground">
               Claim it to update hours, vendors, and contact details.
             </p>
-            <ClaimForm
-              targetType="market"
-              targetId={market.id}
-              signedIn={Boolean(profile)}
-              nextPath={`/markets/${market.slug}`}
-            />
+            <ClaimForm targetType="market" targetId={market.id} />
           </div>
         </aside>
         <div className="lg:col-span-2">
