@@ -75,13 +75,15 @@ export function VendorWeekItem({
   index,
 }: {
   pick: VendorWeekPick;
-  index: number;
+  index?: number;
 }) {
   return (
     <li className="flex gap-3 border-b border-border px-3 py-3 last:border-b-0">
-      <span className="w-5 shrink-0 pt-0.5 font-mono text-sm text-muted-foreground">
-        {index + 1}
-      </span>
+      {index != null ? (
+        <span className="w-5 shrink-0 pt-0.5 font-mono text-sm text-muted-foreground">
+          {index + 1}
+        </span>
+      ) : null}
       <span className="min-w-0 flex-1">
         <Link href={`/vendors/${pick.vendorSlug}`} className="text-base font-medium hover:underline">
           {pick.vendorName}

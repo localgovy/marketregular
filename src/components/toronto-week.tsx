@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { HomePanel } from "@/components/home-panel";
 import { Hours } from "@/components/hours";
@@ -44,29 +45,47 @@ function DayCard({ group }: { group: UpcomingGroup }) {
   );
 }
 
-export function TorontoWeek({ groups }: { groups: UpcomingGroup[] }) {
+export function TorontoWeek({
+  groups,
+  id = "week",
+  kicker,
+  title = "Upcoming markets",
+  how = "A stamp means open right now. Tap a name for vendors and the map.",
+  action,
+  empty = `No ${LAUNCH_CITY} markets are on the calendar for the next seven days.`,
+  className = "xl:shrink-0",
+}: {
+  groups: UpcomingGroup[];
+  id?: string;
+  kicker?: string;
+  title?: string;
+  how?: ReactNode;
+  action?: ReactNode;
+  empty?: string;
+  className?: string;
+}) {
   const open = groups.find((g) => g.open);
   const rest = groups.filter((g) => !g.open);
+  const weekKicker = kicker ?? `${LAUNCH_CITY} this week`;
+  const weekAction = action ?? (
+    <Link href="/events" className="hover:underline">
+      Month calendar
+    </Link>
+  );
 
   return (
     <HomePanel
-      id="week"
+      id={id}
       tone="open"
       icon={WeekMark}
-      kicker={`${LAUNCH_CITY} this week`}
-      title="Upcoming markets"
-      how="A stamp means open right now. Tap a name for vendors and the map."
-      className="xl:shrink-0"
-      action={
-        <Link href="/events" className="hover:underline">
-          Month calendar
-        </Link>
-      }
+      kicker={weekKicker}
+      title={title}
+      how={how}
+      className={className}
+      action={weekAction}
     >
       {!groups.length ? (
-        <p className="text-base text-muted-foreground">
-          No Toronto markets are on the calendar for the next seven days.
-        </p>
+        <p className="text-base text-muted-foreground">{empty}</p>
       ) : (
         <div className="grid gap-3">
           {open ? <DayCard group={open} /> : null}

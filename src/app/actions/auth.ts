@@ -3,6 +3,7 @@
 import { authOrigin, safePath } from "@/lib/auth-redirect";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 function callbackUrl(next: unknown) {
@@ -91,6 +92,7 @@ export async function updateProfile(formData: FormData) {
     .update({ display_name })
     .eq("id", user.id);
   if (error) throw new Error(error.message);
+  revalidatePath("/account");
 }
 
 export async function deleteAccount(formData: FormData) {

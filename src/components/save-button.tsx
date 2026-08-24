@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { persistSave } from "@/app/actions/saves";
 import {
   EMPTY_SAVES,
@@ -31,6 +31,7 @@ export function SaveButton({
   size?: "sm" | "md" | "lg";
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const saves = useSaves();
   const saved = isSaved(kind, slug, saves);
   const label = name ?? (kind === "market" ? "this market" : "this stall");
@@ -56,6 +57,9 @@ export function SaveButton({
         void persistSave(kind, slug, nextSaved).then((canonical) => {
           if (canonical) {
             replaceSaves(canonical);
+            if (pathname === "/account" || pathname.startsWith("/account/")) {
+              router.refresh();
+            }
             return;
           }
           toggleSave(kind, slug);

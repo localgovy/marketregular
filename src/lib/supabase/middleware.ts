@@ -1,6 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
+import { safePath } from "@/lib/auth-redirect";
 import { NextResponse, type NextRequest } from "next/server";
+
+function loginRedirect(request: NextRequest) {
+  const next = safePath(`${request.nextUrl.pathname}${request.nextUrl.search}`);
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = "/login";
+  redirectUrl.search = `?next=${encodeURIComponent(next)}`;
+  return NextResponse.redirect(redirectUrl);
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -17,10 +26,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!hasAuthCookie) {
     if (!needsAuth) return supabaseResponse;
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/";
-    redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
+    return loginRedirect(request);
   }
 
   const supabase = createServerClient(url, key, {
@@ -45,10 +51,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (needsAuth && !user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/";
-    redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
+    return loginRedirect(request);
   }
 
   return supabaseResponse;

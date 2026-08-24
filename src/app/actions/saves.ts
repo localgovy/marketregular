@@ -2,6 +2,7 @@
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { SaveKind, Saves } from "@/lib/saves";
+import { revalidatePath } from "next/cache";
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -57,6 +58,8 @@ export async function persistSave(kind: SaveKind, slug: string, saved: boolean):
     if (error) throw new Error(error.message);
   }
 
+  revalidatePath("/account");
+  revalidatePath("/saved");
   return listSaves(supabase, user.id);
 }
 
@@ -82,5 +85,7 @@ export async function mergeSaves(local: Saves): Promise<Saves | null> {
     if (error) throw new Error(error.message);
   }
 
+  revalidatePath("/account");
+  revalidatePath("/saved");
   return listSaves(supabase, user.id);
 }

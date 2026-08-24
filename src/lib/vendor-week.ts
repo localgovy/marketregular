@@ -168,3 +168,63 @@ export function topVendorsThisWeek(
       where: row.where,
     }));
 }
+
+export function savedVendorsSellingToday(
+  savedSlugs: string[],
+  stalls: StallRef[],
+  markets: Market[],
+  vendors: Vendor[],
+  scheduleMap: Map<string, MarketSchedule[]>,
+  now = new Date(),
+): VendorTodayRow[] {
+  if (!savedSlugs.length) return [];
+  const saved = new Set(savedSlugs);
+  return vendorsSellingToday(stalls, markets, vendors, scheduleMap, now)
+    .filter((row) => saved.has(row.vendorSlug))
+    .sort(
+      (a, b) => Number(b.open) - Number(a.open) || a.vendorName.localeCompare(b.vendorName),
+    );
+}
+
+export function savedVendorsThisWeek(
+  savedSlugs: string[],
+  stalls: StallRef[],
+  markets: Market[],
+  vendors: Vendor[],
+  scheduleMap: Map<string, MarketSchedule[]>,
+  now = new Date(),
+): VendorWeekPick[] {
+  if (!savedSlugs.length) return [];
+  const saved = new Set(savedSlugs);
+  const tz = LAUNCH_TZ;
+  const { weekday } = zonedParts(now, tz);
+  const byId = new Map(vendors.map((vendor) => [vendor.id, vendor]));
+  const acc = new Map<string, VendorWeekPick>();
+
+  for (let offset = 0; offset < 7; offset += 1) {
+    const day = (weekday + offset) % 7;
+    const when = dayLabel(offset, day);
+    for (const stall of stalls) {
+      const vendor = byId.get(stall.id);
+      const slug = vendor?.slug ?? stall.slug;
+      if (!saved.has(slug)) continue;
+      if (!stall.days.includes(day)) continue;
+      const market = markets.find((row) => row.id === stall.market_id);
+      if (!market) continue;
+      if (!scheduleForDay(scheduleMap.get(market.id) ?? [], day, now, tz)) continue;
+      const current = acc.get(slug) ?? {
+        vendorName: vendor?.name ?? stall.name,
+        vendorSlug: slug,
+        about: vendor?.about ?? null,
+        tags: vendorProductTags(vendor?.name ?? stall.name, vendor?.tags),
+        where: [],
+      };
+      if (!current.where.some((place) => place.marketSlug === market.slug && place.when === when)) {
+        current.where.push({ when, marketName: market.name, marketSlug: market.slug });
+      }
+      acc.set(slug, current);
+    }
+  }
+
+  return [...acc.values()].sort((a, b) => a.vendorName.localeCompare(b.vendorName));
+}

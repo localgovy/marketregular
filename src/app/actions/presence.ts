@@ -96,6 +96,8 @@ export async function createPost(input: {
     .maybeSingle();
   revalidatePath("/");
   revalidatePath("/markets");
+  revalidatePath("/account");
+  revalidatePath("/feed");
   if (market?.slug) revalidatePath(`/markets/${market.slug}`);
   if (input.vendorSlug) revalidatePath(`/vendors/${input.vendorSlug}`);
   return { error: null, demo: false };
