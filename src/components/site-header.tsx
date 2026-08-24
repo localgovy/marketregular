@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HeaderAccount } from "@/components/header-account";
+import { SavesHydrator } from "@/components/saves-hydrator";
 import { NavLink } from "@/components/nav-link";
 import { SiteMark, StudioWordmark } from "@/components/site-mark";
 import { buttonVariants } from "@/components/ui/button";
@@ -63,6 +64,7 @@ export function SiteHeader() {
               Find
             </button>
           </form>
+          <SavesHydrator />
           <HeaderAccount />
         </div>
       </div>

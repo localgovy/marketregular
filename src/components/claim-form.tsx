@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { submitClaim } from "@/app/actions/claims";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,10 +10,12 @@ export function ClaimForm({
   targetType,
   targetId,
   signedIn,
+  nextPath,
 }: {
   targetType: "market" | "vendor";
   targetId: string;
   signedIn: boolean;
+  nextPath: string;
 }) {
   const [state, action, pending] = useActionState(
     async (_prev: { error: string | null; message?: string } | null, formData: FormData) => {
@@ -21,7 +24,19 @@ export function ClaimForm({
     null,
   );
 
-  if (!signedIn) return null;
+  if (!signedIn) {
+    return (
+      <p className="mt-4 text-sm">
+        <Link
+          href={`/login?next=${encodeURIComponent(nextPath)}`}
+          className="font-medium hover:underline"
+        >
+          Sign in
+        </Link>{" "}
+        to request a claim.
+      </p>
+    );
+  }
 
   return (
     <form action={action} className="mt-4 grid gap-2">

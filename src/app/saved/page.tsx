@@ -17,7 +17,7 @@ export default async function SavedPage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <h1>Saved</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        Your list of halls and stalls. Saved on this device so Saturday is already decided.
+        Your list of halls and stalls. Saved on this device; sign in to keep it with your account.
       </p>
       <SavedDesk markets={markets} vendors={vendors} />
     </div>

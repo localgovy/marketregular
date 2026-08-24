@@ -76,3 +76,10 @@ export function toggleSave(kind: SaveKind, slug: string) {
     : [...current, slug];
   emit({ ...snapshot, [key]: nextList });
 }
+
+export function replaceSaves(next: Saves) {
+  emit({
+    markets: [...new Set(next.markets.filter((item) => typeof item === "string" && item))],
+    vendors: [...new Set(next.vendors.filter((item) => typeof item === "string" && item))],
+  });
+}

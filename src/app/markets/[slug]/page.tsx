@@ -109,15 +109,18 @@ export default async function MarketPage({
             <ListingInstagram href={market.instagram} />
             <ListingTiktok href={market.tiktok} />
           </div>
-          {profile ? (
-            <div className="rounded-xl bg-secondary/50 p-5">
-              <p className="font-medium">Do you run this market?</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Claim it to update hours, vendors, and contact details.
-              </p>
-              <ClaimForm targetType="market" targetId={market.id} signedIn />
-            </div>
-          ) : null}
+          <div className="rounded-xl bg-secondary/50 p-5">
+            <p className="font-medium">Do you run this market?</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Claim it to update hours, vendors, and contact details.
+            </p>
+            <ClaimForm
+              targetType="market"
+              targetId={market.id}
+              signedIn={Boolean(profile)}
+              nextPath={`/markets/${market.slug}`}
+            />
+          </div>
         </aside>
         <div className="lg:col-span-2">
           <MarketVendors vendors={market.vendors} />

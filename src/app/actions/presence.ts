@@ -190,6 +190,18 @@ export async function composeFloorNote(input: {
   return { error: null, demo: post.demo };
 }
 
+export async function deleteOwnPost(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing post.");
+  const { supabase, user, demo } = await requireUser();
+  if (demo || !supabase || !user) throw new Error("Sign in first.");
+  const { error } = await supabase.from("posts").delete().eq("id", id).eq("user_id", user.id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/account");
+  revalidatePath("/");
+  revalidatePath("/feed");
+}
+
 export async function flagItem(table: "posts" | "reviews", id: string) {
   if (!isFlagTable(table)) return { error: "Admins only." };
   const { supabase, user, demo } = await requireUser();

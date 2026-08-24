@@ -1,14 +1,17 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { persistSave } from "@/app/actions/saves";
 import {
   EMPTY_SAVES,
   getSaves,
   isSaved,
   subscribeSaves,
   toggleSave,
+  replaceSaves,
   type SaveKind,
 } from "@/lib/saves";
+import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { cn } from "@/lib/utils";
 
 export function useSaves() {
@@ -38,7 +41,12 @@ export function SaveButton({
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
+        const nextSaved = !saved;
         toggleSave(kind, slug);
+        if (!documentHasAuthCookie()) return;
+        void persistSave(kind, slug, nextSaved).then((canonical) => {
+          if (canonical) replaceSaves(canonical);
+        });
       }}
       className={cn(
         "relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",

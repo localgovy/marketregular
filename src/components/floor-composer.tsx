@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { composeFloorNote } from "@/app/actions/presence";
 import { useGeo } from "@/components/geo-provider";
 import { ScorePlate } from "@/components/listing-score";
 import { CloseMark, PlateMark, TagMark } from "@/components/marks";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FLOOR_TAGS, isSupabaseConfigured } from "@/lib/constants";
@@ -49,6 +51,7 @@ export function FloorComposer({
 }) {
   const { nearby, coords, error, request } = useGeo();
   const here = nearby[0];
+  const pathname = usePathname() || "/";
   const demo = !isSupabaseConfigured();
   const [signedIn, setSignedIn] = useState(signedInProp);
   const [body, setBody] = useState("");
@@ -392,15 +395,24 @@ export function FloorComposer({
           </div>
         ) : null}
         <div className="ml-auto flex min-w-0 items-center gap-1">
-          <Button
-            type="button"
-            size="sm"
-            onClick={submit}
-            disabled={pending || body.trim().length < 3 || !canWrite || !market}
-            className="h-8 rounded-full px-4"
-          >
-            {pending ? "…" : "Review"}
-          </Button>
+          {!demo && !signedIn ? (
+            <Link
+              href={`/login?next=${encodeURIComponent(pathname)}`}
+              className={cn(buttonVariants({ size: "sm" }), "h-8 rounded-full px-4")}
+            >
+              Sign in
+            </Link>
+          ) : (
+            <Button
+              type="button"
+              size="sm"
+              onClick={submit}
+              disabled={pending || body.trim().length < 3 || !canWrite || !market}
+              className="h-8 rounded-full px-4"
+            >
+              {pending ? "…" : "Review"}
+            </Button>
+          )}
         </div>
       </div>
 

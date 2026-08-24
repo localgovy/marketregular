@@ -26,7 +26,7 @@ export function SavedRail({
       icon={TicketMark}
       kicker="On your list"
       title="Saved"
-      how="Markets and stalls you saved. They stay in this browser."
+      how="Markets and stalls you saved."
       action={
         <Link href="/saved" className="hover:underline">
           Open list
@@ -78,9 +78,11 @@ export function SavedRail({
 export function SavedDesk({
   markets,
   vendors,
+  followAccount = false,
 }: {
   markets: Market[];
   vendors: Vendor[];
+  followAccount?: boolean;
 }) {
   const saves = useSaves();
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
@@ -91,8 +93,9 @@ export function SavedDesk({
     <div className="grid gap-10">
       {empty ? (
         <p className="text-muted-foreground">
-          Nothing saved yet. Open a market or a stall and press Save. It stays in this
-          browser until you take it off. You do not need an account.
+          {followAccount
+            ? "Nothing saved yet. Open a market or a stall and press Save. The list follows this account."
+            : "Nothing saved yet. Open a market or a stall and press Save. It stays in this browser until you take it off. You do not need an account."}
         </p>
       ) : null}
       <section>

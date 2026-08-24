@@ -142,12 +142,15 @@ export default async function VendorPage({
               ))}
             </ul>
           </div>
-          {profile ? (
-            <div className="rounded-xl bg-secondary/50 p-5">
-              <p className="font-medium">Is this your stall?</p>
-              <ClaimForm targetType="vendor" targetId={vendor.id} signedIn />
-            </div>
-          ) : null}
+          <div className="rounded-xl bg-secondary/50 p-5">
+            <p className="font-medium">Is this your stall?</p>
+            <ClaimForm
+              targetType="vendor"
+              targetId={vendor.id}
+              signedIn={Boolean(profile)}
+              nextPath={`/vendors/${vendor.slug}`}
+            />
+          </div>
         </aside>
       </div>
     </div>

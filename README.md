@@ -49,7 +49,7 @@ node --experimental-strip-types scripts/generate-seed-sql.ts
 
 ## Admin
 
-`/admin` edits markets and vendors, moderates the feed, and approves listing claims. Public sign-in is off for now; the desk only shows if you already have an admin session.
+`/admin` edits markets and vendors, moderates the feed, and approves listing claims. Shoppers sign in at `/login`. The desk only shows if you already have an admin session.
 
 ## What is seeded
 

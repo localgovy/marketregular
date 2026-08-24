@@ -25,7 +25,6 @@ const nextConfig: NextConfig = {
       },
       { source: "/search", destination: "/markets", permanent: true },
       { source: "/vendors", destination: "/markets", permanent: true },
-      { source: "/login", destination: "/", permanent: false },
     ];
   },
   async headers() {
@@ -65,6 +64,8 @@ const nextConfig: NextConfig = {
       { source: "/admin", headers: noindex },
       { source: "/admin/:path*", headers: noindex },
       { source: "/account", headers: noindex },
+      { source: "/account/:path*", headers: noindex },
+      { source: "/login", headers: noindex },
       { source: "/auth/:path*", headers: noindex },
       { source: "/saved", headers: noindex },
       { source: "/kept", headers: noindex },
