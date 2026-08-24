@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import { persistSave } from "@/app/actions/saves";
 import {
   EMPTY_SAVES,
@@ -29,6 +30,7 @@ export function SaveButton({
   name?: string;
   size?: "sm" | "md" | "lg";
 }) {
+  const router = useRouter();
   const saves = useSaves();
   const saved = isSaved(kind, slug, saves);
   const label = name ?? (kind === "market" ? "this market" : "this stall");
@@ -37,15 +39,27 @@ export function SaveButton({
     <button
       type="button"
       aria-pressed={saved}
-      aria-label={saved ? `Remove ${label} from saved` : `Save ${label}`}
+      aria-label={
+        saved ? `Remove ${label} from saved` : `Save ${label}`
+      }
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
+        const next = `${window.location.pathname}${window.location.search}`;
+        const loginHref = `/login?next=${encodeURIComponent(next || "/account")}`;
+        if (!documentHasAuthCookie()) {
+          router.push(loginHref);
+          return;
+        }
         const nextSaved = !saved;
         toggleSave(kind, slug);
-        if (!documentHasAuthCookie()) return;
         void persistSave(kind, slug, nextSaved).then((canonical) => {
-          if (canonical) replaceSaves(canonical);
+          if (canonical) {
+            replaceSaves(canonical);
+            return;
+          }
+          toggleSave(kind, slug);
+          router.push(loginHref);
         });
       }}
       className={cn(

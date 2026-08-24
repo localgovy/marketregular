@@ -5,6 +5,7 @@ import { HomePanel } from "@/components/home-panel";
 import { ListingScore } from "@/components/listing-score";
 import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
+import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import type { Market, Vendor } from "@/types/database";
 
 export function SavedRail({
@@ -13,10 +14,11 @@ export function SavedRail({
   markets: Array<Pick<Market, "id" | "slug" | "name" | "address" | "rating_avg" | "review_count">>;
 }) {
   const saves = useSaves();
+  const signedIn = useAuthCookie();
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const vendorCount = saves.vendors.length;
 
-  if (!savedMarkets.length && !vendorCount) return null;
+  if (!signedIn || (!savedMarkets.length && !vendorCount)) return null;
 
   return (
     <HomePanel
@@ -95,7 +97,7 @@ export function SavedDesk({
         <p className="text-muted-foreground">
           {followAccount
             ? "Nothing saved yet. Open a market or a stall and press Save. The list follows this account."
-            : "Nothing saved yet. Open a market or a stall and press Save. It stays in this browser until you take it off. You do not need an account."}
+            : "Sign in to save markets and stalls to this account."}
         </p>
       ) : null}
       <section>

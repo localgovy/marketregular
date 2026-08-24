@@ -10,7 +10,7 @@ import { CloseMark, PlateMark, TagMark } from "@/components/marks";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { FLOOR_TAGS, isSupabaseConfigured } from "@/lib/constants";
+import { FLOOR_TAGS } from "@/lib/constants";
 import { formatPriceLevel } from "@/lib/format";
 import { NOTE_PROMPTS } from "@/lib/floor-note";
 import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
@@ -42,23 +42,28 @@ export function FloorComposer({
   markets,
   onPosted,
   autoFocus = false,
+  initialMarketId,
+  initialVendorId,
+  className,
 }: {
   signedIn?: boolean;
   stalls: Array<Pick<StallRef, "id" | "name" | "slug" | "market_id" | "stall">>;
   markets: GeoMarket[];
   onPosted: (item: FloorItem) => void;
   autoFocus?: boolean;
+  initialMarketId?: string;
+  initialVendorId?: string;
+  className?: string;
 }) {
   const { nearby, coords, error, request } = useGeo();
   const here = nearby[0];
   const pathname = usePathname() || "/";
-  const demo = !isSupabaseConfigured();
   const [signedIn, setSignedIn] = useState(signedInProp);
   const [body, setBody] = useState("");
   const [rating, setRating] = useState(0);
   const [price, setPrice] = useState(0);
-  const [marketId, setMarketId] = useState<string | null>(null);
-  const [vendorId, setVendorId] = useState("");
+  const [marketId, setMarketId] = useState<string | null>(initialMarketId ?? null);
+  const [vendorId, setVendorId] = useState(initialVendorId ?? "");
   const [marketQuery, setMarketQuery] = useState("");
   const [vendorQuery, setVendorQuery] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -80,7 +85,7 @@ export function FloorComposer({
   }, [market, stalls]);
 
   const tagged = stallOptions.find((s) => s.id === vendorId);
-  const canWrite = demo || signedIn;
+  const canWrite = signedIn;
   const onSite = Boolean(market && nearby.some((item) => item.id === market.id));
   const manyStalls = stallOptions.length > 8;
 
@@ -107,6 +112,10 @@ export function FloorComposer({
   }, [manyStalls, stallOptions, vendorQuery]);
 
   useEffect(() => {
+    if (signedInProp) {
+      setSignedIn(true);
+      return;
+    }
     const hasCookie = document.cookie.split(";").some((part) => {
       const name = part.trim().split("=")[0];
       return cookieLooksLikeSupabaseAuth(name);
@@ -126,7 +135,7 @@ export function FloorComposer({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [pathname, signedInProp]);
 
   useEffect(() => {
     if (extra !== "place") return;
@@ -238,7 +247,10 @@ export function FloorComposer({
   return (
     <div
       ref={wrapRef}
-      className="relative z-10 shrink-0 border-b border-border bg-background px-3 pt-3 pb-2"
+      className={cn(
+        "relative z-10 shrink-0 border-b border-border bg-background px-3 pt-3 pb-2",
+        className,
+      )}
     >
       <label className="sr-only" htmlFor="floor-post">
         Write a review
@@ -395,7 +407,7 @@ export function FloorComposer({
           </div>
         ) : null}
         <div className="ml-auto flex min-w-0 items-center gap-1">
-          {!demo && !signedIn ? (
+          {!signedIn ? (
             <Link
               href={`/login?next=${encodeURIComponent(pathname)}`}
               className={cn(buttonVariants({ size: "sm" }), "h-8 rounded-full px-4")}

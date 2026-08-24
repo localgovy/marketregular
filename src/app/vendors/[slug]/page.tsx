@@ -5,12 +5,14 @@ import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
 import { ListingScore } from "@/components/listing-score";
+import { ListingComposer } from "@/components/listing-composer";
 import { SaveButton } from "@/components/save-button";
 import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
 import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
+import { toGeoMarket } from "@/lib/geo";
 import { WEEKDAYS } from "@/lib/constants";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
@@ -95,19 +97,36 @@ export default async function VendorPage({
               <StallMenu items={vendor.menus} />
             </section>
           ) : null}
-          {vendor.feed.length ? (
-            <section>
-              <h2>Reviews</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Anything written about this stall on the live list. The public score above is separate.
-              </p>
-              <ol className="mt-4">
+          <section>
+            <h2>Reviews</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Anything written about this stall on the live list. Sign in to add one.
+            </p>
+            {vendor.markets.length ? (
+              <ListingComposer
+                signedIn={Boolean(profile)}
+                markets={vendor.markets.map(toGeoMarket)}
+                stalls={vendor.markets.map((market) => ({
+                  id: vendor.id,
+                  name: vendor.name,
+                  slug: vendor.slug,
+                  market_id: market.id,
+                  stall: market.stall,
+                }))}
+                initialMarketId={vendor.markets[0]?.id}
+                initialVendorId={vendor.id}
+              />
+            ) : null}
+            {vendor.feed.length ? (
+              <ol className={vendor.markets.length ? undefined : "mt-4"}>
                 {vendor.feed.map((item) => (
                   <ReviewCard key={item.id} item={item} />
                 ))}
               </ol>
-            </section>
-          ) : null}
+            ) : (
+              <p className="mt-4 text-base text-muted-foreground">No reviews yet.</p>
+            )}
+          </section>
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">

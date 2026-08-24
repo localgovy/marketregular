@@ -3,11 +3,13 @@
 import { useState, type ComponentType, type ReactNode } from "react";
 import { getComposerDirectory } from "@/app/actions/home-lazy";
 import { ReviewCard } from "@/components/review-card";
+import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import type { GeoMarket } from "@/lib/geo";
 import type { FloorItem, StallRef } from "@/types/database";
 
 type ComposerProps = {
   autoFocus?: boolean;
+  signedIn?: boolean;
   stalls: Array<Pick<StallRef, "id" | "name" | "slug" | "market_id" | "stall">>;
   markets: GeoMarket[];
   onPosted: (item: FloorItem) => void;
@@ -35,15 +37,18 @@ function ComposerStart({ onStart }: { onStart: () => void }) {
 
 function LoadedComposer({
   bundle,
+  signedIn,
   onPosted,
 }: {
   bundle: ComposerBundle;
+  signedIn: boolean;
   onPosted: (item: FloorItem) => void;
 }) {
   const Composer = bundle.Composer;
   return (
     <Composer
       autoFocus
+      signedIn={signedIn}
       stalls={bundle.stalls}
       markets={bundle.markets}
       onPosted={onPosted}
@@ -52,6 +57,7 @@ function LoadedComposer({
 }
 
 export function FloorTapeLive({ children }: { children: ReactNode }) {
+  const signedIn = useAuthCookie();
   const [bundle, setBundle] = useState<ComposerBundle | null>(null);
   const [extra, setExtra] = useState<FloorItem[]>([]);
   const [pending, setPending] = useState(false);
@@ -77,6 +83,7 @@ export function FloorTapeLive({ children }: { children: ReactNode }) {
         {bundle ? (
           <LoadedComposer
             bundle={bundle}
+            signedIn={signedIn}
             onPosted={(item) => setExtra((current) => [item, ...current].slice(0, 30))}
           />
         ) : (

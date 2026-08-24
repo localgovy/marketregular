@@ -5,6 +5,7 @@ import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
 import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
+import { ListingComposer } from "@/components/listing-composer";
 import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
 import { MarketVendors } from "@/components/market-vendors";
@@ -13,6 +14,7 @@ import { ScheduleList } from "@/components/schedule-list";
 import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
+import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle } from "@/lib/listing-copy";
 import { nextOpenLabel } from "@/lib/schedule";
@@ -136,10 +138,22 @@ export default async function MarketPage({
             </p>
           ) : (
             <p className="mt-1 text-sm text-muted-foreground">
-              Same posts as the live list. A score is optional.
+              Same posts as the live list. A score is optional. Sign in to write one.
             </p>
           )}
           <div className="mt-4">
+            <ListingComposer
+              signedIn={Boolean(profile)}
+              markets={[toGeoMarket(market)]}
+              stalls={market.vendors.map((vendor) => ({
+                id: vendor.id,
+                name: vendor.name,
+                slug: vendor.slug,
+                market_id: market.id,
+                stall: vendor.stall,
+              }))}
+              initialMarketId={market.id}
+            />
             <LiveFeed initialItems={market.feed} marketId={market.id} />
           </div>
         </section>

@@ -51,7 +51,7 @@ export function LiveFeed({
   if (!items.length) {
     return (
       <p className="text-base text-muted-foreground">
-        No reviews yet. Write the first one from home.
+        No reviews yet. Sign in to write the first one.
       </p>
     );
   }

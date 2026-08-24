@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { mergeSaves } from "@/app/actions/saves";
-import { getSaves, replaceSaves } from "@/lib/saves";
+import { EMPTY_SAVES, getSaves, replaceSaves } from "@/lib/saves";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 
 export function SavesHydrator() {
@@ -12,6 +12,7 @@ export function SavesHydrator() {
 
   useEffect(() => {
     if (!documentHasAuthCookie()) {
+      if (merged.current) replaceSaves(EMPTY_SAVES);
       merged.current = false;
       return;
     }

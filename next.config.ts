@@ -29,11 +29,13 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+    const dev = process.env.NODE_ENV !== "production";
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'",
+      // React reconstructs call stacks with eval() in development only.
+      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${dev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.supabase.co https://*.openfreemap.org",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.openfreemap.org https://*.googleusercontent.com",
       "font-src 'self' data: https://*.openfreemap.org",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.openfreemap.org",
       "worker-src 'self' blob:",
@@ -42,7 +44,7 @@ const nextConfig: NextConfig = {
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
-      "upgrade-insecure-requests",
+      ...(dev ? [] : ["upgrade-insecure-requests"]),
     ].join("; ");
     const security = [
       { key: "X-Content-Type-Options", value: "nosniff" },
