@@ -6,7 +6,7 @@ import { signOut } from "@/app/actions/auth";
 import { EmailVisitButton } from "@/components/email-visit-button";
 import { HomePanel } from "@/components/home-panel";
 import { Hours } from "@/components/hours";
-import { CloseMark, CrateMark, PlateMark, TicketMark } from "@/components/marks";
+import { CheckMark, CrateMark, PlateMark, TicketMark } from "@/components/marks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,30 +75,29 @@ export function OnboardingDesk({
     return () => window.clearTimeout(timer);
   }, [localError, normalized]);
 
-  const bySlug = useMemo(() => new Map(markets.map((market) => [market.slug, market])), [markets]);
-  const selected = picked
-    .map((slug) => bySlug.get(slug))
-    .filter((market): market is OnboardingMarket => Boolean(market));
-
-  const matches = useMemo(() => {
+  const visible = useMemo(() => {
     const q = fold(query);
-    if (!q) return [];
     const tokens = q.split(" ").filter(Boolean);
-    const taken = new Set(picked);
-    return markets.filter((market) => {
-      if (taken.has(market.slug)) return false;
-      const hay = fold(`${market.name} ${market.address}`);
-      return tokens.every((token) => hay.includes(token));
+    const chosen = new Set(picked);
+    const matches = !tokens.length
+      ? markets
+      : markets.filter((market) => {
+          const hay = fold(`${market.name} ${market.address}`);
+          return tokens.every((token) => hay.includes(token));
+        });
+    return [...matches].sort((a, b) => {
+      const aPicked = chosen.has(a.slug) ? 0 : 1;
+      const bPicked = chosen.has(b.slug) ? 0 : 1;
+      return aPicked - bPicked;
     });
   }, [markets, picked, query]);
 
-  function addMarket(slug: string) {
-    setPicked((current) => (current.includes(slug) || current.length >= 3 ? current : [...current, slug]));
-    setQuery("");
-  }
-
-  function removeMarket(slug: string) {
-    setPicked((current) => current.filter((item) => item !== slug));
+  function toggleMarket(slug: string) {
+    setPicked((current) => {
+      if (current.includes(slug)) return current.filter((item) => item !== slug);
+      if (current.length >= 3) return current;
+      return [...current, slug];
+    });
   }
 
   const title =
@@ -170,63 +169,64 @@ export function OnboardingDesk({
           title="Favorite halls"
           how="Three markets you actually go to. They land on your saved list with hours."
         >
-          {selected.length ? (
-            <ul className="mb-4 divide-y divide-border ring-1 ring-border">
-              {selected.map((market) => (
-                <li
-                  key={market.slug}
-                  className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-baseline gap-x-3 px-3 py-2"
-                >
-                  <span className="min-w-0 text-base font-medium">{market.name}</span>
-                  <Hours value={market.hours} className="text-muted-foreground" />
-                  <button
-                    type="button"
-                    className="stall-chip-sm inline-flex size-7 items-center justify-center"
-                    aria-label={`Remove ${market.name}`}
-                    onClick={() => removeMarket(market.slug)}
-                  >
-                    <CloseMark className="size-3.5" />
-                  </button>
-                </li>
-              ))}
+          <p className="text-sm text-muted-foreground">
+            {picked.length === 3
+              ? "Three halls on the list. Click one to swap it."
+              : `Click a hall to add it. ${3 - picked.length} left.`}
+          </p>
+          <Label htmlFor="market-search" className="mt-3">
+            Narrow the list
+          </Label>
+          <Input
+            id="market-search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Name or neighbourhood"
+            className="mt-1.5"
+            autoComplete="off"
+          />
+          {visible.length ? (
+            <ul className="mt-3 ring-1 ring-border">
+              {visible.map((market) => {
+                const on = picked.includes(market.slug);
+                const full = picked.length >= 3 && !on;
+                return (
+                  <li key={market.slug} className="border-b border-border last:border-b-0">
+                    <button
+                      type="button"
+                      aria-pressed={on}
+                      disabled={full}
+                      onClick={() => toggleMarket(market.slug)}
+                      aria-label={
+                        on
+                          ? `Remove ${market.name}`
+                          : full
+                            ? `${market.name}. Three already picked.`
+                            : `Add ${market.name}`
+                      }
+                      className={cn(
+                        "grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-baseline gap-x-3 px-3 py-2.5 text-left",
+                        on
+                          ? "bg-foreground text-receipt"
+                          : "hover:bg-secondary disabled:cursor-default disabled:opacity-50",
+                      )}
+                    >
+                      <CheckMark
+                        className={cn("size-4 shrink-0 self-center", on ? "opacity-100" : "opacity-0")}
+                      />
+                      <span className="min-w-0 text-base font-medium">{market.name}</span>
+                      <Hours
+                        value={market.hours}
+                        className={on ? "text-receipt" : "text-muted-foreground"}
+                      />
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
-          ) : null}
-          {picked.length < 3 ? (
-            <>
-              <Label htmlFor="market-search">Find a market</Label>
-              <Input
-                id="market-search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Wychwood, Junction, St. Lawrence…"
-                className="mt-1.5"
-                autoComplete="off"
-              />
-              <div className="mt-2 max-h-52 overflow-y-auto">
-                {fold(query) ? (
-                  matches.length ? (
-                    matches.map((market) => (
-                      <button
-                        key={market.slug}
-                        type="button"
-                        onClick={() => addMarket(market.slug)}
-                        className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-2 py-1.5 text-left hover:bg-secondary"
-                      >
-                        <span className="min-w-0 text-base font-medium">{market.name}</span>
-                        <Hours value={market.hours} className="text-muted-foreground" />
-                      </button>
-                    ))
-                  ) : (
-                    <p className="px-2 py-1.5 text-sm text-muted-foreground">No markets match that.</p>
-                  )
-                ) : (
-                  <p className="px-2 py-1.5 text-sm text-muted-foreground">
-                    Type a hall or neighbourhood. {3 - picked.length} left.
-                  </p>
-                )}
-              </div>
-            </>
-          ) : null}
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">No markets match that.</p>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => setStep(1)}>
               Back
