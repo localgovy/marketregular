@@ -34,7 +34,7 @@ function pointFromEvent(
 export function VendorHallsKicker({ halls }: { halls: VendorHall[] }) {
   const menuId = useId();
   const count = halls.length;
-  const label = count === 1 ? "1 market" : `${count} markets`;
+  const label = count === 1 ? "Serving 1 market" : `Serving ${count} markets`;
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const pinnedRef = useRef(false);
