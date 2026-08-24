@@ -1,15 +1,17 @@
-import { authOrigin, safePath } from "@/lib/auth-redirect";
+import { AUTH_NEXT_COOKIE, callbackOrigin, safePath } from "@/lib/auth-redirect";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-function callbackOrigin(request: NextRequest) {
-  const { hostname, origin } = request.nextUrl;
-  if (hostname === "localhost" || hostname === "127.0.0.1") return origin;
-  return authOrigin();
+function redirectAway(url: URL) {
+  const response = NextResponse.redirect(url);
+  response.cookies.set(AUTH_NEXT_COOKIE, "", { path: "/", maxAge: 0 });
+  return response;
 }
 
 export async function GET(request: NextRequest) {
-  const next = safePath(request.nextUrl.searchParams.get("next"));
+  const next = safePath(
+    request.nextUrl.searchParams.get("next") ?? request.cookies.get(AUTH_NEXT_COOKIE)?.value,
+  );
   const origin = callbackOrigin(request);
   const code = request.nextUrl.searchParams.get("code");
   const oauthError =
@@ -20,11 +22,11 @@ export async function GET(request: NextRequest) {
     const url = new URL("/login", origin);
     url.searchParams.set("error", message.slice(0, 280));
     if (next !== "/account") url.searchParams.set("next", next);
-    return NextResponse.redirect(url);
+    return redirectAway(url);
   };
 
   if (oauthError) return loginError(oauthError);
-  if (!code) return NextResponse.redirect(new URL(next, origin));
+  if (!code) return redirectAway(new URL(next, origin));
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -33,7 +35,7 @@ export async function GET(request: NextRequest) {
   }
 
   const redirectTo = new URL(next, origin);
-  let response = NextResponse.redirect(redirectTo);
+  let response = redirectAway(redirectTo);
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
@@ -44,7 +46,7 @@ export async function GET(request: NextRequest) {
         cookiesToSet.forEach(({ name, value }) => {
           request.cookies.set(name, value);
         });
-        response = NextResponse.redirect(redirectTo);
+        response = redirectAway(redirectTo);
         cookiesToSet.forEach(({ name, value, options }) => {
           response.cookies.set(name, value, options);
         });

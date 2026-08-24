@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { safePath } from "@/lib/auth-redirect";
+import { authNextCookie, safePath } from "@/lib/auth-redirect";
+import {
+  buildGoogleAuthUrl,
+  googleRedirectUri,
+  isSiteOwnedOrigin,
+  randomOAuthValue,
+  storeGoogleOAuthHandoff,
+} from "@/lib/google-oauth";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -40,10 +47,33 @@ export function GoogleSignIn({
         return;
       }
 
+      const origin = window.location.origin;
+      if (isSiteOwnedOrigin(origin)) {
+        const paramsRes = await fetch("/auth/google/params");
+        const params = (await paramsRes.json()) as { clientId: string | null };
+        if (params.clientId) {
+          const state = randomOAuthValue();
+          const nonce = randomOAuthValue();
+          storeGoogleOAuthHandoff({ state, nonce, next: safePath(next) });
+          window.location.assign(
+            buildGoogleAuthUrl({
+              clientId: params.clientId,
+              redirectUri: googleRedirectUri(origin),
+              state,
+              nonce,
+            }),
+          );
+          return;
+        }
+      }
+
+      document.cookie = authNextCookie(next);
       const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safePath(next))}`,
+          // No query string — exact allow-list entries fail when `?next=` is appended,
+          // and GoTrue then falls back to Site URL (often localhost).
+          redirectTo: `${origin}/auth/callback`,
           skipBrowserRedirect: true,
           queryParams: { access_type: "offline", prompt: "select_account" },
         },

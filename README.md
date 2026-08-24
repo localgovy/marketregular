@@ -37,9 +37,32 @@ npx supabase db query --linked < supabase/seed.sql
 
 (`db query` command names vary by CLI version; you can also paste `supabase/seed.sql` into the SQL editor.)
 
-Enable Email auth. Add the site URL and both `https://www.marketregular.com/auth/callback` and `https://marketregular.com/auth/callback` to Auth redirect URLs. For local Google sign-in also allow `http://localhost:3000/auth/callback`.
+Enable Email auth. In [URL Configuration](https://supabase.com/dashboard/project/pxsndrlptceafhsxfays/auth/url-configuration) set **Site URL** to `https://www.marketregular.com` — never localhost. Site URL is where Google sends people when a redirect is missing or not allowed, so localhost here dumps live sign-in onto your laptop.
 
-To turn on Continue with Google: create a Google Cloud OAuth 2.0 Web client, set the authorized redirect URI to `https://<project-ref>.supabase.co/auth/v1/callback`, then enable the Google provider in Supabase Auth with that client ID and secret.
+Redirect URLs (localhost only on this list, not as Site URL):
+
+- `https://www.marketregular.com/**`
+- `https://marketregular.com/**`
+- `http://localhost:3000/**`
+- `http://127.0.0.1:3000/**`
+
+To turn on Continue with Google: create a Google Cloud OAuth 2.0 Web client, then enable the Google provider in Supabase Auth with that client ID and secret.
+
+On that same Web client, keep the Supabase callback and add the MarketRegular callbacks. Google’s account picker shows the host of the redirect URI, so without these the screen still says `supabase.co`.
+
+**Authorized JavaScript origins**
+
+- `https://www.marketregular.com`
+- `https://marketregular.com`
+- `http://localhost:3000` (local only)
+
+**Authorized redirect URIs**
+
+- `https://<project-ref>.supabase.co/auth/v1/callback` (keep this)
+- `https://www.marketregular.com/auth/google/callback`
+- `https://marketregular.com/auth/google/callback`
+- `http://localhost:3000/auth/google/callback` (local only)
+- `http://127.0.0.1:3000/auth/google/callback` (local only)
 
 Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars. Set `ADMIN_EMAILS` to your login email.
 

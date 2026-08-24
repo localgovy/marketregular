@@ -2,6 +2,8 @@ import { SITE_URL } from "@/lib/constants";
 
 const SAFE_PATH = /^\/[A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%\-]*$/;
 
+export const AUTH_NEXT_COOKIE = "mr-auth-next";
+
 export function safePath(next: unknown, fallback = "/account") {
   if (typeof next !== "string") return fallback;
   const value = next.trim();
@@ -10,6 +12,28 @@ export function safePath(next: unknown, fallback = "/account") {
   if (value.includes("\\") || value.includes("://")) return fallback;
   if (!SAFE_PATH.test(value)) return fallback;
   return value;
+}
+
+export function authNextCookie(next: string) {
+  return `${AUTH_NEXT_COOKIE}=${encodeURIComponent(safePath(next))}; Path=/; Max-Age=600; SameSite=Lax`;
+}
+
+function isTrustedAuthHost(hostname: string) {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "marketregular.com" ||
+    hostname.endsWith(".marketregular.com")
+  );
+}
+
+/** Stay on the host that handled the callback when that host is ours. */
+export function callbackOrigin(request: { nextUrl: URL }) {
+  const { hostname, origin } = request.nextUrl;
+  if (!isTrustedAuthHost(hostname)) return authOrigin();
+  if (hostname === "localhost" || hostname === "127.0.0.1") return origin;
+  const host = hostname === "marketregular.com" ? "www.marketregular.com" : hostname;
+  return `https://${host}`;
 }
 
 /** Magic-link / OAuth redirect origin. Never taken from forwarded Host headers. */
