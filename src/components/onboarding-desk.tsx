@@ -20,6 +20,8 @@ export type OnboardingMarket = {
   hours: string;
 };
 
+const MARKET_PAGE = 7;
+
 function fold(value: string) {
   return value
     .toLowerCase()
@@ -46,6 +48,7 @@ export function OnboardingDesk({
   const [handleOk, setHandleOk] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [query, setQuery] = useState("");
+  const [pages, setPages] = useState(1);
   const [state, finish, finishing] = useActionState(
     async (_prev: { error: string } | null, formData: FormData) => {
       const result = await completeOnboarding(formData);
@@ -91,6 +94,7 @@ export function OnboardingDesk({
       return aPicked - bPicked;
     });
   }, [markets, picked, query]);
+  const listed = visible.slice(0, pages * MARKET_PAGE);
 
   function toggleMarket(slug: string) {
     setPicked((current) => {
@@ -180,14 +184,17 @@ export function OnboardingDesk({
           <Input
             id="market-search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPages(1);
+            }}
             placeholder="Name or neighbourhood"
             className="mt-1.5"
             autoComplete="off"
           />
           {visible.length ? (
             <ul className="mt-3 ring-1 ring-border">
-              {visible.map((market) => {
+              {listed.map((market) => {
                 const on = picked.includes(market.slug);
                 const full = picked.length >= 3 && !on;
                 return (
@@ -227,6 +234,20 @@ export function OnboardingDesk({
           ) : (
             <p className="mt-3 text-sm text-muted-foreground">No markets match that.</p>
           )}
+          {listed.length < visible.length ? (
+            <div className="mt-3 flex flex-col items-start gap-2">
+              <button
+                type="button"
+                onClick={() => setPages((n) => n + 1)}
+                className="stall-chip inline-flex h-11 min-w-[10rem] cursor-pointer items-center justify-center bg-primary px-5 text-sm font-medium text-primary-foreground outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-foreground"
+              >
+                Show more
+              </button>
+              <p className="text-sm text-muted-foreground">
+                {listed.length} of {visible.length} markets
+              </p>
+            </div>
+          ) : null}
           <div className="mt-4 flex flex-wrap gap-2">
             <Button type="button" variant="outline" onClick={() => setStep(1)}>
               Back
