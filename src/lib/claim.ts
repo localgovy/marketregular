@@ -14,3 +14,8 @@ export const CLAIM_ROLES = {
 } as const;
 
 export type ClaimListingType = keyof typeof CLAIM_ROLES;
+export type ClaimRole = (typeof CLAIM_ROLES)[ClaimListingType][number];
+
+export function isClaimRole(targetType: ClaimListingType, role: string): role is ClaimRole {
+  return (CLAIM_ROLES[targetType] as readonly string[]).includes(role);
+}

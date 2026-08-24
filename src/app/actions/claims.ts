@@ -1,7 +1,7 @@
 "use server";
 
 import { Resend } from "resend";
-import { CLAIM_ROLES } from "@/lib/claim";
+import { isClaimRole } from "@/lib/claim";
 import { CLAIM_INBOX, SITE_NAME, SITE_URL } from "@/lib/constants";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -100,7 +100,6 @@ export async function submitClaim(formData: FormData) {
   const target_id = String(formData.get("target_id"));
   if (!UUID.test(target_id)) return { error: "That listing is missing." };
 
-  const roles = CLAIM_ROLES[target_type];
   const name = clip(formData.get("name"), 80);
   const email = clip(formData.get("email"), 120).toLowerCase();
   const phone = clip(formData.get("phone"), 40);
@@ -111,7 +110,7 @@ export async function submitClaim(formData: FormData) {
 
   if (name.length < 2) return { error: "Add your name." };
   if (!EMAIL.test(email)) return { error: "Add a working email." };
-  if (!roles.includes(role as (typeof roles)[number])) {
+  if (!isClaimRole(target_type, role)) {
     return { error: "Pick how you relate to this listing." };
   }
 
