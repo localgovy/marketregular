@@ -17,7 +17,7 @@ Two sans families: **Mona Sans** (`font-heading`) for titles and figures, **Schi
 | Lede | Grotesk | `type-lede` (`text-lg`) | Sentence under an h1 |
 | How / body | Grotesk | `text-base` | Choose when, a neighbourhood… |
 | List names | Grotesk | `text-base font-medium` | Wychwood Barns in a row |
-| Times / prices / stalls / census | Mona medium | `type-nums` | `8 AM–2 PM`, `39` |
+| Times / prices / stalls / census | Mona semibold, condensed | `type-nums` | `8 AM–2 PM`, `39` |
 
 Use real heading tags and let the base sizes apply. Do not add `text-4xl`, `text-5xl`, `text-[13px]`, or `font-heading` on paragraphs. Numbers use `type-nums`, not `font-mono`.
 
