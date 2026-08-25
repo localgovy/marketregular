@@ -39,7 +39,7 @@ function MarketPips({ count, on }: { count: number; on: boolean }) {
           className={cn("size-1.5 rounded-full", on ? "bg-ticket" : "bg-ticket/90")}
         />
       ))}
-      <span className={cn("font-mono text-sm tabular-nums", on ? "text-chalk" : "text-ticket-ink")}>
+      <span className={cn("type-nums text-sm", on ? "text-chalk" : "text-ticket-ink")}>
         {count}
       </span>
     </span>
@@ -283,7 +283,7 @@ export function EventsCalendar({
                 >
                   <span
                     className={cn(
-                      "font-mono text-sm tabular-nums",
+                      "type-nums text-sm",
                       on && "text-chalk",
                       cell.isToday && !on && "font-medium text-ticket-ink",
                     )}

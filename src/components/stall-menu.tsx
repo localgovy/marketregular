@@ -28,7 +28,7 @@ export function StallMenu({ items }: { items: MenuItem[] }) {
               ) : null}
             </div>
             {price ? (
-              <span className="shrink-0 self-start whitespace-nowrap bg-ticket px-1.5 py-0.5 font-mono text-sm tabular-nums text-foreground">
+              <span className="type-nums shrink-0 self-start whitespace-nowrap bg-ticket px-1.5 py-0.5 text-sm text-foreground">
                 {price}
               </span>
             ) : null}

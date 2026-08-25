@@ -25,7 +25,7 @@ function CensusCell({
     >
       <span
         aria-hidden
-        className="inline-block font-mono text-2xl leading-none tabular-nums tracking-tight sm:text-3xl"
+        className="type-nums inline-block text-2xl leading-none sm:text-3xl"
       >
         {formatCount(value)}
       </span>

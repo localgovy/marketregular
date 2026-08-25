@@ -267,7 +267,7 @@ export function AccountDesk({
                           </>
                         ) : null}
                         <span aria-hidden>·</span>
-                        <time className="font-mono tabular-nums" dateTime={post.created_at}>
+                        <time className="type-nums" dateTime={post.created_at}>
                           {timeAgo(post.created_at)}
                         </time>
                       </p>

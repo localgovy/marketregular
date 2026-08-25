@@ -8,7 +8,7 @@ export function Hours({
   className?: string;
 }) {
   return (
-    <span className={cn("whitespace-nowrap font-mono text-sm tabular-nums", className)}>
+    <span className={cn("type-nums whitespace-nowrap text-sm", className)}>
       {value}
     </span>
   );

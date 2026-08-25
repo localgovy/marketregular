@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Azeret_Mono, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
+import { Mona_Sans, Schibsted_Grotesk } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
 import { GuestSignInSlip } from "@/components/guest-signin-slip";
 import { SiteHeader } from "@/components/site-header";
@@ -19,13 +19,6 @@ const grotesk = Schibsted_Grotesk({
 const display = Mona_Sans({
   subsets: ["latin"],
   variable: "--font-display",
-  display: "swap",
-  preload: false,
-});
-
-const ticket = Azeret_Mono({
-  subsets: ["latin"],
-  variable: "--font-ticket",
   display: "swap",
   preload: false,
 });
@@ -64,7 +57,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-CA"
-      className={`${grotesk.variable} ${display.variable} ${ticket.variable} h-full antialiased`}
+      className={`${grotesk.variable} ${display.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <JsonLd data={websiteJsonLd()} />

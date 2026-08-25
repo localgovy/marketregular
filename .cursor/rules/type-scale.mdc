@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Type scale
 
-Two sans families: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotesk** (`font-sans`) for everything else. **Azeret Mono** (`font-mono`) is only for times, prices, stall numbers, and province codes. Do not put Mona on body copy, kickers, posts, empty states, or the site name.
+Two sans families: **Mona Sans** (`font-heading`) for titles and figures, **Schibsted Grotesk** (`font-sans`) for everything else. Do not load a third face for numbers. Do not put Mona on body copy, kickers, posts, empty states, or the site name.
 
 | Role | Face | Size | Example |
 | --- | --- | --- | --- |
@@ -17,8 +17,8 @@ Two sans families: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotes
 | Lede | Grotesk | `type-lede` (`text-lg`) | Sentence under an h1 |
 | How / body | Grotesk | `text-base` | Choose when, a neighbourhood… |
 | List names | Grotesk | `text-base font-medium` | Wychwood Barns in a row |
-| Times / prices / stalls | Azeret Mono | `text-sm` tabular | `8 AM–2 PM` |
+| Times / prices / stalls / census | Mona medium | `type-nums` | `8 AM–2 PM`, `39` |
 
-Use real heading tags and let the base sizes apply. Do not add `text-4xl`, `text-5xl`, `text-[13px]`, or `font-heading` on paragraphs.
+Use real heading tags and let the base sizes apply. Do not add `text-4xl`, `text-5xl`, `text-[13px]`, or `font-heading` on paragraphs. Numbers use `type-nums`, not `font-mono`.
 
 The wordmark is Grotesk on purpose so it does not look like a page title. Nav stays Grotesk `text-sm font-medium`.

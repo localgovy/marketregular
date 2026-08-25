@@ -12,7 +12,7 @@ Never combine these (or close variants):
 - `uppercase`
 - wide tracking (`tracking-wide`, `tracking-widest`, `tracking-[0.1em]` or looser)
 - micro type (`text-[9px]`, `text-[10px]`, `text-[11px]`, `text-xs` used as a section kicker)
-- `font-mono` used for a UI label rather than a time, price, stall number, or province code
+- `font-mono` used as a UI label or kicker
 
 ```tsx
 // BAD
@@ -24,6 +24,6 @@ Never combine these (or close variants):
 <p className="text-base font-medium text-ticket">Open now</p>
 ```
 
-Write labels in sentence case at `text-sm` or `text-base`. Use the same fonts as surrounding copy. Mono is only for times (`8 AM`), prices (`$8.50`), stall numbers, and province codes (`ON`) — with tight tracking, not fashion-wide.
+Write labels in sentence case at `text-sm` or `text-base`. Use the same fonts as surrounding copy. Figures (times, prices, stall numbers, census) use `type-nums` — Mona medium, not a coding mono.
 
 Status chips (open now, selling now) may use the ticket plate color. They still read as normal words: `Open now`, not `OPEN NOW`.

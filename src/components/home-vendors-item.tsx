@@ -80,7 +80,7 @@ export function VendorWeekItem({
   return (
     <li className="flex gap-3 border-b border-border px-3 py-3 last:border-b-0">
       {index != null ? (
-        <span className="w-5 shrink-0 pt-0.5 font-mono text-sm text-muted-foreground">
+        <span className="type-nums w-5 shrink-0 pt-0.5 text-sm text-muted-foreground">
           {index + 1}
         </span>
       ) : null}

@@ -43,7 +43,7 @@ export function VendorCard({
             {stall || dayLabel ? (
               <p className="mt-1 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 text-sm text-muted-foreground">
                 {stall ? (
-                  <span className="min-w-0 font-mono tabular-nums">{stall}</span>
+                  <span className="type-nums min-w-0">{stall}</span>
                 ) : (
                   <span />
                 )}

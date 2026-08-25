@@ -272,7 +272,7 @@ export function FloorComposer({
               <button
                 type="button"
                 onClick={() => setExtra("stars")}
-                className="px-2 py-0.5 font-mono text-sm tabular-nums tracking-tight"
+                className="type-nums px-2 py-0.5 text-sm"
               >
                 {rating}
               </button>
@@ -357,7 +357,7 @@ export function FloorComposer({
           aria-expanded={extra === "stars"}
           onClick={() => setExtra((current) => (current === "stars" ? null : "stars"))}
           className={cn(
-            "stall-chip-sm inline-flex h-8 min-w-8 items-center justify-center px-2 font-mono text-sm tabular-nums tracking-tight",
+            "stall-chip-sm type-nums inline-flex h-8 min-w-8 items-center justify-center px-2 text-sm",
             extra === "stars" || rating
               ? "bg-ticket text-foreground"
               : "bg-secondary text-muted-foreground hover:bg-muted",
@@ -394,7 +394,7 @@ export function FloorComposer({
                     setPrice((current) => (current === choice.level ? 0 : choice.level))
                   }
                   className={cn(
-                    "flex h-8 min-w-8 items-center justify-center rounded-full px-1.5 font-mono text-sm tabular-nums",
+                    "flex h-8 min-w-8 items-center justify-center rounded-full px-1.5 type-nums text-sm",
                     on
                       ? "bg-ticket text-foreground"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground",
@@ -665,7 +665,7 @@ function VendorStep({
                   {stall.stall ? (
                     <span
                       className={cn(
-                        "ml-1 font-mono text-sm font-normal tabular-nums",
+                        "type-nums ml-1 text-sm",
                         taggedId === stall.id ? "text-receipt/80" : "text-muted-foreground",
                       )}
                     >

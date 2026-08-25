@@ -64,11 +64,11 @@ export function ReviewCard({
         {price ? (
           <>
             <span aria-hidden>·</span>
-            <span className="font-mono tabular-nums text-stamp">{price}</span>
+            <span className="type-nums text-stamp">{price}</span>
           </>
         ) : null}
         <span aria-hidden>·</span>
-        <time className="font-mono tabular-nums" dateTime={item.created_at}>
+        <time className="type-nums" dateTime={item.created_at}>
           {timeAgo(item.created_at)}
         </time>
       </p>

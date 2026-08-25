@@ -251,7 +251,7 @@ export function FeedBoard({
                         </>
                       ) : null}
                     </span>
-                    <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
+                    <span className="type-nums shrink-0 text-muted-foreground">
                       {place.count}
                     </span>
                   </Link>
@@ -272,7 +272,7 @@ export function FeedBoard({
                     className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 text-sm hover:text-primary"
                   >
                     <span className="font-medium">{place.name}</span>
-                    <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
+                    <span className="type-nums shrink-0 text-muted-foreground">
                       {place.count}
                     </span>
                   </Link>
