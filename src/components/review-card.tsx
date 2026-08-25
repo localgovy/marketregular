@@ -67,12 +67,6 @@ export function ReviewCard({
             <span className="font-mono tabular-nums text-stamp">{price}</span>
           </>
         ) : null}
-        {item.verified_on_site ? (
-          <>
-            <span aria-hidden>·</span>
-            <span>On site</span>
-          </>
-        ) : null}
         <span aria-hidden>·</span>
         <time className="font-mono tabular-nums" dateTime={item.created_at}>
           {timeAgo(item.created_at)}

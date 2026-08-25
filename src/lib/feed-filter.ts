@@ -7,7 +7,6 @@ export type FeedQuery = {
   market: string;
   vendor: string;
   tag: string;
-  onSite: boolean;
   sort: FeedSort;
 };
 
@@ -31,7 +30,6 @@ export function parseFeedQuery(params: {
   market?: string;
   vendor?: string;
   tag?: string;
-  onSite?: string;
   sort?: string;
 }): FeedQuery {
   const sort = params.sort;
@@ -40,7 +38,6 @@ export function parseFeedQuery(params: {
     market: params.market?.trim() ?? "",
     vendor: params.vendor?.trim() ?? "",
     tag: params.tag?.trim().toLowerCase() ?? "",
-    onSite: params.onSite === "1",
     sort: sort === "old" || sort === "score" ? sort : "new",
   };
 }
@@ -51,14 +48,13 @@ export function feedSearchString(query: FeedQuery): string {
   if (query.market) next.set("market", query.market);
   if (query.vendor) next.set("vendor", query.vendor);
   if (query.tag) next.set("tag", query.tag);
-  if (query.onSite) next.set("onSite", "1");
   if (query.sort && query.sort !== "new") next.set("sort", query.sort);
   const value = next.toString();
   return value ? `/feed?${value}` : "/feed";
 }
 
 export function feedIsFiltered(query: FeedQuery) {
-  return Boolean(query.q || query.market || query.vendor || query.tag || query.onSite);
+  return Boolean(query.q || query.market || query.vendor || query.tag);
 }
 
 export function filterFeed(items: FloorItem[], query: FeedQuery): FloorItem[] {
@@ -67,7 +63,6 @@ export function filterFeed(items: FloorItem[], query: FeedQuery): FloorItem[] {
     if (query.market && item.market_slug !== query.market) return false;
     if (query.vendor && item.vendor_slug !== query.vendor) return false;
     if (query.tag && !item.tags.includes(query.tag)) return false;
-    if (query.onSite && !item.verified_on_site) return false;
     if (!tokens.length) return true;
     const hay = fold(
       [

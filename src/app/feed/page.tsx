@@ -30,8 +30,7 @@ export default async function FeedPage() {
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <h1>Feed</h1>
       <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
-        Posts from {LAUNCH_CITY} markets. Filter by hall, stall, or what&apos;s on the table. You
-        do not have to share your location.
+        Posts from {LAUNCH_CITY} markets. Filter by hall, stall, or what&apos;s on the table.
       </p>
       <Suspense fallback={<p className="mt-8 text-base text-muted-foreground">Loading posts…</p>}>
         <FeedBoard

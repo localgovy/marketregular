@@ -55,7 +55,7 @@ export function FloorComposer({
   initialVendorId?: string;
   className?: string;
 }) {
-  const { nearby, coords, error, request } = useGeo();
+  const { nearby, coords } = useGeo();
   const here = nearby[0];
   const pathname = usePathname() || "/";
   const [signedIn, setSignedIn] = useState(signedInProp);
@@ -487,10 +487,6 @@ export function FloorComposer({
                 setMarketQuery("");
                 setPlaceStep("market");
               }}
-              onSite={onSite}
-              locationError={error}
-              onShareLocation={request}
-              coords={coords}
             />
           ) : null}
         </div>
@@ -602,10 +598,6 @@ function VendorStep({
   onPick,
   onSkip,
   onChangeMarket,
-  onSite,
-  locationError,
-  onShareLocation,
-  coords,
 }: {
   marketName: string;
   query: string;
@@ -619,10 +611,6 @@ function VendorStep({
   onPick: (id: string) => void;
   onSkip: () => void;
   onChangeMarket: () => void;
-  onSite: boolean;
-  locationError: string | null;
-  onShareLocation: () => void;
-  coords: { lat: number; lng: number } | null;
 }) {
   const searching = fold(query).length > 0;
 
@@ -697,19 +685,6 @@ function VendorStep({
       >
         Skip, just the market
       </button>
-      {onSite ? (
-        <p className="mt-2 text-sm text-muted-foreground">Posted on site.</p>
-      ) : (
-        <div className="mt-2">
-          <button type="button" onClick={onShareLocation} className="text-sm text-primary hover:underline">
-            I&apos;m at this market
-          </button>
-          {locationError ? <p className="mt-1 text-sm text-destructive">{locationError}</p> : null}
-          {coords && !onSite ? (
-            <p className="mt-1 text-sm text-muted-foreground">Not close enough for an on-site stamp.</p>
-          ) : null}
-        </div>
-      )}
     </>
   );
 }

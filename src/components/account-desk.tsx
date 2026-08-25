@@ -266,12 +266,6 @@ export function AccountDesk({
                             <ReviewScore value={decoded.rating} />
                           </>
                         ) : null}
-                        {post.verified_on_site ? (
-                          <>
-                            <span aria-hidden>·</span>
-                            <span>On site</span>
-                          </>
-                        ) : null}
                         <span aria-hidden>·</span>
                         <time className="font-mono tabular-nums" dateTime={post.created_at}>
                           {timeAgo(post.created_at)}

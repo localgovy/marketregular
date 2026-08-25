@@ -28,7 +28,6 @@ function queryFromParams(params: URLSearchParams): FeedQuery {
     market: params.get("market") ?? undefined,
     vendor: params.get("vendor") ?? undefined,
     tag: params.get("tag") ?? undefined,
-    onSite: params.get("onSite") ?? undefined,
     sort: params.get("sort") ?? undefined,
   });
 }
@@ -115,7 +114,7 @@ export function FeedBoard({
           <h2 className="type-column">Reviews</h2>
           <p className="flex flex-wrap items-baseline gap-x-1 text-sm">
             <Link
-              href={feedSearchString({ ...query, q: "", market: "", vendor: "", tag: "", onSite: false })}
+              href={feedSearchString({ ...query, q: "", market: "", vendor: "", tag: "" })}
               className={cn(
                 "hover:text-foreground",
                 filtered ? "text-muted-foreground" : "font-medium text-foreground",
@@ -123,19 +122,6 @@ export function FeedBoard({
             >
               All posts
             </Link>
-            <span aria-hidden className="text-muted-foreground">
-              ·
-            </span>
-            <button
-              type="button"
-              onClick={() => go({ ...query, onSite: !query.onSite })}
-              className={cn(
-                "hover:text-foreground",
-                query.onSite ? "font-medium text-ticket-ink" : "text-muted-foreground",
-              )}
-            >
-              On site
-            </button>
             <span aria-hidden className="text-muted-foreground">
               ·
             </span>
@@ -180,38 +166,28 @@ export function FeedBoard({
             Find
           </button>
         </form>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => go({ ...query, onSite: !query.onSite })}
-            className={cn(
-              "stall-chip-sm px-2.5 py-1 text-sm",
-              query.onSite
-                ? "bg-primary text-primary-foreground"
-                : "border border-input bg-card text-foreground",
-            )}
-          >
-            On site
-          </button>
-          {topics.map((tag) => {
-            const on = query.tag === tag;
-            return (
-              <button
-                key={tag}
-                type="button"
-                onClick={() => go({ ...query, tag: on ? "" : tag })}
-                className={cn(
-                  "stall-chip-sm px-2.5 py-1 text-sm",
-                  on
-                    ? "bg-primary text-primary-foreground"
-                    : "border border-input bg-card text-foreground",
-                )}
-              >
-                {tagLabel(tag)}
-              </button>
-            );
-          })}
-        </div>
+        {topics.length ? (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {topics.map((tag) => {
+              const on = query.tag === tag;
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => go({ ...query, tag: on ? "" : tag })}
+                  className={cn(
+                    "stall-chip-sm px-2.5 py-1 text-sm",
+                    on
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-input bg-card text-foreground",
+                  )}
+                >
+                  {tagLabel(tag)}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
         <p className="mt-3 text-sm text-muted-foreground">
           {visible.length} {visible.length === 1 ? "post" : "posts"}
           {query.q ? ` for “${query.q}”` : null}

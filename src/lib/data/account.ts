@@ -17,7 +17,6 @@ export type AccountPost = {
   id: string;
   body: string;
   created_at: string;
-  verified_on_site: boolean;
   market_id: string;
   markets: { name: string; slug: string } | null;
 };
@@ -39,7 +38,7 @@ export async function loadAccountDesk(userId: string) {
     supabase.from("saves").select("kind, slug").eq("user_id", user.id),
     supabase
       .from("posts")
-      .select("id, body, created_at, verified_on_site, market_id")
+      .select("id, body, created_at, market_id")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(30),
