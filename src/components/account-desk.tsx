@@ -317,7 +317,7 @@ export function AccountDesk({
             icon={PlateMark}
             kicker="On posts"
             title="Name and sign-in"
-            how="The name sits on reviews. The handle is unique on this site. Sign-in stays on this device until you sign out."
+            how="Your handle is your unique name, but your 'Name on posts' is what people actually see."
           >
             <div className="flex items-center gap-3 pb-4">
               {profile.avatar_url ? (
