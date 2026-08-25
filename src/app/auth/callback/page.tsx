@@ -4,11 +4,11 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = pageMeta({
   title: "Signing in",
-  path: "/auth/google/callback",
-  description: "Finishing Google sign-in.",
+  path: "/auth/callback",
+  description: "Finishing sign-in.",
   index: false,
 });
 
-export default function GoogleCallbackPage() {
+export default function AuthCallbackPage() {
   return <AuthCallbackClient />;
 }

@@ -1,5 +1,6 @@
 import { loadMyProfile } from "@/lib/my-profile";
 import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
+import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 import { onboardingExemptPath, onboardingHref } from "@/lib/onboarding";
 import { safePath } from "@/lib/auth-redirect";
 import { NextResponse, type NextRequest } from "next/server";
@@ -23,8 +24,8 @@ function copyCookies(from: NextResponse, to: NextResponse) {
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = supabaseUrl();
+  const key = supabaseAnonKey();
   if (!url || !key) return supabaseResponse;
 
   const path = request.nextUrl.pathname;

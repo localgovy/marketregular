@@ -112,14 +112,20 @@ export async function completeOnboarding(formData: FormData) {
     }
   }
 
-  const service = createServiceClient();
-  if (!service) return { error: "Supabase is not configured yet." };
-  const { data: stamped, error: stampError } = await service.rpc("stamp_onboarded_at", {
+  const { data: stamped, error: stampError } = await supabase.rpc("stamp_onboarded_at", {
     p_user_id: user.id,
   });
-  if (stampError) return { error: "Could not finish setting up this account. Try again." };
-  if (!stamped) {
-    return { error: "Could not finish setting up this account. Try again." };
+  if (stampError || !stamped) {
+    const service = createServiceClient();
+    if (!service) {
+      return { error: "Could not finish setting up this account. Try again." };
+    }
+    const { data: retry, error: retryError } = await service.rpc("stamp_onboarded_at", {
+      p_user_id: user.id,
+    });
+    if (retryError || !retry) {
+      return { error: "Could not finish setting up this account. Try again." };
+    }
   }
 
   revalidatePath("/account");

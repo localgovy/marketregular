@@ -1,8 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { authNextCookie } from "@/lib/auth-redirect";
+import { authNextCookie, safePath } from "@/lib/auth-redirect";
+import {
+  buildGoogleAuthUrl,
+  googleRedirectUri,
+  isSiteOwnedOrigin,
+  randomOAuthValue,
+  storeGoogleOAuthHandoff,
+} from "@/lib/google-oauth";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 import { Button } from "@/components/ui/button";
 
 export function GoogleSignIn({
@@ -19,8 +27,8 @@ export function GoogleSignIn({
     setError(null);
     setPending(true);
     const supabase = createBrowserSupabaseClient();
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const url = supabaseUrl();
+    const key = supabaseAnonKey();
     if (!supabase || !url || !key) {
       setPending(false);
       setError("Supabase is not configured yet.");
@@ -41,6 +49,29 @@ export function GoogleSignIn({
       }
 
       const origin = window.location.origin;
+      if (isSiteOwnedOrigin(origin)) {
+        const paramsRes = await fetch("/auth/google/params");
+        const params = (await paramsRes.json()) as { clientId: string | null };
+        if (!params.clientId) {
+          setPending(false);
+          setError("Google sign-in is not ready yet. Use email and password.");
+          return;
+        }
+        const state = randomOAuthValue();
+        const nonce = randomOAuthValue();
+        document.cookie = authNextCookie(next);
+        storeGoogleOAuthHandoff({ state, nonce, next: safePath(next) });
+        window.location.assign(
+          buildGoogleAuthUrl({
+            clientId: params.clientId,
+            redirectUri: googleRedirectUri(origin),
+            state,
+            nonce,
+          }),
+        );
+        return;
+      }
+
       document.cookie = authNextCookie(next);
       const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",

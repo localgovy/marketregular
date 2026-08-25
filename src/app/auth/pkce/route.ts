@@ -1,5 +1,6 @@
 import { AUTH_NEXT_COOKIE, callbackOrigin, safePath } from "@/lib/auth-redirect";
 import type { LoginErrorKey } from "@/lib/public-error";
+import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -29,16 +30,16 @@ export async function GET(request: NextRequest) {
   if (oauthError) return loginError("oauth");
   if (!code) return redirectAway(new URL(next, origin));
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseKey) {
+  const url = supabaseUrl();
+  const key = supabaseAnonKey();
+  if (!url || !key) {
     return loginError("session");
   }
 
   const redirectTo = new URL(next, origin);
   let response = redirectAway(redirectTo);
 
-  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+  const supabase = createServerClient(url, key, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
