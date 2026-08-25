@@ -123,7 +123,7 @@ export function AccountDesk({
       <div className="mx-auto w-full max-w-6xl px-4 py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] lg:items-start lg:gap-5 lg:px-6">
         <div className="grid min-w-0 gap-5">
           <header className="max-w-2xl">
-            <p className="type-kicker text-muted-foreground">Your plate</p>
+            <p className="type-kicker text-muted-foreground">Your profile</p>
             <h1>{name}</h1>
             <p className="type-lede mt-2 text-muted-foreground">
               Saved halls, stalls, and the reviews you write stay with this account. This
@@ -136,7 +136,7 @@ export function AccountDesk({
             groups={week}
             kicker="From your saved list"
             title="This week"
-            how="Hours for the markets you saved, and the halls your saved stalls sell at. A stamp means open right now."
+            how="Your saved markets' schedules throughout the week, click on a name for more info."
             empty="Save a market or a stall and this week's hours show up here."
             action={
               <Link href="/markets" className="hover:underline">

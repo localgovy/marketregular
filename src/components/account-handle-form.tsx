@@ -32,7 +32,11 @@ export function AccountHandleForm({ username }: { username: string | null }) {
           className="border-primary-foreground/35 bg-primary-foreground text-foreground"
         />
       </div>
-      {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+      {state?.error ? (
+        <p role="alert" className="text-base font-medium text-chalk">
+          {state.error}
+        </p>
+      ) : null}
       <Button type="submit" disabled={pending} className="w-fit bg-primary-foreground text-primary hover:bg-chalk">
         {pending ? "Saving…" : "Save handle"}
       </Button>
