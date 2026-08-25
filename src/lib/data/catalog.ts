@@ -3,11 +3,9 @@ import { distanceMeters } from "@/lib/geo";
 import { LAUNCH_CITY, isLaunchCity } from "@/lib/launch";
 import {
   localFeatured,
-  localFloorTape,
   localMarketBySlug,
   localMarkets,
   localMenuCount,
-  localPosts,
   localSchedules,
   localSearch,
   localSitemapVendors,
@@ -615,14 +613,14 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
 
 export async function getLivePosts(limit = 20): Promise<Post[]> {
   const supabase = publicDb();
-  if (!supabase) return localPosts(limit);
+  if (!supabase) return [];
   const { data, error } = await supabase
     .from("posts")
     .select("*, profiles(display_name, avatar_url), markets(name, slug, city)")
     .eq("flagged", false)
     .order("created_at", { ascending: false })
     .limit(limit);
-  if (error || !data?.length) return localPosts(limit);
+  if (error || !data?.length) return [];
   return (
     data as Array<
       Post & {
@@ -643,7 +641,7 @@ export async function getLivePosts(limit = 20): Promise<Post[]> {
 
 export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
   const supabase = publicDb();
-  if (!supabase) return localFloorTape(limit);
+  if (!supabase) return [];
 
   const [{ data: posts, error: postError }, { data: reviews, error: reviewError }] =
     await Promise.all([
@@ -661,7 +659,7 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
         .limit(limit),
     ]);
 
-  if (postError && reviewError) return localFloorTape(limit);
+  if (postError && reviewError) return [];
 
   const fromPosts = (
     (posts ?? []) as Array<
@@ -701,7 +699,6 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
   );
 
   const merged = mergeReviews([...fromPosts, ...fromReviews]);
-  if (!merged.length) return localFloorTape(limit);
   return merged.slice(0, limit);
 }
 
