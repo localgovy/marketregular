@@ -39,11 +39,9 @@ function MarketPips({ count, on }: { count: number; on: boolean }) {
           className={cn("size-1.5 rounded-full", on ? "bg-ticket" : "bg-ticket/90")}
         />
       ))}
-      {count > 3 ? (
-        <span className={cn("font-mono text-sm tabular-nums", on ? "text-chalk" : "text-ticket-ink")}>
-          {count}
-        </span>
-      ) : null}
+      <span className={cn("font-mono text-sm tabular-nums", on ? "text-chalk" : "text-ticket-ink")}>
+        {count}
+      </span>
     </span>
   );
 }

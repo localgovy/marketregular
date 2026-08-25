@@ -7,7 +7,7 @@ import { pageMeta } from "@/lib/seo";
 export const metadata: Metadata = pageMeta({
   title: `${LAUNCH_CITY} market events`,
   path: "/events",
-  description: `Every ${LAUNCH_CITY} market day, month by month. Names and hours for each day.`,
+  description: "Click on a day, find your market, and start planning your trip.",
 });
 
 export default async function EventsPage({
