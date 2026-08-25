@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useTransition } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useTransition } from "react";
 import { emailDaySlip, listDayPlanStalls, type DayPlanStall } from "@/app/actions/day-plan";
 import { useDayPlan } from "@/components/day-plan-provider";
 import { useGeo } from "@/components/geo-provider";
 import { CheckMark, CloseMark } from "@/components/marks";
+import { SearchField } from "@/components/search-field";
 import { buttonVariants } from "@/components/ui/button";
 import { Hours } from "@/components/hours";
 import {
@@ -15,22 +16,47 @@ import {
   mapsUrl,
 } from "@/lib/day-plan";
 import { formatDistance, distanceMeters } from "@/lib/geo";
+import { openDayPlanHint } from "@/lib/day-plan-hint";
 import { openSignInSlip } from "@/lib/signin-slip";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { visitPlanWaitCopy, visitPlanWaitMs } from "@/lib/visit-plan-limit";
 import { cn } from "@/lib/utils";
 
-const STALL_CAP = 12;
+function StallRow({
+  name,
+  on,
+  onToggle,
+}: {
+  name: string;
+  on: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      onClick={onToggle}
+      className={cn(
+        "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 px-1 py-1.5 text-left text-sm font-medium",
+        on ? "text-foreground" : "text-foreground hover:bg-foreground/[0.06]",
+      )}
+    >
+      <span>{name}</span>
+      {on ? <CheckMark className="size-3.5 shrink-0 text-ticket-ink" /> : null}
+    </button>
+  );
+}
 
 export function DayPlanSlip() {
   const titleId = useId();
+  const searchId = useId();
   const panelRef = useRef<HTMLElement>(null);
   const asked = useRef(false);
   const busy = useRef(false);
   const { plan, open, tuck, toggleVendor, setMode, patchHours } = useDayPlan();
   const { coords, request } = useGeo();
   const [stalls, setStalls] = useState<DayPlanStall[]>([]);
-  const [expandedKey, setExpandedKey] = useState("");
+  const [query, setQuery] = useState("");
   const [pendingStalls, startStalls] = useTransition();
   const [sending, startSend] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
@@ -68,8 +94,10 @@ export function DayPlanSlip() {
 
   const slug = plan?.hall.slug;
   const date = plan?.hall.date;
-  const stallKey = slug && date ? `${slug}:${date}` : "";
-  const restOpen = expandedKey === stallKey;
+
+  useEffect(() => {
+    setQuery("");
+  }, [slug, date, open]);
 
   useEffect(() => {
     if (!open || !slug || !date) return;
@@ -85,6 +113,18 @@ export function DayPlanSlip() {
     };
   }, [open, slug, date, patchHours]);
 
+  const punched = useMemo(() => new Set(plan?.vendorSlugs ?? []), [plan?.vendorSlugs]);
+  const needle = query.trim().toLowerCase();
+  const punchedStalls = useMemo(
+    () => stalls.filter((stall) => punched.has(stall.slug)),
+    [stalls, punched],
+  );
+  const foundStalls = useMemo(() => {
+    if (!needle) return [];
+    return stalls.filter((stall) => stall.name.toLowerCase().includes(needle));
+  }, [stalls, needle]);
+  const listed = needle ? foundStalls : punchedStalls;
+
   if (!open || !plan) return null;
 
   const slip = plan;
@@ -92,11 +132,9 @@ export function DayPlanSlip() {
     ? distanceMeters(coords, { lat: slip.hall.lat, lng: slip.hall.lng })
     : null;
   const about = meters != null ? formatAboutTime(meters, slip.mode) : null;
-  const shown = restOpen ? stalls : stalls.slice(0, STALL_CAP);
-  const hidden = Math.max(0, stalls.length - STALL_CAP);
-  const punched = new Set(slip.vendorSlugs);
   const goHref = mapsUrl(slip.hall.lat, slip.hall.lng, slip.mode, isAppleMapsDevice());
   const note = error ? null : message ?? (now != null && cooling ? visitPlanWaitCopy(waitMs) : null);
+  const punchedCount = punchedStalls.length;
 
   function send() {
     if (busy.current || cooling) return;
@@ -143,33 +181,35 @@ export function DayPlanSlip() {
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}
-      className="fixed right-4 bottom-4 left-4 z-50 max-h-[min(36rem,calc(100dvh-5rem))] max-w-none overflow-y-auto rounded-xl bg-card p-4 shadow-md ring-1 ring-foreground/10 outline-none animate-in fade-in-0 slide-in-from-bottom-2 duration-200 motion-reduce:animate-none sm:left-auto sm:w-[22.5rem]"
+      className="fixed right-4 bottom-4 left-4 z-50 flex max-h-[min(22rem,calc(100dvh-5.5rem))] max-w-none flex-col rounded-xl bg-card p-3 shadow-md ring-1 ring-foreground/10 outline-none animate-in fade-in-0 slide-in-from-bottom-2 duration-200 motion-reduce:animate-none sm:left-auto sm:w-[20.5rem]"
     >
       <button
         type="button"
         aria-label="Close"
         onClick={tuck}
-        className="absolute top-1.5 right-1.5 inline-flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
+        className="absolute top-1 right-1 inline-flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
       >
         <CloseMark className="size-4" />
       </button>
-      <p className="text-sm text-muted-foreground">Today’s slip</p>
-      <h2 id={titleId} className="type-column mt-1 pr-8">
-        {slip.hall.name}
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">{slip.hall.address}</p>
-      <p className="mt-1 text-sm">
-        <span>{formatSlipDate(slip.hall.date)}</span>
-        {slip.hall.hours ? (
-          <>
-            {" · "}
-            <Hours value={slip.hall.hours} className="text-foreground" />
-          </>
-        ) : null}
-      </p>
 
-      <p className="mt-4 text-sm font-medium">How you go</p>
-      <div className="mt-2 flex flex-wrap gap-2">
+      <div className="shrink-0 pr-8">
+        <p className="text-sm text-muted-foreground">Today’s slip</p>
+        <h2 id={titleId} className="type-column mt-0.5">
+          {slip.hall.name}
+        </h2>
+        <p className="mt-0.5 text-sm">
+          <span>{formatSlipDate(slip.hall.date)}</span>
+          {slip.hall.hours ? (
+            <>
+              {" · "}
+              <Hours value={slip.hall.hours} className="text-foreground" />
+            </>
+          ) : null}
+        </p>
+      </div>
+
+      <p className="mt-3 shrink-0 text-sm font-medium">How you go</p>
+      <div className="mt-1.5 flex shrink-0 flex-wrap gap-1.5">
         {TRAVEL_MODES.map((item) => {
           const on = slip.mode === item.id;
           return (
@@ -179,7 +219,7 @@ export function DayPlanSlip() {
               aria-pressed={on}
               onClick={() => setMode(item.id)}
               className={cn(
-                "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
+                "stall-chip-sm inline-flex h-8 items-center px-2.5 text-sm font-medium",
                 on
                   ? "bg-foreground text-receipt"
                   : "bg-secondary text-foreground hover:bg-foreground/10",
@@ -191,86 +231,97 @@ export function DayPlanSlip() {
           );
         })}
       </div>
-      <a
-        href={goHref}
-        target="_blank"
-        rel="noreferrer"
-        className={cn(buttonVariants({ size: "sm" }), "mt-3 h-8 rounded-full px-4")}
-      >
-        Get going
-      </a>
+      <p className="mt-1.5 shrink-0 text-sm text-muted-foreground">
+        {meters != null ? (
+          <>
+            <span className="type-nums text-foreground">{formatDistance(meters)}</span>
+            {about ? (
+              <>
+                {" · "}
+                <span className="type-nums text-foreground">{about}</span>
+              </>
+            ) : null}
+          </>
+        ) : (
+          "Open Maps for the time from where you are."
+        )}
+      </p>
 
-      <p className="mt-4 text-sm font-medium">How far</p>
-      {meters != null ? (
-        <p className="mt-1 text-sm text-muted-foreground">
-          <span className="type-nums text-foreground">{formatDistance(meters)}</span>
-          {about ? (
-            <>
-              {" · "}
-              <span className="type-nums text-foreground">{about}</span>
-            </>
+      <div className="mt-3 shrink-0">
+        <div className="flex shrink-0 items-baseline justify-between gap-2">
+          <label htmlFor={searchId} className="text-sm font-medium">
+            Who to see
+          </label>
+          {punchedCount ? (
+            <p className="text-sm text-muted-foreground">
+              <span className="type-nums text-foreground">{punchedCount}</span> punched
+            </p>
           ) : null}
-          <span> as the crow flies</span>
-        </p>
-      ) : (
-        <p className="mt-1 text-sm text-muted-foreground">
-          Open Maps for the time from where you are.
-        </p>
-      )}
+        </div>
+        <SearchField
+          id={searchId}
+          value={query}
+          onChange={setQuery}
+          placeholder="Find a stall"
+          className="mt-1.5 h-8"
+        />
+        <div className="mt-1 max-h-32 overflow-y-auto">
+          {pendingStalls && !stalls.length ? (
+            <p className="px-1 py-1.5 text-sm text-muted-foreground">Loading stalls…</p>
+          ) : listed.length ? (
+            <ul>
+              {listed.map((stall) => (
+                <li key={stall.slug}>
+                  <StallRow
+                    name={stall.name}
+                    on={punched.has(stall.slug)}
+                    onToggle={() => toggleVendor(stall.slug)}
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : needle ? (
+            <p className="px-1 py-1.5 text-sm text-muted-foreground">No stall matches.</p>
+          ) : stalls.length ? (
+            <p className="px-1 py-1.5 text-sm text-muted-foreground">Search to punch a stall.</p>
+          ) : (
+            <p className="px-1 py-1.5 text-sm text-muted-foreground">
+              No stalls listed for that day yet.
+            </p>
+          )}
+        </div>
+      </div>
 
-      <p className="mt-4 text-sm font-medium">Who to see</p>
-      {pendingStalls && !stalls.length ? (
-        <p className="mt-1 text-sm text-muted-foreground">Loading stalls…</p>
-      ) : stalls.length ? (
-        <ul className="mt-2 flex flex-wrap gap-2">
-          {shown.map((stall) => {
-            const on = punched.has(stall.slug);
-            return (
-              <li key={stall.slug}>
-                <button
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => toggleVendor(stall.slug)}
-                  className={cn(
-                    "stall-chip-sm relative inline-flex h-9 items-center gap-1.5 px-3 text-sm font-medium",
-                    on
-                      ? "bg-foreground text-receipt"
-                      : "bg-secondary text-foreground hover:bg-foreground/10",
-                  )}
-                >
-                  {on ? null : <span aria-hidden className="stall-chip-fill" />}
-                  <span className="relative inline-flex items-center gap-1.5">
-                    {on ? <CheckMark className="size-3.5" /> : null}
-                    {stall.name}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p className="mt-1 text-sm text-muted-foreground">No stalls listed for that day yet.</p>
-      )}
-      {hidden > 0 && !restOpen ? (
+      <div className="mt-3 grid shrink-0 grid-cols-2 gap-2">
+        <a
+          href={goHref}
+          target="_blank"
+          rel="noreferrer"
+          className={cn(buttonVariants({ size: "sm" }), "h-8 rounded-full px-4")}
+        >
+          Get going
+        </a>
         <button
           type="button"
-          onClick={() => setExpandedKey(stallKey)}
-          className="mt-2 text-sm font-medium text-foreground hover:underline"
+          onClick={() => {
+            tuck();
+            openDayPlanHint();
+          }}
+          className={cn(buttonVariants({ size: "sm", variant: "outline" }), "h-8 rounded-full px-4")}
         >
-          See the rest
+          Done
         </button>
-      ) : null}
-
+      </div>
       <button
         type="button"
         disabled={sending || cooling}
         onClick={send}
-        className={cn(buttonVariants({ size: "sm", variant: "outline" }), "mt-4 h-8 rounded-full px-4")}
+        className="mt-2 shrink-0 text-sm font-medium text-foreground hover:underline disabled:no-underline disabled:opacity-50"
       >
         {sending ? "Sending…" : "Email this slip"}
       </button>
-      {error ? <p className="mt-2 text-sm text-destructive">{error}</p> : null}
-      {note ? <p className="mt-2 text-sm text-muted-foreground">{note}</p> : null}
+      {error ? <p className="mt-1 shrink-0 text-sm text-destructive">{error}</p> : null}
+      {note ? <p className="mt-1 shrink-0 text-sm text-muted-foreground">{note}</p> : null}
     </aside>
   );
 }

@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { DayPlanChip } from "@/components/day-plan-chip";
 import { HeaderAccount } from "@/components/header-account";
 import { SavesHydrator } from "@/components/saves-hydrator";
 import { NavLink } from "@/components/nav-link";
@@ -60,7 +59,6 @@ export function SiteHeader() {
             </button>
           </form>
           <SavesHydrator />
-          <DayPlanChip />
           <HeaderAccount />
         </div>
       </div>

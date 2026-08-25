@@ -119,16 +119,6 @@ export function dayPlanServerSnapshot() {
   return "";
 }
 
-export function hallFirstName(name: string) {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return name;
-  const lead = parts[0];
-  if (lead === "The" || lead === "St." || lead === "St") {
-    return parts.slice(0, 2).join(" ") || lead;
-  }
-  return lead;
-}
-
 export function formatSlipDate(iso: string) {
   const [year, month, day] = iso.split("-").map(Number);
   if (!year || !month || !day) return iso;

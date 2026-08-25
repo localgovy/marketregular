@@ -1,6 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { usePathname } from "next/navigation";
 import {
   dayPlanServerSnapshot,
   dayPlanSnapshot,
@@ -51,12 +60,38 @@ function requireSignedIn(name: string) {
 }
 
 export function DayPlanProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const raw = useSyncExternalStore(subscribeDayPlan, dayPlanSnapshot, dayPlanServerSnapshot);
   const plan = useMemo(() => {
     if (!documentHasAuthCookie()) return null;
     return storedPlan(raw);
   }, [raw]);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    function onClick(event: MouseEvent) {
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = (event.target as Element | null)?.closest?.("a");
+      if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
+      const href = link.getAttribute("href");
+      if (!href || href.startsWith("#")) return;
+      try {
+        const next = new URL(href, window.location.href);
+        if (next.origin !== window.location.origin) return;
+        if (next.pathname === window.location.pathname) return;
+        setOpen(false);
+      } catch {
+        // ignore malformed hrefs
+      }
+    }
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, []);
 
   const putHall = useCallback((hall: DayPlanHall) => {
     if (!requireSignedIn(hall.name)) return;

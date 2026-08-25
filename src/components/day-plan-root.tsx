@@ -1,3 +1,4 @@
+import { DayPlanHint } from "@/components/day-plan-hint";
 import { DayPlanProvider } from "@/components/day-plan-provider";
 import { DayPlanSlip } from "@/components/day-plan-slip";
 import { HomeGeo } from "@/components/home-geo";
@@ -11,6 +12,7 @@ export async function DayPlanRoot({ children }: { children: React.ReactNode }) {
       <DayPlanProvider>
         {children}
         <DayPlanSlip />
+        <DayPlanHint />
       </DayPlanProvider>
     </HomeGeo>
   );
