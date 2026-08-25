@@ -161,13 +161,7 @@ export default async function VendorPage({
               ))}
             </ul>
           </div>
-          <div className="rounded-xl bg-secondary/50 p-5">
-            <p className="font-medium">Is this your stall?</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Claim it to update hours, the menu, and how people find you.
-            </p>
-            <ClaimForm targetType="vendor" targetId={vendor.id} />
-          </div>
+          <ClaimForm targetType="vendor" targetId={vendor.id} />
         </aside>
       </div>
     </div>
