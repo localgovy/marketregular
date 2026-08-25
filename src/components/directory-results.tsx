@@ -6,7 +6,7 @@ import { VendorCard } from "@/components/vendor-card";
 import { CaretUpMark } from "@/components/marks";
 import { cn } from "@/lib/utils";
 import type { DirectoryVendor } from "@/lib/vendor-halls";
-import type { Market } from "@/types/database";
+import type { Market, MarketSchedule } from "@/types/database";
 
 const MARKET_PAGE = 10;
 const VENDOR_PAGE = 15;
@@ -14,9 +14,11 @@ const VENDOR_PAGE = 15;
 export function DirectoryResults({
   markets,
   vendors,
+  schedulesByMarket,
 }: {
   markets: Market[];
   vendors: DirectoryVendor[];
+  schedulesByMarket?: Record<string, MarketSchedule[]>;
 }) {
   const [marketPages, setMarketPages] = useState(1);
   const [vendorPages, setVendorPages] = useState(1);
@@ -31,7 +33,11 @@ export function DirectoryResults({
           {markets.length ? (
             <div className="grid gap-4">
               {shownMarkets.map((market) => (
-                <MarketCard key={market.id} market={market} />
+                <MarketCard
+                  key={market.id}
+                  market={market}
+                  schedules={schedulesByMarket?.[market.id]}
+                />
               ))}
             </div>
           ) : (

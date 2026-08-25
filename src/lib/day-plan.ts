@@ -76,6 +76,14 @@ export function parseDayPlan(value: unknown): DayPlan | null {
 
 export const DAY_PLAN_EVENT = "mr-day-plan";
 
+export function mergeHall(current: DayPlanHall, next: DayPlanHall): DayPlanHall {
+  return {
+    ...current,
+    ...next,
+    hours: next.hours.trim() ? next.hours : current.hours,
+  };
+}
+
 export function writeDayPlan(plan: DayPlan | null) {
   if (typeof window === "undefined") return;
   try {

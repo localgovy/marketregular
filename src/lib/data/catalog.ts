@@ -435,6 +435,7 @@ export async function searchDirectory(filters: SearchFilters) {
       near: filters.near,
       marketsBySlug,
     }),
+    schedulesByMarket: Object.fromEntries(schedulesByMarket),
   };
 }
 

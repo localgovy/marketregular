@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useState, useSyncExter
 import {
   dayPlanServerSnapshot,
   dayPlanSnapshot,
+  mergeHall,
   parseDayPlan,
   subscribeDayPlan,
   writeDayPlan,
@@ -63,7 +64,7 @@ export function DayPlanProvider({ children }: { children: React.ReactNode }) {
     if (current && current.hall.slug === hall.slug) {
       writeDayPlan({
         ...current,
-        hall: { ...current.hall, ...hall },
+        hall: mergeHall(current.hall, hall),
       });
     } else {
       writeDayPlan({
@@ -82,7 +83,7 @@ export function DayPlanProvider({ children }: { children: React.ReactNode }) {
       const has = current.vendorSlugs.includes(slug);
       writeDayPlan({
         ...current,
-        hall: { ...current.hall, ...hall },
+        hall: mergeHall(current.hall, hall),
         vendorSlugs: has
           ? current.vendorSlugs.filter((item) => item !== slug)
           : [...current.vendorSlugs, slug],

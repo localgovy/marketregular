@@ -157,6 +157,9 @@ export function localSearch(filters: SearchFilters) {
       near: filters.near,
       marketsBySlug,
     }),
+    schedulesByMarket: Object.fromEntries(
+      markets.map((market) => [market.id, schedulesFor(market.id)]),
+    ),
   };
 }
 

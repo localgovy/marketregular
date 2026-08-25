@@ -47,7 +47,7 @@ export default async function MarketsPage({
   const tags = queryList(params.tag);
   const areas = queryList(params.area);
   const sort = parseDirectorySort(params.sort, Boolean(near));
-  const { markets: foundMarkets, vendors } = await searchDirectory({
+  const { markets: foundMarkets, vendors, schedulesByMarket } = await searchDirectory({
     q: params.q,
     weekdays: weekdays.length ? weekdays : undefined,
     tags: tags.length ? tags : undefined,
@@ -130,7 +130,7 @@ export default async function MarketsPage({
         </div>
         <p className="text-sm text-muted-foreground">{summary}</p>
       </div>
-      <DirectoryResults key={formKey} markets={markets} vendors={vendors} />
+      <DirectoryResults key={formKey} markets={markets} vendors={vendors} schedulesByMarket={schedulesByMarket} />
     </div>
   );
 }
