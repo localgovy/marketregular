@@ -299,7 +299,7 @@ export function EventsCalendar({
           </div>
         </div>
         <p className="type-kicker mt-3 text-muted-foreground">
-          Gold marks a market day. Swipe or use arrows; Page Up and Page Down change month.
+          Number at the end of the dots marks the amount of markets on that day.
         </p>
       </div>
 
