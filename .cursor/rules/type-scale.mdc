@@ -5,11 +5,11 @@ alwaysApply: true
 
 # Type scale
 
-Two sans families: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotesk** (`font-sans`) for everything else. Ticket census figures use **Barlow Condensed ExtraBold** (`type-census`). Do not put Mona on body copy, kickers, posts, empty states, or the site name. Do not use a coding mono for numbers.
+Two sans families: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotesk** (`font-sans`) for everything else. The site wordmark is the lockup image (`site-wordmark`), not typeset Grotesk or Mona. Ticket census figures use **Barlow Condensed ExtraBold** (`type-census`). Do not put Mona on body copy, kickers, posts, empty states, or the site name. Do not use a coding mono for numbers.
 
 | Role | Face | Size | Example |
 | --- | --- | --- | --- |
-| Wordmark | Grotesk | `type-wordmark` (`text-xl font-medium tracking-[-0.04em]`) | MarketRegular |
+| Wordmark | Lockup image | `site-wordmark` | MarketRegular |
 | Kicker | Grotesk | `type-kicker` (`text-sm`) | Toronto, Live posts, When, where, or what |
 | Page title | Mona | `h1` (`text-3xl sm:text-4xl leading-tight`) | Toronto farmers' markets |
 | Panel / section | Mona | `h2` (`text-2xl leading-tight`) | Find a market |
@@ -22,4 +22,4 @@ Two sans families: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotes
 
 Use real heading tags and let the base sizes apply. Do not add `text-4xl`, `text-5xl`, `text-[13px]`, or `font-heading` on paragraphs. Small figures use `type-nums`, not `font-mono`. Directory counts on the ticket use `type-census`.
 
-The wordmark is Grotesk on purpose so it does not look like a page title. Nav stays Grotesk `text-sm font-medium`.
+The wordmark is the lockup image, not a page title. Nav stays Grotesk `text-sm font-medium`.

@@ -175,16 +175,19 @@
   @apply text-3xl leading-tight sm:text-4xl;
 }
 
-/* Wordmark: Grotesk lockup, not a Mona heading. */
-@utility type-wordmark {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.04em;
-  @apply text-xl font-medium leading-tight;
-}
-
-/* City, “Live notes”, panel kicker. */
-@utility type-kicker {
-  @apply text-sm;
+/* Wordmark: supplied lockup, color from currentColor. */
+@utility site-wordmark {
+  display: inline-block;
+  height: 1.25rem;
+  width: calc(1.25rem * 506 / 75);
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 /* localgovy lockup: glyph mask, color from currentColor. */
@@ -200,6 +203,11 @@
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
+}
+
+/* City, “Live notes”, panel kicker. */
+@utility type-kicker {
+  @apply text-sm;
 }
 
 /* Sentence under a page title. */

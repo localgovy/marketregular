@@ -1,7 +1,7 @@
 import {
-  SITE_LOGO,
   SITE_NAME,
   SITE_URL,
+  SITE_WORDMARK,
   STUDIO_NAME,
   STUDIO_URL,
   STUDIO_WORDMARK,
@@ -79,7 +79,7 @@ ${escapeHtml(slot.market.address)}<br/>
 
   const origin = emailOrigin();
   const home = escapeHtml(origin);
-  const mark = escapeHtml(`${origin}${SITE_LOGO}`);
+  const mark = escapeHtml(`${origin}${SITE_WORDMARK}`);
   const wordmark = escapeHtml(`${origin}${STUDIO_WORDMARK}`);
   const studio = escapeHtml(STUDIO_URL);
 
@@ -98,14 +98,13 @@ ${escapeHtml(slot.market.address)}<br/>
 <td bgcolor="#2c4a40" style="background:#2c4a40;padding:16px 24px">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0">
 <tr>
-<td valign="middle" style="padding:0 10px 0 0">
+<td valign="middle" style="padding:0 12px 0 0">
 <a href="${home}" style="text-decoration:none">
-<img src="${mark}" width="32" height="32" alt="" style="display:block;border:0;border-radius:3px;outline:none"/>
+<img src="${mark}" width="162" height="24" alt="${escapeHtml(SITE_NAME)}" style="display:block;border:0;outline:none"/>
 </a>
 </td>
 <td valign="middle" style="font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.15">
-<a href="${home}" style="font-size:20px;font-weight:500;letter-spacing:-0.04em;color:#f3eee4;text-decoration:none">${escapeHtml(SITE_NAME)}</a>
-<a href="${studio}" style="font-size:14px;font-weight:400;color:#c5ddd4;text-decoration:none;padding-left:8px">
+<a href="${studio}" style="font-size:14px;font-weight:400;color:#c5ddd4;text-decoration:none">
 by <img src="${wordmark}" width="67" height="15" alt="${escapeHtml(STUDIO_NAME)}" style="display:inline;border:0;vertical-align:middle;margin:0 0 2px 4px;outline:none"/>
 </a>
 </td>

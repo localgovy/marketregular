@@ -6,7 +6,7 @@ import { GuestSignInSlip } from "@/components/guest-signin-slip";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
-import { SITE_NAME, SITE_TAGLINE, SITE_URL, SITE_LOGO } from "@/lib/constants";
+import { SITE_NAME, SITE_TAGLINE, SITE_URL, SITE_OG } from "@/lib/constants";
 import { SITE_DESCRIPTION, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
 
@@ -48,9 +48,9 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     images: [
       {
-        url: SITE_LOGO,
-        width: 800,
-        height: 800,
+        url: SITE_OG,
+        width: 1200,
+        height: 630,
         alt: SITE_NAME,
       },
     ],

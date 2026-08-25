@@ -23,7 +23,9 @@ function canonicalSiteUrl() {
 }
 
 export const SITE_URL = canonicalSiteUrl();
-export const SITE_LOGO = "/brand/market-regular-logo.png";
+export const SITE_WORDMARK = "/brand/marketregular-wordmark.png";
+export const SITE_LOGO = "/brand/marketregular-logo.png";
+export const SITE_OG = "/brand/marketregular-og.png";
 
 /** Studio that builds MarketRegular. Wordmark is lowercase. */
 export const STUDIO_NAME = "localgovy";

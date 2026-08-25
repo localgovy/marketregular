@@ -2,7 +2,7 @@ import Link from "next/link";
 import { HeaderAccount } from "@/components/header-account";
 import { SavesHydrator } from "@/components/saves-hydrator";
 import { NavLink } from "@/components/nav-link";
-import { SiteMark, StudioWordmark } from "@/components/site-mark";
+import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { SearchField } from "@/components/search-field";
 import { buttonVariants } from "@/components/ui/button";
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
@@ -15,27 +15,23 @@ export function SiteHeader() {
       <div className="flex h-14 w-full items-center gap-3 px-4 lg:grid lg:h-16 lg:site-rail lg:gap-0 lg:px-0">
         <div className="flex min-w-0 flex-1 items-center lg:h-16 lg:flex-none lg:border-r lg:border-board lg:bg-board lg:px-4">
           <div className="flex min-w-0 items-center gap-2.5">
-            <Link href="/" prefetch={false} aria-label={`${SITE_NAME} home`} className="shrink-0">
-              <SiteMark className="size-8" />
+            <Link
+              href="/"
+              prefetch={false}
+              aria-label={`${SITE_NAME} home`}
+              className="shrink-0 text-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk"
+            >
+              <SiteWordmark />
             </Link>
-            <span className="flex min-w-0 items-baseline gap-2 leading-none">
-              <Link
-                href="/"
-                prefetch={false}
-                className="type-wordmark shrink-0 text-foreground lg:text-chalk"
-              >
-                {SITE_NAME}
-              </Link>
-              <a
-                href={STUDIO_URL}
-                rel="noreferrer"
-                aria-label={`by ${STUDIO_NAME}`}
-                className="type-kicker inline-flex shrink-0 items-center gap-1 text-muted-foreground outline-none hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk/70"
-              >
-                <span>by</span>
-                <StudioWordmark />
-              </a>
-            </span>
+            <a
+              href={STUDIO_URL}
+              rel="noreferrer"
+              aria-label={`by ${STUDIO_NAME}`}
+              className="type-kicker inline-flex shrink-0 items-center gap-1 text-muted-foreground outline-none hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk/70"
+            >
+              <span>by</span>
+              <StudioWordmark />
+            </a>
           </div>
         </div>
         <div className="flex min-w-0 items-center justify-end gap-3 lg:h-16 lg:px-6">
