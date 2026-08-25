@@ -182,7 +182,7 @@ export function AccountDesk({
             how="Your saves. Find your favourites."
             action={
               <Link href="/saved" className="hover:underline">
-                Open list
+                Full Saved List
               </Link>
             }
           >
