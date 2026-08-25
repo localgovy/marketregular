@@ -248,16 +248,16 @@ export function FloorComposer({
     <div
       ref={wrapRef}
       className={cn(
-        "relative z-10 shrink-0 border-b border-border bg-background px-3 pt-3 pb-2",
+        "relative z-10 shrink-0 rounded-md border border-input bg-card focus-within:border-ring",
         className,
       )}
     >
-      <label className="sr-only" htmlFor="floor-post">
+      <label className="block px-3 pt-3 text-sm font-medium" htmlFor="floor-post">
         Write a review
       </label>
       <Textarea
         id="floor-post"
-        className="min-h-[4.5rem] max-h-40 resize-none border-0 bg-transparent px-0 py-1 text-lg shadow-none md:text-lg focus-visible:border-transparent focus-visible:ring-0"
+        className="min-h-[5.5rem] max-h-40 resize-none border-0 bg-transparent px-3 py-2 text-base shadow-none md:text-base focus-visible:border-transparent focus-visible:ring-0"
         rows={3}
         autoFocus={autoFocus}
         value={body}
@@ -266,7 +266,7 @@ export function FloorComposer({
       />
 
       {rating || market || tagged || tags.length ? (
-        <ul className="mt-1.5 flex flex-wrap gap-1">
+        <ul className="flex flex-wrap gap-1 px-3 pb-2">
           {rating ? (
             <li className="stall-chip-sm inline-flex overflow-hidden bg-ticket text-foreground">
               <button
@@ -350,7 +350,7 @@ export function FloorComposer({
         </ul>
       ) : null}
 
-      <div className="mt-1.5 flex flex-wrap items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1 border-t border-border bg-secondary px-2 py-1.5">
         <button
           type="button"
           aria-label="Score"
@@ -515,7 +515,9 @@ export function FloorComposer({
         </ExtraPanel>
       ) : null}
 
-      {message ? <p className="mt-1 px-1 text-sm text-muted-foreground">{message}</p> : null}
+      {message ? (
+        <p className="px-3 pb-2 text-sm text-muted-foreground">{message}</p>
+      ) : null}
     </div>
   );
 }
