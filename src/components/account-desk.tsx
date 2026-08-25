@@ -24,6 +24,7 @@ import {
 import { NowLabel } from "@/components/now-label";
 import { TorontoWeek } from "@/components/toronto-week";
 import { Button } from "@/components/ui/button";
+import { SITE_NAME } from "@/lib/constants";
 import { timeAgo } from "@/lib/format";
 import { decodeFloorBody } from "@/lib/floor-note";
 import { tagLabel } from "@/lib/find-paths";
@@ -126,8 +127,8 @@ export function AccountDesk({
             <p className="type-kicker text-muted-foreground">Your profile</p>
             <h1>{name}</h1>
             <p className="type-lede mt-2 text-muted-foreground">
-              Saved halls, stalls, and the reviews you write stay with this account. This
-              week&apos;s hours are built from that list.
+              Your {SITE_NAME} identity – post reviews, save markets, and purchase your
+              favourite goods ahead of time, all in one profile.
             </p>
           </header>
 
