@@ -7,11 +7,11 @@ import { SearchField } from "@/components/search-field";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
   FIND_AREAS,
-  FIND_ORIGINS,
   FIND_PRODUCTS,
   FIND_RECORD,
   FIND_SETUP,
   marketsHref,
+  originChipRow,
   tagLabel,
   weekdayInToronto,
   whenOptions,
@@ -260,7 +260,7 @@ export function SearchForm({
             </button>
           );
         })}
-        {FIND_ORIGINS.map((tag) => {
+        {originChipRow(live.tags).map((tag) => {
           const on = live.tags.includes(tag);
           return (
             <button

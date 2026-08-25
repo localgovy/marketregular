@@ -7,9 +7,9 @@ import { SearchField } from "@/components/search-field";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import { countryTagsFromQuery } from "@/lib/country-tags";
 import {
-  FIND_ORIGINS,
   FIND_PRODUCTS,
   FIND_RECORD,
+  originChipRow,
   tagLabel,
   tagsPresent,
   weekdayInToronto,
@@ -111,8 +111,8 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
     [vendors],
   );
   const cuisineChips = useMemo(
-    () => tagsPresent(vendors, FIND_ORIGINS),
-    [vendors],
+    () => tagsPresent(vendors, originChipRow(live.tags)),
+    [vendors, live.tags],
   );
   const sellTags = useMemo(() => tagsPresent(vendors, PRODUCT_TAGS), [vendors]);
   const cuisineTags = useMemo(() => tagsPresent(vendors, COUNTRY_TAGS), [vendors]);

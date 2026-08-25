@@ -29,35 +29,24 @@ export const FIND_PRODUCTS = [
   "beer",
 ] as const;
 
-/** Cuisines people actually type, in the order they tend to ask. */
+/** Short cuisine row on Find. Everything else lives under All filters. */
 export const FIND_ORIGINS = [
   "jamaican",
   "caribbean",
   "mexican",
-  "salvadoran",
   "italian",
   "indian",
-  "sri-lankan",
   "chinese",
   "japanese",
-  "korean",
-  "vietnamese",
-  "thai",
-  "filipino",
-  "ethiopian",
-  "portuguese",
-  "greek",
-  "french",
-  "lebanese",
-  "persian",
-  "middle-eastern",
-  "mediterranean",
-  "west-african",
-  "polish",
-  "ukrainian",
-  "tibetan",
-  "nepali",
 ] as const;
+
+const FIND_ORIGIN_SET = new Set<string>(FIND_ORIGINS);
+
+/** Default origin chips, plus any cuisine already on from All filters. */
+export function originChipRow(selected: readonly string[] = []) {
+  const extras = selected.filter((tag) => COUNTRY_SET.has(tag) && !FIND_ORIGIN_SET.has(tag));
+  return extras.length ? [...FIND_ORIGINS, ...extras] : FIND_ORIGINS;
+}
 
 /** Weather and season, after time and place. */
 export const FIND_SETUP = ["indoor", "outdoor", "year-round"] as const;
