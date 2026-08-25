@@ -7,6 +7,7 @@ import { composeFloorNote } from "@/app/actions/presence";
 import { useGeo } from "@/components/geo-provider";
 import { ScorePlate } from "@/components/listing-score";
 import { CloseMark, PlateMark, TagMark } from "@/components/marks";
+import { ReviewSignupOverlay } from "@/components/review-signup-overlay";
 import { SearchField } from "@/components/search-field";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -255,15 +256,20 @@ export function FloorComposer({
       <label className="block px-3 pt-3 text-sm font-medium" htmlFor="floor-post">
         Write a review
       </label>
-      <Textarea
-        id="floor-post"
-        className="min-h-[5.5rem] max-h-40 resize-none border-0 bg-transparent px-3 py-2 text-base shadow-none md:text-base focus-visible:border-transparent focus-visible:ring-0"
-        rows={3}
-        autoFocus={autoFocus}
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder={prompt}
-      />
+      <div className="relative">
+        <Textarea
+          id="floor-post"
+          className="min-h-[5.5rem] max-h-40 resize-none border-0 bg-transparent px-3 py-2 text-base shadow-none md:text-base focus-visible:border-transparent focus-visible:ring-0"
+          rows={3}
+          autoFocus={autoFocus && signedIn}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder={prompt}
+          readOnly={!signedIn}
+          tabIndex={signedIn ? undefined : -1}
+        />
+        {signedIn ? null : <ReviewSignupOverlay next={pathname} />}
+      </div>
 
       {rating || market || tagged || tags.length ? (
         <ul className="flex flex-wrap gap-1 px-3 pb-2">

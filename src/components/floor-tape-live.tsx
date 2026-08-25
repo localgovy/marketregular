@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, type ComponentType, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { getComposerDirectory } from "@/app/actions/home-lazy";
 import { ReviewCard } from "@/components/review-card";
+import { ReviewSignupOverlay } from "@/components/review-signup-overlay";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import type { GeoMarket } from "@/lib/geo";
 import type { FloorItem, StallRef } from "@/types/database";
@@ -21,19 +23,41 @@ type ComposerBundle = {
   markets: GeoMarket[];
 };
 
-function ComposerStart({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="px-3 py-3">
-      <button
-        type="button"
-        onClick={onStart}
-        className="relative z-10 w-full rounded-md border border-input bg-card px-3 pt-3 pb-2 text-left hover:border-ring"
-      >
-        <span className="block text-sm font-medium text-foreground">Write a review</span>
-        <span className="mt-2 block min-h-[5.5rem] py-2 text-base text-muted-foreground">
+function ComposerStart({
+  signedIn,
+  onStart,
+}: {
+  signedIn: boolean;
+  onStart: () => void;
+}) {
+  const pathname = usePathname() || "/";
+  const field = (
+    <>
+      <span className="block text-sm font-medium text-foreground">Write a review</span>
+      <span className="relative mt-2 block min-h-[5.5rem]">
+        <span className="block py-2 text-base text-muted-foreground">
           What should the next shopper know?
         </span>
-      </button>
+        {signedIn ? null : <ReviewSignupOverlay next={pathname} />}
+      </span>
+    </>
+  );
+
+  return (
+    <div className="px-3 py-3">
+      {signedIn ? (
+        <button
+          type="button"
+          onClick={onStart}
+          className="relative z-10 w-full rounded-md border border-input bg-card px-3 pt-3 pb-2 text-left hover:border-ring"
+        >
+          {field}
+        </button>
+      ) : (
+        <div className="relative z-10 w-full rounded-md border border-input bg-card px-3 pt-3 pb-2">
+          {field}
+        </div>
+      )}
     </div>
   );
 }
@@ -92,7 +116,7 @@ export function FloorTapeLive({ children }: { children: ReactNode }) {
             />
           </div>
         ) : (
-          <ComposerStart onStart={start} />
+          <ComposerStart signedIn={signedIn} onStart={start} />
         )}
       </div>
       {extra.length ? (
