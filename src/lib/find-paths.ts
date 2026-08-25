@@ -176,6 +176,15 @@ export function weekdayInToronto(now = new Date()) {
   return WEEKDAYS.findIndex((day) => day === name);
 }
 
+export const DIRECTORY_SORTS = [
+  { id: "name", label: "Name" },
+  { id: "next", label: "Next open" },
+  { id: "near", label: "Closest" },
+  { id: "score", label: "Score" },
+] as const;
+
+export type DirectorySort = (typeof DIRECTORY_SORTS)[number]["id"];
+
 export type MarketsSearch = {
   q?: string;
   weekdays?: number[];
@@ -185,7 +194,18 @@ export type MarketsSearch = {
   tags?: string[];
   lat?: string;
   lng?: string;
+  sort?: DirectorySort;
 };
+
+export function parseDirectorySort(
+  value: string | undefined,
+  hasNear: boolean,
+): DirectorySort {
+  if (value === "name" || value === "next" || value === "near" || value === "score") {
+    return value;
+  }
+  return hasNear ? "near" : "name";
+}
 
 export function marketsHref(search: MarketsSearch) {
   const query = new URLSearchParams();
@@ -204,6 +224,8 @@ export function marketsHref(search: MarketsSearch) {
     query.set("lat", search.lat);
     query.set("lng", search.lng);
   }
+  const implied: DirectorySort = search.lat && search.lng ? "near" : "name";
+  if (search.sort && search.sort !== implied) query.set("sort", search.sort);
   const qs = query.toString();
   return qs ? `/markets?${qs}` : "/markets";
 }
@@ -224,9 +246,10 @@ export function marketsCrumbs(search: {
   tags?: string[];
   openNow?: boolean;
   near?: boolean;
+  sort?: DirectorySort;
 }) {
   const crumbs: string[] = [];
-  if (search.near) crumbs.push("closest first");
+  if (search.near && (!search.sort || search.sort === "near")) crumbs.push("closest first");
   for (const day of search.weekdays ?? []) {
     const name = WEEKDAYS[day];
     if (name) crumbs.push(name);

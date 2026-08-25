@@ -3,6 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { VendorCard } from "@/components/vendor-card";
 import { Button } from "@/components/ui/button";
+import { FilterClearButton } from "@/components/filter-clear";
 import { SearchField } from "@/components/search-field";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import { countryTagsFromQuery } from "@/lib/country-tags";
@@ -132,6 +133,8 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
     cuisineTags.length > 0 ||
     recordTags.length > 0;
   const dayValue = live.weekdays.length === 1 ? String(live.weekdays[0]) : "";
+  const browseOn = live.weekdays.length > 0 || live.hereToday;
+  const tagsOn = live.tags.length > 0;
 
   function go(next: StallBrowse) {
     setApplied(next);
@@ -229,6 +232,11 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
                     Here today
                   </button>
                 ) : null}
+                <FilterClearButton
+                  className="ml-auto"
+                  disabled={!browseOn}
+                  onClick={() => update({ weekdays: [], hereToday: false })}
+                />
               </div>
             ) : null}
             {productChips.length || cuisineChips.length || canAllFilters ? (
@@ -252,17 +260,23 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
                     </button>
                   );
                 })}
-                {canAllFilters ? (
-                  <button
-                    type="button"
-                    className="ml-auto text-sm font-medium underline underline-offset-4 hover:text-foreground"
-                    aria-expanded={panelOpen}
-                    aria-controls="stall-filters"
-                    onClick={openPanel}
-                  >
-                    All filters
-                  </button>
-                ) : null}
+                <div className="ml-auto flex items-center gap-3">
+                  <FilterClearButton
+                    disabled={!tagsOn}
+                    onClick={() => update({ tags: [] })}
+                  />
+                  {canAllFilters ? (
+                    <button
+                      type="button"
+                      className="text-sm font-medium underline underline-offset-4 hover:text-foreground"
+                      aria-expanded={panelOpen}
+                      aria-controls="stall-filters"
+                      onClick={openPanel}
+                    >
+                      All filters
+                    </button>
+                  ) : null}
+                </div>
               </div>
             ) : null}
             {panelOpen ? (
@@ -429,13 +443,7 @@ function StallAllFilters({
         ) : null}
       </div>
       <div className="mt-6 flex items-center justify-between gap-3 border-t border-border pt-4">
-        <button
-          type="button"
-          className="text-sm underline underline-offset-4 hover:text-foreground"
-          onClick={onClear}
-        >
-          Clear
-        </button>
+        <FilterClearButton onClick={onClear} />
         <Button type="button" className="h-9 px-4" onClick={onApply}>
           {stallsLabel}
         </Button>

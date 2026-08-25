@@ -9,9 +9,9 @@ import {
   toPublicMarket,
   toPublicVendor,
 } from "@/data/directory";
-import { distanceMeters } from "@/lib/geo";
 import { decodeFloorBody, mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
-import { applyDirectoryTags, searchWeekdays } from "@/lib/find-paths";
+import { applyDirectoryTags, parseDirectorySort, searchWeekdays } from "@/lib/find-paths";
+import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { isLaunchCity } from "@/lib/launch";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
@@ -132,16 +132,21 @@ export function localSearch(filters: SearchFilters) {
     markets = tagged.markets;
     vendors = tagged.vendors;
   }
-  if (filters.near) {
-    markets = markets
-      .map((m) => ({ m, d: distanceMeters(filters.near!, { lat: m.lat, lng: m.lng }) }))
-      .sort((a, b) => a.d - b.d)
-      .map((x) => x.m);
-  }
+  const sort = parseDirectorySort(filters.sort, Boolean(filters.near));
+  const allMarkets = localMarkets();
+  const halls = groupVendorHalls(localStalls(), allMarkets);
+  const withHalls = withVendorHalls(vendors, halls);
+  const marketsBySlug = new Map(allMarkets.map((market) => [market.slug, market]));
 
   return {
-    markets,
-    vendors: withVendorHalls(vendors, groupVendorHalls(localStalls(), localMarkets())),
+    markets: sortDirectoryMarkets(markets, sort, {
+      near: filters.near,
+      schedulesFor,
+    }),
+    vendors: sortDirectoryVendors(withHalls, sort, {
+      near: filters.near,
+      marketsBySlug,
+    }),
   };
 }
 

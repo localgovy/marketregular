@@ -128,17 +128,51 @@ export function formatSchedule(row: ScheduleRow) {
   return { day, hours, detail };
 }
 
-export function nextOpenLabel(schedules: ScheduleRow[], province: string) {
-  if (isMarketOpen(schedules, province)) return "Open now";
+export type NextOpenSlot = {
+  waitMinutes: number;
+  offset: number;
+  weekday: number;
+  opensAt: string;
+};
+
+/** Soonest remaining session this week, or null if nothing is on the board. */
+export function nextOpenSlot(
+  schedules: ScheduleRow[],
+  province: string,
+  now = new Date(),
+): NextOpenSlot | null {
+  if (!schedules.length) return null;
   const tz = provinceTz(province);
-  const { weekday } = zonedParts(new Date(), tz);
-  for (let i = 0; i < 7; i += 1) {
-    const day = (weekday + i) % 7;
-    const row = schedules.find((s) => s.weekday === day);
-    if (!row) continue;
-    if (i === 0) return `Later today ${formatTime(row.opens_at)}`;
-    if (i === 1) return `Tomorrow ${formatTime(row.opens_at)}`;
-    return `${WEEKDAYS[day]} ${formatTime(row.opens_at)}`;
+  const { weekday, minutes } = zonedParts(now, tz);
+  for (let offset = 0; offset < 7; offset += 1) {
+    const day = (weekday + offset) % 7;
+    let best: NextOpenSlot | null = null;
+    for (const row of schedules) {
+      if (row.weekday !== day) continue;
+      if (!inSeason(now, row.season_start, row.season_end, tz)) continue;
+      const opens = parseHm(row.opens_at);
+      const closes = parseHm(row.closes_at);
+      let waitMinutes: number;
+      if (offset === 0) {
+        if (minutes > closes) continue;
+        waitMinutes = minutes >= opens ? 0 : opens - minutes;
+      } else {
+        waitMinutes = offset * 24 * 60 - minutes + opens;
+      }
+      if (!best || waitMinutes < best.waitMinutes) {
+        best = { waitMinutes, offset, weekday: day, opensAt: row.opens_at };
+      }
+    }
+    if (best) return best;
   }
-  return "See schedule";
+  return null;
+}
+
+export function nextOpenLabel(schedules: ScheduleRow[], province: string, now = new Date()) {
+  const slot = nextOpenSlot(schedules, province, now);
+  if (!slot) return "See schedule";
+  if (slot.waitMinutes === 0) return "Open now";
+  if (slot.offset === 0) return `Later today ${formatTime(slot.opensAt)}`;
+  if (slot.offset === 1) return `Tomorrow ${formatTime(slot.opensAt)}`;
+  return `${WEEKDAYS[slot.weekday]} ${formatTime(slot.opensAt)}`;
 }

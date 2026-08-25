@@ -192,4 +192,5 @@ export type SearchFilters = {
   setup?: string;
   openNow?: boolean;
   near?: { lat: number; lng: number };
+  sort?: string;
 };

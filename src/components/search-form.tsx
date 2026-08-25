@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { FilterClearButton } from "@/components/filter-clear";
 import { SearchField } from "@/components/search-field";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
@@ -15,6 +16,7 @@ import {
   tagLabel,
   weekdayInToronto,
   whenOptions,
+  type DirectorySort,
   type MarketsSearch,
 } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
@@ -29,6 +31,7 @@ export type SearchFormDefaults = {
   openNow?: boolean;
   lat?: string;
   lng?: string;
+  sort?: DirectorySort;
 };
 
 type BrowseState = {
@@ -64,6 +67,7 @@ function toSearch(state: BrowseState, defaults?: SearchFormDefaults): MarketsSea
     tags: state.tags,
     lat: defaults?.lat,
     lng: defaults?.lng,
+    sort: defaults?.sort,
   };
 }
 
@@ -117,6 +121,9 @@ export function SearchForm({
 
   const dayValue = live.weekdays.length === 1 ? String(live.weekdays[0]) : "";
   const areaValue = live.areas.length === 1 ? live.areas[0] : "";
+  const browseOn =
+    live.weekdays.length > 0 || Boolean(live.setup) || live.areas.length > 0 || live.openNow;
+  const tagsOn = live.tags.length > 0;
 
   return (
     <form
@@ -238,6 +245,13 @@ export function SearchForm({
         >
           Open now
         </button>
+        <FilterClearButton
+          className="ml-auto"
+          disabled={!browseOn}
+          onClick={() =>
+            update({ weekdays: [], setup: "", areas: [], openNow: false })
+          }
+        />
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-border px-3 py-3 sm:px-4">
@@ -279,15 +293,21 @@ export function SearchForm({
             </button>
           );
         })}
-        <button
-          type="button"
-          className="ml-auto text-sm font-medium underline underline-offset-4 hover:text-foreground"
-          aria-expanded={panelOpen}
-          aria-controls="all-filters"
-          onClick={openPanel}
-        >
-          All filters
-        </button>
+        <div className="ml-auto flex items-center gap-3">
+          <FilterClearButton
+            disabled={!tagsOn}
+            onClick={() => update({ tags: [] })}
+          />
+          <button
+            type="button"
+            className="text-sm font-medium underline underline-offset-4 hover:text-foreground"
+            aria-expanded={panelOpen}
+            aria-controls="all-filters"
+            onClick={openPanel}
+          >
+            All filters
+          </button>
+        </div>
       </div>
 
       {panelOpen ? (
@@ -446,13 +466,7 @@ function AllFilters({
       </div>
 
       <div className="mt-6 flex items-center justify-between gap-3 border-t border-border pt-4">
-        <button
-          type="button"
-          className="text-sm underline underline-offset-4 hover:text-foreground"
-          onClick={onClear}
-        >
-          Clear
-        </button>
+        <FilterClearButton onClick={onClear} />
         <Button type="button" className="h-9 px-4" onClick={onApply}>
           {marketsLabel}
         </Button>

@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
 import { DirectoryResults } from "@/components/directory-results";
+import { DirectorySort } from "@/components/directory-sort";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
 import { searchDirectory } from "@/lib/data/catalog";
-import { filterMarketsByAreas, marketsCrumbs, queryList } from "@/lib/find-paths";
+import {
+  filterMarketsByAreas,
+  marketsCrumbs,
+  parseDirectorySort,
+  queryList,
+  type MarketsSearch,
+} from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 
@@ -27,6 +34,7 @@ export default async function MarketsPage({
     openNow?: string;
     lat?: string;
     lng?: string;
+    sort?: string;
   }>;
 }) {
   const params = await searchParams;
@@ -38,6 +46,7 @@ export default async function MarketsPage({
   const near = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : undefined;
   const tags = queryList(params.tag);
   const areas = queryList(params.area);
+  const sort = parseDirectorySort(params.sort, Boolean(near));
   const { markets: foundMarkets, vendors } = await searchDirectory({
     q: params.q,
     weekdays: weekdays.length ? weekdays : undefined,
@@ -45,6 +54,7 @@ export default async function MarketsPage({
     setup: params.setup || undefined,
     openNow: params.openNow === "1",
     near,
+    sort,
   });
   const markets = filterMarketsByAreas(foundMarkets, areas);
   const crumbs = marketsCrumbs({
@@ -54,7 +64,19 @@ export default async function MarketsPage({
     tags,
     openNow: params.openNow === "1",
     near: Boolean(near),
+    sort,
   });
+  const search: MarketsSearch = {
+    q: params.q,
+    weekdays,
+    tags,
+    areas,
+    setup: params.setup,
+    openNow: params.openNow === "1",
+    lat: params.lat,
+    lng: params.lng,
+    sort,
+  };
   const status = [LAUNCH_CITY, ...crumbs, `${markets.length} markets`].join(" · ");
   const summary = [
     `${markets.length} markets`,
@@ -72,6 +94,7 @@ export default async function MarketsPage({
     params.openNow,
     params.lat,
     params.lng,
+    sort,
   ].join("|");
 
   return (
@@ -89,6 +112,7 @@ export default async function MarketsPage({
           openNow: params.openNow === "1",
           lat: params.lat,
           lng: params.lng,
+          sort,
         }}
       />
       <div className="mt-8">
@@ -101,7 +125,10 @@ export default async function MarketsPage({
         >
           Search Results
         </a>
-        <p className="text-sm text-muted-foreground">{summary}</p>
+        <div className="flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1">
+          <DirectorySort search={search} />
+          <p className="text-sm text-muted-foreground">{summary}</p>
+        </div>
       </div>
       <DirectoryResults key={formKey} markets={markets} vendors={vendors} />
     </div>

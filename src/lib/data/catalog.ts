@@ -1,5 +1,4 @@
 import { isSupabaseConfigured } from "@/lib/constants";
-import { distanceMeters } from "@/lib/geo";
 import { LAUNCH_CITY, isLaunchCity } from "@/lib/launch";
 import {
   localFeatured,
@@ -14,7 +13,8 @@ import {
   localVendorBySlug,
   localVendors,
 } from "@/lib/data/local";
-import { applyDirectoryTags, searchWeekdays } from "@/lib/find-paths";
+import { applyDirectoryTags, parseDirectorySort, searchWeekdays } from "@/lib/find-paths";
+import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
@@ -403,18 +403,20 @@ export async function searchDirectory(filters: SearchFilters) {
     markets = tagged.markets;
     vendors = tagged.vendors;
   }
-  if (filters.near) {
-    const here = filters.near;
-    markets = [...markets].sort(
-      (a, b) =>
-        distanceMeters(here, { lat: a.lat, lng: a.lng }) -
-        distanceMeters(here, { lat: b.lat, lng: b.lng }),
-    );
-  }
+  const sort = parseDirectorySort(filters.sort, Boolean(filters.near));
+  const halls = groupVendorHalls(stalls, allMarkets);
+  const withHalls = withVendorHalls(vendors, halls);
+  const marketsBySlug = new Map(allMarkets.map((market) => [market.slug, market]));
 
   return {
-    markets,
-    vendors: withVendorHalls(vendors, groupVendorHalls(stalls, allMarkets)),
+    markets: sortDirectoryMarkets(markets, sort, {
+      near: filters.near,
+      schedulesFor: (id) => schedulesByMarket.get(id) ?? [],
+    }),
+    vendors: sortDirectoryVendors(withHalls, sort, {
+      near: filters.near,
+      marketsBySlug,
+    }),
   };
 }
 
