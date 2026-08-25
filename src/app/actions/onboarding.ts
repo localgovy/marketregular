@@ -5,6 +5,7 @@ import { safePath } from "@/lib/auth-redirect";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { normalizeUsername, usernameError } from "@/lib/username";
+import { dbPublicError } from "@/lib/public-error";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -29,7 +30,7 @@ export async function usernameAvailable(raw: string) {
     .select("id")
     .eq("username", username)
     .maybeSingle();
-  if (queryError) return { available: false as const, error: queryError.message };
+  if (queryError) return { available: false as const, error: "Could not check that handle." };
   if (data && data.id !== user.id) return { available: false as const, error: "That handle is taken." };
   return { available: true as const, error: null };
 }
@@ -69,7 +70,7 @@ export async function completeOnboarding(formData: FormData) {
     onConflict: "user_id,kind,slug",
     ignoreDuplicates: true,
   });
-  if (saveError) return { error: saveError.message };
+  if (saveError) return { error: dbPublicError(saveError, "Could not save those markets.") };
 
   const patch = {
     username,
@@ -83,7 +84,7 @@ export async function completeOnboarding(formData: FormData) {
     .maybeSingle();
   if (error) {
     if (error.code === "23505") return { error: "That handle is taken." };
-    return { error: error.message };
+    return { error: dbPublicError(error, "Could not finish setting up this account.") };
   }
 
   if (!updated) {
@@ -107,7 +108,7 @@ export async function completeOnboarding(formData: FormData) {
     });
     if (insertError) {
       if (insertError.code === "23505") return { error: "That handle is taken." };
-      return { error: insertError.message };
+      return { error: dbPublicError(insertError, "Could not finish setting up this account.") };
     }
   }
 
@@ -116,7 +117,7 @@ export async function completeOnboarding(formData: FormData) {
   const { data: stamped, error: stampError } = await service.rpc("stamp_onboarded_at", {
     p_user_id: user.id,
   });
-  if (stampError) return { error: stampError.message };
+  if (stampError) return { error: "Could not finish setting up this account. Try again." };
   if (!stamped) {
     return { error: "Could not finish setting up this account. Try again." };
   }
@@ -142,7 +143,7 @@ export async function updateUsername(formData: FormData) {
   const { error } = await supabase.from("profiles").update({ username }).eq("id", user.id);
   if (error) {
     if (error.code === "23505") return { error: "That handle is taken." };
-    return { error: error.message };
+    return { error: dbPublicError(error, "Could not save that handle.") };
   }
   revalidatePath("/account");
   return { error: null };

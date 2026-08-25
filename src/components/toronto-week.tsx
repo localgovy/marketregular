@@ -1,29 +1,31 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { DayPlanHoursRow } from "@/components/day-plan-plus";
 import { HomePanel } from "@/components/home-panel";
-import { Hours } from "@/components/hours";
 import { WeekMark } from "@/components/marks";
 import { NowLabel } from "@/components/now-label";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { UpcomingGroup, UpcomingSlot } from "@/lib/upcoming";
 
-function SlotRow({ slot }: { slot: UpcomingSlot }) {
+function SlotRow({ slot, iso }: { slot: UpcomingSlot; iso: string }) {
   return (
-    <Link
+    <DayPlanHoursRow
       href={`/markets/${slot.market.slug}`}
-      className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-3 py-1.5 hover:bg-primary/[0.045]"
-    >
-      <span className="min-w-0 text-base font-medium">{slot.market.name}</span>
-      <span className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-1.5">
-        {slot.open ? (
-          <NowLabel>Open</NowLabel>
-        ) : null}
-        <Hours
-          value={slot.hours}
-          className={slot.open ? "text-stamp" : "text-muted-foreground"}
-        />
-      </span>
-    </Link>
+      name={slot.market.name}
+      hours={slot.hours}
+      hall={{
+        slug: slot.market.slug,
+        name: slot.market.name,
+        address: slot.market.address,
+        lat: slot.market.lat,
+        lng: slot.market.lng,
+        hours: slot.hours,
+        date: iso,
+      }}
+      extra={slot.open ? <NowLabel>Open</NowLabel> : null}
+      hoursClassName={slot.open ? "text-stamp" : "text-muted-foreground"}
+      className="px-3 py-1.5 hover:bg-primary/[0.045]"
+    />
   );
 }
 
@@ -37,7 +39,7 @@ function DayCard({ group }: { group: UpcomingGroup }) {
       <ul className="divide-y divide-border/50">
         {group.slots.map((slot) => (
           <li key={slot.market.id}>
-            <SlotRow slot={slot} />
+            <SlotRow slot={slot} iso={group.iso} />
           </li>
         ))}
       </ul>

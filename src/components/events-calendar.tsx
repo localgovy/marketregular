@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CaretLeftMark, CaretRightMark } from "@/components/marks";
-import { Hours } from "@/components/hours";
+import { DayPlanHoursRow } from "@/components/day-plan-plus";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { Button } from "@/components/ui/button";
@@ -323,24 +322,29 @@ export function EventsCalendar({
                 key={`${selectedCell.iso}-${event.marketId}`}
                 className="flex items-start gap-2 border-b border-border/70 py-3 last:border-b-0"
               >
-                <Link
-                  href={`/markets/${event.marketSlug}`}
-                  className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3"
-                >
-                  <span className="min-w-0">
-                    <span className="block text-base font-medium text-ticket-ink underline-offset-2 hover:underline">
-                      {event.marketName}
-                    </span>
-                    <span className="block text-sm text-muted-foreground">{event.address}</span>
-                    {event.notes ? (
-                      <span className="mt-0.5 block text-sm text-muted-foreground">{event.notes}</span>
-                    ) : null}
-                  </span>
-                  <span className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-1.5">
-                    {event.open ? <NowLabel>Open</NowLabel> : null}
-                    <Hours value={event.hours} className="text-muted-foreground" />
-                  </span>
-                </Link>
+                <div className="min-w-0 flex-1">
+                  <DayPlanHoursRow
+                    href={`/markets/${event.marketSlug}`}
+                    name={event.marketName}
+                    hours={event.hours}
+                    hall={{
+                      slug: event.marketSlug,
+                      name: event.marketName,
+                      address: event.address,
+                      lat: event.lat,
+                      lng: event.lng,
+                      hours: event.hours,
+                      date: selectedCell.iso,
+                    }}
+                    extra={event.open ? <NowLabel>Open</NowLabel> : null}
+                    hoursClassName="text-muted-foreground"
+                    nameClassName="text-ticket-ink underline-offset-2 hover:underline"
+                  />
+                  <p className="text-sm text-muted-foreground">{event.address}</p>
+                  {event.notes ? (
+                    <p className="mt-0.5 text-sm text-muted-foreground">{event.notes}</p>
+                  ) : null}
+                </div>
                 <span className="shrink-0 pt-0.5">
                   <SaveButton kind="market" slug={event.marketSlug} name={event.marketName} />
                 </span>

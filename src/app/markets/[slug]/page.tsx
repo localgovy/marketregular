@@ -4,6 +4,7 @@ import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
 import { ListingScore } from "@/components/listing-score";
+import { DayPlanPlus } from "@/components/day-plan-plus";
 import { SaveButton } from "@/components/save-button";
 import { ListingComposer } from "@/components/listing-composer";
 import { LiveFeed } from "@/components/live-feed";
@@ -15,6 +16,7 @@ import { ScheduleList } from "@/components/schedule-list";
 import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
+import { hallFromMarket } from "@/lib/day-plan";
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle } from "@/lib/listing-copy";
@@ -65,6 +67,8 @@ export default async function MarketPage({
       ? avgRated.reduce((sum, item) => sum + (item.rating ?? 0), 0) / avgRated.length
       : null;
 
+  const hall = hallFromMarket(market, market.schedules);
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <JsonLd data={marketJsonLd(market)} />
@@ -74,7 +78,10 @@ export default async function MarketPage({
       </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{market.name}</h1>
-        <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
+        <div className="flex items-center gap-1">
+          <DayPlanPlus hall={hall} className="size-14" />
+          <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
+        </div>
       </div>
       {when === "Open now" ? (
         <NowLabel className="mt-2">{when}</NowLabel>
@@ -128,7 +135,7 @@ export default async function MarketPage({
           <ClaimForm targetType="market" targetId={market.id} />
         </aside>
         <div className="lg:col-span-2">
-          <MarketVendors vendors={market.vendors} />
+          <MarketVendors vendors={market.vendors} hall={hall} />
         </div>
         <section className="lg:col-span-2">
           <h2>Reviews</h2>

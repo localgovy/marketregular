@@ -27,9 +27,9 @@ function toSaves(rows: Array<{ kind: string; slug: string }> | null): Saves {
 async function listSaves(
   supabase: NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>,
   userId: string,
-): Promise<Saves> {
+): Promise<Saves | null> {
   const { data, error } = await supabase.from("saves").select("kind, slug").eq("user_id", userId);
-  if (error) throw new Error(error.message);
+  if (error) return null;
   return toSaves(data);
 }
 
@@ -44,7 +44,7 @@ export async function persistSave(kind: SaveKind, slug: string, saved: boolean):
 
   if (saved) {
     const { error } = await supabase.from("saves").insert({ user_id: user.id, kind, slug });
-    if (error && error.code !== "23505") throw new Error(error.message);
+    if (error && error.code !== "23505") return null;
   } else {
     const { error } = await supabase
       .from("saves")
@@ -52,7 +52,7 @@ export async function persistSave(kind: SaveKind, slug: string, saved: boolean):
       .eq("user_id", user.id)
       .eq("kind", kind)
       .eq("slug", slug);
-    if (error) throw new Error(error.message);
+    if (error) return null;
   }
 
   revalidatePath("/account");
@@ -78,6 +78,7 @@ export async function mergeSaves(local: Saves): Promise<Saves | null> {
     if (validSlug(slug)) rows.push({ user_id: user.id, kind: "vendor", slug });
   }
   const existing = await listSaves(supabase, user.id);
+  if (!existing) return null;
   const have = new Set([
     ...existing.markets.map((slug) => `market:${slug}`),
     ...existing.vendors.map((slug) => `vendor:${slug}`),
@@ -89,7 +90,7 @@ export async function mergeSaves(local: Saves): Promise<Saves | null> {
     const { error } = await supabase
       .from("saves")
       .upsert(capped, { onConflict: "user_id,kind,slug", ignoreDuplicates: true });
-    if (error) throw new Error(error.message);
+    if (error) return null;
   }
 
   revalidatePath("/account");

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
+import { DayPlanPlus, DayPlanPunch } from "@/components/day-plan-plus";
 import { JsonLd } from "@/components/json-ld";
 import { ListingScore } from "@/components/listing-score";
 import { ListingComposer } from "@/components/listing-composer";
@@ -14,6 +15,7 @@ import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { toGeoMarket } from "@/lib/geo";
 import { WEEKDAYS } from "@/lib/constants";
+import { nextIsoForWeekdays } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { pageMeta, vendorJsonLd } from "@/lib/seo";
@@ -52,13 +54,38 @@ export default async function VendorPage({
   ]);
   if (!vendor) notFound();
 
+  const homeMarket = [...vendor.markets].sort((a, b) =>
+    nextIsoForWeekdays(a.days).localeCompare(nextIsoForWeekdays(b.days)),
+  )[0];
+  const punchHall = homeMarket
+    ? {
+        slug: homeMarket.slug,
+        name: homeMarket.name,
+        address: homeMarket.address,
+        lat: homeMarket.lat,
+        lng: homeMarket.lng,
+        hours: "",
+        date: nextIsoForWeekdays(homeMarket.days),
+      }
+    : null;
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <JsonLd data={vendorJsonLd(vendor)} />
       <BackButton href="/markets" />
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{vendor.name}</h1>
-        <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
+        <div className="flex items-center gap-1">
+          {punchHall ? (
+            <DayPlanPunch
+              hall={punchHall}
+              vendorSlug={vendor.slug}
+              vendorName={vendor.name}
+              className="size-14"
+            />
+          ) : null}
+          <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
+        </div>
       </div>
       {vendor.markets.length ? (
         <p className="type-lede mt-2 max-w-3xl text-pretty text-muted-foreground">
@@ -142,7 +169,17 @@ export default async function VendorPage({
                   : "mt-3 grid gap-3"
               }
             >
-              {vendor.markets.map((market) => (
+              {vendor.markets.map((market) => {
+                const hall = {
+                  slug: market.slug,
+                  name: market.name,
+                  address: market.address,
+                  lat: market.lat,
+                  lng: market.lng,
+                  hours: "",
+                  date: nextIsoForWeekdays(market.days),
+                };
+                return (
                 <li key={market.id} className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <Link href={`/markets/${market.slug}`} className="font-medium hover:underline">
@@ -156,9 +193,13 @@ export default async function VendorPage({
                         : ""}
                     </p>
                   </div>
-                  <SaveButton kind="market" slug={market.slug} name={market.name} />
+                  <span className="flex shrink-0 items-center">
+                    <DayPlanPlus hall={hall} />
+                    <SaveButton kind="market" slug={market.slug} name={market.name} />
+                  </span>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           </div>
           <ClaimForm targetType="vendor" targetId={vendor.id} />

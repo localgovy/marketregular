@@ -41,6 +41,7 @@ export function GuestSignInSlip() {
   const [browseDue, setBrowseDue] = useState(false);
   const [source, setSource] = useState<"browse" | "save" | null>(null);
   const [saveName, setSaveName] = useState("");
+  const [saveCopy, setSaveCopy] = useState<string | null>(null);
 
   const query = searchParams.toString();
   const next = `${pathname}${query ? `?${query}` : ""}`;
@@ -76,6 +77,7 @@ export function GuestSignInSlip() {
     return subscribeSignInSlip((detail) => {
       if (documentHasAuthCookie()) return;
       setSaveName(detail.name);
+      setSaveCopy(detail.copy ?? null);
       setSource("save");
     });
   }, []);
@@ -97,13 +99,17 @@ export function GuestSignInSlip() {
   if (!guest || onAuthPage || !source) return null;
 
   const copy =
-    source === "save" && saveName ? `Sign in to save ${saveName}.` : BROWSE_COPY;
+    source === "save" && saveCopy
+      ? saveCopy
+      : source === "save" && saveName
+        ? `Sign in to save ${saveName}.`
+        : BROWSE_COPY;
 
   return (
     <aside
       aria-label="Sign in"
       aria-describedby={copyId}
-      className="fixed bottom-4 left-4 right-4 z-50 max-w-none rounded-xl bg-card p-3 shadow-md ring-1 ring-foreground/10 animate-in fade-in-0 duration-150 motion-reduce:animate-none sm:left-auto sm:right-4 sm:w-[18rem]"
+      className="fixed right-4 bottom-4 left-4 z-[60] max-w-none rounded-xl bg-card p-3 shadow-md ring-1 ring-foreground/10 animate-in fade-in-0 duration-150 motion-reduce:animate-none sm:left-auto sm:w-[18rem]"
     >
       <button
         type="button"
@@ -116,12 +122,20 @@ export function GuestSignInSlip() {
       <p id={copyId} className="pr-8 text-sm leading-snug">
         {copy}
       </p>
-      <Link
-        href={`/login?next=${encodeURIComponent(next || "/")}`}
-        className={cn(buttonVariants({ size: "sm" }), "mt-3 h-8 rounded-full px-4")}
-      >
-        Sign in
-      </Link>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <Link
+          href={`/login?next=${encodeURIComponent(next || "/")}`}
+          className={cn(buttonVariants({ size: "sm" }), "h-8 rounded-full px-4")}
+        >
+          Sign in
+        </Link>
+        <Link
+          href={`/signup?next=${encodeURIComponent(next || "/")}`}
+          className="text-sm font-medium text-foreground hover:underline"
+        >
+          Create one
+        </Link>
+      </div>
     </aside>
   );
 }

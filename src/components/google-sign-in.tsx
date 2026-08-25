@@ -54,7 +54,7 @@ export function GoogleSignIn({
       });
       if (oauthError || !data.url) {
         setPending(false);
-        setError(oauthError?.message ?? "Google sign-in failed.");
+        setError("Google sign-in failed.");
         return;
       }
       window.location.assign(data.url);

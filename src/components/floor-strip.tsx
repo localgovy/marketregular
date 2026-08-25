@@ -1,15 +1,21 @@
-import Link from "next/link";
-import { Hours } from "@/components/hours";
+import { DayPlanHoursRow } from "@/components/day-plan-plus";
+import { torontoYmd } from "@/lib/events-month";
+import type { DayPlanHall } from "@/lib/day-plan";
 
 type OpenMarket = {
   id: string;
   name: string;
   slug: string;
   hours: string;
+  address: string;
+  lat: number;
+  lng: number;
+  date?: string;
 };
 
 export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
   const countLabel = openNow.length === 1 ? "market" : "markets";
+  const date = torontoYmd();
 
   return (
     <nav
@@ -24,20 +30,29 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
       </div>
       {openNow.length ? (
         <ul className="grid gap-px border-t border-border bg-border sm:grid-cols-2">
-          {openNow.map((market) => (
-            <li key={market.id} className="bg-card">
-              <Link
-                href={`/markets/${market.slug}`}
-                prefetch={false}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-3 py-2.5 hover:bg-secondary/60 sm:px-4"
-              >
-                <span className="min-w-0 text-base font-medium">{market.name}</span>
-                {market.hours ? (
-                  <Hours value={market.hours} className="text-ticket-ink" />
-                ) : null}
-              </Link>
-            </li>
-          ))}
+          {openNow.map((market) => {
+            const hall: DayPlanHall = {
+              slug: market.slug,
+              name: market.name,
+              address: market.address,
+              lat: market.lat,
+              lng: market.lng,
+              hours: market.hours,
+              date: market.date ?? date,
+            };
+            return (
+              <li key={market.id} className="bg-card">
+                <DayPlanHoursRow
+                  href={`/markets/${market.slug}`}
+                  name={market.name}
+                  hours={market.hours}
+                  hall={hall}
+                  hoursClassName="text-ticket-ink"
+                  className="px-3 py-2.5 hover:bg-secondary/60 sm:px-4"
+                />
+              </li>
+            );
+          })}
         </ul>
       ) : (
         <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">

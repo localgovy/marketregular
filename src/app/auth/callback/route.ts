@@ -1,4 +1,5 @@
 import { AUTH_NEXT_COOKIE, callbackOrigin, safePath } from "@/lib/auth-redirect";
+import type { LoginErrorKey } from "@/lib/public-error";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -18,20 +19,20 @@ export async function GET(request: NextRequest) {
     request.nextUrl.searchParams.get("error_description") ??
     request.nextUrl.searchParams.get("error");
 
-  const loginError = (message: string) => {
+  const loginError = (key: LoginErrorKey) => {
     const url = new URL("/login", origin);
-    url.searchParams.set("error", message.slice(0, 280));
+    url.searchParams.set("error", key);
     if (next !== "/account") url.searchParams.set("next", next);
     return redirectAway(url);
   };
 
-  if (oauthError) return loginError(oauthError);
+  if (oauthError) return loginError("oauth");
   if (!code) return redirectAway(new URL(next, origin));
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseKey) {
-    return loginError("Supabase is not configured yet.");
+    return loginError("session");
   }
 
   const redirectTo = new URL(next, origin);
@@ -55,6 +56,6 @@ export async function GET(request: NextRequest) {
   });
 
   const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) return loginError(error.message);
+  if (error) return loginError("session");
   return response;
 }

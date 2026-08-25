@@ -18,3 +18,13 @@ export function allowedPostPhotos(userId: string, photos: unknown): string[] | n
   }
   return out;
 }
+
+/** Render-time guard for photos already stored on a post. */
+export function isPublicPostPhotoUrl(src: string) {
+  if (src.length === 0 || src.length > MAX_URL) return false;
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
+  if (!base) return false;
+  const prefix = `${base}/storage/v1/object/public/post-photos/`;
+  if (!src.startsWith(prefix)) return false;
+  return !src.includes("..") && !src.includes("\\") && !src.includes("#");
+}

@@ -56,27 +56,40 @@ export function visitPlanText(groups: UpcomingGroup[]) {
   return lines.join("\n").trim() + "\n";
 }
 
-export function visitPlanHtml(groups: UpcomingGroup[]) {
-  const rows = groups.length
-    ? groups
-        .map((group) => {
-          const slots = group.slots
-            .map((slot) => {
-              const href = `${SITE_URL}/markets/${slot.market.slug}`;
-              const hours = `${slot.hours}${slot.open ? " · open now" : ""}`;
-              return `<p style="margin:0 0 12px;line-height:1.4">
-<strong>${escapeHtml(slot.market.name)}</strong><br/>
-${escapeHtml(slot.market.address)}<br/>
-<span style="font-family:ui-monospace,Menlo,monospace;font-size:14px">${escapeHtml(hours)}</span><br/>
-<a href="${href}" style="color:#24352B">${escapeHtml(href)}</a>
-</p>`;
-            })
-            .join("");
-          return `<h2 style="font-size:18px;margin:20px 0 8px">${escapeHtml(group.label)} · ${escapeHtml(group.date)}</h2>${slots}`;
-        })
-        .join("")
-    : `<p>None of those halls are on the calendar this week. See <a href="${SITE_URL}/markets">${SITE_URL}/markets</a>.</p>`;
+export type DaySlipMail = {
+  marketName: string;
+  marketSlug: string;
+  address: string;
+  dateLabel: string;
+  hours: string;
+  modeLabel: string;
+  mapsUrl: string;
+  about: string | null;
+  stalls: string[];
+};
 
+export function daySlipText(slip: DaySlipMail) {
+  const lines = [
+    `${SITE_NAME} by ${STUDIO_NAME}`,
+    "",
+    `Today’s slip — ${slip.marketName}`,
+    slip.dateLabel,
+    slip.address,
+    slip.hours,
+    "",
+    `How you go: ${slip.modeLabel}`,
+    `Get going: ${slip.mapsUrl}`,
+  ];
+  if (slip.about) lines.push(slip.about);
+  if (slip.stalls.length) {
+    lines.push("", "Who to see");
+    for (const name of slip.stalls) lines.push(name);
+  }
+  lines.push("", `${SITE_URL}/markets/${slip.marketSlug}`);
+  return lines.join("\n").trim() + "\n";
+}
+
+function ticketEmail(kicker: string, body: string) {
   const origin = emailOrigin();
   const home = escapeHtml(origin);
   const mark = escapeHtml(`${origin}${SITE_WORDMARK}`);
@@ -114,8 +127,8 @@ by <img src="${wordmark}" width="67" height="15" alt="${escapeHtml(STUDIO_NAME)}
 </tr>
 <tr>
 <td style="padding:24px">
-<p style="margin:0 0 16px;font-size:14px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif">This week at ${escapeHtml(SITE_NAME)}</p>
-${rows}
+<p style="margin:0 0 16px;font-size:14px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif">${escapeHtml(kicker)}</p>
+${body}
 <p style="margin:24px 0 0;font-size:14px;font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;color:#5C7A86">
 Search: <a href="${SITE_URL}/markets" style="color:#24352B">${SITE_URL}/markets</a><br/>
 Saved: <a href="${SITE_URL}/saved" style="color:#24352B">${SITE_URL}/saved</a>
@@ -126,6 +139,52 @@ Saved: <a href="${SITE_URL}/saved" style="color:#24352B">${SITE_URL}/saved</a>
 </td></tr>
 </table>
 </body></html>`;
+}
+
+export function visitPlanHtml(groups: UpcomingGroup[]) {
+  const rows = groups.length
+    ? groups
+        .map((group) => {
+          const slots = group.slots
+            .map((slot) => {
+              const href = escapeHtml(`${SITE_URL}/markets/${slot.market.slug}`);
+              const hours = `${slot.hours}${slot.open ? " · open now" : ""}`;
+              return `<p style="margin:0 0 12px;line-height:1.4">
+<strong>${escapeHtml(slot.market.name)}</strong><br/>
+${escapeHtml(slot.market.address)}<br/>
+<span style="font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;font-size:14px">${escapeHtml(hours)}</span><br/>
+<a href="${href}" style="color:#24352B">${href}</a>
+</p>`;
+            })
+            .join("");
+          return `<h2 style="font-size:18px;margin:20px 0 8px">${escapeHtml(group.label)} · ${escapeHtml(group.date)}</h2>${slots}`;
+        })
+        .join("")
+    : `<p>None of those halls are on the calendar this week. See <a href="${SITE_URL}/markets">${SITE_URL}/markets</a>.</p>`;
+
+  return ticketEmail(`This week at ${SITE_NAME}`, rows);
+}
+
+export function daySlipHtml(slip: DaySlipMail) {
+  const href = escapeHtml(`${SITE_URL}/markets/${slip.marketSlug}`);
+  const stalls = slip.stalls.length
+    ? `<p style="margin:16px 0 8px;line-height:1.4"><strong>Who to see</strong></p>
+<p style="margin:0 0 12px;line-height:1.5">${slip.stalls.map((name) => escapeHtml(name)).join("<br/>")}</p>`
+    : "";
+  const about = slip.about
+    ? `<p style="margin:0 0 12px;line-height:1.4">${escapeHtml(slip.about)}</p>`
+    : "";
+  const body = `<p style="margin:0 0 12px;line-height:1.4">
+<strong>${escapeHtml(slip.marketName)}</strong><br/>
+${escapeHtml(slip.address)}<br/>
+${escapeHtml(slip.dateLabel)} · ${escapeHtml(slip.hours)}
+</p>
+<p style="margin:0 0 12px;line-height:1.4">How you go: ${escapeHtml(slip.modeLabel)}</p>
+${about}
+<p style="margin:0 0 12px;line-height:1.4"><a href="${escapeHtml(slip.mapsUrl)}" style="color:#24352B">Get going in Maps</a></p>
+${stalls}
+<p style="margin:0;line-height:1.4"><a href="${href}" style="color:#24352B">${href}</a></p>`;
+  return ticketEmail(`Today’s slip — ${SITE_NAME}`, body);
 }
 
 function escapeHtml(value: string) {

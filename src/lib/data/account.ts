@@ -52,10 +52,19 @@ export async function loadAccountDesk(userId: string) {
     fetchMyProfile(supabase),
   ]);
 
-  if (savesRes.error) throw new Error(savesRes.error.message);
-  if (postsRes.error) throw new Error(postsRes.error.message);
-  if (claimsRes.error) throw new Error(claimsRes.error.message);
-  if (postCountRes.error) throw new Error(postCountRes.error.message);
+  if (savesRes.error || postsRes.error || claimsRes.error || postCountRes.error) {
+    return {
+      email: user.email ?? null,
+      visitPlanEmailedAt: me?.visit_plan_emailed_at ?? null,
+      saves: savesRes.error ? EMPTY_SAVES : toSaves(savesRes.data),
+      posts: (postsRes.data ?? []).map((row) => ({
+        ...row,
+        markets: null,
+      })) as AccountPost[],
+      claims: (claimsRes.data ?? []) as ClaimRequest[],
+      reviewCount: postCountRes.count ?? 0,
+    };
+  }
 
   return {
     email: user.email ?? null,

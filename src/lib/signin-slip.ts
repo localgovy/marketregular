@@ -3,6 +3,7 @@ export const SIGNIN_SLIP_EVENT = "mr-signin-slip";
 export type SignInSlipDetail = {
   next: string;
   name: string;
+  copy?: string;
 };
 
 export function openSignInSlip(detail: SignInSlipDetail) {

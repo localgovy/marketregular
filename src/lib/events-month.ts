@@ -3,13 +3,15 @@ import { LAUNCH_TZ } from "@/lib/launch";
 import { formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
 
-export type EventMarket = Pick<Market, "id" | "slug" | "name" | "address">;
+export type EventMarket = Pick<Market, "id" | "slug" | "name" | "address" | "lat" | "lng">;
 
 export type CalendarEvent = {
   marketId: string;
   marketName: string;
   marketSlug: string;
   address: string;
+  lat: number;
+  lng: number;
   hours: string;
   notes: string | null;
   open: boolean;
@@ -41,6 +43,17 @@ export function torontoYmd(now = new Date(), tz = LAUNCH_TZ) {
     month: "2-digit",
     day: "2-digit",
   }).format(now);
+}
+
+/** Civil YYYY-MM-DD in Toronto, shifted by whole days. */
+export function torontoIsoOffset(now: Date, offset: number, tz = LAUNCH_TZ) {
+  const [year, month, day] = torontoYmd(now, tz).split("-").map(Number);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "UTC",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(Date.UTC(year, month - 1, day + offset)));
 }
 
 /** Noon-ish in Toronto for a civil date, so weekday and season stay on that day. */
@@ -148,6 +161,8 @@ function eventsForCivilDate(
       marketName: market.name,
       marketSlug: market.slug,
       address: market.address,
+      lat: market.lat,
+      lng: market.lng,
       hours: formatHours(row.opens_at, row.closes_at),
       notes: row.notes,
       open,

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Barlow_Condensed, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
+import { DayPlanRoot } from "@/components/day-plan-root";
 import { GuestSignInSlip } from "@/components/guest-signin-slip";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -67,14 +68,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${grotesk.variable} ${display.variable} ${nums.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <JsonLd data={websiteJsonLd()} />
-        <SiteHeader />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
-        <Suspense fallback={null}>
-          <GuestSignInSlip />
-        </Suspense>
-        <AppToaster />
+        <DayPlanRoot>
+          <JsonLd data={websiteJsonLd()} />
+          <SiteHeader />
+          <main className="flex-1">{children}</main>
+          <SiteFooter />
+          <Suspense fallback={null}>
+            <GuestSignInSlip />
+          </Suspense>
+          <AppToaster />
+        </DayPlanRoot>
       </body>
     </html>
   );

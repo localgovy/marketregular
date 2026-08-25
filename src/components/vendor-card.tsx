@@ -2,11 +2,13 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
+import { DayPlanPunch } from "@/components/day-plan-plus";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { VendorHallsKicker } from "@/components/vendor-halls-kicker";
 import { WEEKDAYS } from "@/lib/constants";
 import { sortTagsForDisplay } from "@/lib/find-paths";
+import type { DayPlanHall } from "@/lib/day-plan";
 import type { Vendor, VendorHall } from "@/types/database";
 
 const NO_HALLS: VendorHall[] = [];
@@ -16,11 +18,13 @@ export function VendorCard({
   stall,
   days = [],
   halls = NO_HALLS,
+  punchHall,
 }: {
   vendor: Vendor;
   stall?: string | null;
   days?: number[];
   halls?: VendorHall[];
+  punchHall?: DayPlanHall;
 }) {
   const dayLabel = days
     .map((d) => WEEKDAYS[d]?.slice(0, 3))
@@ -32,6 +36,13 @@ export function VendorCard({
       <Card className="h-full overflow-visible transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-center gap-2">
+            {punchHall ? (
+              <DayPlanPunch
+                hall={punchHall}
+                vendorSlug={vendor.slug}
+                vendorName={vendor.name}
+              />
+            ) : null}
             <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
             <VendorHallsKicker halls={halls} />
             <ListingMark src={vendor.logo_url} />

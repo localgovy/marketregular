@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/constants";
 import { LAUNCH_CITY, isLaunchCity } from "@/lib/launch";
 import {
@@ -135,7 +136,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   };
 }
 
-export async function listMarkets(): Promise<Market[]> {
+export const listMarkets = cache(async function listMarkets(): Promise<Market[]> {
   const supabase = publicDb();
   if (!supabase) return localMarkets();
   const { data, error } = await fetchAllRows<Market>((from, to) =>
@@ -149,7 +150,7 @@ export async function listMarkets(): Promise<Market[]> {
   );
   if (error) return localMarkets();
   return data.map(withListingStats);
-}
+});
 
 export async function listVendors(): Promise<Vendor[]> {
   const supabase = publicDb();

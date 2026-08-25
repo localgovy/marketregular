@@ -1,4 +1,5 @@
 import { WEEKDAYS } from "@/lib/constants";
+import { torontoIsoOffset } from "@/lib/events-month";
 import { LAUNCH_TZ } from "@/lib/launch";
 import { formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
@@ -16,6 +17,7 @@ export type UpcomingGroup = {
   label: string;
   hint: string;
   date: string;
+  iso: string;
   open: boolean;
   slots: UpcomingSlot[];
 };
@@ -85,6 +87,7 @@ export function upcomingByDay(
       label: offset === 1 ? "Tomorrow" : WEEKDAYS[day],
       hint: `${slots.length} market${slots.length === 1 ? "" : "s"}`,
       date: torontoDateLabel(now, offset, tz),
+      iso: torontoIsoOffset(now, offset, tz),
       open: false,
       slots,
     });
@@ -97,6 +100,7 @@ export function upcomingByDay(
       label: "Open now",
       hint: "Doors are open this minute",
       date: torontoDateLabel(now, 0, tz),
+      iso: torontoIsoOffset(now, 0, tz),
       open: true,
       slots: openNow,
     });
@@ -107,6 +111,7 @@ export function upcomingByDay(
       label: "Later today",
       hint: WEEKDAYS[weekday],
       date: torontoDateLabel(now, 0, tz),
+      iso: torontoIsoOffset(now, 0, tz),
       open: false,
       slots: laterToday,
     });

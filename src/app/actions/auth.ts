@@ -1,6 +1,13 @@
 "use server";
 
 import { authOrigin, safePath } from "@/lib/auth-redirect";
+import {
+  dbPublicError,
+  isAuthRateLimited,
+  passwordUpdatePublicError,
+  signInPublicError,
+  signUpPublicError,
+} from "@/lib/public-error";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -43,7 +50,7 @@ export async function signInWithPassword(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const next = safePath(formData.get("next"));
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: error.message };
+  if (error) return { error: signInPublicError(error) };
   redirect(next);
 }
 
@@ -65,7 +72,7 @@ export async function signUpWithPassword(formData: FormData) {
       data: { display_name: displayName },
     },
   });
-  if (error) return { error: error.message };
+  if (error) return signUpPublicError(error);
   if (data.session) redirect(next);
   return { error: null, message: "Check your email to confirm your account." };
 }
@@ -78,7 +85,9 @@ export async function requestPasswordReset(formData: FormData) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: callbackUrl("/account/password"),
   });
-  if (error) return { error: error.message };
+  if (error && isAuthRateLimited(error)) {
+    return { error: "Wait a bit, then try again." };
+  }
   return { error: null, message: "Check your email for a reset link." };
 }
 
@@ -102,7 +111,7 @@ export async function updatePassword(formData: FormData) {
       : { error: "Sign in again, then set a password." };
   }
   const { error } = await supabase.auth.updateUser({ password });
-  if (error) return { error: error.message };
+  if (error) return { error: passwordUpdatePublicError(error) };
   redirect("/account");
 }
 
@@ -125,7 +134,7 @@ export async function updateProfile(formData: FormData) {
     .from("profiles")
     .update({ display_name })
     .eq("id", user.id);
-  if (error) return { error: error.message };
+  if (error) return { error: dbPublicError(error, "Could not save that name.") };
   revalidatePath("/account");
   return { error: null };
 }
@@ -151,6 +160,6 @@ export async function deleteAccount(formData: FormData) {
   if (!admin) return { error: "Account deletion is not configured." };
   await supabase.auth.signOut({ scope: "global" });
   const { error } = await admin.auth.admin.deleteUser(user.id);
-  if (error) return { error: error.message };
+  if (error) return { error: "Could not delete the account." };
   redirect("/");
 }

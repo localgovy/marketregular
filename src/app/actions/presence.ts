@@ -2,11 +2,13 @@
 
 import { encodeFloorBody } from "@/lib/floor-note";
 import { allowedPostPhotos } from "@/lib/post-photos";
+import { dbPublicError } from "@/lib/public-error";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 const FLAG_TABLES = new Set(["posts", "reviews"] as const);
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type FlagTable = typeof FLAG_TABLES extends Set<infer T> ? T : never;
 
 async function getClient() {
@@ -60,6 +62,7 @@ export async function createPost(input: {
   const { supabase, user, demo } = await requireUser();
   if (demo) return { error: null, demo: true };
   if (!supabase || !user) return { error: "Sign in to review." };
+  if (!UUID.test(input.marketId)) return { error: "Pick a market." };
 
   const photos = allowedPostPhotos(user.id, input.photos ?? []);
   if (!photos) return { error: "Those photos could not be attached." };
@@ -88,7 +91,7 @@ export async function createPost(input: {
     if (error.message.includes("Daily review limit")) {
       return { error: "Daily review limit reached. See you tomorrow." };
     }
-    return { error: error.message };
+    return { error: dbPublicError(error, "Could not post that review.") };
   }
 
   if (inserted && hasCoords(input.lat, input.lng)) {
@@ -123,6 +126,8 @@ export async function createReview(input: {
 }) {
   const body = input.body.trim();
   if (!input.marketId && !input.vendorId) return { error: "Pick a market or vendor." };
+  if (input.marketId && !UUID.test(input.marketId)) return { error: "Pick a market or vendor." };
+  if (input.vendorId && !UUID.test(input.vendorId)) return { error: "Pick a market or vendor." };
   if (input.rating < 1 || input.rating > 5) return { error: "Rating must be 1–5." };
   if (body.length < 8) return { error: "Tell people a bit more about your visit." };
 
@@ -161,7 +166,7 @@ export async function createReview(input: {
     if (error.message.includes("Daily review limit")) {
       return { error: "Daily review limit reached. See you tomorrow." };
     }
-    return { error: error.message };
+    return { error: dbPublicError(error, "Could not post that review.") };
   }
 
   if (inserted && hasCoords(input.lat, input.lng)) {
@@ -207,7 +212,7 @@ export async function composeFloorNote(input: {
 
 export async function deleteOwnPost(formData: FormData) {
   const id = String(formData.get("id") ?? "");
-  if (!id) return { error: "Missing post." };
+  if (!id || !UUID.test(id)) return { error: "Missing post." };
   const { supabase, user, demo } = await requireUser();
   if (demo || !supabase || !user) return { error: "Sign in first." };
   const { data, error } = await supabase
@@ -216,7 +221,7 @@ export async function deleteOwnPost(formData: FormData) {
     .eq("id", id)
     .eq("user_id", user.id)
     .select("id");
-  if (error) return { error: error.message };
+  if (error) return { error: dbPublicError(error, "Could not remove that review.") };
   if (!data?.length) return { error: "That review cannot be removed." };
   revalidatePath("/account");
   revalidatePath("/");
@@ -225,7 +230,7 @@ export async function deleteOwnPost(formData: FormData) {
 }
 
 export async function flagItem(table: "posts" | "reviews", id: string) {
-  if (!isFlagTable(table)) return { error: "Admins only." };
+  if (!isFlagTable(table) || !UUID.test(id)) return { error: "Admins only." };
   const { supabase, user, demo } = await requireUser();
   if (demo || !supabase || !user) return { error: "Admins only." };
   const { data: isAdmin } = await supabase.rpc("is_admin");
@@ -233,14 +238,14 @@ export async function flagItem(table: "posts" | "reviews", id: string) {
   const service = createServiceClient();
   if (!service) return { error: "Admins only." };
   const { error } = await service.from(table).update({ flagged: true }).eq("id", id);
-  if (error) return { error: error.message };
+  if (error) return { error: "Could not update that." };
   revalidatePath("/admin");
   revalidatePath("/");
   return { error: null };
 }
 
 export async function unflagItem(table: "posts" | "reviews", id: string) {
-  if (!isFlagTable(table)) return { error: "Admins only." };
+  if (!isFlagTable(table) || !UUID.test(id)) return { error: "Admins only." };
   const { supabase, user, demo } = await requireUser();
   if (demo || !supabase || !user) return { error: "Admins only." };
   const { data: isAdmin } = await supabase.rpc("is_admin");
@@ -248,7 +253,7 @@ export async function unflagItem(table: "posts" | "reviews", id: string) {
   const service = createServiceClient();
   if (!service) return { error: "Admins only." };
   const { error } = await service.from(table).update({ flagged: false }).eq("id", id);
-  if (error) return { error: error.message };
+  if (error) return { error: "Could not update that." };
   revalidatePath("/admin");
   return { error: null };
 }

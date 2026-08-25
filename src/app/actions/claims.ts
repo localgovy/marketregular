@@ -3,7 +3,9 @@
 import { Resend } from "resend";
 import { isClaimRole } from "@/lib/claim";
 import { CLAIM_INBOX, SITE_NAME, SITE_URL } from "@/lib/constants";
+import { sanitizeMailAddress, sanitizeMailHeader } from "@/lib/mail-header";
 import { clientIp, hashMailKey, takeMailSlot } from "@/lib/mail-limit";
+import { dbPublicError } from "@/lib/public-error";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -162,12 +164,12 @@ export async function submitClaim(formData: FormData) {
   const { error: sendError } = await resend.emails.send({
     from,
     to: CLAIM_INBOX,
-    replyTo: email,
-    subject: `Claim request — ${listing.name}`,
+    replyTo: sanitizeMailAddress(email),
+    subject: sanitizeMailHeader(`Claim request — ${listing.name}`),
     text: mail.text,
     html: mail.html,
   });
-  if (sendError) return { error: sendError.message };
+  if (sendError) return { error: "Could not send right now. Write us if it keeps failing." };
 
   if (user && supabase) {
     const evidence = [
@@ -188,7 +190,7 @@ export async function submitClaim(formData: FormData) {
       evidence,
       status: "pending",
     });
-    if (error) return { error: error.message };
+    if (error) return { error: dbPublicError(error, "Could not save that claim. We still emailed the desk.") };
     revalidatePath("/account");
   }
 

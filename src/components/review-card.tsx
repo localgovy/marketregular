@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ReviewScore } from "@/components/listing-score";
+import { isPublicPostPhotoUrl } from "@/lib/post-photos";
 import { tagLabel } from "@/lib/find-paths";
 import { formatPriceLevel, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ export function ReviewCard({
   const market = item.market_name;
   const price = formatPriceLevel(item.price_level);
   const score = item.rating != null && item.rating >= 1 ? item.rating : null;
+  const photos = item.photos?.filter(isPublicPostPhotoUrl) ?? [];
 
   return (
     <li className={cn("border-b border-border px-3 py-3 hover:bg-muted/50", className)}>
@@ -85,9 +87,9 @@ export function ReviewCard({
           ))}
         </p>
       ) : null}
-      {item.photos?.length ? (
+      {photos.length ? (
         <div className="mt-2 grid grid-cols-2 gap-2">
-          {item.photos.map((src) => (
+          {photos.map((src) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img key={src} src={src} alt="" className="h-32 w-full object-cover" />
           ))}

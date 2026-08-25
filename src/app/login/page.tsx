@@ -2,6 +2,7 @@ import { BackButton } from "@/components/back-button";
 import { LoginForm } from "@/components/login-form";
 import { safePath } from "@/lib/auth-redirect";
 import { getCurrentProfile } from "@/lib/data/catalog";
+import { loginQueryError } from "@/lib/public-error";
 import { needsOnboarding, onboardingHref } from "@/lib/onboarding";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
@@ -35,7 +36,7 @@ export default async function LoginPage({
       </p>
       <LoginForm
         next={next}
-        oauthError={oauthError?.trim() ? oauthError.trim().slice(0, 280) : undefined}
+        oauthError={loginQueryError(oauthError)}
       />
     </div>
   );

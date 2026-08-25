@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { distanceMeters, type GeoMarket } from "@/lib/geo";
 
 export type { GeoMarket };
@@ -24,7 +24,7 @@ export function GeoProvider({
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const request = () => {
+  const request = useCallback(() => {
     if (!navigator.geolocation) {
       setError("Location is not available in this browser.");
       return;
@@ -37,7 +37,7 @@ export function GeoProvider({
       (err) => setError(err.message),
       { enableHighAccuracy: true, timeout: 12_000, maximumAge: 30_000 },
     );
-  };
+  }, []);
 
   const nearby = useMemo(() => {
     if (!coords) return [];

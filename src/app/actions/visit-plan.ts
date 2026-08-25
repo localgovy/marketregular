@@ -2,6 +2,7 @@
 
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
 import { SITE_NAME } from "@/lib/constants";
+import { sanitizeMailHeader } from "@/lib/mail-header";
 import { clientIp, hashMailKey, takeMailSlot } from "@/lib/mail-limit";
 import { fetchMyProfile } from "@/lib/my-profile";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -62,7 +63,7 @@ export async function emailVisitPlan(slugs: string[]) {
     "stamp_visit_plan_emailed_at",
     { p_user_id: user.id },
   );
-  if (reserveError) return { error: reserveError.message };
+  if (reserveError) return { error: "Could not send right now." };
   if (reserved !== true) {
     return { error: null, wait: true, message: visitPlanWaitCopy(VISIT_PLAN_COOLDOWN_MS) };
   }
@@ -80,11 +81,11 @@ export async function emailVisitPlan(slugs: string[]) {
   const { error } = await resend.emails.send({
     from,
     to: user.email,
-    subject: `This week’s markets — ${SITE_NAME}`,
+    subject: sanitizeMailHeader(`This week’s markets — ${SITE_NAME}`),
     text: visitPlanText(groups),
     html: visitPlanHtml(groups),
   });
-  if (error) return { error: error.message };
+  if (error) return { error: "Could not send right now." };
 
   return { error: null, message: `Sent to ${user.email}` };
 }

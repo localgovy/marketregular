@@ -230,6 +230,18 @@ export function CheckMark(props: MarkProps) {
   );
 }
 
+/** Cut-corner stall plate with a plus punched through. */
+export function PlusMark(props: MarkProps) {
+  return (
+    <Mark {...props}>
+      <path
+        fillRule="evenodd"
+        d={`${plate(2.4, 2.4, 19.2, 19.2, 3.2)}M10.7 6.6h2.6v4.7h4.7v2.6h-4.7v4.7h-2.6v-4.7H6v-2.6h4.7z`}
+      />
+    </Mark>
+  );
+}
+
 /** Thick bar and square — warning, not a triangle bang. */
 export function BangMark(props: MarkProps) {
   return (

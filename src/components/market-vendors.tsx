@@ -16,6 +16,7 @@ import {
   weekdayInToronto,
 } from "@/lib/find-paths";
 import { cn } from "@/lib/utils";
+import type { DayPlanHall } from "@/lib/day-plan";
 import type { MarketDetail } from "@/types/database";
 
 type MarketStall = MarketDetail["vendors"][number];
@@ -92,7 +93,13 @@ function browseActive(find: StallBrowse) {
   );
 }
 
-export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
+export function MarketVendors({
+  vendors,
+  hall,
+}: {
+  vendors: MarketStall[];
+  hall: DayPlanHall;
+}) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [applied, setApplied] = useState<StallBrowse>(EMPTY_BROWSE);
   const [draft, setDraft] = useState<StallBrowse>(EMPTY_BROWSE);
@@ -310,6 +317,7 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
                   stall={vendor.stall}
                   days={vendor.days}
                   halls={vendor.halls}
+                  punchHall={hall}
                 />
               ))}
             </div>

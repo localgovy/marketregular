@@ -33,6 +33,8 @@ export default async function EventsPage({
           slug: market.slug,
           name: market.name,
           address: market.address,
+          lat: market.lat,
+          lng: market.lng,
         }))}
         schedules={schedules}
         initialMonth={m}
