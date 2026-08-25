@@ -119,16 +119,16 @@ export default async function MarketsPage({
         <MarketMapLazy markets={markets} load="visible" />
       </div>
       <div className="mt-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-border pb-2">
-        <a
-          href="#directory-markets"
-          className="text-base font-medium underline decoration-primary decoration-2 underline-offset-8"
-        >
-          Search Results
-        </a>
-        <div className="flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <a
+            href="#directory-markets"
+            className="text-base font-medium underline decoration-primary decoration-2 underline-offset-8"
+          >
+            Search Results
+          </a>
           <DirectorySort search={search} />
-          <p className="text-sm text-muted-foreground">{summary}</p>
         </div>
+        <p className="text-sm text-muted-foreground">{summary}</p>
       </div>
       <DirectoryResults key={formKey} markets={markets} vendors={vendors} />
     </div>

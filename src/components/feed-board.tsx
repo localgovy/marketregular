@@ -229,7 +229,10 @@ export function FeedBoard({
       <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
         <h2 className="type-column">In this feed</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Halls and stalls these posts name. Tap one to stay on Feed.
+          Listed are mentions of markets and vendors.
+          {!mentions.markets.length && !mentions.vendors.length
+            ? " No halls or stalls on these posts yet."
+            : null}
         </p>
         {mentions.markets.length ? (
           <section className="mt-5">
@@ -299,11 +302,6 @@ export function FeedBoard({
               ))}
             </ul>
           </section>
-        ) : null}
-        {!mentions.markets.length && !mentions.vendors.length ? (
-          <p className="mt-4 text-sm text-muted-foreground">
-            No halls or stalls on these posts yet.
-          </p>
         ) : null}
       </aside>
     </div>
