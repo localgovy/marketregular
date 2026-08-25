@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "mr-signin-slip";
 const BROWSE_DELAY_MS = 10_000;
-const BROWSE_COPY = "Keep markets and stalls on a list that follows you.";
+const BROWSE_COPY = "Keep markets and vendors on a list that follows you.";
 
 function browseWasDismissed() {
   try {
