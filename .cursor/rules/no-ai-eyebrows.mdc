@@ -24,6 +24,6 @@ Never combine these (or close variants):
 <p className="text-base font-medium text-ticket">Open now</p>
 ```
 
-Write labels in sentence case at `text-sm` or `text-base`. Use the same fonts as surrounding copy. Times, prices, and stall numbers use `type-nums` — Mona semibold condensed, not a coding mono. Directory counts on the ticket use `type-census` (Bungee).
+Write labels in sentence case at `text-sm` or `text-base`. Use the same fonts as surrounding copy. Times, prices, and stall numbers use `type-nums` — Mona semibold condensed, not a coding mono. Directory counts on the ticket use `type-census` (Barlow Condensed ExtraBold).
 
 Status chips (open now, selling now) may use the ticket plate color. They still read as normal words: `Open now`, not `OPEN NOW`.

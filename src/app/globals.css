@@ -469,10 +469,10 @@ li:nth-child(3n + 3) .now-open-stamp {
   letter-spacing: -0.04em;
 }
 
-/* Ticket census: vinyl sign letters, not the title face. */
+/* Ticket census: Barlow Condensed ExtraBold, not the title face. */
 @utility type-census {
   font-family: var(--font-nums), ui-sans-serif, system-ui, sans-serif;
-  font-weight: 400;
+  font-weight: 800;
   font-variant-numeric: lining-nums tabular-nums;
   letter-spacing: 0;
 }

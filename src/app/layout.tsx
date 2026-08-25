@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Bungee, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
+import { Barlow_Condensed, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
 import { GuestSignInSlip } from "@/components/guest-signin-slip";
 import { SiteHeader } from "@/components/site-header";
@@ -23,8 +23,8 @@ const display = Mona_Sans({
   preload: false,
 });
 
-const nums = Bungee({
-  weight: "400",
+const nums = Barlow_Condensed({
+  weight: "800",
   subsets: ["latin"],
   variable: "--font-nums",
   display: "swap",
