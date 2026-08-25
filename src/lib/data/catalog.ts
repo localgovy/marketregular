@@ -13,7 +13,12 @@ import {
   localVendorBySlug,
   localVendors,
 } from "@/lib/data/local";
-import { applyDirectoryTags, parseDirectorySort, searchWeekdays } from "@/lib/find-paths";
+import {
+  applyDirectoryTags,
+  parseDirectorySort,
+  searchWeekdays,
+  slugsForPlaceQuery,
+} from "@/lib/find-paths";
 import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
@@ -366,6 +371,18 @@ export async function searchDirectory(filters: SearchFilters) {
   let vendors = ((vendorRows ?? []) as Vendor[]).map((vendor) =>
     withVendorCountryTags(withListingStats(vendor)),
   );
+  if (filters.q?.trim()) {
+    const placeSlugs = new Set(slugsForPlaceQuery(filters.q));
+    if (placeSlugs.size) {
+      const seen = new Set(markets.map((market) => market.id));
+      for (const market of allMarkets) {
+        if (!placeSlugs.has(market.slug) || seen.has(market.id)) continue;
+        markets.push(market);
+        seen.add(market.id);
+      }
+      markets.sort((a, b) => a.name.localeCompare(b.name));
+    }
+  }
   const originQuery = filters.q?.trim() ? countryTagsFromQuery(filters.q) : [];
   if (originQuery.length && vendors.length) {
     const vendorIds = new Set(vendors.map((vendor) => vendor.id));

@@ -285,6 +285,7 @@ export function QuickFind({
           </FindGroup>
         ) : null}
       </div>
+      {areaQ ? <input type="hidden" name="area" value={areaQ} /> : null}
       {productTags.map((tag) => (
         <input key={tag} type="hidden" name="tag" value={tag} />
       ))}

@@ -239,6 +239,36 @@ export function filterMarketsByAreas(markets: Market[], areaKeys: string[]) {
   return markets.filter((market) => slugs.has(market.slug));
 }
 
+/** Typed search for “Wychwood” / “Brick Works” should still find the hall. */
+export function slugsForPlaceQuery(query: string) {
+  const needle = foldPlaceQuery(query);
+  if (needle.length < 3) return [] as string[];
+  const slugs = new Set<string>();
+  for (const area of FIND_AREAS) {
+    const label = foldPlaceQuery(area.label);
+    const key = foldPlaceQuery(area.q);
+    const hit =
+      needle === label ||
+      needle === key ||
+      label.includes(needle) ||
+      key.includes(needle) ||
+      needle.includes(label) ||
+      needle.includes(key);
+    if (hit) area.slugs.forEach((slug) => slugs.add(slug));
+  }
+  return [...slugs];
+}
+
+function foldPlaceQuery(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[.’']/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function marketsCrumbs(search: {
   weekdays?: number[];
   setup?: string;

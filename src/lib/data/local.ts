@@ -10,7 +10,7 @@ import {
   toPublicVendor,
 } from "@/data/directory";
 import { decodeFloorBody, mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
-import { applyDirectoryTags, parseDirectorySort, searchWeekdays } from "@/lib/find-paths";
+import { applyDirectoryTags, parseDirectorySort, searchWeekdays, slugsForPlaceQuery } from "@/lib/find-paths";
 import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { isLaunchCity } from "@/lib/launch";
@@ -88,6 +88,16 @@ export function localSearch(filters: SearchFilters) {
       const seen = new Set(markets.map((market) => market.id));
       for (const market of localMarkets()) {
         if (!hostIds.has(market.id) || seen.has(market.id)) continue;
+        markets.push(market);
+        seen.add(market.id);
+      }
+      markets.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    const placeSlugs = new Set(slugsForPlaceQuery(q));
+    if (placeSlugs.size) {
+      const seen = new Set(markets.map((market) => market.id));
+      for (const market of localMarkets()) {
+        if (!placeSlugs.has(market.slug) || seen.has(market.id)) continue;
         markets.push(market);
         seen.add(market.id);
       }

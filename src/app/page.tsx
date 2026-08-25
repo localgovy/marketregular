@@ -2,6 +2,7 @@ import { RulesMark } from "@/components/marks";
 import { FloorTape } from "@/components/floor-tape";
 import { HomeGeo } from "@/components/home-geo";
 import { HomePanel } from "@/components/home-panel";
+import { HomeWalkthrough } from "@/components/home-walkthrough";
 import { HomeMosaic } from "@/components/visit-loop";
 import { MarketRow } from "@/components/market-row";
 import {
@@ -65,6 +66,7 @@ export default async function HomePage() {
 
   return (
     <HomeGeo markets={geoMarkets}>
+      <HomeWalkthrough />
       <div className="flex flex-col lg:grid lg:site-rail">
         <div className="min-w-0 px-4 py-5 lg:col-start-2 lg:row-start-1 lg:px-6 lg:py-6">
           {markets.length ? (
