@@ -87,11 +87,13 @@ export function QuickFind({
   markets,
   areas,
   sellOptions,
+  cuisineOptions,
   setup,
 }: {
   markets: NearMarket[];
   areas: Array<{ label: string; q: string }>;
   sellOptions: string[];
+  cuisineOptions: string[];
   setup: string[];
 }) {
   const today = weekdayInToronto();
@@ -102,14 +104,15 @@ export function QuickFind({
   const [whenId, setWhenId] = useState<string | null>(null);
   const [areaQ, setAreaQ] = useState<string | null>(null);
   const [productTags, setProductTags] = useState<string[]>([]);
+  const [originTags, setOriginTags] = useState<string[]>([]);
   const [setupTag, setSetupTag] = useState<string | null>(null);
   const [near, setNear] = useState(false);
   const [more, setMore] = useState(false);
 
   const selectedWhen = when.find((item) => item.id === whenId);
   const query = q.trim();
-  const extraOn = Boolean(areaQ || productTags.length || setupTag);
-  const canMore = Boolean(areas.length || sellOptions.length || setup.length);
+  const extraOn = Boolean(areaQ || productTags.length || originTags.length || setupTag);
+  const canMore = Boolean(areas.length || sellOptions.length || cuisineOptions.length || setup.length);
 
   const nearest =
     coords && near
@@ -148,7 +151,7 @@ export function QuickFind({
             setQ(next);
             setAreaQ((current) => (current && next.trim() !== current ? null : current));
           }}
-          placeholder="Market, neighbourhood, or food"
+          placeholder="Market, neighbourhood, or cuisine"
           className="h-12 border-transparent bg-card px-3.5 text-base text-foreground focus-visible:border-foreground/20 focus-visible:ring-foreground/20"
         />
         {query ? <input type="hidden" name="q" value={query} /> : null}
@@ -248,6 +251,26 @@ export function QuickFind({
           </FindGroup>
         ) : null}
 
+        {cuisineOptions.length ? (
+          <FindGroup label="Cuisine">
+            {cuisineOptions.map((item) => (
+              <ToggleChip
+                key={item}
+                pressed={originTags.includes(item)}
+                onClick={() =>
+                  setOriginTags((current) =>
+                    current.includes(item)
+                      ? current.filter((tag) => tag !== item)
+                      : [...current, item],
+                  )
+                }
+              >
+                {tagLabel(item)}
+              </ToggleChip>
+            ))}
+          </FindGroup>
+        ) : null}
+
         {setup.length ? (
           <FindGroup label="Indoor or outdoor">
             {setup.map((item) => (
@@ -264,6 +287,9 @@ export function QuickFind({
       </div>
       {productTags.map((tag) => (
         <input key={tag} type="hidden" name="tag" value={tag} />
+      ))}
+      {originTags.map((tag) => (
+        <input key={`origin-${tag}`} type="hidden" name="tag" value={tag} />
       ))}
       {setupTag ? <input type="hidden" name="setup" value={setupTag} /> : null}
 
@@ -285,7 +311,7 @@ export function QuickFind({
           className="find-go stall-chip inline-flex min-h-[3.35rem] w-full cursor-pointer items-center justify-between gap-4 px-5 py-3 text-left text-receipt outline-none transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-receipt active:translate-y-px"
         >
           <span className="type-column text-receipt">
-            {query || whenId || productTags.length || setupTag || near
+            {query || whenId || productTags.length || originTags.length || setupTag || near
               ? "Search with these"
               : "Search all markets"}
           </span>

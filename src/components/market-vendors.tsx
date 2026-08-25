@@ -4,8 +4,10 @@ import { useMemo, useState, type ReactNode } from "react";
 import { VendorCard } from "@/components/vendor-card";
 import { Button } from "@/components/ui/button";
 import { SearchField } from "@/components/search-field";
-import { PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
+import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
+import { countryTagsFromQuery } from "@/lib/country-tags";
 import {
+  FIND_ORIGINS,
   FIND_PRODUCTS,
   FIND_RECORD,
   tagLabel,
@@ -57,7 +59,8 @@ function stallMatches(vendor: MarketStall, query: string) {
       .filter(Boolean)
       .join(" "),
   );
-  return tokens.every((token) => hay.includes(token));
+  if (tokens.every((token) => hay.includes(token))) return true;
+  return countryTagsFromQuery(query).some((tag) => vendor.tags.includes(tag));
 }
 
 function stallFits(vendor: MarketStall, find: StallBrowse, today: number) {
@@ -107,7 +110,12 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
     () => tagsPresent(vendors, FIND_PRODUCTS),
     [vendors],
   );
+  const cuisineChips = useMemo(
+    () => tagsPresent(vendors, FIND_ORIGINS),
+    [vendors],
+  );
   const sellTags = useMemo(() => tagsPresent(vendors, PRODUCT_TAGS), [vendors]);
+  const cuisineTags = useMemo(() => tagsPresent(vendors, COUNTRY_TAGS), [vendors]);
   const recordTags = useMemo(() => tagsPresent(vendors, FIND_RECORD), [vendors]);
   const matches = useMemo(
     () => vendors.filter((vendor) => stallFits(vendor, applied, today)),
@@ -119,7 +127,10 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
   );
   const filtering = browseActive(applied);
   const canAllFilters =
-    stallDays.length > 0 || sellTags.length > 0 || recordTags.length > 0;
+    stallDays.length > 0 ||
+    sellTags.length > 0 ||
+    cuisineTags.length > 0 ||
+    recordTags.length > 0;
   const dayValue = live.weekdays.length === 1 ? String(live.weekdays[0]) : "";
 
   function go(next: StallBrowse) {
@@ -168,7 +179,7 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
                 key={applied.q}
                 name="q"
                 defaultValue={applied.q}
-                placeholder="Stall, bakery, or tomato"
+                placeholder="Stall, cuisine, or tomato"
                 className="h-10 bg-card"
                 aria-label="Search stalls"
                 onClear={() => {
@@ -220,9 +231,9 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
                 ) : null}
               </div>
             ) : null}
-            {productChips.length || canAllFilters ? (
+            {productChips.length || cuisineChips.length || canAllFilters ? (
               <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-border px-3 py-3 sm:px-4">
-                {productChips.map((tag) => {
+                {[...productChips, ...cuisineChips].map((tag) => {
                   const on = live.tags.includes(tag);
                   return (
                     <button
@@ -259,6 +270,7 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
                 state={draft}
                 stallDays={stallDays}
                 sellTags={sellTags}
+                cuisineTags={cuisineTags}
                 recordTags={recordTags}
                 showHereToday={stallDays.includes(today)}
                 resultCount={draftCount}
@@ -302,6 +314,7 @@ function StallAllFilters({
   state,
   stallDays,
   sellTags,
+  cuisineTags,
   recordTags,
   showHereToday,
   resultCount,
@@ -312,6 +325,7 @@ function StallAllFilters({
   state: StallBrowse;
   stallDays: number[];
   sellTags: string[];
+  cuisineTags: string[];
   recordTags: string[];
   showHereToday: boolean;
   resultCount: number;
@@ -324,7 +338,7 @@ function StallAllFilters({
 
   return (
     <div id="stall-filters" className="border-t border-border bg-card p-4 sm:p-5">
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {stallDays.length ? (
           <FilterColumn title="When">
             {stallDays.map((day) => (
@@ -356,6 +370,26 @@ function StallAllFilters({
         {sellTags.length ? (
           <FilterColumn title="Sells">
             {sellTags.map((tag) => (
+              <FilterCheck
+                key={tag}
+                checked={state.tags.includes(tag)}
+                onChange={(on) =>
+                  onChange({
+                    ...state,
+                    tags: on
+                      ? [...new Set([...state.tags, tag])]
+                      : state.tags.filter((item) => item !== tag),
+                  })
+                }
+              >
+                {tagLabel(tag)}
+              </FilterCheck>
+            ))}
+          </FilterColumn>
+        ) : null}
+        {cuisineTags.length ? (
+          <FilterColumn title="Cuisine">
+            {cuisineTags.map((tag) => (
               <FilterCheck
                 key={tag}
                 checked={state.tags.includes(tag)}

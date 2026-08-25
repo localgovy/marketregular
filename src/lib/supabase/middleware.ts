@@ -71,7 +71,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && !onboardingExemptPath(path)) {
     const { profile, error } = await loadMyProfile(supabase);
-    if (!error && !profile?.onboarded_at) {
+    if (error || !profile?.onboarded_at) {
       const dest = new URL(onboardingHref(`${path}${request.nextUrl.search}`), request.nextUrl.origin);
       return copyCookies(supabaseResponse, NextResponse.redirect(dest));
     }

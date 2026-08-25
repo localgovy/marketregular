@@ -1,8 +1,16 @@
-import { AMENITY_TAGS, PRODUCT_TAGS, RECORD_TAGS, WEEKDAYS } from "@/lib/constants";
+import {
+  AMENITY_TAGS,
+  COUNTRY_TAGS,
+  PRODUCT_TAGS,
+  RECORD_TAGS,
+  WEEKDAYS,
+} from "@/lib/constants";
 import { LAUNCH_TZ } from "@/lib/launch";
 import type { Market } from "@/types/database";
 
 const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
+const COUNTRY_SET = new Set<string>(COUNTRY_TAGS);
+const VENDOR_FILTER_SET = new Set<string>([...PRODUCT_TAGS, ...COUNTRY_TAGS]);
 const SETUP_SET = new Set(["indoor", "outdoor", "year-round", "seasonal"]);
 
 /** Product tags people actually shop by, in the order they tend to ask. */
@@ -19,6 +27,36 @@ export const FIND_PRODUCTS = [
   "crafts",
   "coffee",
   "beer",
+] as const;
+
+/** Cuisines people actually type, in the order they tend to ask. */
+export const FIND_ORIGINS = [
+  "jamaican",
+  "caribbean",
+  "mexican",
+  "salvadoran",
+  "italian",
+  "indian",
+  "sri-lankan",
+  "chinese",
+  "japanese",
+  "korean",
+  "vietnamese",
+  "thai",
+  "filipino",
+  "ethiopian",
+  "portuguese",
+  "greek",
+  "french",
+  "lebanese",
+  "persian",
+  "middle-eastern",
+  "mediterranean",
+  "west-african",
+  "polish",
+  "ukrainian",
+  "tibetan",
+  "nepali",
 ] as const;
 
 /** Weather and season, after time and place. */
@@ -61,14 +99,25 @@ const TAG_LABELS: Record<string, string> = {
   "gluten-free": "Gluten-free",
   "black-owned": "Black-owned",
   jewelry: "Jewellery",
+  "sri-lankan": "Sri Lankan",
+  "west-african": "West African",
+  "middle-eastern": "Middle Eastern",
 };
 
 export function tagLabel(tag: string) {
-  return TAG_LABELS[tag] ?? tag.charAt(0).toUpperCase() + tag.slice(1);
+  if (TAG_LABELS[tag]) return TAG_LABELS[tag];
+  return tag
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 export function isProductTag(tag: string) {
   return PRODUCT_SET.has(tag);
+}
+
+export function isVendorFilterTag(tag: string) {
+  return VENDOR_FILTER_SET.has(tag);
 }
 
 const RECORD_SET = new Set<string>(RECORD_TAGS);
@@ -76,8 +125,9 @@ const RECORD_SET = new Set<string>(RECORD_TAGS);
 export function sortTagsForDisplay(tags: string[]) {
   const rank = (tag: string) => {
     if (PRODUCT_SET.has(tag)) return 0;
-    if (RECORD_SET.has(tag)) return 1;
-    return 2;
+    if (COUNTRY_SET.has(tag)) return 1;
+    if (RECORD_SET.has(tag)) return 2;
+    return 3;
   };
   return [...tags].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 }
@@ -93,8 +143,8 @@ export function applyDirectoryTags<
 ) {
   if (!tags.length) return { markets, vendors };
 
-  const product = tags.filter((tag) => isProductTag(tag));
-  const place = tags.filter((tag) => !isProductTag(tag));
+  const product = tags.filter((tag) => isVendorFilterTag(tag));
+  const place = tags.filter((tag) => !isVendorFilterTag(tag));
 
   let nextMarkets = markets;
   let nextVendors = vendors;

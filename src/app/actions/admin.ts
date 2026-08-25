@@ -201,11 +201,15 @@ export async function decideClaim(id: string, status: "approved" | "rejected", n
     if (listing?.claimed_by && listing.claimed_by !== claim.user_id) {
       fail("That listing is already claimed.");
     }
-    const { error: claimError } = await supabase
+    const { data: claimed, error: claimError } = await supabase
       .from(table)
       .update({ claimed_by: claim.user_id })
-      .eq("id", claim.target_id);
+      .eq("id", claim.target_id)
+      .or(`claimed_by.is.null,claimed_by.eq.${claim.user_id}`)
+      .select("id")
+      .maybeSingle();
     if (claimError) fail(claimError.message);
+    if (!claimed) fail("That listing is already claimed.");
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")

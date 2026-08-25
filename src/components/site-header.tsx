@@ -55,7 +55,7 @@ export function SiteHeader() {
           >
             <SearchField
               name="q"
-              placeholder="Search market, vendor, location, food"
+              placeholder="Search market, vendor, cuisine, or neighbourhood"
               className="bg-card"
             />
             <button type="submit" className={cn(buttonVariants({ size: "sm" }), "shrink-0")}>

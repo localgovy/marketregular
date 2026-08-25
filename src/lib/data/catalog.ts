@@ -17,6 +17,7 @@ import {
   localVendors,
 } from "@/lib/data/local";
 import { applyDirectoryTags, searchWeekdays } from "@/lib/find-paths";
+import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { withListingStats } from "@/lib/listing-score";
@@ -159,7 +160,7 @@ export async function listVendors(): Promise<Vendor[]> {
       .range(from, to),
   );
   if (error) return localVendors();
-  return data.map(withListingStats);
+  return data.map((vendor) => withVendorCountryTags(withListingStats(vendor)));
 }
 
 export async function listSitemapVendors(): Promise<Vendor[]> {
@@ -298,6 +299,21 @@ export async function getTablePeek(vendorIds: string[]): Promise<TablePeek[]> {
   return lines.length ? lines : localTablePeek(vendorIds);
 }
 
+function tagContainsFilter(slug: string) {
+  return slug.includes("-") ? `tags.cs.{"${slug}"}` : `tags.cs.{${slug}}`;
+}
+
+function postgrestIlike(column: string, raw: string) {
+  const needle = raw
+    .replace(/[,()"\\]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 80);
+  if (!needle) return null;
+  const escaped = needle.replaceAll("%", "\\%").replaceAll("_", "\\_");
+  return `${column}.ilike."%${escaped}%"`;
+}
+
 export async function searchDirectory(filters: SearchFilters) {
   const supabase = publicDb();
   if (!supabase) return localSearch(filters);
@@ -310,11 +326,19 @@ export async function searchDirectory(filters: SearchFilters) {
   let vendorQuery = supabase.from("vendors").select(VENDOR_PUBLIC).eq("status", "published");
 
   if (filters.q?.trim()) {
-    const q = `%${filters.q.trim()}%`;
-    marketQuery = marketQuery.or(
-      `name.ilike.${q},city.ilike.${q},about.ilike.${q},address.ilike.${q}`,
-    );
-    vendorQuery = vendorQuery.or(`name.ilike.${q},about.ilike.${q}`);
+    const raw = filters.q.trim();
+    const marketOr = ["name", "city", "about", "address"]
+      .map((column) => postgrestIlike(column, raw))
+      .filter((part): part is string => Boolean(part));
+    if (marketOr.length) marketQuery = marketQuery.or(marketOr.join(","));
+    const originFilters = countryTagsFromQuery(raw)
+      .slice(0, 6)
+      .map(tagContainsFilter);
+    const vendorOr = ["name", "about"]
+      .map((column) => postgrestIlike(column, raw))
+      .filter((part): part is string => Boolean(part));
+    const vendorParts = [...vendorOr, ...originFilters];
+    if (vendorParts.length) vendorQuery = vendorQuery.or(vendorParts.join(","));
   }
   if (filters.province) marketQuery = marketQuery.eq("province", filters.province);
   if (filters.city) marketQuery = marketQuery.ilike("city", filters.city);
@@ -341,7 +365,23 @@ export async function searchDirectory(filters: SearchFilters) {
   }
 
   let markets = ((marketRows ?? []) as Market[]).map(withListingStats);
-  let vendors = ((vendorRows ?? []) as Vendor[]).map(withListingStats);
+  let vendors = ((vendorRows ?? []) as Vendor[]).map((vendor) =>
+    withVendorCountryTags(withListingStats(vendor)),
+  );
+  const originQuery = filters.q?.trim() ? countryTagsFromQuery(filters.q) : [];
+  if (originQuery.length && vendors.length) {
+    const vendorIds = new Set(vendors.map((vendor) => vendor.id));
+    const hostIds = new Set(
+      stalls.filter((stall) => vendorIds.has(stall.id)).map((stall) => stall.market_id),
+    );
+    const seen = new Set(markets.map((market) => market.id));
+    for (const market of allMarkets) {
+      if (!hostIds.has(market.id) || seen.has(market.id)) continue;
+      markets.push(market);
+      seen.add(market.id);
+    }
+    markets.sort((a, b) => a.name.localeCompare(b.name));
+  }
   const days = searchWeekdays(filters);
   if (days.length) {
     markets = markets.filter((m) =>
@@ -419,7 +459,9 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
     hallsByVendorIds(vendorIdList),
   ]);
 
-  const vendorMap = new Map((vendors ?? []).map((v: Vendor) => [v.id, withListingStats(v)]));
+  const vendorMap = new Map(
+    (vendors ?? []).map((v: Vendor) => [v.id, withVendorCountryTags(withListingStats(v))]),
+  );
   const vendorIds = new Set(vendorIdList);
 
   const mappedReviews = (
@@ -560,7 +602,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
     }));
 
   return {
-    ...withListingStats(vendor as Vendor),
+    ...withVendorCountryTags(withListingStats(vendor as Vendor)),
     menus: (menus ?? []) as MenuItem[],
     markets: vendorMarkets,
     reviews: mappedReviews,

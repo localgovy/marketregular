@@ -210,8 +210,14 @@ export async function deleteOwnPost(formData: FormData) {
   if (!id) return { error: "Missing post." };
   const { supabase, user, demo } = await requireUser();
   if (demo || !supabase || !user) return { error: "Sign in first." };
-  const { error } = await supabase.from("posts").delete().eq("id", id).eq("user_id", user.id);
+  const { data, error } = await supabase
+    .from("posts")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id");
   if (error) return { error: error.message };
+  if (!data?.length) return { error: "That review cannot be removed." };
   revalidatePath("/account");
   revalidatePath("/");
   revalidatePath("/feed");

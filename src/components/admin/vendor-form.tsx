@@ -89,7 +89,12 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
           id="tags"
           name="tags"
           defaultValue={vendor?.tags.join(", ")}
-          placeholder={PRODUCT_TAGS.slice(0, 6).join(", ")}
+          placeholder={[
+            ...PRODUCT_TAGS.slice(0, 3),
+            "italian",
+            "jamaican",
+            "mexican",
+          ].join(", ")}
         />
       </div>
       <Button type="submit" className="w-fit">

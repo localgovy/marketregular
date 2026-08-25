@@ -5,6 +5,31 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
+
+const STEP_UP_MS = 10 * 60 * 1000;
+
+function recentlySignedIn(user: User) {
+  const at = user.last_sign_in_at ? Date.parse(user.last_sign_in_at) : 0;
+  return Number.isFinite(at) && Date.now() - at < STEP_UP_MS;
+}
+
+function hasPasswordIdentity(user: User) {
+  return (user.identities ?? []).some((identity) => identity.provider === "email");
+}
+
+async function confirmCurrentPassword(
+  supabase: NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>,
+  user: User,
+  current: string,
+) {
+  if (!user.email || !current) return false;
+  const { error } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: current,
+  });
+  return !error;
+}
 
 function callbackUrl(next: unknown) {
   const path = safePath(next);
@@ -66,8 +91,16 @@ export async function updatePassword(formData: FormData) {
   if (!user) return { error: "Sign in first." };
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
+  const current = String(formData.get("current_password") ?? "");
   if (password.length < 8) return { error: "Use at least 8 characters." };
   if (password !== confirm) return { error: "Those passwords do not match." };
+  const steppedUp =
+    (await confirmCurrentPassword(supabase, user, current)) || recentlySignedIn(user);
+  if (!steppedUp) {
+    return hasPasswordIdentity(user)
+      ? { error: "Enter your current password." }
+      : { error: "Sign in again, then set a password." };
+  }
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: error.message };
   redirect("/account");
@@ -106,6 +139,14 @@ export async function deleteAccount(formData: FormData) {
   if (!user) return { error: "Sign in first." };
   const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
   if (confirm !== "delete") return { error: "Type delete to confirm." };
+  const current = String(formData.get("current_password") ?? "");
+  const steppedUp =
+    (await confirmCurrentPassword(supabase, user, current)) || recentlySignedIn(user);
+  if (!steppedUp) {
+    return hasPasswordIdentity(user)
+      ? { error: "Enter your current password." }
+      : { error: "Sign in again, then delete the account." };
+  }
   const admin = createServiceClient();
   if (!admin) return { error: "Account deletion is not configured." };
   await supabase.auth.signOut({ scope: "global" });

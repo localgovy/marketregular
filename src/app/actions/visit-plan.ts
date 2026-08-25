@@ -2,7 +2,7 @@
 
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
 import { SITE_NAME } from "@/lib/constants";
-import { clientIp, hashMailKey, mailAllowed, recordMail } from "@/lib/mail-limit";
+import { clientIp, hashMailKey, takeMailSlot } from "@/lib/mail-limit";
 import { fetchMyProfile } from "@/lib/my-profile";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -49,7 +49,7 @@ export async function emailVisitPlan(slugs: string[]) {
 
   const ip = await clientIp();
   const keys = [hashMailKey(`ip:${ip}|email:${user.email}`), hashMailKey(`user:${user.id}`)];
-  const allowed = await mailAllowed(service, "visit", keys);
+  const allowed = await takeMailSlot(service, "visit", keys);
   if (!allowed) {
     return {
       error: null,
@@ -66,8 +66,6 @@ export async function emailVisitPlan(slugs: string[]) {
   if (reserved !== true) {
     return { error: null, wait: true, message: visitPlanWaitCopy(VISIT_PLAN_COOLDOWN_MS) };
   }
-
-  await recordMail(service, "visit", keys);
 
   const [markets, schedules] = await Promise.all([listMarkets(), listSchedules()]);
   const scheduleMap = new Map<string, MarketSchedule[]>();

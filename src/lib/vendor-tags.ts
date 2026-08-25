@@ -1,4 +1,5 @@
 import { PRODUCT_TAGS } from "@/lib/constants";
+import { guessCountryTags, storedCountryTags } from "@/lib/country-tags";
 
 const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
 
@@ -161,6 +162,8 @@ export function guessVendorTags(name: string) {
 
 export function vendorProductTags(name: string, stored: string[] = []) {
   const fromRecord = stored.filter((tag) => PRODUCT_SET.has(tag));
-  if (fromRecord.length) return fromRecord;
-  return guessVendorTags(name);
+  const products = fromRecord.length ? fromRecord : guessVendorTags(name);
+  const storedOrigin = storedCountryTags(stored);
+  const origin = storedOrigin.length ? storedOrigin : guessCountryTags(name);
+  return [...products, ...origin];
 }

@@ -17,6 +17,18 @@ export function PasswordForm() {
   return (
     <form action={action} className="mt-8 grid gap-3">
       <div className="grid gap-1.5">
+        <Label htmlFor="current_password">Current password</Label>
+        <Input
+          id="current_password"
+          name="current_password"
+          type="password"
+          autoComplete="current-password"
+        />
+        <p className="text-sm text-muted-foreground">
+          Skip this if you just opened a reset link.
+        </p>
+      </div>
+      <div className="grid gap-1.5">
         <Label htmlFor="password">New password</Label>
         <Input
           id="password"

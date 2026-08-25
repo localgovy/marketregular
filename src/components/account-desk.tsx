@@ -320,7 +320,7 @@ export function AccountDesk({
             how="Your handle is your unique name, but your 'Name on posts' is what people actually see."
           >
             <div className="flex items-center gap-3 pb-4">
-              {profile.avatar_url ? (
+              {profile.avatar_url && !/\.svg([?#]|$)/i.test(profile.avatar_url) ? (
                 // Google (and similar) profile photos are off our image host list.
                 // eslint-disable-next-line @next/next/no-img-element
                 <img

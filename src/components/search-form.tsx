@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchField } from "@/components/search-field";
-import { PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
+import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
   FIND_AREAS,
+  FIND_ORIGINS,
   FIND_PRODUCTS,
   FIND_RECORD,
   FIND_SETUP,
@@ -133,7 +134,7 @@ export function SearchForm({
           key={defaults?.q ?? ""}
           name="q"
           defaultValue={defaults?.q}
-          placeholder="Market, vendor, neighbourhood, or tomato"
+          placeholder="Market, vendor, cuisine, or neighbourhood"
           className="h-10 bg-card"
           aria-label="Search markets and stalls"
           onClear={() => {
@@ -241,6 +242,25 @@ export function SearchForm({
 
       <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-border px-3 py-3 sm:px-4">
         {FIND_PRODUCTS.map((tag) => {
+          const on = live.tags.includes(tag);
+          return (
+            <button
+              key={tag}
+              type="button"
+              aria-pressed={on}
+              onClick={() => update({ tags: toggleIn(live.tags, tag) })}
+              className={cn(
+                "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
+                on
+                  ? "bg-primary text-primary-foreground"
+                  : "border border-input bg-card text-foreground hover:bg-muted",
+              )}
+            >
+              {tagLabel(tag)}
+            </button>
+          );
+        })}
+        {FIND_ORIGINS.map((tag) => {
           const on = live.tags.includes(tag);
           return (
             <button
@@ -390,6 +410,18 @@ function AllFilters({
 
         <FilterColumn title="Sells">
           {PRODUCT_TAGS.map((tag) => (
+            <FilterCheck
+              key={tag}
+              checked={state.tags.includes(tag)}
+              onChange={(on) => setTag(tag, on)}
+            >
+              {tagLabel(tag)}
+            </FilterCheck>
+          ))}
+        </FilterColumn>
+
+        <FilterColumn title="Cuisine">
+          {COUNTRY_TAGS.map((tag) => (
             <FilterCheck
               key={tag}
               checked={state.tags.includes(tag)}

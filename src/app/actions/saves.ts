@@ -60,6 +60,8 @@ export async function persistSave(kind: SaveKind, slug: string, saved: boolean):
   return listSaves(supabase, user.id);
 }
 
+const MAX_SAVES = 200;
+
 export async function mergeSaves(local: Saves): Promise<Saves | null> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
@@ -75,10 +77,18 @@ export async function mergeSaves(local: Saves): Promise<Saves | null> {
   for (const slug of local.vendors ?? []) {
     if (validSlug(slug)) rows.push({ user_id: user.id, kind: "vendor", slug });
   }
-  if (rows.length) {
+  const existing = await listSaves(supabase, user.id);
+  const have = new Set([
+    ...existing.markets.map((slug) => `market:${slug}`),
+    ...existing.vendors.map((slug) => `vendor:${slug}`),
+  ]);
+  const novel = rows.filter((row) => !have.has(`${row.kind}:${row.slug}`));
+  const room = Math.max(0, MAX_SAVES - have.size);
+  const capped = novel.slice(0, room);
+  if (capped.length) {
     const { error } = await supabase
       .from("saves")
-      .upsert(rows, { onConflict: "user_id,kind,slug", ignoreDuplicates: true });
+      .upsert(capped, { onConflict: "user_id,kind,slug", ignoreDuplicates: true });
     if (error) throw new Error(error.message);
   }
 

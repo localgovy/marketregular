@@ -2,8 +2,7 @@ import { safePath } from "@/lib/auth-redirect";
 import type { Profile } from "@/types/database";
 
 export function needsOnboarding(profile: Pick<Profile, "onboarded_at"> | null) {
-  if (!profile) return false;
-  return !profile.onboarded_at;
+  return !profile?.onboarded_at;
 }
 
 export function onboardingExemptPath(path: string) {

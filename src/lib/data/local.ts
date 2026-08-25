@@ -12,6 +12,7 @@ import {
 import { distanceMeters } from "@/lib/geo";
 import { decodeFloorBody, mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { applyDirectoryTags, searchWeekdays } from "@/lib/find-paths";
+import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { isLaunchCity } from "@/lib/launch";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
@@ -45,7 +46,7 @@ export function localVendors(): Vendor[] {
   const vendorIds = new Set(
     seedMarketVendors.filter((link) => ids.has(link.market_id)).map((link) => link.vendor_id),
   );
-  return seedVendors.filter((v) => vendorIds.has(v.id)).map(toPublicVendor);
+  return seedVendors.filter((v) => vendorIds.has(v.id)).map((v) => withVendorCountryTags(toPublicVendor(v)));
 }
 
 export function localSitemapVendors(): Vendor[] {
@@ -64,6 +65,7 @@ export function localSearch(filters: SearchFilters) {
   let vendors = localVendors();
 
   if (q) {
+    const origin = countryTagsFromQuery(q);
     markets = markets.filter((m) =>
       haystack([m.name, m.city, m.province, m.about, m.tags.join(" "), m.address]).includes(q),
     );
@@ -71,8 +73,26 @@ export function localSearch(filters: SearchFilters) {
       const marketNames = seedMarketVendors
         .filter((mv) => mv.vendor_id === v.id)
         .map((mv) => seedMarkets.find((m) => m.id === mv.market_id)?.name);
-      return haystack([v.name, v.about, v.tags.join(" "), ...marketNames]).includes(q);
+      return (
+        haystack([v.name, v.about, v.tags.join(" "), ...marketNames]).includes(q) ||
+        origin.some((tag) => v.tags.includes(tag))
+      );
     });
+    if (origin.length && vendors.length) {
+      const vendorIds = new Set(vendors.map((vendor) => vendor.id));
+      const hostIds = new Set(
+        seedMarketVendors
+          .filter((link) => vendorIds.has(link.vendor_id))
+          .map((link) => link.market_id),
+      );
+      const seen = new Set(markets.map((market) => market.id));
+      for (const market of localMarkets()) {
+        if (!hostIds.has(market.id) || seen.has(market.id)) continue;
+        markets.push(market);
+        seen.add(market.id);
+      }
+      markets.sort((a, b) => a.name.localeCompare(b.name));
+    }
   }
   if (filters.province) {
     markets = markets.filter((m) => m.province === filters.province);
@@ -184,7 +204,7 @@ export function localMarketBySlug(slug: string): MarketDetail | null {
     if (!v) return [];
     return [
       {
-        ...toPublicVendor(v),
+        ...withVendorCountryTags(toPublicVendor(v)),
         stall: link.stall,
         days: link.days,
         halls: hallsMap.get(v.id) ?? [],
@@ -206,7 +226,7 @@ export function localMarketBySlug(slug: string): MarketDetail | null {
 export function localVendorBySlug(slug: string): VendorDetail | null {
   const seed = seedVendors.find((v) => v.slug === slug);
   if (!seed) return null;
-  const vendor = toPublicVendor(seed);
+  const vendor = withVendorCountryTags(toPublicVendor(seed));
   const links = seedMarketVendors.filter((mv) => mv.vendor_id === vendor.id);
   const markets = links.flatMap((link) => {
     const m = seedMarkets.find((x) => x.id === link.market_id);

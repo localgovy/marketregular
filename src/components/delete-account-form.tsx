@@ -16,6 +16,13 @@ export function DeleteAccountForm() {
 
   return (
     <form action={action} className="mt-3 grid max-w-sm gap-3">
+      <Label htmlFor="delete-current">Current password</Label>
+      <Input
+        id="delete-current"
+        name="current_password"
+        type="password"
+        autoComplete="current-password"
+      />
       <Label htmlFor="delete-confirm">Type delete to confirm</Label>
       <Input id="delete-confirm" name="confirm" autoComplete="off" />
       <Button type="submit" variant="destructive" className="w-fit" disabled={pending}>

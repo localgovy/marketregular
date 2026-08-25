@@ -103,7 +103,6 @@ export async function completeOnboarding(formData: FormData) {
       id: user.id,
       display_name: displayName,
       avatar_url: avatar,
-      role: "user",
       ...patch,
     });
     if (insertError) {

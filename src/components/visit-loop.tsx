@@ -8,7 +8,7 @@ import { MarketMapLazy } from "@/components/market-map-lazy";
 import { QuickFind } from "@/components/quick-find";
 import { TorontoWeek } from "@/components/toronto-week";
 import type { DirectoryCensus } from "@/lib/data/catalog";
-import { FIND_PRODUCTS, FIND_SETUP, areasForMarkets, tagsPresent } from "@/lib/find-paths";
+import { FIND_ORIGINS, FIND_PRODUCTS, FIND_SETUP, areasForMarkets, tagsPresent } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
@@ -33,6 +33,7 @@ export function HomeMosaic({
 }) {
   const areas = areasForMarkets(markets).map(({ label, q }) => ({ label, q }));
   const sellOptions = tagsPresent([...markets, ...vendors], FIND_PRODUCTS);
+  const cuisineOptions = tagsPresent(vendors, FIND_ORIGINS);
   const setup = [...tagsPresent(markets, FIND_SETUP)];
   const nearMarkets = markets.map((market) => ({
     name: market.name,
@@ -93,12 +94,13 @@ export function HomeMosaic({
             icon={SlatsMark}
             kicker="When, where, or what"
             title="Find a market"
-            how="Choose when, a neighbourhood, or what they sell. Press Search when the list looks right."
+            how="Choose when, a neighbourhood, what they sell, or a cuisine. Press Search when the list looks right."
           >
             <QuickFind
               markets={nearMarkets}
               areas={areas}
               sellOptions={sellOptions}
+              cuisineOptions={cuisineOptions}
               setup={setup}
             />
           </HomePanel>
