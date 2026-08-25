@@ -4,7 +4,6 @@ import { FeedBoard } from "@/components/feed-board";
 import {
   getCurrentProfile,
   getFloorTape,
-  getOpenToday,
   listMarkets,
   listStalls,
 } from "@/lib/data/catalog";
@@ -18,11 +17,10 @@ export const metadata: Metadata = pageMeta({
 });
 
 export default async function FeedPage() {
-  const [tape, markets, stalls, openNow, profile] = await Promise.all([
+  const [tape, markets, stalls, profile] = await Promise.all([
     getFloorTape(80),
     listMarkets(),
     listStalls(),
-    getOpenToday(),
     getCurrentProfile(),
   ]);
 
@@ -38,7 +36,6 @@ export default async function FeedPage() {
           signedIn={Boolean(profile)}
           stalls={stalls}
           markets={markets}
-          openSlugs={openNow.map((market) => market.slug)}
         />
       </Suspense>
     </div>
