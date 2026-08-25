@@ -12,7 +12,7 @@ export function ListingComposer({
   stalls,
   initialMarketId,
   initialVendorId,
-  className = "mt-4 mb-6 rounded-md border-b-0 ring-1 ring-border",
+  className = "mt-4 mb-6",
 }: {
   signedIn: boolean;
   markets: GeoMarket[];
