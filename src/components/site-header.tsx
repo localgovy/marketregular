@@ -14,12 +14,12 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md lg:border-b-2 lg:border-board">
       <div className="flex h-14 w-full items-center gap-3 px-4 lg:grid lg:h-16 lg:site-rail lg:gap-0 lg:px-0">
         <div className="flex min-w-0 flex-1 items-center lg:h-16 lg:flex-none lg:border-r lg:border-board lg:bg-board lg:px-4">
-          <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex min-w-0 items-center gap-2">
             <Link
               href="/"
               prefetch={false}
               aria-label={`${SITE_NAME} home`}
-              className="shrink-0 text-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk"
+              className="inline-flex shrink-0 items-center text-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk"
             >
               <SiteWordmark />
             </Link>
@@ -27,7 +27,7 @@ export function SiteHeader() {
               href={STUDIO_URL}
               rel="noreferrer"
               aria-label={`by ${STUDIO_NAME}`}
-              className="type-kicker inline-flex shrink-0 items-center gap-1 text-muted-foreground outline-none hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk/70"
+              className="type-kicker inline-flex shrink-0 items-center gap-1 leading-none text-muted-foreground outline-none translate-y-0.5 hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk/70"
             >
               <span>by</span>
               <StudioWordmark />

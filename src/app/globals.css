@@ -177,7 +177,7 @@
 
 /* Wordmark: supplied lockup, color from currentColor. */
 @utility site-wordmark {
-  display: inline-block;
+  display: block;
   height: 1.25rem;
   width: calc(1.25rem * 506 / 75);
   flex-shrink: 0;
@@ -192,9 +192,9 @@
 
 /* localgovy lockup: glyph mask, color from currentColor. */
 @utility studio-wordmark {
-  display: inline-block;
-  height: 0.95em;
-  width: 4.27em;
+  display: block;
+  height: 1em;
+  width: calc(1em * 836 / 186);
   flex-shrink: 0;
   background-color: currentColor;
   -webkit-mask-size: contain;
