@@ -59,14 +59,30 @@ On that same Web client, keep the Supabase callback and add the MarketRegular ca
 **Authorized redirect URIs**
 
 - `https://<project-ref>.supabase.co/auth/v1/callback` (keep this)
-- `https://www.marketregular.com/auth/google/callback`
-- `https://marketregular.com/auth/google/callback`
-- `http://localhost:3000/auth/google/callback` (local only)
-- `http://127.0.0.1:3000/auth/google/callback` (local only)
+- `https://www.marketregular.com/auth/callback`
+- `https://marketregular.com/auth/callback`
+- `http://localhost:3000/auth/callback` (local only)
+- `http://127.0.0.1:3000/auth/callback` (local only)
 
-Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars. Set `ADMIN_EMAILS` to your login email.
+Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars.
+
+Grant the desk in SQL (once), not via an env allow-list:
+
+```sql
+update public.profiles
+set role = 'admin'
+where id = '<auth user uuid>';
+```
 
 New accounts (and existing ones without a handle) go to `/onboarding` after sign-in: unique `@handle`, three favorite markets, then a short how-to. Optional visit-plan mail uses `RESEND_API_KEY` and `RESEND_FROM` — see [DOMAIN.md](DOMAIN.md).
+
+### Hosted Auth before a public launch
+
+Local `supabase/config.toml` is not production. In the hosted project:
+
+1. Authentication → Providers → Email: turn **Confirm email** on
+2. Authentication → Attack protection: **Leaked password protection** on
+3. Minimum password length **8** (the app already rejects shorter)
 
 Regenerate seed SQL after editing `src/data/directory.ts`:
 
@@ -76,7 +92,7 @@ node --experimental-strip-types scripts/generate-seed-sql.ts
 
 ## Admin
 
-`/admin` edits markets and vendors, moderates the feed, and approves listing claims. Shoppers sign in at `/login`. The desk only shows if you already have an admin session.
+`/admin` edits markets and vendors, moderates the feed, and approves listing claims. Shoppers sign in at `/login`. The desk only shows if `profiles.role` is `admin`.
 
 ## What is seeded
 

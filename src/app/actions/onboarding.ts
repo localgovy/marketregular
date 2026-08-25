@@ -2,6 +2,7 @@
 
 import { listMarkets } from "@/lib/data/catalog";
 import { safePath } from "@/lib/auth-redirect";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { normalizeUsername, usernameError } from "@/lib/username";
 import { revalidatePath } from "next/cache";
@@ -70,11 +71,9 @@ export async function completeOnboarding(formData: FormData) {
   });
   if (saveError) return { error: saveError.message };
 
-  const onboardedAt = new Date().toISOString();
   const patch = {
     username,
     favorite_market_slugs: slugs,
-    onboarded_at: onboardedAt,
   };
   const { data: updated, error } = await supabase
     .from("profiles")
@@ -113,13 +112,13 @@ export async function completeOnboarding(formData: FormData) {
     }
   }
 
-  const { data: row, error: checkError } = await supabase
-    .from("profiles")
-    .select("id, onboarded_at")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (checkError) return { error: checkError.message };
-  if (!row?.onboarded_at) {
+  const service = createServiceClient();
+  if (!service) return { error: "Supabase is not configured yet." };
+  const { data: stamped, error: stampError } = await service.rpc("stamp_onboarded_at", {
+    p_user_id: user.id,
+  });
+  if (stampError) return { error: stampError.message };
+  if (!stamped) {
     return { error: "Could not finish setting up this account. Try again." };
   }
 

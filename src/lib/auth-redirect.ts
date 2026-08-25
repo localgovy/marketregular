@@ -1,4 +1,5 @@
 import { SITE_URL } from "@/lib/constants";
+import { isTrustedSiteHost } from "@/lib/site-host";
 
 const SAFE_PATH = /^\/[A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%\-]*$/;
 
@@ -39,12 +40,7 @@ export function clearAuthNextCookie() {
 }
 
 function isTrustedAuthHost(hostname: string) {
-  return (
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "marketregular.com" ||
-    hostname.endsWith(".marketregular.com")
-  );
+  return isTrustedSiteHost(hostname);
 }
 
 /** Stay on the host that handled the callback when that host is ours. */

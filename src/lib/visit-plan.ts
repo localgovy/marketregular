@@ -6,13 +6,15 @@ import {
   STUDIO_URL,
   STUDIO_WORDMARK,
 } from "@/lib/constants";
+import { isTrustedSiteHost } from "@/lib/site-host";
 import { upcomingByDay, type UpcomingGroup } from "@/lib/upcoming";
 import type { Market, MarketSchedule } from "@/types/database";
 
 /** Brand files must be on the live host — mail clients cannot load localhost. */
 function emailOrigin() {
   try {
-    if (new URL(SITE_URL).hostname.endsWith("marketregular.com")) return SITE_URL;
+    const host = new URL(SITE_URL).hostname;
+    if (isTrustedSiteHost(host) && host !== "localhost" && host !== "127.0.0.1") return SITE_URL;
   } catch {
     /* fall through */
   }

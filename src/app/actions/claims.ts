@@ -3,6 +3,8 @@
 import { Resend } from "resend";
 import { isClaimRole } from "@/lib/claim";
 import { CLAIM_INBOX, SITE_NAME, SITE_URL } from "@/lib/constants";
+import { claimMailAllowed, clientIp, hashMailKey, recordClaimMail } from "@/lib/mail-limit";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -127,6 +129,19 @@ export async function submitClaim(formData: FormData) {
   const {
     data: { user },
   } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+
+  const service = createServiceClient();
+  if (!service) {
+    return { error: `Mail is not set up yet. Write ${CLAIM_INBOX} directly.` };
+  }
+  const ip = await clientIp();
+  const keys = [hashMailKey(`ip:${ip}|email:${email}`)];
+  if (user) keys.push(hashMailKey(`user:${user.id}`));
+  const allowed = await claimMailAllowed(service, keys);
+  if (!allowed) {
+    return { error: "Wait a bit before sending another claim." };
+  }
+  await recordClaimMail(service, keys);
 
   const listingUrl = `${SITE_URL}${listing.path}`;
   const kind = target_type === "market" ? "market" : "stall";

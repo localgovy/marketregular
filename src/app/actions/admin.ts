@@ -2,7 +2,6 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { slugify } from "@/lib/format";
-import { createServiceClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -194,17 +193,30 @@ export async function decideClaim(id: string, status: "approved" | "rejected", n
 
   if (status === "approved") {
     const table = claim.target_type === "market" ? "markets" : "vendors";
-    await supabase.from(table).update({ claimed_by: claim.user_id }).eq("id", claim.target_id);
-    const service = createServiceClient();
-    if (service) {
-      const { data: profile } = await service
+    const { data: listing } = await supabase
+      .from(table)
+      .select("claimed_by")
+      .eq("id", claim.target_id)
+      .maybeSingle();
+    if (listing?.claimed_by && listing.claimed_by !== claim.user_id) {
+      fail("That listing is already claimed.");
+    }
+    const { error: claimError } = await supabase
+      .from(table)
+      .update({ claimed_by: claim.user_id })
+      .eq("id", claim.target_id);
+    if (claimError) fail(claimError.message);
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", claim.user_id)
+      .maybeSingle();
+    if (profile?.role !== "admin") {
+      const { error: roleError } = await supabase
         .from("profiles")
-        .select("role")
-        .eq("id", claim.user_id)
-        .maybeSingle();
-      if (profile?.role !== "admin") {
-        await service.from("profiles").update({ role: "vendor" }).eq("id", claim.user_id);
-      }
+        .update({ role: "vendor" })
+        .eq("id", claim.user_id);
+      if (roleError) fail(roleError.message);
     }
   }
   revalidatePath("/admin/claims");

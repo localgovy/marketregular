@@ -108,8 +108,8 @@ export async function deleteAccount(formData: FormData) {
   if (confirm !== "delete") return { error: "Type delete to confirm." };
   const admin = createServiceClient();
   if (!admin) return { error: "Account deletion is not configured." };
+  await supabase.auth.signOut({ scope: "global" });
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) return { error: error.message };
-  await supabase.auth.signOut();
   redirect("/");
 }

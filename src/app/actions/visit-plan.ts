@@ -2,13 +2,14 @@
 
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
 import { SITE_NAME } from "@/lib/constants";
+import { fetchMyProfile } from "@/lib/my-profile";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { visitPlanHtml, visitPlanText, weekPlanForSlugs } from "@/lib/visit-plan";
 import type { MarketSchedule } from "@/types/database";
 import { Resend } from "resend";
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const RATE_MS = 10 * 60 * 1000;
 
 function validSlug(slug: string) {
   return slug.length >= 1 && slug.length <= 160 && SLUG.test(slug);
@@ -28,25 +29,24 @@ export async function emailVisitPlan(slugs: string[]) {
   } = await supabase.auth.getUser();
   if (!user?.email) return { error: "Sign in first." };
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("favorite_market_slugs, visit_plan_emailed_at")
-    .eq("id", user.id)
-    .maybeSingle();
+  const profile = await fetchMyProfile(supabase);
+  if (!profile) return { error: "Sign in first." };
 
-  const sentAt = profile?.visit_plan_emailed_at
-    ? new Date(profile.visit_plan_emailed_at).getTime()
-    : 0;
-  if (sentAt && Date.now() - sentAt < RATE_MS) {
-    return { error: "Wait a few minutes before sending again." };
-  }
-
-  const stored = Array.isArray(profile?.favorite_market_slugs)
-    ? profile.favorite_market_slugs.filter((item): item is string => typeof item === "string")
-    : [];
+  const stored = profile.favorite_market_slugs;
   const picked = (slugs.length ? slugs : stored).filter(validSlug);
   const unique = [...new Set(picked)].slice(0, 3);
   if (unique.length === 0) return { error: "Pick at least one market first." };
+
+  const service = createServiceClient();
+  if (!service) return { error: "Visit email is not set up yet." };
+  const { data: reserved, error: reserveError } = await service.rpc(
+    "stamp_visit_plan_emailed_at",
+    { p_user_id: user.id },
+  );
+  if (reserveError) return { error: reserveError.message };
+  if (reserved !== true) {
+    return { error: "Wait a few minutes before sending again." };
+  }
 
   const [markets, schedules] = await Promise.all([listMarkets(), listSchedules()]);
   const scheduleMap = new Map<string, MarketSchedule[]>();
@@ -66,11 +66,6 @@ export async function emailVisitPlan(slugs: string[]) {
     html: visitPlanHtml(groups),
   });
   if (error) return { error: error.message };
-
-  await supabase
-    .from("profiles")
-    .update({ visit_plan_emailed_at: new Date().toISOString() })
-    .eq("id", user.id);
 
   return { error: null, message: `Sent to ${user.email}` };
 }

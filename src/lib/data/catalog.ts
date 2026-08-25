@@ -20,6 +20,7 @@ import { applyDirectoryTags, searchWeekdays } from "@/lib/find-paths";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { withListingStats } from "@/lib/listing-score";
+import { fetchMyPublicProfile } from "@/lib/my-profile";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
@@ -50,7 +51,7 @@ function publicDb() {
 
 const PAGE = 1000;
 
-/** Anon cannot SELECT * (email / claimed_by are revoked). */
+/** email / claimed_by are revoked from anon and authenticated. */
 const MARKET_PUBLIC =
   "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, phone, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok";
 const VENDOR_PUBLIC =
@@ -117,20 +118,8 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data } = await supabase
-    .from("profiles")
-    .select(
-      "id, display_name, avatar_url, role, username, favorite_market_slugs, onboarded_at",
-    )
-    .eq("id", user.id)
-    .maybeSingle();
-  if (data) {
-    const row = data as Profile;
-    return {
-      ...row,
-      favorite_market_slugs: row.favorite_market_slugs ?? [],
-    };
-  }
+  const row = await fetchMyPublicProfile(supabase);
+  if (row) return row;
   return {
     id: user.id,
     display_name: user.email?.split("@")[0] ?? "You",

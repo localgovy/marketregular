@@ -1,6 +1,8 @@
 "use server";
 
 import { encodeFloorBody } from "@/lib/floor-note";
+import { allowedPostPhotos } from "@/lib/post-photos";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
@@ -59,6 +61,9 @@ export async function createPost(input: {
   if (demo) return { error: null, demo: true };
   if (!supabase || !user) return { error: "Sign in to review." };
 
+  const photos = allowedPostPhotos(user.id, input.photos ?? []);
+  if (!photos) return { error: "Those photos could not be attached." };
+
   const { count } = await supabase
     .from("posts")
     .select("id", { count: "exact", head: true })
@@ -74,12 +79,17 @@ export async function createPost(input: {
       user_id: user.id,
       market_id: input.marketId,
       body,
-      photos: input.photos ?? [],
+      photos,
       verified_on_site: false,
     })
     .select("id")
     .single();
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.message.includes("Daily review limit")) {
+      return { error: "Daily review limit reached. See you tomorrow." };
+    }
+    return { error: error.message };
+  }
 
   if (inserted && hasCoords(input.lat, input.lng)) {
     await supabase.rpc("confirm_on_site", {
@@ -148,6 +158,9 @@ export async function createReview(input: {
     if (error.code === "23505") {
       return { error: "You already reviewed this. One review per listing." };
     }
+    if (error.message.includes("Daily review limit")) {
+      return { error: "Daily review limit reached. See you tomorrow." };
+    }
     return { error: error.message };
   }
 
@@ -209,13 +222,11 @@ export async function flagItem(table: "posts" | "reviews", id: string) {
   if (!isFlagTable(table)) return { error: "Admins only." };
   const { supabase, user, demo } = await requireUser();
   if (demo || !supabase || !user) return { error: "Admins only." };
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.role !== "admin") return { error: "Admins only." };
-  const { error } = await supabase.from(table).update({ flagged: true }).eq("id", id);
+  const { data: isAdmin } = await supabase.rpc("is_admin");
+  if (isAdmin !== true) return { error: "Admins only." };
+  const service = createServiceClient();
+  if (!service) return { error: "Admins only." };
+  const { error } = await service.from(table).update({ flagged: true }).eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/admin");
   revalidatePath("/");
@@ -226,13 +237,11 @@ export async function unflagItem(table: "posts" | "reviews", id: string) {
   if (!isFlagTable(table)) return { error: "Admins only." };
   const { supabase, user, demo } = await requireUser();
   if (demo || !supabase || !user) return { error: "Admins only." };
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-  if (profile?.role !== "admin") return { error: "Admins only." };
-  const { error } = await supabase.from(table).update({ flagged: false }).eq("id", id);
+  const { data: isAdmin } = await supabase.rpc("is_admin");
+  if (isAdmin !== true) return { error: "Admins only." };
+  const service = createServiceClient();
+  if (!service) return { error: "Admins only." };
+  const { error } = await service.from(table).update({ flagged: false }).eq("id", id);
   if (error) return { error: error.message };
   revalidatePath("/admin");
   return { error: null };

@@ -1,3 +1,5 @@
+import { isTrustedSiteHost } from "@/lib/site-host";
+
 /** One word. Never “Market Regular”. */
 export const SITE_NAME = "MarketRegular";
 export const SITE_TAGLINE = "Toronto farmers' markets, this week.";
@@ -11,7 +13,9 @@ function canonicalSiteUrl() {
     const url = new URL(raw);
     // Live Vercel sends apex → www. Sitemap and canonicals must match the final host.
     if (url.hostname === "marketregular.com") url.hostname = "www.marketregular.com";
-    if (url.hostname.endsWith("marketregular.com")) url.protocol = "https:";
+    if (isTrustedSiteHost(url.hostname) && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+      url.protocol = "https:";
+    }
     return url.origin;
   } catch {
     return "https://www.marketregular.com";

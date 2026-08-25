@@ -1,3 +1,4 @@
+import { loadMyProfile } from "@/lib/my-profile";
 import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
 import { onboardingExemptPath, onboardingHref } from "@/lib/onboarding";
 import { safePath } from "@/lib/auth-redirect";
@@ -69,12 +70,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && !onboardingExemptPath(path)) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("onboarded_at")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (!error && !data?.onboarded_at) {
+    const { profile, error } = await loadMyProfile(supabase);
+    if (!error && !profile?.onboarded_at) {
       const dest = new URL(onboardingHref(`${path}${request.nextUrl.search}`), request.nextUrl.origin);
       return copyCookies(supabaseResponse, NextResponse.redirect(dest));
     }

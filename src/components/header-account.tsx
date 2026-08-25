@@ -43,15 +43,14 @@ export function HeaderAccount() {
         }
         return;
       }
-      const { data } = await supabase
-        .from("profiles")
-        .select("display_name, role")
-        .eq("id", user.id)
-        .maybeSingle();
+      const [{ data }, { data: isAdmin }] = await Promise.all([
+        supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
+        supabase.rpc("is_admin"),
+      ]);
       if (cancelled) return;
       setProfile({
         display_name: data?.display_name ?? user.email?.split("@")[0] ?? "You",
-        role: (data?.role as UserRole | undefined) ?? "user",
+        role: isAdmin === true ? "admin" : "user",
       });
       setReady(true);
     })();

@@ -22,8 +22,8 @@ export default async function AdminLayout({
         <h1>Admin needs Supabase</h1>
         <p className="type-lede mt-3 text-muted-foreground">
           Create a Supabase project, run the migrations in <code>supabase/</code>, and set
-          the env vars in <code>.env.local</code> / Vercel. Add your email to{" "}
-          <code>ADMIN_EMAILS</code>.
+          the env vars in <code>.env.local</code> / Vercel. Grant desk access by setting{" "}
+          <code>profiles.role</code> to <code>admin</code> in the database.
         </p>
       </div>
     );
