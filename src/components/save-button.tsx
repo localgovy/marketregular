@@ -12,6 +12,7 @@ import {
   replaceSaves,
   type SaveKind,
 } from "@/lib/saves";
+import { openSignInSlip } from "@/lib/signin-slip";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +50,7 @@ export function SaveButton({
         const next = `${window.location.pathname}${window.location.search}`;
         const loginHref = `/login?next=${encodeURIComponent(next || "/account")}`;
         if (!documentHasAuthCookie()) {
-          router.push(loginHref);
+          openSignInSlip({ next, name: label });
           return;
         }
         const nextSaved = !saved;

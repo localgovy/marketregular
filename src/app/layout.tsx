@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Azeret_Mono, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
+import { GuestSignInSlip } from "@/components/guest-signin-slip";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
@@ -69,6 +71,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />
+        <Suspense fallback={null}>
+          <GuestSignInSlip />
+        </Suspense>
         <AppToaster />
       </body>
     </html>
