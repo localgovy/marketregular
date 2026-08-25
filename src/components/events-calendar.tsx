@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { CaretLeftMark, CaretRightMark } from "@/components/marks";
 import { Hours } from "@/components/hours";
 import { NowLabel } from "@/components/now-label";
+import { SaveButton } from "@/components/save-button";
 import { Button } from "@/components/ui/button";
 import { WEEKDAYS } from "@/lib/constants";
 import {
@@ -322,11 +323,11 @@ export function EventsCalendar({
             {selectedCell.events.map((event) => (
               <li
                 key={`${selectedCell.iso}-${event.marketId}`}
-                className="border-b border-border/70 py-3 last:border-b-0"
+                className="flex items-start gap-2 border-b border-border/70 py-3 last:border-b-0"
               >
                 <Link
                   href={`/markets/${event.marketSlug}`}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3"
+                  className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3"
                 >
                   <span className="min-w-0">
                     <span className="block text-base font-medium text-ticket-ink underline-offset-2 hover:underline">
@@ -338,12 +339,13 @@ export function EventsCalendar({
                     ) : null}
                   </span>
                   <span className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-1.5">
-                    {event.open ? (
-                      <NowLabel>Open</NowLabel>
-                    ) : null}
+                    {event.open ? <NowLabel>Open</NowLabel> : null}
                     <Hours value={event.hours} className="text-muted-foreground" />
                   </span>
                 </Link>
+                <span className="shrink-0 pt-0.5">
+                  <SaveButton kind="market" slug={event.marketSlug} name={event.marketName} />
+                </span>
               </li>
             ))}
           </ul>
