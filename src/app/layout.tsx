@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Mona_Sans, Schibsted_Grotesk } from "next/font/google";
+import { Bungee, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
 import { AppToaster } from "@/components/app-toaster";
 import { GuestSignInSlip } from "@/components/guest-signin-slip";
 import { SiteHeader } from "@/components/site-header";
@@ -21,6 +21,13 @@ const display = Mona_Sans({
   variable: "--font-display",
   display: "swap",
   preload: false,
+});
+
+const nums = Bungee({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-nums",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -57,7 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en-CA"
-      className={`${grotesk.variable} ${display.variable} h-full antialiased`}
+      className={`${grotesk.variable} ${display.variable} ${nums.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <JsonLd data={websiteJsonLd()} />

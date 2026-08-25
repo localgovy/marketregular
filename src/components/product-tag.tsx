@@ -2,7 +2,7 @@ import { tagLabel } from "@/lib/find-paths";
 
 export function ProductTag({ tag }: { tag: string }) {
   return (
-    <li className="stall-chip-sm bg-receipt px-1.5 py-0.5 text-sm font-medium text-foreground shadow-[inset_3px_0_0_var(--ticket)]">
+    <li className="stall-chip-sm bg-foreground px-2 py-0.5 text-sm text-receipt">
       {tagLabel(tag)}
     </li>
   );

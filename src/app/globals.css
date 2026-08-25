@@ -460,13 +460,21 @@ li:nth-child(3n + 3) .now-open-stamp {
   );
 }
 
-/* Figures: same Mona cut as titles — semibold, condensed, lining tabular. */
+/* Small figures: Mona, same cut as titles. */
 @utility type-nums {
   font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
   font-weight: 600;
   font-stretch: 94%;
   font-variant-numeric: lining-nums tabular-nums;
   letter-spacing: -0.04em;
+}
+
+/* Ticket census: vinyl sign letters, not the title face. */
+@utility type-census {
+  font-family: var(--font-nums), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: 0;
 }
 
 @utility stall-chip-sm {

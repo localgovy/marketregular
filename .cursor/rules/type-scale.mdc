@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Type scale
 
-Two sans families: **Mona Sans** (`font-heading`) for titles and figures, **Schibsted Grotesk** (`font-sans`) for everything else. Do not load a third face for numbers. Do not put Mona on body copy, kickers, posts, empty states, or the site name.
+Two sans families: **Mona Sans** (`font-heading`) for titles, **Schibsted Grotesk** (`font-sans`) for everything else. Ticket census figures use **Bungee** (`type-census`). Do not put Mona on body copy, kickers, posts, empty states, or the site name. Do not use a coding mono for numbers.
 
 | Role | Face | Size | Example |
 | --- | --- | --- | --- |
@@ -17,8 +17,9 @@ Two sans families: **Mona Sans** (`font-heading`) for titles and figures, **Schi
 | Lede | Grotesk | `type-lede` (`text-lg`) | Sentence under an h1 |
 | How / body | Grotesk | `text-base` | Choose when, a neighbourhood… |
 | List names | Grotesk | `text-base font-medium` | Wychwood Barns in a row |
-| Times / prices / stalls / census | Mona semibold, condensed | `type-nums` | `8 AM–2 PM`, `39` |
+| Times / prices / stalls | Mona semibold, condensed | `type-nums` | `8 AM–2 PM` |
+| Ticket census | Bungee | `type-census` | `39`, `635`, `1,976` |
 
-Use real heading tags and let the base sizes apply. Do not add `text-4xl`, `text-5xl`, `text-[13px]`, or `font-heading` on paragraphs. Numbers use `type-nums`, not `font-mono`.
+Use real heading tags and let the base sizes apply. Do not add `text-4xl`, `text-5xl`, `text-[13px]`, or `font-heading` on paragraphs. Small figures use `type-nums`, not `font-mono`. Directory counts on the ticket use `type-census`.
 
 The wordmark is Grotesk on purpose so it does not look like a page title. Nav stays Grotesk `text-sm font-medium`.
