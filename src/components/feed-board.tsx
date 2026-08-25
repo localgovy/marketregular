@@ -4,14 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FloorComposer } from "@/components/floor-composer";
-import { NowLabel } from "@/components/now-label";
 import { ReviewCard } from "@/components/review-card";
 import { SearchField } from "@/components/search-field";
 import {
   feedIsFiltered,
   feedSearchString,
   filterFeed,
-  mentionPlaces,
   parseFeedQuery,
   tagsInFeed,
   type FeedQuery,
@@ -37,20 +35,17 @@ export function FeedBoard({
   signedIn,
   stalls,
   markets,
-  openSlugs,
 }: {
   initialItems: FloorItem[];
   signedIn: boolean;
   stalls: StallRef[];
   markets: Market[];
-  openSlugs: string[];
 }) {
   const router = useRouter();
   const params = useSearchParams();
   const query = useMemo(() => queryFromParams(params), [params]);
   const [items, setItems] = useState(initialItems);
   const [search, setSearch] = useState(query.q);
-  const open = useMemo(() => new Set(openSlugs), [openSlugs]);
 
   useEffect(() => {
     setItems(initialItems);
@@ -97,8 +92,6 @@ export function FeedBoard({
 
   const topics = useMemo(() => tagsInFeed(items), [items]);
   const visible = useMemo(() => filterFeed(items, query), [items, query]);
-  const mentions = useMemo(() => mentionPlaces(visible), [visible]);
-  const openMentions = mentions.markets.filter((place) => open.has(place.slug));
   const filtered = feedIsFiltered(query);
   const marketName = query.market
     ? (markets.find((m) => m.slug === query.market)?.name ?? query.market)
@@ -108,8 +101,7 @@ export function FeedBoard({
     : "";
 
   return (
-    <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
-      <div className="min-w-0">
+    <div className="mt-8 min-w-0">
         <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-3">
           <h2 className="type-column">Reviews</h2>
           <p className="flex flex-wrap items-baseline gap-x-1 text-sm">
@@ -219,93 +211,11 @@ export function FeedBoard({
           ) : (
             <p className="px-3 py-4 text-base text-muted-foreground">
               {filtered
-                ? "No posts match that. Clear the search or pick a place from the rail."
+                ? "No posts match that. Clear the search."
                 : "No posts yet. Sign in to write the first one."}
             </p>
           )}
         </div>
-      </div>
-
-      <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
-        <h2 className="type-column">In this feed</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Halls and stalls these posts name. Tap one to stay on Feed.
-        </p>
-        {mentions.markets.length ? (
-          <section className="mt-5">
-            <h3 className="text-sm font-medium">Markets</h3>
-            <ul className="mt-1">
-              {mentions.markets.map((place) => (
-                <li key={place.slug}>
-                  <Link
-                    href={feedSearchString({ ...query, market: place.slug, vendor: "" })}
-                    scroll={false}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 text-sm hover:text-primary"
-                  >
-                    <span>
-                      <span className="font-medium">{place.name}</span>
-                      {open.has(place.slug) ? (
-                        <>
-                          {" "}
-                          <NowLabel className="align-middle">Open</NowLabel>
-                        </>
-                      ) : null}
-                    </span>
-                    <span className="type-nums shrink-0 text-muted-foreground">
-                      {place.count}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-        {mentions.vendors.length ? (
-          <section className="mt-5">
-            <h3 className="text-sm font-medium">Stalls</h3>
-            <ul className="mt-1">
-              {mentions.vendors.map((place) => (
-                <li key={place.slug}>
-                  <Link
-                    href={feedSearchString({ ...query, vendor: place.slug, market: "" })}
-                    scroll={false}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 text-sm hover:text-primary"
-                  >
-                    <span className="font-medium">{place.name}</span>
-                    <span className="type-nums shrink-0 text-muted-foreground">
-                      {place.count}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-        {openMentions.length ? (
-          <section className="mt-5">
-            <h3 className="text-sm font-medium">Open now</h3>
-            <ul className="mt-1">
-              {openMentions.map((place) => (
-                <li key={place.slug}>
-                  <Link
-                    href={feedSearchString({ ...query, market: place.slug, vendor: "" })}
-                    scroll={false}
-                    className="flex items-baseline gap-2 py-1.5 text-sm hover:text-primary"
-                  >
-                    <span className="font-medium">{place.name}</span>
-                    <NowLabel>Open</NowLabel>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
-        {!mentions.markets.length && !mentions.vendors.length ? (
-          <p className="mt-4 text-sm text-muted-foreground">
-            No halls or stalls on these posts yet.
-          </p>
-        ) : null}
-      </aside>
     </div>
   );
 }
