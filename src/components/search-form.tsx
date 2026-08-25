@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/search-field";
 import { PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
   FIND_AREAS,
@@ -129,14 +129,16 @@ export function SearchForm({
       }}
     >
       <div className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-stretch sm:px-4">
-        <Input
+        <SearchField
           key={defaults?.q ?? ""}
           name="q"
           defaultValue={defaults?.q}
           placeholder="Market, vendor, neighbourhood, or tomato"
-          className="h-10 flex-1 bg-card"
+          className="h-10 bg-card"
           aria-label="Search markets and stalls"
-          autoComplete="off"
+          onClear={() => {
+            if (applied.q.trim()) go({ ...live, q: "" });
+          }}
         />
         <button
           type="submit"

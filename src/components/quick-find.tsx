@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/search-field";
 import { useGeo } from "@/components/geo-provider";
 import { WEEKDAYS } from "@/lib/constants";
 import { formatDistance } from "@/lib/geo";
@@ -141,18 +141,15 @@ export function QuickFind({
         <label className="sr-only" htmlFor="home-search">
           Search for a Toronto market, vendor, or neighbourhood
         </label>
-        <Input
+        <SearchField
           id="home-search"
-          type="search"
           value={q}
-          onChange={(e) => {
-            const next = e.target.value;
+          onChange={(next) => {
             setQ(next);
             setAreaQ((current) => (current && next.trim() !== current ? null : current));
           }}
           placeholder="Market, neighbourhood, or food"
           className="h-12 border-transparent bg-card px-3.5 text-base text-foreground focus-visible:border-foreground/20 focus-visible:ring-foreground/20"
-          autoComplete="off"
         />
         {query ? <input type="hidden" name="q" value={query} /> : null}
       </div>

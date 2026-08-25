@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { mergeSaves } from "@/app/actions/saves";
 import { EMPTY_SAVES, getSaves, replaceSaves, unionSaves } from "@/lib/saves";
+import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 export function SavesHydrator() {
@@ -17,12 +18,16 @@ export function SavesHydrator() {
     if (!supabase) return;
 
     void (async () => {
+      if (!documentHasAuthCookie()) {
+        replaceSaves(EMPTY_SAVES);
+        merged.current = false;
+      }
       const {
         data: { session },
       } = await supabase.auth.getSession();
       if (cancelled) return;
       if (!session) {
-        if (merged.current) replaceSaves(EMPTY_SAVES);
+        replaceSaves(EMPTY_SAVES);
         merged.current = false;
         return;
       }

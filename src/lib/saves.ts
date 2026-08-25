@@ -1,3 +1,5 @@
+import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
+
 export type SaveKind = "market" | "vendor";
 
 export type Saves = {
@@ -45,10 +47,18 @@ function emit(next: Saves) {
 
 if (typeof window !== "undefined") {
   const stored = window.localStorage.getItem(KEY) ?? window.localStorage.getItem(LEGACY_KEY);
-  snapshot = parse(stored);
+  snapshot = documentHasAuthCookie() ? parse(stored) : clone(EMPTY_SAVES);
+  if (!documentHasAuthCookie()) {
+    try {
+      window.localStorage.setItem(KEY, JSON.stringify(EMPTY_SAVES));
+      window.localStorage.removeItem(LEGACY_KEY);
+    } catch {
+      /* private mode / quota */
+    }
+  }
   window.addEventListener("storage", (event) => {
     if (event.key !== KEY && event.key !== LEGACY_KEY) return;
-    snapshot = parse(event.newValue);
+    snapshot = documentHasAuthCookie() ? parse(event.newValue) : clone(EMPTY_SAVES);
     listeners.forEach((fn) => fn());
   });
 }

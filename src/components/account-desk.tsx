@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { signOut, updateProfile } from "@/app/actions/auth";
-import { deleteOwnPost } from "@/app/actions/presence";
 import { AccountCensus } from "@/components/account-census";
 import { AccountHandleForm } from "@/components/account-handle-form";
+import { AccountNameForm } from "@/components/account-name-form";
+import { DeleteOwnPostForm } from "@/components/delete-own-post-form";
+import { SignOutForm } from "@/components/sign-out-form";
 import { AccountSavedLists } from "@/components/account-saved";
 import { DeleteAccountForm } from "@/components/delete-account-form";
 import { EmailVisitButton } from "@/components/email-visit-button";
@@ -23,8 +24,6 @@ import {
 import { NowLabel } from "@/components/now-label";
 import { TorontoWeek } from "@/components/toronto-week";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { timeAgo } from "@/lib/format";
 import { decodeFloorBody } from "@/lib/floor-note";
 import { tagLabel } from "@/lib/find-paths";
@@ -99,9 +98,9 @@ export function AccountDesk({
   const name = profile.display_name?.trim() || "Regular";
   const handle = profile.username ? `@${profile.username}` : null;
   const visitSlugs =
-    (profile.favorite_market_slugs ?? []).length > 0
-      ? profile.favorite_market_slugs
-      : saves.markets.slice(0, 3);
+    saves.markets.length > 0
+      ? saves.markets.slice(0, 3)
+      : (profile.favorite_market_slugs ?? []).slice(0, 3);
   const vendorBySlug = new Map(vendors.map((vendor) => [vendor.slug, vendor]));
   const listingName = new Map<string, { name: string; href: string }>();
   for (const market of markets) {
@@ -287,12 +286,7 @@ export function AccountDesk({
                           ))}
                         </p>
                       ) : null}
-                      <form action={deleteOwnPost}>
-                        <input type="hidden" name="id" value={post.id} />
-                        <Button type="submit" variant="ghost" size="sm">
-                          Delete
-                        </Button>
-                      </form>
+                      <DeleteOwnPostForm id={post.id} />
                     </li>
                   );
                 })}
@@ -344,22 +338,7 @@ export function AccountDesk({
                 ) : null}
               </div>
             </div>
-            <form action={updateProfile} className="grid gap-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="display_name" className="text-chalk">
-                  Name on posts
-                </Label>
-                <Input
-                  id="display_name"
-                  name="display_name"
-                  defaultValue={profile.display_name ?? ""}
-                  className="border-primary-foreground/35 bg-primary-foreground text-foreground"
-                />
-              </div>
-              <Button type="submit" className="w-fit bg-primary-foreground text-primary hover:bg-chalk">
-                Save name
-              </Button>
-            </form>
+            <AccountNameForm displayName={profile.display_name ?? ""} />
             <div className="mt-4">
               <AccountHandleForm username={profile.username} />
             </div>
@@ -379,7 +358,7 @@ export function AccountDesk({
                 </Link>
               ) : null}
             </div>
-            <form action={signOut} className="mt-4">
+            <SignOutForm className="mt-4">
               <Button
                 type="submit"
                 variant="outline"
@@ -387,7 +366,7 @@ export function AccountDesk({
               >
                 Sign out
               </Button>
-            </form>
+            </SignOutForm>
           </HomePanel>
 
           {stallWeek.length ? (

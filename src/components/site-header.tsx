@@ -3,8 +3,8 @@ import { HeaderAccount } from "@/components/header-account";
 import { SavesHydrator } from "@/components/saves-hydrator";
 import { NavLink } from "@/components/nav-link";
 import { SiteMark, StudioWordmark } from "@/components/site-mark";
+import { SearchField } from "@/components/search-field";
 import { buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
 import { SITE_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
@@ -53,12 +53,10 @@ export function SiteHeader() {
             action="/markets"
             className="hidden min-w-0 w-full max-w-md items-center gap-2 md:flex lg:ml-auto"
           >
-            <Input
+            <SearchField
               name="q"
-              type="search"
               placeholder="Search market, vendor, location, food"
               className="bg-card"
-              autoComplete="off"
             />
             <button type="submit" className={cn(buttonVariants({ size: "sm" }), "shrink-0")}>
               Find

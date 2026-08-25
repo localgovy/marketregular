@@ -7,8 +7,8 @@ import { composeFloorNote } from "@/app/actions/presence";
 import { useGeo } from "@/components/geo-provider";
 import { ScorePlate } from "@/components/listing-score";
 import { CloseMark, PlateMark, TagMark } from "@/components/marks";
+import { SearchField } from "@/components/search-field";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FLOOR_TAGS } from "@/lib/constants";
 import { formatPriceLevel } from "@/lib/format";
@@ -551,10 +551,11 @@ function MarketStep({
       <p className="mb-2 text-sm text-muted-foreground">Type the name. Results show as you type.</p>
       <SearchField
         id="floor-market-search"
-        inputRef={searchRef}
+        ref={searchRef}
         value={query}
         onChange={onQuery}
         placeholder="Wychwood, Junction, St. Lawrence…"
+        className="h-9 bg-background text-base md:text-base"
       />
       <div className="mt-2 max-h-44 overflow-y-auto">
         {!searching && current && onKeep ? (
@@ -646,10 +647,11 @@ function VendorStep({
           {many || stallCount > 5 ? (
             <SearchField
               id="floor-vendor-search"
-              inputRef={searchRef}
+              ref={searchRef}
               value={query}
               onChange={onQuery}
               placeholder="Find a stall"
+              className="h-9 bg-background text-base md:text-base"
             />
           ) : null}
           <div className="mt-2 max-h-44 overflow-y-auto">
@@ -709,48 +711,6 @@ function VendorStep({
         </div>
       )}
     </>
-  );
-}
-
-function SearchField({
-  id,
-  inputRef,
-  value,
-  onChange,
-  placeholder,
-}: {
-  id: string;
-  inputRef: React.RefObject<HTMLInputElement | null>;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-}) {
-  return (
-    <div className="relative">
-      <Input
-        ref={inputRef}
-        id={id}
-        type="search"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete="off"
-        className="h-9 bg-background pr-9 text-base md:text-base"
-      />
-      {value ? (
-        <button
-          type="button"
-          onClick={() => {
-            onChange("");
-            inputRef.current?.focus();
-          }}
-          className="absolute top-1/2 right-1.5 flex size-7 -translate-y-1/2 items-center justify-center text-muted-foreground hover:text-foreground"
-          aria-label="Clear"
-        >
-          <CloseMark className="size-3.5" />
-        </button>
-      ) : null}
-    </div>
   );
 }
 

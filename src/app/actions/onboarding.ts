@@ -70,17 +70,57 @@ export async function completeOnboarding(formData: FormData) {
   });
   if (saveError) return { error: saveError.message };
 
-  const { error } = await supabase
+  const onboardedAt = new Date().toISOString();
+  const patch = {
+    username,
+    favorite_market_slugs: slugs,
+    onboarded_at: onboardedAt,
+  };
+  const { data: updated, error } = await supabase
     .from("profiles")
-    .update({
-      username,
-      favorite_market_slugs: slugs,
-      onboarded_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+    .update(patch)
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle();
   if (error) {
     if (error.code === "23505") return { error: "That handle is taken." };
     return { error: error.message };
+  }
+
+  if (!updated) {
+    const meta = user.user_metadata ?? {};
+    const fromMeta = [meta.display_name, meta.full_name, meta.name].find(
+      (value) => typeof value === "string" && value.trim(),
+    );
+    const displayName =
+      (typeof fromMeta === "string" ? fromMeta.trim() : "") ||
+      user.email?.split("@")[0] ||
+      "Regular";
+    const avatar =
+      (typeof meta.avatar_url === "string" && meta.avatar_url) ||
+      (typeof meta.picture === "string" && meta.picture) ||
+      null;
+    const { error: insertError } = await supabase.from("profiles").insert({
+      id: user.id,
+      display_name: displayName,
+      avatar_url: avatar,
+      role: "user",
+      ...patch,
+    });
+    if (insertError) {
+      if (insertError.code === "23505") return { error: "That handle is taken." };
+      return { error: insertError.message };
+    }
+  }
+
+  const { data: row, error: checkError } = await supabase
+    .from("profiles")
+    .select("id, onboarded_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (checkError) return { error: checkError.message };
+  if (!row?.onboarded_at) {
+    return { error: "Could not finish setting up this account. Try again." };
   }
 
   revalidatePath("/account");

@@ -194,14 +194,15 @@ export async function composeFloorNote(input: {
 
 export async function deleteOwnPost(formData: FormData) {
   const id = String(formData.get("id") ?? "");
-  if (!id) throw new Error("Missing post.");
+  if (!id) return { error: "Missing post." };
   const { supabase, user, demo } = await requireUser();
-  if (demo || !supabase || !user) throw new Error("Sign in first.");
+  if (demo || !supabase || !user) return { error: "Sign in first." };
   const { error } = await supabase.from("posts").delete().eq("id", id).eq("user_id", user.id);
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
   revalidatePath("/account");
   revalidatePath("/");
   revalidatePath("/feed");
+  return { error: null };
 }
 
 export async function flagItem(table: "posts" | "reviews", id: string) {

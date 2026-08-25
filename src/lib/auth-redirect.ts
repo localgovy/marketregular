@@ -18,6 +18,26 @@ export function authNextCookie(next: string) {
   return `${AUTH_NEXT_COOKIE}=${encodeURIComponent(safePath(next))}; Path=/; Max-Age=600; SameSite=Lax`;
 }
 
+export function readAuthNextCookie() {
+  if (typeof document === "undefined") return null;
+  const prefix = `${AUTH_NEXT_COOKIE}=`;
+  const part = document.cookie
+    .split(";")
+    .map((item) => item.trim())
+    .find((item) => item.startsWith(prefix));
+  if (!part) return null;
+  try {
+    return safePath(decodeURIComponent(part.slice(prefix.length)));
+  } catch {
+    return null;
+  }
+}
+
+export function clearAuthNextCookie() {
+  if (typeof document === "undefined") return;
+  document.cookie = `${AUTH_NEXT_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
 function isTrustedAuthHost(hostname: string) {
   return (
     hostname === "localhost" ||

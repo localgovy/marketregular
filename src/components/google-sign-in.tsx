@@ -54,6 +54,7 @@ export function GoogleSignIn({
         if (params.clientId) {
           const state = randomOAuthValue();
           const nonce = randomOAuthValue();
+          document.cookie = authNextCookie(next);
           storeGoogleOAuthHandoff({ state, nonce, next: safePath(next) });
           window.location.assign(
             buildGoogleAuthUrl({

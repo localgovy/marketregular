@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { FloorComposer } from "@/components/floor-composer";
 import { NowLabel } from "@/components/now-label";
 import { ReviewCard } from "@/components/review-card";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/search-field";
 import {
   feedIsFiltered,
   feedSearchString,
@@ -163,13 +163,15 @@ export function FeedBoard({
             go({ ...query, q: search.trim() });
           }}
         >
-          <Input
+          <SearchField
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={setSearch}
             placeholder="Post, author, market, or stall"
-            className="min-w-0 flex-1 bg-card"
-            autoComplete="off"
+            className="bg-card"
             aria-label="Find posts"
+            onClear={() => {
+              if (query.q) go({ ...query, q: "" });
+            }}
           />
           <button
             type="submit"

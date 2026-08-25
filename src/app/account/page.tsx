@@ -7,7 +7,6 @@ import {
   listVendors,
 } from "@/lib/data/catalog";
 import { loadAccountDesk } from "@/lib/data/account";
-import { unionSaves } from "@/lib/saves";
 import { toGeoMarket } from "@/lib/geo";
 import { nextOpenLabel } from "@/lib/schedule";
 import { upcomingByDay } from "@/lib/upcoming";
@@ -54,10 +53,7 @@ export default async function AccountPage() {
     if (hours) nextHours[market.slug] = hours;
   }
 
-  const saves = unionSaves(desk.saves, {
-    markets: profile.favorite_market_slugs ?? [],
-    vendors: [],
-  });
+  const saves = desk.saves;
 
   const stallWeek = savedVendorsThisWeek(
     saves.vendors,

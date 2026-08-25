@@ -52,6 +52,7 @@ export async function loadAccountDesk(userId: string) {
 
   if (savesRes.error) throw new Error(savesRes.error.message);
   if (postsRes.error) throw new Error(postsRes.error.message);
+  if (claimsRes.error) throw new Error(claimsRes.error.message);
   if (postCountRes.error) throw new Error(postCountRes.error.message);
 
   return {

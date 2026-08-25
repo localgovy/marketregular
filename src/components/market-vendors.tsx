@@ -3,7 +3,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { VendorCard } from "@/components/vendor-card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { SearchField } from "@/components/search-field";
 import { PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
   FIND_PRODUCTS,
@@ -164,14 +164,16 @@ export function MarketVendors({ vendors }: { vendors: MarketStall[] }) {
             }}
           >
             <div className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-stretch sm:px-4">
-              <Input
+              <SearchField
                 key={applied.q}
                 name="q"
                 defaultValue={applied.q}
                 placeholder="Stall, bakery, or tomato"
-                className="h-10 flex-1 bg-card"
+                className="h-10 bg-card"
                 aria-label="Search stalls"
-                autoComplete="off"
+                onClear={() => {
+                  if (applied.q.trim()) go({ ...live, q: "" });
+                }}
               />
               <button
                 type="submit"

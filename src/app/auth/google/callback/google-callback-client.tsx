@@ -7,7 +7,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { takeGoogleOAuthHandoff } from "@/lib/google-oauth";
 import { mergeSaves } from "@/app/actions/saves";
 import { getSaves } from "@/lib/saves";
-import { safePath } from "@/lib/auth-redirect";
+import { clearAuthNextCookie, readAuthNextCookie, safePath } from "@/lib/auth-redirect";
 
 type CallbackPayload = {
   oauthError: string | null;
@@ -50,7 +50,11 @@ export function GoogleCallbackClient() {
         if (!cancelled) setError(oauthError.slice(0, 280));
         return;
       }
-      if (!token || !state || !handoff || state !== handoff.state) {
+      if (!token) {
+        if (!cancelled) setError("Google sign-in did not finish. Try again.");
+        return;
+      }
+      if (handoff && state !== handoff.state) {
         if (!cancelled) setError("Google sign-in did not finish. Try again.");
         return;
       }
@@ -61,11 +65,13 @@ export function GoogleCallbackClient() {
         return;
       }
 
-      const first = await supabase.auth.signInWithIdToken({
-        provider: "google",
-        token,
-        nonce: handoff.nonce,
-      });
+      const first = handoff
+        ? await supabase.auth.signInWithIdToken({
+            provider: "google",
+            token,
+            nonce: handoff.nonce,
+          })
+        : await supabase.auth.signInWithIdToken({ provider: "google", token });
       const result = first.error
         ? await supabase.auth.signInWithIdToken({ provider: "google", token })
         : first;
@@ -81,7 +87,9 @@ export function GoogleCallbackClient() {
       }
 
       if (cancelled) return;
-      router.replace(safePath(handoff.next));
+      const next = safePath(handoff?.next ?? readAuthNextCookie());
+      clearAuthNextCookie();
+      router.replace(next);
       router.refresh();
     })();
 

@@ -2,11 +2,12 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { completeOnboarding, usernameAvailable } from "@/app/actions/onboarding";
-import { signOut } from "@/app/actions/auth";
 import { EmailVisitButton } from "@/components/email-visit-button";
 import { HomePanel } from "@/components/home-panel";
 import { Hours } from "@/components/hours";
 import { CheckMark, CrateMark, PlateMark, TicketMark } from "@/components/marks";
+import { SearchField } from "@/components/search-field";
+import { SignOutForm } from "@/components/sign-out-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -181,17 +182,17 @@ export function OnboardingDesk({
           <Label htmlFor="market-search" className="mt-3">
             Narrow the list
           </Label>
-          <Input
-            id="market-search"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setPages(1);
-            }}
-            placeholder="Name or neighbourhood"
-            className="mt-1.5"
-            autoComplete="off"
-          />
+          <div className="mt-1.5">
+            <SearchField
+              id="market-search"
+              value={query}
+              onChange={(next) => {
+                setQuery(next);
+                setPages(1);
+              }}
+              placeholder="Name or neighbourhood"
+            />
+          </div>
           {visible.length ? (
             <ul className="mt-3 ring-1 ring-border">
               {listed.map((market) => {
@@ -302,11 +303,11 @@ export function OnboardingDesk({
         </HomePanel>
       ) : null}
 
-      <form action={signOut} className="mt-8">
+      <SignOutForm className="mt-8">
         <button type="submit" className={cn("text-sm font-medium hover:underline")}>
           Sign out
         </button>
-      </form>
+      </SignOutForm>
     </div>
   );
 }
