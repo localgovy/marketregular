@@ -1,4 +1,5 @@
 import { createAuthedServerClient } from "@/lib/supabase/server";
+import { fetchMyProfile } from "@/lib/my-profile";
 import { EMPTY_SAVES, type Saves } from "@/lib/saves";
 import type { ClaimRequest } from "@/types/database";
 
@@ -26,6 +27,7 @@ export async function loadAccountDesk(userId: string) {
   if (!supabase || !user || user.id !== userId) {
     return {
       email: null,
+      visitPlanEmailedAt: null,
       saves: EMPTY_SAVES,
       posts: [] as AccountPost[],
       claims: [] as ClaimRequest[],
@@ -33,7 +35,7 @@ export async function loadAccountDesk(userId: string) {
     };
   }
 
-  const [savesRes, postsRes, claimsRes, postCountRes] = await Promise.all([
+  const [savesRes, postsRes, claimsRes, postCountRes, me] = await Promise.all([
     supabase.from("saves").select("kind, slug").eq("user_id", user.id),
     supabase
       .from("posts")
@@ -48,6 +50,7 @@ export async function loadAccountDesk(userId: string) {
       .order("created_at", { ascending: false })
       .limit(20),
     supabase.from("posts").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    fetchMyProfile(supabase),
   ]);
 
   if (savesRes.error) throw new Error(savesRes.error.message);
@@ -57,6 +60,7 @@ export async function loadAccountDesk(userId: string) {
 
   return {
     email: user.email ?? null,
+    visitPlanEmailedAt: me?.visit_plan_emailed_at ?? null,
     saves: toSaves(savesRes.data),
     posts: (postsRes.data ?? []).map((row) => ({
       ...row,

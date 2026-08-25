@@ -111,6 +111,7 @@ export default async function AccountPage() {
       claims={desk.claims}
       saves={saves}
       reviewCount={desk.reviewCount}
+      visitPlanEmailedAt={desk.visitPlanEmailedAt}
     />
   );
 }

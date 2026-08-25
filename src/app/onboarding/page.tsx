@@ -41,6 +41,7 @@ export default async function OnboardingPage({
       displayName={profile.display_name?.trim() || ""}
       email={desk.email}
       next={next === "/onboarding" ? "/account" : next}
+      visitPlanEmailedAt={desk.visitPlanEmailedAt}
       markets={markets.map((market) => ({
         slug: market.slug,
         name: market.name,

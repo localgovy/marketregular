@@ -78,6 +78,7 @@ export function AccountDesk({
   claims,
   saves,
   reviewCount,
+  visitPlanEmailedAt,
 }: {
   profile: Profile;
   email: string | null;
@@ -95,6 +96,7 @@ export function AccountDesk({
   claims: ClaimRequest[];
   saves: { markets: string[]; vendors: string[] };
   reviewCount: number;
+  visitPlanEmailedAt?: string | null;
 }) {
   const name = profile.display_name?.trim() || "Regular";
   const handle = profile.username ? `@${profile.username}` : null;
@@ -177,7 +179,7 @@ export function AccountDesk({
             icon={TicketMark}
             kicker="On this account"
             title="Saved"
-            how="The same list as on the floor. It follows you across browsers."
+            how="Your saves. Find your favourites."
             action={
               <Link href="/saved" className="hover:underline">
                 Open list
@@ -192,7 +194,11 @@ export function AccountDesk({
               initialSaves={saves}
             />
             {visitSlugs.length ? (
-              <EmailVisitButton className="mt-4" slugs={visitSlugs} />
+              <EmailVisitButton
+                className="mt-4"
+                slugs={visitSlugs}
+                lastSentAt={visitPlanEmailedAt}
+              />
             ) : null}
           </HomePanel>
 
@@ -201,8 +207,8 @@ export function AccountDesk({
             tone="vendors"
             icon={TagMark}
             kicker="On the live list"
-            title="Leave a note"
-            how="What was on the tables. A score is optional. This is the reason people keep an account."
+            title="Leave a review"
+            how="Give others a taste of what you experienced at a market or stall. Rate out of 5 and tag the market or vendor. Tell us how it really was."
           >
             <ListingComposer
               signedIn

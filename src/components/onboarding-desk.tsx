@@ -37,11 +37,13 @@ export function OnboardingDesk({
   email,
   next,
   markets,
+  visitPlanEmailedAt = null,
 }: {
   displayName: string;
   email: string | null;
   next: string;
   markets: OnboardingMarket[];
+  visitPlanEmailedAt?: string | null;
 }) {
   const [step, setStep] = useState(1);
   const [username, setUsername] = useState("");
@@ -283,7 +285,7 @@ export function OnboardingDesk({
               the halls you picked, sent to {email ?? "the email on this account"}.
             </li>
           </ol>
-          <EmailVisitButton className="mt-4" slugs={picked} />
+          <EmailVisitButton className="mt-4" slugs={picked} lastSentAt={visitPlanEmailedAt} />
           <form className="mt-4" action={finish}>
             <input type="hidden" name="username" value={normalized} />
             <input type="hidden" name="next" value={next} />

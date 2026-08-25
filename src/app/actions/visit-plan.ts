@@ -2,10 +2,12 @@
 
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
 import { SITE_NAME } from "@/lib/constants";
+import { clientIp, hashMailKey, mailAllowed, recordMail } from "@/lib/mail-limit";
 import { fetchMyProfile } from "@/lib/my-profile";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { visitPlanHtml, visitPlanText, weekPlanForSlugs } from "@/lib/visit-plan";
+import { visitPlanWaitCopy, visitPlanWaitMs, VISIT_PLAN_COOLDOWN_MS } from "@/lib/visit-plan-limit";
 import type { MarketSchedule } from "@/types/database";
 import { Resend } from "resend";
 
@@ -37,16 +39,35 @@ export async function emailVisitPlan(slugs: string[]) {
   const unique = [...new Set(picked)].slice(0, 3);
   if (unique.length === 0) return { error: "Pick at least one market first." };
 
+  const waitMs = visitPlanWaitMs(profile.visit_plan_emailed_at);
+  if (waitMs > 0) {
+    return { error: null, wait: true, message: visitPlanWaitCopy(waitMs) };
+  }
+
   const service = createServiceClient();
   if (!service) return { error: "Visit email is not set up yet." };
+
+  const ip = await clientIp();
+  const keys = [hashMailKey(`ip:${ip}|email:${user.email}`), hashMailKey(`user:${user.id}`)];
+  const allowed = await mailAllowed(service, "visit", keys);
+  if (!allowed) {
+    return {
+      error: null,
+      wait: true,
+      message: "Already sent a few times today. Try again tomorrow.",
+    };
+  }
+
   const { data: reserved, error: reserveError } = await service.rpc(
     "stamp_visit_plan_emailed_at",
     { p_user_id: user.id },
   );
   if (reserveError) return { error: reserveError.message };
   if (reserved !== true) {
-    return { error: "Wait a few minutes before sending again." };
+    return { error: null, wait: true, message: visitPlanWaitCopy(VISIT_PLAN_COOLDOWN_MS) };
   }
+
+  await recordMail(service, "visit", keys);
 
   const [markets, schedules] = await Promise.all([listMarkets(), listSchedules()]);
   const scheduleMap = new Map<string, MarketSchedule[]>();
