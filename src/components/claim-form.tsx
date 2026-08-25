@@ -55,9 +55,10 @@ export function ClaimForm({
           <span className="block font-medium">{copy.title}</span>
           <span className="mt-1 block text-sm text-muted-foreground">{copy.lede}</span>
         </span>
-        <CaretDownMark className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+        <CaretDownMark className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden />
       </summary>
-      <form action={action} className="mt-4 grid gap-3">
+      <div className="mt-4 hidden group-open:block">
+        <form action={action} className="grid gap-3">
         <input type="hidden" name="target_type" value={targetType} />
         <input type="hidden" name="target_id" value={targetId} />
         <p className="sr-only" aria-hidden="true">
@@ -153,7 +154,8 @@ export function ClaimForm({
         <p className="text-sm text-muted-foreground">
           Goes to {CLAIM_INBOX}. We reply to the email you give.
         </p>
-      </form>
+        </form>
+      </div>
     </details>
   );
 }
