@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SiteMark } from "@/components/site-mark";
-import { SITE_NAME } from "@/lib/constants";
+import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
 import { SITE_NAV } from "@/lib/nav";
 
 export function SiteFooter() {
@@ -10,7 +10,11 @@ export function SiteFooter() {
         <p className="flex items-center gap-2">
           <SiteMark className="size-7" />
           <span>
-            {SITE_NAME} — Toronto farmers&apos; markets, this week.
+            {SITE_NAME} by{" "}
+            <a href={STUDIO_URL} rel="noreferrer" className="hover:text-foreground">
+              {STUDIO_NAME}
+            </a>{" "}
+            – Toronto Farmers&apos; Markets, all in one place
           </span>
         </p>
         <div className="flex flex-wrap gap-4">
