@@ -141,7 +141,7 @@ export function AccountDesk({
             empty="Save a market or a stall and this week's hours show up here."
             action={
               <Link href="/markets" className="hover:underline">
-                Directory
+                Full Markets List
               </Link>
             }
           />
