@@ -19,7 +19,7 @@ export function DayPlanPlus({ hall, className }: { hall: DayPlanHall; className?
     <button
       type="button"
       aria-pressed={on}
-      aria-label={on ? `${hall.name} is on today's slip` : `Put ${hall.name} on today's slip`}
+      aria-label={on ? `${hall.name} is on today's slip` : `Add ${hall.name} to planner`}
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -27,6 +27,7 @@ export function DayPlanPlus({ hall, className }: { hall: DayPlanHall; className?
       }}
       className={cn(
         hit,
+        "group relative hover:z-20 focus-visible:z-20",
         on
           ? "stall-chip-sm bg-foreground text-receipt"
           : "rounded-full text-foreground hover:bg-foreground/[0.06] active:bg-foreground/[0.1]",
@@ -34,6 +35,14 @@ export function DayPlanPlus({ hall, className }: { hall: DayPlanHall; className?
       )}
     >
       {on ? <CheckMark className="size-4" /> : <PlusMark className="size-4" />}
+      {on ? null : (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-[calc(100%+4px)] left-1/2 z-20 w-max -translate-x-1/2 bg-ticket px-2 py-0.5 text-sm font-medium whitespace-nowrap text-foreground opacity-0 shadow-[0_1px_0_rgb(28_25_22/0.2)] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
+        >
+          Add to planner
+        </span>
+      )}
     </button>
   );
 }
