@@ -14753,87 +14753,9 @@ export const seedMarketVendors: MarketVendor[] = [
   },
 ];
 
-function hoursAgo(h: number) {
-  return new Date(Date.now() - h * 3600 * 1000).toISOString();
-}
+export const seedPosts: Post[] = [];
 
-export const seedPosts: Post[] = [
-  {
-    id: "00000000-0000-0000-0000-000000000201",
-    user_id: null,
-    market_id: "00000000-0000-0000-0000-000000000001",
-    body: "Peaches just landed at the Niagara stall. Line is moving. Bring cash and a tote.",
-    photos: [],
-    verified_on_site: true,
-    flagged: false,
-    created_at: hoursAgo(1.2),
-    author_name: "Priya M.",
-    market_name: "St. Lawrence Market",
-    market_slug: "st-lawrence-market",
-    market_city: "Toronto",
-    tags: ["peaches"],
-  },
-  {
-    id: "00000000-0000-0000-0000-000000000202",
-    user_id: null,
-    market_id: "00000000-0000-0000-0000-000000000002",
-    body: "Someone is handing out cheddar samples like it's a birthday. I am not above this.",
-    photos: [],
-    verified_on_site: true,
-    flagged: false,
-    created_at: hoursAgo(3.1),
-    author_name: "Rae D.",
-    market_name: "Evergreen Brick Works Saturday Farmers Market",
-    market_slug: "evergreen-brick-works-saturday-farmers-market",
-    market_city: "Toronto",
-    tags: ["cheese"],
-  },
-  {
-    id: "00000000-0000-0000-0000-000000000203",
-    user_id: null,
-    market_id: "00000000-0000-0000-0000-000000000003",
-    body: "The tomato stall at the back of the barn is the one. They still had heirlooms at 11.",
-    photos: [],
-    verified_on_site: true,
-    flagged: false,
-    created_at: hoursAgo(2.2),
-    author_name: "Helen P.",
-    market_name: "The Stop’s Farmers’ Market",
-    market_slug: "the-stops-farmers-market",
-    market_city: "Toronto",
-    tags: ["tomatoes"],
-  },
-  {
-    id: "00000000-0000-0000-0000-000000000204",
-    user_id: null,
-    market_id: "00000000-0000-0000-0000-000000000004",
-    body: "Rye walnut is already gone. Country loaf is left if you can get here before six.",
-    photos: [],
-    verified_on_site: true,
-    flagged: false,
-    created_at: hoursAgo(0.8),
-    author_name: "Omar S.",
-    market_name: "Dufferin Grove Organic Farmers’ Market",
-    market_slug: "dufferin-grove-organic-farmers-market",
-    market_city: "Toronto",
-    tags: ["bread"],
-  },
-];
-
-export const seedReviews: Review[] = [
-  {
-    id: "00000000-0000-0000-0000-000000000301",
-    user_id: null,
-    market_id: "00000000-0000-0000-0000-000000000001",
-    vendor_id: null,
-    rating: 5,
-    body: "Saturday farmers' market is the real event. Get there before 8 if you want the good tomatoes.",
-    verified_on_site: true,
-    flagged: false,
-    created_at: hoursAgo(40),
-    author_name: "Maya K.",
-  },
-];
+export const seedReviews: Review[] = [];
 
 export function toPublicMarket(m: SeedMarket): Market {
   const stats = marketReviewStats[m.slug];

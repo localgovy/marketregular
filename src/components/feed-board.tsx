@@ -242,7 +242,9 @@ export function FeedBoard({
             </ol>
           ) : (
             <p className="px-3 py-4 text-base text-muted-foreground">
-              No posts match that. Clear the search or pick a place from the rail.
+              {filtered
+                ? "No posts match that. Clear the search or pick a place from the rail."
+                : "No posts yet. Sign in to write the first one."}
             </p>
           )}
         </div>
