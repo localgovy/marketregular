@@ -10,6 +10,12 @@ export type FeedQuery = {
   sort: FeedSort;
 };
 
+export type FeedMention = {
+  slug: string;
+  name: string;
+  count: number;
+};
+
 function fold(value: string) {
   return value
     .toLowerCase()
@@ -96,4 +102,29 @@ export function tagsInFeed(items: FloorItem[]) {
     }
   }
   return tags.sort((a, b) => a.localeCompare(b));
+}
+
+function countMentions(
+  items: FloorItem[],
+  kind: "market" | "vendor",
+): FeedMention[] {
+  const counts = new Map<string, FeedMention>();
+  for (const item of items) {
+    const slug = kind === "market" ? item.market_slug : item.vendor_slug;
+    const name = kind === "market" ? item.market_name : item.vendor_name;
+    if (!slug || !name) continue;
+    const current = counts.get(slug);
+    if (current) current.count += 1;
+    else counts.set(slug, { slug, name, count: 1 });
+  }
+  return [...counts.values()].sort(
+    (a, b) => b.count - a.count || a.name.localeCompare(b.name),
+  );
+}
+
+export function mentionPlaces(items: FloorItem[]) {
+  return {
+    markets: countMentions(items, "market").slice(0, 8),
+    vendors: countMentions(items, "vendor").slice(0, 8),
+  };
 }
