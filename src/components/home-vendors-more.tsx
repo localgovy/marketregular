@@ -1,35 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { getVendorsTodayRest } from "@/app/actions/home-lazy";
 import { VendorTodayItem } from "@/components/home-vendors-item";
-import type { VendorTodayRow } from "@/lib/vendor-week";
+import { TODAY_STALL_CAP, type VendorTodayRow } from "@/lib/vendor-week";
 
-export function VendorsTodayMore({ total }: { total: number }) {
-  const [extra, setExtra] = useState<VendorTodayRow[] | null>(null);
-  const [pending, setPending] = useState(false);
-
-  if (extra) {
-    return extra.map((row) => (
-      <VendorTodayItem key={`${row.vendorSlug}-${row.marketSlug}`} row={row} />
-    ));
-  }
+export function VendorsTodayMore({ rest }: { rest: VendorTodayRow[] }) {
+  const [shown, setShown] = useState(0);
+  const visible = rest.slice(0, shown);
+  const remaining = rest.length - shown;
+  const next = Math.min(TODAY_STALL_CAP, remaining);
 
   return (
-    <li className="border-border">
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() => {
-          setPending(true);
-          void getVendorsTodayRest()
-            .then(setExtra)
-            .finally(() => setPending(false));
-        }}
-        className="w-full px-3 py-3 text-left text-base font-medium text-primary hover:bg-muted disabled:opacity-70"
-      >
-        {pending ? "Loading…" : `See all ${total}`}
-      </button>
-    </li>
+    <>
+      {visible.map((row) => (
+        <VendorTodayItem key={`${row.vendorSlug}-${row.marketSlug}`} row={row} />
+      ))}
+      {next > 0 ? (
+        <li className="border-border">
+          <button
+            type="button"
+            onClick={() => setShown((count) => count + TODAY_STALL_CAP)}
+            className="w-full px-3 py-3 text-left text-base font-medium text-primary hover:bg-muted"
+          >
+            {next === 1 ? "See 1 more" : `See ${next} more`}
+          </button>
+        </li>
+      ) : null}
+    </>
   );
 }

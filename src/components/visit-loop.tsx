@@ -85,8 +85,8 @@ export function HomeMosaic({
 
       <FloorStrip openNow={ticker} />
 
-      <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
-        <div className="contents xl:flex xl:min-h-0 xl:min-w-0 xl:flex-col xl:gap-5">
+      <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] xl:items-start">
+        <div className="contents xl:flex xl:min-w-0 xl:flex-col xl:gap-5">
           <HomePanel
             id="find"
             tone="find"
@@ -94,7 +94,6 @@ export function HomeMosaic({
             kicker="When, where, or what"
             title="Find a market"
             how="Choose when, a neighbourhood, or what they sell. Press Search when the list looks right."
-            className="xl:shrink-0"
           >
             <QuickFind
               markets={nearMarkets}
@@ -113,13 +112,13 @@ export function HomeMosaic({
             kicker="Around the city"
             title="Map of Toronto markets"
             how="Show the map, then click a pin for the name and address. Every market is also in the list below."
-            className="order-last xl:order-none xl:flex xl:min-h-0 xl:flex-1 xl:flex-col"
+            className="order-last xl:order-none"
             flush
           >
             <MarketMapLazy
               markets={mapMarkets}
               load="click"
-              className="h-56 w-full min-h-56 overflow-hidden xl:h-auto xl:min-h-72 xl:flex-1"
+              className="h-56 w-full overflow-hidden xl:h-72"
             />
           </HomePanel>
         </div>

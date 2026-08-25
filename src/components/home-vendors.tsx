@@ -33,7 +33,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
           {first.map((row) => (
             <VendorTodayItem key={`${row.vendorSlug}-${row.marketSlug}`} row={row} />
           ))}
-          {capped ? <VendorsTodayMore total={rows.length} /> : null}
+          {capped ? <VendorsTodayMore rest={rows.slice(TODAY_STALL_CAP)} /> : null}
         </ul>
       ) : (
         <p className="text-sm leading-relaxed text-muted-foreground">
