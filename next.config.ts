@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     root: path.dirname(fileURLToPath(import.meta.url)),
   },
   images: {
+    // Hobby Image Optimization is at the cap; serve originals so logos do not 402.
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "**.supabase.co" },
     ],

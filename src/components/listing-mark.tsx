@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -18,12 +17,12 @@ export function ListingMark({
 
   return (
     <span className={cn("relative block h-12 w-[4.5rem] shrink-0", className)}>
-      <Image
+      <img
         src={src}
         alt=""
-        fill
-        sizes="72px"
-        className="object-contain object-right"
+        loading="lazy"
+        decoding="async"
+        className="h-full w-full object-contain object-right"
         onError={() => setFailed(true)}
       />
     </span>

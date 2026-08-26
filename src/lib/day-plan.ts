@@ -160,14 +160,16 @@ export function hoursOnIso(schedules: ScheduleRow[], province: string, iso: stri
   const { weekday } = zonedParts(when, tz);
   const row = schedules.find(
     (item) =>
-      item.weekday === weekday && inSeason(when, item.season_start, item.season_end, tz),
+      Number(item.weekday) === weekday && inSeason(when, item.season_start, item.season_end, tz),
   );
   return row ? formatHours(row.opens_at, row.closes_at) : "";
 }
 
 export function slipDateAndHours(schedules: ScheduleRow[], province: string, now = new Date()) {
   const tz = provinceTz(province);
-  const slot = nextOpenSlot(schedules, province, now);
+  const slot =
+    nextOpenSlot(schedules, province, now) ??
+    nextOpenSlot(schedules, province, now, { ignoreSeason: true });
   if (!slot) {
     return { date: torontoYmd(now), hours: "" };
   }

@@ -28,8 +28,16 @@ export function formatHours(opensAt: string, closesAt: string) {
   return `${formatTime(opensAt)}–${formatTime(closesAt)}`;
 }
 
+const MONTH_DAY = /^\d{2}-\d{2}$/;
+
+function seasonBound(value: string | null) {
+  return value && MONTH_DAY.test(value) ? value : null;
+}
+
 export function inSeason(now: Date, start: string | null, end: string | null, tz: string) {
-  if (!start || !end) return true;
+  const from = seasonBound(start);
+  const to = seasonBound(end);
+  if (!from || !to) return true;
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
     month: "2-digit",
@@ -38,8 +46,8 @@ export function inSeason(now: Date, start: string | null, end: string | null, tz
   const month = parts.find((p) => p.type === "month")?.value ?? "01";
   const day = parts.find((p) => p.type === "day")?.value ?? "01";
   const md = `${month}-${day}`;
-  if (start <= end) return md >= start && md <= end;
-  return md >= start || md <= end;
+  if (from <= to) return md >= from && md <= to;
+  return md >= from || md <= to;
 }
 
 export function zonedParts(now: Date, tz: string) {
@@ -73,14 +81,14 @@ export function isMarketOpen(
   const tz = provinceTz(province);
   const { weekday, minutes } = zonedParts(now, tz);
   return schedules.some((row) => {
-    if (row.weekday !== weekday) return false;
+    if (Number(row.weekday) !== weekday) return false;
     if (!inSeason(now, row.season_start, row.season_end, tz)) return false;
     return minutes >= parseHm(row.opens_at) && minutes <= parseHm(row.closes_at);
   });
 }
 
 export function isOpenOnWeekday(schedules: ScheduleRow[], weekday: number) {
-  return schedules.some((row) => row.weekday === weekday);
+  return schedules.some((row) => Number(row.weekday) === weekday);
 }
 
 const MONTHS_SHORT = [
@@ -105,8 +113,10 @@ export function formatMonthDay(value: string) {
 }
 
 export function formatSeasonRange(start: string | null, end: string | null) {
-  if (!start || !end) return "Year-round";
-  return `${formatMonthDay(start)} to ${formatMonthDay(end)}`;
+  const from = seasonBound(start);
+  const to = seasonBound(end);
+  if (!from || !to) return "Year-round";
+  return `${formatMonthDay(from)} to ${formatMonthDay(to)}`;
 }
 
 export function formatSchedule(row: ScheduleRow) {
@@ -135,21 +145,22 @@ export type NextOpenSlot = {
   opensAt: string;
 };
 
-/** Soonest remaining session this week, or null if nothing is on the board. */
+/** Soonest remaining session in the next week, including the same weekday next week. */
 export function nextOpenSlot(
   schedules: ScheduleRow[],
   province: string,
   now = new Date(),
+  opts?: { ignoreSeason?: boolean },
 ): NextOpenSlot | null {
   if (!schedules.length) return null;
   const tz = provinceTz(province);
   const { weekday, minutes } = zonedParts(now, tz);
-  for (let offset = 0; offset < 7; offset += 1) {
+  for (let offset = 0; offset <= 7; offset += 1) {
     const day = (weekday + offset) % 7;
     let best: NextOpenSlot | null = null;
     for (const row of schedules) {
-      if (row.weekday !== day) continue;
-      if (!inSeason(now, row.season_start, row.season_end, tz)) continue;
+      if (Number(row.weekday) !== day) continue;
+      if (!opts?.ignoreSeason && !inSeason(now, row.season_start, row.season_end, tz)) continue;
       const opens = parseHm(row.opens_at);
       const closes = parseHm(row.closes_at);
       let waitMinutes: number;
@@ -169,8 +180,15 @@ export function nextOpenSlot(
 }
 
 export function nextOpenLabel(schedules: ScheduleRow[], province: string, now = new Date()) {
-  const slot = nextOpenSlot(schedules, province, now);
-  if (!slot) return "See schedule";
+  const slot =
+    nextOpenSlot(schedules, province, now) ??
+    nextOpenSlot(schedules, province, now, { ignoreSeason: true });
+  if (!slot) {
+    const row = schedules[0];
+    if (!row) return "See schedule";
+    const day = WEEKDAYS[Number(row.weekday)] ?? "Day";
+    return `${day} ${formatTime(row.opens_at)}`;
+  }
   if (slot.waitMinutes === 0) return "Open now";
   if (slot.offset === 0) return `Later today ${formatTime(slot.opensAt)}`;
   if (slot.offset === 1) return `Tomorrow ${formatTime(slot.opensAt)}`;
