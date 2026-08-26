@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { useDayPlan } from "@/components/day-plan-provider";
@@ -39,6 +40,11 @@ export function SavedDayPlan({
         return vendor ? [vendor] : [];
       })
     : [];
+
+  useEffect(() => {
+    if (window.location.hash !== "#slip") return;
+    document.getElementById("slip")?.scrollIntoView({ block: "start" });
+  }, [plan]);
 
   return (
     <section id="slip" className="scroll-mt-28">

@@ -62,11 +62,16 @@ function requireSignedIn(name: string) {
 export function DayPlanProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const raw = useSyncExternalStore(subscribeDayPlan, dayPlanSnapshot, dayPlanServerSnapshot);
+  const [allowed, setAllowed] = useState(false);
   const plan = useMemo(() => {
-    if (!documentHasAuthCookie()) return null;
+    if (!allowed) return null;
     return storedPlan(raw);
-  }, [raw]);
+  }, [allowed, raw]);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setAllowed(documentHasAuthCookie());
+  }, [pathname]);
 
   useEffect(() => {
     setOpen(false);
@@ -95,6 +100,7 @@ export function DayPlanProvider({ children }: { children: React.ReactNode }) {
 
   const putHall = useCallback((hall: DayPlanHall) => {
     if (!requireSignedIn(hall.name)) return;
+    setAllowed(true);
     const current = storedPlan(dayPlanSnapshot());
     if (current && current.hall.slug === hall.slug) {
       writeDayPlan({
@@ -113,6 +119,7 @@ export function DayPlanProvider({ children }: { children: React.ReactNode }) {
 
   const punchVendor = useCallback((slug: string, hall: DayPlanHall) => {
     if (!requireSignedIn(hall.name)) return;
+    setAllowed(true);
     const current = storedPlan(dayPlanSnapshot());
     if (current && current.hall.slug === hall.slug) {
       const has = current.vendorSlugs.includes(slug);

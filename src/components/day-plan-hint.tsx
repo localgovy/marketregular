@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useDayPlan } from "@/components/day-plan-provider";
 import { CloseMark } from "@/components/marks";
 import { subscribeDayPlanHint } from "@/lib/day-plan-hint";
 
@@ -10,12 +11,13 @@ const HIDE_MS = 10_000;
 
 export function DayPlanHint() {
   const pathname = usePathname();
+  const { open } = useDayPlan();
   const copyId = useId();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (pathname === "/saved") setVisible(false);
-  }, [pathname]);
+    if (pathname === "/saved" || open) setVisible(false);
+  }, [pathname, open]);
 
   useEffect(() => {
     let hide = 0;
