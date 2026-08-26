@@ -50,7 +50,7 @@ export function SavedRail({
             {savedMarkets.map((market) => (
               <li
                 key={market.id}
-                className="flex items-start gap-2 border-b border-border last:border-b-0"
+                className="flex items-center gap-2 border-b border-border last:border-b-0"
               >
                 <Link
                   href={`/markets/${market.slug}`}
