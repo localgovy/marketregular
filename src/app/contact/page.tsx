@@ -4,7 +4,6 @@ import {
   CONTACT_EMAIL,
   CONTACT_NAME,
   SITE_NAME,
-  STUDIO_NAME,
   STUDIO_URL,
 } from "@/lib/constants";
 import { listMarkets, listStalls, listVendors } from "@/lib/data/catalog";
@@ -57,40 +56,30 @@ export default async function ContactPage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <h1>Contact</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        Write the desk, or claim a market or stall you run.
+        Claim a market or vendor, or write to us.
       </p>
 
       <section>
-        <h2>Why this exists</h2>
-        <p className="mt-2 text-base leading-relaxed">
-          {SITE_NAME} exists to support every local market and vendor in Toronto, so shopping
-          local not only exists, but flourishes.
-        </p>
-      </section>
-
-      <section className="mt-10">
-        <h2>Write us</h2>
-        <p className="mt-2 text-base font-medium">{CONTACT_NAME}</p>
-        <p className="mt-1 text-base text-muted-foreground">
-          Builds {SITE_NAME} at{" "}
-          <a href={STUDIO_URL} rel="noreferrer" className="text-foreground hover:underline">
-            {STUDIO_NAME}
-          </a>.
-        </p>
-        <p className="mt-3 text-base">
-          <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium hover:underline">
-            {CONTACT_EMAIL}
-          </a>
-        </p>
-      </section>
-
-      <section className="mt-10">
         <h2>Claim a listing</h2>
         <p className="mt-2 mb-6 text-base text-muted-foreground">
           If you run a Toronto market or stall, pick it and send a claim. Same form as on each
           listing page.
         </p>
         <ContactClaim markets={listings.markets} vendors={listings.vendors} />
+      </section>
+
+      <section className="mt-10">
+        <h2>Write us</h2>
+        <p className="mt-2 text-base font-medium">{CONTACT_NAME}</p>
+        <p className="mt-1 text-base text-muted-foreground">
+          Founder, CEO of{" "}
+          <a href={STUDIO_URL} rel="noreferrer" className="text-foreground hover:underline">LocalGovy</a>, the team behind {SITE_NAME}
+        </p>
+        <p className="mt-3 text-base">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium hover:underline">
+            {CONTACT_EMAIL}
+          </a>
+        </p>
       </section>
     </div>
   );

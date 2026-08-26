@@ -115,7 +115,7 @@ export function ContactClaim({
               setQuery("");
             }}
           />
-          A stall
+          A vendor
         </label>
       </fieldset>
       <div className="grid gap-1.5">
