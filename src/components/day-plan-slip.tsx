@@ -65,7 +65,7 @@ function bySlipStall(a: DayPlanStall, b: DayPlanStall, saved: ReadonlySet<string
 export function DayPlanSlip() {
   const titleId = useId();
   const searchId = useId();
-  const panelRef = useRef<HTMLElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const asked = useRef(false);
   const busy = useRef(false);
   const { plan, open, tuck, toggleVendor, setMode, patchHours } = useDayPlan();
@@ -212,7 +212,7 @@ export function DayPlanSlip() {
   }
 
   return (
-    <aside
+    <div
       ref={panelRef}
       tabIndex={-1}
       role="dialog"
@@ -362,6 +362,6 @@ export function DayPlanSlip() {
       </button>
       {error ? <p className="mt-1 shrink-0 text-sm text-destructive">{error}</p> : null}
       {note ? <p className="mt-1 shrink-0 text-sm text-muted-foreground">{note}</p> : null}
-    </aside>
+    </div>
   );
 }

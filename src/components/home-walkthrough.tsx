@@ -27,7 +27,7 @@ const STEPS = [
 export function HomeWalkthrough() {
   const titleId = useId();
   const copyId = useId();
-  const panelRef = useRef<HTMLElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
@@ -58,7 +58,7 @@ export function HomeWalkthrough() {
   const last = step === STEPS.length - 1;
 
   return (
-    <aside
+    <div
       ref={panelRef}
       tabIndex={-1}
       role="dialog"
@@ -113,6 +113,6 @@ export function HomeWalkthrough() {
           {last ? "Got it" : "Next"}
         </button>
       </div>
-    </aside>
+    </div>
   );
 }
