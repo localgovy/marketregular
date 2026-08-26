@@ -13,6 +13,8 @@ export function SavesHydrator() {
   const merged = useRef(false);
 
   useEffect(() => {
+    if (pathname.startsWith("/auth/")) return;
+
     let cancelled = false;
     const supabase = createBrowserSupabaseClient();
     if (!supabase) return;

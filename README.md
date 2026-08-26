@@ -82,6 +82,19 @@ Local `supabase/config.toml` is not production. In the hosted project:
 1. Authentication → Providers → Email: turn **Confirm email** on
 2. Authentication → Attack protection: **Leaked password protection** on
 3. Minimum password length **8** (the app already rejects shorter)
+4. Authentication → Email Templates: confirmation and recovery links must hit `/auth/confirm` with the token hash so the original signup tab is not required. Site URL stays `https://www.marketregular.com`.
+
+Confirm sign-up:
+
+```html
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Confirm email address</a>
+```
+
+Reset password (`type=recovery`):
+
+```html
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery">Choose a new password</a>
+```
 
 Regenerate seed SQL after editing `src/data/directory.ts`:
 

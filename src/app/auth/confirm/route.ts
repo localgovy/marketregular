@@ -1,7 +1,6 @@
 import {
   authLoginError,
   authNextPath,
-  authRedirect,
   createAuthRouteClient,
   emailOtpType,
 } from "@/lib/auth-callback";
@@ -11,31 +10,16 @@ import type { NextRequest } from "next/server";
 export async function GET(request: NextRequest) {
   const next = authNextPath(request);
   const origin = callbackOrigin(request);
-  const code = request.nextUrl.searchParams.get("code");
-  const oauthError =
-    request.nextUrl.searchParams.get("error_description") ??
-    request.nextUrl.searchParams.get("error");
   const tokenHash = request.nextUrl.searchParams.get("token_hash");
   const type = emailOtpType(request.nextUrl.searchParams.get("type"));
 
-  if (oauthError) return authLoginError(request, "oauth", next);
+  if (!tokenHash || !type) {
+    return authLoginError(request, "session", next);
+  }
 
   const redirectTo = new URL(next, origin);
-  if (!code && (!tokenHash || !type)) {
-    return authRedirect(request, redirectTo);
-  }
-
   const { supabase, getResponse } = createAuthRouteClient(request, redirectTo);
   if (!supabase) return authLoginError(request, "session", next);
-
-  if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return getResponse();
-    console.error("auth.exchange", error.code ?? "unknown");
-    if (!tokenHash || !type) return authLoginError(request, "session", next);
-  }
-
-  if (!tokenHash || !type) return authLoginError(request, "session", next);
 
   const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
   if (error) {

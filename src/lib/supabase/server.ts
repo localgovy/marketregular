@@ -20,8 +20,16 @@ export async function createServerSupabaseClient() {
           cookiesToSet.forEach(({ name, value, options }) => {
             cookieStore.set(name, value, options);
           });
-        } catch {
-          // Called from a Server Component; proxy.ts handles the refresh.
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "";
+          if (
+            message.includes(
+              "Cookies can only be modified in a Server Action or Route Handler",
+            )
+          ) {
+            return;
+          }
+          throw error;
         }
       },
     },

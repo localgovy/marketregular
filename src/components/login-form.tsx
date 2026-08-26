@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { requestPasswordReset, signInWithPassword } from "@/app/actions/auth";
 import { GoogleSignIn } from "@/components/google-sign-in";
 import { Button } from "@/components/ui/button";
@@ -23,9 +24,21 @@ export function LoginForm({
   oauthError?: string;
 }) {
   const configured = isSupabaseConfigured();
+  const router = useRouter();
   const [forgot, setForgot] = useState(false);
+  const [queryError, setQueryError] = useState(oauthError ?? null);
+
+  useEffect(() => {
+    if (!oauthError) return;
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("error")) return;
+    params.delete("error");
+    const qs = params.toString();
+    router.replace(qs ? `/login?${qs}` : "/login", { scroll: false });
+  }, [oauthError, router]);
 
   async function passwordAction(_prev: AuthResult, formData: FormData) {
+    setQueryError(null);
     formData.set("next", next);
     return signInWithPassword(formData);
   }
@@ -78,6 +91,7 @@ export function LoginForm({
   return (
     <div className="grid gap-8">
       <form action={passSubmit} className="grid gap-3">
+        {queryError ? <p className="text-sm text-destructive">{queryError}</p> : null}
         <div className="grid gap-1.5">
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" required autoComplete="email" />
@@ -107,7 +121,7 @@ export function LoginForm({
         ) : null}
       </form>
 
-      <GoogleSignIn next={next} error={oauthError} />
+      <GoogleSignIn next={next} />
 
       <p className="text-sm text-muted-foreground">
         No account?{" "}

@@ -18,6 +18,7 @@ type CallbackPayload = {
 };
 
 let payload: CallbackPayload | undefined;
+let finishKey: string | null = null;
 
 function consumeGoogleCallback(): CallbackPayload {
   if (payload) return payload;
@@ -50,10 +51,12 @@ export function AuthCallbackClient() {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-
     void (async () => {
       const arriving = new URLSearchParams(window.location.search);
+      if (arriving.has("token_hash")) {
+        window.location.replace(`/auth/confirm${window.location.search}`);
+        return;
+      }
       if (
         arriving.has("code") ||
         arriving.has("error") ||
@@ -64,14 +67,16 @@ export function AuthCallbackClient() {
       }
 
       const { cancelled: oauthCancelled, token, state, handoff } = consumeGoogleCallback();
+      const attempt = `${token ?? ""}:${state ?? ""}:${oauthCancelled ? "1" : "0"}`;
+      if (finishKey === attempt) return;
+      finishKey = attempt;
+
       const next = safePath(handoff?.next ?? readAuthNextCookie());
 
       const fail = (key: "oauth" | "session") => {
         clearAuthNextCookie();
-        if (!cancelled) {
-          setFailed(true);
-          router.replace(loginHref(next, key));
-        }
+        setFailed(true);
+        router.replace(loginHref(next, key));
       };
 
       if (oauthCancelled) {
@@ -80,7 +85,7 @@ export function AuthCallbackClient() {
       }
       if (!token) {
         clearAuthNextCookie();
-        if (!cancelled) router.replace(next);
+        router.replace(next);
         return;
       }
       if (!handoff || !state || !oauthValuesMatch(state, handoff.state)) {
@@ -100,8 +105,13 @@ export function AuthCallbackClient() {
         nonce: handoff.nonce,
       });
       if (error) {
-        fail("session");
-        return;
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.user) {
+          fail("session");
+          return;
+        }
       }
 
       try {
@@ -110,15 +120,10 @@ export function AuthCallbackClient() {
         /* Account hydrator retries. */
       }
 
-      if (cancelled) return;
       clearAuthNextCookie();
       router.replace(next);
       router.refresh();
     })();
-
-    return () => {
-      cancelled = true;
-    };
   }, [router]);
 
   return (

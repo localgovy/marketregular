@@ -1,6 +1,6 @@
 "use server";
 
-import { authOrigin, safePath } from "@/lib/auth-redirect";
+import { AUTH_NEXT_COOKIE, authOrigin, safePath } from "@/lib/auth-redirect";
 import {
   dbPublicError,
   isAuthRateLimited,
@@ -11,6 +11,7 @@ import {
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 
@@ -38,42 +39,53 @@ async function confirmCurrentPassword(
   return !error;
 }
 
-function callbackUrl(next: unknown) {
+function callbackUrl() {
+  return `${authOrigin()}/auth/callback`;
+}
+
+async function rememberAuthNext(next: unknown) {
   const path = safePath(next);
-  return `${authOrigin()}/auth/callback?next=${encodeURIComponent(path)}`;
+  const jar = await cookies();
+  jar.set(AUTH_NEXT_COOKIE, path, { path: "/", maxAge: 600, sameSite: "lax" });
+  return path;
 }
 
 export async function signInWithPassword(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { error: "Supabase is not configured yet." };
-  const email = String(formData.get("email") ?? "");
+  const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const next = safePath(formData.get("next"));
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: signInPublicError(error) };
+  revalidatePath("/", "layout");
   redirect(next);
 }
 
 export async function signUpWithPassword(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { error: "Supabase is not configured yet." };
-  const email = String(formData.get("email") ?? "");
+  const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
   const displayName = String(formData.get("display_name") ?? "").trim();
   const next = safePath(formData.get("next"));
   if (password.length < 8) return { error: "Use at least 8 characters." };
   if (password !== confirm) return { error: "Those passwords do not match." };
+  await rememberAuthNext(next);
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: callbackUrl(next),
+      emailRedirectTo: callbackUrl(),
       data: { display_name: displayName },
     },
   });
   if (error) return signUpPublicError(error);
-  if (data.session) redirect(next);
+  if (data.session) {
+    revalidatePath("/", "layout");
+    redirect(next);
+  }
   return { error: null, message: "Check your email to confirm your account." };
 }
 
@@ -82,8 +94,9 @@ export async function requestPasswordReset(formData: FormData) {
   if (!supabase) return { error: "Supabase is not configured yet." };
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: "Enter the email on the account." };
+  await rememberAuthNext("/account/password");
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: callbackUrl("/account/password"),
+    redirectTo: callbackUrl(),
   });
   if (error && isAuthRateLimited(error)) {
     return { error: "Wait a bit, then try again." };

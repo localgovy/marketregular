@@ -3,15 +3,20 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
-  if (
-    pathname === "/auth/callback" &&
-    (searchParams.has("code") ||
-      searchParams.has("error") ||
-      searchParams.has("error_description"))
-  ) {
+  if (pathname === "/auth/callback") {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/pkce";
-    return NextResponse.rewrite(url);
+    if (searchParams.has("token_hash")) {
+      url.pathname = "/auth/confirm";
+      return NextResponse.rewrite(url);
+    }
+    if (
+      searchParams.has("code") ||
+      searchParams.has("error") ||
+      searchParams.has("error_description")
+    ) {
+      url.pathname = "/auth/pkce";
+      return NextResponse.rewrite(url);
+    }
   }
   return updateSession(request);
 }
