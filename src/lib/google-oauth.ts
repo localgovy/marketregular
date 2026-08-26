@@ -46,6 +46,12 @@ export function randomOAuthValue() {
     .replace(/=+$/g, "");
 }
 
+/** SHA-256 hex for Google's nonce param. Pass the raw value to signInWithIdToken. */
+export async function hashNonce(raw: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
 export function oauthValuesMatch(left: string, right: string) {
   if (left.length !== right.length) return false;
   let mismatch = 0;

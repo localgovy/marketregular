@@ -105,6 +105,7 @@ export function AuthCallbackClient() {
         nonce: handoff.nonce,
       });
       if (error) {
+        console.error("auth.idToken", error.code ?? "unknown");
         const {
           data: { session },
         } = await supabase.auth.getSession();

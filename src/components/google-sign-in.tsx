@@ -5,6 +5,7 @@ import { authNextCookie, safePath } from "@/lib/auth-redirect";
 import {
   buildGoogleAuthUrl,
   googleRedirectUri,
+  hashNonce,
   isSiteOwnedOrigin,
   randomOAuthValue,
   storeGoogleOAuthHandoff,
@@ -66,7 +67,7 @@ export function GoogleSignIn({
             clientId: params.clientId,
             redirectUri: googleRedirectUri(origin),
             state,
-            nonce,
+            nonce: await hashNonce(nonce),
           }),
         );
         return;
