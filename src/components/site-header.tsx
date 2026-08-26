@@ -60,6 +60,13 @@ export function SiteHeader() {
             </button>
           </form>
           <SavesHydrator />
+          <Link
+            href="/contact"
+            prefetch={false}
+            className="hidden shrink-0 text-sm font-medium hover:underline sm:inline"
+          >
+            Contact
+          </Link>
           <HeaderAccount />
         </div>
       </div>

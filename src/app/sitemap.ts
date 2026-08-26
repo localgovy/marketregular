@@ -18,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     loc("/markets"),
     loc("/feed"),
     loc("/events"),
+    loc("/contact"),
     ...markets.map((market) =>
       loc(`/markets/${market.slug}`, market.updated_at ?? market.created_at),
     ),

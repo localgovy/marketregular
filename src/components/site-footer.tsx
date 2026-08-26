@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SiteWordmark } from "@/components/site-mark";
 import { STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
-import { SITE_NAV } from "@/lib/nav";
+import { SITE_FOOTER_NAV } from "@/lib/nav";
 
 export function SiteFooter() {
   return (
@@ -18,7 +18,7 @@ export function SiteFooter() {
           </span>
         </p>
         <div className="flex flex-wrap gap-4">
-          {SITE_NAV.map((item) => (
+          {SITE_FOOTER_NAV.map((item) => (
             <Link key={item.href} href={item.href} prefetch={false} className="hover:text-foreground">
               {item.label}
             </Link>

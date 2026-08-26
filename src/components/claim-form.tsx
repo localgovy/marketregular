@@ -24,9 +24,13 @@ const CLAIM_COPY = {
 export function ClaimForm({
   targetType,
   targetId,
+  listingName,
+  layout = "fold",
 }: {
   targetType: "market" | "vendor";
   targetId: string;
+  listingName?: string;
+  layout?: "fold" | "open";
 }) {
   const [state, action, pending] = useActionState(
     async (_prev: { error: string | null; message?: string } | null, formData: FormData) => {
@@ -38,12 +42,123 @@ export function ClaimForm({
   const copy = CLAIM_COPY[targetType];
   const roles = CLAIM_ROLES[targetType];
   const stall = targetType === "vendor";
+  const title = listingName ?? copy.title;
 
   if (state?.message) {
     return (
       <div className="rounded-xl bg-secondary/50 p-5">
-        <p className="font-medium">{copy.title}</p>
+        <p className="font-medium">{title}</p>
         <p className="mt-4 text-sm">{state.message}</p>
+      </div>
+    );
+  }
+
+  const form = (
+    <form action={action} className="grid gap-3">
+      <input type="hidden" name="target_type" value={targetType} />
+      <input type="hidden" name="target_id" value={targetId} />
+      <p className="sr-only" aria-hidden="true">
+        <label htmlFor="claim-gotcha">Company</label>
+        <input id="claim-gotcha" name="_gotcha" tabIndex={-1} autoComplete="off" />
+      </p>
+
+      <div className="grid gap-1.5">
+        <Label htmlFor="claim-name">Your name</Label>
+        <Input
+          id="claim-name"
+          name="name"
+          required
+          minLength={2}
+          maxLength={80}
+          autoComplete="name"
+          className="bg-card"
+        />
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="claim-email">Email</Label>
+        <Input
+          id="claim-email"
+          name="email"
+          type="email"
+          required
+          maxLength={120}
+          autoComplete="email"
+          className="bg-card"
+        />
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="claim-phone">Phone</Label>
+        <Input
+          id="claim-phone"
+          name="phone"
+          type="tel"
+          maxLength={40}
+          autoComplete="tel"
+          placeholder="Optional"
+          className="bg-card"
+        />
+      </div>
+      <fieldset className="grid gap-2">
+        <legend className="text-sm font-medium">Your role</legend>
+        {roles.map((role) => (
+          <label key={role} className="flex items-center gap-2 text-sm">
+            <input type="radio" name="role" value={role} required className="accent-primary" />
+            {role}
+          </label>
+        ))}
+      </fieldset>
+      <div className="grid gap-1.5">
+        <Label htmlFor="claim-business">{stall ? "Business or stall name" : "Organization"}</Label>
+        <Input
+          id="claim-business"
+          name="business"
+          maxLength={120}
+          placeholder="Optional"
+          className="bg-card"
+        />
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="claim-website">Website or Instagram</Label>
+        <Input
+          id="claim-website"
+          name="website"
+          maxLength={200}
+          placeholder="Optional"
+          autoComplete="url"
+          className="bg-card"
+        />
+      </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="claim-notes">Anything else</Label>
+        <Textarea
+          id="claim-notes"
+          name="notes"
+          rows={3}
+          maxLength={2000}
+          placeholder={
+            stall
+              ? "Stall number, hours to fix, or a manager we can email."
+              : "Hours to fix, a manager we can email, or how this listing should read."
+          }
+          className="bg-card"
+        />
+      </div>
+      <Button type="submit" variant="outline" disabled={pending}>
+        {pending ? "Sending…" : "Request to claim this listing"}
+      </Button>
+      {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+      <p className="text-sm text-muted-foreground">
+        Goes to {CLAIM_INBOX}. We reply to the email you give.
+      </p>
+    </form>
+  );
+
+  if (layout === "open") {
+    return (
+      <div className="rounded-xl bg-secondary/50 p-5">
+        <p className="font-medium">{copy.title}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{copy.lede}</p>
+        <div className="mt-4">{form}</div>
       </div>
     );
   }
@@ -57,105 +172,7 @@ export function ClaimForm({
         </span>
         <CaretDownMark className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180 motion-reduce:transition-none" aria-hidden />
       </summary>
-      <div className="mt-4 hidden group-open:block">
-        <form action={action} className="grid gap-3">
-        <input type="hidden" name="target_type" value={targetType} />
-        <input type="hidden" name="target_id" value={targetId} />
-        <p className="sr-only" aria-hidden="true">
-          <label htmlFor="claim-gotcha">Company</label>
-          <input id="claim-gotcha" name="_gotcha" tabIndex={-1} autoComplete="off" />
-        </p>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="claim-name">Your name</Label>
-          <Input
-            id="claim-name"
-            name="name"
-            required
-            minLength={2}
-            maxLength={80}
-            autoComplete="name"
-            className="bg-card"
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="claim-email">Email</Label>
-          <Input
-            id="claim-email"
-            name="email"
-            type="email"
-            required
-            maxLength={120}
-            autoComplete="email"
-            className="bg-card"
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="claim-phone">Phone</Label>
-          <Input
-            id="claim-phone"
-            name="phone"
-            type="tel"
-            maxLength={40}
-            autoComplete="tel"
-            placeholder="Optional"
-            className="bg-card"
-          />
-        </div>
-        <fieldset className="grid gap-2">
-          <legend className="text-sm font-medium">Your role</legend>
-          {roles.map((role) => (
-            <label key={role} className="flex items-center gap-2 text-sm">
-              <input type="radio" name="role" value={role} required className="accent-primary" />
-              {role}
-            </label>
-          ))}
-        </fieldset>
-        <div className="grid gap-1.5">
-          <Label htmlFor="claim-business">{stall ? "Business or stall name" : "Organization"}</Label>
-          <Input
-            id="claim-business"
-            name="business"
-            maxLength={120}
-            placeholder="Optional"
-            className="bg-card"
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="claim-website">Website or Instagram</Label>
-          <Input
-            id="claim-website"
-            name="website"
-            maxLength={200}
-            placeholder="Optional"
-            autoComplete="url"
-            className="bg-card"
-          />
-        </div>
-        <div className="grid gap-1.5">
-          <Label htmlFor="claim-notes">Anything else</Label>
-          <Textarea
-            id="claim-notes"
-            name="notes"
-            rows={3}
-            maxLength={2000}
-            placeholder={
-              stall
-                ? "Stall number, hours to fix, or a manager we can email."
-                : "Hours to fix, a manager we can email, or how this listing should read."
-            }
-            className="bg-card"
-          />
-        </div>
-        <Button type="submit" variant="outline" disabled={pending}>
-          {pending ? "Sending…" : "Request to claim this listing"}
-        </Button>
-        {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
-        <p className="text-sm text-muted-foreground">
-          Goes to {CLAIM_INBOX}. We reply to the email you give.
-        </p>
-        </form>
-      </div>
+      <div className="mt-4 hidden group-open:block">{form}</div>
     </details>
   );
 }

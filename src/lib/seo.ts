@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SITE_NAME, SITE_URL, SITE_LOGO, WEEKDAYS } from "@/lib/constants";
+import { CLAIM_INBOX, SITE_NAME, SITE_URL, SITE_LOGO, WEEKDAYS } from "@/lib/constants";
 import { listingScore } from "@/lib/listing-score";
 import { externalHref } from "@/lib/format";
 import type { Market, MarketSchedule, Vendor } from "@/types/database";
@@ -49,6 +49,12 @@ export function websiteJsonLd() {
         name: SITE_NAME,
         url: SITE_URL,
         logo: `${SITE_URL}${SITE_LOGO}`,
+        contactPoint: {
+          "@type": "ContactPoint",
+          email: CLAIM_INBOX,
+          contactType: "customer support",
+          url: `${SITE_URL}/contact`,
+        },
       },
       {
         "@type": "WebSite",

@@ -42,6 +42,9 @@ export const STUDIO_WORDMARK = "/brand/localgovy-wordmark.png";
 /** Inbox for stall and market claim requests. */
 export const CLAIM_INBOX = "noah@localgovy.com";
 
+export const CONTACT_NAME = "Noah Khan";
+export const CONTACT_EMAIL = CLAIM_INBOX;
+
 export const PROVINCES = [
   { code: "AB", name: "Alberta", tz: "America/Edmonton" },
   { code: "BC", name: "British Columbia", tz: "America/Vancouver" },
