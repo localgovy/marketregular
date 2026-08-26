@@ -241,7 +241,7 @@ export function FloorComposer({
       setPrice(0);
       setVendorId("");
       setTags([]);
-      setMessage(result.demo ? "Your review is on the list for now." : "Your review is up.");
+      setMessage("Your review is up.");
     });
   }
 

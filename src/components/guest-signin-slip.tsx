@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { CloseMark } from "@/components/marks";
 import { buttonVariants } from "@/components/ui/button";
-import { homeWalkthroughSeen } from "@/lib/home-walkthrough";
+import { homeWalkthroughSeen, rememberHomeWalkthrough } from "@/lib/home-walkthrough";
 import {
   isSignInSlipAuthPath,
   subscribeSignInSlip,
@@ -76,6 +76,7 @@ export function GuestSignInSlip() {
   useEffect(() => {
     return subscribeSignInSlip((detail) => {
       if (documentHasAuthCookie()) return;
+      rememberHomeWalkthrough();
       setSaveName(detail.name);
       setSaveCopy(detail.copy ?? null);
       setSource("save");

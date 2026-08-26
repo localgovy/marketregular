@@ -1,5 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
-import { supabaseServiceRoleKey, supabaseUrl } from "@/lib/supabase/env";
+import { supabaseUrl } from "@/lib/supabase/env";
+
+function supabaseServiceRoleKey() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
+}
 
 export function createServiceClient() {
   const url = supabaseUrl();

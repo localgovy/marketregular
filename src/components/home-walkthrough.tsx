@@ -4,7 +4,11 @@ import { useEffect, useId, useRef, useState } from "react";
 import { CloseMark } from "@/components/marks";
 import { buttonVariants } from "@/components/ui/button";
 import { SITE_NAME } from "@/lib/constants";
-import { rememberHomeWalkthrough, homeWalkthroughSeen } from "@/lib/home-walkthrough";
+import {
+  rememberHomeWalkthrough,
+  homeWalkthroughSeen,
+  subscribeHomeWalkthrough,
+} from "@/lib/home-walkthrough";
 import { cn } from "@/lib/utils";
 
 const DELAY_MS = 700;
@@ -36,6 +40,8 @@ export function HomeWalkthrough() {
     const id = window.setTimeout(() => setOpen(true), DELAY_MS);
     return () => window.clearTimeout(id);
   }, []);
+
+  useEffect(() => subscribeHomeWalkthrough(() => setOpen(false)), []);
 
   useEffect(() => {
     if (!open) return;

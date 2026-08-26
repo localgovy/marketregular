@@ -51,6 +51,7 @@ export function SiteHeader() {
           >
             <SearchField
               name="q"
+              aria-label="Search market, vendor, cuisine, or neighbourhood"
               placeholder="Search market, vendor, cuisine, or neighbourhood"
               className="bg-card"
             />

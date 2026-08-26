@@ -60,7 +60,7 @@ export async function createPost(input: {
   if (body.length > 2000) return { error: "Reviews are limited to 2,000 characters." };
 
   const { supabase, user, demo } = await requireUser();
-  if (demo) return { error: null, demo: true };
+  if (demo) return { error: "Reviews aren't available right now. Try again later." };
   if (!supabase || !user) return { error: "Sign in to review." };
   if (!UUID.test(input.marketId)) return { error: "Pick a market." };
 
@@ -132,7 +132,7 @@ export async function createReview(input: {
   if (body.length < 8) return { error: "Tell people a bit more about your visit." };
 
   const { supabase, user, demo } = await requireUser();
-  if (demo) return { error: null, demo: true };
+  if (demo) return { error: "Reviews aren't available right now. Try again later." };
   if (!supabase || !user) return { error: "Sign in to post." };
 
   let marketId = input.marketId;

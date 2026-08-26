@@ -148,7 +148,8 @@ export default async function MarketPage({
             </p>
           ) : (
             <p className="mt-1 text-sm text-muted-foreground">
-              Same posts as the live list. A score is optional. Sign in to write one.
+              Same posts as the live list. A score is optional.
+              {profile ? "" : " Sign in to write one."}
             </p>
           )}
           <div className="mt-4">

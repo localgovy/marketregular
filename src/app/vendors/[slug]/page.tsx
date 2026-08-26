@@ -127,7 +127,8 @@ export default async function VendorPage({
           <section>
             <h2>Reviews</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Anything written about this stall on the live list. Sign in to add one.
+              Anything written about this stall on the live list.
+              {profile ? "" : " Sign in to add one."}
             </p>
             {vendor.markets.length ? (
               <ListingComposer
