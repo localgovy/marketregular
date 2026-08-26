@@ -3,6 +3,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Tailwind + next/font CSS is ~21 KiB gzipped. Inlining it removes the
+    // render-blocking stylesheet round-trips PageSpeed flags on mobile.
+    inlineCss: true,
+  },
   turbopack: {
     root: path.dirname(fileURLToPath(import.meta.url)),
   },
