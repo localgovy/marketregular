@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CheckMark, PlusMark } from "@/components/marks";
 import { Hours } from "@/components/hours";
 import { useDayPlan } from "@/components/day-plan-provider";
+import { DAY_PLAN_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { DayPlanHall } from "@/lib/day-plan";
 
@@ -19,7 +20,11 @@ export function DayPlanPlus({ hall, className }: { hall: DayPlanHall; className?
     <button
       type="button"
       aria-pressed={on}
-      aria-label={on ? `${hall.name} is on today's slip` : `Add ${hall.name} to planner`}
+      aria-label={
+        on
+          ? `${hall.name} is on today’s ${DAY_PLAN_NAME}`
+          : `Add ${hall.name} to today’s ${DAY_PLAN_NAME}`
+      }
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -40,7 +45,7 @@ export function DayPlanPlus({ hall, className }: { hall: DayPlanHall; className?
           aria-hidden
           className="pointer-events-none absolute bottom-[calc(100%+4px)] left-1/2 z-20 w-max -translate-x-1/2 bg-ticket px-2 py-0.5 text-sm font-medium whitespace-nowrap text-foreground opacity-0 shadow-[0_1px_0_rgb(28_25_22/0.2)] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
         >
-          Add to planner
+          Add to {DAY_PLAN_NAME}
         </span>
       )}
     </button>
@@ -66,7 +71,11 @@ export function DayPlanPunch({
     <button
       type="button"
       aria-pressed={on}
-      aria-label={on ? `${vendorName} is punched on today's slip` : `Punch ${vendorName} on today's slip`}
+      aria-label={
+        on
+          ? `${vendorName} is punched on today’s ${DAY_PLAN_NAME}`
+          : `Punch ${vendorName} on today’s ${DAY_PLAN_NAME}`
+      }
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();

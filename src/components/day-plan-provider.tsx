@@ -22,6 +22,7 @@ import {
   type TravelMode,
 } from "@/lib/day-plan";
 import { openSignInSlip } from "@/lib/signin-slip";
+import { DAY_PLAN_NAME } from "@/lib/constants";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 
 type DayPlanState = {
@@ -54,7 +55,7 @@ function requireSignedIn(name: string) {
   openSignInSlip({
     next: `${window.location.pathname}${window.location.search}`,
     name,
-    copy: `Sign in to put ${name} on today's slip.`,
+    copy: `Sign in to put ${name} on today’s ${DAY_PLAN_NAME}.`,
   });
   return false;
 }

@@ -1,4 +1,5 @@
 import {
+  DAY_PLAN_TODAY,
   SITE_NAME,
   SITE_URL,
   SITE_WORDMARK,
@@ -72,7 +73,7 @@ export function daySlipText(slip: DaySlipMail) {
   const lines = [
     `${SITE_NAME} by ${STUDIO_NAME}`,
     "",
-    `Today’s slip — ${slip.marketName}`,
+    `${DAY_PLAN_TODAY} — ${slip.marketName}`,
     slip.dateLabel,
     slip.address,
     slip.hours,
@@ -184,7 +185,7 @@ ${about}
 <p style="margin:0 0 12px;line-height:1.4"><a href="${escapeHtml(slip.mapsUrl)}" style="color:#24352B">Get going in Maps</a></p>
 ${stalls}
 <p style="margin:0;line-height:1.4"><a href="${href}" style="color:#24352B">${href}</a></p>`;
-  return ticketEmail(`Today’s slip — ${SITE_NAME}`, body);
+  return ticketEmail(`${DAY_PLAN_TODAY} — ${SITE_NAME}`, body);
 }
 
 function escapeHtml(value: string) {

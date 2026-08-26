@@ -4,11 +4,12 @@ import { SavedDayPlan } from "@/components/saved-day-plan";
 import { SavedDesk } from "@/components/saved-rail";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
 import { pageMeta } from "@/lib/seo";
+import { DAY_PLAN_NAME } from "@/lib/constants";
 
 export const metadata: Metadata = pageMeta({
   title: "Saved markets and stalls",
   path: "/saved",
-  description: "Markets, stalls, and today’s slip saved to your account.",
+  description: `Markets, stalls, and today’s ${DAY_PLAN_NAME} saved to your account.`,
   index: false,
 });
 
@@ -24,7 +25,7 @@ export default async function SavedPage() {
       <h1>Saved</h1>
       {profile ? (
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
-          Markets, stalls, and today’s slip on this account.
+          Markets, stalls, and today’s {DAY_PLAN_NAME} on this account.
         </p>
       ) : (
         <p className="type-lede mt-2 mb-8 text-muted-foreground">

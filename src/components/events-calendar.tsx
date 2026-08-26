@@ -282,7 +282,7 @@ export function EventsCalendar({
                 >
                   <span
                     className={cn(
-                      "type-nums text-sm",
+                      "type-nums text-lg",
                       on && "text-chalk",
                       cell.isToday && !on && "font-medium text-ticket-ink",
                     )}

@@ -1,0 +1,21 @@
+---
+description: The day planner is a ticket, never a slip
+alwaysApply: true
+---
+
+# Day planner is a ticket
+
+The planning device is a **ticket**. User-facing copy must use `DAY_PLAN_NAME` / `DAY_PLAN_TODAY` / `DAY_PLAN_SAVED_HREF` from `@/lib/constants`. Never call it a slip or a planner.
+
+```tsx
+// BAD
+<p>Today’s slip</p>
+<span>Add to planner</span>
+
+// GOOD
+import { DAY_PLAN_NAME, DAY_PLAN_TODAY } from "@/lib/constants";
+<p>{DAY_PLAN_TODAY}</p>
+<span>Add to {DAY_PLAN_NAME}</span>
+```
+
+The sign-in overlay (`GuestSignInSlip`) is a different surface. `bg-ticket` / `--ticket` is the yellow plate color, not this name.

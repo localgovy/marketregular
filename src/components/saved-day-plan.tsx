@@ -5,6 +5,12 @@ import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { useDayPlan } from "@/components/day-plan-provider";
 import { formatSlipDate } from "@/lib/day-plan";
+import {
+  DAY_PLAN_HASH,
+  DAY_PLAN_NAME,
+  DAY_PLAN_SAVED_HREF,
+  DAY_PLAN_TODAY,
+} from "@/lib/constants";
 import type { Vendor } from "@/types/database";
 
 const plate =
@@ -16,7 +22,7 @@ export function SavedRailSlip() {
   if (!plan) return null;
 
   return (
-    <Link href="/saved#slip" className="block bg-receipt px-3 py-2.5 shadow-[inset_4px_0_0_var(--ticket)] hover:bg-secondary/40">
+    <Link href={DAY_PLAN_SAVED_HREF} className="block bg-receipt px-3 py-2.5 shadow-[inset_4px_0_0_var(--ticket)] hover:bg-secondary/40">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3">
         <span className="text-base font-medium">{plan.hall.name}</span>
         {plan.hall.hours ? (
@@ -42,13 +48,13 @@ export function SavedDayPlan({
     : [];
 
   useEffect(() => {
-    if (window.location.hash !== "#slip") return;
-    document.getElementById("slip")?.scrollIntoView({ block: "start" });
+    if (window.location.hash !== `#${DAY_PLAN_HASH}` && window.location.hash !== "#slip") return;
+    document.getElementById(DAY_PLAN_HASH)?.scrollIntoView({ block: "start" });
   }, [plan]);
 
   return (
-    <section id="slip" className="scroll-mt-28">
-      <h2>Today’s slip</h2>
+    <section id={DAY_PLAN_HASH} className="scroll-mt-28">
+      <h2>{DAY_PLAN_TODAY}</h2>
       {plan ? (
         <article className={`mt-3 ${plate}`}>
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-4 py-3">
@@ -98,13 +104,13 @@ export function SavedDayPlan({
               onClick={show}
               className="stall-chip-sm inline-flex h-8 items-center bg-ticket px-3 text-sm font-medium text-foreground hover:brightness-110"
             >
-              Open slip
+              Open {DAY_PLAN_NAME}
             </button>
           </div>
         </article>
       ) : (
         <p className={`mt-3 px-4 py-3 text-sm text-muted-foreground ${plate}`}>
-          No slip yet. Tap plus on a market listing.
+          No {DAY_PLAN_NAME} yet. Tap plus on a market listing.
         </p>
       )}
     </section>

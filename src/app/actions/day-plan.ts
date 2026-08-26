@@ -16,6 +16,7 @@ import { fetchMyProfile } from "@/lib/my-profile";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { daySlipHtml, daySlipText } from "@/lib/visit-plan";
+import { DAY_PLAN_NAME, DAY_PLAN_TODAY } from "@/lib/constants";
 import { visitPlanWaitCopy, visitPlanWaitMs, VISIT_PLAN_COOLDOWN_MS } from "@/lib/visit-plan-limit";
 import { Resend } from "resend";
 
@@ -25,6 +26,8 @@ const MAIL_FAIL = "Could not send right now.";
 export type DayPlanStall = {
   slug: string;
   name: string;
+  rating_avg: number | null;
+  review_count: number;
 };
 
 export async function listDayPlanStalls(marketSlug: string, date: string) {
@@ -37,7 +40,12 @@ export async function listDayPlanStalls(marketSlug: string, date: string) {
   const hours = hoursOnIso(market.schedules, market.province, date);
   const stalls = market.vendors
     .filter((vendor) => !vendor.days.length || vendor.days.includes(weekday))
-    .map((vendor) => ({ slug: vendor.slug, name: vendor.name }))
+    .map((vendor) => ({
+      slug: vendor.slug,
+      name: vendor.name,
+      rating_avg: vendor.rating_avg ?? null,
+      review_count: vendor.review_count ?? 0,
+    }))
     .sort((a, b) => a.name.localeCompare(b.name));
   return { hours, stalls };
 }
@@ -65,10 +73,10 @@ export async function emailDaySlip(input: {
   if (!profile) return { error: "Sign in first." };
 
   if (!validPlanSlug(input.marketSlug) || !isSlipDateInRange(input.date)) {
-    return { error: "That slip is missing a hall." };
+    return { error: `That ${DAY_PLAN_NAME} is missing a hall.` };
   }
   if (!MODES.includes(input.mode)) {
-    return { error: "That slip is missing how you go." };
+    return { error: `That ${DAY_PLAN_NAME} is missing how you go.` };
   }
 
   const market = await getMarketBySlug(input.marketSlug);
@@ -125,7 +133,7 @@ export async function emailDaySlip(input: {
   const { error } = await resend.emails.send({
     from,
     to: user.email,
-    subject: sanitizeMailHeader(`Today’s slip — ${market.name}`),
+    subject: sanitizeMailHeader(`${DAY_PLAN_TODAY} — ${market.name}`),
     text: daySlipText(slip),
     html: daySlipHtml(slip),
   });

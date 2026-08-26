@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useDayPlan } from "@/components/day-plan-provider";
 import { CloseMark } from "@/components/marks";
 import { subscribeDayPlanHint } from "@/lib/day-plan-hint";
+import { DAY_PLAN_NAME, DAY_PLAN_SAVED_HREF, DAY_PLAN_TODAY } from "@/lib/constants";
 
 const HIDE_MS = 10_000;
 
@@ -37,7 +38,7 @@ export function DayPlanHint() {
 
   return (
     <aside
-      aria-label="Today’s slip"
+      aria-label={DAY_PLAN_TODAY}
       aria-describedby={copyId}
       className="fixed right-4 bottom-4 left-4 z-[55] max-w-none rounded-xl bg-card p-3 shadow-md ring-1 ring-foreground/10 animate-in fade-in-0 duration-150 motion-reduce:animate-none sm:left-auto sm:w-[18rem]"
     >
@@ -50,9 +51,9 @@ export function DayPlanHint() {
         <CloseMark className="size-4" />
       </button>
       <p id={copyId} className="pr-8 text-sm leading-snug">
-        Find today’s slip in{" "}
+        Find today’s {DAY_PLAN_NAME} in{" "}
         <Link
-          href="/saved#slip"
+          href={DAY_PLAN_SAVED_HREF}
           onClick={() => setVisible(false)}
           className="font-medium text-foreground hover:underline"
         >

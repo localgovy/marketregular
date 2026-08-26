@@ -4,8 +4,9 @@ import { useEffect, useId, useMemo, useRef, useState, useTransition } from "reac
 import { emailDaySlip, listDayPlanStalls, type DayPlanStall } from "@/app/actions/day-plan";
 import { useDayPlan } from "@/components/day-plan-provider";
 import { useGeo } from "@/components/geo-provider";
-import { CheckMark, CloseMark } from "@/components/marks";
+import { CheckMark, CloseMark, PlusMark } from "@/components/marks";
 import { SearchField } from "@/components/search-field";
+import { useSaves } from "@/components/save-button";
 import { buttonVariants } from "@/components/ui/button";
 import { Hours } from "@/components/hours";
 import {
@@ -20,6 +21,8 @@ import { openDayPlanHint } from "@/lib/day-plan-hint";
 import { openSignInSlip } from "@/lib/signin-slip";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { visitPlanWaitCopy, visitPlanWaitMs } from "@/lib/visit-plan-limit";
+import { DAY_PLAN_NAME, DAY_PLAN_TODAY } from "@/lib/constants";
+import { TODAY_STALL_CAP } from "@/lib/vendor-week";
 import { cn } from "@/lib/utils";
 
 function StallRow({
@@ -36,15 +39,27 @@ function StallRow({
       type="button"
       aria-pressed={on}
       onClick={onToggle}
-      className={cn(
-        "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 px-1 py-1.5 text-left text-sm font-medium",
-        on ? "text-foreground" : "text-foreground hover:bg-foreground/[0.06]",
-      )}
+      className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 px-1 py-1.5 text-left text-sm font-medium hover:bg-foreground/[0.06]"
     >
       <span>{name}</span>
-      {on ? <CheckMark className="size-3.5 shrink-0 text-ticket-ink" /> : null}
+      {on ? (
+        <CheckMark className="size-3.5 shrink-0 text-ticket-ink" />
+      ) : (
+        <PlusMark className="size-3.5 shrink-0 text-muted-foreground" />
+      )}
     </button>
   );
+}
+
+function bySlipStall(a: DayPlanStall, b: DayPlanStall, saved: ReadonlySet<string>) {
+  const aSaved = saved.has(a.slug) ? 1 : 0;
+  const bSaved = saved.has(b.slug) ? 1 : 0;
+  if (bSaved !== aSaved) return bSaved - aSaved;
+  const aAvg = a.rating_avg ?? -1;
+  const bAvg = b.rating_avg ?? -1;
+  if (bAvg !== aAvg) return bAvg - aAvg;
+  if (b.review_count !== a.review_count) return b.review_count - a.review_count;
+  return a.name.localeCompare(b.name);
 }
 
 export function DayPlanSlip() {
@@ -55,6 +70,7 @@ export function DayPlanSlip() {
   const busy = useRef(false);
   const { plan, open, tuck, toggleVendor, setMode, patchHours } = useDayPlan();
   const { coords, request } = useGeo();
+  const saves = useSaves();
   const [stalls, setStalls] = useState<DayPlanStall[]>([]);
   const [query, setQuery] = useState("");
   const [pendingStalls, startStalls] = useTransition();
@@ -114,16 +130,37 @@ export function DayPlanSlip() {
   }, [open, slug, date, patchHours]);
 
   const punched = useMemo(() => new Set(plan?.vendorSlugs ?? []), [plan?.vendorSlugs]);
+  const saved = useMemo(() => new Set(saves.vendors), [saves.vendors]);
   const needle = query.trim().toLowerCase();
   const punchedStalls = useMemo(
     () => stalls.filter((stall) => punched.has(stall.slug)),
     [stalls, punched],
   );
+  const suggested = useMemo(
+    () => [...stalls].sort((a, b) => bySlipStall(a, b, saved)).slice(0, TODAY_STALL_CAP),
+    [stalls, saved],
+  );
+  const idleStalls = useMemo(() => {
+    const seen = new Set<string>();
+    const rows: DayPlanStall[] = [];
+    for (const stall of punchedStalls) {
+      if (seen.has(stall.slug)) continue;
+      seen.add(stall.slug);
+      rows.push(stall);
+    }
+    for (const stall of suggested) {
+      if (seen.has(stall.slug)) continue;
+      seen.add(stall.slug);
+      rows.push(stall);
+    }
+    return rows;
+  }, [punchedStalls, suggested]);
   const foundStalls = useMemo(() => {
     if (!needle) return [];
     return stalls.filter((stall) => stall.name.toLowerCase().includes(needle));
   }, [stalls, needle]);
-  const listed = needle ? foundStalls : punchedStalls;
+  const listed = needle ? foundStalls : idleStalls;
+  const moreToFind = !needle && stalls.length > suggested.length;
 
   if (!open || !plan) return null;
 
@@ -142,7 +179,7 @@ export function DayPlanSlip() {
       openSignInSlip({
         next: `${window.location.pathname}${window.location.search}`,
         name: slip.hall.name,
-        copy: "Sign in to email this slip.",
+        copy: `Sign in to email this ${DAY_PLAN_NAME}.`,
       });
       return;
     }
@@ -181,7 +218,7 @@ export function DayPlanSlip() {
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}
-      className="fixed right-4 bottom-4 left-4 z-50 flex max-h-[min(22rem,calc(100dvh-5.5rem))] max-w-none flex-col rounded-xl bg-card p-3 shadow-md ring-1 ring-foreground/10 outline-none animate-in fade-in-0 slide-in-from-bottom-2 duration-200 motion-reduce:animate-none sm:left-auto sm:w-[20.5rem]"
+      className="fixed right-4 bottom-4 left-4 z-50 flex max-h-[min(22rem,calc(100dvh-5.5rem))] max-w-none flex-col overflow-hidden rounded-xl bg-card p-3 shadow-md ring-1 ring-foreground/10 outline-none animate-in fade-in-0 slide-in-from-bottom-2 duration-200 motion-reduce:animate-none sm:left-auto sm:w-[20.5rem]"
     >
       <button
         type="button"
@@ -193,7 +230,7 @@ export function DayPlanSlip() {
       </button>
 
       <div className="shrink-0 pr-8">
-        <p className="text-sm text-muted-foreground">Today’s slip</p>
+        <p className="text-sm text-muted-foreground">{DAY_PLAN_TODAY}</p>
         <h2 id={titleId} className="type-column mt-0.5">
           {slip.hall.name}
         </h2>
@@ -247,7 +284,7 @@ export function DayPlanSlip() {
         )}
       </p>
 
-      <div className="mt-3 shrink-0">
+      <div className="mt-3 flex min-h-0 flex-1 flex-col">
         <div className="flex shrink-0 items-baseline justify-between gap-2">
           <label htmlFor={searchId} className="text-sm font-medium">
             Who to see
@@ -263,9 +300,9 @@ export function DayPlanSlip() {
           value={query}
           onChange={setQuery}
           placeholder="Find a stall"
-          className="mt-1.5 h-8"
+          className="mt-1.5 h-8 shrink-0"
         />
-        <div className="mt-1 max-h-32 overflow-y-auto">
+        <div className="mt-1 min-h-0 flex-1 overflow-y-auto">
           {pendingStalls && !stalls.length ? (
             <p className="px-1 py-1.5 text-sm text-muted-foreground">Loading stalls…</p>
           ) : listed.length ? (
@@ -282,14 +319,17 @@ export function DayPlanSlip() {
             </ul>
           ) : needle ? (
             <p className="px-1 py-1.5 text-sm text-muted-foreground">No stall matches.</p>
-          ) : stalls.length ? (
-            <p className="px-1 py-1.5 text-sm text-muted-foreground">Search to punch a stall.</p>
           ) : (
             <p className="px-1 py-1.5 text-sm text-muted-foreground">
               No stalls listed for that day yet.
             </p>
           )}
         </div>
+        {moreToFind ? (
+          <p className="shrink-0 px-1 pt-0.5 text-sm text-muted-foreground">
+            Search for the rest.
+          </p>
+        ) : null}
       </div>
 
       <div className="mt-3 grid shrink-0 grid-cols-2 gap-2">
@@ -318,7 +358,7 @@ export function DayPlanSlip() {
         onClick={send}
         className="mt-2 shrink-0 text-sm font-medium text-foreground hover:underline disabled:no-underline disabled:opacity-50"
       >
-        {sending ? "Sending…" : "Email this slip"}
+        {sending ? "Sending…" : `Email this ${DAY_PLAN_NAME}`}
       </button>
       {error ? <p className="mt-1 shrink-0 text-sm text-destructive">{error}</p> : null}
       {note ? <p className="mt-1 shrink-0 text-sm text-muted-foreground">{note}</p> : null}

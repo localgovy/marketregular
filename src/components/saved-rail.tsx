@@ -7,6 +7,7 @@ import { ListingScore } from "@/components/listing-score";
 import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
 import { SavedRailSlip } from "@/components/saved-day-plan";
+import { DAY_PLAN_NAME } from "@/lib/constants";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import type { Market, Vendor } from "@/types/database";
 
@@ -31,7 +32,7 @@ export function SavedRail({
       icon={TicketMark}
       kicker="On your list"
       title="Saved"
-      how="Markets, stalls, and today’s slip."
+      how={`Markets, stalls, and today’s ${DAY_PLAN_NAME}.`}
       action={
         <Link href="/saved" className="hover:underline">
           Open list
