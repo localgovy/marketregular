@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { ClaimForm } from "@/components/claim-form";
 import { SearchField } from "@/components/search-field";
-import { Label } from "@/components/ui/label";
 
 export type ContactListingOption = {
   id: string;
@@ -89,12 +88,13 @@ export function ContactClaim({
 
   return (
     <div className="grid gap-5 rounded-xl bg-secondary/50 p-5">
-      <fieldset className="grid gap-2">
+      <fieldset className="grid gap-2" autoComplete="off">
         <legend className="text-sm font-medium">What are you claiming?</legend>
         <label className="flex items-center gap-2 text-sm">
           <input
             type="radio"
             name="claim-kind"
+            value="market"
             checked={kind === "market"}
             className="accent-primary"
             onChange={() => {
@@ -108,6 +108,7 @@ export function ContactClaim({
           <input
             type="radio"
             name="claim-kind"
+            value="vendor"
             checked={kind === "vendor"}
             className="accent-primary"
             onChange={() => {
@@ -119,7 +120,9 @@ export function ContactClaim({
         </label>
       </fieldset>
       <div className="grid gap-1.5">
-        <Label htmlFor="claim-listing-q">{kind === "market" ? "Find the market" : "Find the stall"}</Label>
+        <label htmlFor="claim-listing-q" className="text-sm font-medium">
+          {kind === "market" ? "Find the market" : "Find the stall"}
+        </label>
         <SearchField
           id="claim-listing-q"
           value={query}

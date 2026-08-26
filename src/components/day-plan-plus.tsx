@@ -100,6 +100,7 @@ export function DayPlanHoursRow({
   hours,
   hall,
   extra,
+  save,
   className,
   hoursClassName,
   nameClassName,
@@ -109,6 +110,7 @@ export function DayPlanHoursRow({
   hours: string;
   hall: DayPlanHall;
   extra?: ReactNode;
+  save?: ReactNode;
   className?: string;
   hoursClassName?: string;
   nameClassName?: string;
@@ -116,7 +118,10 @@ export function DayPlanHoursRow({
   return (
     <div
       className={cn(
-        "grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-1.5",
+        "grid items-center gap-x-1.5",
+        save
+          ? "grid-cols-[minmax(0,1fr)_auto_auto_auto]"
+          : "grid-cols-[minmax(0,1fr)_auto_auto]",
         className,
       )}
     >
@@ -132,6 +137,7 @@ export function DayPlanHoursRow({
         {extra}
         {hours ? <Hours value={hours} className={hoursClassName} /> : null}
       </span>
+      {save ? <span className="shrink-0">{save}</span> : null}
     </div>
   );
 }

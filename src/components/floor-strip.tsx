@@ -1,4 +1,5 @@
 import { DayPlanHoursRow } from "@/components/day-plan-plus";
+import { SaveButton } from "@/components/save-button";
 import { torontoYmd } from "@/lib/events-month";
 import type { DayPlanHall } from "@/lib/day-plan";
 
@@ -49,6 +50,7 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
                   hall={hall}
                   hoursClassName="text-ticket-ink"
                   className="px-3 py-2.5 hover:bg-secondary/60 sm:px-4"
+                  save={<SaveButton kind="market" slug={market.slug} name={market.name} />}
                 />
               </li>
             );
