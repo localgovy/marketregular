@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Barlow_Condensed, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { AppToaster } from "@/components/app-toaster";
 import { DayPlanRoot } from "@/components/day-plan-root";
 import { GuestSignInSlip } from "@/components/guest-signin-slip";
@@ -78,6 +79,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </Suspense>
           <AppToaster />
         </DayPlanRoot>
+        <Analytics />
       </body>
     </html>
   );
