@@ -88,7 +88,7 @@ export function ContactClaim({
 
   return (
     <div className="grid gap-5 rounded-xl bg-secondary/50 p-5">
-      <fieldset className="grid gap-2" autoComplete="off">
+      <fieldset className="grid gap-2">
         <legend className="text-sm font-medium">What are you claiming?</legend>
         <label className="flex items-center gap-2 text-sm">
           <input
