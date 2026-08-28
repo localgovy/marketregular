@@ -46,7 +46,12 @@ function callbackUrl() {
 async function rememberAuthNext(next: unknown) {
   const path = safePath(next);
   const jar = await cookies();
-  jar.set(AUTH_NEXT_COOKIE, path, { path: "/", maxAge: 600, sameSite: "lax" });
+  jar.set(AUTH_NEXT_COOKIE, path, {
+    path: "/",
+    maxAge: 600,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
   return path;
 }
 

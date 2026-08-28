@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { mergeSaves } from "@/app/actions/saves";
+import { OAUTH_HASH_STORAGE_KEY } from "@/lib/analytics";
 import { oauthValuesMatch, takeGoogleOAuthHandoff } from "@/lib/google-oauth";
 import { LOGIN_ERROR_COPY } from "@/lib/public-error";
 import { clearAuthNextCookie, readAuthNextCookie, safePath } from "@/lib/auth-redirect";
@@ -22,7 +23,9 @@ let finishKey: string | null = null;
 
 function consumeGoogleCallback(): CallbackPayload {
   if (payload) return payload;
-  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const stashed = sessionStorage.getItem(OAUTH_HASH_STORAGE_KEY);
+  if (stashed) sessionStorage.removeItem(OAUTH_HASH_STORAGE_KEY);
+  const hash = new URLSearchParams((stashed ?? window.location.hash).replace(/^#/, ""));
   const query = new URLSearchParams(window.location.search);
   payload = {
     cancelled: Boolean(

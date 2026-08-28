@@ -40,11 +40,11 @@ const nextConfig: NextConfig = {
     const csp = [
       "default-src 'self'",
       // React reconstructs call stacks with eval() in development only.
-      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://va.vercel-scripts.com${dev ? " 'unsafe-eval'" : ""}`,
+      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://va.vercel-scripts.com https://*.googletagmanager.com${dev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.supabase.co https://*.openfreemap.org https://*.googleusercontent.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.openfreemap.org https://*.googleusercontent.com https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.com https://*.google.ca",
       "font-src 'self' data: https://*.openfreemap.org",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.openfreemap.org https://va.vercel-scripts.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.openfreemap.org https://va.vercel-scripts.com https://*.google-analytics.com https://*.analytics.google.com https://analytics.google.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.com https://*.google.ca",
       "worker-src 'self' blob:",
       "child-src 'self' blob:",
       "frame-ancestors 'self'",

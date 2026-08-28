@@ -16,7 +16,8 @@ export function safePath(next: unknown, fallback = "/account") {
 }
 
 export function authNextCookie(next: string) {
-  return `${AUTH_NEXT_COOKIE}=${encodeURIComponent(safePath(next))}; Path=/; Max-Age=600; SameSite=Lax`;
+  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+  return `${AUTH_NEXT_COOKIE}=${encodeURIComponent(safePath(next))}; Path=/; Max-Age=600; SameSite=Lax${secure}`;
 }
 
 export function readAuthNextCookie() {

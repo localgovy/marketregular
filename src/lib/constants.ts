@@ -29,6 +29,10 @@ function canonicalSiteUrl() {
 }
 
 export const SITE_URL = canonicalSiteUrl();
+
+/** Google Analytics 4 measurement ID. */
+export const GA_MEASUREMENT_ID = "G-M2JJ68QT2H";
+
 export const SITE_WORDMARK = "/brand/marketregular-wordmark.png";
 export const SITE_LOGO = "/brand/marketregular-logo.png";
 export const SITE_OG = "/brand/marketregular-og.png";

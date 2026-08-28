@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Barlow_Condensed, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 import { AppToaster } from "@/components/app-toaster";
 import { DayPlanRoot } from "@/components/day-plan-root";
 import { GuestSignInSlip } from "@/components/guest-signin-slip";
+import { SiteAnalytics } from "@/components/site-analytics";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
+import { OAUTH_HASH_SCRUB_SCRIPT } from "@/lib/analytics";
 import { SITE_NAME, SITE_TAGLINE, SITE_URL, SITE_OG } from "@/lib/constants";
 import { SITE_DESCRIPTION, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
@@ -79,7 +81,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </Suspense>
           <AppToaster />
         </DayPlanRoot>
-        <Analytics />
+        <Script id="oauth-hash-scrub" strategy="beforeInteractive">
+          {OAUTH_HASH_SCRUB_SCRIPT}
+        </Script>
+        <SiteAnalytics />
       </body>
     </html>
   );
