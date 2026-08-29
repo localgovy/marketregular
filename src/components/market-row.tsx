@@ -28,38 +28,35 @@ export function MarketRow({
   return (
     <div
       className={cn(
-        "flex items-center gap-1 hover:bg-secondary/50",
+        "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 hover:bg-secondary/50",
         inset ? "px-1" : "border-b border-border",
       )}
     >
-      <div
-        className={cn(
-          "grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-1.5 py-3",
-          inset && "px-2",
-        )}
-      >
-        <Link href={`/markets/${market.slug}`} className="min-w-0">
-          <span className="block text-base font-medium">{market.name}</span>
-          <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
-            <span>{market.address}</span>
-            <ListingScore
-              ratingAvg={market.rating_avg}
-              reviewCount={market.review_count}
-              compact
-              className="text-foreground"
-            />
-          </span>
+      <div className={cn("min-w-0 py-3", inset && "px-2")}>
+        <Link href={`/markets/${market.slug}`} className="text-base font-medium">
+          {market.name}
         </Link>
-        <DayPlanPlus hall={hall} />
-        <span className="shrink-0 whitespace-nowrap text-right text-sm">
+        <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           {open ? (
             <NowLabel>Open now</NowLabel>
           ) : (
-            <span className="text-muted-foreground">{when ?? "Hours"}</span>
+            <span className="whitespace-nowrap text-sm text-muted-foreground">
+              {when ?? "Hours"}
+            </span>
           )}
+        </p>
+        <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
+          <span>{market.address}</span>
+          <ListingScore
+            ratingAvg={market.rating_avg}
+            reviewCount={market.review_count}
+            compact
+            className="text-foreground"
+          />
         </span>
       </div>
-      <span className={inset ? "pr-2" : "pr-1"}>
+      <span className={cn("flex shrink-0 items-start gap-1 py-3", inset ? "pr-2" : "pr-1")}>
+        <DayPlanPlus hall={hall} />
         <SaveButton kind="market" slug={market.slug} name={market.name} />
       </span>
     </div>

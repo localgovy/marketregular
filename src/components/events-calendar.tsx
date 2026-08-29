@@ -320,34 +320,32 @@ export function EventsCalendar({
             {selectedCell.events.map((event) => (
               <li
                 key={`${selectedCell.iso}-${event.marketId}`}
-                className="flex items-start gap-2 border-b border-border/70 py-3 last:border-b-0"
+                className="border-b border-border/70 py-3 last:border-b-0"
               >
-                <div className="min-w-0 flex-1">
-                  <DayPlanHoursRow
-                    href={`/markets/${event.marketSlug}`}
-                    name={event.marketName}
-                    hours={event.hours}
-                    hall={{
-                      slug: event.marketSlug,
-                      name: event.marketName,
-                      address: event.address,
-                      lat: event.lat,
-                      lng: event.lng,
-                      hours: event.hours,
-                      date: selectedCell.iso,
-                    }}
-                    extra={event.open ? <NowLabel>Open</NowLabel> : null}
-                    hoursClassName="text-muted-foreground"
-                    nameClassName="text-ticket-ink underline-offset-2 hover:underline"
-                  />
-                  <p className="text-sm text-muted-foreground">{event.address}</p>
-                  {event.notes ? (
-                    <p className="mt-0.5 text-sm text-muted-foreground">{event.notes}</p>
-                  ) : null}
-                </div>
-                <span className="shrink-0 pt-0.5">
-                  <SaveButton kind="market" slug={event.marketSlug} name={event.marketName} />
-                </span>
+                <DayPlanHoursRow
+                  href={`/markets/${event.marketSlug}`}
+                  name={event.marketName}
+                  hours={event.hours}
+                  hall={{
+                    slug: event.marketSlug,
+                    name: event.marketName,
+                    address: event.address,
+                    lat: event.lat,
+                    lng: event.lng,
+                    hours: event.hours,
+                    date: selectedCell.iso,
+                  }}
+                  extra={event.open ? <NowLabel>Open</NowLabel> : null}
+                  save={
+                    <SaveButton kind="market" slug={event.marketSlug} name={event.marketName} />
+                  }
+                  hoursClassName="text-muted-foreground"
+                  nameClassName="text-ticket-ink underline-offset-2 hover:underline"
+                />
+                <p className="text-sm text-muted-foreground">{event.address}</p>
+                {event.notes ? (
+                  <p className="mt-0.5 text-sm text-muted-foreground">{event.notes}</p>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -118,26 +118,29 @@ export function DayPlanHoursRow({
   return (
     <div
       className={cn(
-        "grid items-center gap-x-1.5",
-        save
-          ? "grid-cols-[minmax(0,1fr)_auto_auto_auto]"
-          : "grid-cols-[minmax(0,1fr)_auto_auto]",
+        "grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2",
         className,
       )}
     >
-      <Link
-        href={href}
-        prefetch={false}
-        className={cn("min-w-0 text-base font-medium", nameClassName)}
-      >
-        {name}
-      </Link>
-      <DayPlanPlus hall={hall} />
-      <span className="flex shrink-0 items-baseline justify-end gap-x-1.5">
-        {extra}
-        {hours ? <Hours value={hours} className={hoursClassName} /> : null}
+      <div className="min-w-0">
+        <Link
+          href={href}
+          prefetch={false}
+          className={cn("text-base font-medium", nameClassName)}
+        >
+          {name}
+        </Link>
+        {extra || hours ? (
+          <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            {extra}
+            {hours ? <Hours value={hours} className={hoursClassName} /> : null}
+          </p>
+        ) : null}
+      </div>
+      <span className="flex shrink-0 items-start gap-1">
+        <DayPlanPlus hall={hall} />
+        {save}
       </span>
-      {save ? <span className="shrink-0">{save}</span> : null}
     </div>
   );
 }
