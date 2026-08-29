@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FilterClearButton } from "@/components/filter-clear";
+import { FilterColumn, FilterRow, type FilterOption } from "@/components/filter-column";
 import { SearchField } from "@/components/search-field";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
@@ -341,8 +342,8 @@ export function SearchForm({
               tags: [],
             })
           }
-          onApply={() => {
-            go(draft);
+          onApply={(next) => {
+            go(next);
             setPanelOpen(false);
           }}
         />
@@ -364,7 +365,7 @@ function AllFilters({
   resultCount: number;
   onChange: (next: BrowseState) => void;
   onClear: () => void;
-  onApply: () => void;
+  onApply: (next: BrowseState) => void;
 }) {
   function setSetup(tag: string, on: boolean) {
     if (!on) {
@@ -384,142 +385,96 @@ function AllFilters({
   const marketsLabel =
     resultCount === 1 ? "Show 1 market" : `Show ${resultCount} markets`;
 
+  const whenLead: FilterOption[] = WEEKDAYS.map((day, index) => ({
+    key: day,
+    label: day,
+    checked: state.weekdays.includes(index),
+    onChange: (on) =>
+      onChange({
+        ...state,
+        weekdays: on
+          ? [...state.weekdays, index]
+          : state.weekdays.filter((item) => item !== index),
+      }),
+  }));
+
+  const whenRest: FilterOption[] = [
+    {
+      key: "open-now",
+      label: "Open now",
+      checked: state.openNow,
+      onChange: (on) => onChange({ ...state, openNow: on }),
+    },
+    {
+      key: "year-round",
+      label: "Year-round",
+      checked: state.setup === "year-round" || state.tags.includes("year-round"),
+      onChange: (on) => setSetup("year-round", on),
+    },
+  ];
+
+  const placeLead: FilterOption[] = (["indoor", "outdoor"] as const).map((tag) => ({
+    key: tag,
+    label: tagLabel(tag),
+    checked: state.setup === tag,
+    onChange: (on) => setSetup(tag, on),
+  }));
+
+  const placeOptions: FilterOption[] = [...places.neighbourhoods, ...places.cities].map(
+    (area) => ({
+      key: area.q,
+      label: area.label,
+      checked: state.areas.includes(area.q),
+      onChange: (on) =>
+        onChange({
+          ...state,
+          areas: on
+            ? [...state.areas, area.q]
+            : state.areas.filter((item) => item !== area.q),
+        }),
+    }),
+  );
+
+  const sellOptions: FilterOption[] = PRODUCT_TAGS.map((tag) => ({
+    key: tag,
+    label: tagLabel(tag),
+    checked: state.tags.includes(tag),
+    onChange: (on) => setTag(tag, on),
+  }));
+
+  const cuisineOptions: FilterOption[] = COUNTRY_TAGS.map((tag) => ({
+    key: tag,
+    label: tagLabel(tag),
+    checked: state.tags.includes(tag),
+    onChange: (on) => setTag(tag, on),
+  }));
+
+  const recordOptions: FilterOption[] = FIND_RECORD.map((tag) => ({
+    key: tag,
+    label: tagLabel(tag),
+    checked: state.tags.includes(tag),
+    onChange: (on) => setTag(tag, on),
+  }));
+
   return (
-    <div id="all-filters" className="border-t border-border bg-card p-4 sm:p-5">
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        <FilterColumn title="When">
-          {WEEKDAYS.map((day, index) => (
-            <FilterCheck
-              key={day}
-              checked={state.weekdays.includes(index)}
-              onChange={(on) =>
-                onChange({
-                  ...state,
-                  weekdays: on
-                    ? [...state.weekdays, index]
-                    : state.weekdays.filter((item) => item !== index),
-                })
-              }
-            >
-              {day}
-            </FilterCheck>
-          ))}
-          <FilterCheck
-            checked={state.openNow}
-            onChange={(on) => onChange({ ...state, openNow: on })}
-          >
-            Open now
-          </FilterCheck>
-          <FilterCheck
-            checked={state.setup === "year-round" || state.tags.includes("year-round")}
-            onChange={(on) => setSetup("year-round", on)}
-          >
-            Year-round
-          </FilterCheck>
-        </FilterColumn>
-
-        <FilterColumn title="Place">
-          {(["indoor", "outdoor"] as const).map((tag) => (
-            <FilterCheck
-              key={tag}
-              checked={state.setup === tag}
-              onChange={(on) => setSetup(tag, on)}
-            >
-              {tagLabel(tag)}
-            </FilterCheck>
-          ))}
-          {[...places.neighbourhoods, ...places.cities].map((area) => (
-            <FilterCheck
-              key={area.q}
-              checked={state.areas.includes(area.q)}
-              onChange={(on) =>
-                onChange({
-                  ...state,
-                  areas: on
-                    ? [...state.areas, area.q]
-                    : state.areas.filter((item) => item !== area.q),
-                })
-              }
-            >
-              {area.label}
-            </FilterCheck>
-          ))}
-        </FilterColumn>
-
-        <FilterColumn title="Sells">
-          {PRODUCT_TAGS.map((tag) => (
-            <FilterCheck
-              key={tag}
-              checked={state.tags.includes(tag)}
-              onChange={(on) => setTag(tag, on)}
-            >
-              {tagLabel(tag)}
-            </FilterCheck>
-          ))}
-        </FilterColumn>
-
-        <FilterColumn title="Cuisine">
-          {COUNTRY_TAGS.map((tag) => (
-            <FilterCheck
-              key={tag}
-              checked={state.tags.includes(tag)}
-              onChange={(on) => setTag(tag, on)}
-            >
-              {tagLabel(tag)}
-            </FilterCheck>
-          ))}
-        </FilterColumn>
-
-        <FilterColumn title="On the record">
-          {FIND_RECORD.map((tag) => (
-            <FilterCheck
-              key={tag}
-              checked={state.tags.includes(tag)}
-              onChange={(on) => setTag(tag, on)}
-            >
-              {tagLabel(tag)}
-            </FilterCheck>
-          ))}
-        </FilterColumn>
+    <div id="all-filters" className="border-t border-border bg-card px-4 py-5 sm:px-6 sm:py-6">
+      <div className="grid items-start gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        <FilterColumn title="When" lead={whenLead} options={whenRest} />
+        <FilterColumn title="Place" lead={placeLead} options={placeOptions} />
+        <FilterColumn title="Sells" options={sellOptions} />
+        <FilterColumn title="Cuisine" options={cuisineOptions} />
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-3 border-t border-border pt-4">
+      <div className="mt-10 border-t border-dashed border-border pt-6">
+        <FilterRow title="On the record" options={recordOptions} />
+      </div>
+
+      <div className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-4">
         <FilterClearButton onClick={onClear} />
-        <Button type="button" className="h-9 px-4" onClick={onApply}>
+        <Button type="button" className="h-9 px-4" onClick={() => onApply(state)}>
           {marketsLabel}
         </Button>
       </div>
     </div>
-  );
-}
-
-function FilterColumn({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <fieldset className="min-w-0">
-      <legend className="mb-3 text-sm font-medium">{title}</legend>
-      <div className="grid gap-2">{children}</div>
-    </fieldset>
-  );
-}
-
-function FilterCheck({
-  checked,
-  onChange,
-  children,
-}: {
-  checked: boolean;
-  onChange: (on: boolean) => void;
-  children: ReactNode;
-}) {
-  return (
-    <label className="flex cursor-pointer items-start gap-2 text-sm text-stamp">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-primary"
-      />
-      <span>{children}</span>
-    </label>
   );
 }

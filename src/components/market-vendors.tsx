@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { VendorCard } from "@/components/vendor-card";
 import { Button } from "@/components/ui/button";
 import { FilterClearButton } from "@/components/filter-clear";
+import { FilterColumn, FilterRow, type FilterOption } from "@/components/filter-column";
 import { SearchField } from "@/components/search-field";
 import { ShowMore } from "@/components/show-more";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
@@ -312,7 +313,7 @@ export function MarketVendors({
                     hereToday: false,
                   })
                 }
-                onApply={() => go(draft)}
+                onApply={(next) => go(next)}
               />
             ) : null}
           </form>
@@ -369,140 +370,87 @@ function StallAllFilters({
   resultCount: number;
   onChange: (next: StallBrowse) => void;
   onClear: () => void;
-  onApply: () => void;
+  onApply: (next: StallBrowse) => void;
 }) {
   const stallsLabel =
     resultCount === 1 ? "Show 1 stall" : `Show ${resultCount} stalls`;
 
+  function setTag(tag: string, on: boolean) {
+    onChange({
+      ...state,
+      tags: on
+        ? [...new Set([...state.tags, tag])]
+        : state.tags.filter((item) => item !== tag),
+    });
+  }
+
+  const whenLead: FilterOption[] = stallDays.map((day) => ({
+    key: String(day),
+    label: WEEKDAYS[day],
+    checked: state.weekdays.includes(day),
+    onChange: (on) =>
+      onChange({
+        ...state,
+        weekdays: on
+          ? [...state.weekdays, day]
+          : state.weekdays.filter((item) => item !== day),
+      }),
+  }));
+
+  const whenRest: FilterOption[] = showHereToday
+    ? [
+        {
+          key: "here-today",
+          label: "Here today",
+          checked: state.hereToday,
+          onChange: (on) => onChange({ ...state, hereToday: on }),
+        },
+      ]
+    : [];
+
+  const sellOptions: FilterOption[] = sellTags.map((tag) => ({
+    key: tag,
+    label: tagLabel(tag),
+    checked: state.tags.includes(tag),
+    onChange: (on) => setTag(tag, on),
+  }));
+
+  const cuisineOptions: FilterOption[] = cuisineTags.map((tag) => ({
+    key: tag,
+    label: tagLabel(tag),
+    checked: state.tags.includes(tag),
+    onChange: (on) => setTag(tag, on),
+  }));
+
+  const recordOptions: FilterOption[] = recordTags.map((tag) => ({
+    key: tag,
+    label: tagLabel(tag),
+    checked: state.tags.includes(tag),
+    onChange: (on) => setTag(tag, on),
+  }));
+
   return (
-    <div id="stall-filters" className="border-t border-border bg-card p-4 sm:p-5">
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {stallDays.length ? (
-          <FilterColumn title="When">
-            {stallDays.map((day) => (
-              <FilterCheck
-                key={day}
-                checked={state.weekdays.includes(day)}
-                onChange={(on) =>
-                  onChange({
-                    ...state,
-                    weekdays: on
-                      ? [...state.weekdays, day]
-                      : state.weekdays.filter((item) => item !== day),
-                  })
-                }
-              >
-                {WEEKDAYS[day]}
-              </FilterCheck>
-            ))}
-            {showHereToday ? (
-              <FilterCheck
-                checked={state.hereToday}
-                onChange={(on) => onChange({ ...state, hereToday: on })}
-              >
-                Here today
-              </FilterCheck>
-            ) : null}
-          </FilterColumn>
+    <div id="stall-filters" className="border-t border-border bg-card px-4 py-5 sm:px-6 sm:py-6">
+      <div className="grid items-start gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+        {whenLead.length || whenRest.length ? (
+          <FilterColumn title="When" lead={whenLead} options={whenRest} />
         ) : null}
-        {sellTags.length ? (
-          <FilterColumn title="Sells">
-            {sellTags.map((tag) => (
-              <FilterCheck
-                key={tag}
-                checked={state.tags.includes(tag)}
-                onChange={(on) =>
-                  onChange({
-                    ...state,
-                    tags: on
-                      ? [...new Set([...state.tags, tag])]
-                      : state.tags.filter((item) => item !== tag),
-                  })
-                }
-              >
-                {tagLabel(tag)}
-              </FilterCheck>
-            ))}
-          </FilterColumn>
-        ) : null}
-        {cuisineTags.length ? (
-          <FilterColumn title="Cuisine">
-            {cuisineTags.map((tag) => (
-              <FilterCheck
-                key={tag}
-                checked={state.tags.includes(tag)}
-                onChange={(on) =>
-                  onChange({
-                    ...state,
-                    tags: on
-                      ? [...new Set([...state.tags, tag])]
-                      : state.tags.filter((item) => item !== tag),
-                  })
-                }
-              >
-                {tagLabel(tag)}
-              </FilterCheck>
-            ))}
-          </FilterColumn>
-        ) : null}
-        {recordTags.length ? (
-          <FilterColumn title="On the record">
-            {recordTags.map((tag) => (
-              <FilterCheck
-                key={tag}
-                checked={state.tags.includes(tag)}
-                onChange={(on) =>
-                  onChange({
-                    ...state,
-                    tags: on
-                      ? [...new Set([...state.tags, tag])]
-                      : state.tags.filter((item) => item !== tag),
-                  })
-                }
-              >
-                {tagLabel(tag)}
-              </FilterCheck>
-            ))}
-          </FilterColumn>
+        {sellOptions.length ? <FilterColumn title="Sells" options={sellOptions} /> : null}
+        {cuisineOptions.length ? (
+          <FilterColumn title="Cuisine" options={cuisineOptions} />
         ) : null}
       </div>
-      <div className="mt-6 flex items-center justify-between gap-3 border-t border-border pt-4">
+      {recordOptions.length ? (
+        <div className="mt-10 border-t border-dashed border-border pt-6">
+          <FilterRow title="On the record" options={recordOptions} />
+        </div>
+      ) : null}
+      <div className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-4">
         <FilterClearButton onClick={onClear} />
-        <Button type="button" className="h-9 px-4" onClick={onApply}>
+        <Button type="button" className="h-9 px-4" onClick={() => onApply(state)}>
           {stallsLabel}
         </Button>
       </div>
     </div>
-  );
-}
-
-function FilterColumn({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <fieldset className="min-w-0">
-      <legend className="mb-3 text-sm font-medium">{title}</legend>
-      <div className="grid gap-2">{children}</div>
-    </fieldset>
-  );
-}
-
-function FilterCheck({
-  checked,
-  onChange,
-  children,
-}: {
-  checked: boolean;
-  onChange: (on: boolean) => void;
-  children: ReactNode;
-}) {
-  return (
-    <label className="flex cursor-pointer items-start gap-2 text-sm text-stamp">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-        className="mt-0.5 size-4 shrink-0 accent-primary"
-      />
-      <span>{children}</span>
-    </label>
   );
 }

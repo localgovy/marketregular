@@ -300,57 +300,183 @@
   animation: speed-unfold 0.18s ease-out;
 }
 
-@keyframes now-validate {
-  0%,
-  62% {
-    transform: scale(1);
+.open-now-sprout {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  overflow: visible;
+  color: currentColor;
+}
+
+.open-now-sprout__stem {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: open-now-sprout-stem 3200ms linear infinite both;
+}
+
+.open-now-sprout__leaf {
+  fill: currentColor;
+  transform-box: fill-box;
+}
+
+.open-now-sprout__leaf--left {
+  transform-origin: 92% 80%;
+  animation: open-now-sprout-left 3200ms linear infinite both;
+}
+
+.open-now-sprout__leaf--right {
+  transform-origin: 8% 80%;
+  animation: open-now-sprout-right 3200ms linear infinite both;
+}
+
+.open-now-sprout__leaf--top {
+  transform-origin: 50% 96%;
+  animation: open-now-sprout-top 3200ms linear infinite both;
+}
+
+@keyframes open-now-sprout-stem {
+  0% {
+    transform: scaleY(0);
+    opacity: 0.35;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
-  68% {
-    transform: scale(0.15);
+
+  12%,
+  84% {
+    transform: scaleY(1);
+    opacity: 1;
   }
-  76% {
-    transform: scale(1.25);
+
+  84% {
+    animation-timing-function: cubic-bezier(0.64, 0, 0.78, 0);
   }
-  84%,
+
+  96%,
   100% {
-    transform: scale(1);
+    transform: scaleY(0);
+    opacity: 0.35;
   }
 }
 
-@keyframes now-press {
+@keyframes open-now-sprout-left {
   0%,
-  62% {
-    transform: translateY(0);
+  7% {
+    transform: scale(0) rotate(18deg);
+    opacity: 0;
   }
-  68% {
-    transform: translateY(1px) scale(0.97);
+
+  7% {
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
-  76%,
+
+  16% {
+    transform: scale(1.025) rotate(-1deg);
+    opacity: 1;
+  }
+
+  19%,
+  78% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+
+  78% {
+    animation-timing-function: cubic-bezier(0.64, 0, 0.78, 0);
+  }
+
+  81% {
+    transform: scale(1.025) rotate(-1deg);
+    opacity: 1;
+  }
+
+  93%,
   100% {
-    transform: translateY(0);
+    transform: scale(0) rotate(18deg);
+    opacity: 0;
   }
 }
 
-.now-open {
-  position: relative;
-  transform-origin: 50% 50%;
-  animation: now-press 2.4s ease-in-out infinite;
+@keyframes open-now-sprout-right {
+  0%,
+  13% {
+    transform: scale(0) rotate(-18deg);
+    opacity: 0;
+  }
+
+  13% {
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  22% {
+    transform: scale(1.025) rotate(1deg);
+    opacity: 1;
+  }
+
+  25%,
+  72% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+
+  72% {
+    animation-timing-function: cubic-bezier(0.64, 0, 0.78, 0);
+  }
+
+  75% {
+    transform: scale(1.025) rotate(1deg);
+    opacity: 1;
+  }
+
+  87%,
+  100% {
+    transform: scale(0) rotate(-18deg);
+    opacity: 0;
+  }
 }
 
-.now-open-stamp {
-  flex-shrink: 0;
-  transform-origin: 50% 50%;
-  animation: now-validate 2.4s ease-in-out infinite;
-}
+@keyframes open-now-sprout-top {
+  0%,
+  19% {
+    transform: scale(0) translateY(0.7px);
+    opacity: 0;
+  }
 
-li:nth-child(3n + 2) .now-open,
-li:nth-child(3n + 2) .now-open-stamp {
-  animation-delay: 0.35s;
-}
+  19% {
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
 
-li:nth-child(3n + 3) .now-open,
-li:nth-child(3n + 3) .now-open-stamp {
-  animation-delay: 0.7s;
+  28% {
+    transform: scale(1.025) translateY(-0.1px);
+    opacity: 1;
+  }
+
+  31%,
+  66% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+
+  66% {
+    animation-timing-function: cubic-bezier(0.64, 0, 0.78, 0);
+  }
+
+  69% {
+    transform: scale(1.025) translateY(-0.1px);
+    opacity: 1;
+  }
+
+  81%,
+  100% {
+    transform: scale(0) translateY(0.7px);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -370,8 +496,8 @@ li:nth-child(3n + 3) .now-open-stamp {
   .speed-menu {
     animation: none;
   }
-  .now-open,
-  .now-open-stamp {
+  .open-now-sprout__stem,
+  .open-now-sprout__leaf {
     animation: none;
   }
 }

@@ -53,7 +53,7 @@ export function TorontoWeek({
   id = "week",
   kicker,
   title = "Upcoming markets",
-  how = "A stamp means open right now. Tap a name for vendors and the map.",
+  how = "A sprout means open right now. Tap a name for vendors and the map.",
   action,
   empty = `No ${LAUNCH_REGION} markets are on the calendar for the next seven days.`,
   className = "xl:shrink-0",
