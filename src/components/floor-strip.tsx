@@ -2,6 +2,7 @@ import { DayPlanHoursRow } from "@/components/day-plan-plus";
 import { SaveButton } from "@/components/save-button";
 import { torontoYmd } from "@/lib/events-month";
 import type { DayPlanHall } from "@/lib/day-plan";
+import { marketListName } from "@/lib/listing-copy";
 
 type OpenMarket = {
   id: string;
@@ -9,6 +10,7 @@ type OpenMarket = {
   slug: string;
   hours: string;
   address: string;
+  city?: string;
   lat: number;
   lng: number;
   date?: string;
@@ -45,7 +47,7 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
               <li key={market.id} className="bg-card">
                 <DayPlanHoursRow
                   href={`/markets/${market.slug}`}
-                  name={market.name}
+                  name={marketListName(market.name, market.city ?? "")}
                   hours={market.hours}
                   hall={hall}
                   hoursClassName="text-ticket-ink"
@@ -58,7 +60,7 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
         </ul>
       ) : (
         <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
-          No Toronto market is open this minute.
+          No GTA market is open this minute.
         </p>
       )}
     </nav>

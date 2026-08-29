@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { isSupabaseConfigured } from "@/lib/constants";
-import { LAUNCH_CITY, isLaunchCity } from "@/lib/launch";
+import { DIRECTORY_CENSUS_ID, LAUNCH_CITY_FILTER, isLaunchCity } from "@/lib/launch";
 import {
   localFeatured,
   localMarketBySlug,
@@ -98,7 +98,7 @@ export async function getDirectoryCensus(): Promise<DirectoryCensus> {
   const { data, error } = await supabase
     .from("directory_census")
     .select("markets, vendors, menus, tallied_at")
-    .eq("id", LAUNCH_CITY.toLowerCase())
+    .eq("id", DIRECTORY_CENSUS_ID)
     .maybeSingle();
   if (error || !data) {
     return {
@@ -144,12 +144,12 @@ export const listMarkets = cache(async function listMarkets(): Promise<Market[]>
       .from("markets")
       .select(MARKET_PUBLIC)
       .eq("status", "published")
-      .ilike("city", LAUNCH_CITY)
+      .in("city", LAUNCH_CITY_FILTER)
       .order("name")
       .range(from, to),
   );
   if (error) return localMarkets();
-  return data.map(withListingStats);
+  return data.filter((market) => isLaunchCity(market.city)).map(withListingStats);
 });
 
 export async function listVendors(): Promise<Vendor[]> {
@@ -326,7 +326,7 @@ export async function searchDirectory(filters: SearchFilters) {
     .from("markets")
     .select(MARKET_PUBLIC)
     .eq("status", "published")
-    .ilike("city", LAUNCH_CITY);
+    .in("city", LAUNCH_CITY_FILTER);
   let vendorQuery = supabase.from("vendors").select(VENDOR_PUBLIC).eq("status", "published");
 
   if (filters.q?.trim()) {
@@ -368,7 +368,9 @@ export async function searchDirectory(filters: SearchFilters) {
     schedulesByMarket.set(row.market_id, list);
   }
 
-  let markets = ((marketRows ?? []) as Market[]).map(withListingStats);
+  let markets = ((marketRows ?? []) as Market[])
+    .filter((market) => isLaunchCity(market.city))
+    .map(withListingStats);
   let vendors = ((vendorRows ?? []) as Vendor[]).map((vendor) =>
     withVendorCountryTags(withListingStats(vendor)),
   );
@@ -731,10 +733,10 @@ export async function getFeaturedMarkets() {
     .select(MARKET_PUBLIC)
     .eq("status", "published")
     .eq("featured", true)
-    .ilike("city", LAUNCH_CITY)
+    .in("city", LAUNCH_CITY_FILTER)
     .order("name");
   if (!data?.length) return localFeatured();
-  return (data as Market[]).map(withListingStats);
+  return (data as Market[]).filter((market) => isLaunchCity(market.city)).map(withListingStats);
 }
 
 export async function getOpenToday() {

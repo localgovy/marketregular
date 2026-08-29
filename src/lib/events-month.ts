@@ -3,13 +3,14 @@ import { LAUNCH_TZ } from "@/lib/launch";
 import { formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
 
-export type EventMarket = Pick<Market, "id" | "slug" | "name" | "address" | "lat" | "lng">;
+export type EventMarket = Pick<Market, "id" | "slug" | "name" | "address" | "city" | "lat" | "lng">;
 
 export type CalendarEvent = {
   marketId: string;
   marketName: string;
   marketSlug: string;
   address: string;
+  city: string;
   lat: number;
   lng: number;
   hours: string;
@@ -161,6 +162,7 @@ function eventsForCivilDate(
       marketName: market.name,
       marketSlug: market.slug,
       address: market.address,
+      city: market.city,
       lat: market.lat,
       lng: market.lng,
       hours: formatHours(row.opens_at, row.closes_at),

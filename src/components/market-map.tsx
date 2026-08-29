@@ -11,6 +11,7 @@ import {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LAUNCH_CENTER, LAUNCH_ZOOM } from "@/lib/launch";
+import { marketPlaceLine } from "@/lib/listing-copy";
 import type { Market } from "@/types/database";
 
 // Bundled MapLibre points the worker at this origin's HTML. Host the ESM worker
@@ -61,7 +62,7 @@ export function MarketMap({
     for (const market of markets) {
       bounds.extend([market.lng, market.lat]);
       const href = `/markets/${encodeURIComponent(market.slug)}`;
-      const place = market.address ?? market.city;
+      const place = marketPlaceLine(market.address, market.city);
       const popup = new Popup({ offset: 16 }).setHTML(
         `<a href="${escapeHtml(href)}" style="font-weight:600;color:#1a1714">${escapeHtml(market.name)}</a><div style="color:#5e5a53">${escapeHtml(place)}</div>`,
       );

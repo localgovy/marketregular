@@ -45,6 +45,7 @@ export default async function OnboardingPage({
       markets={markets.map((market) => ({
         slug: market.slug,
         name: market.name,
+        city: market.city,
         address: market.address,
         hours: nextOpenLabel(scheduleMap.get(market.id) ?? [], market.province),
       }))}

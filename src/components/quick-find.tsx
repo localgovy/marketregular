@@ -142,7 +142,7 @@ export function QuickFind({
     <form action="/markets" className="grid gap-3 sm:gap-4">
       <div className="order-1">
         <label className="sr-only" htmlFor="home-search">
-          Search for a Toronto market, vendor, or neighbourhood
+          Search for a GTA market, vendor, or neighbourhood
         </label>
         <SearchField
           id="home-search"
@@ -177,7 +177,7 @@ export function QuickFind({
       </div>
 
       <div className="order-4 sm:order-3">
-        <p className="type-kicker text-chalk">Where in the city</p>
+        <p className="type-kicker text-chalk">Where you go</p>
         <div className="mt-1.5 flex flex-col items-stretch gap-2 sm:items-start">
           <ToggleChip pressed={near} onClick={toggleNear}>
             Near me

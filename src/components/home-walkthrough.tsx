@@ -16,11 +16,11 @@ const DELAY_MS = 700;
 const STEPS = [
   {
     title: `Welcome to ${SITE_NAME}`,
-    body: "Toronto farmers' markets this week — who's open, the hours, and who's on the floor.",
+    body: "GTA farmers' markets this week — who's open, the hours, and who's on the floor.",
   },
   {
     title: "Find a market",
-    body: "Pick a day, a neighbourhood, what they sell, or a cuisine. Then search.",
+    body: "Pick a day, a neighbourhood or city, what they sell, or a cuisine. Then search.",
   },
   {
     title: "Save the ones you go to",

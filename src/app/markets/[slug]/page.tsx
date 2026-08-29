@@ -19,7 +19,7 @@ import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { hallFromMarket } from "@/lib/day-plan";
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay } from "@/lib/find-paths";
-import { marketPageDescription, marketPageTitle } from "@/lib/listing-copy";
+import { marketPageDescription, marketPageTitle, marketPlaceLine } from "@/lib/listing-copy";
 import { nextOpenLabel } from "@/lib/schedule";
 import { marketJsonLd, pageMeta } from "@/lib/seo";
 
@@ -74,7 +74,9 @@ export default async function MarketPage({
       <JsonLd data={marketJsonLd(market)} />
       <div className="flex items-center gap-1">
         <BackButton href="/markets" />
-        <p className="type-kicker text-muted-foreground">{market.address}</p>
+        <p className="type-kicker text-muted-foreground">
+          {marketPlaceLine(market.address, market.city)}
+        </p>
       </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{market.name}</h1>

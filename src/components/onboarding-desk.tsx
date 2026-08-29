@@ -12,11 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { normalizeUsername, usernameError } from "@/lib/username";
+import { marketListName } from "@/lib/listing-copy";
 import { cn } from "@/lib/utils";
 
 export type OnboardingMarket = {
   slug: string;
   name: string;
+  city: string;
   address: string;
   hours: string;
 };
@@ -88,7 +90,7 @@ export function OnboardingDesk({
     const matches = !tokens.length
       ? markets
       : markets.filter((market) => {
-          const hay = fold(`${market.name} ${market.address}`);
+          const hay = fold(`${market.name} ${market.city} ${market.address}`);
           return tokens.every((token) => hay.includes(token));
         });
     return [...matches].sort((a, b) => {
@@ -224,7 +226,9 @@ export function OnboardingDesk({
                       <CheckMark
                         className={cn("size-4 shrink-0 self-center", on ? "opacity-100" : "opacity-0")}
                       />
-                      <span className="min-w-0 text-base font-medium">{market.name}</span>
+                      <span className="min-w-0 text-base font-medium">
+                        {marketListName(market.name, market.city)}
+                      </span>
                       <Hours
                         value={market.hours}
                         className={on ? "text-receipt" : "text-muted-foreground"}

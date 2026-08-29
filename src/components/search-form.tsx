@@ -7,7 +7,7 @@ import { FilterClearButton } from "@/components/filter-clear";
 import { SearchField } from "@/components/search-field";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
-  FIND_AREAS,
+  FIND_PLACE_AREAS,
   FIND_PRODUCTS,
   FIND_RECORD,
   FIND_SETUP,
@@ -19,7 +19,7 @@ import {
   type DirectorySort,
   type MarketsSearch,
 } from "@/lib/find-paths";
-import { LAUNCH_CITY } from "@/lib/launch";
+import { LAUNCH_REGION } from "@/lib/launch";
 import { cn } from "@/lib/utils";
 
 export type SearchFormDefaults = {
@@ -198,8 +198,8 @@ export function SearchForm({
             update({ areas: value ? [value] : [] });
           }}
         >
-          <option value="">Anywhere in {LAUNCH_CITY}</option>
-          {FIND_AREAS.map((area) => (
+          <option value="">Anywhere in the {LAUNCH_REGION}</option>
+          {FIND_PLACE_AREAS.map((area) => (
             <option key={area.q} value={area.q}>
               {area.label}
             </option>
@@ -410,7 +410,7 @@ function AllFilters({
               {tagLabel(tag)}
             </FilterCheck>
           ))}
-          {FIND_AREAS.map((area) => (
+          {FIND_PLACE_AREAS.map((area) => (
             <FilterCheck
               key={area.q}
               checked={state.areas.includes(area.q)}

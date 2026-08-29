@@ -9,7 +9,7 @@ import { QuickFind } from "@/components/quick-find";
 import { TorontoWeek } from "@/components/toronto-week";
 import type { DirectoryCensus } from "@/lib/data/catalog";
 import { FIND_ORIGINS, FIND_PRODUCTS, FIND_SETUP, areasForMarkets, tagsPresent } from "@/lib/find-paths";
-import { LAUNCH_CITY } from "@/lib/launch";
+import { LAUNCH_REGION } from "@/lib/launch";
 import type { UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { Market, Vendor } from "@/types/database";
@@ -58,13 +58,14 @@ export function HomeMosaic({
     review_count: market.review_count,
   }));
   const openGroup = week.find((group) => group.open);
-  const ticker =
+  const     ticker =
     openGroup?.slots.map((slot) => ({
       id: slot.market.id,
       name: slot.market.name,
       slug: slot.market.slug,
       hours: slot.hours,
       address: slot.market.address,
+      city: slot.market.city,
       lat: slot.market.lat,
       lng: slot.market.lng,
       date: openGroup.iso,
@@ -75,6 +76,7 @@ export function HomeMosaic({
       slug: market.slug,
       hours: "",
       address: market.address,
+      city: market.city,
       lat: market.lat,
       lng: market.lng,
     }));
@@ -85,10 +87,10 @@ export function HomeMosaic({
 
       <header className="mb-4 max-w-2xl">
         <h1>
-          {LAUNCH_CITY} farmers&apos; markets
+          {LAUNCH_REGION} farmers&apos; markets
         </h1>
         <p className="type-lede mt-2 text-muted-foreground">
-          Find out everything you want to know about markets near or in Toronto.
+          Find out everything you want to know about markets in Toronto and across the GTA.
         </p>
       </header>
 
@@ -102,7 +104,7 @@ export function HomeMosaic({
             icon={SlatsMark}
             kicker="When, where, or what"
             title="Find a market"
-            how="Choose when, a neighbourhood, what they sell, or a cuisine. Press Search when the list looks right."
+            how="Choose when, a neighbourhood or city, what they sell, or a cuisine. Press Search when the list looks right."
           >
             <QuickFind
               markets={nearMarkets}
@@ -119,8 +121,8 @@ export function HomeMosaic({
             id="map"
             tone="map"
             icon={BlocksMark}
-            kicker="Around the city"
-            title="Map of Toronto markets"
+            kicker="Around the GTA"
+            title="Map of GTA markets"
             how="Show the map, then click a pin for the name and address. Every market is also in the list below."
             className="order-last xl:order-none"
             flush

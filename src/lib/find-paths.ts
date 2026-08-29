@@ -5,7 +5,7 @@ import {
   RECORD_TAGS,
   WEEKDAYS,
 } from "@/lib/constants";
-import { LAUNCH_TZ } from "@/lib/launch";
+import { LAUNCH_CITY, LAUNCH_CITIES, LAUNCH_TZ } from "@/lib/launch";
 import type { Market } from "@/types/database";
 
 const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
@@ -64,9 +64,22 @@ export const FIND_AREAS: Array<{ label: string; q: string; slugs: string[] }> = 
   { label: "North York", q: "North York", slugs: ["north-york-farmers-market"] },
 ];
 
+export const FIND_CITY_AREAS: Array<{ label: string; q: string }> = LAUNCH_CITIES.filter((city) => {
+  if (city === LAUNCH_CITY) return false;
+  return !FIND_AREAS.some((area) => area.label.toLowerCase() === city.toLowerCase());
+}).map((city) => ({ label: city, q: city }));
+
+export const FIND_PLACE_AREAS: Array<{ label: string; q: string; slugs?: string[] }> = [
+  ...FIND_AREAS,
+  ...FIND_CITY_AREAS,
+];
+
 export function areasForMarkets(markets: Market[]) {
   const slugs = new Set(markets.map((m) => m.slug));
-  return FIND_AREAS.filter((area) => area.slugs.some((slug) => slugs.has(slug)));
+  const neighbourhoods = FIND_AREAS.filter((area) => area.slugs.some((slug) => slugs.has(slug)));
+  const present = new Set(markets.map((m) => m.city));
+  const cities = FIND_CITY_AREAS.filter((area) => present.has(area.label));
+  return [...neighbourhoods, ...cities];
 }
 
 export function tagsPresent(rows: Array<{ tags: string[] }>, wanted: readonly string[]) {
@@ -232,11 +245,16 @@ export function marketsHref(search: MarketsSearch) {
 
 export function filterMarketsByAreas(markets: Market[], areaKeys: string[]) {
   if (!areaKeys.length) return markets;
+  const keys = new Set(areaKeys);
   const slugs = new Set(
-    FIND_AREAS.filter((area) => areaKeys.includes(area.q)).flatMap((area) => area.slugs),
+    FIND_AREAS.filter((area) => keys.has(area.q)).flatMap((area) => area.slugs),
   );
-  if (!slugs.size) return markets;
-  return markets.filter((market) => slugs.has(market.slug));
+  const cities = new Set(
+    areaKeys.map((key) => key.trim().toLowerCase()).filter((key) => key && key !== LAUNCH_CITY.toLowerCase()),
+  );
+  return markets.filter(
+    (market) => slugs.has(market.slug) || cities.has(market.city.trim().toLowerCase()),
+  );
 }
 
 /** Typed search for “Wychwood” / “Brick Works” should still find the hall. */
@@ -244,7 +262,7 @@ export function slugsForPlaceQuery(query: string) {
   const needle = foldPlaceQuery(query);
   if (needle.length < 3) return [] as string[];
   const slugs = new Set<string>();
-  for (const area of FIND_AREAS) {
+  for (const area of FIND_PLACE_AREAS) {
     const label = foldPlaceQuery(area.label);
     const key = foldPlaceQuery(area.q);
     const hit =
@@ -254,7 +272,9 @@ export function slugsForPlaceQuery(query: string) {
       key.includes(needle) ||
       needle.includes(label) ||
       needle.includes(key);
-    if (hit) area.slugs.forEach((slug) => slugs.add(slug));
+    if (hit) {
+      if (area.slugs) area.slugs.forEach((slug) => slugs.add(slug));
+    }
   }
   return [...slugs];
 }

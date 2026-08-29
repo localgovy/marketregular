@@ -11,13 +11,13 @@ import {
   queryList,
   type MarketsSearch,
 } from "@/lib/find-paths";
-import { LAUNCH_CITY } from "@/lib/launch";
+import { LAUNCH_REGION } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 
 export const metadata: Metadata = pageMeta({
-  title: `${LAUNCH_CITY} markets`,
+  title: `${LAUNCH_REGION} markets`,
   path: "/markets",
-  description: `${LAUNCH_CITY} farmers' markets with this week's hours, maps, and who's on the floor.`,
+  description: `${LAUNCH_REGION} farmers' markets with this week's hours, maps, and who's on the floor.`,
 });
 
 export default async function MarketsPage({
@@ -77,7 +77,7 @@ export default async function MarketsPage({
     lng: params.lng,
     sort,
   };
-  const status = [LAUNCH_CITY, ...crumbs, `${markets.length} markets`].join(" · ");
+  const status = [LAUNCH_REGION, ...crumbs, `${markets.length} markets`].join(" · ");
   const summary = [
     `${markets.length} markets`,
     `${vendors.length} vendors`,

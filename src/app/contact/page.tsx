@@ -13,7 +13,7 @@ import type { Market, StallRef, Vendor } from "@/types/database";
 export const metadata: Metadata = pageMeta({
   title: "Contact",
   path: "/contact",
-  description: `Write ${SITE_NAME}, or claim a Toronto market or stall you run.`,
+  description: `Write ${SITE_NAME}, or claim a GTA market or stall you run.`,
 });
 
 export const revalidate = 3600;
@@ -33,13 +33,10 @@ function contactListings(markets: Market[], vendors: Vendor[], stalls: StallRef[
   }
   return {
     markets: markets.map((market) => ({ id: market.id, name: market.name })),
-    vendors: vendors.map((vendor) => {
+    vendors: vendors.flatMap((vendor) => {
       const at = where.get(vendor.id);
-      return {
-        id: vendor.id,
-        name: vendor.name,
-        ...(at?.length ? { where: at.join(", ") } : {}),
-      };
+      if (!at?.length) return [];
+      return [{ id: vendor.id, name: vendor.name, where: at.join(", ") }];
     }),
   };
 }
@@ -62,7 +59,7 @@ export default async function ContactPage() {
       <section>
         <h2>Claim a listing</h2>
         <p className="mt-2 mb-6 text-base text-muted-foreground">
-          If you run a Toronto market or stall, pick it and send a claim. Same form as on each
+          If you run a GTA market or stall, pick it and send a claim. Same form as on each
           listing page.
         </p>
         <ContactClaim markets={listings.markets} vendors={listings.vendors} />

@@ -4,6 +4,7 @@ import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { hallFromMarket } from "@/lib/day-plan";
+import { marketPlaceLine } from "@/lib/listing-copy";
 import { nextOpenLabel } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
 import type { Market, MarketSchedule } from "@/types/database";
@@ -46,7 +47,7 @@ export function MarketRow({
           )}
         </p>
         <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
-          <span>{market.address}</span>
+          <span>{marketPlaceLine(market.address, market.city)}</span>
           <ListingScore
             ratingAvg={market.rating_avg}
             reviewCount={market.review_count}

@@ -18,7 +18,7 @@ export function SiteFooter() {
             <span>by</span>
             <StudioWordmark className="lg:text-primary" />
           </a>
-          <span>– Toronto Farmers&apos; Markets, all in one place</span>
+          <span>– GTA farmers&apos; markets, all in one place</span>
         </p>
         <div className="flex flex-wrap gap-4">
           {SITE_FOOTER_NAV.map((item) => (

@@ -93,7 +93,7 @@ export default async function HomePage() {
             tone="directory"
             icon={RulesMark}
             kicker="A short list"
-            title="Toronto markets"
+            title="GTA markets"
             how="Open ones first. Tap a name, then save the ones you actually go to."
             action={
               <Link href="/markets" className="hover:underline">

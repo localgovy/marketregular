@@ -7,8 +7,9 @@ import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { hallFromMarket } from "@/lib/day-plan";
-import { nextOpenLabel } from "@/lib/schedule";
 import { sortTagsForDisplay } from "@/lib/find-paths";
+import { marketPlaceLine } from "@/lib/listing-copy";
+import { nextOpenLabel } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
 
 export function MarketCard({
@@ -30,7 +31,7 @@ export function MarketCard({
             <DayPlanPlus hall={hall} />
             <SaveButton kind="market" slug={market.slug} name={market.name} />
             <p className="type-kicker min-w-0 flex-1 text-muted-foreground">
-              {market.address}
+              {marketPlaceLine(market.address, market.city)}
             </p>
             <ListingMark src={market.logo_url} />
           </div>

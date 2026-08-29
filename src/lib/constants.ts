@@ -2,7 +2,7 @@ import { isTrustedSiteHost } from "@/lib/site-host";
 
 /** One word. Never “Market Regular”. */
 export const SITE_NAME = "MarketRegular";
-export const SITE_TAGLINE = "Toronto farmers' markets, this week.";
+export const SITE_TAGLINE = "GTA farmers' markets, this week.";
 
 /** User-facing name of the day planner. Never “slip” or “planner”. */
 export const DAY_PLAN_NAME = "ticket";

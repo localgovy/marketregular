@@ -1,4 +1,5 @@
 import { WEEKDAYS } from "@/lib/constants";
+import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { formatHours } from "@/lib/schedule";
 import type { MarketSchedule } from "@/types/database";
 
@@ -35,8 +36,24 @@ export function vendorPageDescription({
   if (about?.trim()) return clipMeta(about);
   const at = joinList(marketNames);
   return at
-    ? `${name} at ${at} in Toronto.`
-    : `${name} at Toronto farmers' markets.`;
+    ? `${name} at ${at} in the ${LAUNCH_REGION}.`
+    : `${name} at ${LAUNCH_REGION} farmers' markets.`;
+}
+
+export function marketPlaceLine(address: string | null | undefined, city: string) {
+  const street = address?.trim() ?? "";
+  const town = city.trim();
+  if (!street) return town;
+  if (!town) return street;
+  if (street.toLowerCase().includes(town.toLowerCase())) return street;
+  return `${street} · ${town}`;
+}
+
+export function marketListName(name: string, city: string) {
+  const town = city.trim();
+  if (!town || town.toLowerCase() === LAUNCH_CITY.toLowerCase()) return name;
+  if (name.toLowerCase().includes(town.toLowerCase())) return name;
+  return `${name} · ${town}`;
 }
 
 export function marketPageTitle(name: string, city: string) {

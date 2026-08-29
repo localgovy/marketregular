@@ -5,7 +5,7 @@ import { externalHref } from "@/lib/format";
 import type { Market, MarketSchedule, Vendor } from "@/types/database";
 
 export const SITE_DESCRIPTION =
-  "Find Toronto farmers' markets and their vendors: this week's hours, maps, menus, reviews, and a live floor feed.";
+  "Find farmers' markets across the Greater Toronto Area and their vendors: this week's hours, maps, menus, reviews, and a live floor feed.";
 
 export const noIndex: Metadata["robots"] = {
   index: false,
@@ -145,7 +145,7 @@ export function vendorJsonLd(vendor: Vendor) {
     url: absoluteUrl(`/vendors/${vendor.slug}`),
     telephone: vendor.phone ?? undefined,
     sameAs: sameAsLinks(vendor.website, vendor.instagram, vendor.tiktok),
-    areaServed: { "@type": "City", name: "Toronto" },
+    areaServed: { "@type": "AdministrativeArea", name: "Greater Toronto Area" },
     ...(aggregateRating ? { aggregateRating } : {}),
   };
 }

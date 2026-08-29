@@ -28,7 +28,7 @@ function sqlArr(values: string[] | number[]) {
 }
 
 const lines: string[] = [
-  "-- Generated from Toronto launch markets in src/data/directory.ts — re-run scripts/generate-seed-sql.ts after seed edits",
+  "-- Generated from launch markets in src/data/directory.ts — re-run scripts/generate-seed-sql.ts after seed edits",
   "insert into public.markets (id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, phone, email, tags, status, featured) values",
 ];
 

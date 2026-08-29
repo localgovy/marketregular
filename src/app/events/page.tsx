@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { EventsCalendar } from "@/components/events-calendar";
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
-import { LAUNCH_CITY } from "@/lib/launch";
+import { LAUNCH_REGION } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 
 export const metadata: Metadata = pageMeta({
-  title: `${LAUNCH_CITY} market events`,
+  title: `${LAUNCH_REGION} market events`,
   path: "/events",
   description: "Click on a day, find your market, and start planning your trip.",
 });
@@ -32,6 +32,7 @@ export default async function EventsPage({
           id: market.id,
           slug: market.slug,
           name: market.name,
+          city: market.city,
           address: market.address,
           lat: market.lat,
           lng: market.lng,
