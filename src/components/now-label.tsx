@@ -50,7 +50,7 @@ export function NowLabel({
   return (
     <span
       className={cn(
-        "stall-chip-sm inline-flex items-center gap-1.5 bg-receipt px-2 py-0.5 text-sm font-medium text-stamp",
+        "inline-flex items-center gap-1.5 text-sm font-medium text-stamp",
         className,
       )}
     >
