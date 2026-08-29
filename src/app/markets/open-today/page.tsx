@@ -107,6 +107,16 @@ export default async function OpenTodayPage() {
             .
           </p>
           <MarketDayList rows={tomorrow.slice(0, 6)} scheduleMap={scheduleMap} />
+          {tomorrow.length > 6 ? (
+            <p className="mt-2 text-sm">
+              <Link
+                href={`/markets/day/${daySlug(weekday + 1)}`}
+                className="font-medium text-primary hover:underline"
+              >
+                All {tomorrow.length} {dayName(weekday + 1)} markets
+              </Link>
+            </p>
+          ) : null}
         </section>
       ) : null}
 

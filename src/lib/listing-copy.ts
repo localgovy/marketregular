@@ -1,7 +1,7 @@
 import { PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
-import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
+import { LAUNCH_CITY, LAUNCH_REGION, LAUNCH_TZ } from "@/lib/launch";
 import { tagLabel } from "@/lib/tag-label";
-import { formatHours } from "@/lib/schedule";
+import { civilDateAtOffset, formatHours, inSeason, zonedParts } from "@/lib/schedule";
 import type { MarketSchedule } from "@/types/database";
 
 /** Google truncates near 60. The distinguishing words have to land before that. */
@@ -60,12 +60,18 @@ function dayGroupLabel(days: number[]) {
  * “Saturdays 8 AM–1 PM · Sundays 9 AM–2 PM”. Days that share hours collapse into one
  * group. Season notes are deliberately excluded — those are research copy, not a snippet.
  */
-export function scheduleDaysLine(schedules: MarketSchedule[], maxGroups = 3) {
+export function scheduleDaysLine(schedules: MarketSchedule[], maxGroups = 3, now = new Date()) {
+  const tz = LAUNCH_TZ;
+  const today = zonedParts(now, tz).weekday;
   const byHours = new Map<string, number[]>();
   for (const row of schedules) {
+    const weekday = Number(row.weekday);
+    const offset = (weekday - today + 7) % 7;
+    const when = civilDateAtOffset(now, offset, tz);
+    if (!inSeason(when, row.season_start, row.season_end, tz)) continue;
     const hours = formatHours(row.opens_at, row.closes_at);
     const days = byHours.get(hours) ?? [];
-    if (!days.includes(Number(row.weekday))) days.push(Number(row.weekday));
+    if (!days.includes(weekday)) days.push(weekday);
     byHours.set(hours, days);
   }
   const groups = [...byHours.entries()]

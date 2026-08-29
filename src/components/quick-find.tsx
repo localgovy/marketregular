@@ -117,6 +117,7 @@ export function QuickFind({
   const canMore = Boolean(
     placeChips.length || sellOptions.length || cuisineOptions.length || setup.length,
   );
+  const waitingOnGeo = near && !coords && !error;
 
   const nearest =
     coords && near
@@ -323,12 +324,15 @@ export function QuickFind({
       <div className="order-2 border-t border-primary-foreground/25 pt-3 sm:order-5 sm:pt-4">
         <button
           type="submit"
-          className="find-go stall-chip inline-flex min-h-[3.35rem] w-full cursor-pointer items-center justify-between gap-4 px-5 py-3 text-left text-receipt outline-none transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-receipt active:translate-y-px"
+          disabled={waitingOnGeo}
+          className="find-go stall-chip inline-flex min-h-[3.35rem] w-full cursor-pointer items-center justify-between gap-4 px-5 py-3 text-left text-receipt outline-none transition-[filter,transform] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-receipt active:translate-y-px disabled:cursor-wait disabled:opacity-80"
         >
           <span className="type-column text-receipt">
-            {query || whenId || productTags.length || originTags.length || setupTag || near
-              ? "Search with these"
-              : "Search all markets"}
+            {waitingOnGeo
+              ? "Waiting for location"
+              : query || whenId || productTags.length || originTags.length || setupTag || near
+                ? "Search with these"
+                : "Search all markets"}
           </span>
           <span
             aria-hidden

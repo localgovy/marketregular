@@ -12,7 +12,12 @@ export const EMPTY_SAVES: Saves = { markets: [], vendors: [] };
 const KEY = "mr-saves";
 const LEGACY_KEY = "mr-keeps";
 const listeners = new Set<() => void>();
-let snapshot: Saves = EMPTY_SAVES;
+let snapshot: Saves = cloneEmpty();
+let booted = false;
+
+function cloneEmpty(): Saves {
+  return { markets: [], vendors: [] };
+}
 
 function clone(saves: Saves): Saves {
   return { markets: [...saves.markets], vendors: [...saves.vendors] };
@@ -45,7 +50,16 @@ function emit(next: Saves) {
   listeners.forEach((fn) => fn());
 }
 
-if (typeof window !== "undefined") {
+function onStorage(event: StorageEvent) {
+  if (event.key !== KEY && event.key !== LEGACY_KEY) return;
+  snapshot = documentHasAuthCookie() ? parse(event.newValue) : clone(EMPTY_SAVES);
+  listeners.forEach((fn) => fn());
+}
+
+/** After mount, so the first client paint still matches the empty server snapshot. */
+export function bootSaves() {
+  if (booted || typeof window === "undefined") return;
+  booted = true;
   const stored = window.localStorage.getItem(KEY) ?? window.localStorage.getItem(LEGACY_KEY);
   snapshot = documentHasAuthCookie() ? parse(stored) : clone(EMPTY_SAVES);
   if (!documentHasAuthCookie()) {
@@ -56,11 +70,8 @@ if (typeof window !== "undefined") {
       /* private mode / quota */
     }
   }
-  window.addEventListener("storage", (event) => {
-    if (event.key !== KEY && event.key !== LEGACY_KEY) return;
-    snapshot = documentHasAuthCookie() ? parse(event.newValue) : clone(EMPTY_SAVES);
-    listeners.forEach((fn) => fn());
-  });
+  window.addEventListener("storage", onStorage);
+  listeners.forEach((fn) => fn());
 }
 
 export function getSaves() {

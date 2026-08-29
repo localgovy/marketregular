@@ -4,12 +4,11 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { useDayPlan } from "@/components/day-plan-provider";
-import { formatSlipDate } from "@/lib/day-plan";
+import { formatSlipDate, ticketKicker } from "@/lib/day-plan";
 import {
   DAY_PLAN_HASH,
   DAY_PLAN_NAME,
   DAY_PLAN_SAVED_HREF,
-  DAY_PLAN_TODAY,
 } from "@/lib/constants";
 import type { Vendor } from "@/types/database";
 
@@ -54,7 +53,7 @@ export function SavedDayPlan({
 
   return (
     <section id={DAY_PLAN_HASH} className="scroll-mt-28">
-      <h2>{DAY_PLAN_TODAY}</h2>
+      <h2>{ticketKicker(plan?.hall.date)}</h2>
       {plan ? (
         <article className={`mt-3 ${plate}`}>
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-4 py-3">

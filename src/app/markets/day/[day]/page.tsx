@@ -19,7 +19,7 @@ import {
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
-export const revalidate = 3600;
+export const revalidate = 900;
 
 export function generateStaticParams() {
   return DAY_SLUGS.map((day) => ({ day }));
@@ -112,7 +112,7 @@ export default async function MarketDayPage({
           {rows.length} {rows.length === 1 ? "market" : "markets"} {whenWord(weekday)}, sorted
           by opening time, with {stallCount.toLocaleString("en-CA")}{" "}
           {stallCount === 1 ? "stall" : "stalls"} between them. Hours are the{" "}
-          {name.toLowerCase()} session.
+          {name} session.
         </p>
       ) : (
         <p className="type-lede mt-2 max-w-2xl text-muted-foreground">

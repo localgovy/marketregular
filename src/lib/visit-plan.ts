@@ -67,13 +67,18 @@ export type DaySlipMail = {
   mapsUrl: string;
   about: string | null;
   stalls: string[];
+  kicker?: string;
 };
+
+function slipKicker(slip: DaySlipMail) {
+  return slip.kicker ?? DAY_PLAN_TODAY;
+}
 
 export function daySlipText(slip: DaySlipMail) {
   const lines = [
     `${SITE_NAME} by ${STUDIO_NAME}`,
     "",
-    `${DAY_PLAN_TODAY} — ${slip.marketName}`,
+    `${slipKicker(slip)} — ${slip.marketName}`,
     slip.dateLabel,
     slip.address,
     slip.hours,
@@ -185,7 +190,7 @@ ${about}
 <p style="margin:0 0 12px;line-height:1.4"><a href="${escapeHtml(slip.mapsUrl)}" style="color:#24352B">Get going in Maps</a></p>
 ${stalls}
 <p style="margin:0;line-height:1.4"><a href="${href}" style="color:#24352B">${href}</a></p>`;
-  return ticketEmail(`${DAY_PLAN_TODAY} — ${SITE_NAME}`, body);
+  return ticketEmail(`${slipKicker(slip)} — ${SITE_NAME}`, body);
 }
 
 function escapeHtml(value: string) {

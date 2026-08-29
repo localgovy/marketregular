@@ -1,7 +1,15 @@
 import { WEEKDAYS, provinceTz } from "@/lib/constants";
 import { torontoIsoOffset } from "@/lib/events-month";
 import { LAUNCH_CITY, LAUNCH_TZ } from "@/lib/launch";
-import { civilDateAtOffset, formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
+import {
+  civilDateAtOffset,
+  formatHours,
+  formatTime,
+  inSeason,
+  nextOpenSlot,
+  parseHm,
+  zonedParts,
+} from "@/lib/schedule";
 import type { Market, MarketSchedule, StallRef, Vendor } from "@/types/database";
 
 export const DAY_SLUGS = [
@@ -43,6 +51,8 @@ export type MarketDayRow = {
   /** Only ever true when the day being viewed is today. */
   openNow: boolean;
   stallCount: number;
+  /** Civil date the hours belong to, so plus stamps this session, not the next one. */
+  date: string;
 };
 
 /**
@@ -89,6 +99,7 @@ export function marketsOnWeekday({
       notes: row.notes,
       openNow: offset === 0 && minutes >= opens && minutes <= closes,
       stallCount: stallsByMarket.get(market.id) ?? 0,
+      date: isoForWeekday(weekday, now),
     });
   }
   return rows.sort(
@@ -98,6 +109,48 @@ export function marketsOnWeekday({
 
 export function isoForWeekday(weekday: number, now = new Date()) {
   return torontoIsoOffset(now, offsetToWeekday(weekday, now));
+}
+
+/**
+ * Next remaining session as a day-list row: real hours, open-now, and the civil date
+ * that session falls on. Tag landings used to dump nextOpenLabel into the hours cell.
+ */
+export function marketNextOpenRow(
+  market: Market,
+  schedules: MarketSchedule[],
+  stallCount = 0,
+  now = new Date(),
+): MarketDayRow {
+  const slot = nextOpenSlot(schedules, market.province, now);
+  const tz = provinceTz(market.province);
+  if (!slot) {
+    return {
+      market,
+      hours: "See schedule",
+      opensMinutes: 0,
+      notes: null,
+      openNow: false,
+      stallCount,
+      date: isoForWeekday(zonedParts(now, tz).weekday, now),
+    };
+  }
+  const when = civilDateAtOffset(now, slot.offset, tz);
+  const session = schedules.find(
+    (item) =>
+      Number(item.weekday) === slot.weekday &&
+      inSeason(when, item.season_start, item.season_end, tz),
+  );
+  return {
+    market,
+    hours: session
+      ? formatHours(session.opens_at, session.closes_at)
+      : formatTime(slot.opensAt),
+    opensMinutes: session ? parseHm(session.opens_at) : parseHm(slot.opensAt),
+    notes: session?.notes ?? null,
+    openNow: slot.waitMinutes === 0,
+    stallCount,
+    date: torontoIsoOffset(now, slot.offset, tz),
+  };
 }
 
 /** “this Saturday” / “today” / “tomorrow”, for a lede that reads like a person wrote it. */

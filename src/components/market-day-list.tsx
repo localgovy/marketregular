@@ -25,7 +25,11 @@ export function MarketDayList({
   return (
     <ul className="mt-4 rounded-md bg-card ring-1 ring-border">
       {rows.map((row) => {
-        const hall = hallFromMarket(row.market, scheduleMap.get(row.market.id) ?? []);
+        const hall = hallFromMarket(
+          row.market,
+          scheduleMap.get(row.market.id) ?? [],
+          row.date,
+        );
         return (
           <li
             key={row.market.id}

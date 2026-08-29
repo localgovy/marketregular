@@ -5,7 +5,7 @@ import { BackButton } from "@/components/back-button";
 import { BrowseLinks } from "@/components/browse-links";
 import { JsonLd } from "@/components/json-ld";
 import { ListingScore } from "@/components/listing-score";
-import { listMarkets, listStalls, listVendors } from "@/lib/data/catalog";
+import { listMarkets, listMenuVendorIds, listStalls, listVendors } from "@/lib/data/catalog";
 import { CATEGORIES } from "@/lib/landing";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { vendorHasSubstance } from "@/lib/listing-substance";
@@ -31,8 +31,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { page: raw } = await searchParams;
   const page = pageNumber(raw);
-  const vendors = await listVendors();
-  const listed = vendors.filter(vendorHasSubstance);
+  const [vendors, menuIds] = await Promise.all([listVendors(), listMenuVendorIds()]);
+  const listed = vendors.filter((vendor) =>
+    vendorHasSubstance({ ...vendor, hasMenu: menuIds.has(vendor.id) }),
+  );
   const pages = Math.max(1, Math.ceil(listed.length / PER_PAGE));
 
   return pageMeta({
@@ -54,15 +56,16 @@ export default async function VendorsIndexPage({
   const { page: raw } = await searchParams;
   const page = pageNumber(raw);
 
-  const [vendors, markets, stalls] = await Promise.all([
+  const [vendors, markets, stalls, menuIds] = await Promise.all([
     listVendors(),
     listMarkets(),
     listStalls(),
+    listMenuVendorIds(),
   ]);
 
   // A stall with nothing but a name belongs on its market's roster, not in a directory.
   const listed = vendors
-    .filter(vendorHasSubstance)
+    .filter((vendor) => vendorHasSubstance({ ...vendor, hasMenu: menuIds.has(vendor.id) }))
     .sort((a, b) => a.name.localeCompare(b.name));
   const pages = Math.max(1, Math.ceil(listed.length / PER_PAGE));
   if (page > pages) notFound();

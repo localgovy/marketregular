@@ -2,7 +2,7 @@ import type { Vendor } from "@/types/database";
 
 type SubstanceInput = Pick<
   Vendor,
-  "about" | "phone" | "website" | "instagram" | "tiktok" | "facebook"
+  "about" | "phone" | "website" | "instagram" | "tiktok" | "facebook" | "review_count"
 > & {
   menus?: unknown[];
   feed?: unknown[];
@@ -18,6 +18,7 @@ export function vendorHasSubstance(vendor: SubstanceInput) {
   if (vendor.about?.trim()) return true;
   if (vendor.hasMenu || (vendor.menus?.length ?? 0) > 0) return true;
   if ((vendor.feed?.length ?? 0) > 0) return true;
+  if ((vendor.review_count ?? 0) > 0) return true;
   return Boolean(
     vendor.phone?.trim() ||
       vendor.website?.trim() ||

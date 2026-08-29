@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { FloorComposer } from "@/components/floor-composer";
-import { GeoProvider } from "@/components/geo-provider";
 import type { GeoMarket } from "@/lib/geo";
 import type { StallRef } from "@/types/database";
 
@@ -25,16 +24,14 @@ export function ListingComposer({
   if (!markets.length) return null;
 
   return (
-    <GeoProvider markets={markets}>
-      <FloorComposer
-        signedIn={signedIn}
-        markets={markets}
-        stalls={stalls}
-        initialMarketId={initialMarketId ?? markets[0]?.id}
-        initialVendorId={initialVendorId}
-        className={className}
-        onPosted={() => router.refresh()}
-      />
-    </GeoProvider>
+    <FloorComposer
+      signedIn={signedIn}
+      markets={markets}
+      stalls={stalls}
+      initialMarketId={initialMarketId ?? markets[0]?.id}
+      initialVendorId={initialVendorId}
+      className={className}
+      onPosted={() => router.refresh()}
+    />
   );
 }

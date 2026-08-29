@@ -6,23 +6,39 @@ import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
-import { hallFromMarket } from "@/lib/day-plan";
+import { hallFromMarket, hoursOnIso } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
+import { isoForWeekday } from "@/lib/landing";
 import { marketPlaceLine } from "@/lib/listing-copy";
-import { nextOpenLabel } from "@/lib/schedule";
+import { nextOpenLabel, nextOpenSlot } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
 
 export function MarketCard({
   market,
   schedules,
+  weekdays,
 }: {
   market: Market;
   schedules?: MarketSchedule[];
+  /** When the directory is filtered to one weekday, show that session, not the next one. */
+  weekdays?: number[];
 }) {
-  const when = schedules?.length
-    ? nextOpenLabel(schedules, market.province)
-    : null;
-  const hall = hallFromMarket(market, schedules ?? []);
+  const rows = schedules ?? [];
+  const weekday = weekdays?.length === 1 ? weekdays[0] : null;
+  const iso = weekday == null ? undefined : isoForWeekday(weekday);
+  const sessionHours = iso ? hoursOnIso(rows, market.province, iso) : "";
+  const slot = rows.length ? nextOpenSlot(rows, market.province) : null;
+  const openNow =
+    weekday == null
+      ? slot?.waitMinutes === 0
+      : slot?.waitMinutes === 0 && slot.weekday === weekday;
+  const when =
+    weekday != null
+      ? sessionHours || (rows.length ? nextOpenLabel(rows, market.province) : null)
+      : rows.length
+        ? nextOpenLabel(rows, market.province)
+        : null;
+  const hall = hallFromMarket(market, rows, iso);
   return (
     <div className="h-full">
       <Card className="h-full overflow-visible transition-shadow hover:shadow-md">
@@ -45,10 +61,11 @@ export function MarketCard({
             <p className="line-clamp-3 text-sm text-muted-foreground">
               {market.about}
             </p>
-            {when === "Open now" ? (
-              <NowLabel>{when}</NowLabel>
-            ) : when ? (
-              <p className="text-sm font-medium text-primary">{when}</p>
+            {(openNow || (when && when !== "Open now")) ? (
+            <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm font-medium text-primary">
+              {openNow ? <NowLabel>Open now</NowLabel> : null}
+              {when && when !== "Open now" ? <span>{when}</span> : null}
+            </p>
             ) : null}
             <TagList tags={sortTagsForDisplay(market.tags).slice(0, 4)} />
           </CardContent>

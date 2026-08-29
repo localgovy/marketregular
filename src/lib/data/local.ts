@@ -23,6 +23,7 @@ import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags"
 import { provinceTz } from "@/lib/constants";
 import { isLaunchCity } from "@/lib/launch";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
+import { withVendorProductTags } from "@/lib/vendor-tags";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
 import type {
   FloorItem,
@@ -36,6 +37,10 @@ import type {
   Vendor,
   VendorDetail,
 } from "@/types/database";
+
+function publicVendor(vendor: (typeof seedVendors)[number]) {
+  return withVendorProductTags(withVendorCountryTags(toPublicVendor(vendor)));
+}
 
 function haystack(parts: Array<string | null | undefined>) {
   return parts.filter(Boolean).join(" ").toLowerCase();
@@ -54,12 +59,18 @@ export function localVendors(): Vendor[] {
   const vendorIds = new Set(
     seedMarketVendors.filter((link) => ids.has(link.market_id)).map((link) => link.vendor_id),
   );
-  return seedVendors.filter((v) => vendorIds.has(v.id)).map((v) => withVendorCountryTags(toPublicVendor(v)));
+  return seedVendors.filter((v) => vendorIds.has(v.id)).map(publicVendor);
 }
 
 export function localSitemapVendors(): Vendor[] {
   return localVendors().filter(
     (vendor) => Boolean(vendor.about?.trim()) || menusFor(vendor.id).length > 0,
+  );
+}
+
+export function localMenuVendorIds() {
+  return new Set(
+    localVendors().filter((vendor) => menusFor(vendor.id).length > 0).map((vendor) => vendor.id),
   );
 }
 
@@ -232,7 +243,7 @@ export function localMarketBySlug(slug: string): MarketDetail | null {
     if (!v) return [];
     return [
       {
-        ...withVendorCountryTags(toPublicVendor(v)),
+        ...publicVendor(v),
         stall: link.stall,
         days: link.days,
         halls: hallsMap.get(v.id) ?? [],
@@ -254,7 +265,7 @@ export function localMarketBySlug(slug: string): MarketDetail | null {
 export function localVendorBySlug(slug: string): VendorDetail | null {
   const seed = seedVendors.find((v) => v.slug === slug);
   if (!seed) return null;
-  const vendor = withVendorCountryTags(toPublicVendor(seed));
+  const vendor = publicVendor(seed);
   const links = seedMarketVendors.filter((mv) => mv.vendor_id === vendor.id);
   const markets = links.flatMap((link) => {
     const m = seedMarkets.find((x) => x.id === link.market_id);

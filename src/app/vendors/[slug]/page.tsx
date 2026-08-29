@@ -20,7 +20,22 @@ import { hallFromStall } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
+import { sessionOnWeekday } from "@/lib/schedule";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
+import type { MarketSchedule } from "@/types/database";
+
+function inSeasonDayLabels(days: number[], schedules: MarketSchedule[], province: string) {
+  return days.flatMap((day) => {
+    if (!sessionOnWeekday(schedules, day, province)) return [];
+    const name = WEEKDAYS[day]?.slice(0, 3);
+    return name ? [name] : [];
+  });
+}
+
+function dayParen(days: number[], schedules: MarketSchedule[], province: string) {
+  const names = inSeasonDayLabels(days, schedules, province);
+  return names.length ? ` (${names.join(", ")})` : "";
+}
 
 export const revalidate = 3600;
 
@@ -39,7 +54,9 @@ export async function generateMetadata({
       name: vendor.name,
       about: vendor.about,
       marketNames,
-      days: vendor.markets.flatMap((market) => market.days),
+      days: vendor.markets.flatMap((market) =>
+        market.days.filter((day) => sessionOnWeekday(market.schedules, day, market.province)),
+      ),
       tags: vendor.tags,
     }),
     path: `/vendors/${vendor.slug}`,
@@ -82,7 +99,7 @@ export default async function VendorPage({
           { name: vendor.name, path: `/vendors/${vendor.slug}` },
         ])}
       />
-      <BackButton href="/markets" />
+      <BackButton href="/vendors" />
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{vendor.name}</h1>
         <div className="flex items-center gap-1">
@@ -105,9 +122,7 @@ export default async function VendorPage({
               <Link href={`/markets/${market.slug}`} className="font-medium text-foreground hover:underline">
                 {market.name}
               </Link>
-              {market.days.length
-                ? ` (${market.days.map((day) => WEEKDAYS[day]?.slice(0, 3)).join(", ")})`
-                : ""}
+              {dayParen(market.days, market.schedules, market.province)}
             </span>
           ))}
           .
@@ -183,6 +198,7 @@ export default async function VendorPage({
             >
               {vendor.markets.map((market) => {
                 const hall = hallFromStall(market, market.schedules, market.days);
+                const days = inSeasonDayLabels(market.days, market.schedules, market.province);
                 return (
                 <li key={market.id} className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -192,9 +208,7 @@ export default async function VendorPage({
                     <p className="text-sm text-muted-foreground">
                       {market.address}
                       {market.stall ? ` · ${market.stall}` : ""}
-                      {market.days.length
-                        ? ` · ${market.days.map((d) => WEEKDAYS[d]?.slice(0, 3)).join(", ")}`
-                        : ""}
+                      {days.length ? ` · ${days.join(", ")}` : ""}
                     </p>
                   </div>
                   <span className="flex shrink-0 items-center">
@@ -211,7 +225,11 @@ export default async function VendorPage({
         <div className="lg:col-span-2">
           <ListingAlsoLinks
             heading="Find more like this"
-            weekdays={vendor.markets.flatMap((market) => market.days)}
+            weekdays={vendor.markets.flatMap((market) =>
+              market.days.filter((day) =>
+                sessionOnWeekday(market.schedules, day, market.province),
+              ),
+            )}
             tags={vendor.tags}
           />
         </div>

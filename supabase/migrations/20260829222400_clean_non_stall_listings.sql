@@ -10,6 +10,12 @@
 --   3. Three duplicate pairs still split links between two URLs.
 --
 -- To revert the unpublishing: set status = 'published' for the slugs in the first block.
+--
+-- status, slug, rating_avg, and review_count are privilege columns. The SQL editor and
+-- postgres role are not service_role, so protect_vendor_privilege_columns would
+-- raise 42501. Same pattern as 20260829195948_merge_east_olive_supply.
+
+alter table public.vendors disable trigger protect_vendor_privilege_columns;
 
 update public.vendors
 set status = 'draft'
@@ -138,6 +144,8 @@ where s.kind = 'vendor'
   and m.drop_id = drop_row.id;
 
 delete from public.vendors where id in (select drop_id from private.vendor_merge);
+
+alter table public.vendors enable trigger protect_vendor_privilege_columns;
 
 drop table private.vendor_merge;
 

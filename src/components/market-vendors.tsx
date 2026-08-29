@@ -84,7 +84,7 @@ function stallFits(vendor: MarketStall, find: StallBrowse, today: number) {
   }
   if (
     find.tags.length &&
-    !find.tags.some((tag) => vendorFilterTags(vendor).includes(tag))
+    !find.tags.some((tag) => vendor.tags.includes(tag))
   ) {
     return false;
   }
@@ -155,7 +155,12 @@ export function MarketVendors({
     sellTags.length > 0 ||
     cuisineTags.length > 0 ||
     recordTags.length > 0;
-  const dayValue = live.weekdays.length === 1 ? String(live.weekdays[0]) : "";
+  const dayValue =
+    live.weekdays.length === 1
+      ? String(live.weekdays[0])
+      : live.weekdays.length > 1
+        ? "multi"
+        : "";
   const browseOn = live.weekdays.length > 0 || live.hereToday;
   const tagsOn = live.tags.length > 0;
 
@@ -236,6 +241,7 @@ export function MarketVendors({
                   value={dayValue}
                   onChange={(event) => {
                     const value = event.target.value;
+                    if (value === "multi") return;
                     update({
                       weekdays: value === "" ? [] : [Number(value)],
                       ...(value === "" ? {} : { hereToday: false }),
@@ -243,6 +249,10 @@ export function MarketVendors({
                   }}
                 >
                   <option value="">Any day</option>
+                  {live.weekdays.length > 1 &&
+                  live.weekdays.every((day) => stallDays.includes(day)) ? (
+                    <option value="multi">{live.weekdays.length} days</option>
+                  ) : null}
                   {stallDays.map((day) => (
                     <option key={day} value={day}>
                       {WEEKDAYS[day]}

@@ -6,6 +6,7 @@ import {
   localMarketBySlug,
   localMarkets,
   localMenuCount,
+  localMenuVendorIds,
   localSchedules,
   localSearch,
   localSitemapVendors,
@@ -21,6 +22,7 @@ import {
   scopeVendorsToMarkets,
   searchWeekdays,
   slugsForPlaceQuery,
+  queryNamesHall,
 } from "@/lib/find-paths";
 import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
@@ -71,6 +73,26 @@ const SCHEDULE_PUBLIC =
 /** Score, then the tag guesses that keep name-only roster shops inside the filters. */
 function hydrateVendor(vendor: Vendor) {
   return withVendorProductTags(withVendorCountryTags(withListingStats(vendor)));
+}
+
+const IN_CHUNK = 80;
+
+async function fetchPublishedVendorsByIds(ids: string[]): Promise<Vendor[]> {
+  const supabase = publicDb();
+  if (!supabase || !ids.length) return [];
+  const unique = [...new Set(ids)];
+  const rows: Vendor[] = [];
+  for (let i = 0; i < unique.length; i += IN_CHUNK) {
+    const slice = unique.slice(i, i + IN_CHUNK);
+    const { data, error } = await supabase
+      .from("vendors")
+      .select(VENDOR_PUBLIC)
+      .eq("status", "published")
+      .in("id", slice);
+    if (error) break;
+    rows.push(...((data ?? []) as Vendor[]));
+  }
+  return rows;
 }
 
 async function fetchAllRows<T>(
@@ -194,6 +216,16 @@ export async function listSitemapVendors(): Promise<Vendor[]> {
   const withMenu = new Set((menuRows.data ?? []).map((row) => row.vendor_id));
   return vendors.filter((vendor) => Boolean(vendor.about?.trim()) || withMenu.has(vendor.id));
 }
+
+export const listMenuVendorIds = cache(async function listMenuVendorIds(): Promise<Set<string>> {
+  const supabase = publicDb();
+  if (!supabase) return localMenuVendorIds();
+  const { data, error } = await fetchAllRows<{ vendor_id: string }>((from, to) =>
+    supabase.from("vendor_menus").select("vendor_id").range(from, to),
+  );
+  if (error) return localMenuVendorIds();
+  return new Set(data.map((row) => row.vendor_id));
+});
 
 export const listStalls = cache(async function listStalls(): Promise<StallRef[]> {
   const supabase = publicDb();
@@ -378,17 +410,28 @@ export async function searchDirectory(filters: SearchFilters) {
     return query.order("name").range(from, to);
   };
 
-  const [marketRows, vendorRows, scheduleRows, stalls, allMarkets] = await Promise.all([
-    fetchAllRows<Market>(marketPage).then((result) => result.data),
-    fetchAllRows<Vendor>(vendorPage).then((result) => result.data),
+  const [marketResult, vendorResult, scheduleResult, stalls, allMarkets] = await Promise.all([
+    fetchAllRows<Market>(marketPage),
+    fetchAllRows<Vendor>(vendorPage),
     fetchAllRows<MarketSchedule>((from, to) =>
       supabase.from("market_schedules").select(SCHEDULE_PUBLIC).order("id").range(from, to),
-    ).then((result) => result.data),
+    ),
     listStalls(),
     listMarkets(),
   ]);
 
-  if (!marketRows.length && !vendorRows.length) return localSearch(filters);
+  if (
+    marketResult.error &&
+    vendorResult.error &&
+    !marketResult.data.length &&
+    !vendorResult.data.length
+  ) {
+    return localSearch(filters);
+  }
+
+  const marketRows = marketResult.data;
+  const vendorRows = vendorResult.data;
+  const scheduleRows = scheduleResult.data;
 
   const schedulesByMarket = new Map<string, MarketSchedule[]>();
   for (const row of scheduleRows) {
@@ -400,8 +443,8 @@ export async function searchDirectory(filters: SearchFilters) {
   let markets = marketRows.filter((market) => isLaunchCity(market.city)).map(withListingStats);
   const atLaunch = new Set(stalls.map((stall) => stall.id));
   let vendors = vendorRows.map(hydrateVendor).filter((vendor) => atLaunch.has(vendor.id));
-  if (filters.q?.trim()) {
-    const placeSlugs = new Set(slugsForPlaceQuery(filters.q));
+  if (raw) {
+    const placeSlugs = new Set(slugsForPlaceQuery(raw));
     if (placeSlugs.size) {
       const seen = new Set(markets.map((market) => market.id));
       for (const market of allMarkets) {
@@ -410,6 +453,32 @@ export async function searchDirectory(filters: SearchFilters) {
         seen.add(market.id);
       }
       markets.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    const rosterHallIds = new Set<string>();
+    if (placeSlugs.size) {
+      for (const market of markets) {
+        if (placeSlugs.has(market.slug)) rosterHallIds.add(market.id);
+      }
+    }
+    for (const market of markets) {
+      if (queryNamesHall(raw, market.name)) rosterHallIds.add(market.id);
+    }
+    if (rosterHallIds.size) {
+      const wantIds = stalls
+        .filter((stall) => rosterHallIds.has(stall.market_id))
+        .map((stall) => stall.id);
+      const have = new Set(vendors.map((vendor) => vendor.id));
+      const missing = wantIds.filter((id) => !have.has(id));
+      if (missing.length) {
+        const extra = await fetchPublishedVendorsByIds(missing);
+        vendors = [
+          ...vendors,
+          ...extra
+            .map(hydrateVendor)
+            .filter((vendor) => atLaunch.has(vendor.id) && !have.has(vendor.id)),
+        ];
+        vendors.sort((a, b) => a.name.localeCompare(b.name));
+      }
     }
   }
   const originQuery = filters.q?.trim() ? countryTagsFromQuery(filters.q) : [];

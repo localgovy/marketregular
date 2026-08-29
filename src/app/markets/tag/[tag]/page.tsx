@@ -10,12 +10,12 @@ import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/
 import {
   CATEGORIES,
   categoryBySlug,
+  marketNextOpenRow,
   marketsWithTag,
   scheduleMapFrom,
   vendorsWithTag,
 } from "@/lib/landing";
 import { LAUNCH_CITY } from "@/lib/launch";
-import { nextOpenLabel } from "@/lib/schedule";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 import { tagLabel } from "@/lib/tag-label";
 import type { Market, MarketSchedule, Vendor } from "@/types/database";
@@ -64,24 +64,22 @@ export async function generateMetadata({
 function MarketList({
   markets,
   scheduleMap,
+  stallCountByMarket,
 }: {
   markets: Market[];
   scheduleMap: Map<string, MarketSchedule[]>;
+  stallCountByMarket: Map<string, number>;
 }) {
   return (
     <MarketDayList
       scheduleMap={scheduleMap}
-      rows={markets.map((market) => {
-        const schedules = scheduleMap.get(market.id) ?? [];
-        return {
+      rows={markets.map((market) =>
+        marketNextOpenRow(
           market,
-          hours: nextOpenLabel(schedules, market.province),
-          opensMinutes: 0,
-          notes: null,
-          openNow: false,
-          stallCount: 0,
-        };
-      })}
+          scheduleMap.get(market.id) ?? [],
+          stallCountByMarket.get(market.id) ?? 0,
+        ),
+      )}
     />
   );
 }
@@ -136,6 +134,12 @@ export default async function MarketTagPage({
     scope: category.scope,
   });
   const shops = category.scope === "markets" ? [] : vendorsWithTag(vendors, tag);
+  const taggedVendorIds = new Set(shops.map((vendor) => vendor.id));
+  const stallCountByMarket = new Map<string, number>();
+  for (const stall of stalls) {
+    if (category.scope === "both" && !taggedVendorIds.has(stall.id)) continue;
+    stallCountByMarket.set(stall.market_id, (stallCountByMarket.get(stall.market_id) ?? 0) + 1);
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10">
@@ -164,7 +168,11 @@ export default async function MarketTagPage({
           {halls.length} {halls.length === 1 ? "market" : "markets"}
         </h2>
         {halls.length ? (
-          <MarketList markets={halls} scheduleMap={scheduleMap} />
+          <MarketList
+            markets={halls}
+            scheduleMap={scheduleMap}
+            stallCountByMarket={stallCountByMarket}
+          />
         ) : (
           <p className="mt-2 text-base text-muted-foreground">
             Nothing in the directory carries this yet.

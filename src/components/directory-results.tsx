@@ -16,10 +16,12 @@ export function DirectoryResults({
   markets,
   vendors,
   schedulesByMarket,
+  weekdays,
 }: {
   markets: Market[];
   vendors: DirectoryVendor[];
   schedulesByMarket?: Record<string, MarketSchedule[]>;
+  weekdays?: number[];
 }) {
   const [marketPages, setMarketPages] = useState(1);
   const [vendorPages, setVendorPages] = useState(1);
@@ -38,6 +40,7 @@ export function DirectoryResults({
                   key={market.id}
                   market={market}
                   schedules={schedulesByMarket?.[market.id]}
+                  weekdays={weekdays}
                 />
               ))}
             </div>

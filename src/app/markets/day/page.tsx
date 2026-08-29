@@ -16,7 +16,7 @@ import {
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
-export const revalidate = 3600;
+export const revalidate = 900;
 
 export const metadata: Metadata = pageMeta({
   title: `${LAUNCH_CITY} farmers' markets by day of the week`,
@@ -103,7 +103,7 @@ export default async function MarketDayHubPage() {
                   href={`/markets/day/${day.slug}`}
                   className="font-medium text-primary hover:underline"
                 >
-                  All {day.rows.length} {day.name.toLowerCase()} markets
+                  All {day.rows.length} {day.name} markets
                 </Link>
               </p>
             ) : null}

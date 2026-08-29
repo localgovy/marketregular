@@ -16,6 +16,7 @@ import {
   mergeHall,
   parseDayPlan,
   subscribeDayPlan,
+  ticketTargetCopy,
   writeDayPlan,
   type DayPlan,
   type DayPlanHall,
@@ -23,7 +24,6 @@ import {
 } from "@/lib/day-plan";
 import { torontoYmd } from "@/lib/events-month";
 import { openSignInSlip } from "@/lib/signin-slip";
-import { DAY_PLAN_NAME } from "@/lib/constants";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 
@@ -51,13 +51,13 @@ function storedPlan(raw: string): DayPlan | null {
   }
 }
 
-function requireSignedIn(name: string) {
+function requireSignedIn(name: string, date?: string) {
   if (documentHasAuthCookie()) return true;
   if (typeof window === "undefined") return false;
   openSignInSlip({
     next: `${window.location.pathname}${window.location.search}`,
     name,
-    copy: `Sign in to put ${name} on today’s ${DAY_PLAN_NAME}.`,
+    copy: `Sign in to put ${name} on ${ticketTargetCopy(date)}.`,
   });
   return false;
 }
@@ -82,7 +82,7 @@ export function DayPlanProvider({ children }: { children: React.ReactNode }) {
   }, [allowed]);
 
   const putHall = useCallback((hall: DayPlanHall) => {
-    if (!requireSignedIn(hall.name)) return;
+    if (!requireSignedIn(hall.name, hall.date)) return;
     const current = storedPlan(dayPlanSnapshot());
     if (current && current.hall.slug === hall.slug) {
       writeDayPlan({
@@ -100,7 +100,7 @@ export function DayPlanProvider({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   const punchVendor = useCallback((slug: string, hall: DayPlanHall) => {
-    if (!requireSignedIn(hall.name)) return;
+    if (!requireSignedIn(hall.name, hall.date)) return;
     const current = storedPlan(dayPlanSnapshot());
     if (current && current.hall.slug === hall.slug) {
       const has = current.vendorSlugs.includes(slug);

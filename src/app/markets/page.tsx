@@ -153,7 +153,13 @@ export default async function MarketsPage({
         </div>
         <p className="text-sm text-muted-foreground">{summary}</p>
       </div>
-      <DirectoryResults key={formKey} markets={markets} vendors={vendors} schedulesByMarket={schedulesByMarket} />
+      <DirectoryResults
+        key={formKey}
+        markets={markets}
+        vendors={vendors}
+        schedulesByMarket={schedulesByMarket}
+        weekdays={weekdays}
+      />
       <BrowseLinks className="mt-12" />
     </div>
   );

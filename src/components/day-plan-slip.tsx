@@ -15,13 +15,14 @@ import {
   formatSlipDate,
   isAppleMapsDevice,
   mapsUrl,
+  ticketKicker,
 } from "@/lib/day-plan";
 import { formatDistance, distanceMeters } from "@/lib/geo";
 import { openDayPlanHint } from "@/lib/day-plan-hint";
 import { openSignInSlip } from "@/lib/signin-slip";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { visitPlanWaitCopy, visitPlanWaitMs } from "@/lib/visit-plan-limit";
-import { DAY_PLAN_NAME, DAY_PLAN_TODAY } from "@/lib/constants";
+import { DAY_PLAN_NAME } from "@/lib/constants";
 import { TODAY_STALL_CAP } from "@/lib/vendor-week";
 import { cn } from "@/lib/utils";
 
@@ -230,7 +231,7 @@ export function DayPlanSlip() {
       </button>
 
       <div className="shrink-0 pr-8">
-        <p className="text-sm text-muted-foreground">{DAY_PLAN_TODAY}</p>
+        <p className="text-sm text-muted-foreground">{ticketKicker(slip.hall.date)}</p>
         <h2 id={titleId} className="type-column mt-0.5">
           {slip.hall.name}
         </h2>

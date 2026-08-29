@@ -6,6 +6,7 @@ import {
   hoursOnIso,
   isSlipDateInRange,
   mapsUrl,
+  ticketKicker,
   validPlanSlug,
   weekdayFromIso,
   type TravelMode,
@@ -16,7 +17,7 @@ import { fetchMyProfile } from "@/lib/my-profile";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { daySlipHtml, daySlipText } from "@/lib/visit-plan";
-import { DAY_PLAN_NAME, DAY_PLAN_TODAY } from "@/lib/constants";
+import { DAY_PLAN_NAME } from "@/lib/constants";
 import { visitPlanWaitCopy, visitPlanWaitMs, VISIT_PLAN_COOLDOWN_MS } from "@/lib/visit-plan-limit";
 import { Resend } from "resend";
 
@@ -127,13 +128,14 @@ export async function emailDaySlip(input: {
     mapsUrl: mapsUrl(market.lat, market.lng, input.mode),
     about: null,
     stalls,
+    kicker: ticketKicker(input.date),
   };
 
   const resend = new Resend(key);
   const { error } = await resend.emails.send({
     from,
     to: user.email,
-    subject: sanitizeMailHeader(`${DAY_PLAN_TODAY} — ${market.name}`),
+    subject: sanitizeMailHeader(`${ticketKicker(input.date)} — ${market.name}`),
     text: daySlipText(slip),
     html: daySlipHtml(slip),
   });

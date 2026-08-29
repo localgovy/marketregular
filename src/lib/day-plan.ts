@@ -1,5 +1,5 @@
 import { torontoIsoOffset, torontoNoon, torontoYmd } from "@/lib/events-month";
-import { provinceTz } from "@/lib/constants";
+import { DAY_PLAN_NAME, DAY_PLAN_TODAY, provinceTz } from "@/lib/constants";
 import { LAUNCH_TZ } from "@/lib/launch";
 import {
   formatHours,
@@ -89,8 +89,11 @@ export function writeDayPlan(plan: DayPlan | null) {
   try {
     if (!plan) {
       window.localStorage.removeItem(DAY_PLAN_KEY);
+      cachedPlan = "";
     } else {
-      window.localStorage.setItem(DAY_PLAN_KEY, JSON.stringify(plan));
+      const raw = JSON.stringify(plan);
+      window.localStorage.setItem(DAY_PLAN_KEY, raw);
+      cachedPlan = raw;
     }
     window.dispatchEvent(new Event(DAY_PLAN_EVENT));
   } catch {
@@ -107,12 +110,22 @@ export function subscribeDayPlan(onStoreChange: () => void) {
   };
 }
 
-export function dayPlanSnapshot() {
+let cachedPlan = "";
+let planBooted = false;
+
+export function bootDayPlan() {
+  if (planBooted || typeof window === "undefined") return;
+  planBooted = true;
   try {
-    return window.localStorage.getItem(DAY_PLAN_KEY) ?? "";
+    cachedPlan = window.localStorage.getItem(DAY_PLAN_KEY) ?? "";
   } catch {
-    return "";
+    cachedPlan = "";
   }
+  window.dispatchEvent(new Event(DAY_PLAN_EVENT));
+}
+
+export function dayPlanSnapshot() {
+  return cachedPlan;
 }
 
 export function dayPlanServerSnapshot() {
@@ -128,6 +141,24 @@ export function formatSlipDate(iso: string) {
     day: "numeric",
     timeZone: "UTC",
   }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
+export function ticketIsToday(iso: string, now = new Date()) {
+  return iso === torontoYmd(now);
+}
+
+/** Heading: "Today’s ticket", or "Ticket" when the hall date is another day. */
+export function ticketKicker(iso?: string | null, now = new Date()) {
+  if (iso && !ticketIsToday(iso, now)) {
+    return `${DAY_PLAN_NAME.charAt(0).toUpperCase()}${DAY_PLAN_NAME.slice(1)}`;
+  }
+  return DAY_PLAN_TODAY;
+}
+
+/** In a sentence: "today’s ticket", or "the ticket" when the date is another day. */
+export function ticketTargetCopy(iso?: string | null, now = new Date()) {
+  if (iso && !ticketIsToday(iso, now)) return `the ${DAY_PLAN_NAME}`;
+  return `today’s ${DAY_PLAN_NAME}`;
 }
 
 export function weekdayFromIso(iso: string) {

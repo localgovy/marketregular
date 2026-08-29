@@ -7,7 +7,6 @@ import {
 } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_TZ } from "@/lib/launch";
 import { tagLabel } from "@/lib/tag-label";
-import { vendorFilterTags } from "@/lib/vendor-tags";
 import type { Market } from "@/types/database";
 
 const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
@@ -22,6 +21,7 @@ export const FIND_PRODUCTS = [
   "bakery",
   "meat",
   "cheese",
+  "honey",
   "vegan",
   "gluten-free",
   "flowers",
@@ -30,6 +30,14 @@ export const FIND_PRODUCTS = [
   "coffee",
   "beer",
 ] as const;
+
+const FIND_PRODUCT_SET = new Set<string>(FIND_PRODUCTS);
+
+/** Default product chips, plus any product already on from a category page. */
+export function productChipRow(selected: readonly string[] = []) {
+  const extras = selected.filter((tag) => PRODUCT_SET.has(tag) && !FIND_PRODUCT_SET.has(tag));
+  return extras.length ? [...FIND_PRODUCTS, ...extras] : FIND_PRODUCTS;
+}
 
 /** Short cuisine row on Find. Everything else lives under All filters. */
 export const FIND_ORIGINS = [
@@ -58,10 +66,10 @@ export const FIND_AREAS: Array<{ label: string; q: string; slugs: string[] }> = 
   { label: "Wychwood", q: "Wychwood", slugs: ["the-stops-farmers-market"] },
   { label: "Dufferin Grove", q: "Dufferin Grove", slugs: ["dufferin-grove-organic-farmers-market"] },
   { label: "Junction", q: "Junction", slugs: ["the-junction-farmers-market"] },
-  { label: "Leslieville", q: "Leslieville", slugs: ["the-leslieville-farmers-market"] },
+  { label: "Leslieville", q: "Leslieville", slugs: ["the-leslieville-farmers-market", "leslieville-farmers-market-east-end-food-hub"] },
   { label: "East York", q: "East York", slugs: ["east-york-farmers-market"] },
   { label: "Withrow", q: "Withrow", slugs: ["withrow-park-farmers-market"] },
-  { label: "Sorauren", q: "Sorauren", slugs: ["sorauren-farmers-market"] },
+  { label: "Sorauren", q: "Sorauren", slugs: ["sorauren-farmers-market", "sorauren-farmers-market-henderson-brewery"] },
   { label: "Brick Works", q: "Brick Works", slugs: ["evergreen-brick-works-saturday-farmers-market"] },
   { label: "North York", q: "North York", slugs: ["north-york-farmers-market"] },
 ];
@@ -122,12 +130,12 @@ export function homeAreas(markets: Array<Pick<Market, "slug" | "city">>) {
 
 export type HomeAreas = ReturnType<typeof homeAreas>;
 
-/** Which filter chips can actually return something, inferred tags included. */
+/** Which filter chips can actually return something. Stored tags only — guesses are not facts. */
 export function tagsPresent(
-  rows: Array<{ tags: string[]; searchTags?: string[] }>,
+  rows: Array<{ tags: string[] }>,
   wanted: readonly string[],
 ) {
-  const have = new Set(rows.flatMap((row) => vendorFilterTags(row)));
+  const have = new Set(rows.flatMap((row) => row.tags));
   return wanted.filter((tag) => have.has(tag));
 }
 
@@ -183,11 +191,9 @@ export function applyDirectoryTags<
   }
 
   if (product.length) {
-    // Inferred tags widen what a filter can reach without widening what a page claims.
-    nextVendors = nextVendors.filter((vendor) => {
-      const searchable = vendorFilterTags(vendor);
-      return product.some((tag) => searchable.includes(tag));
-    });
+    nextVendors = nextVendors.filter((vendor) =>
+      product.some((tag) => vendor.tags.includes(tag)),
+    );
     const matchingVendorIds = new Set(nextVendors.map((vendor) => vendor.id));
     const hostIds = new Set(
       links
@@ -241,7 +247,8 @@ export function parseDirectorySort(
   value: string | undefined,
   hasNear: boolean,
 ): DirectorySort {
-  if (value === "name" || value === "next" || value === "near" || value === "score") {
+  if (value === "near") return hasNear ? "near" : "name";
+  if (value === "name" || value === "next" || value === "score") {
     return value;
   }
   return hasNear ? "near" : "name";
@@ -349,6 +356,14 @@ function foldPlaceQuery(value: string) {
     .replace(/[^a-z0-9]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/** Typed search for a hall name, not a word that merely appears in an about blurb. */
+export function queryNamesHall(query: string, name: string) {
+  const needle = foldPlaceQuery(query);
+  const hall = foldPlaceQuery(name);
+  if (needle.length < 4) return false;
+  return hall === needle || hall.startsWith(needle) || needle.startsWith(hall);
 }
 
 export function marketsCrumbs(search: {

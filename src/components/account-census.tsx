@@ -61,7 +61,7 @@ export function AccountCensus({
         <CensusCell
           href="#reviews"
           value={reviewCount}
-          word={reviewCount === 1 ? "saved review" : "saved reviews"}
+          word={reviewCount === 1 ? "review" : "reviews"}
         />
       </div>
     </nav>

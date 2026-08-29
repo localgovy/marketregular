@@ -8,11 +8,11 @@ import { FilterColumn, FilterRow, type FilterOption } from "@/components/filter-
 import { SearchField } from "@/components/search-field";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
-  FIND_PRODUCTS,
   FIND_RECORD,
   FIND_SETUP,
   marketsHref,
   originChipRow,
+  productChipRow,
   tagLabel,
   weekdayInToronto,
   whenOptions,
@@ -105,13 +105,9 @@ export function SearchForm({
     router.push(marketsHref(toSearch(next, defaults)));
   }
 
-  function update(patch: Partial<BrowseState>) {
-    const next = { ...live, q: typedQ(), ...patch };
-    if (panelOpen) {
-      setDraft(next);
-      return;
-    }
-    go(next);
+  /** Compact chips always apply. All Filters is the only uncommitted draft. */
+  function compact(patch: Partial<BrowseState>) {
+    go({ ...applied, q: typedQ(), ...patch });
   }
 
   function openPanel() {
@@ -120,19 +116,25 @@ export function SearchForm({
   }
 
   function nextOpenValue() {
-    if (live.openNow && live.weekdays.length === 0) return "open";
-    if (!live.openNow && live.weekdays.length === 1) {
-      const match = nextOpenChoices.find((item) => item.weekday === live.weekdays[0]);
+    if (applied.openNow && applied.weekdays.length === 0) return "open";
+    if (!applied.openNow && applied.weekdays.length === 1) {
+      const match = nextOpenChoices.find((item) => item.weekday === applied.weekdays[0]);
       if (match) return match.id;
     }
     return "";
   }
 
-  const dayValue = live.weekdays.length === 1 ? String(live.weekdays[0]) : "";
-  const areaValue = live.areas.length === 1 ? live.areas[0] : "";
+  const dayValue =
+    applied.weekdays.length === 1
+      ? String(applied.weekdays[0])
+      : applied.weekdays.length > 1
+        ? "multi"
+        : "";
+  const areaValue =
+    applied.areas.length === 1 ? applied.areas[0] : applied.areas.length > 1 ? "multi" : "";
   const browseOn =
-    live.weekdays.length > 0 || Boolean(live.setup) || live.areas.length > 0 || live.openNow;
-  const tagsOn = live.tags.length > 0;
+    applied.weekdays.length > 0 || Boolean(applied.setup) || applied.areas.length > 0 || applied.openNow;
+  const tagsOn = applied.tags.length > 0;
 
   return (
     <form
@@ -174,13 +176,17 @@ export function SearchForm({
           value={dayValue}
           onChange={(event) => {
             const value = event.target.value;
-            update({
+            if (value === "multi") return;
+            compact({
               weekdays: value === "" ? [] : [Number(value)],
               ...(value === "" ? {} : { openNow: false }),
             });
           }}
         >
           <option value="">Any day</option>
+          {applied.weekdays.length > 1 ? (
+            <option value="multi">{applied.weekdays.length} days</option>
+          ) : null}
           {WEEKDAYS.map((day, index) => (
             <option key={day} value={index}>
               {day}
@@ -190,8 +196,8 @@ export function SearchForm({
         <select
           aria-label="Indoor or outdoor"
           className={selectClass}
-          value={live.setup}
-          onChange={(event) => update({ setup: event.target.value })}
+          value={applied.setup}
+          onChange={(event) => compact({ setup: event.target.value })}
         >
           <option value="">Indoor or outdoor</option>
           {FIND_SETUP.map((tag) => (
@@ -206,10 +212,14 @@ export function SearchForm({
           value={areaValue}
           onChange={(event) => {
             const value = event.target.value;
-            update({ areas: value ? [value] : [] });
+            if (value === "multi") return;
+            compact({ areas: value ? [value] : [] });
           }}
         >
           <option value="">Anywhere in {LAUNCH_COVERAGE}</option>
+          {applied.areas.length > 1 ? (
+            <option value="multi">{applied.areas.length} places</option>
+          ) : null}
           {places.neighbourhoods.length ? (
             <optgroup label="Toronto neighbourhoods">
               {places.neighbourhoods.map((area) => (
@@ -236,16 +246,16 @@ export function SearchForm({
           onChange={(event) => {
             const id = event.target.value;
             if (id === "open") {
-              update({ openNow: true, weekdays: [] });
+              compact({ openNow: true, weekdays: [] });
               return;
             }
             if (id === "") {
-              update({ openNow: false });
+              compact({ openNow: false, weekdays: [] });
               return;
             }
             const choice = nextOpenChoices.find((item) => item.id === id);
             if (choice?.weekday != null) {
-              update({ weekdays: [choice.weekday], openNow: false });
+              compact({ weekdays: [choice.weekday], openNow: false });
             }
           }}
         >
@@ -258,13 +268,13 @@ export function SearchForm({
         </select>
         <button
           type="button"
-          aria-pressed={live.openNow}
+          aria-pressed={applied.openNow}
           onClick={() =>
-            update(live.openNow ? { openNow: false } : { openNow: true, weekdays: [] })
+            compact(applied.openNow ? { openNow: false } : { openNow: true, weekdays: [] })
           }
           className={cn(
             "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
-            live.openNow
+            applied.openNow
               ? "bg-ticket text-foreground"
               : "border border-input bg-card text-foreground hover:bg-muted",
           )}
@@ -275,20 +285,20 @@ export function SearchForm({
           className="ml-auto"
           disabled={!browseOn}
           onClick={() =>
-            update({ weekdays: [], setup: "", areas: [], openNow: false })
+            compact({ weekdays: [], setup: "", areas: [], openNow: false })
           }
         />
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-border px-3 py-3 sm:px-4">
-        {FIND_PRODUCTS.map((tag) => {
-          const on = live.tags.includes(tag);
+        {productChipRow(applied.tags).map((tag) => {
+          const on = applied.tags.includes(tag);
           return (
             <button
               key={tag}
               type="button"
               aria-pressed={on}
-              onClick={() => update({ tags: toggleIn(live.tags, tag) })}
+              onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
               className={cn(
                 "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
                 on
@@ -300,14 +310,14 @@ export function SearchForm({
             </button>
           );
         })}
-        {originChipRow(live.tags).map((tag) => {
-          const on = live.tags.includes(tag);
+        {originChipRow(applied.tags).map((tag) => {
+          const on = applied.tags.includes(tag);
           return (
             <button
               key={tag}
               type="button"
               aria-pressed={on}
-              onClick={() => update({ tags: toggleIn(live.tags, tag) })}
+              onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
               className={cn(
                 "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
                 on
@@ -322,7 +332,7 @@ export function SearchForm({
         <div className="ml-auto flex items-center gap-3">
           <FilterClearButton
             disabled={!tagsOn}
-            onClick={() => update({ tags: [] })}
+            onClick={() => compact({ tags: [] })}
           />
           <button
             type="button"
@@ -379,10 +389,18 @@ function AllFilters({
 }) {
   function setSetup(tag: string, on: boolean) {
     if (!on) {
-      onChange({ ...state, setup: state.setup === tag ? "" : state.setup });
+      onChange({
+        ...state,
+        setup: state.setup === tag ? "" : state.setup,
+        tags: tag === "year-round" ? state.tags.filter((item) => item !== "year-round") : state.tags,
+      });
       return;
     }
-    onChange({ ...state, setup: tag });
+    onChange({
+      ...state,
+      setup: tag,
+      tags: tag === "year-round" ? state.tags.filter((item) => item !== "year-round") : state.tags,
+    });
   }
 
   function setTag(tag: string, on: boolean) {

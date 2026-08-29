@@ -51,6 +51,31 @@ export function inSeason(now: Date, start: string | null, end: string | null, tz
   return md >= from || md <= to;
 }
 
+/** Days from today to the next time this weekday comes around. 0 means today. */
+export function weekdayOffset(weekday: number, now = new Date(), tz = LAUNCH_TZ) {
+  const today = zonedParts(now, tz).weekday;
+  return (weekday - today + 7) % 7;
+}
+
+/** In-season session on the next date this weekday falls. */
+export function sessionOnWeekday(
+  schedules: ScheduleRow[],
+  weekday: number,
+  province: string,
+  now = new Date(),
+) {
+  const tz = provinceTz(province);
+  const offset = weekdayOffset(weekday, now, tz);
+  const when = civilDateAtOffset(now, offset, tz);
+  return (
+    schedules.find(
+      (item) =>
+        Number(item.weekday) === weekday &&
+        inSeason(when, item.season_start, item.season_end, tz),
+    ) ?? null
+  );
+}
+
 /** Noon-ish UTC for a civil date in `tz`, shifted by whole days from `now`. */
 export function civilDateAtOffset(now: Date, offset: number, tz: string) {
   const parts = new Intl.DateTimeFormat("en-CA", {
