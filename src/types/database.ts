@@ -182,6 +182,9 @@ export type StallRef = {
   days: number[];
 };
 
+/** What the feed and composer need from a stall. Keeps `days` out of the client payload. */
+export type StallPick = Pick<StallRef, "id" | "name" | "slug" | "market_id" | "stall">;
+
 export type SearchFilters = {
   q?: string;
   province?: string;
@@ -189,6 +192,7 @@ export type SearchFilters = {
   weekday?: number;
   weekdays?: number[];
   tags?: string[];
+  areas?: string[];
   setup?: string;
   openNow?: boolean;
   near?: { lat: number; lng: number };

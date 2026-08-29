@@ -18,9 +18,10 @@ import {
 } from "@/lib/feed-filter";
 import { tagLabel } from "@/lib/find-paths";
 import { reviewFromPost } from "@/lib/floor-note";
+import type { GeoMarket } from "@/lib/geo";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import type { FloorItem, Market, Post, StallRef } from "@/types/database";
+import type { FloorItem, Post, StallPick } from "@/types/database";
 
 function queryFromParams(params: URLSearchParams): FeedQuery {
   return parseFeedQuery({
@@ -41,8 +42,8 @@ export function FeedBoard({
 }: {
   initialItems: FloorItem[];
   signedIn: boolean;
-  stalls: StallRef[];
-  markets: Market[];
+  stalls: StallPick[];
+  markets: GeoMarket[];
   openSlugs: string[];
 }) {
   const router = useRouter();

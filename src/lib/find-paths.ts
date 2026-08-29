@@ -5,7 +5,7 @@ import {
   RECORD_TAGS,
   WEEKDAYS,
 } from "@/lib/constants";
-import { LAUNCH_CITY, LAUNCH_CITIES, LAUNCH_TZ } from "@/lib/launch";
+import { LAUNCH_CITY, LAUNCH_TZ } from "@/lib/launch";
 import type { Market } from "@/types/database";
 
 const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
@@ -64,23 +64,61 @@ export const FIND_AREAS: Array<{ label: string; q: string; slugs: string[] }> = 
   { label: "North York", q: "North York", slugs: ["north-york-farmers-market"] },
 ];
 
-export const FIND_CITY_AREAS: Array<{ label: string; q: string }> = LAUNCH_CITIES.filter((city) => {
-  if (city === LAUNCH_CITY) return false;
-  return !FIND_AREAS.some((area) => area.label.toLowerCase() === city.toLowerCase());
-}).map((city) => ({ label: city, q: city }));
+export type PlaceArea = { label: string; q: string };
 
-export const FIND_PLACE_AREAS: Array<{ label: string; q: string; slugs?: string[] }> = [
-  ...FIND_AREAS,
-  ...FIND_CITY_AREAS,
-];
+export type PlaceAreas = {
+  neighbourhoods: PlaceArea[];
+  cities: PlaceArea[];
+};
 
-export function areasForMarkets(markets: Market[]) {
-  const slugs = new Set(markets.map((m) => m.slug));
-  const neighbourhoods = FIND_AREAS.filter((area) => area.slugs.some((slug) => slugs.has(slug)));
-  const present = new Set(markets.map((m) => m.city));
-  const cities = FIND_CITY_AREAS.filter((area) => present.has(area.label));
-  return [...neighbourhoods, ...cities];
+/**
+ * Only places that actually hold a market, so the filter never offers a dead end.
+ * Toronto neighbourhoods come from the curated list; everywhere else is its municipality.
+ */
+export function placeAreasForMarkets(
+  markets: Array<Pick<Market, "slug" | "city">>,
+): PlaceAreas {
+  const slugs = new Set(markets.map((market) => market.slug));
+  const neighbourhoods = FIND_AREAS.filter((area) =>
+    area.slugs.some((slug) => slugs.has(slug)),
+  ).map(({ label, q }) => ({ label, q }));
+  const named = new Set(neighbourhoods.map((area) => area.label.toLowerCase()));
+  const cities = [...new Set(markets.map((market) => market.city.trim()).filter(Boolean))]
+    .filter((city) => city.toLowerCase() !== LAUNCH_CITY.toLowerCase())
+    .filter((city) => !named.has(city.toLowerCase()))
+    .sort((a, b) => a.localeCompare(b))
+    .map((city) => ({ label: city, q: city }));
+  return { neighbourhoods, cities };
 }
+
+/** Chips shown before the row is expanded, per kind of place. */
+const HOME_AREA_SLOTS = 6;
+
+/**
+ * Home chip row. Keeps neighbourhoods and municipalities both visible in a short row
+ * instead of listing every place in the region, with the remainder behind a toggle.
+ */
+export function homeAreas(markets: Array<Pick<Market, "slug" | "city">>) {
+  const { neighbourhoods, cities } = placeAreasForMarkets(markets);
+  const halls = new Map<string, number>();
+  for (const market of markets) {
+    const city = market.city.trim();
+    halls.set(city, (halls.get(city) ?? 0) + 1);
+  }
+  const busiest = [...cities].sort(
+    (a, b) =>
+      (halls.get(b.label) ?? 0) - (halls.get(a.label) ?? 0) || a.label.localeCompare(b.label),
+  );
+  return {
+    primary: [
+      ...neighbourhoods.slice(0, HOME_AREA_SLOTS),
+      ...busiest.slice(0, HOME_AREA_SLOTS),
+    ],
+    rest: [...neighbourhoods.slice(HOME_AREA_SLOTS), ...busiest.slice(HOME_AREA_SLOTS)],
+  };
+}
+
+export type HomeAreas = ReturnType<typeof homeAreas>;
 
 export function tagsPresent(rows: Array<{ tags: string[] }>, wanted: readonly string[]) {
   const have = new Set(rows.flatMap((row) => row.tags));
@@ -257,12 +295,49 @@ export function filterMarketsByAreas(markets: Market[], areaKeys: string[]) {
   );
 }
 
+/**
+ * The vendor column answers “who is at these halls”, so a place or time filter narrows it
+ * along with the markets. A text query must not: someone searching a shop by name should
+ * still find it when no market matched those words.
+ */
+export function scopeVendorsToMarkets<M extends { id: string }, V extends { id: string }>(
+  markets: M[],
+  vendors: V[],
+  links: Array<{ market_id: string; vendor_id: string; days: number[] }>,
+  search: {
+    city?: string;
+    province?: string;
+    setup?: string;
+    openNow?: boolean;
+    areas?: string[];
+  },
+  weekdays: number[],
+): V[] {
+  const narrowed = Boolean(
+    search.areas?.length ||
+      search.city ||
+      search.province ||
+      search.setup ||
+      search.openNow ||
+      weekdays.length,
+  );
+  if (!narrowed) return vendors;
+  const shown = new Set(markets.map((market) => market.id));
+  const present = new Set(
+    links
+      .filter((link) => shown.has(link.market_id))
+      .filter((link) => !weekdays.length || link.days.some((day) => weekdays.includes(day)))
+      .map((link) => link.vendor_id),
+  );
+  return vendors.filter((vendor) => present.has(vendor.id));
+}
+
 /** Typed search for “Wychwood” / “Brick Works” should still find the hall. */
 export function slugsForPlaceQuery(query: string) {
   const needle = foldPlaceQuery(query);
   if (needle.length < 3) return [] as string[];
   const slugs = new Set<string>();
-  for (const area of FIND_PLACE_AREAS) {
+  for (const area of FIND_AREAS) {
     const label = foldPlaceQuery(area.label);
     const key = foldPlaceQuery(area.q);
     const hit =
@@ -272,9 +347,7 @@ export function slugsForPlaceQuery(query: string) {
       key.includes(needle) ||
       needle.includes(label) ||
       needle.includes(key);
-    if (hit) {
-      if (area.slugs) area.slugs.forEach((slug) => slugs.add(slug));
-    }
+    if (hit) area.slugs.forEach((slug) => slugs.add(slug));
   }
   return [...slugs];
 }

@@ -160,6 +160,14 @@ export function guessVendorTags(name: string) {
   return tags;
 }
 
+/** Roster-only shops arrive with no tags. A name guess keeps them inside the filters. */
+export function withVendorProductTags<T extends { name: string; tags: string[] }>(vendor: T): T {
+  if (vendor.tags.some((tag) => PRODUCT_SET.has(tag))) return vendor;
+  const extra = guessVendorTags(vendor.name);
+  if (!extra.length) return vendor;
+  return { ...vendor, tags: [...vendor.tags, ...extra] };
+}
+
 export function vendorProductTags(name: string, stored: string[] = []) {
   const fromRecord = stored.filter((tag) => PRODUCT_SET.has(tag));
   const products = fromRecord.length ? fromRecord : guessVendorTags(name);

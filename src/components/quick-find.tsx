@@ -7,7 +7,7 @@ import { useGeo } from "@/components/geo-provider";
 import { WEEKDAYS } from "@/lib/constants";
 import { formatDistance } from "@/lib/geo";
 import { distanceMeters } from "@/lib/geo";
-import { tagLabel, whenOptions } from "@/lib/find-paths";
+import { tagLabel, whenOptions, type HomeAreas } from "@/lib/find-paths";
 import { cn } from "@/lib/utils";
 
 type NearMarket = {
@@ -91,7 +91,7 @@ export function QuickFind({
   setup,
 }: {
   markets: NearMarket[];
-  areas: Array<{ label: string; q: string }>;
+  areas: HomeAreas;
   sellOptions: string[];
   cuisineOptions: string[];
   setup: string[];
@@ -108,11 +108,15 @@ export function QuickFind({
   const [setupTag, setSetupTag] = useState<string | null>(null);
   const [near, setNear] = useState(false);
   const [more, setMore] = useState(false);
+  const [allPlaces, setAllPlaces] = useState(false);
 
   const selectedWhen = when.find((item) => item.id === whenId);
   const query = q.trim();
   const extraOn = Boolean(areaQ || productTags.length || originTags.length || setupTag);
-  const canMore = Boolean(areas.length || sellOptions.length || cuisineOptions.length || setup.length);
+  const placeChips = allPlaces ? [...areas.primary, ...areas.rest] : areas.primary;
+  const canMore = Boolean(
+    placeChips.length || sellOptions.length || cuisineOptions.length || setup.length,
+  );
 
   const nearest =
     coords && near
@@ -193,10 +197,10 @@ export function QuickFind({
               Closest: {nearest.map((row) => `${row.market.name} ${formatDistance(row.distance)}`).join(" · ")}
             </span>
           ) : null}
-          {areas.length ? (
+          {placeChips.length ? (
             <div id="home-find-areas" className={cn(!more && "max-sm:hidden")}>
               <ChipRow>
-                {areas.map((area) => (
+                {placeChips.map((area) => (
                   <ToggleChip
                     key={area.q}
                     pressed={areaQ === area.q}
@@ -213,6 +217,16 @@ export function QuickFind({
                     {area.label}
                   </ToggleChip>
                 ))}
+                {areas.rest.length ? (
+                  <button
+                    type="button"
+                    aria-expanded={allPlaces}
+                    onClick={() => setAllPlaces((open) => !open)}
+                    className={chipIdle}
+                  >
+                    {allPlaces ? "Fewer places" : `${areas.rest.length} more places`}
+                  </button>
+                ) : null}
               </ChipRow>
             </div>
           ) : (

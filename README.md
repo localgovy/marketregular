@@ -1,6 +1,6 @@
 # MarketRegular
 
-Toronto farmers’ market hub: search markets and vendors (schedules, menus, contact, tags), leave on-site reviews and posts, and follow a live floor feed.
+Greater Toronto Area farmers’ market hub: search markets and vendors (schedules, menus, contact, tags), leave on-site reviews and posts, and follow a live floor feed.
 
 Web first at [www.marketregular.com](https://www.marketregular.com). Source: [github.com/localgovy/marketregular](https://github.com/localgovy/marketregular). The same Supabase backend is meant to serve an iOS app later.
 
@@ -12,6 +12,8 @@ Web first at [www.marketregular.com](https://www.marketregular.com). Source: [gi
 - MapLibre via OpenFreeMap
 
 The public directory works from the bundled Toronto seed data until a Supabase project is connected. Auth, live posts, reviews, photos, admin, and vendor claims require Supabase.
+
+Launch covers the municipalities in `LAUNCH_CITIES` (`src/lib/launch.ts`). Markets in any other city stay hidden, and the same list gates the `directory_census` counts, so change both together.
 
 ## Local development
 
@@ -108,7 +110,9 @@ node --experimental-strip-types scripts/generate-seed-sql.ts
 
 ## What is seeded
 
-31 Toronto farmers’ markets from `seed batches/toronto_markets_seed.json`, plus published vendor names from `seed batches/toronto_markets_vendor_names.json` where a roster exists. Menus and bios are left empty until we have them. Do not invent stall-holder details.
+The live catalog covers the Greater Toronto Area: markets across Toronto, Peel, York, Durham, and Halton, with vendor rosters wherever an operator publishes one. Markets with no published roster stay empty rather than guessing. Menus and bios are left empty until we have them. Do not invent stall-holder details.
+
+`src/data/directory.ts` and `supabase/seed.sql` hold the bundled Toronto-only fallback used when Supabase is unconfigured; they are not a mirror of the live catalog.
 
 ```bash
 npm run seed:import   # refresh src/data/directory.ts from the JSON

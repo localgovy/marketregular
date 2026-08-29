@@ -57,7 +57,7 @@ export function decodeFloorBody(raw: string) {
 
 export function reviewFromPost(
   post: Post,
-  stalls: StallRef[] = [],
+  stalls: Array<Pick<StallRef, "name" | "slug">> = [],
 ): FloorItem {
   const decoded = decodeFloorBody(post.body);
   const slug = post.vendor_slug ?? decoded.vendorSlug;

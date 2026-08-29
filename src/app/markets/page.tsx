@@ -3,11 +3,11 @@ import { DirectoryResults } from "@/components/directory-results";
 import { DirectorySort } from "@/components/directory-sort";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
-import { searchDirectory } from "@/lib/data/catalog";
+import { listMarkets, searchDirectory } from "@/lib/data/catalog";
 import {
-  filterMarketsByAreas,
   marketsCrumbs,
   parseDirectorySort,
+  placeAreasForMarkets,
   queryList,
   type MarketsSearch,
 } from "@/lib/find-paths";
@@ -47,16 +47,18 @@ export default async function MarketsPage({
   const tags = queryList(params.tag);
   const areas = queryList(params.area);
   const sort = parseDirectorySort(params.sort, Boolean(near));
-  const { markets: foundMarkets, vendors, schedulesByMarket } = await searchDirectory({
+  const { markets, vendors, schedulesByMarket } = await searchDirectory({
     q: params.q,
     weekdays: weekdays.length ? weekdays : undefined,
     tags: tags.length ? tags : undefined,
+    areas: areas.length ? areas : undefined,
     setup: params.setup || undefined,
     openNow: params.openNow === "1",
     near,
     sort,
   });
-  const markets = filterMarketsByAreas(foundMarkets, areas);
+  // Filter options come from the whole directory, not the narrowed result set.
+  const places = placeAreasForMarkets(await listMarkets());
   const crumbs = marketsCrumbs({
     weekdays,
     setup: params.setup,
@@ -103,6 +105,7 @@ export default async function MarketsPage({
       <p className="type-kicker mt-2 mb-6 text-muted-foreground">{status}</p>
       <SearchForm
         resultCount={markets.length}
+        places={places}
         defaults={{
           q: params.q,
           weekdays,

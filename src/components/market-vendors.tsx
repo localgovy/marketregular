@@ -5,6 +5,7 @@ import { VendorCard } from "@/components/vendor-card";
 import { Button } from "@/components/ui/button";
 import { FilterClearButton } from "@/components/filter-clear";
 import { SearchField } from "@/components/search-field";
+import { ShowMore } from "@/components/show-more";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import { countryTagsFromQuery } from "@/lib/country-tags";
 import {
@@ -37,6 +38,9 @@ const EMPTY_BROWSE: StallBrowse = {
 
 const selectClass =
   "h-9 min-w-[10rem] max-w-full rounded-none border border-input bg-card px-2.5 text-sm";
+
+/** Rosters run to 180+ stalls, so the grid opens on a readable slice. */
+const STALL_PAGE = 24;
 
 function fold(value: string) {
   return value
@@ -129,6 +133,8 @@ export function MarketVendors({
     () => vendors.filter((vendor) => stallFits(vendor, applied, today)),
     [vendors, applied, today],
   );
+  const [pages, setPages] = useState(1);
+  const shown = matches.slice(0, pages * STALL_PAGE);
   const draftCount = useMemo(
     () => vendors.filter((vendor) => stallFits(vendor, live, today)).length,
     [vendors, live, today],
@@ -145,6 +151,7 @@ export function MarketVendors({
 
   function go(next: StallBrowse) {
     setApplied(next);
+    setPages(1);
     setPanelOpen(false);
   }
 
@@ -155,6 +162,7 @@ export function MarketVendors({
       return;
     }
     setApplied(next);
+    setPages(1);
   }
 
   function openPanel() {
@@ -309,18 +317,26 @@ export function MarketVendors({
             ) : null}
           </form>
           {matches.length ? (
-            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {matches.map((vendor) => (
-                <VendorCard
-                  key={vendor.id}
-                  vendor={vendor}
-                  stall={vendor.stall}
-                  days={vendor.days}
-                  halls={vendor.halls}
-                  punchHall={hall}
-                />
-              ))}
-            </div>
+            <>
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {shown.map((vendor) => (
+                  <VendorCard
+                    key={vendor.id}
+                    vendor={vendor}
+                    stall={vendor.stall}
+                    days={vendor.days}
+                    halls={vendor.halls}
+                    punchHall={hall}
+                  />
+                ))}
+              </div>
+              <ShowMore
+                shown={shown.length}
+                total={matches.length}
+                noun="stalls"
+                onMore={() => setPages((n) => n + 1)}
+              />
+            </>
           ) : (
             <p className="mt-4 text-sm text-muted-foreground">No stalls match that.</p>
           )}

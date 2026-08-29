@@ -7,7 +7,6 @@ import { FilterClearButton } from "@/components/filter-clear";
 import { SearchField } from "@/components/search-field";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
-  FIND_PLACE_AREAS,
   FIND_PRODUCTS,
   FIND_RECORD,
   FIND_SETUP,
@@ -18,6 +17,7 @@ import {
   whenOptions,
   type DirectorySort,
   type MarketsSearch,
+  type PlaceAreas,
 } from "@/lib/find-paths";
 import { LAUNCH_REGION } from "@/lib/launch";
 import { cn } from "@/lib/utils";
@@ -77,9 +77,11 @@ function toggleIn<T>(list: T[], value: T) {
 
 export function SearchForm({
   defaults,
+  places,
   resultCount,
 }: {
   defaults?: SearchFormDefaults;
+  places: PlaceAreas;
   resultCount?: number;
 }) {
   const router = useRouter();
@@ -199,11 +201,24 @@ export function SearchForm({
           }}
         >
           <option value="">Anywhere in the {LAUNCH_REGION}</option>
-          {FIND_PLACE_AREAS.map((area) => (
-            <option key={area.q} value={area.q}>
-              {area.label}
-            </option>
-          ))}
+          {places.neighbourhoods.length ? (
+            <optgroup label="Toronto neighbourhoods">
+              {places.neighbourhoods.map((area) => (
+                <option key={area.q} value={area.q}>
+                  {area.label}
+                </option>
+              ))}
+            </optgroup>
+          ) : null}
+          {places.cities.length ? (
+            <optgroup label={`Around the ${LAUNCH_REGION}`}>
+              {places.cities.map((area) => (
+                <option key={area.q} value={area.q}>
+                  {area.label}
+                </option>
+              ))}
+            </optgroup>
+          ) : null}
         </select>
         <select
           aria-label="When it opens"
@@ -313,6 +328,7 @@ export function SearchForm({
       {panelOpen ? (
         <AllFilters
           state={draft}
+          places={places}
           resultCount={resultCount ?? 0}
           onChange={setDraft}
           onClear={() =>
@@ -337,12 +353,14 @@ export function SearchForm({
 
 function AllFilters({
   state,
+  places,
   resultCount,
   onChange,
   onClear,
   onApply,
 }: {
   state: BrowseState;
+  places: PlaceAreas;
   resultCount: number;
   onChange: (next: BrowseState) => void;
   onClear: () => void;
@@ -410,7 +428,7 @@ function AllFilters({
               {tagLabel(tag)}
             </FilterCheck>
           ))}
-          {FIND_PLACE_AREAS.map((area) => (
+          {[...places.neighbourhoods, ...places.cities].map((area) => (
             <FilterCheck
               key={area.q}
               checked={state.areas.includes(area.q)}

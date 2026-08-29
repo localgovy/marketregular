@@ -8,7 +8,7 @@ import { MarketMapLazy } from "@/components/market-map-lazy";
 import { QuickFind } from "@/components/quick-find";
 import { TorontoWeek } from "@/components/toronto-week";
 import type { DirectoryCensus } from "@/lib/data/catalog";
-import { FIND_ORIGINS, FIND_PRODUCTS, FIND_SETUP, areasForMarkets, tagsPresent } from "@/lib/find-paths";
+import { FIND_ORIGINS, FIND_PRODUCTS, FIND_SETUP, homeAreas, tagsPresent } from "@/lib/find-paths";
 import { LAUNCH_REGION } from "@/lib/launch";
 import type { UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
@@ -31,7 +31,7 @@ export function HomeMosaic({
   weekVendors: VendorWeekPick[];
   census: DirectoryCensus;
 }) {
-  const areas = areasForMarkets(markets).map(({ label, q }) => ({ label, q }));
+  const areas = homeAreas(markets);
   const sellOptions = tagsPresent([...markets, ...vendors], FIND_PRODUCTS);
   const cuisineOptions = tagsPresent(vendors, FIND_ORIGINS);
   const setup = [...tagsPresent(markets, FIND_SETUP)];

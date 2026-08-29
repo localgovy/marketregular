@@ -18,6 +18,9 @@ export const metadata: Metadata = pageMeta({
 
 export const revalidate = 3600;
 
+/** Shops sit at up to a dozen halls; the picker only needs enough to tell them apart. */
+const WHERE_CAP = 3;
+
 function contactListings(markets: Market[], vendors: Vendor[], stalls: StallRef[]) {
   const marketName = new Map(markets.map((market) => [market.id, market.name]));
   const where = new Map<string, string[]>();
@@ -36,7 +39,12 @@ function contactListings(markets: Market[], vendors: Vendor[], stalls: StallRef[
     vendors: vendors.flatMap((vendor) => {
       const at = where.get(vendor.id);
       if (!at?.length) return [];
-      return [{ id: vendor.id, name: vendor.name, where: at.join(", ") }];
+      const extra = at.length - WHERE_CAP;
+      const label =
+        extra > 0
+          ? `${at.slice(0, WHERE_CAP).join(", ")} and ${extra} more`
+          : at.join(", ");
+      return [{ id: vendor.id, name: vendor.name, where: label }];
     }),
   };
 }

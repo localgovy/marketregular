@@ -8,6 +8,7 @@ import {
   listMarkets,
   listStalls,
 } from "@/lib/data/catalog";
+import { toGeoMarket } from "@/lib/geo";
 import { LAUNCH_REGION } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 
@@ -36,8 +37,14 @@ export default async function FeedPage() {
         <FeedBoard
           initialItems={tape}
           signedIn={Boolean(profile)}
-          stalls={stalls}
-          markets={markets}
+          stalls={stalls.map((stall) => ({
+            id: stall.id,
+            name: stall.name,
+            slug: stall.slug,
+            market_id: stall.market_id,
+            stall: stall.stall,
+          }))}
+          markets={markets.map(toGeoMarket)}
           openSlugs={openNow.map((market) => market.slug)}
         />
       </Suspense>

@@ -10,7 +10,14 @@ import {
   toPublicVendor,
 } from "@/data/directory";
 import { decodeFloorBody, mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
-import { applyDirectoryTags, parseDirectorySort, searchWeekdays, slugsForPlaceQuery } from "@/lib/find-paths";
+import {
+  applyDirectoryTags,
+  filterMarketsByAreas,
+  parseDirectorySort,
+  scopeVendorsToMarkets,
+  searchWeekdays,
+  slugsForPlaceQuery,
+} from "@/lib/find-paths";
 import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { isLaunchCity } from "@/lib/launch";
@@ -142,6 +149,8 @@ export function localSearch(filters: SearchFilters) {
     markets = tagged.markets;
     vendors = tagged.vendors;
   }
+  markets = filterMarketsByAreas(markets, filters.areas ?? []);
+  vendors = scopeVendorsToMarkets(markets, vendors, seedMarketVendors, filters, days);
   const sort = parseDirectorySort(filters.sort, Boolean(filters.near));
   const allMarkets = localMarkets();
   const halls = groupVendorHalls(localStalls(), allMarkets);

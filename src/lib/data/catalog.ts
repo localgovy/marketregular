@@ -16,12 +16,15 @@ import {
 } from "@/lib/data/local";
 import {
   applyDirectoryTags,
+  filterMarketsByAreas,
   parseDirectorySort,
+  scopeVendorsToMarkets,
   searchWeekdays,
   slugsForPlaceQuery,
 } from "@/lib/find-paths";
 import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
+import { withVendorProductTags } from "@/lib/vendor-tags";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { withListingStats } from "@/lib/listing-score";
@@ -61,6 +64,11 @@ const MARKET_PUBLIC =
   "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, phone, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok";
 const VENDOR_PUBLIC =
   "id, slug, name, about, website, phone, tags, status, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok";
+
+/** Score, then the tag guesses that keep name-only roster shops inside the filters. */
+function hydrateVendor(vendor: Vendor) {
+  return withVendorProductTags(withVendorCountryTags(withListingStats(vendor)));
+}
 
 async function fetchAllRows<T>(
   run: (from: number, to: number) => PromiseLike<{
@@ -164,7 +172,7 @@ export async function listVendors(): Promise<Vendor[]> {
       .range(from, to),
   );
   if (error) return localVendors();
-  return data.map((vendor) => withVendorCountryTags(withListingStats(vendor)));
+  return data.map(hydrateVendor);
 }
 
 export async function listSitemapVendors(): Promise<Vendor[]> {
@@ -322,58 +330,62 @@ export async function searchDirectory(filters: SearchFilters) {
   const supabase = publicDb();
   if (!supabase) return localSearch(filters);
 
-  let marketQuery = supabase
-    .from("markets")
-    .select(MARKET_PUBLIC)
-    .eq("status", "published")
-    .in("city", LAUNCH_CITY_FILTER);
-  let vendorQuery = supabase.from("vendors").select(VENDOR_PUBLIC).eq("status", "published");
+  const raw = filters.q?.trim() ?? "";
+  const marketOr = raw
+    ? ["name", "city", "about", "address"]
+        .map((column) => postgrestIlike(column, raw))
+        .filter((part): part is string => Boolean(part))
+    : [];
+  const vendorOr = raw
+    ? [
+        ...["name", "about"]
+          .map((column) => postgrestIlike(column, raw))
+          .filter((part): part is string => Boolean(part)),
+        ...countryTagsFromQuery(raw).slice(0, 6).map(tagContainsFilter),
+      ]
+    : [];
 
-  if (filters.q?.trim()) {
-    const raw = filters.q.trim();
-    const marketOr = ["name", "city", "about", "address"]
-      .map((column) => postgrestIlike(column, raw))
-      .filter((part): part is string => Boolean(part));
-    if (marketOr.length) marketQuery = marketQuery.or(marketOr.join(","));
-    const originFilters = countryTagsFromQuery(raw)
-      .slice(0, 6)
-      .map(tagContainsFilter);
-    const vendorOr = ["name", "about"]
-      .map((column) => postgrestIlike(column, raw))
-      .filter((part): part is string => Boolean(part));
-    const vendorParts = [...vendorOr, ...originFilters];
-    if (vendorParts.length) vendorQuery = vendorQuery.or(vendorParts.join(","));
-  }
-  if (filters.province) marketQuery = marketQuery.eq("province", filters.province);
-  if (filters.city) marketQuery = marketQuery.ilike("city", filters.city);
-  if (filters.setup) {
-    marketQuery = marketQuery.contains("tags", [filters.setup]);
-  }
+  // Built per page: the Data API caps a response at 1000 rows, so every read is ranged.
+  const marketPage = (from: number, to: number) => {
+    let query = supabase
+      .from("markets")
+      .select(MARKET_PUBLIC)
+      .eq("status", "published")
+      .in("city", LAUNCH_CITY_FILTER);
+    if (marketOr.length) query = query.or(marketOr.join(","));
+    if (filters.province) query = query.eq("province", filters.province);
+    if (filters.city) query = query.ilike("city", filters.city);
+    if (filters.setup) query = query.contains("tags", [filters.setup]);
+    return query.order("name").range(from, to);
+  };
 
-  const [{ data: marketRows }, { data: vendorRows }, { data: scheduleRows }, stalls, allMarkets] =
-    await Promise.all([
-      marketQuery.order("name"),
-      vendorQuery.order("name"),
-      supabase.from("market_schedules").select("*"),
-      listStalls(),
-      listMarkets(),
-    ]);
+  const vendorPage = (from: number, to: number) => {
+    let query = supabase.from("vendors").select(VENDOR_PUBLIC).eq("status", "published");
+    if (vendorOr.length) query = query.or(vendorOr.join(","));
+    return query.order("name").range(from, to);
+  };
 
-  if (!marketRows?.length && !vendorRows?.length) return localSearch(filters);
+  const [marketRows, vendorRows, scheduleRows, stalls, allMarkets] = await Promise.all([
+    fetchAllRows<Market>(marketPage).then((result) => result.data),
+    fetchAllRows<Vendor>(vendorPage).then((result) => result.data),
+    fetchAllRows<MarketSchedule>((from, to) =>
+      supabase.from("market_schedules").select("*").order("id").range(from, to),
+    ).then((result) => result.data),
+    listStalls(),
+    listMarkets(),
+  ]);
+
+  if (!marketRows.length && !vendorRows.length) return localSearch(filters);
 
   const schedulesByMarket = new Map<string, MarketSchedule[]>();
-  for (const row of (scheduleRows ?? []) as MarketSchedule[]) {
+  for (const row of scheduleRows) {
     const list = schedulesByMarket.get(row.market_id) ?? [];
     list.push(row);
     schedulesByMarket.set(row.market_id, list);
   }
 
-  let markets = ((marketRows ?? []) as Market[])
-    .filter((market) => isLaunchCity(market.city))
-    .map(withListingStats);
-  let vendors = ((vendorRows ?? []) as Vendor[]).map((vendor) =>
-    withVendorCountryTags(withListingStats(vendor)),
-  );
+  let markets = marketRows.filter((market) => isLaunchCity(market.city)).map(withListingStats);
+  let vendors = vendorRows.map(hydrateVendor);
   if (filters.q?.trim()) {
     const placeSlugs = new Set(slugsForPlaceQuery(filters.q));
     if (placeSlugs.size) {
@@ -423,6 +435,14 @@ export async function searchDirectory(filters: SearchFilters) {
     markets = tagged.markets;
     vendors = tagged.vendors;
   }
+  markets = filterMarketsByAreas(markets, filters.areas ?? []);
+  vendors = scopeVendorsToMarkets(
+    markets,
+    vendors,
+    stalls.map((stall) => ({ market_id: stall.market_id, vendor_id: stall.id, days: stall.days })),
+    filters,
+    days,
+  );
   const sort = parseDirectorySort(filters.sort, Boolean(filters.near));
   const halls = groupVendorHalls(stalls, allMarkets);
   const withHalls = withVendorHalls(vendors, halls);
@@ -445,43 +465,52 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
   const supabase = publicDb();
   if (!supabase) return localMarketBySlug(slug);
 
-  const { data: market } = await supabase
+  const { data: market, error } = await supabase
     .from("markets")
     .select(MARKET_PUBLIC)
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
-  if (!market) return localMarketBySlug(slug);
+  // Only reach for the bundled seed when the read failed. A live database that simply has
+  // no such row means the listing is gone, and the seed must not resurrect it.
+  if (error) return localMarketBySlug(slug);
+  if (!market) return null;
   if (!isLaunchCity((market as Market).city)) return null;
 
-  const [{ data: schedules }, { data: links }, { data: reviews }, { data: posts }] =
-    await Promise.all([
-      supabase.from("market_schedules").select("*").eq("market_id", market.id),
-      supabase.from("market_vendors").select("*").eq("market_id", market.id),
-      supabase
-        .from("reviews")
-        .select("*, profiles(display_name), vendors(name, slug), markets(name, slug)")
-        .eq("flagged", false)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("posts")
-        .select("*, profiles(display_name, avatar_url)")
-        .eq("market_id", market.id)
-        .eq("flagged", false)
-        .order("created_at", { ascending: false })
-        .limit(40),
-    ]);
+  const [{ data: schedules }, { data: links }, { data: posts }] = await Promise.all([
+    supabase.from("market_schedules").select("*").eq("market_id", market.id),
+    supabase.from("market_vendors").select("*").eq("market_id", market.id),
+    supabase
+      .from("posts")
+      .select("*, profiles(display_name, avatar_url)")
+      .eq("market_id", market.id)
+      .eq("flagged", false)
+      .order("created_at", { ascending: false })
+      .limit(40),
+  ]);
 
   const vendorIdList = (links ?? []).map((l: { vendor_id: string }) => l.vendor_id);
-  const [{ data: vendors }, hallsMap] = await Promise.all([
+  // Scoped to this hall and its stalls. Reading the whole table would cap at 1000 rows.
+  const reviewScope = [`market_id.eq.${market.id}`];
+  if (vendorIdList.length) reviewScope.push(`vendor_id.in.(${vendorIdList.join(",")})`);
+  const [{ data: vendors }, hallsMap, { data: reviews }] = await Promise.all([
     vendorIdList.length > 0
       ? supabase.from("vendors").select(VENDOR_PUBLIC).in("id", vendorIdList)
       : Promise.resolve({ data: [] as Vendor[] }),
     hallsByVendorIds(vendorIdList),
+    fetchAllRows<Review>((from, to) =>
+      supabase
+        .from("reviews")
+        .select("*, profiles(display_name), vendors(name, slug), markets(name, slug)")
+        .eq("flagged", false)
+        .or(reviewScope.join(","))
+        .order("created_at", { ascending: false })
+        .range(from, to),
+    ),
   ]);
 
   const vendorMap = new Map(
-    (vendors ?? []).map((v: Vendor) => [v.id, withVendorCountryTags(withListingStats(v))]),
+    (vendors ?? []).map((v: Vendor) => [v.id, hydrateVendor(v)]),
   );
   const vendorIds = new Set(vendorIdList);
 
@@ -538,13 +567,15 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
   const supabase = publicDb();
   if (!supabase) return localVendorBySlug(slug);
 
-  const { data: vendor } = await supabase
+  const { data: vendor, error } = await supabase
     .from("vendors")
     .select(VENDOR_PUBLIC)
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
-  if (!vendor) return localVendorBySlug(slug);
+  // As with markets: the seed is a fallback for a failed read, not for a deleted shop.
+  if (error) return localVendorBySlug(slug);
+  if (!vendor) return null;
 
   const [{ data: menus }, { data: links }, { data: reviews }, { data: posts }] = await Promise.all([
     supabase.from("vendor_menus").select("*").eq("vendor_id", vendor.id),
@@ -575,7 +606,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
     if (!m || !isLaunchCity(m.city)) return [];
     return [{ ...m, stall: link.stall, days: link.days }];
   });
-  if (!vendorMarkets.length) return localVendorBySlug(slug);
+  if (!vendorMarkets.length) return null;
 
   const marketIdSet = new Set(vendorMarkets.map((m) => m.id));
   const mappedReviews = (
@@ -623,7 +654,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
     }));
 
   return {
-    ...withVendorCountryTags(withListingStats(vendor as Vendor)),
+    ...hydrateVendor(vendor as Vendor),
     menus: (menus ?? []) as MenuItem[],
     markets: vendorMarkets,
     reviews: mappedReviews,

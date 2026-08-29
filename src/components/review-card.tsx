@@ -27,7 +27,7 @@ export function ReviewCard({
   className,
 }: {
   item: FloorItem;
-  stalls?: StallRef[];
+  stalls?: Array<Pick<StallRef, "name" | "slug">>;
   className?: string;
 }) {
   const vendor =
