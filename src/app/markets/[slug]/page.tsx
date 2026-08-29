@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
@@ -6,6 +7,7 @@ import { JsonLd } from "@/components/json-ld";
 import { ListingScore } from "@/components/listing-score";
 import { DayPlanPlus } from "@/components/day-plan-plus";
 import { SaveButton } from "@/components/save-button";
+import { ListingAlsoLinks } from "@/components/listing-also-links";
 import { ListingComposer } from "@/components/listing-composer";
 import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
@@ -17,11 +19,12 @@ import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok, ListingF
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { hallFromMarket } from "@/lib/day-plan";
+import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle, marketPlaceLine } from "@/lib/listing-copy";
 import { nextOpenLabel } from "@/lib/schedule";
-import { marketJsonLd, pageMeta } from "@/lib/seo";
+import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -34,13 +37,16 @@ export async function generateMetadata({
   const market = await getMarketBySlug(slug);
   if (!market) return { title: "Market" };
   return pageMeta({
-    title: marketPageTitle(market.name, market.city),
+    title: marketPageTitle(market.name, market.city, listingQualifier(market.slug)),
     description: marketPageDescription({
       name: market.name,
       about: market.about,
       city: market.city,
       province: market.province,
       schedules: market.schedules,
+      address: market.address,
+      tags: market.tags,
+      stallCount: market.vendors.length,
     }),
     path: `/markets/${market.slug}`,
   });
@@ -68,10 +74,26 @@ export default async function MarketPage({
       : null;
 
   const hall = hallFromMarket(market, market.schedules);
+  const siblings = await Promise.all(
+    siblingSlugs(market.slug).map(async (slug) => {
+      const other = await getMarketBySlug(slug);
+      return other ? { slug, name: other.name } : null;
+    }),
+  );
+  const otherFloors = siblings.filter(
+    (entry): entry is { slug: string; name: string } => entry !== null,
+  );
+  const lead = siblingLead(market.slug);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <JsonLd data={marketJsonLd(market)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          MARKETS_CRUMB,
+          { name: market.name, path: `/markets/${market.slug}` },
+        ])}
+      />
       <div className="flex items-center gap-1">
         <BackButton href="/markets" />
         <p className="type-kicker text-muted-foreground">
@@ -89,6 +111,26 @@ export default async function MarketPage({
         <NowLabel className="mt-2">{when}</NowLabel>
       ) : when ? (
         <p className="mt-2 text-base font-medium text-primary">{when}</p>
+      ) : null}
+      {listingNote(market.slug) ? (
+        <p className="mt-2 max-w-2xl text-base text-muted-foreground">
+          {listingNote(market.slug)}
+          {lead && otherFloors.length ? (
+            <>
+              {` ${lead} `}
+              {otherFloors.map((other) => (
+                <Link
+                  key={other.slug}
+                  href={`/markets/${other.slug}`}
+                  className="font-medium text-foreground hover:underline"
+                >
+                  {other.name}
+                </Link>
+              ))}
+              .
+            </>
+          ) : null}
+        </p>
       ) : null}
       <ListingScore
         className="mt-3 text-base"
@@ -139,6 +181,13 @@ export default async function MarketPage({
         </aside>
         <div className="lg:col-span-2">
           <MarketVendors vendors={market.vendors} market={market} />
+        </div>
+        <div className="lg:col-span-2">
+          <ListingAlsoLinks
+            heading="Other markets like this one"
+            weekdays={market.schedules.map((row) => Number(row.weekday))}
+            tags={market.tags}
+          />
         </div>
         <section className="lg:col-span-2">
           <h2>Reviews</h2>

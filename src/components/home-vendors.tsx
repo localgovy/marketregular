@@ -53,7 +53,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
       icon={TallyMark}
       kicker="This week's stalls"
       title="Top 5 this week"
-      how="The five vendors in the GTA market game this week. Tap a name to learn more about them."
+      how="The five vendors in the Toronto market game this week. Tap a name to learn more about them."
     >
       {picks.length ? (
         <ol className="ring-1 ring-border">

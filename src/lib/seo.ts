@@ -1,17 +1,30 @@
 import type { Metadata } from "next";
-import { CLAIM_INBOX, SITE_NAME, SITE_URL, SITE_LOGO, WEEKDAYS } from "@/lib/constants";
+import { CLAIM_INBOX, SITE_NAME, SITE_URL, SITE_LOGO, SITE_OG, WEEKDAYS } from "@/lib/constants";
+import { LAUNCH_CITY, LAUNCH_REGION_NAME } from "@/lib/launch";
 import { listingScore } from "@/lib/listing-score";
 import { externalHref } from "@/lib/format";
-import type { Market, MarketSchedule, Vendor } from "@/types/database";
+import type { Market, MarketSchedule, MenuItem, Vendor } from "@/types/database";
 
 export const SITE_DESCRIPTION =
-  "Find farmers' markets across the Greater Toronto Area and their vendors: this week's hours, maps, menus, reviews, and a live floor feed.";
+  "Toronto farmers' markets and the stalls that work them: what's open today, this week's hours, addresses, maps, menus and reviews across the GTA.";
+
+/** schema.org has no FarmersMarket type, so the sense is carried as additionalType. */
+const FARMERS_MARKET_CONCEPT = "https://en.wikipedia.org/wiki/Farmers%27_market";
+
+const FOOD_TAGS = new Set(["prepared-food", "bakery", "coffee"]);
 
 export const noIndex: Metadata["robots"] = {
   index: false,
   follow: false,
   nocache: true,
   googleBot: { index: false, follow: false },
+};
+
+/** Out of the index, still crawled, so internal links keep pointing at the halls. */
+export const noIndexFollow: Metadata["robots"] = {
+  index: false,
+  follow: true,
+  googleBot: { index: false, follow: true },
 };
 
 export function absoluteUrl(path = "/") {
@@ -25,17 +38,20 @@ export function pageMeta({
   description,
   path,
   index = true,
+  follow = false,
 }: {
   title?: string;
   description: string;
   path: string;
   index?: boolean;
+  /** Keep crawling a page that is out of the index. */
+  follow?: boolean;
 }): Metadata {
   return {
     ...(title ? { title } : {}),
     description,
     alternates: { canonical: path },
-    robots: index ? { index: true, follow: true } : noIndex,
+    robots: index ? { index: true, follow: true } : follow ? noIndexFollow : noIndex,
   };
 }
 
@@ -49,6 +65,7 @@ export function websiteJsonLd() {
         name: SITE_NAME,
         url: SITE_URL,
         logo: `${SITE_URL}${SITE_LOGO}`,
+        areaServed: { "@type": "AdministrativeArea", name: LAUNCH_REGION_NAME },
         contactPoint: {
           "@type": "ContactPoint",
           email: CLAIM_INBOX,
@@ -102,50 +119,169 @@ function sameAsLinks(...urls: Array<string | null | undefined>) {
   return list.length === 1 ? list[0] : list;
 }
 
+const MONTH_DAY = /^\d{2}-\d{2}$/;
+
+/** `MM-DD` season bounds become this year's window; a wrap-around ends next year. */
+function seasonWindow(start: string | null, end: string | null, now = new Date()) {
+  if (!start || !end || !MONTH_DAY.test(start) || !MONTH_DAY.test(end)) return {};
+  const year = now.getUTCFullYear();
+  const endYear = start <= end ? year : year + 1;
+  return { validFrom: `${year}-${start}`, validThrough: `${endYear}-${end}` };
+}
+
+function postalAddress(market: Pick<Market, "address" | "city" | "province" | "postal_code">) {
+  return {
+    "@type": "PostalAddress",
+    streetAddress: market.address,
+    addressLocality: market.city,
+    addressRegion: market.province,
+    ...(market.postal_code ? { postalCode: market.postal_code } : {}),
+    addressCountry: "CA",
+  };
+}
+
+function mapUrl(lat: number, lng: number) {
+  return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
+
+function listingImage(logoUrl: string | null) {
+  return externalHref(logoUrl) ?? absoluteUrl(SITE_OG);
+}
+
 export function marketJsonLd(market: Market & { schedules: MarketSchedule[] }) {
   const aggregateRating = aggregateRatingJsonLd(market);
+  const url = absoluteUrl(`/markets/${market.slug}`);
   return {
     "@context": "https://schema.org",
-    "@type": "FarmersMarket",
+    "@type": "GroceryStore",
+    "@id": `${url}#market`,
+    additionalType: FARMERS_MARKET_CONCEPT,
     name: market.name,
     description: market.about ?? undefined,
-    url: absoluteUrl(`/markets/${market.slug}`),
+    url,
+    image: listingImage(market.logo_url),
     telephone: market.phone ?? undefined,
     sameAs: sameAsLinks(market.website, market.instagram, market.tiktok, market.facebook),
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: market.address,
-      addressLocality: market.city,
-      addressRegion: market.province,
-      postalCode: market.postal_code ?? undefined,
-      addressCountry: "CA",
-    },
+    address: postalAddress(market),
     geo: {
       "@type": "GeoCoordinates",
       latitude: market.lat,
       longitude: market.lng,
     },
+    hasMap: mapUrl(market.lat, market.lng),
+    areaServed: { "@type": "AdministrativeArea", name: LAUNCH_REGION_NAME },
     openingHoursSpecification: market.schedules.map((row) => ({
       "@type": "OpeningHoursSpecification",
       dayOfWeek: WEEKDAYS[row.weekday] ?? "Sunday",
       opens: clock(row.opens_at),
       closes: clock(row.closes_at),
+      ...seasonWindow(row.season_start, row.season_end),
     })),
     ...(aggregateRating ? { aggregateRating } : {}),
   };
 }
 
-export function vendorJsonLd(vendor: Vendor) {
+type VendorHallForJsonLd = Pick<
+  Market,
+  "slug" | "name" | "address" | "city" | "province" | "postal_code" | "lat" | "lng"
+>;
+
+function menuOffers(menus: MenuItem[]) {
+  const priced = menus.filter((item) => item.price_cents != null).slice(0, 25);
+  if (!priced.length) return undefined;
+  return priced.map((item) => ({
+    "@type": "Offer",
+    itemOffered: {
+      "@type": "Product",
+      name: item.name,
+      ...(item.description ? { description: item.description } : {}),
+    },
+    price: ((item.price_cents ?? 0) / 100).toFixed(2),
+    priceCurrency: "CAD",
+  }));
+}
+
+export function vendorJsonLd(
+  vendor: Vendor & { menus?: MenuItem[]; markets?: VendorHallForJsonLd[] },
+) {
   const aggregateRating = aggregateRatingJsonLd(vendor);
+  const url = absoluteUrl(`/vendors/${vendor.slug}`);
+  const halls = vendor.markets ?? [];
+  const menus = vendor.menus ?? [];
+  const servesFood = vendor.tags.some((tag) => FOOD_TAGS.has(tag));
+  const offers = menuOffers(menus);
+
   return {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": servesFood ? "FoodEstablishment" : "LocalBusiness",
+    "@id": `${url}#stall`,
     name: vendor.name,
     description: vendor.about ?? undefined,
-    url: absoluteUrl(`/vendors/${vendor.slug}`),
+    url,
+    image: listingImage(vendor.logo_url),
     telephone: vendor.phone ?? undefined,
     sameAs: sameAsLinks(vendor.website, vendor.instagram, vendor.tiktok, vendor.facebook),
-    areaServed: { "@type": "AdministrativeArea", name: "Greater Toronto Area" },
+    areaServed: { "@type": "AdministrativeArea", name: LAUNCH_REGION_NAME },
+    ...(halls.length
+      ? {
+          containedInPlace: halls.map((hall) => ({
+            "@type": "Place",
+            name: hall.name,
+            url: absoluteUrl(`/markets/${hall.slug}`),
+            address: postalAddress(hall),
+            geo: {
+              "@type": "GeoCoordinates",
+              latitude: hall.lat,
+              longitude: hall.lng,
+            },
+          })),
+        }
+      : {}),
+    ...(servesFood && menus.length ? { hasMenu: `${url}#menu` } : {}),
+    ...(offers ? { makesOffer: offers } : {}),
     ...(aggregateRating ? { aggregateRating } : {}),
   };
 }
+
+export function breadcrumbJsonLd(trail: Array<{ name: string; path: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: trail.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: absoluteUrl(crumb.path),
+    })),
+  };
+}
+
+/**
+ * Ordered directory results. Keeps the list machine-readable without repeating each
+ * listing's own markup, which lives on the listing page.
+ */
+export function itemListJsonLd({
+  name,
+  path,
+  items,
+}: {
+  name: string;
+  path: string;
+  items: Array<{ name: string; path: string }>;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    url: absoluteUrl(path),
+    numberOfItems: items.length,
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      url: absoluteUrl(item.path),
+    })),
+  };
+}
+
+export const MARKETS_CRUMB = { name: `${LAUNCH_CITY} farmers' markets`, path: "/markets" };

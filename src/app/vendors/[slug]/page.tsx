@@ -5,6 +5,7 @@ import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { DayPlanPlus, DayPlanPunch } from "@/components/day-plan-plus";
 import { JsonLd } from "@/components/json-ld";
+import { ListingAlsoLinks } from "@/components/listing-also-links";
 import { ListingScore } from "@/components/listing-score";
 import { ListingComposer } from "@/components/listing-composer";
 import { SaveButton } from "@/components/save-button";
@@ -18,7 +19,8 @@ import { WEEKDAYS } from "@/lib/constants";
 import { hallFromStall } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
-import { pageMeta, vendorJsonLd } from "@/lib/seo";
+import { vendorHasSubstance } from "@/lib/listing-substance";
+import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -37,8 +39,13 @@ export async function generateMetadata({
       name: vendor.name,
       about: vendor.about,
       marketNames,
+      days: vendor.markets.flatMap((market) => market.days),
+      tags: vendor.tags,
     }),
     path: `/vendors/${vendor.slug}`,
+    // Name-and-markets pages stay out of the index but keep passing equity to the halls.
+    index: vendorHasSubstance(vendor),
+    follow: true,
   });
 }
 
@@ -66,6 +73,15 @@ export default async function VendorPage({
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
       <JsonLd data={vendorJsonLd(vendor)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          MARKETS_CRUMB,
+          ...(homeMarket
+            ? [{ name: homeMarket.name, path: `/markets/${homeMarket.slug}` }]
+            : []),
+          { name: vendor.name, path: `/vendors/${vendor.slug}` },
+        ])}
+      />
       <BackButton href="/markets" />
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{vendor.name}</h1>
@@ -192,6 +208,13 @@ export default async function VendorPage({
           </div>
           <ClaimForm targetType="vendor" targetId={vendor.id} />
         </aside>
+        <div className="lg:col-span-2">
+          <ListingAlsoLinks
+            heading="Find more like this"
+            weekdays={vendor.markets.flatMap((market) => market.days)}
+            tags={vendor.tags}
+          />
+        </div>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import {
   weekdayInToronto,
 } from "@/lib/find-paths";
 import { hallFromStall } from "@/lib/day-plan";
+import { vendorFilterTags } from "@/lib/vendor-tags";
 import { cn } from "@/lib/utils";
 import type { Market, MarketDetail, MarketSchedule } from "@/types/database";
 
@@ -55,19 +56,20 @@ function fold(value: string) {
 function stallMatches(vendor: MarketStall, query: string) {
   const tokens = fold(query).split(" ").filter(Boolean);
   if (!tokens.length) return true;
+  const searchable = vendorFilterTags(vendor);
   const hay = fold(
     [
       vendor.name,
       vendor.stall,
       vendor.about,
-      vendor.tags.join(" "),
+      searchable.join(" "),
       vendor.days.map((day) => WEEKDAYS[day] ?? "").join(" "),
     ]
       .filter(Boolean)
       .join(" "),
   );
   if (tokens.every((token) => hay.includes(token))) return true;
-  return countryTagsFromQuery(query).some((tag) => vendor.tags.includes(tag));
+  return countryTagsFromQuery(query).some((tag) => searchable.includes(tag));
 }
 
 function stallFits(vendor: MarketStall, find: StallBrowse, today: number) {
@@ -80,7 +82,10 @@ function stallFits(vendor: MarketStall, find: StallBrowse, today: number) {
   ) {
     return false;
   }
-  if (find.tags.length && !find.tags.some((tag) => vendor.tags.includes(tag))) {
+  if (
+    find.tags.length &&
+    !find.tags.some((tag) => vendorFilterTags(vendor).includes(tag))
+  ) {
     return false;
   }
   return true;

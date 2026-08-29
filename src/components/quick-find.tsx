@@ -146,7 +146,7 @@ export function QuickFind({
     <form action="/markets" className="grid gap-3 sm:gap-4">
       <div className="order-1">
         <label className="sr-only" htmlFor="home-search">
-          Search for a GTA market, vendor, or neighbourhood
+          Search for a Toronto market, vendor, or neighbourhood
         </label>
         <SearchField
           id="home-search"

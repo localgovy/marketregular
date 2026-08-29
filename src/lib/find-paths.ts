@@ -6,6 +6,8 @@ import {
   WEEKDAYS,
 } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_TZ } from "@/lib/launch";
+import { tagLabel } from "@/lib/tag-label";
+import { vendorFilterTags } from "@/lib/vendor-tags";
 import type { Market } from "@/types/database";
 
 const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
@@ -120,8 +122,12 @@ export function homeAreas(markets: Array<Pick<Market, "slug" | "city">>) {
 
 export type HomeAreas = ReturnType<typeof homeAreas>;
 
-export function tagsPresent(rows: Array<{ tags: string[] }>, wanted: readonly string[]) {
-  const have = new Set(rows.flatMap((row) => row.tags));
+/** Which filter chips can actually return something, inferred tags included. */
+export function tagsPresent(
+  rows: Array<{ tags: string[]; searchTags?: string[] }>,
+  wanted: readonly string[],
+) {
+  const have = new Set(rows.flatMap((row) => vendorFilterTags(row)));
   return wanted.filter((tag) => have.has(tag));
 }
 
@@ -131,26 +137,7 @@ export const FIND_RECORD = [
   ...AMENITY_TAGS.filter((tag) => !SETUP_SET.has(tag)),
 ] as const;
 
-const TAG_LABELS: Record<string, string> = {
-  "year-round": "Year-round",
-  "prepared-food": "Prepared food",
-  "card-accepted": "Takes cards",
-  atm: "ATM",
-  "gluten-free": "Gluten-free",
-  "black-owned": "Black-owned",
-  jewelry: "Jewellery",
-  "sri-lankan": "Sri Lankan",
-  "west-african": "West African",
-  "middle-eastern": "Middle Eastern",
-};
-
-export function tagLabel(tag: string) {
-  if (TAG_LABELS[tag]) return TAG_LABELS[tag];
-  return tag
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
+export { tagLabel };
 
 export function isProductTag(tag: string) {
   return PRODUCT_SET.has(tag);
@@ -174,7 +161,7 @@ export function sortTagsForDisplay(tags: string[]) {
 
 export function applyDirectoryTags<
   M extends { id: string; tags: string[] },
-  V extends { id: string; tags: string[] },
+  V extends { id: string; tags: string[]; searchTags?: string[] },
 >(
   markets: M[],
   vendors: V[],
@@ -196,9 +183,11 @@ export function applyDirectoryTags<
   }
 
   if (product.length) {
-    nextVendors = nextVendors.filter((vendor) =>
-      product.some((tag) => vendor.tags.includes(tag)),
-    );
+    // Inferred tags widen what a filter can reach without widening what a page claims.
+    nextVendors = nextVendors.filter((vendor) => {
+      const searchable = vendorFilterTags(vendor);
+      return product.some((tag) => searchable.includes(tag));
+    });
     const matchingVendorIds = new Set(nextVendors.map((vendor) => vendor.id));
     const hostIds = new Set(
       links

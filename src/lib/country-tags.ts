@@ -256,11 +256,13 @@ export function storedCountryTags(tags: string[]) {
   return tags.filter((tag): tag is CountryTag => COUNTRY_SET.has(tag));
 }
 
-export function withVendorCountryTags<T extends { name: string; about?: string | null; tags: string[] }>(
-  vendor: T,
-): T {
+/** Guesses go to `searchTags` so a cuisine we inferred never renders as a stated fact. */
+export function withVendorCountryTags<
+  T extends { name: string; about?: string | null; tags: string[] },
+>(vendor: T): T & { searchTags?: string[] } {
   if (storedCountryTags(vendor.tags).length) return vendor;
   const extra = guessCountryTags(vendor.name, vendor.about);
   if (!extra.length) return vendor;
-  return { ...vendor, tags: [...vendor.tags, ...extra] };
+  const current = (vendor as { searchTags?: string[] }).searchTags ?? [];
+  return { ...vendor, searchTags: [...new Set([...current, ...extra])] };
 }

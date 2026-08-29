@@ -65,6 +65,11 @@ export type Vendor = {
   phone: string | null;
   logo_url: string | null;
   tags: string[];
+  /**
+   * Tags inferred from the name so name-only stalls stay reachable through the filters.
+   * Never rendered — a guess is not something the shop told us.
+   */
+  searchTags?: string[];
   status: ListingStatus;
   review_count: number;
   rating_avg: number | null;

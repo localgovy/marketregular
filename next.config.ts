@@ -31,7 +31,8 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       { source: "/search", destination: "/markets", permanent: true },
-      { source: "/vendors", destination: "/markets", permanent: true },
+      // `/vendors` used to 308 to /markets while Google ranked it for stall-directory
+      // queries. It is a real index page now, so the redirect is gone.
     ];
   },
   async headers() {

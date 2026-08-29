@@ -64,6 +64,9 @@ const MARKET_PUBLIC =
   "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, phone, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
 const VENDOR_PUBLIC =
   "id, slug, name, about, website, phone, tags, status, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
+/** `research_notes` is sourcing detail for the desk, not visitor copy — never selected here. */
+const SCHEDULE_PUBLIC =
+  "id, market_id, weekday, opens_at, closes_at, season_start, season_end, notes";
 
 /** Score, then the tag guesses that keep name-only roster shops inside the filters. */
 function hydrateVendor(vendor: Vendor) {
@@ -379,7 +382,7 @@ export async function searchDirectory(filters: SearchFilters) {
     fetchAllRows<Market>(marketPage).then((result) => result.data),
     fetchAllRows<Vendor>(vendorPage).then((result) => result.data),
     fetchAllRows<MarketSchedule>((from, to) =>
-      supabase.from("market_schedules").select("*").order("id").range(from, to),
+      supabase.from("market_schedules").select(SCHEDULE_PUBLIC).order("id").range(from, to),
     ).then((result) => result.data),
     listStalls(),
     listMarkets(),
@@ -495,7 +498,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
   if (!isLaunchCity((market as Market).city)) return null;
 
   const [{ data: schedules }, { data: links }, { data: posts }] = await Promise.all([
-    supabase.from("market_schedules").select("*").eq("market_id", market.id),
+    supabase.from("market_schedules").select(SCHEDULE_PUBLIC).eq("market_id", market.id),
     supabase.from("market_vendors").select("*").eq("market_id", market.id),
     supabase
       .from("posts")
@@ -621,7 +624,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
           .limit(40)
       : Promise.resolve({ data: [] as Post[] }),
     marketIds.length > 0
-      ? supabase.from("market_schedules").select("*").in("market_id", marketIds)
+      ? supabase.from("market_schedules").select(SCHEDULE_PUBLIC).in("market_id", marketIds)
       : Promise.resolve({ data: [] as MarketSchedule[] }),
   ]);
   const marketMap = new Map((markets ?? []).map((m: Market) => [m.id, withListingStats(m)]));
@@ -821,7 +824,7 @@ export async function listSchedules(): Promise<MarketSchedule[]> {
   const supabase = publicDb();
   if (!supabase) return localSchedules();
   const { data, error } = await fetchAllRows<MarketSchedule>((from, to) =>
-    supabase.from("market_schedules").select("*").order("id").range(from, to),
+    supabase.from("market_schedules").select(SCHEDULE_PUBLIC).order("id").range(from, to),
   );
   if (error) return localSchedules();
   return data;
@@ -837,7 +840,7 @@ export async function getSchedules(marketId: string) {
   }
   const { data } = await supabase
     .from("market_schedules")
-    .select("*")
+    .select(SCHEDULE_PUBLIC)
     .eq("market_id", marketId);
   return (data ?? []) as MarketSchedule[];
 }

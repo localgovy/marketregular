@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { BrowseLinks } from "@/components/browse-links";
 import { DirectoryResults } from "@/components/directory-results";
 import { DirectorySort } from "@/components/directory-sort";
+import { JsonLd } from "@/components/json-ld";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
-import { listMarkets, searchDirectory } from "@/lib/data/catalog";
+import { getDirectoryCensus, listMarkets, searchDirectory } from "@/lib/data/catalog";
 import {
   marketsCrumbs,
   parseDirectorySort,
@@ -11,14 +13,21 @@ import {
   queryList,
   type MarketsSearch,
 } from "@/lib/find-paths";
-import { LAUNCH_REGION } from "@/lib/launch";
-import { pageMeta } from "@/lib/seo";
+import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
+import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = pageMeta({
-  title: `${LAUNCH_REGION} markets`,
-  path: "/markets",
-  description: `${LAUNCH_REGION} farmers' markets with this week's hours, maps, and who's on the floor.`,
-});
+/**
+ * Canonical is always bare `/markets`, so every filter combination consolidates here
+ * instead of competing. Day and category intent gets its own indexable pages.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const census = await getDirectoryCensus();
+  return pageMeta({
+    title: `${LAUNCH_CITY} farmers' markets: hours and vendors`,
+    path: "/markets",
+    description: `All ${census.markets} farmers' markets across ${LAUNCH_CITY} and the ${LAUNCH_REGION}, with this week's hours, addresses, maps and the ${census.vendors.toLocaleString("en-CA")} stalls that work them.`,
+  });
+}
 
 export default async function MarketsPage({
   searchParams,
@@ -79,7 +88,7 @@ export default async function MarketsPage({
     lng: params.lng,
     sort,
   };
-  const status = [LAUNCH_REGION, ...crumbs, `${markets.length} markets`].join(" · ");
+  const status = [LAUNCH_CITY, ...crumbs, `${markets.length} markets`].join(" · ");
   const summary = [
     `${markets.length} markets`,
     `${vendors.length} vendors`,
@@ -101,7 +110,18 @@ export default async function MarketsPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <h1>Markets</h1>
+      <JsonLd data={breadcrumbJsonLd([MARKETS_CRUMB])} />
+      <JsonLd
+        data={itemListJsonLd({
+          name: `${LAUNCH_CITY} farmers' markets`,
+          path: "/markets",
+          items: markets.map((market) => ({
+            name: market.name,
+            path: `/markets/${market.slug}`,
+          })),
+        })}
+      />
+      <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
       <p className="type-kicker mt-2 mb-6 text-muted-foreground">{status}</p>
       <SearchForm
         resultCount={markets.length}
@@ -134,6 +154,7 @@ export default async function MarketsPage({
         <p className="text-sm text-muted-foreground">{summary}</p>
       </div>
       <DirectoryResults key={formKey} markets={markets} vendors={vendors} schedulesByMarket={schedulesByMarket} />
+      <BrowseLinks className="mt-12" />
     </div>
   );
 }

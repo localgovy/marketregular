@@ -20,7 +20,7 @@ import {
   type MarketsSearch,
   type PlaceAreas,
 } from "@/lib/find-paths";
-import { LAUNCH_REGION } from "@/lib/launch";
+import { LAUNCH_COVERAGE } from "@/lib/launch";
 import { cn } from "@/lib/utils";
 
 export type SearchFormDefaults = {
@@ -209,7 +209,7 @@ export function SearchForm({
             update({ areas: value ? [value] : [] });
           }}
         >
-          <option value="">Anywhere in the {LAUNCH_REGION}</option>
+          <option value="">Anywhere in {LAUNCH_COVERAGE}</option>
           {places.neighbourhoods.length ? (
             <optgroup label="Toronto neighbourhoods">
               {places.neighbourhoods.map((area) => (
@@ -220,7 +220,7 @@ export function SearchForm({
             </optgroup>
           ) : null}
           {places.cities.length ? (
-            <optgroup label={`Around the ${LAUNCH_REGION}`}>
+            <optgroup label="Around Toronto">
               {places.cities.map((area) => (
                 <option key={area.q} value={area.q}>
                   {area.label}

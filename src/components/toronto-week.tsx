@@ -6,7 +6,7 @@ import { DayPlanHoursRow } from "@/components/day-plan-plus";
 import { HomePanel } from "@/components/home-panel";
 import { WeekMark } from "@/components/marks";
 import { NowLabel } from "@/components/now-label";
-import { LAUNCH_REGION } from "@/lib/launch";
+import { LAUNCH_CITY } from "@/lib/launch";
 import { marketListName } from "@/lib/listing-copy";
 import type { UpcomingGroup, UpcomingSlot } from "@/lib/upcoming";
 
@@ -75,7 +75,7 @@ export function TorontoWeek({
   title = "Upcoming markets",
   how = "A sprout means open right now. Tap a name for vendors and the map.",
   action,
-  empty = `No ${LAUNCH_REGION} markets are on the calendar for the next seven days.`,
+  empty = `No ${LAUNCH_CITY} markets are on the calendar for the next seven days.`,
   className = "xl:shrink-0",
 }: {
   groups: UpcomingGroup[];
@@ -89,7 +89,7 @@ export function TorontoWeek({
 }) {
   const open = groups.find((g) => g.open);
   const rest = groups.filter((g) => !g.open);
-  const weekKicker = kicker ?? `${LAUNCH_REGION} this week`;
+  const weekKicker = kicker ?? `${LAUNCH_CITY} this week`;
   const weekAction = action ?? (
     <Link href="/events" className="hover:underline">
       Month calendar

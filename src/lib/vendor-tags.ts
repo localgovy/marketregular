@@ -1,5 +1,5 @@
 import { PRODUCT_TAGS } from "@/lib/constants";
-import { guessCountryTags, storedCountryTags } from "@/lib/country-tags";
+import { storedCountryTags } from "@/lib/country-tags";
 
 const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
 
@@ -144,10 +144,15 @@ function fold(value: string) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+/**
+ * Both ends are anchored. Without a trailing boundary "butter" matched Butterfly,
+ * "fish" matched Fisher and "plant" matched Plantation, so a name-only stall picked up
+ * Dairy, Seafood or Plants it had nothing to do with.
+ */
 function mentions(hay: string, needle: string) {
   if (needle.includes(" ")) return hay.includes(needle);
-  const stem = needle.length <= 3 ? `${needle}(?:[^a-z]|$)` : needle;
-  return new RegExp(`(?:^|[^a-z])${stem}`).test(hay);
+  const inflected = `${needle}(?:s|es|ed|ing|ery|ies)?`;
+  return new RegExp(`(?:^|[^a-z])${inflected}(?:[^a-z]|$)`).test(hay);
 }
 
 export function guessVendorTags(name: string) {
@@ -160,18 +165,27 @@ export function guessVendorTags(name: string) {
   return tags;
 }
 
-/** Roster-only shops arrive with no tags. A name guess keeps them inside the filters. */
-export function withVendorProductTags<T extends { name: string; tags: string[] }>(vendor: T): T {
+/**
+ * Roster-only shops arrive with no tags, and a name guess keeps them reachable through
+ * the filters. The guess goes to `searchTags`, never to `tags`: a guess is not a fact and
+ * must not render on the page as though the shop told us.
+ */
+export function withVendorProductTags<T extends { name: string; tags: string[] }>(
+  vendor: T,
+): T & { searchTags?: string[] } {
   if (vendor.tags.some((tag) => PRODUCT_SET.has(tag))) return vendor;
   const extra = guessVendorTags(vendor.name);
   if (!extra.length) return vendor;
-  return { ...vendor, tags: [...vendor.tags, ...extra] };
+  return { ...vendor, searchTags: [...new Set([...(vendor as { searchTags?: string[] }).searchTags ?? [], ...extra])] };
 }
 
+/** Everything a stall can be matched on: what it told us, plus what we inferred. */
+export function vendorFilterTags(vendor: { tags: string[]; searchTags?: string[] }) {
+  if (!vendor.searchTags?.length) return vendor.tags;
+  return [...new Set([...vendor.tags, ...vendor.searchTags])];
+}
+
+/** Display only, so stored tags only. */
 export function vendorProductTags(name: string, stored: string[] = []) {
-  const fromRecord = stored.filter((tag) => PRODUCT_SET.has(tag));
-  const products = fromRecord.length ? fromRecord : guessVendorTags(name);
-  const storedOrigin = storedCountryTags(stored);
-  const origin = storedOrigin.length ? storedOrigin : guessCountryTags(name);
-  return [...products, ...origin];
+  return [...stored.filter((tag) => PRODUCT_SET.has(tag)), ...storedCountryTags(stored)];
 }

@@ -13,6 +13,7 @@ import {
   listStalls,
   listVendors,
 } from "@/lib/data/catalog";
+import { LAUNCH_CITY } from "@/lib/launch";
 import { upcomingByDay } from "@/lib/upcoming";
 import { topVendorsThisWeek, vendorsSellingToday } from "@/lib/vendor-week";
 import { pageMeta, SITE_DESCRIPTION } from "@/lib/seo";
@@ -20,6 +21,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = pageMeta({
+  title: `${LAUNCH_CITY} farmers' markets: what's open today`,
   path: "/",
   description: SITE_DESCRIPTION,
 });
@@ -93,7 +95,7 @@ export default async function HomePage() {
             tone="directory"
             icon={RulesMark}
             kicker="A short list"
-            title="GTA markets"
+            title="Toronto markets"
             how="Open ones first. Tap a name, then save the ones you actually go to."
             action={
               <Link href="/markets" className="hover:underline">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
+import { LAUNCH_COVERAGE } from "@/lib/launch";
 import { SITE_FOOTER_NAV } from "@/lib/nav";
 
 export function SiteFooter() {
@@ -18,7 +19,7 @@ export function SiteFooter() {
             <span>by</span>
             <StudioWordmark className="lg:text-primary" />
           </a>
-          <span>– GTA farmers&apos; markets, all in one place</span>
+          <span>– {LAUNCH_COVERAGE}, farmers&apos; markets, all in one place</span>
         </p>
         <div className="flex flex-wrap gap-4">
           {SITE_FOOTER_NAV.map((item) => (
