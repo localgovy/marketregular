@@ -302,9 +302,9 @@
 
 .open-now-sprout {
   display: block;
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
+  width: 1em;
+  height: 1em;
+  flex: 0 0 1em;
   overflow: visible;
   color: currentColor;
 }

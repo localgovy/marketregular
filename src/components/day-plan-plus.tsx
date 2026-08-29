@@ -131,9 +131,9 @@ export function DayPlanHoursRow({
           {name}
         </Link>
         {extra || hours ? (
-          <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
             {extra}
-            {hours ? <Hours value={hours} className={hoursClassName} /> : null}
+            {hours ? <Hours value={hours} className={cn("leading-none", hoursClassName)} /> : null}
           </p>
         ) : null}
       </div>

@@ -15,7 +15,7 @@ function CensusCell({
 }) {
   const label = `${formatCount(value)} ${word}`;
   const className =
-    "flex min-w-0 flex-col items-start gap-0.5 px-3 py-3 text-foreground sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2.5 sm:px-4 sm:py-3.5";
+    "flex min-w-0 flex-col items-start gap-0.5 px-3 py-3 text-chalk sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2.5 sm:px-4 sm:py-3.5";
   const inner = (
     <>
       <span
@@ -39,7 +39,7 @@ function CensusCell({
     <Link
       href={href}
       aria-label={label}
-      className={`${className} outline-none transition-colors hover:bg-black/10 focus-visible:bg-black/10`}
+      className={`${className} outline-none transition-colors hover:bg-white/12 focus-visible:bg-white/12`}
     >
       {inner}
     </Link>
@@ -58,9 +58,9 @@ export function HomeCensus({
   return (
     <nav
       aria-label="On the directory"
-      className="-mx-4 -mt-5 mb-5 bg-ticket lg:-mx-6 lg:-mt-6"
+      className="-mx-4 -mt-5 mb-5 bg-board lg:-mx-6 lg:-mt-6"
     >
-      <div className="grid grid-cols-3 divide-x divide-receipt/25">
+      <div className="grid grid-cols-3 divide-x divide-chalk/20">
         <CensusCell
           href="/markets"
           value={markets}
