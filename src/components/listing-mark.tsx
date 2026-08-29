@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { externalHref } from "@/lib/format";
 
 const SVG_SRC = /\.svg(\?|$)/i;
 
@@ -13,12 +14,13 @@ export function ListingMark({
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
-  if (!src || failed || SVG_SRC.test(src)) return null;
+  const url = externalHref(src);
+  if (!url || failed || SVG_SRC.test(url)) return null;
 
   return (
     <span className={cn("relative block h-12 w-[4.5rem] shrink-0", className)}>
       <img
-        src={src}
+        src={url}
         alt=""
         loading="lazy"
         decoding="async"

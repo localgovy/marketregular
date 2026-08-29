@@ -96,6 +96,9 @@ export function dbPublicError(error: DbLike | null | undefined, fallback: string
     if (message.includes("Avatar URL") || message.includes("Logo URL")) {
       return "That image could not be saved.";
     }
+    if (message.includes("Listing URL")) {
+      return "That link could not be saved.";
+    }
   }
   return fallback;
 }

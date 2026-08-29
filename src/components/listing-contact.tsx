@@ -5,11 +5,22 @@ import { externalHref, formatPhone } from "@/lib/format";
 
 export function ListingPhone({ phone }: { phone: string | null }) {
   if (!phone) return null;
+  const digits = phone.replace(/\D/g, "");
+  const tel =
+    digits.length === 11 && digits.startsWith("1")
+      ? `+${digits}`
+      : digits.length === 10
+        ? `+1${digits}`
+        : null;
   return (
     <p className="mt-2 text-sm">
-      <a className="hover:underline" href={`tel:${phone}`}>
-        {formatPhone(phone)}
-      </a>
+      {tel ? (
+        <a className="hover:underline" href={`tel:${tel}`}>
+          {formatPhone(phone)}
+        </a>
+      ) : (
+        formatPhone(phone)
+      )}
     </p>
   );
 }

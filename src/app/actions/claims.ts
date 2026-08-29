@@ -188,7 +188,6 @@ export async function submitClaim(formData: FormData) {
       target_type,
       target_id,
       evidence,
-      status: "pending",
     });
     if (error) return { error: dbPublicError(error, "Could not save that claim. We still emailed the desk.") };
     revalidatePath("/account");

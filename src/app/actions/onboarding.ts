@@ -112,9 +112,7 @@ export async function completeOnboarding(formData: FormData) {
     }
   }
 
-  const { data: stamped, error: stampError } = await supabase.rpc("stamp_onboarded_at", {
-    p_user_id: user.id,
-  });
+  const { data: stamped, error: stampError } = await supabase.rpc("stamp_onboarded_at");
   if (stampError || !stamped) {
     const service = createServiceClient();
     if (!service) {
