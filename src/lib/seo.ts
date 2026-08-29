@@ -111,7 +111,7 @@ export function marketJsonLd(market: Market & { schedules: MarketSchedule[] }) {
     description: market.about ?? undefined,
     url: absoluteUrl(`/markets/${market.slug}`),
     telephone: market.phone ?? undefined,
-    sameAs: sameAsLinks(market.website, market.instagram, market.tiktok),
+    sameAs: sameAsLinks(market.website, market.instagram, market.tiktok, market.facebook),
     address: {
       "@type": "PostalAddress",
       streetAddress: market.address,
@@ -144,7 +144,7 @@ export function vendorJsonLd(vendor: Vendor) {
     description: vendor.about ?? undefined,
     url: absoluteUrl(`/vendors/${vendor.slug}`),
     telephone: vendor.phone ?? undefined,
-    sameAs: sameAsLinks(vendor.website, vendor.instagram, vendor.tiktok),
+    sameAs: sameAsLinks(vendor.website, vendor.instagram, vendor.tiktok, vendor.facebook),
     areaServed: { "@type": "AdministrativeArea", name: "Greater Toronto Area" },
     ...(aggregateRating ? { aggregateRating } : {}),
   };

@@ -302,9 +302,9 @@
 
 .open-now-sprout {
   display: block;
-  width: 14px;
-  height: 14px;
-  flex: 0 0 14px;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
   overflow: visible;
   color: currentColor;
 }
@@ -312,10 +312,9 @@
 .open-now-sprout__stem {
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.7;
+  stroke-width: 0.7;
   stroke-linecap: round;
   stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
   transform-box: fill-box;
   transform-origin: 50% 100%;
   animation: open-now-sprout-stem 3200ms linear infinite both;
@@ -327,12 +326,12 @@
 }
 
 .open-now-sprout__leaf--left {
-  transform-origin: 92% 80%;
+  transform-origin: 94% 55%;
   animation: open-now-sprout-left 3200ms linear infinite both;
 }
 
 .open-now-sprout__leaf--right {
-  transform-origin: 8% 80%;
+  transform-origin: 6% 55%;
   animation: open-now-sprout-right 3200ms linear infinite both;
 }
 

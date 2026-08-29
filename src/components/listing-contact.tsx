@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { InstagramMark, SignMark, TikTokMark, type MarkProps } from "@/components/marks";
+import { FacebookMark, InstagramMark, SignMark, TikTokMark, type MarkProps } from "@/components/marks";
 import { buttonVariants } from "@/components/ui/button";
 import { externalHref, formatPhone } from "@/lib/format";
 
@@ -52,4 +52,8 @@ export function ListingInstagram({ href }: { href: string | null }) {
 
 export function ListingTiktok({ href }: { href: string | null }) {
   return <ListingOutbound href={href} label="TikTok" icon={TikTokMark} />;
+}
+
+export function ListingFacebook({ href }: { href: string | null }) {
+  return <ListingOutbound href={href} label="Facebook" icon={FacebookMark} />;
 }

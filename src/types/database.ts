@@ -28,6 +28,7 @@ export type Market = {
   website: string | null;
   instagram: string | null;
   tiktok: string | null;
+  facebook: string | null;
   phone: string | null;
   email?: string | null;
   logo_url: string | null;
@@ -60,6 +61,7 @@ export type Vendor = {
   website: string | null;
   instagram: string | null;
   tiktok: string | null;
+  facebook: string | null;
   phone: string | null;
   logo_url: string | null;
   tags: string[];

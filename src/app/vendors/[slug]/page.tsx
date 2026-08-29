@@ -10,7 +10,7 @@ import { ListingComposer } from "@/components/listing-composer";
 import { SaveButton } from "@/components/save-button";
 import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
-import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok } from "@/components/listing-contact";
+import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { toGeoMarket } from "@/lib/geo";
@@ -163,9 +163,10 @@ export default async function VendorPage({
             <ListingWebsite href={vendor.website} />
             <ListingInstagram href={vendor.instagram} />
             <ListingTiktok href={vendor.tiktok} />
+            <ListingFacebook href={vendor.facebook} />
             <ul
               className={
-                vendor.phone || vendor.website || vendor.instagram || vendor.tiktok
+                vendor.phone || vendor.website || vendor.instagram || vendor.tiktok || vendor.facebook
                   ? "mt-4 grid gap-3 border-t border-border pt-4"
                   : "mt-3 grid gap-3"
               }

@@ -11,20 +11,31 @@ function OpenNowSprout() {
     >
       <path
         className="open-now-sprout__stem"
-        d="M8.05 14.15C8.12 11.9 7.92 9.45 8.18 6.05"
+        d="M8.1 14.4C8.12 12.15 8.06 10 8.1 8.25"
       />
-      <path
-        className="open-now-sprout__leaf open-now-sprout__leaf--left"
-        d="M7.92 10.12C5.62 10.24 3.78 8.98 3.2 6.78C5.5 6.63 7.28 7.78 7.92 10.12Z"
-      />
-      <path
-        className="open-now-sprout__leaf open-now-sprout__leaf--right"
-        d="M8.08 8.22C10.27 8.22 11.92 7.12 12.46 5.05C10.22 4.94 8.53 6.03 8.08 8.22Z"
-      />
-      <path
-        className="open-now-sprout__leaf open-now-sprout__leaf--top"
-        d="M8.15 6.22C6.75 4.7 6.97 2.48 8.68 1.2C10.08 2.86 9.82 4.98 8.15 6.22Z"
-      />
+      <g className="open-now-sprout__leaf open-now-sprout__leaf--left">
+        <ellipse
+          cx="4.15"
+          cy="7.12"
+          rx="4.2"
+          ry="2.05"
+          transform="rotate(20 4.15 7.12)"
+          fill="currentColor"
+        />
+      </g>
+      <g className="open-now-sprout__leaf open-now-sprout__leaf--right">
+        <ellipse
+          cx="12.05"
+          cy="7.12"
+          rx="4.2"
+          ry="2.05"
+          transform="rotate(-20 12.05 7.12)"
+          fill="currentColor"
+        />
+      </g>
+      <g className="open-now-sprout__leaf open-now-sprout__leaf--top">
+        <ellipse cx="8.1" cy="3.4" rx="1.7" ry="3.2" fill="currentColor" />
+      </g>
     </svg>
   );
 }

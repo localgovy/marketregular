@@ -13,7 +13,7 @@ import { CaretDownMark } from "@/components/marks";
 import { MarketVendors } from "@/components/market-vendors";
 import { NowLabel } from "@/components/now-label";
 import { ScheduleList } from "@/components/schedule-list";
-import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok } from "@/components/listing-contact";
+import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { hallFromMarket } from "@/lib/day-plan";
@@ -133,6 +133,7 @@ export default async function MarketPage({
             <ListingWebsite href={market.website} />
             <ListingInstagram href={market.instagram} />
             <ListingTiktok href={market.tiktok} />
+            <ListingFacebook href={market.facebook} />
           </div>
           <ClaimForm targetType="market" targetId={market.id} />
         </aside>

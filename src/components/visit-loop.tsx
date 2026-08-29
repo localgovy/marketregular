@@ -9,7 +9,7 @@ import { QuickFind } from "@/components/quick-find";
 import { TorontoWeek } from "@/components/toronto-week";
 import type { DirectoryCensus } from "@/lib/data/catalog";
 import { FIND_ORIGINS, FIND_PRODUCTS, FIND_SETUP, homeAreas, tagsPresent } from "@/lib/find-paths";
-import { LAUNCH_REGION } from "@/lib/launch";
+import { LAUNCH_CITY } from "@/lib/launch";
 import type { UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { Market, Vendor } from "@/types/database";
@@ -87,7 +87,7 @@ export function HomeMosaic({
 
       <header className="mb-4 max-w-2xl">
         <h1>
-          {LAUNCH_REGION} farmers&apos; markets
+          {LAUNCH_CITY} farmers&apos; markets
         </h1>
         <p className="type-lede mt-2 text-muted-foreground">
           Find out everything you want to know about markets in Toronto and across the GTA.

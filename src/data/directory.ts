@@ -11,7 +11,7 @@ import type {
 
 type SeedMarket = Omit<
   Market,
-  "status" | "claimed_by" | "email" | "logo_url" | "review_count" | "rating_avg" | "instagram" | "tiktok"
+  "status" | "claimed_by" | "email" | "logo_url" | "review_count" | "rating_avg" | "instagram" | "tiktok" | "facebook"
 > & {
   email?: string;
   logo_url?: string | null;
@@ -19,18 +19,20 @@ type SeedMarket = Omit<
   rating_avg?: number | null;
   instagram?: string | null;
   tiktok?: string | null;
+  facebook?: string | null;
   schedules: Omit<MarketSchedule, "id" | "market_id">[];
 };
 
 type SeedVendor = Omit<
   Vendor,
-  "status" | "claimed_by" | "logo_url" | "review_count" | "rating_avg" | "instagram" | "tiktok"
+  "status" | "claimed_by" | "logo_url" | "review_count" | "rating_avg" | "instagram" | "tiktok" | "facebook"
 > & {
   logo_url?: string | null;
   review_count?: number;
   rating_avg?: number | null;
   instagram?: string | null;
   tiktok?: string | null;
+  facebook?: string | null;
   menus: Omit<MenuItem, "id" | "vendor_id">[];
 };
 
@@ -14774,6 +14776,7 @@ export function toPublicMarket(m: SeedMarket): Market {
     website: m.website,
     instagram: m.instagram ?? null,
     tiktok: m.tiktok ?? null,
+    facebook: m.facebook ?? null,
     phone: m.phone,
     email: m.email ?? null,
     logo_url: m.logo_url ?? null,
@@ -14806,6 +14809,7 @@ export function toPublicVendor(v: SeedVendor): Vendor {
     website: v.website,
     instagram: v.instagram ?? null,
     tiktok: v.tiktok ?? null,
+    facebook: v.facebook ?? null,
     phone: v.phone,
     logo_url: v.logo_url ?? null,
     tags: v.tags,

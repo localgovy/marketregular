@@ -80,6 +80,10 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
         <Input id="tiktok" name="tiktok" defaultValue={vendor?.tiktok ?? ""} />
       </div>
       <div className="grid gap-1.5">
+        <Label htmlFor="facebook">Facebook</Label>
+        <Input id="facebook" name="facebook" defaultValue={vendor?.facebook ?? ""} />
+      </div>
+      <div className="grid gap-1.5">
         <Label htmlFor="phone">Phone</Label>
         <Input id="phone" name="phone" defaultValue={vendor?.phone ?? ""} />
       </div>

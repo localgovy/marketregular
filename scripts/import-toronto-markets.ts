@@ -203,6 +203,7 @@ type VendorRecord = {
   website: null;
   instagram: null;
   tiktok: null;
+  facebook: null;
   phone: null;
   tags: string[];
   menus: [];
@@ -260,6 +261,7 @@ for (const row of roster) {
         website: null,
         instagram: null,
         tiktok: null,
+        facebook: null,
         phone: null,
         tags: [],
         menus: [],
@@ -336,6 +338,7 @@ export function toPublicMarket(m: SeedMarket): Market {
     website: m.website,
     instagram: m.instagram ?? null,
     tiktok: m.tiktok ?? null,
+    facebook: m.facebook ?? null,
     phone: m.phone,
     email: m.email ?? null,
     logo_url: m.logo_url ?? null,
@@ -365,6 +368,7 @@ export function toPublicVendor(v: SeedVendor): Vendor {
     website: v.website,
     instagram: v.instagram ?? null,
     tiktok: v.tiktok ?? null,
+    facebook: v.facebook ?? null,
     phone: v.phone,
     logo_url: v.logo_url ?? null,
     tags: v.tags,
