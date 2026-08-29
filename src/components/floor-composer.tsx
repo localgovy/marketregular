@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { composeFloorNote } from "@/app/actions/presence";
 import { useGeo } from "@/components/geo-provider";
 import { ScorePlate } from "@/components/listing-score";
-import { CloseMark, PlateMark, TagMark } from "@/components/marks";
+import { PlateMark, TagMark } from "@/components/marks";
 import { ReviewSignupOverlay } from "@/components/review-signup-overlay";
 import { SearchField } from "@/components/search-field";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { FLOOR_TAGS } from "@/lib/constants";
 import { formatPriceLevel } from "@/lib/format";
 import { NOTE_PROMPTS } from "@/lib/floor-note";
-import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
+import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import { cn } from "@/lib/utils";
 import type { FloorItem, StallRef } from "@/types/database";
 import type { GeoMarket } from "@/lib/geo";
@@ -59,7 +59,8 @@ export function FloorComposer({
   const { nearby, coords } = useGeo();
   const here = nearby[0];
   const pathname = usePathname() || "/";
-  const [signedIn, setSignedIn] = useState(signedInProp);
+  const cookieIn = useAuthCookie(signedInProp);
+  const signedIn = signedInProp || cookieIn;
   const [body, setBody] = useState("");
   const [rating, setRating] = useState(0);
   const [price, setPrice] = useState(0);
@@ -75,7 +76,7 @@ export function FloorComposer({
   const wrapRef = useRef<HTMLDivElement>(null);
   const marketSearchRef = useRef<HTMLInputElement>(null);
   const vendorSearchRef = useRef<HTMLInputElement>(null);
-  const prompt = NOTE_PROMPTS[Math.floor(Date.now() / 3_600_000) % NOTE_PROMPTS.length];
+  const prompt = NOTE_PROMPTS[0] ?? "What should the next shopper know?";
 
   const picked = marketId ? markets.find((m) => m.id === marketId) ?? null : null;
   const market = marketId === "" ? null : (picked ?? here ?? null);
@@ -111,32 +112,6 @@ export function FloorComposer({
       return tokens.every((token) => hay.includes(token));
     });
   }, [manyStalls, stallOptions, vendorQuery]);
-
-  useEffect(() => {
-    if (signedInProp) {
-      setSignedIn(true);
-      return;
-    }
-    const hasCookie = document.cookie.split(";").some((part) => {
-      const name = part.trim().split("=")[0];
-      return cookieLooksLikeSupabaseAuth(name);
-    });
-    if (!hasCookie) {
-      setSignedIn(false);
-      return;
-    }
-    let cancelled = false;
-    void import("@/lib/supabase/client").then(({ createBrowserSupabaseClient }) => {
-      const supabase = createBrowserSupabaseClient();
-      if (!supabase || cancelled) return;
-      return supabase.auth.getSession().then(({ data: { session } }) => {
-        if (!cancelled) setSignedIn(Boolean(session?.user));
-      });
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname, signedInProp]);
 
   useEffect(() => {
     if (extra !== "place") return;

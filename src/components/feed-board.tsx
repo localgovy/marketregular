@@ -49,17 +49,14 @@ export function FeedBoard({
   const router = useRouter();
   const params = useSearchParams();
   const query = useMemo(() => queryFromParams(params), [params]);
-  const [items, setItems] = useState(initialItems);
-  const [search, setSearch] = useState(query.q);
   const open = useMemo(() => new Set(openSlugs), [openSlugs]);
-
-  useEffect(() => {
-    setItems(initialItems);
-  }, [initialItems]);
-
-  useEffect(() => {
+  const [extra, setExtra] = useState<FloorItem[]>([]);
+  const [search, setSearch] = useState(query.q);
+  const [seenQ, setSeenQ] = useState(query.q);
+  if (query.q !== seenQ) {
+    setSeenQ(query.q);
     setSearch(query.q);
-  }, [query.q]);
+  }
 
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
@@ -80,8 +77,8 @@ export function FeedBoard({
             },
             stalls,
           );
-          setItems((current) => {
-            if (current.some((p) => p.id === item.id)) return current;
+          setExtra((current) => {
+            if (current.some((post) => post.id === item.id)) return current;
             return [item, ...current].slice(0, 80);
           });
         },
@@ -95,6 +92,12 @@ export function FeedBoard({
   function go(next: FeedQuery) {
     router.replace(feedSearchString(next), { scroll: false });
   }
+
+  const items = useMemo(() => {
+    const seen = new Set(initialItems.map((item) => item.id));
+    const prepend = extra.filter((item) => !seen.has(item.id));
+    return [...prepend, ...initialItems].slice(0, 80);
+  }, [extra, initialItems]);
 
   const topics = useMemo(() => tagsInFeed(items), [items]);
   const visible = useMemo(() => filterFeed(items, query), [items, query]);
@@ -209,7 +212,7 @@ export function FeedBoard({
             signedIn={signedIn}
             stalls={stalls}
             markets={markets}
-            onPosted={(item) => setItems((current) => [item, ...current].slice(0, 80))}
+            onPosted={(item) => setExtra((current) => [item, ...current].slice(0, 80))}
           />
           {visible.length ? (
             <ol>
@@ -221,7 +224,9 @@ export function FeedBoard({
             <p className="px-3 py-4 text-base text-muted-foreground">
               {filtered
                 ? "No posts match that. Clear the search or pick a place from the rail."
-                : "No posts yet. Sign in to write the first one."}
+                : signedIn
+                  ? "No posts yet."
+                  : "No posts yet. Sign in to write the first one."}
             </p>
           )}
         </div>

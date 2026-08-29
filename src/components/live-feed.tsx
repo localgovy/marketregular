@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ReviewCard } from "@/components/review-card";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { reviewFromPost } from "@/lib/floor-note";
@@ -13,11 +13,7 @@ export function LiveFeed({
   initialItems: FloorItem[];
   marketId?: string;
 }) {
-  const [items, setItems] = useState(initialItems);
-
-  useEffect(() => {
-    setItems(initialItems);
-  }, [initialItems]);
+  const [extra, setExtra] = useState<FloorItem[]>([]);
 
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
@@ -36,8 +32,8 @@ export function LiveFeed({
             author_name: "Someone on the floor",
             photos: row.photos ?? [],
           });
-          setItems((current) => {
-            if (current.some((p) => p.id === item.id)) return current;
+          setExtra((current) => {
+            if (current.some((post) => post.id === item.id)) return current;
             return [item, ...current].slice(0, 40);
           });
         },
@@ -48,12 +44,14 @@ export function LiveFeed({
     };
   }, [marketId]);
 
+  const items = useMemo(() => {
+    const seen = new Set(initialItems.map((item) => item.id));
+    const prepend = extra.filter((item) => !seen.has(item.id));
+    return [...prepend, ...initialItems].slice(0, 40);
+  }, [extra, initialItems]);
+
   if (!items.length) {
-    return (
-      <p className="text-base text-muted-foreground">
-        No reviews yet. Sign in to write the first one.
-      </p>
-    );
+    return <p className="text-base text-muted-foreground">No reviews yet.</p>;
   }
 
   return (

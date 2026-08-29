@@ -1,6 +1,7 @@
 import { WEEKDAYS } from "@/lib/constants";
+import { torontoYmd } from "@/lib/events-month";
 import { LAUNCH_TZ } from "@/lib/launch";
-import { formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
+import { civilDateAtOffset, formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
 import { vendorProductTags } from "@/lib/vendor-tags";
 import type { FloorItem, Market, MarketSchedule, StallRef, Vendor } from "@/types/database";
 
@@ -28,11 +29,11 @@ export type VendorWeekPick = {
 function scheduleForDay(
   rows: MarketSchedule[],
   weekday: number,
-  now: Date,
+  when: Date,
   tz: string,
 ) {
   return rows.find(
-    (row) => row.weekday === weekday && inSeason(now, row.season_start, row.season_end, tz),
+    (row) => row.weekday === weekday && inSeason(when, row.season_start, row.season_end, tz),
   );
 }
 
@@ -42,10 +43,21 @@ function dayLabel(offset: number, weekday: number) {
   return WEEKDAYS[weekday];
 }
 
-function shuffled<T>(items: T[]): T[] {
+function hashSeed(value: string) {
+  let h = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    h ^= value.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+function shuffled<T>(items: T[], seed: string): T[] {
   const next = items.slice();
+  let h = hashSeed(seed);
   for (let i = next.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
+    h = Math.imul(h, 1664525) + 1013904223;
+    const j = (h >>> 0) % (i + 1);
     const a = next[i];
     const b = next[j];
     if (a === undefined || b === undefined) continue;
@@ -64,6 +76,7 @@ export function vendorsSellingToday(
 ): VendorTodayRow[] {
   const tz = LAUNCH_TZ;
   const { weekday, minutes } = zonedParts(now, tz);
+  const today = civilDateAtOffset(now, 0, tz);
   const byId = new Map(vendors.map((v) => [v.id, v]));
   const rows: VendorTodayRow[] = [];
 
@@ -71,7 +84,7 @@ export function vendorsSellingToday(
     if (!stall.days.includes(weekday)) continue;
     const market = markets.find((m) => m.id === stall.market_id);
     if (!market) continue;
-    const row = scheduleForDay(scheduleMap.get(market.id) ?? [], weekday, now, tz);
+    const row = scheduleForDay(scheduleMap.get(market.id) ?? [], weekday, today, tz);
     if (!row) continue;
     const vendor = byId.get(stall.id);
     const open = minutes >= parseHm(row.opens_at) && minutes <= parseHm(row.closes_at);
@@ -87,7 +100,17 @@ export function vendorsSellingToday(
     });
   }
 
-  return [...shuffled(rows.filter((row) => row.open)), ...shuffled(rows.filter((row) => !row.open))];
+  const seed = torontoYmd(now);
+  return [
+    ...shuffled(
+      rows.filter((row) => row.open),
+      `${seed}:open`,
+    ),
+    ...shuffled(
+      rows.filter((row) => !row.open),
+      `${seed}:shut`,
+    ),
+  ];
 }
 
 export function topVendorsThisWeek(
@@ -106,7 +129,7 @@ export function topVendorsThisWeek(
   const mentionCounts = new Map<string, number>();
   for (const item of tape) {
     if (!item.vendor_slug) continue;
-    if (Date.now() - +new Date(item.created_at) > weekMs) continue;
+    if (+now - +new Date(item.created_at) > weekMs) continue;
     mentionCounts.set(item.vendor_slug, (mentionCounts.get(item.vendor_slug) ?? 0) + 1);
   }
 
@@ -124,11 +147,12 @@ export function topVendorsThisWeek(
   for (let offset = 0; offset < 7; offset += 1) {
     const day = (weekday + offset) % 7;
     const when = dayLabel(offset, day);
+    const on = civilDateAtOffset(now, offset, tz);
     for (const stall of stalls) {
       if (!stall.days.includes(day)) continue;
       const market = markets.find((m) => m.id === stall.market_id);
       if (!market) continue;
-      if (!scheduleForDay(scheduleMap.get(market.id) ?? [], day, now, tz)) continue;
+      if (!scheduleForDay(scheduleMap.get(market.id) ?? [], day, on, tz)) continue;
       const vendor = byId.get(stall.id);
       const current = acc.get(stall.id) ?? {
         name: vendor?.name ?? stall.name,
@@ -204,6 +228,7 @@ export function savedVendorsThisWeek(
   for (let offset = 0; offset < 7; offset += 1) {
     const day = (weekday + offset) % 7;
     const when = dayLabel(offset, day);
+    const on = civilDateAtOffset(now, offset, tz);
     for (const stall of stalls) {
       const vendor = byId.get(stall.id);
       const slug = vendor?.slug ?? stall.slug;
@@ -211,7 +236,7 @@ export function savedVendorsThisWeek(
       if (!stall.days.includes(day)) continue;
       const market = markets.find((row) => row.id === stall.market_id);
       if (!market) continue;
-      if (!scheduleForDay(scheduleMap.get(market.id) ?? [], day, now, tz)) continue;
+      if (!scheduleForDay(scheduleMap.get(market.id) ?? [], day, on, tz)) continue;
       const current = acc.get(slug) ?? {
         vendorName: vendor?.name ?? stall.name,
         vendorSlug: slug,

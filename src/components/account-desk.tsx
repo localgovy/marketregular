@@ -25,7 +25,7 @@ import { NowLabel } from "@/components/now-label";
 import { TorontoWeek } from "@/components/toronto-week";
 import { Button } from "@/components/ui/button";
 import { SITE_NAME } from "@/lib/constants";
-import { timeAgo } from "@/lib/format";
+import { TimeAgo } from "@/components/time-ago";
 import { decodeFloorBody } from "@/lib/floor-note";
 import { tagLabel } from "@/lib/find-paths";
 import type { GeoMarket } from "@/lib/geo";
@@ -267,9 +267,7 @@ export function AccountDesk({
                           </>
                         ) : null}
                         <span aria-hidden>·</span>
-                        <time className="type-nums" dateTime={post.created_at}>
-                          {timeAgo(post.created_at)}
-                        </time>
+                        <TimeAgo className="type-nums" iso={post.created_at} />
                       </p>
                       <p className="text-base leading-snug">{decoded.body}</p>
                       {decoded.tags.length ? (

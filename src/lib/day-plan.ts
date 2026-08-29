@@ -167,9 +167,7 @@ export function hoursOnIso(schedules: ScheduleRow[], province: string, iso: stri
 
 export function slipDateAndHours(schedules: ScheduleRow[], province: string, now = new Date()) {
   const tz = provinceTz(province);
-  const slot =
-    nextOpenSlot(schedules, province, now) ??
-    nextOpenSlot(schedules, province, now, { ignoreSeason: true });
+  const slot = nextOpenSlot(schedules, province, now);
   if (!slot) {
     return { date: torontoYmd(now), hours: "" };
   }
@@ -205,6 +203,25 @@ export function hallFromMarket(
     hours: next.hours,
     date: next.date,
   };
+}
+
+/** Next session this stall actually works, not the hall's next day. */
+export function hallFromStall(
+  market: {
+    slug: string;
+    name: string;
+    address: string;
+    lat: number;
+    lng: number;
+    province: string;
+  },
+  schedules: ScheduleRow[],
+  stallDays: number[] = [],
+): DayPlanHall {
+  const rows = stallDays.length
+    ? schedules.filter((row) => stallDays.includes(Number(row.weekday)))
+    : schedules;
+  return hallFromMarket(market, rows.length ? rows : schedules);
 }
 
 const SPEED_KPH: Record<TravelMode, number> = {

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { ReviewScore } from "@/components/listing-score";
+import { TimeAgo } from "@/components/time-ago";
 import { isPublicPostPhotoUrl } from "@/lib/post-photos";
 import { tagLabel } from "@/lib/find-paths";
-import { formatPriceLevel, timeAgo } from "@/lib/format";
+import { formatPriceLevel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { FloorItem, StallRef } from "@/types/database";
 
@@ -70,9 +71,7 @@ export function ReviewCard({
           </>
         ) : null}
         <span aria-hidden>·</span>
-        <time className="type-nums" dateTime={item.created_at}>
-          {timeAgo(item.created_at)}
-        </time>
+        <TimeAgo className="type-nums" iso={item.created_at} />
       </p>
       <p className="mt-1 text-base leading-snug">{item.body}</p>
       {item.tags.length ? (

@@ -1,4 +1,5 @@
 import { WEEKDAYS, provinceTz } from "@/lib/constants";
+import { LAUNCH_TZ } from "@/lib/launch";
 
 export type ScheduleRow = {
   weekday: number;
@@ -50,6 +51,20 @@ export function inSeason(now: Date, start: string | null, end: string | null, tz
   return md >= from || md <= to;
 }
 
+/** Noon-ish UTC for a civil date in `tz`, shifted by whole days from `now`. */
+export function civilDateAtOffset(now: Date, offset: number, tz: string) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const year = Number(parts.find((p) => p.type === "year")?.value ?? 2026);
+  const month = Number(parts.find((p) => p.type === "month")?.value ?? 1);
+  const day = Number(parts.find((p) => p.type === "day")?.value ?? 1);
+  return new Date(Date.UTC(year, month - 1, day + offset, 16, 0, 0));
+}
+
 export function zonedParts(now: Date, tz: string) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
@@ -87,8 +102,20 @@ export function isMarketOpen(
   });
 }
 
-export function isOpenOnWeekday(schedules: ScheduleRow[], weekday: number) {
-  return schedules.some((row) => Number(row.weekday) === weekday);
+export function isOpenOnWeekday(
+  schedules: ScheduleRow[],
+  weekday: number,
+  tz = LAUNCH_TZ,
+  now = new Date(),
+) {
+  const today = zonedParts(now, tz).weekday;
+  const offset = (weekday - today + 7) % 7;
+  const when = civilDateAtOffset(now, offset, tz);
+  return schedules.some(
+    (row) =>
+      Number(row.weekday) === weekday &&
+      inSeason(when, row.season_start, row.season_end, tz),
+  );
 }
 
 const MONTHS_SHORT = [
@@ -145,22 +172,28 @@ export type NextOpenSlot = {
   opensAt: string;
 };
 
-/** Soonest remaining session in the next week, including the same weekday next week. */
+const NEXT_OPEN_HORIZON = 366;
+
+/** Soonest remaining in-season session, including the same weekday next week. */
 export function nextOpenSlot(
   schedules: ScheduleRow[],
   province: string,
   now = new Date(),
-  opts?: { ignoreSeason?: boolean },
+  opts?: { ignoreSeason?: boolean; horizonDays?: number },
 ): NextOpenSlot | null {
   if (!schedules.length) return null;
   const tz = provinceTz(province);
   const { weekday, minutes } = zonedParts(now, tz);
-  for (let offset = 0; offset <= 7; offset += 1) {
+  const horizon = opts?.horizonDays ?? NEXT_OPEN_HORIZON;
+  for (let offset = 0; offset <= horizon; offset += 1) {
     const day = (weekday + offset) % 7;
+    const when = civilDateAtOffset(now, offset, tz);
     let best: NextOpenSlot | null = null;
     for (const row of schedules) {
       if (Number(row.weekday) !== day) continue;
-      if (!opts?.ignoreSeason && !inSeason(now, row.season_start, row.season_end, tz)) continue;
+      if (!opts?.ignoreSeason && !inSeason(when, row.season_start, row.season_end, tz)) {
+        continue;
+      }
       const opens = parseHm(row.opens_at);
       const closes = parseHm(row.closes_at);
       let waitMinutes: number;
@@ -180,17 +213,20 @@ export function nextOpenSlot(
 }
 
 export function nextOpenLabel(schedules: ScheduleRow[], province: string, now = new Date()) {
-  const slot =
-    nextOpenSlot(schedules, province, now) ??
-    nextOpenSlot(schedules, province, now, { ignoreSeason: true });
-  if (!slot) {
-    const row = schedules[0];
-    if (!row) return "See schedule";
-    const day = WEEKDAYS[Number(row.weekday)] ?? "Day";
-    return `${day} ${formatTime(row.opens_at)}`;
-  }
+  const slot = nextOpenSlot(schedules, province, now);
+  if (!slot) return "See schedule";
   if (slot.waitMinutes === 0) return "Open now";
   if (slot.offset === 0) return `Later today ${formatTime(slot.opensAt)}`;
   if (slot.offset === 1) return `Tomorrow ${formatTime(slot.opensAt)}`;
-  return `${WEEKDAYS[slot.weekday]} ${formatTime(slot.opensAt)}`;
+  if (slot.offset < 7) return `${WEEKDAYS[slot.weekday]} ${formatTime(slot.opensAt)}`;
+  const tz = provinceTz(province);
+  const when = civilDateAtOffset(now, slot.offset, tz);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(when);
+  const month = parts.find((p) => p.type === "month")?.value ?? "01";
+  const day = parts.find((p) => p.type === "day")?.value ?? "01";
+  return `${formatMonthDay(`${month}-${day}`)} ${formatTime(slot.opensAt)}`;
 }

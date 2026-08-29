@@ -138,7 +138,7 @@ export default async function MarketPage({
           <ClaimForm targetType="market" targetId={market.id} />
         </aside>
         <div className="lg:col-span-2">
-          <MarketVendors vendors={market.vendors} hall={hall} />
+          <MarketVendors vendors={market.vendors} market={market} />
         </div>
         <section className="lg:col-span-2">
           <h2>Reviews</h2>

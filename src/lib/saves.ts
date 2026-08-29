@@ -94,6 +94,13 @@ export function replaceSaves(next: Saves) {
   });
 }
 
+export function sameSaves(left: Saves, right: Saves) {
+  return (
+    left.markets.join("\0") === right.markets.join("\0") &&
+    left.vendors.join("\0") === right.vendors.join("\0")
+  );
+}
+
 export function unionSaves(left: Saves, right: Saves): Saves {
   return {
     markets: [...new Set([...left.markets, ...right.markets])],

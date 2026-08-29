@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SavedDayPlan } from "@/components/saved-day-plan";
 import { SavedDesk } from "@/components/saved-rail";
+import { loadMySaves } from "@/lib/data/account";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
 import { pageMeta } from "@/lib/seo";
 import { DAY_PLAN_NAME } from "@/lib/constants";
+import { EMPTY_SAVES } from "@/lib/saves";
 
 export const metadata: Metadata = pageMeta({
   title: "Saved markets and stalls",
@@ -19,6 +21,7 @@ export default async function SavedPage() {
     listVendors(),
     getCurrentProfile(),
   ]);
+  const saves = profile ? await loadMySaves() : EMPTY_SAVES;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
@@ -37,7 +40,9 @@ export default async function SavedPage() {
       )}
       <div className="grid gap-10">
         <SavedDayPlan vendors={vendors} />
-        {profile ? <SavedDesk markets={markets} vendors={vendors} followAccount /> : null}
+        {profile ? (
+          <SavedDesk markets={markets} vendors={vendors} followAccount initialSaves={saves} />
+        ) : null}
       </div>
     </div>
   );

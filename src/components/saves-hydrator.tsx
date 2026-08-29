@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { mergeSaves } from "@/app/actions/saves";
-import { EMPTY_SAVES, getSaves, replaceSaves, unionSaves } from "@/lib/saves";
+import { EMPTY_SAVES, getSaves, replaceSaves, sameSaves, unionSaves } from "@/lib/saves";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
@@ -34,23 +34,26 @@ export function SavesHydrator() {
         return;
       }
       if (merged.current) return;
-      merged.current = true;
-      const before = getSaves();
+
       try {
-        const canonical = await mergeSaves(before);
-        if (cancelled) return;
-        if (!canonical) {
-          merged.current = false;
-          return;
+        let before = getSaves();
+        let canonical = await mergeSaves(before);
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          if (cancelled) return;
+          if (!canonical) return;
+          const after = getSaves();
+          if (sameSaves(after, before)) {
+            replaceSaves(unionSaves(before, canonical));
+            merged.current = true;
+            if (!cancelled) router.refresh();
+            return;
+          }
+          before = after;
+          canonical = await mergeSaves(before);
         }
-        const after = getSaves();
-        if (
-          after.markets.join("\0") !== before.markets.join("\0") ||
-          after.vendors.join("\0") !== before.vendors.join("\0")
-        ) {
-          return;
-        }
-        replaceSaves(unionSaves(before, canonical));
+        if (cancelled || !canonical) return;
+        replaceSaves(unionSaves(getSaves(), canonical));
+        merged.current = true;
         router.refresh();
       } catch {
         merged.current = false;

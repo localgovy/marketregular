@@ -13,6 +13,14 @@ function toSaves(rows: Array<{ kind: string; slug: string }> | null): Saves {
   return { markets, vendors };
 }
 
+export async function loadMySaves(): Promise<Saves> {
+  const { supabase, user } = await createAuthedServerClient();
+  if (!supabase || !user) return EMPTY_SAVES;
+  const { data, error } = await supabase.from("saves").select("kind, slug").eq("user_id", user.id);
+  if (error) return EMPTY_SAVES;
+  return toSaves(data);
+}
+
 export type AccountPost = {
   id: string;
   body: string;

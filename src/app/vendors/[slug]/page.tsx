@@ -15,7 +15,7 @@ import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { toGeoMarket } from "@/lib/geo";
 import { WEEKDAYS } from "@/lib/constants";
-import { nextIsoForWeekdays } from "@/lib/day-plan";
+import { hallFromStall } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { pageMeta, vendorJsonLd } from "@/lib/seo";
@@ -55,18 +55,12 @@ export default async function VendorPage({
   if (!vendor) notFound();
 
   const homeMarket = [...vendor.markets].sort((a, b) =>
-    nextIsoForWeekdays(a.days).localeCompare(nextIsoForWeekdays(b.days)),
+    hallFromStall(a, a.schedules, a.days).date.localeCompare(
+      hallFromStall(b, b.schedules, b.days).date,
+    ),
   )[0];
   const punchHall = homeMarket
-    ? {
-        slug: homeMarket.slug,
-        name: homeMarket.name,
-        address: homeMarket.address,
-        lat: homeMarket.lat,
-        lng: homeMarket.lng,
-        hours: "",
-        date: nextIsoForWeekdays(homeMarket.days),
-      }
+    ? hallFromStall(homeMarket, homeMarket.schedules, homeMarket.days)
     : null;
 
   return (
@@ -172,15 +166,7 @@ export default async function VendorPage({
               }
             >
               {vendor.markets.map((market) => {
-                const hall = {
-                  slug: market.slug,
-                  name: market.name,
-                  address: market.address,
-                  lat: market.lat,
-                  lng: market.lng,
-                  hours: "",
-                  date: nextIsoForWeekdays(market.days),
-                };
+                const hall = hallFromStall(market, market.schedules, market.days);
                 return (
                 <li key={market.id} className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

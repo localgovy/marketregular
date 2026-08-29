@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { VendorCard } from "@/components/vendor-card";
 import { Button } from "@/components/ui/button";
 import { FilterClearButton } from "@/components/filter-clear";
@@ -17,9 +17,9 @@ import {
   tagsPresent,
   weekdayInToronto,
 } from "@/lib/find-paths";
+import { hallFromStall } from "@/lib/day-plan";
 import { cn } from "@/lib/utils";
-import type { DayPlanHall } from "@/lib/day-plan";
-import type { MarketDetail } from "@/types/database";
+import type { Market, MarketDetail, MarketSchedule } from "@/types/database";
 
 type MarketStall = MarketDetail["vendors"][number];
 
@@ -72,8 +72,9 @@ function stallMatches(vendor: MarketStall, query: string) {
 
 function stallFits(vendor: MarketStall, find: StallBrowse, today: number) {
   if (!stallMatches(vendor, find.q)) return false;
-  if (find.hereToday && !vendor.days.includes(today)) return false;
-  if (
+  if (find.hereToday) {
+    if (!vendor.days.includes(today)) return false;
+  } else if (
     find.weekdays.length &&
     !find.weekdays.some((day) => vendor.days.includes(day))
   ) {
@@ -100,11 +101,14 @@ function browseActive(find: StallBrowse) {
 
 export function MarketVendors({
   vendors,
-  hall,
+  market,
 }: {
   vendors: MarketStall[];
-  hall: DayPlanHall;
+  market: Pick<Market, "slug" | "name" | "address" | "lat" | "lng" | "province"> & {
+    schedules: MarketSchedule[];
+  };
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [applied, setApplied] = useState<StallBrowse>(EMPTY_BROWSE);
   const [draft, setDraft] = useState<StallBrowse>(EMPTY_BROWSE);
@@ -150,6 +154,11 @@ export function MarketVendors({
   const browseOn = live.weekdays.length > 0 || live.hereToday;
   const tagsOn = live.tags.length > 0;
 
+  function typedQ() {
+    if (!formRef.current) return live.q;
+    return String(new FormData(formRef.current).get("q") ?? live.q);
+  }
+
   function go(next: StallBrowse) {
     setApplied(next);
     setPages(1);
@@ -157,7 +166,7 @@ export function MarketVendors({
   }
 
   function update(patch: Partial<StallBrowse>) {
-    const next = { ...live, ...patch };
+    const next = { ...live, q: typedQ(), ...patch };
     if (panelOpen) {
       setDraft(next);
       return;
@@ -185,6 +194,7 @@ export function MarketVendors({
         <>
           <p className="mt-1 text-sm text-muted-foreground">Tap a name for the menu.</p>
           <form
+            ref={formRef}
             className="mt-4 bg-secondary shadow-[inset_4px_0_0_var(--ticket)] ring-1 ring-border"
             onSubmit={(event) => {
               event.preventDefault();
@@ -223,6 +233,7 @@ export function MarketVendors({
                     const value = event.target.value;
                     update({
                       weekdays: value === "" ? [] : [Number(value)],
+                      ...(value === "" ? {} : { hereToday: false }),
                     });
                   }}
                 >
@@ -237,7 +248,13 @@ export function MarketVendors({
                   <button
                     type="button"
                     aria-pressed={live.hereToday}
-                    onClick={() => update({ hereToday: !live.hereToday })}
+                    onClick={() =>
+                      update(
+                        live.hereToday
+                          ? { hereToday: false }
+                          : { hereToday: true, weekdays: [] },
+                      )
+                    }
                     className={cn(
                       "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
                       live.hereToday
@@ -313,7 +330,7 @@ export function MarketVendors({
                     hereToday: false,
                   })
                 }
-                onApply={(next) => go(next)}
+                onApply={(next) => go({ ...next, q: typedQ() })}
               />
             ) : null}
           </form>
@@ -327,7 +344,7 @@ export function MarketVendors({
                     stall={vendor.stall}
                     days={vendor.days}
                     halls={vendor.halls}
-                    punchHall={hall}
+                    punchHall={hallFromStall(market, market.schedules, vendor.days)}
                   />
                 ))}
               </div>
@@ -388,13 +405,14 @@ function StallAllFilters({
     key: String(day),
     label: WEEKDAYS[day],
     checked: state.weekdays.includes(day),
-    onChange: (on) =>
-      onChange({
-        ...state,
-        weekdays: on
-          ? [...state.weekdays, day]
-          : state.weekdays.filter((item) => item !== day),
-      }),
+      onChange: (on) =>
+        onChange({
+          ...state,
+          weekdays: on
+            ? [...state.weekdays, day]
+            : state.weekdays.filter((item) => item !== day),
+          hereToday: on ? false : state.hereToday,
+        }),
   }));
 
   const whenRest: FilterOption[] = showHereToday
@@ -403,7 +421,12 @@ function StallAllFilters({
           key: "here-today",
           label: "Here today",
           checked: state.hereToday,
-          onChange: (on) => onChange({ ...state, hereToday: on }),
+          onChange: (on) =>
+            onChange({
+              ...state,
+              hereToday: on,
+              weekdays: on ? [] : state.weekdays,
+            }),
         },
       ]
     : [];

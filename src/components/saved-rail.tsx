@@ -8,6 +8,8 @@ import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
 import { SavedRailSlip } from "@/components/saved-day-plan";
 import { DAY_PLAN_NAME } from "@/lib/constants";
+import { useHydratedSaves } from "@/lib/use-hydrated-saves";
+import { EMPTY_SAVES, type Saves } from "@/lib/saves";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import type { Market, Vendor } from "@/types/database";
 
@@ -90,12 +92,14 @@ export function SavedDesk({
   markets,
   vendors,
   followAccount = false,
+  initialSaves = EMPTY_SAVES,
 }: {
   markets: Market[];
   vendors: Vendor[];
   followAccount?: boolean;
+  initialSaves?: Saves;
 }) {
-  const saves = useSaves();
+  const saves = useHydratedSaves(initialSaves);
   const { plan } = useDayPlan();
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));

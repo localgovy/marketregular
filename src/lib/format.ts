@@ -1,3 +1,5 @@
+import { LAUNCH_TZ } from "@/lib/launch";
+
 export function slugify(value: string) {
   return value
     .toLowerCase()
@@ -10,11 +12,13 @@ export function slugify(value: string) {
 
 export function formatPrice(cents: number | null) {
   if (cents == null) return null;
-  return new Intl.NumberFormat("en-CA", {
-    style: "currency",
-    currency: "CAD",
-    maximumFractionDigits: cents % 100 === 0 ? 0 : 2,
-  }).format(cents / 100);
+  const negative = cents < 0;
+  const abs = Math.abs(cents);
+  const dollars = Math.floor(abs / 100);
+  const remainder = abs % 100;
+  const body =
+    remainder === 0 ? `$${dollars}` : `$${dollars}.${String(remainder).padStart(2, "0")}`;
+  return negative ? `-${body}` : body;
 }
 
 export function formatPriceLevel(level: number | null | undefined) {
@@ -50,8 +54,36 @@ export function externalHref(href: string | null | undefined) {
   }
 }
 
-export function timeAgo(iso: string) {
-  const delta = Date.now() - new Date(iso).getTime();
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+/** Calendar date in `tz`. Numeric parts only — no locale month names. */
+export function formatPostedAt(iso: string, tz = LAUNCH_TZ) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(iso));
+  const month = Number(parts.find((part) => part.type === "month")?.value ?? 0);
+  const day = Number(parts.find((part) => part.type === "day")?.value ?? 0);
+  if (month < 1 || month > 12 || !day) return iso;
+  return `${MONTHS_SHORT[month - 1]} ${day}`;
+}
+
+export function timeAgo(iso: string, now = Date.now()) {
+  const delta = now - new Date(iso).getTime();
   const min = Math.round(delta / 60000);
   if (min < 1) return "just now";
   if (min < 60) return `${min}m ago`;
@@ -59,8 +91,5 @@ export function timeAgo(iso: string) {
   if (hr < 24) return `${hr}h ago`;
   const day = Math.round(hr / 24);
   if (day < 7) return `${day}d ago`;
-  return new Intl.DateTimeFormat("en-CA", {
-    month: "short",
-    day: "numeric",
-  }).format(new Date(iso));
+  return formatPostedAt(iso);
 }

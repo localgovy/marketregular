@@ -20,6 +20,7 @@ import {
 } from "@/lib/find-paths";
 import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
+import { provinceTz } from "@/lib/constants";
 import { isLaunchCity } from "@/lib/launch";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
@@ -125,10 +126,10 @@ export function localSearch(filters: SearchFilters) {
   if (filters.setup) {
     markets = markets.filter((m) => m.tags.includes(filters.setup!));
   }
-  const days = searchWeekdays(filters);
+  const days = filters.openNow ? [] : searchWeekdays(filters);
   if (days.length) {
     markets = markets.filter((m) =>
-      days.some((day) => isOpenOnWeekday(schedulesFor(m.id), day)),
+      days.some((day) => isOpenOnWeekday(schedulesFor(m.id), day, provinceTz(m.province))),
     );
   }
   if (filters.openNow) {
@@ -258,7 +259,7 @@ export function localVendorBySlug(slug: string): VendorDetail | null {
   const markets = links.flatMap((link) => {
     const m = seedMarkets.find((x) => x.id === link.market_id);
     if (!m || !isLaunchCity(m.city)) return [];
-    return [{ ...toPublicMarket(m), stall: link.stall, days: link.days }];
+    return [{ ...toPublicMarket(m), stall: link.stall, days: link.days, schedules: schedulesFor(m.id) }];
   });
   if (!markets.length) return null;
   return {

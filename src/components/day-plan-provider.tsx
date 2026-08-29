@@ -21,9 +21,11 @@ import {
   type DayPlanHall,
   type TravelMode,
 } from "@/lib/day-plan";
+import { torontoYmd } from "@/lib/events-month";
 import { openSignInSlip } from "@/lib/signin-slip";
 import { DAY_PLAN_NAME } from "@/lib/constants";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
+import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 
 type DayPlanState = {
   plan: DayPlan | null;
@@ -63,45 +65,24 @@ function requireSignedIn(name: string) {
 export function DayPlanProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const raw = useSyncExternalStore(subscribeDayPlan, dayPlanSnapshot, dayPlanServerSnapshot);
-  const [allowed, setAllowed] = useState(false);
+  const allowed = useAuthCookie();
   const plan = useMemo(() => {
     if (!allowed) return null;
     return storedPlan(raw);
   }, [allowed, raw]);
-  const [open, setOpen] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const open = openPath === pathname;
 
   useEffect(() => {
-    setAllowed(documentHasAuthCookie());
-  }, [pathname]);
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    function onClick(event: MouseEvent) {
-      if (event.defaultPrevented || event.button !== 0) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const link = (event.target as Element | null)?.closest?.("a");
-      if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
-      const href = link.getAttribute("href");
-      if (!href || href.startsWith("#")) return;
-      try {
-        const next = new URL(href, window.location.href);
-        if (next.origin !== window.location.origin) return;
-        if (next.pathname === window.location.pathname) return;
-        setOpen(false);
-      } catch {
-        // ignore malformed hrefs
-      }
+    if (!allowed) return;
+    const current = storedPlan(dayPlanSnapshot());
+    if (current && current.hall.date < torontoYmd()) {
+      writeDayPlan(null);
     }
-    document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
-  }, []);
+  }, [allowed]);
 
   const putHall = useCallback((hall: DayPlanHall) => {
     if (!requireSignedIn(hall.name)) return;
-    setAllowed(true);
     const current = storedPlan(dayPlanSnapshot());
     if (current && current.hall.slug === hall.slug) {
       writeDayPlan({
@@ -115,12 +96,11 @@ export function DayPlanProvider({ children }: { children: React.ReactNode }) {
         mode: current?.mode ?? "walk",
       });
     }
-    setOpen(true);
-  }, []);
+    setOpenPath(pathname);
+  }, [pathname]);
 
   const punchVendor = useCallback((slug: string, hall: DayPlanHall) => {
     if (!requireSignedIn(hall.name)) return;
-    setAllowed(true);
     const current = storedPlan(dayPlanSnapshot());
     if (current && current.hall.slug === hall.slug) {
       const has = current.vendorSlugs.includes(slug);
@@ -138,8 +118,8 @@ export function DayPlanProvider({ children }: { children: React.ReactNode }) {
         mode: current?.mode ?? "walk",
       });
     }
-    setOpen(true);
-  }, []);
+    setOpenPath(pathname);
+  }, [pathname]);
 
   const toggleVendor = useCallback((slug: string) => {
     if (!documentHasAuthCookie()) return;
@@ -170,9 +150,9 @@ export function DayPlanProvider({ children }: { children: React.ReactNode }) {
 
   const show = useCallback(() => {
     if (!documentHasAuthCookie()) return;
-    setOpen(true);
-  }, []);
-  const tuck = useCallback(() => setOpen(false), []);
+    setOpenPath(pathname);
+  }, [pathname]);
+  const tuck = useCallback(() => setOpenPath(null), []);
 
   const value = useMemo(
     () => ({

@@ -1,7 +1,7 @@
 import { WEEKDAYS } from "@/lib/constants";
 import { torontoIsoOffset } from "@/lib/events-month";
 import { LAUNCH_TZ } from "@/lib/launch";
-import { formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
+import { civilDateAtOffset, formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
 
 export type UpcomingSlot = {
@@ -38,9 +38,9 @@ function torontoDateLabel(now: Date, offset: number, tz: string) {
   }).format(new Date(utc));
 }
 
-function rowForDay(rows: MarketSchedule[], weekday: number, now: Date, tz: string) {
+function rowForDay(rows: MarketSchedule[], weekday: number, when: Date, tz: string) {
   return rows.find(
-    (row) => row.weekday === weekday && inSeason(now, row.season_start, row.season_end, tz),
+    (row) => row.weekday === weekday && inSeason(when, row.season_start, row.season_end, tz),
   );
 }
 
@@ -57,9 +57,10 @@ export function upcomingByDay(
 
   for (let offset = 0; offset < 7; offset += 1) {
     const day = (weekday + offset) % 7;
+    const when = civilDateAtOffset(now, offset, tz);
     const slots: UpcomingSlot[] = [];
     for (const market of markets) {
-      const row = rowForDay(scheduleMap.get(market.id) ?? [], day, now, tz);
+      const row = rowForDay(scheduleMap.get(market.id) ?? [], day, when, tz);
       if (!row) continue;
       const opens = parseHm(row.opens_at);
       const closes = parseHm(row.closes_at);

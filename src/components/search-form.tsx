@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FilterClearButton } from "@/components/filter-clear";
 import { FilterColumn, FilterRow, type FilterOption } from "@/components/filter-column";
@@ -86,6 +86,7 @@ export function SearchForm({
   resultCount?: number;
 }) {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [draft, setDraft] = useState<BrowseState>(() => fromDefaults(defaults));
   const applied = fromDefaults(defaults);
@@ -95,12 +96,17 @@ export function SearchForm({
     (item) => item.id === "open" || item.id === "today" || item.id === "tomorrow",
   );
 
+  function typedQ() {
+    if (!formRef.current) return live.q;
+    return String(new FormData(formRef.current).get("q") ?? live.q);
+  }
+
   function go(next: BrowseState) {
     router.push(marketsHref(toSearch(next, defaults)));
   }
 
   function update(patch: Partial<BrowseState>) {
-    const next = { ...live, ...patch };
+    const next = { ...live, q: typedQ(), ...patch };
     if (panelOpen) {
       setDraft(next);
       return;
@@ -130,6 +136,7 @@ export function SearchForm({
 
   return (
     <form
+      ref={formRef}
       className="bg-secondary shadow-[inset_4px_0_0_var(--ticket)] ring-1 ring-border"
       onSubmit={(event) => {
         event.preventDefault();
@@ -169,6 +176,7 @@ export function SearchForm({
             const value = event.target.value;
             update({
               weekdays: value === "" ? [] : [Number(value)],
+              ...(value === "" ? {} : { openNow: false }),
             });
           }}
         >
@@ -228,7 +236,7 @@ export function SearchForm({
           onChange={(event) => {
             const id = event.target.value;
             if (id === "open") {
-              update({ openNow: true });
+              update({ openNow: true, weekdays: [] });
               return;
             }
             if (id === "") {
@@ -251,7 +259,9 @@ export function SearchForm({
         <button
           type="button"
           aria-pressed={live.openNow}
-          onClick={() => update({ openNow: !live.openNow })}
+          onClick={() =>
+            update(live.openNow ? { openNow: false } : { openNow: true, weekdays: [] })
+          }
           className={cn(
             "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
             live.openNow
@@ -343,7 +353,7 @@ export function SearchForm({
             })
           }
           onApply={(next) => {
-            go(next);
+            go({ ...next, q: typedQ() });
             setPanelOpen(false);
           }}
         />
@@ -389,13 +399,14 @@ function AllFilters({
     key: day,
     label: day,
     checked: state.weekdays.includes(index),
-    onChange: (on) =>
-      onChange({
-        ...state,
-        weekdays: on
-          ? [...state.weekdays, index]
-          : state.weekdays.filter((item) => item !== index),
-      }),
+      onChange: (on) =>
+        onChange({
+          ...state,
+          weekdays: on
+            ? [...state.weekdays, index]
+            : state.weekdays.filter((item) => item !== index),
+          openNow: on ? false : state.openNow,
+        }),
   }));
 
   const whenRest: FilterOption[] = [
@@ -403,7 +414,12 @@ function AllFilters({
       key: "open-now",
       label: "Open now",
       checked: state.openNow,
-      onChange: (on) => onChange({ ...state, openNow: on }),
+      onChange: (on) =>
+        onChange({
+          ...state,
+          openNow: on,
+          weekdays: on ? [] : state.weekdays,
+        }),
     },
     {
       key: "year-round",

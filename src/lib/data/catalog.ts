@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { isSupabaseConfigured } from "@/lib/constants";
+import { isSupabaseConfigured, provinceTz } from "@/lib/constants";
 import { DIRECTORY_CENSUS_ID, LAUNCH_CITY_FILTER, isLaunchCity } from "@/lib/launch";
 import {
   localFeatured,
@@ -160,20 +160,24 @@ export const listMarkets = cache(async function listMarkets(): Promise<Market[]>
   return data.filter((market) => isLaunchCity(market.city)).map(withListingStats);
 });
 
-export async function listVendors(): Promise<Vendor[]> {
+export const listVendors = cache(async function listVendors(): Promise<Vendor[]> {
   const supabase = publicDb();
   if (!supabase) return localVendors();
-  const { data, error } = await fetchAllRows<Vendor>((from, to) =>
-    supabase
-      .from("vendors")
-      .select(VENDOR_PUBLIC)
-      .eq("status", "published")
-      .order("name")
-      .range(from, to),
-  );
+  const [{ data, error }, stalls] = await Promise.all([
+    fetchAllRows<Vendor>((from, to) =>
+      supabase
+        .from("vendors")
+        .select(VENDOR_PUBLIC)
+        .eq("status", "published")
+        .order("name")
+        .range(from, to),
+    ),
+    listStalls(),
+  ]);
   if (error) return localVendors();
-  return data.map(hydrateVendor);
-}
+  const atLaunch = new Set(stalls.map((stall) => stall.id));
+  return data.map(hydrateVendor).filter((vendor) => atLaunch.has(vendor.id));
+});
 
 export async function listSitemapVendors(): Promise<Vendor[]> {
   const supabase = publicDb();
@@ -188,7 +192,7 @@ export async function listSitemapVendors(): Promise<Vendor[]> {
   return vendors.filter((vendor) => Boolean(vendor.about?.trim()) || withMenu.has(vendor.id));
 }
 
-export async function listStalls(): Promise<StallRef[]> {
+export const listStalls = cache(async function listStalls(): Promise<StallRef[]> {
   const supabase = publicDb();
   if (!supabase) return localStalls();
   const { data, error } = await fetchAllRows<{
@@ -196,10 +200,11 @@ export async function listStalls(): Promise<StallRef[]> {
     stall: string | null;
     days?: number[];
     vendors?: unknown;
+    markets?: unknown;
   }>((from, to) =>
     supabase
       .from("market_vendors")
-      .select("market_id, stall, days, vendors(id, name, slug, status)")
+      .select("market_id, stall, days, vendors(id, name, slug, status), markets(city, status)")
       .order("market_id")
       .order("vendor_id")
       .range(from, to),
@@ -211,6 +216,11 @@ export async function listStalls(): Promise<StallRef[]> {
     if (!vendor || typeof vendor !== "object") return [];
     const v = vendor as { id: string; name: string; slug: string; status: string };
     if (v.status !== "published") return [];
+    const marketRaw = (row as { markets?: unknown }).markets;
+    const market = Array.isArray(marketRaw) ? marketRaw[0] : marketRaw;
+    if (!market || typeof market !== "object") return [];
+    const hall = market as { city: string; status: string };
+    if (hall.status !== "published" || !isLaunchCity(hall.city)) return [];
     return [
       {
         id: v.id,
@@ -224,7 +234,7 @@ export async function listStalls(): Promise<StallRef[]> {
       },
     ];
   });
-}
+});
 
 async function hallsByVendorIds(vendorIds: string[]): Promise<Map<string, VendorHall[]>> {
   if (!vendorIds.length) return new Map();
@@ -385,7 +395,8 @@ export async function searchDirectory(filters: SearchFilters) {
   }
 
   let markets = marketRows.filter((market) => isLaunchCity(market.city)).map(withListingStats);
-  let vendors = vendorRows.map(hydrateVendor);
+  const atLaunch = new Set(stalls.map((stall) => stall.id));
+  let vendors = vendorRows.map(hydrateVendor).filter((vendor) => atLaunch.has(vendor.id));
   if (filters.q?.trim()) {
     const placeSlugs = new Set(slugsForPlaceQuery(filters.q));
     if (placeSlugs.size) {
@@ -412,10 +423,16 @@ export async function searchDirectory(filters: SearchFilters) {
     }
     markets.sort((a, b) => a.name.localeCompare(b.name));
   }
-  const days = searchWeekdays(filters);
+  const days = filters.openNow ? [] : searchWeekdays(filters);
   if (days.length) {
     markets = markets.filter((m) =>
-      days.some((day) => isOpenOnWeekday(schedulesByMarket.get(m.id) ?? [], day)),
+      days.some((day) =>
+        isOpenOnWeekday(
+          schedulesByMarket.get(m.id) ?? [],
+          day,
+          provinceTz(m.province),
+        ),
+      ),
     );
   }
   if (filters.openNow) {
@@ -577,7 +594,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
   if (error) return localVendorBySlug(slug);
   if (!vendor) return null;
 
-  const [{ data: menus }, { data: links }, { data: reviews }, { data: posts }] = await Promise.all([
+  const [{ data: menus }, { data: links }, { data: reviews }] = await Promise.all([
     supabase.from("vendor_menus").select("*").eq("vendor_id", vendor.id),
     supabase.from("market_vendors").select("*").eq("vendor_id", vendor.id),
     supabase
@@ -586,29 +603,42 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
       .eq("vendor_id", vendor.id)
       .eq("flagged", false)
       .order("created_at", { ascending: false }),
-    supabase
-      .from("posts")
-      .select("*, profiles(display_name), markets(name, slug, city)")
-      .eq("flagged", false)
-      .order("created_at", { ascending: false })
-      .limit(80),
   ]);
 
   const marketIds = (links ?? []).map((l: { market_id: string }) => l.market_id);
-  const { data: markets } =
+  const [{ data: markets }, { data: posts }, { data: scheduleRows }] = await Promise.all([
     marketIds.length > 0
-      ? await supabase.from("markets").select(MARKET_PUBLIC).in("id", marketIds)
-      : { data: [] };
+      ? supabase.from("markets").select(MARKET_PUBLIC).in("id", marketIds)
+      : Promise.resolve({ data: [] as Market[] }),
+    marketIds.length > 0
+      ? supabase
+          .from("posts")
+          .select("*, profiles(display_name), markets(name, slug, city)")
+          .eq("flagged", false)
+          .in("market_id", marketIds)
+          .ilike("body", `%@${slug}%`)
+          .order("created_at", { ascending: false })
+          .limit(40)
+      : Promise.resolve({ data: [] as Post[] }),
+    marketIds.length > 0
+      ? supabase.from("market_schedules").select("*").in("market_id", marketIds)
+      : Promise.resolve({ data: [] as MarketSchedule[] }),
+  ]);
   const marketMap = new Map((markets ?? []).map((m: Market) => [m.id, withListingStats(m)]));
+  const schedulesByMarket = new Map<string, MarketSchedule[]>();
+  for (const row of (scheduleRows ?? []) as MarketSchedule[]) {
+    const list = schedulesByMarket.get(row.market_id) ?? [];
+    list.push(row);
+    schedulesByMarket.set(row.market_id, list);
+  }
 
   const vendorMarkets = (links ?? []).flatMap((link: { market_id: string; stall: string | null; days: number[] }) => {
     const m = marketMap.get(link.market_id);
     if (!m || !isLaunchCity(m.city)) return [];
-    return [{ ...m, stall: link.stall, days: link.days }];
+    return [{ ...m, stall: link.stall, days: link.days, schedules: schedulesByMarket.get(m.id) ?? [] }];
   });
   if (!vendorMarkets.length) return null;
 
-  const marketIdSet = new Set(vendorMarkets.map((m) => m.id));
   const mappedReviews = (
     (reviews ?? []) as Array<
       Review & {
@@ -634,7 +664,6 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
       }
     >
   )
-    .filter((p) => marketIdSet.has(p.market_id))
     .filter((p) => {
       const decoded = reviewFromPost({
         ...p,
@@ -707,7 +736,7 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
         .limit(limit),
       supabase
         .from("reviews")
-        .select("*, profiles(display_name), markets(name, slug), vendors(name, slug)")
+        .select("*, profiles(display_name), markets(name, slug, city), vendors(name, slug)")
         .eq("flagged", false)
         .order("created_at", { ascending: false })
         .limit(limit),
@@ -737,11 +766,13 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
     (reviews ?? []) as Array<
       Review & {
         profiles?: { display_name: string | null };
-        markets?: { name: string; slug: string };
+        markets?: { name: string; slug: string; city?: string } | null;
         vendors?: { name: string; slug: string };
       }
     >
-  ).map((r) =>
+  )
+    .filter((r) => !r.markets?.city || isLaunchCity(r.markets.city))
+    .map((r) =>
     reviewFromReview({
       ...r,
       author_name: r.profiles?.display_name ?? "Regular",

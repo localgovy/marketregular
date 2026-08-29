@@ -153,7 +153,7 @@ export type MarketDetail = Market & {
 
 export type VendorDetail = Vendor & {
   menus: MenuItem[];
-  markets: (Market & { stall: string | null; days: number[] })[];
+  markets: (Market & { stall: string | null; days: number[]; schedules: MarketSchedule[] })[];
   reviews: Review[];
   feed: FloorItem[];
 };
