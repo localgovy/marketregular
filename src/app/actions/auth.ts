@@ -91,7 +91,7 @@ export async function signUpWithPassword(formData: FormData) {
     revalidatePath("/", "layout");
     redirect(next);
   }
-  return { error: null, message: "Check your email to confirm your account." };
+  return { error: null, message: "If you already have an account, sign in." };
 }
 
 export async function requestPasswordReset(formData: FormData) {

@@ -26,7 +26,7 @@ export function signInPublicError(error: AuthLike) {
   const code = authCode(error);
   const message = authMessage(error);
   if (code === "email_not_confirmed" || message.includes("email not confirmed")) {
-    return "Confirm your email first.";
+    return "Could not sign in.";
   }
   if (code === "invalid_credentials" || message.includes("invalid login")) {
     return "Email or password is not right.";
@@ -43,7 +43,7 @@ export function signUpPublicError(error: AuthLike): { error: string | null; mess
     code === "user_already_exists" ||
     message.includes("already registered")
   ) {
-    return { error: null, message: "Check your email to confirm your account." };
+    return { error: null, message: "If you already have an account, sign in." };
   }
   if (code === "weak_password") return { error: "Use at least 8 characters." };
   if (code === "validation_failed" && message.includes("email")) {

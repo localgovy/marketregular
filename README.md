@@ -81,16 +81,10 @@ New accounts (and existing ones without a handle) go to `/onboarding` after sign
 
 Local `supabase/config.toml` is not production. In the hosted project:
 
-1. Authentication → Providers → Email: turn **Confirm email** on
+1. Authentication → Providers → Email: leave **Confirm email** off so new accounts can sign in without a mail
 2. Authentication → Attack protection: **Leaked password protection** on
 3. Minimum password length **8** (the app already rejects shorter)
-4. Authentication → Email Templates: confirmation and recovery links must hit `/auth/confirm` with the token hash so the original signup tab is not required. Site URL stays `https://www.marketregular.com`.
-
-Confirm sign-up:
-
-```html
-<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Confirm email address</a>
-```
+4. Authentication → Email Templates: password reset links must hit `/auth/confirm` with the token hash so the original tab is not required. Site URL stays `https://www.marketregular.com`.
 
 Reset password (`type=recovery`):
 
