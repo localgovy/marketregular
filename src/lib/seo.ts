@@ -8,10 +8,18 @@ import type { Market, MarketSchedule, MenuItem, Vendor } from "@/types/database"
 export const SITE_DESCRIPTION =
   "Toronto farmers' markets and the stalls that work them: what's open today, this week's hours, addresses, maps, menus and reviews across the GTA.";
 
-/** schema.org has no FarmersMarket type, so the sense is carried as additionalType. */
-const FARMERS_MARKET_CONCEPT = "https://en.wikipedia.org/wiki/Farmers%27_market";
-
 const FOOD_TAGS = new Set(["prepared-food", "bakery", "coffee"]);
+
+/**
+ * Google review snippets only honor a short parent allowlist
+ * (LocalBusiness, Organization, Product, …). They do not follow
+ * schema.org inheritance, so GroceryStore or FoodEstablishment alone
+ * is reported as `Invalid object type for field "<parent_node>"`.
+ */
+function asLocalBusiness(...specific: string[]) {
+  const extra = specific.filter((type) => type !== "LocalBusiness");
+  return extra.length ? ["LocalBusiness", ...extra] : "LocalBusiness";
+}
 
 export const noIndex: Metadata["robots"] = {
   index: false,
@@ -153,9 +161,8 @@ export function marketJsonLd(market: Market & { schedules: MarketSchedule[] }) {
   const url = absoluteUrl(`/markets/${market.slug}`);
   return {
     "@context": "https://schema.org",
-    "@type": "GroceryStore",
+    "@type": asLocalBusiness("GroceryStore"),
     "@id": `${url}#market`,
-    additionalType: FARMERS_MARKET_CONCEPT,
     name: market.name,
     description: market.about ?? undefined,
     url,
@@ -213,7 +220,7 @@ export function vendorJsonLd(
 
   return {
     "@context": "https://schema.org",
-    "@type": servesFood ? "FoodEstablishment" : "LocalBusiness",
+    "@type": servesFood ? asLocalBusiness("FoodEstablishment") : "LocalBusiness",
     "@id": `${url}#stall`,
     name: vendor.name,
     description: vendor.about ?? undefined,
