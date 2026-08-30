@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { FilterClearButton } from "@/components/filter-clear";
 import { FilterColumn, FilterRow, type FilterOption } from "@/components/filter-column";
@@ -14,6 +14,7 @@ import {
   originChipRow,
   productChipRow,
   tagLabel,
+  vendorsHref,
   weekdayInToronto,
   whenOptions,
   type DirectorySort,
@@ -80,10 +81,12 @@ export function SearchForm({
   defaults,
   places,
   resultCount,
+  variant = "full",
 }: {
   defaults?: SearchFormDefaults;
   places: PlaceAreas;
   resultCount?: number;
+  variant?: "full" | "mini";
 }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -91,6 +94,7 @@ export function SearchForm({
   const [draft, setDraft] = useState<BrowseState>(() => fromDefaults(defaults));
   const applied = fromDefaults(defaults);
   const live = panelOpen ? draft : applied;
+  const mini = variant === "mini";
   const today = weekdayInToronto();
   const nextOpenChoices = whenOptions(today).filter(
     (item) => item.id === "open" || item.id === "today" || item.id === "tomorrow",
@@ -102,7 +106,8 @@ export function SearchForm({
   }
 
   function go(next: BrowseState) {
-    router.push(marketsHref(toSearch(next, defaults)));
+    const search = toSearch(next, defaults);
+    router.push(variant === "mini" ? vendorsHref(search) : marketsHref(search));
   }
 
   /** Compact chips always apply. All Filters is the only uncommitted draft. */
@@ -135,6 +140,71 @@ export function SearchForm({
   const browseOn =
     applied.weekdays.length > 0 || Boolean(applied.setup) || applied.areas.length > 0 || applied.openNow;
   const tagsOn = applied.tags.length > 0;
+  const anythingOn = browseOn || tagsOn || Boolean(applied.q.trim());
+  const fieldH = mini ? "h-9" : "h-10";
+  const chipSize = mini ? "sm" : "md";
+
+  const daySelect = (
+    <select
+      aria-label="Day"
+      className={selectClass}
+      value={dayValue}
+      onChange={(event) => {
+        const value = event.target.value;
+        if (value === "multi") return;
+        compact({
+          weekdays: value === "" ? [] : [Number(value)],
+          ...(value === "" ? {} : { openNow: false }),
+        });
+      }}
+    >
+      <option value="">Any day</option>
+      {applied.weekdays.length > 1 ? (
+        <option value="multi">{applied.weekdays.length} days</option>
+      ) : null}
+      {WEEKDAYS.map((day, index) => (
+        <option key={day} value={index}>
+          {day}
+        </option>
+      ))}
+    </select>
+  );
+
+  const areaSelect = (
+    <select
+      aria-label="Neighbourhood"
+      className={selectClass}
+      value={areaValue}
+      onChange={(event) => {
+        const value = event.target.value;
+        if (value === "multi") return;
+        compact({ areas: value ? [value] : [] });
+      }}
+    >
+      <option value="">Anywhere in {LAUNCH_COVERAGE}</option>
+      {applied.areas.length > 1 ? (
+        <option value="multi">{applied.areas.length} places</option>
+      ) : null}
+      {places.neighbourhoods.length ? (
+        <optgroup label="Toronto neighbourhoods">
+          {places.neighbourhoods.map((area) => (
+            <option key={area.q} value={area.q}>
+              {area.label}
+            </option>
+          ))}
+        </optgroup>
+      ) : null}
+      {places.cities.length ? (
+        <optgroup label="Around Toronto">
+          {places.cities.map((area) => (
+            <option key={area.q} value={area.q}>
+              {area.label}
+            </option>
+          ))}
+        </optgroup>
+      ) : null}
+    </select>
+  );
 
   return (
     <form
@@ -148,205 +218,164 @@ export function SearchForm({
         setPanelOpen(false);
       }}
     >
-      <div className="flex flex-col gap-2 px-3 py-3 sm:flex-row sm:items-stretch sm:px-4">
+      <div
+        className={cn(
+          "flex flex-col gap-2 sm:flex-row sm:items-stretch",
+          mini ? "px-3 py-2 sm:px-3" : "px-3 py-3 sm:px-4",
+        )}
+      >
         <SearchField
           key={defaults?.q ?? ""}
           name="q"
           defaultValue={defaults?.q}
-          placeholder="Market, vendor, cuisine, or neighbourhood"
-          className="h-10 bg-card"
-          aria-label="Search markets and stalls"
+          placeholder={
+            mini ? "Stall, cuisine, or market" : "Market, vendor, cuisine, or neighbourhood"
+          }
+          className={cn(fieldH, "bg-card")}
+          aria-label={mini ? "Search stalls" : "Search markets and stalls"}
           onClear={() => {
             if (applied.q.trim()) go({ ...live, q: "" });
           }}
         />
         <button
           type="submit"
-          className="find-go stall-chip-sm inline-flex h-10 shrink-0 items-center px-5 text-sm font-medium text-receipt outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+          className={cn(
+            "find-go stall-chip-sm inline-flex shrink-0 items-center px-5 text-sm font-medium text-receipt outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+            fieldH,
+          )}
         >
           Find
         </button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-border px-3 py-3 sm:px-4">
-        <p className="text-sm text-muted-foreground">Browse by</p>
-        <select
-          aria-label="Day"
-          className={selectClass}
-          value={dayValue}
-          onChange={(event) => {
-            const value = event.target.value;
-            if (value === "multi") return;
-            compact({
-              weekdays: value === "" ? [] : [Number(value)],
-              ...(value === "" ? {} : { openNow: false }),
-            });
-          }}
-        >
-          <option value="">Any day</option>
-          {applied.weekdays.length > 1 ? (
-            <option value="multi">{applied.weekdays.length} days</option>
-          ) : null}
-          {WEEKDAYS.map((day, index) => (
-            <option key={day} value={index}>
-              {day}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Indoor or outdoor"
-          className={selectClass}
-          value={applied.setup}
-          onChange={(event) => compact({ setup: event.target.value })}
-        >
-          <option value="">Indoor or outdoor</option>
-          {FIND_SETUP.map((tag) => (
-            <option key={tag} value={tag}>
-              {tagLabel(tag)}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Neighbourhood"
-          className={selectClass}
-          value={areaValue}
-          onChange={(event) => {
-            const value = event.target.value;
-            if (value === "multi") return;
-            compact({ areas: value ? [value] : [] });
-          }}
-        >
-          <option value="">Anywhere in {LAUNCH_COVERAGE}</option>
-          {applied.areas.length > 1 ? (
-            <option value="multi">{applied.areas.length} places</option>
-          ) : null}
-          {places.neighbourhoods.length ? (
-            <optgroup label="Toronto neighbourhoods">
-              {places.neighbourhoods.map((area) => (
-                <option key={area.q} value={area.q}>
-                  {area.label}
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-border",
+          mini ? "px-3 py-2 sm:px-3" : "px-3 py-3 sm:px-4",
+        )}
+      >
+        {mini ? null : <p className="text-sm text-muted-foreground">Browse by</p>}
+        {daySelect}
+        {mini ? null : (
+          <select
+            aria-label="Indoor or outdoor"
+            className={selectClass}
+            value={applied.setup}
+            onChange={(event) => compact({ setup: event.target.value })}
+          >
+            <option value="">Indoor or outdoor</option>
+            {FIND_SETUP.map((tag) => (
+              <option key={tag} value={tag}>
+                {tagLabel(tag)}
+              </option>
+            ))}
+          </select>
+        )}
+        {areaSelect}
+        {mini ? null : (
+          <>
+            <select
+              aria-label="When it opens"
+              className={selectClass}
+              value={nextOpenValue()}
+              onChange={(event) => {
+                const id = event.target.value;
+                if (id === "open") {
+                  compact({ openNow: true, weekdays: [] });
+                  return;
+                }
+                if (id === "") {
+                  compact({ openNow: false, weekdays: [] });
+                  return;
+                }
+                const choice = nextOpenChoices.find((item) => item.id === id);
+                if (choice?.weekday != null) {
+                  compact({ weekdays: [choice.weekday], openNow: false });
+                }
+              }}
+            >
+              <option value="">Next open</option>
+              {nextOpenChoices.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
                 </option>
               ))}
-            </optgroup>
-          ) : null}
-          {places.cities.length ? (
-            <optgroup label="Around Toronto">
-              {places.cities.map((area) => (
-                <option key={area.q} value={area.q}>
-                  {area.label}
-                </option>
-              ))}
-            </optgroup>
-          ) : null}
-        </select>
-        <select
-          aria-label="When it opens"
-          className={selectClass}
-          value={nextOpenValue()}
-          onChange={(event) => {
-            const id = event.target.value;
-            if (id === "open") {
-              compact({ openNow: true, weekdays: [] });
-              return;
-            }
-            if (id === "") {
-              compact({ openNow: false, weekdays: [] });
-              return;
-            }
-            const choice = nextOpenChoices.find((item) => item.id === id);
-            if (choice?.weekday != null) {
-              compact({ weekdays: [choice.weekday], openNow: false });
-            }
-          }}
-        >
-          <option value="">Next open</option>
-          {nextOpenChoices.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.label}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          aria-pressed={applied.openNow}
-          onClick={() =>
-            compact(applied.openNow ? { openNow: false } : { openNow: true, weekdays: [] })
-          }
-          className={cn(
-            "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
-            applied.openNow
-              ? "bg-ticket text-foreground"
-              : "border border-input bg-card text-foreground hover:bg-muted",
-          )}
-        >
-          Open now
-        </button>
+            </select>
+            <button
+              type="button"
+              aria-pressed={applied.openNow}
+              onClick={() =>
+                compact(applied.openNow ? { openNow: false } : { openNow: true, weekdays: [] })
+              }
+              className={cn(
+                "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
+                applied.openNow
+                  ? "bg-ticket text-foreground"
+                  : "border border-input bg-card text-foreground hover:bg-muted",
+              )}
+            >
+              Open now
+            </button>
+          </>
+        )}
         <FilterClearButton
           className="ml-auto"
-          disabled={!browseOn}
+          disabled={mini ? !anythingOn : !browseOn}
           onClick={() =>
-            compact({ weekdays: [], setup: "", areas: [], openNow: false })
+            mini
+              ? go({ q: "", weekdays: [], setup: "", areas: [], openNow: false, tags: [] })
+              : compact({ weekdays: [], setup: "", areas: [], openNow: false })
           }
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 border-t border-dashed border-border px-3 py-3 sm:px-4">
-        {productChipRow(applied.tags).map((tag) => {
-          const on = applied.tags.includes(tag);
-          return (
-            <button
-              key={tag}
-              type="button"
-              aria-pressed={on}
-              onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
-              className={cn(
-                "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
-                on
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-input bg-card text-foreground hover:bg-muted",
-              )}
-            >
-              {tagLabel(tag)}
-            </button>
-          );
-        })}
-        {originChipRow(applied.tags).map((tag) => {
-          const on = applied.tags.includes(tag);
-          return (
-            <button
-              key={tag}
-              type="button"
-              aria-pressed={on}
-              onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
-              className={cn(
-                "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
-                on
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-input bg-card text-foreground hover:bg-muted",
-              )}
-            >
-              {tagLabel(tag)}
-            </button>
-          );
-        })}
-        <div className="ml-auto flex items-center gap-3">
-          <FilterClearButton
-            disabled={!tagsOn}
-            onClick={() => compact({ tags: [] })}
-          />
-          <button
-            type="button"
-            className="text-sm font-medium underline underline-offset-4 hover:text-foreground"
-            aria-expanded={panelOpen}
-            aria-controls="all-filters"
-            onClick={openPanel}
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-2 border-t border-dashed border-border",
+          mini ? "px-3 py-2 sm:px-3" : "px-3 py-3 sm:px-4",
+        )}
+      >
+        {productChipRow(applied.tags).map((tag) => (
+          <FilterChip
+            key={tag}
+            pressed={applied.tags.includes(tag)}
+            size={chipSize}
+            onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
           >
-            All filters
-          </button>
-        </div>
+            {tagLabel(tag)}
+          </FilterChip>
+        ))}
+        {mini
+          ? null
+          : originChipRow(applied.tags).map((tag) => (
+              <FilterChip
+                key={tag}
+                pressed={applied.tags.includes(tag)}
+                onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
+              >
+                {tagLabel(tag)}
+              </FilterChip>
+            ))}
+        {mini ? null : (
+          <div className="ml-auto flex items-center gap-3">
+            <FilterClearButton
+              disabled={!tagsOn}
+              onClick={() => compact({ tags: [] })}
+            />
+            <button
+              type="button"
+              className="text-sm font-medium underline underline-offset-4 hover:text-foreground"
+              aria-expanded={panelOpen}
+              aria-controls="all-filters"
+              onClick={openPanel}
+            >
+              All filters
+            </button>
+          </div>
+        )}
       </div>
 
-      {panelOpen ? (
+      {!mini && panelOpen ? (
         <AllFilters
           state={draft}
           places={places}
@@ -369,6 +398,35 @@ export function SearchForm({
         />
       ) : null}
     </form>
+  );
+}
+
+function FilterChip({
+  pressed,
+  onClick,
+  size = "md",
+  children,
+}: {
+  pressed: boolean;
+  onClick: () => void;
+  size?: "sm" | "md";
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={cn(
+        "stall-chip-sm inline-flex items-center px-3 text-sm font-medium",
+        size === "sm" ? "h-8" : "h-9",
+        pressed
+          ? "bg-primary text-primary-foreground"
+          : "border border-input bg-card text-foreground hover:bg-muted",
+      )}
+    >
+      {children}
+    </button>
   );
 }
 

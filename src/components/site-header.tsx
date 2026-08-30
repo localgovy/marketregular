@@ -79,7 +79,7 @@ export function SiteHeader() {
             key={item.href}
             href={item.href}
             variant="tab"
-            className="min-h-11 w-full min-w-0 justify-center px-1"
+            className="min-h-11 w-full min-w-0 justify-center px-1 whitespace-normal text-center leading-tight"
           >
             {item.label}
           </NavLink>
