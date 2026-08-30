@@ -21,7 +21,7 @@ import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { hallFromMarket } from "@/lib/day-plan";
 import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
 import { toGeoMarket } from "@/lib/geo";
-import { sortTagsForDisplay } from "@/lib/find-paths";
+import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle, marketPlaceLine } from "@/lib/listing-copy";
 import { nextOpenLabel } from "@/lib/schedule";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
@@ -73,7 +73,8 @@ export default async function MarketPage({
       ? avgRated.reduce((sum, item) => sum + (item.rating ?? 0), 0) / avgRated.length
       : null;
 
-  const hall = hallFromMarket(market, market.schedules);
+  const now = new Date();
+  const hall = hallFromMarket(market, market.schedules, undefined, now);
   const siblings = await Promise.all(
     siblingSlugs(market.slug).map(async (slug) => {
       const other = await getMarketBySlug(slug);
@@ -180,7 +181,11 @@ export default async function MarketPage({
           <ClaimForm targetType="market" targetId={market.id} />
         </aside>
         <div className="lg:col-span-2">
-          <MarketVendors vendors={market.vendors} market={market} />
+          <MarketVendors
+            vendors={market.vendors}
+            market={market}
+            todayWeekday={weekdayInToronto(now)}
+          />
         </div>
         <div className="lg:col-span-2">
           <ListingAlsoLinks

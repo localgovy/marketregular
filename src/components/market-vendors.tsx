@@ -15,7 +15,6 @@ import {
   originChipRow,
   tagLabel,
   tagsPresent,
-  weekdayInToronto,
 } from "@/lib/find-paths";
 import { hallFromStall } from "@/lib/day-plan";
 import { vendorFilterTags } from "@/lib/vendor-tags";
@@ -107,18 +106,20 @@ function browseActive(find: StallBrowse) {
 export function MarketVendors({
   vendors,
   market,
+  todayWeekday,
 }: {
   vendors: MarketStall[];
   market: Pick<Market, "slug" | "name" | "address" | "lat" | "lng" | "province"> & {
     schedules: MarketSchedule[];
   };
+  todayWeekday: number;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [applied, setApplied] = useState<StallBrowse>(EMPTY_BROWSE);
   const [draft, setDraft] = useState<StallBrowse>(EMPTY_BROWSE);
   const live = panelOpen ? draft : applied;
-  const today = weekdayInToronto();
+  const today = todayWeekday;
   const stallDays = useMemo(() => {
     const days = new Set<number>();
     for (const vendor of vendors) {
@@ -175,14 +176,9 @@ export function MarketVendors({
     setPanelOpen(false);
   }
 
-  function update(patch: Partial<StallBrowse>) {
-    const next = { ...live, q: typedQ(), ...patch };
-    if (panelOpen) {
-      setDraft(next);
-      return;
-    }
-    setApplied(next);
-    setPages(1);
+  /** Compact chips always apply. All filters is the only uncommitted draft. */
+  function compact(patch: Partial<StallBrowse>) {
+    go({ ...applied, q: typedQ(), ...patch });
   }
 
   function openPanel() {
@@ -242,7 +238,7 @@ export function MarketVendors({
                   onChange={(event) => {
                     const value = event.target.value;
                     if (value === "multi") return;
-                    update({
+                    compact({
                       weekdays: value === "" ? [] : [Number(value)],
                       ...(value === "" ? {} : { hereToday: false }),
                     });
@@ -264,8 +260,8 @@ export function MarketVendors({
                     type="button"
                     aria-pressed={live.hereToday}
                     onClick={() =>
-                      update(
-                        live.hereToday
+                      compact(
+                        applied.hereToday
                           ? { hereToday: false }
                           : { hereToday: true, weekdays: [] },
                       )
@@ -283,7 +279,7 @@ export function MarketVendors({
                 <FilterClearButton
                   className="ml-auto"
                   disabled={!browseOn}
-                  onClick={() => update({ weekdays: [], hereToday: false })}
+                  onClick={() => compact({ weekdays: [], hereToday: false })}
                 />
               </div>
             ) : null}
@@ -296,7 +292,7 @@ export function MarketVendors({
                       key={tag}
                       type="button"
                       aria-pressed={on}
-                      onClick={() => update({ tags: toggleIn(live.tags, tag) })}
+                      onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
                       className={cn(
                         "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
                         on
@@ -311,7 +307,7 @@ export function MarketVendors({
                 <div className="ml-auto flex items-center gap-3">
                   <FilterClearButton
                     disabled={!tagsOn}
-                    onClick={() => update({ tags: [] })}
+                    onClick={() => compact({ tags: [] })}
                   />
                   {canAllFilters ? (
                     <button

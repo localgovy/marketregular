@@ -128,7 +128,6 @@ export default async function MarketsPage({
       <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
       <p className="type-kicker mt-2 mb-6 text-muted-foreground">{status}</p>
       <SearchForm
-        key={formKey}
         resultCount={markets.length}
         places={places}
         todayWeekday={todayWeekday}

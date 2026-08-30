@@ -119,7 +119,6 @@ export default async function VendorsIndexPage({
     ...crumbs,
     `${listed.length.toLocaleString("en-CA")} ${listed.length === 1 ? "stall" : "stalls"}`,
   ].join(" · ");
-  const formKey = [q, weekdays.join(","), tags.join(","), areas.join(",")].join("|");
   const todayWeekday = weekdayInToronto();
 
   return (
@@ -150,7 +149,6 @@ export default async function VendorsIndexPage({
 
       <div className={browsing ? undefined : "mt-6"}>
         <SearchForm
-          key={formKey}
           variant="mini"
           places={places}
           todayWeekday={todayWeekday}
