@@ -15,18 +15,21 @@ export function MarketRow({
   schedules,
   open,
   inset,
+  now,
 }: {
   market: Market;
   schedules?: MarketSchedule[];
   open?: boolean;
   inset?: boolean;
+  now: string;
 }) {
+  const clock = new Date(now);
   const when = schedules?.length
-    ? nextOpenLabel(schedules, market.province)
+    ? nextOpenLabel(schedules, market.province, clock)
     : open
       ? "Open now"
       : null;
-  const hall = hallFromMarket(market, schedules ?? []);
+  const hall = hallFromMarket(market, schedules ?? [], undefined, clock);
   return (
     <div
       className={cn(

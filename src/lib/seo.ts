@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CLAIM_INBOX, SITE_NAME, SITE_URL, SITE_LOGO, SITE_OG, WEEKDAYS } from "@/lib/constants";
-import { LAUNCH_CITY, LAUNCH_REGION_NAME } from "@/lib/launch";
+import { LAUNCH_CITY, LAUNCH_REGION_NAME, LAUNCH_TZ } from "@/lib/launch";
 import { listingScore } from "@/lib/listing-score";
 import { externalHref } from "@/lib/format";
 import type { Market, MarketSchedule, MenuItem, Vendor } from "@/types/database";
@@ -72,7 +72,10 @@ export function websiteJsonLd() {
         "@id": `${SITE_URL}/#org`,
         name: SITE_NAME,
         url: SITE_URL,
-        logo: `${SITE_URL}${SITE_LOGO}`,
+        logo: {
+          "@type": "ImageObject",
+          url: `${SITE_URL}${SITE_LOGO}`,
+        },
         areaServed: { "@type": "AdministrativeArea", name: LAUNCH_REGION_NAME },
         contactPoint: {
           "@type": "ContactPoint",
@@ -132,7 +135,9 @@ const MONTH_DAY = /^\d{2}-\d{2}$/;
 /** `MM-DD` season bounds become this year's window; a wrap-around ends next year. */
 function seasonWindow(start: string | null, end: string | null, now = new Date()) {
   if (!start || !end || !MONTH_DAY.test(start) || !MONTH_DAY.test(end)) return {};
-  const year = now.getUTCFullYear();
+  const year = Number(
+    new Intl.DateTimeFormat("en-CA", { timeZone: LAUNCH_TZ, year: "numeric" }).format(now),
+  );
   const endYear = start <= end ? year : year + 1;
   return { validFrom: `${year}-${start}`, validThrough: `${endYear}-${end}` };
 }
@@ -156,7 +161,10 @@ function listingImage(logoUrl: string | null) {
   return externalHref(logoUrl) ?? absoluteUrl(SITE_OG);
 }
 
-export function marketJsonLd(market: Market & { schedules: MarketSchedule[] }) {
+export function marketJsonLd(
+  market: Market & { schedules: MarketSchedule[] },
+  now = new Date(),
+) {
   const aggregateRating = aggregateRatingJsonLd(market);
   const url = absoluteUrl(`/markets/${market.slug}`);
   return {
@@ -182,7 +190,7 @@ export function marketJsonLd(market: Market & { schedules: MarketSchedule[] }) {
       dayOfWeek: WEEKDAYS[row.weekday] ?? "Sunday",
       opens: clock(row.opens_at),
       closes: clock(row.closes_at),
-      ...seasonWindow(row.season_start, row.season_end),
+      ...seasonWindow(row.season_start, row.season_end, now),
     })),
     ...(aggregateRating ? { aggregateRating } : {}),
   };
@@ -193,19 +201,40 @@ type VendorHallForJsonLd = Pick<
   "slug" | "name" | "address" | "city" | "province" | "postal_code" | "lat" | "lng"
 >;
 
-function menuOffers(menus: MenuItem[]) {
-  const priced = menus.filter((item) => item.price_cents != null).slice(0, 25);
-  if (!priced.length) return undefined;
-  return priced.map((item) => ({
-    "@type": "Offer",
-    itemOffered: {
-      "@type": "Product",
+function hallPlace(hall: VendorHallForJsonLd) {
+  return {
+    "@type": "Place" as const,
+    name: hall.name,
+    url: absoluteUrl(`/markets/${hall.slug}`),
+    address: postalAddress(hall),
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: hall.lat,
+      longitude: hall.lng,
+    },
+  };
+}
+
+function stallMenu(url: string, menus: MenuItem[]) {
+  if (!menus.length) return undefined;
+  return {
+    "@type": "Menu",
+    "@id": `${url}#menu`,
+    hasMenuItem: menus.slice(0, 40).map((item) => ({
+      "@type": "MenuItem",
       name: item.name,
       ...(item.description ? { description: item.description } : {}),
-    },
-    price: ((item.price_cents ?? 0) / 100).toFixed(2),
-    priceCurrency: "CAD",
-  }));
+      ...(item.price_cents != null
+        ? {
+            offers: {
+              "@type": "Offer",
+              price: (item.price_cents / 100).toFixed(2),
+              priceCurrency: "CAD",
+            },
+          }
+        : {}),
+    })),
+  };
 }
 
 export function vendorJsonLd(
@@ -216,7 +245,7 @@ export function vendorJsonLd(
   const halls = vendor.markets ?? [];
   const menus = vendor.menus ?? [];
   const servesFood = vendor.tags.some((tag) => FOOD_TAGS.has(tag));
-  const offers = menuOffers(menus);
+  const menu = servesFood ? stallMenu(url, menus) : undefined;
 
   return {
     "@context": "https://schema.org",
@@ -229,23 +258,8 @@ export function vendorJsonLd(
     telephone: vendor.phone ?? undefined,
     sameAs: sameAsLinks(vendor.website, vendor.instagram, vendor.tiktok, vendor.facebook),
     areaServed: { "@type": "AdministrativeArea", name: LAUNCH_REGION_NAME },
-    ...(halls.length
-      ? {
-          containedInPlace: halls.map((hall) => ({
-            "@type": "Place",
-            name: hall.name,
-            url: absoluteUrl(`/markets/${hall.slug}`),
-            address: postalAddress(hall),
-            geo: {
-              "@type": "GeoCoordinates",
-              latitude: hall.lat,
-              longitude: hall.lng,
-            },
-          })),
-        }
-      : {}),
-    ...(servesFood && menus.length ? { hasMenu: `${url}#menu` } : {}),
-    ...(offers ? { makesOffer: offers } : {}),
+    ...(halls.length === 1 ? { containedInPlace: hallPlace(halls[0]) } : {}),
+    ...(menu ? { hasMenu: menu } : {}),
     ...(aggregateRating ? { aggregateRating } : {}),
   };
 }

@@ -82,6 +82,7 @@ export default async function VendorsIndexPage({
   searchParams: Promise<VendorsSearchParams>;
 }) {
   const params = await searchParams;
+  const now = new Date();
   const page = pageNumber(params.page);
   const { q, weekdays, tags, areas, search, on: browsing } = browseFrom(params);
 
@@ -90,13 +91,16 @@ export default async function VendorsIndexPage({
     listStalls(),
     browsing ? Promise.resolve(new Set<string>()) : listMenuVendorIds(),
     browsing
-      ? searchDirectory({
-          q: q || undefined,
-          weekdays: weekdays.length ? weekdays : undefined,
-          tags: tags.length ? tags : undefined,
-          areas: areas.length ? areas : undefined,
-          sort: "name",
-        }).then((result) => result.vendors)
+      ? searchDirectory(
+          {
+            q: q || undefined,
+            weekdays: weekdays.length ? weekdays : undefined,
+            tags: tags.length ? tags : undefined,
+            areas: areas.length ? areas : undefined,
+            sort: "name",
+          },
+          now,
+        ).then((result) => result.vendors)
       : listVendors(),
   ]);
 
@@ -119,7 +123,7 @@ export default async function VendorsIndexPage({
     ...crumbs,
     `${listed.length.toLocaleString("en-CA")} ${listed.length === 1 ? "stall" : "stalls"}`,
   ].join(" · ");
-  const todayWeekday = weekdayInToronto();
+  const todayWeekday = weekdayInToronto(now);
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10">

@@ -24,16 +24,26 @@ import { sessionOnWeekday } from "@/lib/schedule";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 import type { MarketSchedule } from "@/types/database";
 
-function inSeasonDayLabels(days: number[], schedules: MarketSchedule[], province: string) {
+function inSeasonDayLabels(
+  days: number[],
+  schedules: MarketSchedule[],
+  province: string,
+  now: Date,
+) {
   return days.flatMap((day) => {
-    if (!sessionOnWeekday(schedules, day, province)) return [];
+    if (!sessionOnWeekday(schedules, day, province, now)) return [];
     const name = WEEKDAYS[day]?.slice(0, 3);
     return name ? [name] : [];
   });
 }
 
-function dayParen(days: number[], schedules: MarketSchedule[], province: string) {
-  const names = inSeasonDayLabels(days, schedules, province);
+function dayParen(
+  days: number[],
+  schedules: MarketSchedule[],
+  province: string,
+  now: Date,
+) {
+  const names = inSeasonDayLabels(days, schedules, province, now);
   return names.length ? ` (${names.join(", ")})` : "";
 }
 
@@ -47,6 +57,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const vendor = await getVendorBySlug(slug);
   if (!vendor) return { title: "Vendor" };
+  const now = new Date();
   const marketNames = vendor.markets.map((market) => market.name);
   return pageMeta({
     title: vendorPageTitle(vendor.name, marketNames),
@@ -55,7 +66,9 @@ export async function generateMetadata({
       about: vendor.about,
       marketNames,
       days: vendor.markets.flatMap((market) =>
-        market.days.filter((day) => sessionOnWeekday(market.schedules, day, market.province)),
+        market.days.filter((day) =>
+          sessionOnWeekday(market.schedules, day, market.province, now),
+        ),
       ),
       tags: vendor.tags,
     }),
@@ -78,13 +91,14 @@ export default async function VendorPage({
   ]);
   if (!vendor) notFound();
 
+  const now = new Date();
   const homeMarket = [...vendor.markets].sort((a, b) =>
-    hallFromStall(a, a.schedules, a.days).date.localeCompare(
-      hallFromStall(b, b.schedules, b.days).date,
+    hallFromStall(a, a.schedules, a.days, now).date.localeCompare(
+      hallFromStall(b, b.schedules, b.days, now).date,
     ),
   )[0];
   const punchHall = homeMarket
-    ? hallFromStall(homeMarket, homeMarket.schedules, homeMarket.days)
+    ? hallFromStall(homeMarket, homeMarket.schedules, homeMarket.days, now)
     : null;
 
   return (
@@ -122,7 +136,7 @@ export default async function VendorPage({
               <Link href={`/markets/${market.slug}`} className="font-medium text-foreground hover:underline">
                 {market.name}
               </Link>
-              {dayParen(market.days, market.schedules, market.province)}
+              {dayParen(market.days, market.schedules, market.province, now)}
             </span>
           ))}
           .
@@ -144,7 +158,7 @@ export default async function VendorPage({
             </section>
           ) : null}
           {vendor.menus.length ? (
-            <section>
+            <section id="menu">
               <h2>Menu</h2>
               <StallMenu items={vendor.menus} />
             </section>
@@ -197,8 +211,8 @@ export default async function VendorPage({
               }
             >
               {vendor.markets.map((market) => {
-                const hall = hallFromStall(market, market.schedules, market.days);
-                const days = inSeasonDayLabels(market.days, market.schedules, market.province);
+                const hall = hallFromStall(market, market.schedules, market.days, now);
+                const days = inSeasonDayLabels(market.days, market.schedules, market.province, now);
                 return (
                 <li key={market.id} className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -227,7 +241,7 @@ export default async function VendorPage({
             heading="Find more like this"
             weekdays={vendor.markets.flatMap((market) =>
               market.days.filter((day) =>
-                sessionOnWeekday(market.schedules, day, market.province),
+                sessionOnWeekday(market.schedules, day, market.province, now),
               ),
             )}
             tags={vendor.tags}

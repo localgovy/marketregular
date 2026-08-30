@@ -78,7 +78,7 @@ export function localMenuCount() {
   return localVendors().reduce((n, vendor) => n + menusFor(vendor.id).length, 0);
 }
 
-export function localSearch(filters: SearchFilters) {
+export function localSearch(filters: SearchFilters, now = new Date()) {
   const q = filters.q?.trim().toLowerCase();
   let markets = localMarkets();
   let vendors = localVendors();
@@ -140,11 +140,13 @@ export function localSearch(filters: SearchFilters) {
   const days = filters.openNow ? [] : searchWeekdays(filters);
   if (days.length) {
     markets = markets.filter((m) =>
-      days.some((day) => isOpenOnWeekday(schedulesFor(m.id), day, provinceTz(m.province))),
+      days.some((day) =>
+        isOpenOnWeekday(schedulesFor(m.id), day, provinceTz(m.province), now),
+      ),
     );
   }
   if (filters.openNow) {
-    markets = markets.filter((m) => isMarketOpen(schedulesFor(m.id), m.province));
+    markets = markets.filter((m) => isMarketOpen(schedulesFor(m.id), m.province, now));
   }
   if (filters.tags?.length) {
     const tagged = applyDirectoryTags(

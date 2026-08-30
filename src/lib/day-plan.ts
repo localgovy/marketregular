@@ -249,11 +249,12 @@ export function hallFromStall(
   },
   schedules: ScheduleRow[],
   stallDays: number[] = [],
+  now = new Date(),
 ): DayPlanHall {
   const rows = stallDays.length
     ? schedules.filter((row) => stallDays.includes(Number(row.weekday)))
     : schedules;
-  return hallFromMarket(market, rows.length ? rows : schedules);
+  return hallFromMarket(market, rows.length ? rows : schedules, undefined, now);
 }
 
 const SPEED_KPH: Record<TravelMode, number> = {

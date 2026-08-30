@@ -48,6 +48,9 @@ export default async function MarketsPage({
   }>;
 }) {
   const params = await searchParams;
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const todayWeekday = weekdayInToronto(now);
   const weekdays = queryList(params.weekday)
     .map(Number)
     .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6);
@@ -57,16 +60,19 @@ export default async function MarketsPage({
   const tags = queryList(params.tag);
   const areas = queryList(params.area);
   const sort = parseDirectorySort(params.sort, Boolean(near));
-  const { markets, vendors, schedulesByMarket } = await searchDirectory({
-    q: params.q,
-    weekdays: weekdays.length ? weekdays : undefined,
-    tags: tags.length ? tags : undefined,
-    areas: areas.length ? areas : undefined,
-    setup: params.setup || undefined,
-    openNow: params.openNow === "1",
-    near,
-    sort,
-  });
+  const { markets, vendors, schedulesByMarket } = await searchDirectory(
+    {
+      q: params.q,
+      weekdays: weekdays.length ? weekdays : undefined,
+      tags: tags.length ? tags : undefined,
+      areas: areas.length ? areas : undefined,
+      setup: params.setup || undefined,
+      openNow: params.openNow === "1",
+      near,
+      sort,
+    },
+    now,
+  );
   // Filter options come from the whole directory, not the narrowed result set.
   const places = placeAreasForMarkets(await listMarkets());
   const crumbs = marketsCrumbs({
@@ -108,9 +114,6 @@ export default async function MarketsPage({
     params.lng,
     sort,
   ].join("|");
-  const now = new Date();
-  const nowIso = now.toISOString();
-  const todayWeekday = weekdayInToronto(now);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">

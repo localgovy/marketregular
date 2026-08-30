@@ -46,6 +46,7 @@ export default async function HomePage() {
   }
 
   const now = new Date();
+  const nowIso = now.toISOString();
   const week = upcomingByDay(markets, scheduleMap, now);
   const sellingToday = vendorsSellingToday(stalls, markets, vendors, scheduleMap, now);
   const weekVendors = topVendorsThisWeek(stalls, markets, vendors, scheduleMap, tape, now);
@@ -113,6 +114,7 @@ export default async function HomePage() {
                   schedules={scheduleMap.get(market.id)}
                   open={openIds.has(market.id)}
                   inset
+                  now={nowIso}
                 />
               ))}
             </div>

@@ -64,8 +64,9 @@ export default async function MarketPage({
   ]);
   if (!market) notFound();
 
+  const now = new Date();
   const when = market.schedules.length
-    ? nextOpenLabel(market.schedules, market.province)
+    ? nextOpenLabel(market.schedules, market.province, now)
     : null;
   const avgRated = market.feed.filter((item) => item.rating != null);
   const avg =
@@ -73,7 +74,6 @@ export default async function MarketPage({
       ? avgRated.reduce((sum, item) => sum + (item.rating ?? 0), 0) / avgRated.length
       : null;
 
-  const now = new Date();
   const hall = hallFromMarket(market, market.schedules, undefined, now);
   const siblings = await Promise.all(
     siblingSlugs(market.slug).map(async (slug) => {
@@ -88,7 +88,7 @@ export default async function MarketPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <JsonLd data={marketJsonLd(market)} />
+      <JsonLd data={marketJsonLd(market, now)} />
       <JsonLd
         data={breadcrumbJsonLd([
           MARKETS_CRUMB,
@@ -185,6 +185,7 @@ export default async function MarketPage({
             vendors={market.vendors}
             market={market}
             todayWeekday={weekdayInToronto(now)}
+            now={now.toISOString()}
           />
         </div>
         <div className="lg:col-span-2">

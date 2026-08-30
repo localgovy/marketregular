@@ -371,9 +371,9 @@ function postgrestIlike(column: string, raw: string) {
   return `${column}.ilike."%${escaped}%"`;
 }
 
-export async function searchDirectory(filters: SearchFilters) {
+export async function searchDirectory(filters: SearchFilters, now = new Date()) {
   const supabase = publicDb();
-  if (!supabase) return localSearch(filters);
+  if (!supabase) return localSearch(filters, now);
 
   const raw = filters.q?.trim() ?? "";
   const marketOr = raw
@@ -426,7 +426,7 @@ export async function searchDirectory(filters: SearchFilters) {
     !marketResult.data.length &&
     !vendorResult.data.length
   ) {
-    return localSearch(filters);
+    return localSearch(filters, now);
   }
 
   const marketRows = marketResult.data;
@@ -503,13 +503,14 @@ export async function searchDirectory(filters: SearchFilters) {
           schedulesByMarket.get(m.id) ?? [],
           day,
           provinceTz(m.province),
+          now,
         ),
       ),
     );
   }
   if (filters.openNow) {
     markets = markets.filter((m) =>
-      isMarketOpen(schedulesByMarket.get(m.id) ?? [], m.province),
+      isMarketOpen(schedulesByMarket.get(m.id) ?? [], m.province, now),
     );
   }
   if (filters.tags?.length) {

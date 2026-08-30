@@ -239,7 +239,7 @@ export function SearchForm({
           className={cn(fieldH, "bg-card")}
           aria-label={mini ? "Search stalls" : "Search markets and stalls"}
           onClear={() => {
-            if (applied.q.trim()) go({ ...live, q: "" });
+            if (applied.q.trim()) go({ ...applied, q: "" });
           }}
         />
         <button
