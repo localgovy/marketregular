@@ -84,12 +84,12 @@ export default async function HomePage() {
 
         <aside
           id="reviews"
-          className="scroll-mt-28 border-y border-board lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-header-lg lg:h-below-header-lg lg:overflow-hidden lg:scroll-mt-24 lg:border-y-0 lg:border-r lg:border-board"
+          className="scroll-mt-28 border-t border-board lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:sticky lg:top-header-lg lg:h-below-header-lg lg:overflow-hidden lg:scroll-mt-24 lg:border-t-0 lg:border-r lg:border-board"
         >
           <FloorTape initialItems={tape} />
         </aside>
 
-        <div className="min-w-0 px-4 pb-8 lg:col-start-2 lg:row-start-2 lg:px-6 lg:pt-6">
+        <div className="min-w-0 border-t border-board px-4 pt-5 pb-8 lg:col-start-2 lg:row-start-2 lg:border-t-0 lg:px-6 lg:pt-6">
           <HomePanel
             id="directory"
             tone="directory"
