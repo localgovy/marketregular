@@ -7,7 +7,7 @@ import { Hours } from "@/components/hours";
 import { useDayPlan } from "@/components/day-plan-provider";
 import { DAY_PLAN_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { ticketTargetCopy, type DayPlanHall } from "@/lib/day-plan";
+import type { DayPlanHall } from "@/lib/day-plan";
 
 const hit =
   "inline-flex size-9 shrink-0 items-center justify-center outline-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
@@ -21,9 +21,7 @@ export function DayPlanPlus({ hall, className }: { hall: DayPlanHall; className?
       type="button"
       aria-pressed={on}
       aria-label={
-        on
-          ? `${hall.name} is on ${ticketTargetCopy(hall.date)}`
-          : `Add ${hall.name} to ${ticketTargetCopy(hall.date)}`
+        on ? `${hall.name} is on ${DAY_PLAN_NAME}` : `Add ${hall.name} to ${DAY_PLAN_NAME}`
       }
       onClick={(event) => {
         event.preventDefault();
@@ -73,8 +71,8 @@ export function DayPlanPunch({
       aria-pressed={on}
       aria-label={
         on
-          ? `${vendorName} is punched on ${ticketTargetCopy(hall.date)}`
-          : `Punch ${vendorName} on ${ticketTargetCopy(hall.date)}`
+          ? `${vendorName} is punched on ${DAY_PLAN_NAME}`
+          : `Punch ${vendorName} on ${DAY_PLAN_NAME}`
       }
       onClick={(event) => {
         event.preventDefault();

@@ -12,6 +12,7 @@ import {
   placeAreasForMarkets,
   queryList,
   vendorsIndexHref,
+  weekdayInToronto,
   type MarketsSearch,
 } from "@/lib/find-paths";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
@@ -119,6 +120,7 @@ export default async function VendorsIndexPage({
     `${listed.length.toLocaleString("en-CA")} ${listed.length === 1 ? "stall" : "stalls"}`,
   ].join(" · ");
   const formKey = [q, weekdays.join(","), tags.join(","), areas.join(",")].join("|");
+  const todayWeekday = weekdayInToronto();
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10">
@@ -151,6 +153,7 @@ export default async function VendorsIndexPage({
           key={formKey}
           variant="mini"
           places={places}
+          todayWeekday={todayWeekday}
           defaults={{
             q: q || undefined,
             weekdays,

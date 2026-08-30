@@ -7,6 +7,7 @@ import {
 } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_TZ } from "@/lib/launch";
 import { tagLabel } from "@/lib/tag-label";
+import { vendorFilterTags } from "@/lib/vendor-tags";
 import type { Market } from "@/types/database";
 
 const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
@@ -191,9 +192,10 @@ export function applyDirectoryTags<
   }
 
   if (product.length) {
-    nextVendors = nextVendors.filter((vendor) =>
-      product.some((tag) => vendor.tags.includes(tag)),
-    );
+    nextVendors = nextVendors.filter((vendor) => {
+      const hay = vendorFilterTags(vendor);
+      return product.some((tag) => hay.includes(tag));
+    });
     const matchingVendorIds = new Set(nextVendors.map((vendor) => vendor.id));
     const hostIds = new Set(
       links

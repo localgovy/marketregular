@@ -11,6 +11,7 @@ import {
   parseDirectorySort,
   placeAreasForMarkets,
   queryList,
+  weekdayInToronto,
   type MarketsSearch,
 } from "@/lib/find-paths";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
@@ -107,6 +108,9 @@ export default async function MarketsPage({
     params.lng,
     sort,
   ].join("|");
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const todayWeekday = weekdayInToronto(now);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -124,8 +128,10 @@ export default async function MarketsPage({
       <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
       <p className="type-kicker mt-2 mb-6 text-muted-foreground">{status}</p>
       <SearchForm
+        key={formKey}
         resultCount={markets.length}
         places={places}
+        todayWeekday={todayWeekday}
         defaults={{
           q: params.q,
           weekdays,
@@ -155,6 +161,7 @@ export default async function MarketsPage({
       </div>
       <DirectoryResults
         key={formKey}
+        now={nowIso}
         markets={markets}
         vendors={vendors}
         schedulesByMarket={schedulesByMarket}

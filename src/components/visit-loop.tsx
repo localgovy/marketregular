@@ -18,18 +18,18 @@ export function HomeMosaic({
   week,
   markets,
   vendors,
-  openNow,
   sellingToday,
   weekVendors,
   census,
+  today,
 }: {
   week: UpcomingGroup[];
   markets: Market[];
   vendors: Vendor[];
-  openNow: Market[];
   sellingToday: VendorTodayRow[];
   weekVendors: VendorWeekPick[];
   census: DirectoryCensus;
+  today: number;
 }) {
   const areas = homeAreas(markets);
   const sellOptions = tagsPresent([...markets, ...vendors], FIND_PRODUCTS);
@@ -58,7 +58,7 @@ export function HomeMosaic({
     review_count: market.review_count,
   }));
   const openGroup = week.find((group) => group.open);
-  const     ticker =
+  const ticker =
     openGroup?.slots.map((slot) => ({
       id: slot.market.id,
       name: slot.market.name,
@@ -69,17 +69,7 @@ export function HomeMosaic({
       lat: slot.market.lat,
       lng: slot.market.lng,
       date: openGroup.iso,
-    })) ??
-    openNow.map((market) => ({
-      id: market.id,
-      name: market.name,
-      slug: market.slug,
-      hours: "",
-      address: market.address,
-      city: market.city,
-      lat: market.lat,
-      lng: market.lng,
-    }));
+    })) ?? [];
 
   return (
     <div>
@@ -112,6 +102,7 @@ export function HomeMosaic({
               sellOptions={sellOptions}
               cuisineOptions={cuisineOptions}
               setup={setup}
+              today={today}
             />
           </HomePanel>
 

@@ -3,6 +3,7 @@ import { DayPlanPlus } from "@/components/day-plan-plus";
 import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
+import { Hours } from "@/components/hours";
 import { hallFromMarket } from "@/lib/day-plan";
 import { marketPlaceLine } from "@/lib/listing-copy";
 import { nextOpenLabel } from "@/lib/schedule";
@@ -38,13 +39,15 @@ export function MarketRow({
           {market.name}
         </Link>
         <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          {open ? (
-            <NowLabel>Open now</NowLabel>
-          ) : (
+          {open ? <NowLabel>Open now</NowLabel> : null}
+          {open && hall.hours ? (
+            <Hours value={hall.hours} className="text-muted-foreground" />
+          ) : null}
+          {!open ? (
             <span className="whitespace-nowrap text-sm text-muted-foreground">
-              {when ?? "Hours"}
+              {when && when !== "Open now" ? when : "Hours"}
             </span>
-          )}
+          ) : null}
         </p>
         <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
           <span>{marketPlaceLine(market.address, market.city)}</span>

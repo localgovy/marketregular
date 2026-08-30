@@ -221,10 +221,11 @@ export function hallFromMarket(
   },
   schedules: ScheduleRow[],
   date?: string,
+  now = new Date(),
 ): DayPlanHall {
   const next = date
     ? { date, hours: hoursOnIso(schedules, market.province, date) }
-    : slipDateAndHours(schedules, market.province);
+    : slipDateAndHours(schedules, market.province, now);
   return {
     slug: market.slug,
     name: market.name,

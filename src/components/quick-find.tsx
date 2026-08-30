@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { SearchField } from "@/components/search-field";
 import { useGeo } from "@/components/geo-provider";
-import { WEEKDAYS } from "@/lib/constants";
 import { formatDistance } from "@/lib/geo";
 import { distanceMeters } from "@/lib/geo";
 import { tagLabel, whenOptions, type HomeAreas } from "@/lib/find-paths";
@@ -15,14 +14,6 @@ type NearMarket = {
   lat: number;
   lng: number;
 };
-
-function weekdayInToronto() {
-  const name = new Intl.DateTimeFormat("en-CA", {
-    weekday: "long",
-    timeZone: "America/Toronto",
-  }).format(new Date());
-  return WEEKDAYS.findIndex((d) => d === name);
-}
 
 const chipIdle =
   "find-chip inline-flex h-11 w-full items-center justify-center border border-[color-mix(in_srgb,var(--chalk)_78%,transparent)] bg-[color-mix(in_srgb,var(--chalk)_8%,var(--primary))] px-3 text-base font-medium text-primary-foreground hover:brightness-110 sm:h-10 sm:w-auto sm:justify-start sm:px-3.5";
@@ -89,14 +80,15 @@ export function QuickFind({
   sellOptions,
   cuisineOptions,
   setup,
+  today,
 }: {
   markets: NearMarket[];
   areas: HomeAreas;
   sellOptions: string[];
   cuisineOptions: string[];
   setup: string[];
+  today: number;
 }) {
-  const today = weekdayInToronto();
   const { coords, error, request } = useGeo();
   const when = whenOptions(today);
 

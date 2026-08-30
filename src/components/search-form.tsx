@@ -15,7 +15,6 @@ import {
   productChipRow,
   tagLabel,
   vendorsHref,
-  weekdayInToronto,
   whenOptions,
   type DirectorySort,
   type MarketsSearch,
@@ -81,11 +80,14 @@ export function SearchForm({
   defaults,
   places,
   resultCount,
+  todayWeekday,
   variant = "full",
 }: {
   defaults?: SearchFormDefaults;
   places: PlaceAreas;
   resultCount?: number;
+  /** Toronto weekday from the server so Today/Tomorrow options match first paint. */
+  todayWeekday: number;
   variant?: "full" | "mini";
 }) {
   const router = useRouter();
@@ -95,8 +97,7 @@ export function SearchForm({
   const applied = fromDefaults(defaults);
   const live = panelOpen ? draft : applied;
   const mini = variant === "mini";
-  const today = weekdayInToronto();
-  const nextOpenChoices = whenOptions(today).filter(
+  const nextOpenChoices = whenOptions(todayWeekday).filter(
     (item) => item.id === "open" || item.id === "today" || item.id === "tomorrow",
   );
 
@@ -112,6 +113,7 @@ export function SearchForm({
 
   /** Compact chips always apply. All Filters is the only uncommitted draft. */
   function compact(patch: Partial<BrowseState>) {
+    setPanelOpen(false);
     go({ ...applied, q: typedQ(), ...patch });
   }
 
@@ -143,6 +145,9 @@ export function SearchForm({
   const anythingOn = browseOn || tagsOn || Boolean(applied.q.trim());
   const fieldH = mini ? "h-9" : "h-10";
   const chipSize = mini ? "sm" : "md";
+  const productChips = productChipRow(applied.tags);
+  const productOn = new Set<string>(productChips);
+  const extraMiniTags = mini ? applied.tags.filter((tag) => !productOn.has(tag)) : [];
 
   const daySelect = (
     <select
@@ -335,7 +340,7 @@ export function SearchForm({
           mini ? "px-3 py-2 sm:px-3" : "px-3 py-3 sm:px-4",
         )}
       >
-        {productChipRow(applied.tags).map((tag) => (
+        {productChips.map((tag) => (
           <FilterChip
             key={tag}
             pressed={applied.tags.includes(tag)}
@@ -346,7 +351,16 @@ export function SearchForm({
           </FilterChip>
         ))}
         {mini
-          ? null
+          ? extraMiniTags.map((tag) => (
+              <FilterChip
+                key={tag}
+                pressed
+                size={chipSize}
+                onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
+              >
+                {tagLabel(tag)}
+              </FilterChip>
+            ))
           : originChipRow(applied.tags).map((tag) => (
               <FilterChip
                 key={tag}

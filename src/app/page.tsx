@@ -7,13 +7,13 @@ import { MarketRow } from "@/components/market-row";
 import {
   getDirectoryCensus,
   getFloorTape,
-  getOpenToday,
   listMarkets,
   listSchedules,
   listStalls,
   listVendors,
 } from "@/lib/data/catalog";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { weekdayInToronto } from "@/lib/find-paths";
 import { upcomingByDay } from "@/lib/upcoming";
 import { topVendorsThisWeek, vendorsSellingToday } from "@/lib/vendor-week";
 import { pageMeta, SITE_DESCRIPTION } from "@/lib/seo";
@@ -29,9 +29,8 @@ export const metadata: Metadata = pageMeta({
 export const revalidate = 120;
 
 export default async function HomePage() {
-  const [tape, openNow, markets, vendors, stalls, schedules, census] = await Promise.all([
+  const [tape, markets, vendors, stalls, schedules, census] = await Promise.all([
     getFloorTape(),
-    getOpenToday(),
     listMarkets(),
     listVendors(),
     listStalls(),
@@ -46,21 +45,24 @@ export default async function HomePage() {
     scheduleMap.set(row.market_id, list);
   }
 
-  const week = upcomingByDay(markets, scheduleMap);
-  const sellingToday = vendorsSellingToday(stalls, markets, vendors, scheduleMap);
-  const weekVendors = topVendorsThisWeek(stalls, markets, vendors, scheduleMap, tape);
+  const now = new Date();
+  const week = upcomingByDay(markets, scheduleMap, now);
+  const sellingToday = vendorsSellingToday(stalls, markets, vendors, scheduleMap, now);
+  const weekVendors = topVendorsThisWeek(stalls, markets, vendors, scheduleMap, tape, now);
 
   const marketIds = new Set(markets.map((market) => market.id));
   const vendorIds = new Set(
     stalls.filter((stall) => marketIds.has(stall.market_id)).map((stall) => stall.id),
   );
   const torontoVendors = vendors.filter((vendor) => vendorIds.has(vendor.id));
-  const openIds = new Set(openNow.map((m) => m.id));
-  const DIRECTORY_CAP = 10;
-  const directory = [...openNow, ...markets.filter((market) => !openIds.has(market.id))].slice(
-    0,
-    DIRECTORY_CAP,
+  const openIds = new Set(
+    (week.find((group) => group.open)?.slots ?? []).map((slot) => slot.market.id),
   );
+  const DIRECTORY_CAP = 10;
+  const directory = [
+    ...markets.filter((market) => openIds.has(market.id)),
+    ...markets.filter((market) => !openIds.has(market.id)),
+  ].slice(0, DIRECTORY_CAP);
 
   return (
     <>
@@ -72,10 +74,10 @@ export default async function HomePage() {
               week={week}
               markets={markets}
               vendors={torontoVendors}
-              openNow={openNow}
               sellingToday={sellingToday}
               weekVendors={weekVendors}
               census={census}
+              today={weekdayInToronto(now)}
             />
           ) : (
             <p className="text-base text-muted-foreground">Directory is empty.</p>

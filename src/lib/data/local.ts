@@ -23,7 +23,7 @@ import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags"
 import { provinceTz } from "@/lib/constants";
 import { isLaunchCity } from "@/lib/launch";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
-import { withVendorProductTags } from "@/lib/vendor-tags";
+import { withVendorProductTags, vendorFilterTags } from "@/lib/vendor-tags";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
 import type {
   FloorItem,
@@ -93,8 +93,8 @@ export function localSearch(filters: SearchFilters) {
         .filter((mv) => mv.vendor_id === v.id)
         .map((mv) => seedMarkets.find((m) => m.id === mv.market_id)?.name);
       return (
-        haystack([v.name, v.about, v.tags.join(" "), ...marketNames]).includes(q) ||
-        origin.some((tag) => v.tags.includes(tag))
+        haystack([v.name, v.about, vendorFilterTags(v).join(" "), ...marketNames]).includes(q) ||
+        origin.some((tag) => vendorFilterTags(v).includes(tag))
       );
     });
     if (origin.length && vendors.length) {

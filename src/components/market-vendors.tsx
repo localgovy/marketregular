@@ -84,7 +84,7 @@ function stallFits(vendor: MarketStall, find: StallBrowse, today: number) {
   }
   if (
     find.tags.length &&
-    !find.tags.some((tag) => vendor.tags.includes(tag))
+    !find.tags.some((tag) => vendorFilterTags(vendor).includes(tag))
   ) {
     return false;
   }
