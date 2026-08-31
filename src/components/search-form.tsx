@@ -14,7 +14,6 @@ import {
   originChipRow,
   productChipRow,
   tagLabel,
-  vendorsHref,
   whenOptions,
   type DirectorySort,
   type MarketsSearch,
@@ -108,7 +107,7 @@ export function SearchForm({
 
   function go(next: BrowseState) {
     const search = toSearch(next, defaults);
-    router.push(variant === "mini" ? vendorsHref(search) : marketsHref(search));
+    router.push(marketsHref(search));
   }
 
   /** Compact chips always apply. All Filters is the only uncommitted draft. */

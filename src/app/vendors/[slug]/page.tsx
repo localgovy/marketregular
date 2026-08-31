@@ -113,7 +113,7 @@ export default async function VendorPage({
           { name: vendor.name, path: `/vendors/${vendor.slug}` },
         ])}
       />
-      <BackButton href="/vendors" />
+      <BackButton href={homeMarket ? `/markets/${homeMarket.slug}` : "/markets"} />
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{vendor.name}</h1>
         <div className="flex items-center gap-1">

@@ -8,6 +8,5 @@ export const SITE_NAV = [
 
 export const SITE_FOOTER_NAV = [
   ...SITE_NAV,
-  { href: "/vendors", label: "Vendors" },
   { href: "/contact", label: "Contact" },
 ] as const;

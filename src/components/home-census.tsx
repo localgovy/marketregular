@@ -67,7 +67,7 @@ export function HomeCensus({
           word={markets === 1 ? "market" : "markets"}
         />
         <CensusCell
-          href="/vendors"
+          href="/markets#directory-vendors"
           value={vendors}
           word={vendors === 1 ? "vendor" : "vendors"}
         />

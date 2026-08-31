@@ -287,31 +287,6 @@ export function marketsHref(search: MarketsSearch) {
   return hrefWithQuery("/markets", directoryQuery(search));
 }
 
-/** Same Find keys as `/markets`, without map, sort, or setup. Resets pagination. */
-export function vendorsHref(search: MarketsSearch) {
-  return hrefWithQuery(
-    "/vendors",
-    directoryQuery({
-      q: search.q,
-      weekdays: search.weekdays,
-      areas: search.areas,
-      tags: search.tags,
-    }),
-  );
-}
-
-export function vendorsIndexHref(search: MarketsSearch, page: number) {
-  if (page <= 1) return vendorsHref(search);
-  const query = directoryQuery({
-    q: search.q,
-    weekdays: search.weekdays,
-    areas: search.areas,
-    tags: search.tags,
-  });
-  query.set("page", String(page));
-  return `/vendors?${query}`;
-}
-
 export function filterMarketsByAreas(markets: Market[], areaKeys: string[]) {
   if (!areaKeys.length) return markets;
   const keys = new Set(areaKeys);
