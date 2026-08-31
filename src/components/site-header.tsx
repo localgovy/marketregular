@@ -19,7 +19,7 @@ export function SiteHeader() {
               href="/"
               prefetch={false}
               aria-label={`${SITE_NAME} home`}
-              className="inline-flex shrink-0 items-center text-foreground outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk"
+              className="inline-flex shrink-0 items-center text-board outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk"
             >
               <SiteWordmark />
             </Link>
