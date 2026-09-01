@@ -35,6 +35,8 @@ export const SITE_URL = canonicalSiteUrl();
 export const GA_MEASUREMENT_ID = "G-M2JJ68QT2H";
 
 export const SITE_WORDMARK = "/brand/marketregular-wordmark-white.png";
+/** Green glyphs on transparent. Footer lockup (header still masks the white file). */
+export const SITE_WORDMARK_GREEN = "/brand/marketregular-wordmark.png";
 /** Square MR lockup on board green. Favicon, apple icon, and Organization JSON-LD. */
 export const SITE_LOGO = "/brand/marketregular-mr.png";
 export const SITE_OG = "/brand/marketregular-og.png";

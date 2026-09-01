@@ -1,7 +1,27 @@
-import { SITE_WORDMARK, STUDIO_WORDMARK } from "@/lib/constants";
+import { SITE_WORDMARK, SITE_WORDMARK_GREEN, STUDIO_WORDMARK } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-export function SiteWordmark({ className }: { className?: string }) {
+export function SiteWordmark({
+  className,
+  green,
+}: {
+  className?: string;
+  /** Paint the green lockup file instead of masking currentColor. Footer only. */
+  green?: boolean;
+}) {
+  if (green) {
+    return (
+      <img
+        src={SITE_WORDMARK_GREEN}
+        alt=""
+        aria-hidden
+        width={506}
+        height={75}
+        className={cn("site-wordmark-green", className)}
+      />
+    );
+  }
+
   return (
     <span
       aria-hidden

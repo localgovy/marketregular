@@ -190,6 +190,15 @@
   mask-position: center;
 }
 
+/* Baked green lockup — do not mask; the PNG is already board green. */
+@utility site-wordmark-green {
+  display: block;
+  height: 1.25rem;
+  width: calc(1.25rem * 506 / 75);
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
 /* localgovy lockup: glyph mask, color from currentColor. */
 @utility studio-wordmark {
   display: block;
