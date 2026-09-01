@@ -24,7 +24,7 @@ import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib
 export async function generateMetadata(): Promise<Metadata> {
   const census = await getDirectoryCensus();
   return pageMeta({
-    title: `${LAUNCH_CITY} farmers' markets: hours and vendors`,
+    title: `Find ${LAUNCH_CITY} farmers' markets`,
     path: "/markets",
     description: `All ${census.markets} farmers' markets across ${LAUNCH_CITY} and the ${LAUNCH_REGION}, with this week's hours, addresses, maps and the ${census.vendors.toLocaleString("en-CA")} stalls that work them.`,
   });

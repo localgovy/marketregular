@@ -21,7 +21,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = pageMeta({
-  title: `${LAUNCH_CITY} farmers' markets: what's open today`,
+  title: `What's open today at ${LAUNCH_CITY} farmers' markets`,
   path: "/",
   description: SITE_DESCRIPTION,
 });

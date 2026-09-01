@@ -56,7 +56,13 @@ export function pageMeta({
   follow?: boolean;
 }): Metadata {
   return {
-    ...(title ? { title } : {}),
+    ...(title
+      ? {
+          // The root layout template (`%s · MarketRegular`) applies to nested
+          // routes, not `/`. Set the full title there so the brand still shows.
+          title: path === "/" ? { absolute: `${title} · ${SITE_NAME}` } : title,
+        }
+      : {}),
     description,
     alternates: { canonical: path },
     robots: index ? { index: true, follow: true } : follow ? noIndexFollow : noIndex,
