@@ -123,11 +123,9 @@ export function EventsCalendar({
           ? "prev"
           : "in";
     show(cell, dir);
-    if (typeof window !== "undefined" && !window.matchMedia("(min-width: 1280px)").matches) {
-      requestAnimationFrame(() => {
-        dayPanel.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      });
-    }
+    requestAnimationFrame(() => {
+      dayPanel.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
   }
 
   function moveDay(delta: number) {
@@ -151,7 +149,7 @@ export function EventsCalendar({
     : "";
 
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)]">
+    <div className="grid gap-6">
       <div>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-1">
@@ -303,7 +301,7 @@ export function EventsCalendar({
 
       <aside
         ref={dayPanel}
-        className="cal-in bg-card/55 p-5 ring-1 ring-border/80 shadow-[0_0_0_1px_color-mix(in_srgb,var(--chalk)_45%,transparent)] backdrop-blur-xl xl:sticky xl:top-20"
+        className="cal-in bg-card/55 p-5 ring-1 ring-border/80 shadow-[0_0_0_1px_color-mix(in_srgb,var(--chalk)_45%,transparent)] backdrop-blur-xl"
         aria-live="polite"
       >
         <p className="type-kicker text-muted-foreground">That day</p>
