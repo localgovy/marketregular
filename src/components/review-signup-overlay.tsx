@@ -8,6 +8,7 @@ export function ReviewSignupOverlay({ next }: { next: string }) {
   return (
     <Link
       href={href}
+      rel="nofollow"
       aria-label="Sign up to leave a review"
       className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-card/90 px-3 outline-none hover:bg-card focus-visible:bg-card"
     >

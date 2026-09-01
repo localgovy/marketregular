@@ -64,7 +64,7 @@ export function HeaderAccount() {
 
   if (!profile) {
     return (
-      <Link href="/login" className="shrink-0 text-sm font-medium hover:underline">
+      <Link href="/login" rel="nofollow" className="shrink-0 text-sm font-medium hover:underline">
         Sign in
       </Link>
     );

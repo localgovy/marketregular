@@ -1,4 +1,5 @@
 import { DayPlanHoursRow } from "@/components/day-plan-plus";
+import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { torontoYmd } from "@/lib/events-month";
 import type { DayPlanHall } from "@/lib/day-plan";
@@ -26,10 +27,19 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
       className="mb-5 bg-card shadow-[inset_4px_0_0_var(--stamp)] ring-1 ring-border"
     >
       <div className="flex flex-wrap items-baseline gap-x-3 px-3 py-2.5 sm:px-4">
-        <p className="text-base font-medium text-stamp">
-          <span className="type-nums">{openNow.length}</span>
-          {` ${countLabel} open now`}
-        </p>
+        {openNow.length ? (
+          <NowLabel className="text-base">
+            <span>
+              <span className="type-nums">{openNow.length}</span>
+              {` ${countLabel} open now`}
+            </span>
+          </NowLabel>
+        ) : (
+          <p className="text-base font-medium text-stamp">
+            <span className="type-nums">0</span>
+            {` ${countLabel} open now`}
+          </p>
+        )}
       </div>
       {openNow.length ? (
         <ul className="grid gap-px border-t border-border bg-border sm:grid-cols-2">

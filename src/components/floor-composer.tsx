@@ -391,6 +391,7 @@ export function FloorComposer({
           {!signedIn ? (
             <Link
               href={`/login?next=${encodeURIComponent(pathname)}`}
+              rel="nofollow"
               className={cn(buttonVariants({ size: "sm" }), "h-8 rounded-full px-4")}
             >
               Sign in

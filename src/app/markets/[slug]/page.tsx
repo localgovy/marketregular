@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
@@ -18,6 +18,7 @@ import { ScheduleList } from "@/components/schedule-list";
 import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
+import { retiredMarketTarget } from "@/lib/data/retired-listings";
 import { hallFromMarket } from "@/lib/day-plan";
 import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
 import { toGeoMarket } from "@/lib/geo";
@@ -62,7 +63,11 @@ export default async function MarketPage({
     getMarketBySlug(slug),
     getCurrentProfile(),
   ]);
-  if (!market) notFound();
+  if (!market) {
+    const retired = await retiredMarketTarget(slug);
+    if (retired) permanentRedirect(retired);
+    notFound();
+  }
 
   const now = new Date();
   const when = market.schedules.length

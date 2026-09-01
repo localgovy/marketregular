@@ -30,6 +30,7 @@ import { withVendorProductTags } from "@/lib/vendor-tags";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { withListingStats } from "@/lib/listing-score";
+import { vendorHasSubstance } from "@/lib/listing-substance";
 import { fetchMyPublicProfile } from "@/lib/my-profile";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -204,17 +205,14 @@ export const listVendors = cache(async function listVendors(): Promise<Vendor[]>
   return data.map(hydrateVendor).filter((vendor) => atLaunch.has(vendor.id));
 });
 
+/** Same bar the stall page uses to decide `index`, so the sitemap never advertises a noindex URL. */
 export async function listSitemapVendors(): Promise<Vendor[]> {
   const supabase = publicDb();
   if (!supabase) return localSitemapVendors();
-  const [vendors, menuRows] = await Promise.all([
-    listVendors(),
-    fetchAllRows<{ vendor_id: string }>((from, to) =>
-      supabase.from("vendor_menus").select("vendor_id").range(from, to),
-    ),
-  ]);
-  const withMenu = new Set((menuRows.data ?? []).map((row) => row.vendor_id));
-  return vendors.filter((vendor) => Boolean(vendor.about?.trim()) || withMenu.has(vendor.id));
+  const [vendors, menuVendorIds] = await Promise.all([listVendors(), listMenuVendorIds()]);
+  return vendors.filter((vendor) =>
+    vendorHasSubstance({ ...vendor, hasMenu: menuVendorIds.has(vendor.id) }),
+  );
 }
 
 export const listMenuVendorIds = cache(async function listMenuVendorIds(): Promise<Set<string>> {

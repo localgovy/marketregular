@@ -125,7 +125,11 @@ export function LoginForm({
 
       <p className="text-sm text-muted-foreground">
         No account?{" "}
-        <Link href={signupHref(next)} className="font-medium text-foreground hover:underline">
+        <Link
+          href={signupHref(next)}
+          rel="nofollow"
+          className="font-medium text-foreground hover:underline"
+        >
           Create one
         </Link>
       </p>

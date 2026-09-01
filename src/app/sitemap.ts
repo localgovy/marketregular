@@ -50,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
     ...vendors.map((vendor) =>
       loc(`/vendors/${vendor.slug}`, {
-        lastModified: vendor.created_at,
+        lastModified: vendor.updated_at ?? vendor.created_at,
         changeFrequency: "monthly",
         priority: 0.5,
       }),

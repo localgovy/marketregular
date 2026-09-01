@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { DayPlanPlus, DayPlanPunch } from "@/components/day-plan-plus";
@@ -14,6 +14,7 @@ import { StallMenu } from "@/components/stall-menu";
 import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
+import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
 import { WEEKDAYS } from "@/lib/constants";
 import { hallFromStall } from "@/lib/day-plan";
@@ -89,7 +90,11 @@ export default async function VendorPage({
     getVendorBySlug(slug),
     getCurrentProfile(),
   ]);
-  if (!vendor) notFound();
+  if (!vendor) {
+    const retired = await retiredVendorTarget(slug);
+    if (retired) permanentRedirect(retired);
+    notFound();
+  }
 
   const now = new Date();
   const homeMarket = [...vendor.markets].sort((a, b) =>

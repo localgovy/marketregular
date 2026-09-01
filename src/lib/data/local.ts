@@ -22,6 +22,7 @@ import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { provinceTz } from "@/lib/constants";
 import { isLaunchCity } from "@/lib/launch";
+import { vendorHasSubstance } from "@/lib/listing-substance";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { withVendorProductTags, vendorFilterTags } from "@/lib/vendor-tags";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
@@ -63,8 +64,8 @@ export function localVendors(): Vendor[] {
 }
 
 export function localSitemapVendors(): Vendor[] {
-  return localVendors().filter(
-    (vendor) => Boolean(vendor.about?.trim()) || menusFor(vendor.id).length > 0,
+  return localVendors().filter((vendor) =>
+    vendorHasSubstance({ ...vendor, hasMenu: menusFor(vendor.id).length > 0 }),
   );
 }
 

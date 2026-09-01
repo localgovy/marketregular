@@ -75,6 +75,7 @@ export type Vendor = {
   rating_avg: number | null;
   claimed_by?: string | null;
   created_at?: string;
+  updated_at?: string;
 };
 
 export type MarketVendor = {

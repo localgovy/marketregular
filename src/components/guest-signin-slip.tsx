@@ -126,12 +126,14 @@ export function GuestSignInSlip() {
       <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
         <Link
           href={`/login?next=${encodeURIComponent(next || "/")}`}
+          rel="nofollow"
           className={cn(buttonVariants({ size: "sm" }), "h-8 rounded-full px-4")}
         >
           Sign in
         </Link>
         <Link
           href={`/signup?next=${encodeURIComponent(next || "/")}`}
+          rel="nofollow"
           className="text-sm font-medium text-foreground hover:underline"
         >
           Create one

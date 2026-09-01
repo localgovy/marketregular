@@ -82,7 +82,11 @@ export function SignupForm({ next = "/account" }: { next?: string }) {
 
       <p className="text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href={loginHref(next)} className="font-medium text-foreground hover:underline">
+        <Link
+          href={loginHref(next)}
+          rel="nofollow"
+          className="font-medium text-foreground hover:underline"
+        >
           Sign in
         </Link>
       </p>

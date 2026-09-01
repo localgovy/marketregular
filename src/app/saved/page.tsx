@@ -32,7 +32,11 @@ export default async function SavedPage() {
         </p>
       ) : (
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
-          <Link href="/login?next=/saved" className="font-medium text-foreground hover:underline">
+          <Link
+            href="/login?next=/saved"
+            rel="nofollow"
+            className="font-medium text-foreground hover:underline"
+          >
             Sign in
           </Link>{" "}
           to save markets and stalls to this account.
