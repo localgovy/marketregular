@@ -4,11 +4,11 @@ import { SITE_NAME } from "@/lib/constants";
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
 
-/** Paper, board green and the ticket plate, matching the site. */
+/** Paper, board green and stamp red, matching the site. */
 const PAPER = "#f4f1ea";
 const INK = "#1c1916";
 const BOARD = "#2c4a40";
-const TICKET = "#b07f2a";
+const STAMP = "#9e4a3e";
 const MUTED = "#5d574e";
 
 /**
@@ -65,7 +65,7 @@ export function ogCard({
                 style={{
                   fontSize: 38,
                   fontWeight: 700,
-                  backgroundColor: TICKET,
+                  backgroundColor: STAMP,
                   color: PAPER,
                   padding: "8px 20px",
                 }}

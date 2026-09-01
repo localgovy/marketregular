@@ -18,7 +18,7 @@ export function ScorePlate({
     <span
       aria-hidden
       className={cn(
-        "stall-chip-sm type-nums inline-flex h-6 min-w-7 items-center justify-center bg-ticket px-1.5 text-sm text-foreground",
+        "stall-chip-sm type-nums inline-flex h-6 min-w-7 items-center justify-center bg-stamp px-1.5 text-sm text-chalk",
         className,
       )}
     >

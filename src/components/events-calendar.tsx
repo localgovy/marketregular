@@ -36,10 +36,10 @@ function MarketPips({ count, on }: { count: number; on: boolean }) {
       {Array.from({ length: shown }, (_, i) => (
         <span
           key={i}
-          className={cn("size-1.5 rounded-full", on ? "bg-ticket" : "bg-ticket/90")}
+          className={cn("size-1.5 rounded-full", on ? "bg-stamp" : "bg-stamp/90")}
         />
       ))}
-      <span className={cn("type-nums text-sm", on ? "text-chalk" : "text-ticket-ink")}>
+      <span className={cn("type-nums text-sm", on ? "text-chalk" : "text-stamp")}>
         {count}
       </span>
     </span>
@@ -272,11 +272,11 @@ export function EventsCalendar({
                   className={cn(
                     "flex min-h-[4.75rem] flex-col items-start gap-1 px-2 py-2 text-left transition-[background-color,color,transform,box-shadow] duration-200 ease-out motion-safe:hover:-translate-y-px sm:min-h-[5.5rem]",
                     on
-                      ? "bg-board text-chalk shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--ticket)_75%,white)]"
+                      ? "bg-board text-chalk shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--stamp)_75%,white)]"
                       : cell.isToday
-                        ? "bg-ticket/14 text-foreground"
+                        ? "bg-stamp/14 text-foreground"
                         : count
-                          ? "bg-ticket/[0.07] text-foreground hover:bg-ticket/14"
+                          ? "bg-stamp/[0.07] text-foreground hover:bg-stamp/14"
                           : "bg-background/35 text-foreground hover:bg-card/80",
                     !cell.inMonth && !on && "text-muted-foreground",
                   )}
@@ -285,7 +285,7 @@ export function EventsCalendar({
                     className={cn(
                       "type-nums text-lg",
                       on && "text-chalk",
-                      cell.isToday && !on && "font-medium text-ticket-ink",
+                      cell.isToday && !on && "font-medium text-stamp",
                     )}
                   >
                     {cell.day}
@@ -341,7 +341,7 @@ export function EventsCalendar({
                     <SaveButton kind="market" slug={event.marketSlug} name={event.marketName} />
                   }
                   hoursClassName="text-muted-foreground"
-                  nameClassName="text-ticket-ink underline-offset-2 hover:underline"
+                  nameClassName="text-stamp underline-offset-2 hover:underline"
                 />
                 <p className="text-sm text-muted-foreground">
                   {marketPlaceLine(event.address, event.city)}

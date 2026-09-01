@@ -44,7 +44,7 @@ function StallRow({
     >
       <span>{name}</span>
       {on ? (
-        <CheckMark className="size-3.5 shrink-0 text-ticket-ink" />
+        <CheckMark className="size-3.5 shrink-0 text-stamp" />
       ) : (
         <PlusMark className="size-3.5 shrink-0 text-muted-foreground" />
       )}

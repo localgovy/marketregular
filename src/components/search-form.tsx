@@ -213,7 +213,7 @@ export function SearchForm({
   return (
     <form
       ref={formRef}
-      className="bg-secondary shadow-[inset_4px_0_0_var(--ticket)] ring-1 ring-border"
+      className="bg-secondary shadow-[inset_4px_0_0_var(--stamp)] ring-1 ring-border"
       onSubmit={(event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
@@ -314,7 +314,7 @@ export function SearchForm({
               className={cn(
                 "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
                 applied.openNow
-                  ? "bg-ticket text-foreground"
+                  ? "bg-stamp text-chalk"
                   : "border border-input bg-card text-foreground hover:bg-muted",
               )}
             >

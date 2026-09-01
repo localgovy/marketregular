@@ -21,7 +21,7 @@ function CensusCell({
     <Link
       href={href}
       aria-label={`${formatCount(value)} ${word}`}
-      className="flex min-w-0 flex-col items-start gap-0.5 px-3 py-3 text-foreground outline-none transition-colors hover:bg-black/10 focus-visible:bg-black/10 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2.5 sm:px-4 sm:py-3.5"
+      className="flex min-w-0 flex-col items-start gap-0.5 px-3 py-3 text-chalk outline-none transition-colors hover:bg-white/12 focus-visible:bg-white/12 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2.5 sm:px-4 sm:py-3.5"
     >
       <span
         aria-hidden
@@ -46,8 +46,8 @@ export function AccountCensus({
   const stalls = saves.vendors.length;
 
   return (
-    <nav aria-label="On this account" className="bg-ticket">
-      <div className="mx-auto grid max-w-6xl grid-cols-3 divide-x divide-receipt/25">
+    <nav aria-label="On this account" className="bg-stamp">
+      <div className="mx-auto grid max-w-6xl grid-cols-3 divide-x divide-chalk/25">
         <CensusCell
           href="#saved"
           value={markets}

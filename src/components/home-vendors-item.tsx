@@ -31,7 +31,7 @@ function MarketAndList({ places }: { places: WeekPlace[] }) {
       {andSep(i, places.length)}
       <Link
         href={`/markets/${place.marketSlug}`}
-        className="font-medium text-ticket-ink underline underline-offset-2 hover:text-foreground"
+        className="font-medium text-stamp underline underline-offset-2 hover:text-foreground"
       >
         {place.marketName}
       </Link>

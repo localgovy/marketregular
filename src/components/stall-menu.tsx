@@ -9,7 +9,7 @@ export function StallMenu({ items }: { items: MenuItem[] }) {
   if (!items.length) return null;
 
   return (
-    <ul className="mt-3 bg-receipt ring-1 ring-border shadow-[inset_3px_0_0_var(--ticket)]">
+    <ul className="mt-3 bg-receipt ring-1 ring-border shadow-[inset_3px_0_0_var(--stamp)]">
       {items.map((item) => {
         const price = formatPrice(item.price_cents);
         const meta = [item.season, ...tagWords(item.dietary ?? [])].filter(Boolean);
@@ -28,7 +28,7 @@ export function StallMenu({ items }: { items: MenuItem[] }) {
               ) : null}
             </div>
             {price ? (
-              <span className="type-nums shrink-0 self-start whitespace-nowrap bg-ticket px-1.5 py-0.5 text-sm text-foreground">
+              <span className="type-nums shrink-0 self-start whitespace-nowrap bg-stamp px-1.5 py-0.5 text-sm text-chalk">
                 {price}
               </span>
             ) : null}

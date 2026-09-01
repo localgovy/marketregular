@@ -41,7 +41,7 @@ export function DayPlanPlus({ hall, className }: { hall: DayPlanHall; className?
       {on ? null : (
         <span
           aria-hidden
-          className="pointer-events-none absolute bottom-[calc(100%+4px)] left-1/2 z-20 w-max -translate-x-1/2 bg-ticket px-2 py-0.5 text-sm font-medium whitespace-nowrap text-foreground opacity-0 shadow-[0_1px_0_rgb(28_25_22/0.2)] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
+          className="pointer-events-none absolute bottom-[calc(100%+4px)] left-1/2 z-20 w-max -translate-x-1/2 bg-stamp px-2 py-0.5 text-sm font-medium whitespace-nowrap text-chalk opacity-0 shadow-[0_1px_0_rgb(28_25_22/0.2)] transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
         >
           Add to {DAY_PLAN_NAME}
         </span>

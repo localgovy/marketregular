@@ -23,10 +23,10 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
   return (
     <nav
       aria-label="On the floor"
-      className="mb-5 bg-card shadow-[inset_4px_0_0_var(--ticket)] ring-1 ring-border"
+      className="mb-5 bg-card shadow-[inset_4px_0_0_var(--stamp)] ring-1 ring-border"
     >
       <div className="flex flex-wrap items-baseline gap-x-3 px-3 py-2.5 sm:px-4">
-        <p className="text-base font-medium text-ticket-ink">
+        <p className="text-base font-medium text-stamp">
           <span className="type-nums">{openNow.length}</span>
           {` ${countLabel} open now`}
         </p>
@@ -50,7 +50,7 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
                   name={marketListName(market.name, market.city ?? "")}
                   hours={market.hours}
                   hall={hall}
-                  hoursClassName="text-ticket-ink"
+                  hoursClassName="text-stamp"
                   className="px-3 py-2.5 hover:bg-secondary/60 sm:px-4"
                   save={<SaveButton kind="market" slug={market.slug} name={market.name} />}
                 />

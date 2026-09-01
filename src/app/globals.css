@@ -66,7 +66,7 @@
   --header-bar-lg: 4rem;
   --header-stripe: 2px;
   --header-lg: calc(var(--header-bar-lg) + var(--header-stripe));
-  /* Warm paper, quiet leaf, honey only for "open now". */
+  /* Warm paper, quiet leaf. Live/open accents use stamp red. */
   --background: #f4f1ea;
   --foreground: #1c1916;
   --card: #faf7f0;
@@ -82,9 +82,8 @@
   --accent: #ece7dc;
   --accent-foreground: #1c1916;
   --stamp: #9e4a3e;
-  --ticket: #b07f2a;
-  /* Darker honey for type on paper. Fill gold stays --ticket (3.3:1 vs cream). */
-  --ticket-ink: #7a5414;
+  --ticket: var(--stamp);
+  --ticket-ink: var(--stamp);
   --board: #2c4a40;
   --chalk: #f3eee4;
   --receipt: #faf7f0;
@@ -100,7 +99,7 @@
   --input: #ddd6c8;
   --ring: #3a6558;
   --chart-1: #3a6558;
-  --chart-2: #b07f2a;
+  --chart-2: var(--stamp);
   --chart-3: #9e4a3e;
   --chart-4: #1c1916;
   --chart-5: #5e5a53;
@@ -674,11 +673,11 @@
   );
 }
 
-/* Enamel hall plate: bolted to the find board, gold pinstripe. */
+/* Enamel hall plate: bolted to the find board. */
 @utility find-go {
   background-color: var(--foreground);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--ticket) 78%, white),
+    inset 0 0 0 1px color-mix(in srgb, var(--stamp) 78%, white),
     inset 0 0 0 3px var(--foreground),
     0 3px 0 rgba(23, 22, 20, 0.38);
 }
@@ -700,7 +699,7 @@
     background-color: var(--board);
     background-clip: padding-box;
     border: 2px solid var(--secondary);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ticket) 70%, white);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--stamp) 70%, white);
   }
   &::-webkit-scrollbar-thumb:hover {
     background-color: var(--primary);

@@ -33,7 +33,7 @@ function ToggleChip({
 }) {
   const selected =
     tone === "open"
-      ? "find-chip inline-flex h-11 w-full items-center justify-center border border-[color-mix(in_srgb,var(--foreground)_35%,var(--ticket))] bg-ticket px-3 text-base font-medium text-foreground hover:bg-ticket sm:h-10 sm:w-auto sm:justify-start sm:px-3.5"
+      ? "find-chip inline-flex h-11 w-full items-center justify-center border border-[color-mix(in_srgb,var(--chalk)_40%,var(--stamp))] bg-stamp px-3 text-base font-medium text-chalk hover:bg-stamp sm:h-10 sm:w-auto sm:justify-start sm:px-3.5"
       : chipOn;
   return (
     <button
@@ -328,7 +328,7 @@ export function QuickFind({
           </span>
           <span
             aria-hidden
-            className="shrink-0 text-base font-medium text-ticket"
+            className="shrink-0 text-base font-medium text-receipt"
           >
             Go
           </span>

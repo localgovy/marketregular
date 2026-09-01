@@ -204,7 +204,7 @@ export function MarketVendors({
           <p className="mt-1 text-sm text-muted-foreground">Tap a name for the menu.</p>
           <form
             ref={formRef}
-            className="mt-4 bg-secondary shadow-[inset_4px_0_0_var(--ticket)] ring-1 ring-border"
+            className="mt-4 bg-secondary shadow-[inset_4px_0_0_var(--stamp)] ring-1 ring-border"
             onSubmit={(event) => {
               event.preventDefault();
               const data = new FormData(event.currentTarget);
@@ -272,7 +272,7 @@ export function MarketVendors({
                     className={cn(
                       "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
                       live.hereToday
-                        ? "bg-ticket text-foreground"
+                        ? "bg-stamp text-chalk"
                         : "border border-input bg-card text-foreground hover:bg-muted",
                     )}
                   >

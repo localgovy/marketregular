@@ -42,7 +42,7 @@ const tones: Record<PanelTone, ToneStyle> = {
   vendors: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
     ink: "paper",
-    mark: "bg-ticket/15 text-ticket",
+    mark: "bg-stamp/15 text-stamp",
   },
   menus: {
     shell: "bg-card text-card-foreground ring-1 ring-border",

@@ -249,7 +249,7 @@ export function FloorComposer({
       {rating || market || tagged || tags.length ? (
         <ul className="flex flex-wrap gap-1 px-3 pb-2">
           {rating ? (
-            <li className="stall-chip-sm inline-flex overflow-hidden bg-ticket text-foreground">
+            <li className="stall-chip-sm inline-flex overflow-hidden bg-stamp text-chalk">
               <button
                 type="button"
                 onClick={() => setExtra("stars")}
@@ -340,7 +340,7 @@ export function FloorComposer({
           className={cn(
             "stall-chip-sm type-nums inline-flex h-8 min-w-8 items-center justify-center px-2 text-sm",
             extra === "stars" || rating
-              ? "bg-ticket text-foreground"
+              ? "bg-stamp text-chalk"
               : "bg-secondary text-muted-foreground hover:bg-muted",
           )}
         >
@@ -377,7 +377,7 @@ export function FloorComposer({
                   className={cn(
                     "flex h-8 min-w-8 items-center justify-center rounded-full px-1.5 type-nums text-sm",
                     on
-                      ? "bg-ticket text-foreground"
+                      ? "bg-stamp text-chalk"
                       : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >

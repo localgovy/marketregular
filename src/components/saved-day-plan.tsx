@@ -13,7 +13,7 @@ import {
 import type { Vendor } from "@/types/database";
 
 const plate =
-  "bg-receipt ring-1 ring-border shadow-[inset_4px_0_0_var(--ticket)]";
+  "bg-receipt ring-1 ring-border shadow-[inset_4px_0_0_var(--stamp)]";
 const EMPTY_VENDORS: Array<Pick<Vendor, "slug" | "name">> = [];
 
 export function SavedRailSlip() {
@@ -21,11 +21,11 @@ export function SavedRailSlip() {
   if (!plan) return null;
 
   return (
-    <Link href={DAY_PLAN_SAVED_HREF} className="block bg-receipt px-3 py-2.5 shadow-[inset_4px_0_0_var(--ticket)] hover:bg-secondary/40">
+    <Link href={DAY_PLAN_SAVED_HREF} className="block bg-receipt px-3 py-2.5 shadow-[inset_4px_0_0_var(--stamp)] hover:bg-secondary/40">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3">
         <span className="text-base font-medium">{plan.hall.name}</span>
         {plan.hall.hours ? (
-          <Hours value={plan.hall.hours} className="bg-ticket px-1.5 py-0.5 text-foreground" />
+          <Hours value={plan.hall.hours} className="bg-stamp px-1.5 py-0.5 text-chalk" />
         ) : null}
       </div>
       <p className="mt-0.5 text-sm">{formatSlipDate(plan.hall.date)}</p>
@@ -66,7 +66,7 @@ export function SavedDayPlan({
             {plan.hall.hours ? (
               <Hours
                 value={plan.hall.hours}
-                className="bg-ticket px-1.5 py-0.5 text-foreground"
+                className="bg-stamp px-1.5 py-0.5 text-chalk"
               />
             ) : null}
           </div>
@@ -101,7 +101,7 @@ export function SavedDayPlan({
             <button
               type="button"
               onClick={show}
-              className="stall-chip-sm inline-flex h-8 items-center bg-ticket px-3 text-sm font-medium text-foreground hover:brightness-110"
+              className="stall-chip-sm inline-flex h-8 items-center bg-stamp px-3 text-sm font-medium text-chalk hover:brightness-110"
             >
               Open {DAY_PLAN_NAME}
             </button>
