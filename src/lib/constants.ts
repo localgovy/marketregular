@@ -47,6 +47,11 @@ export const CLAIM_INBOX = "noah@localgovy.com";
 export const CONTACT_NAME = "Noah Khan";
 export const CONTACT_EMAIL = CLAIM_INBOX;
 
+/** Corporation that operates MarketRegular. Ontario, no public street address. */
+export const LEGAL_ENTITY = "LocalGovy Inc.";
+export const LEGAL_JURISDICTION = "Ontario, Canada";
+export const LEGAL_EFFECTIVE = "2 September 2026";
+
 export const PROVINCES = [
   { code: "AB", name: "Alberta", tz: "America/Edmonton" },
   { code: "BC", name: "British Columbia", tz: "America/Vancouver" },

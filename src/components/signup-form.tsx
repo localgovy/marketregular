@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { signUpWithPassword } from "@/app/actions/auth";
 import { GoogleSignIn } from "@/components/google-sign-in";
+import { AuthLegalNote } from "@/components/auth-legal-note";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -76,6 +77,7 @@ export function SignupForm({ next = "/account" }: { next?: string }) {
         {state && "message" in state && state.message ? (
           <p className="text-sm text-primary">{state.message}</p>
         ) : null}
+        <AuthLegalNote />
       </form>
 
       <GoogleSignIn next={next} />

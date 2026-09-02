@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
 import { LAUNCH_COVERAGE } from "@/lib/launch";
-import { SITE_FOOTER_NAV } from "@/lib/nav";
+import { SITE_FOOTER_NAV, SITE_LEGAL_NAV } from "@/lib/nav";
 
 export function SiteFooter() {
   return (
@@ -21,12 +21,21 @@ export function SiteFooter() {
           </a>
           <span>– {LAUNCH_COVERAGE}, farmers&apos; markets, all in one place</span>
         </p>
-        <div className="flex flex-wrap gap-4">
-          {SITE_FOOTER_NAV.map((item) => (
-            <Link key={item.href} href={item.href} prefetch={false} className="hover:text-foreground">
-              {item.label}
-            </Link>
-          ))}
+        <div className="flex flex-col gap-2 sm:items-end">
+          <nav aria-label="Footer" className="flex flex-wrap gap-4 sm:justify-end">
+            {SITE_FOOTER_NAV.map((item) => (
+              <Link key={item.href} href={item.href} prefetch={false} className="hover:text-foreground">
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <nav aria-label="Privacy and terms" className="flex flex-wrap gap-4 sm:justify-end">
+            {SITE_LEGAL_NAV.map((item) => (
+              <Link key={item.href} href={item.href} prefetch={false} className="hover:text-foreground">
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
       </div>
     </footer>

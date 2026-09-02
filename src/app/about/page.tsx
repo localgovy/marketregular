@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MapleMark } from "@/components/marks";
-import { CONTACT_NAME, SITE_NAME, STUDIO_URL } from "@/lib/constants";
+import { CONTACT_EMAIL, CONTACT_NAME, SITE_NAME, STUDIO_URL } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_COVERAGE } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 
@@ -39,7 +39,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Why this list</h2>
+        <h2>Why {SITE_NAME}?</h2>
         <p className="mt-2 text-base leading-relaxed text-muted-foreground">
           There&apos;s no better time to shop local, we know that. But is there a better website
           or app available than {SITE_NAME} for shopping local? Fortunately for us, absolutely
@@ -69,6 +69,11 @@ export default function AboutPage() {
         <p className="mt-1 text-base text-muted-foreground">
           Founder, CEO of{" "}
           <a href={STUDIO_URL} rel="noreferrer" className="text-foreground hover:underline">LocalGovy</a>, the team behind {SITE_NAME}
+        </p>
+        <p className="mt-3 text-base">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium hover:underline">
+            {CONTACT_EMAIL}
+          </a>
         </p>
       </section>
     </div>

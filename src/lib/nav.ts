@@ -16,3 +16,9 @@ export const SITE_FOOTER_NAV = [
   ...SITE_NAV,
   ...SITE_META_NAV,
 ] as const;
+
+/** Footer only. Not in the header. */
+export const SITE_LEGAL_NAV = [
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
+] as const;

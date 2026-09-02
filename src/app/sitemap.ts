@@ -42,6 +42,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     loc("/feed", { changeFrequency: "daily", priority: 0.5 }),
     loc("/about", { changeFrequency: "yearly", priority: 0.3 }),
     loc("/contact", { changeFrequency: "yearly", priority: 0.3 }),
+    loc("/privacy", { changeFrequency: "yearly", priority: 0.3 }),
+    loc("/terms", { changeFrequency: "yearly", priority: 0.3 }),
     ...markets.map((market) =>
       loc(`/markets/${market.slug}`, {
         lastModified: market.updated_at ?? market.created_at,

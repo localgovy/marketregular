@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { requestPasswordReset, signInWithPassword } from "@/app/actions/auth";
 import { GoogleSignIn } from "@/components/google-sign-in";
+import { AuthLegalNote } from "@/components/auth-legal-note";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,7 +122,10 @@ export function LoginForm({
         ) : null}
       </form>
 
-      <GoogleSignIn next={next} />
+      <div className="grid gap-3">
+        <GoogleSignIn next={next} />
+        <AuthLegalNote />
+      </div>
 
       <p className="text-sm text-muted-foreground">
         No account?{" "}
