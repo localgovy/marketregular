@@ -83,7 +83,7 @@ export function HomeMosaic({
           Find out everything you want to know about markets in {LAUNCH_COVERAGE}.
         </p>
         <p className="mt-3 flex items-start gap-2 text-base font-medium leading-snug text-board sm:mt-3.5 sm:items-center sm:gap-2.5">
-          <MapleMark className="mt-0.5 h-7 w-14 shrink-0 shadow-[0_0_0_1px_rgba(0,0,0,0.2)] sm:mt-0" />
+          <MapleMark className="mt-0.5 h-7 w-14 shrink-0 text-stamp shadow-[0_0_0_1px_rgba(0,0,0,0.2)] sm:mt-0" />
           <span className="min-w-0 flex-1">
             <span className="flex flex-col gap-y-1 sm:block sm:text-pretty">
               <span className="sm:after:content-['_']">Made by Canadians,</span>
