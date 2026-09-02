@@ -40,6 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
     loc("/events", { changeFrequency: "daily", priority: 0.6 }),
     loc("/feed", { changeFrequency: "daily", priority: 0.5 }),
+    loc("/about", { changeFrequency: "yearly", priority: 0.3 }),
     loc("/contact", { changeFrequency: "yearly", priority: 0.3 }),
     ...markets.map((market) =>
       loc(`/markets/${market.slug}`, {

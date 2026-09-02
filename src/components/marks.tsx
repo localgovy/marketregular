@@ -120,6 +120,21 @@ export function PlateMark(props: MarkProps) {
   );
 }
 
+/** National Flag of Canada — 2:1, red–white–red, 11-point maple. */
+export function MapleMark({ className }: Pick<MarkProps, "className">) {
+  return (
+    <img
+      src="/brand/flag-canada.svg"
+      alt=""
+      width={56}
+      height={28}
+      className={className}
+      aria-hidden
+      draggable={false}
+    />
+  );
+}
+
 /** Eight-point chalk asterisk — rating. */
 export function AsteriskMark(props: MarkProps) {
   return (

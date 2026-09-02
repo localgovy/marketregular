@@ -10,7 +10,7 @@ import { hallHours, hoursOnIso } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { isoForWeekday } from "@/lib/landing";
 import { marketPlaceLine } from "@/lib/listing-copy";
-import { nextOpenLabel, nextOpenSlot } from "@/lib/schedule";
+import { nextOpenLabel, nextOpenSlot, onlyWeekdayLabel } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
 
 export function MarketCard({
@@ -43,6 +43,11 @@ export function MarketCard({
         ? nextOpenLabel(rows, market.province, clock)
         : null;
   const hours = sessionHours || hallHours(market, rows, iso, clock);
+  const onlyDay = onlyWeekdayLabel(rows);
+  const dayName = onlyDay?.replace(/ only$/, "") ?? null;
+  const whenRepeatsDay = Boolean(
+    dayName && when && when !== "Open now" && when.startsWith(`${dayName} `),
+  );
   return (
     <div className="h-full">
       <Card className="h-full overflow-visible transition-shadow hover:shadow-md">
@@ -64,11 +69,16 @@ export function MarketCard({
             <p className="line-clamp-3 text-sm text-muted-foreground">
               {market.about}
             </p>
-            {(openNow || (when && when !== "Open now") || hours) ? (
+            {(openNow || (when && when !== "Open now") || hours || onlyDay) ? (
             <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm font-medium text-primary">
               {openNow ? <NowLabel>Open now</NowLabel> : null}
-              {openNow && hours ? <Hours value={hours} className="text-primary" /> : null}
-              {!openNow && when && when !== "Open now" ? <span>{when}</span> : null}
+              {(openNow || whenRepeatsDay) && hours ? (
+                <Hours value={hours} className="text-primary" />
+              ) : null}
+              {!openNow && when && when !== "Open now" && !whenRepeatsDay ? (
+                <span>{when}</span>
+              ) : null}
+              {onlyDay ? <span>{onlyDay}</span> : null}
             </p>
             ) : null}
             <TagList tags={sortTagsForDisplay(market.tags).slice(0, 4)} />

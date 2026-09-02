@@ -171,6 +171,14 @@ export function formatSeasonRange(start: string | null, end: string | null) {
   return `${formatMonthDay(from)} to ${formatMonthDay(to)}`;
 }
 
+/** When every session is the same weekday: "Saturday only". */
+export function onlyWeekdayLabel(schedules: ScheduleRow[]) {
+  const days = [...new Set(schedules.map((row) => Number(row.weekday)))];
+  if (days.length !== 1) return null;
+  const day = WEEKDAYS[days[0]];
+  return day ? `${day} only` : null;
+}
+
 export function formatSchedule(row: ScheduleRow) {
   const day = WEEKDAYS[row.weekday] ?? "Day";
   const hours = formatHours(row.opens_at, row.closes_at);

@@ -6,14 +6,30 @@ import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { SearchField } from "@/components/search-field";
 import { buttonVariants } from "@/components/ui/button";
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
-import { SITE_NAV } from "@/lib/nav";
+import { SITE_META_NAV, SITE_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
+
+function HeaderSearch({ className }: { className?: string }) {
+  return (
+    <form action="/markets" className={cn("flex min-w-0 items-center gap-2", className)}>
+      <SearchField
+        name="q"
+        aria-label="Search market, vendor, cuisine, or neighbourhood"
+        placeholder="Search markets"
+        className="bg-card"
+      />
+      <button type="submit" className={cn(buttonVariants(), "shrink-0")}>
+        Find
+      </button>
+    </form>
+  );
+}
 
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md lg:border-b-2 lg:border-board">
       <div className="flex h-14 w-full items-center gap-3 px-4 lg:grid lg:h-16 lg:site-rail lg:gap-0 lg:px-0">
-        <div className="flex min-w-0 flex-1 items-center lg:h-16 lg:flex-none lg:border-r lg:border-board lg:bg-board lg:px-4">
+        <div className="flex min-w-0 flex-1 items-center md:flex-none lg:h-16 lg:flex-none lg:border-r lg:border-board lg:bg-board lg:px-4">
           <div className="flex min-w-0 items-center gap-2">
             <Link
               href="/"
@@ -34,10 +50,10 @@ export function SiteHeader() {
             </a>
           </div>
         </div>
-        <div className="flex min-w-0 items-center justify-end gap-3 lg:h-16 lg:px-6">
+        <div className="flex min-w-0 items-center justify-end gap-3 md:flex-1 lg:h-16 lg:px-6">
           <nav
             aria-label="Primary"
-            className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary lg:flex"
+            className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary xl:flex"
           >
             {SITE_NAV.map((item) => (
               <NavLink key={item.href} href={item.href} variant="tab">
@@ -45,34 +61,27 @@ export function SiteHeader() {
               </NavLink>
             ))}
           </nav>
-          <form
-            action="/markets"
-            className="hidden min-w-0 w-full max-w-md items-center gap-2 md:flex lg:ml-auto"
-          >
-            <SearchField
-              name="q"
-              aria-label="Search market, vendor, cuisine, or neighbourhood"
-              placeholder="Search market, vendor, cuisine, or neighbourhood"
-              className="bg-card"
-            />
-            <button type="submit" className={cn(buttonVariants({ size: "sm" }), "shrink-0")}>
-              Find
-            </button>
-          </form>
+          <HeaderSearch className="hidden min-w-48 flex-1 md:flex xl:ml-auto xl:max-w-md" />
           <SavesHydrator />
-          <Link
-            href="/contact"
-            prefetch={false}
-            className="hidden shrink-0 text-sm font-medium hover:underline sm:inline"
-          >
-            Contact
-          </Link>
+          <div className="hidden shrink-0 items-center gap-3 sm:flex">
+            {SITE_META_NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                prefetch={false}
+                className="text-sm font-medium hover:underline"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
           <HeaderAccount />
         </div>
       </div>
+      <HeaderSearch className="border-t border-border px-4 py-2 md:hidden" />
       <nav
         aria-label="Primary"
-        className="header-stripe-paper grid grid-cols-5 divide-x divide-border border-t border-border bg-secondary lg:hidden"
+        className="header-stripe-paper grid grid-cols-5 divide-x divide-border border-t border-border bg-secondary xl:hidden"
       >
         {SITE_NAV.map((item) => (
           <NavLink
