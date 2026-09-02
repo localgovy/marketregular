@@ -10,7 +10,7 @@ import { TorontoWeek } from "@/components/toronto-week";
 import type { DirectoryCensus } from "@/lib/data/catalog";
 import { FIND_ORIGINS, FIND_PRODUCTS, FIND_SETUP, homeAreas, tagsPresent } from "@/lib/find-paths";
 import { LAUNCH_CITY, LAUNCH_COVERAGE } from "@/lib/launch";
-import type { UpcomingGroup } from "@/lib/upcoming";
+import { slimUpcomingGroups, type UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { Market, Vendor } from "@/types/database";
 
@@ -40,23 +40,6 @@ export function HomeMosaic({
     lat: market.lat,
     lng: market.lng,
   }));
-  const mapMarkets = markets.map((market) => ({
-    id: market.id,
-    name: market.name,
-    slug: market.slug,
-    lat: market.lat,
-    lng: market.lng,
-    city: market.city,
-    address: market.address,
-  }));
-  const savedMarkets = markets.map((market) => ({
-    id: market.id,
-    slug: market.slug,
-    name: market.name,
-    address: market.address,
-    rating_avg: market.rating_avg,
-    review_count: market.review_count,
-  }));
   const openGroup = week.find((group) => group.open);
   const ticker =
     openGroup?.slots.map((slot) => ({
@@ -64,11 +47,7 @@ export function HomeMosaic({
       name: slot.market.name,
       slug: slot.market.slug,
       hours: slot.hours,
-      address: slot.market.address,
       city: slot.market.city,
-      lat: slot.market.lat,
-      lng: slot.market.lng,
-      date: openGroup.iso,
     })) ?? [];
 
   return (
@@ -117,7 +96,7 @@ export function HomeMosaic({
             />
           </HomePanel>
 
-          <TorontoWeek groups={week} />
+          <TorontoWeek groups={slimUpcomingGroups(week)} />
 
           <HomePanel
             id="map"
@@ -129,16 +108,12 @@ export function HomeMosaic({
             className="order-last xl:order-none"
             flush
           >
-            <MarketMapLazy
-              markets={mapMarkets}
-              load="click"
-              className="h-56 w-full overflow-hidden xl:h-72"
-            />
+            <MarketMapLazy load="click" className="h-56 w-full overflow-hidden xl:h-72" />
           </HomePanel>
         </div>
 
         <div className="flex min-w-0 flex-col gap-5">
-          <SavedRail markets={savedMarkets} />
+          <SavedRail />
           <VendorsTodayPanel rows={sellingToday} />
           <VendorsWeekPanel picks={weekVendors} />
         </div>

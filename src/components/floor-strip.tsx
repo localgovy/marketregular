@@ -8,11 +8,7 @@ type OpenMarket = {
   name: string;
   slug: string;
   hours: string;
-  address: string;
   city?: string;
-  lat: number;
-  lng: number;
-  date?: string;
 };
 
 export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {

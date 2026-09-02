@@ -1,6 +1,6 @@
 "use client";
 
-import { GoogleAnalytics } from "@next/third-parties/google";
+import Script from "next/script";
 import { Analytics, type BeforeSendEvent } from "@vercel/analytics/next";
 import { usePathname } from "next/navigation";
 import { GA_MEASUREMENT_ID } from "@/lib/constants";
@@ -18,7 +18,16 @@ export function SiteAnalytics() {
   return (
     <>
       <Analytics beforeSend={beforeSend} />
-      <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        strategy="lazyOnload"
+      />
+      <Script id="ga-init" strategy="lazyOnload">{`
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','${GA_MEASUREMENT_ID}');
+`}</Script>
     </>
   );
 }

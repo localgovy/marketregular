@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { NowLabel } from "@/components/now-label";

@@ -14,10 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { FLOOR_TAGS } from "@/lib/constants";
 import { formatPriceLevel } from "@/lib/format";
 import { NOTE_PROMPTS } from "@/lib/floor-note";
+import { distanceMeters, type GeoMarket } from "@/lib/geo";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import { cn } from "@/lib/utils";
 import type { FloorItem, StallRef } from "@/types/database";
-import type { GeoMarket } from "@/lib/geo";
 
 type Extra = "stars" | "place" | "tags" | null;
 type PlaceStep = "market" | "vendor";
@@ -56,7 +56,17 @@ export function FloorComposer({
   initialVendorId?: string;
   className?: string;
 }) {
-  const { nearby, coords } = useGeo();
+  const { coords } = useGeo();
+  const nearby = useMemo(() => {
+    if (!coords) return [];
+    return markets
+      .map((market) => ({
+        ...market,
+        distance: distanceMeters(coords, { lat: market.lat, lng: market.lng }),
+      }))
+      .filter((market) => market.distance <= market.geofence_radius_m)
+      .sort((a, b) => a.distance - b.distance);
+  }, [coords, markets]);
   const here = nearby[0];
   const pathname = usePathname() || "/";
   const cookieIn = useAuthCookie(signedInProp);

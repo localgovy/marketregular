@@ -17,6 +17,9 @@ export function SiteWordmark({
         aria-hidden
         width={506}
         height={75}
+        loading="lazy"
+        decoding="async"
+        fetchPriority="low"
         className={cn("site-wordmark-green", className)}
       />
     );

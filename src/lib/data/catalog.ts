@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { isSupabaseConfigured, provinceTz } from "@/lib/constants";
-import { DIRECTORY_CENSUS_ID, LAUNCH_CITY_FILTER, isLaunchCity } from "@/lib/launch";
+import { DIRECTORY_CENSUS_ID } from "@/lib/launch";
 import {
   localFeatured,
   localMarketBySlug,
@@ -119,6 +119,10 @@ export type DirectoryCensus = {
   talliedAt: string | null;
 };
 
+/**
+ * Published directory totals for the homepage ticket. Kept in `directory_census`
+ * and refreshed on listing writes — not a hardcoded city list.
+ */
 export async function getDirectoryCensus(): Promise<DirectoryCensus> {
   const supabase = publicDb();
   if (!supabase) {
@@ -178,12 +182,11 @@ export const listMarkets = cache(async function listMarkets(): Promise<Market[]>
       .from("markets")
       .select(MARKET_PUBLIC)
       .eq("status", "published")
-      .in("city", LAUNCH_CITY_FILTER)
       .order("name")
       .range(from, to),
   );
   if (error) return localMarkets();
-  return data.filter((market) => isLaunchCity(market.city)).map(withListingStats);
+  return data.map(withListingStats);
 });
 
 export const listVendors = cache(async function listVendors(): Promise<Vendor[]> {
@@ -253,7 +256,7 @@ export const listStalls = cache(async function listStalls(): Promise<StallRef[]>
     const market = Array.isArray(marketRaw) ? marketRaw[0] : marketRaw;
     if (!market || typeof market !== "object") return [];
     const hall = market as { city: string; status: string };
-    if (hall.status !== "published" || !isLaunchCity(hall.city)) return [];
+    if (hall.status !== "published") return [];
     return [
       {
         id: v.id,
@@ -293,7 +296,7 @@ async function hallsByVendorIds(vendorIds: string[]): Promise<Map<string, Vendor
   }>) {
     const raw = row.markets;
     const market = Array.isArray(raw) ? raw[0] : raw;
-    if (!market || market.status !== "published" || !isLaunchCity(market.city)) continue;
+    if (!market || market.status !== "published") continue;
     stalls.push({
       id: row.vendor_id,
       name: "",
@@ -393,8 +396,7 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
     let query = supabase
       .from("markets")
       .select(MARKET_PUBLIC)
-      .eq("status", "published")
-      .in("city", LAUNCH_CITY_FILTER);
+      .eq("status", "published");
     if (marketOr.length) query = query.or(marketOr.join(","));
     if (filters.province) query = query.eq("province", filters.province);
     if (filters.city) query = query.ilike("city", filters.city);
@@ -438,7 +440,7 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
     schedulesByMarket.set(row.market_id, list);
   }
 
-  let markets = marketRows.filter((market) => isLaunchCity(market.city)).map(withListingStats);
+  let markets = marketRows.map(withListingStats);
   const atLaunch = new Set(stalls.map((stall) => stall.id));
   let vendors = vendorRows.map(hydrateVendor).filter((vendor) => atLaunch.has(vendor.id));
   if (raw) {
@@ -563,7 +565,6 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
   // no such row means the listing is gone, and the seed must not resurrect it.
   if (error) return localMarketBySlug(slug);
   if (!market) return null;
-  if (!isLaunchCity((market as Market).city)) return null;
 
   const [{ data: schedules }, { data: links }, { data: posts }] = await Promise.all([
     supabase.from("market_schedules").select(SCHEDULE_PUBLIC).eq("market_id", market.id),
@@ -705,7 +706,7 @@ export async function getVendorBySlug(slug: string): Promise<VendorDetail | null
 
   const vendorMarkets = (links ?? []).flatMap((link: { market_id: string; stall: string | null; days: number[] }) => {
     const m = marketMap.get(link.market_id);
-    if (!m || !isLaunchCity(m.city)) return [];
+    if (!m) return [];
     return [{ ...m, stall: link.stall, days: link.days, schedules: schedulesByMarket.get(m.id) ?? [] }];
   });
   if (!vendorMarkets.length) return null;
@@ -783,7 +784,7 @@ export async function getLivePosts(limit = 20): Promise<Post[]> {
       }
     >
   )
-    .filter((p) => !p.markets?.city || isLaunchCity(p.markets.city)).map((p) => ({
+    .map((p) => ({
     ...p,
     author_name: p.profiles?.display_name ?? "Regular",
     author_avatar: p.profiles?.avatar_url,
@@ -823,7 +824,6 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
       }
     >
   )
-    .filter((p) => !p.markets?.city || isLaunchCity(p.markets.city))
     .map((p) =>
       reviewFromPost({
         ...p,
@@ -842,7 +842,6 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
       }
     >
   )
-    .filter((r) => !r.markets?.city || isLaunchCity(r.markets.city))
     .map((r) =>
     reviewFromReview({
       ...r,
@@ -866,10 +865,9 @@ export async function getFeaturedMarkets() {
     .select(MARKET_PUBLIC)
     .eq("status", "published")
     .eq("featured", true)
-    .in("city", LAUNCH_CITY_FILTER)
     .order("name");
   if (!data?.length) return localFeatured();
-  return (data as Market[]).filter((market) => isLaunchCity(market.city)).map(withListingStats);
+  return (data as Market[]).map(withListingStats);
 }
 
 export async function getOpenToday() {

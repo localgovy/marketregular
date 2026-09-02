@@ -29,7 +29,7 @@ import { TimeAgo } from "@/components/time-ago";
 import { decodeFloorBody } from "@/lib/floor-note";
 import { tagLabel } from "@/lib/find-paths";
 import type { GeoMarket } from "@/lib/geo";
-import type { UpcomingGroup } from "@/lib/upcoming";
+import { slimUpcomingGroups, type UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { ClaimRequest, Market, Profile, StallRef, Vendor } from "@/types/database";
 import type { AccountPost } from "@/lib/data/account";
@@ -136,7 +136,7 @@ export function AccountDesk({
 
           <TorontoWeek
             id="week"
-            groups={week}
+            groups={slimUpcomingGroups(week)}
             kicker="From your saved list"
             title="This week"
             how="Your saved markets' schedules throughout the week, click on a name for more info."

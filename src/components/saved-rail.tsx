@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { getSavedRailMarkets, type SavedRailMarket } from "@/app/actions/home-lazy";
 import { HomePanel } from "@/components/home-panel";
 import { ListingScore } from "@/components/listing-score";
 import { TicketMark } from "@/components/marks";
@@ -10,17 +12,39 @@ import { EMPTY_SAVES, type Saves } from "@/lib/saves";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import type { Market, Vendor } from "@/types/database";
 
-export function SavedRail({
-  markets,
-}: {
-  markets: Array<Pick<Market, "id" | "slug" | "name" | "address" | "rating_avg" | "review_count">>;
-}) {
+export function SavedRail() {
   const saves = useSaves();
   const signedIn = useAuthCookie();
-  const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
+  const [markets, setMarkets] = useState<SavedRailMarket[]>([]);
+  const [ready, setReady] = useState(false);
+  const saveKey = saves.markets.join(" ");
+
+  useEffect(() => {
+    if (!signedIn || !saves.markets.length) {
+      setMarkets([]);
+      setReady(true);
+      return;
+    }
+    let cancelled = false;
+    setReady(false);
+    void getSavedRailMarkets(saves.markets).then((rows) => {
+      if (cancelled) return;
+      setMarkets(rows);
+      setReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn, saveKey, saves.markets]);
+
+  const bySlug = new Map(markets.map((market) => [market.slug, market]));
+  const savedMarkets = saves.markets.flatMap((slug) => {
+    const market = bySlug.get(slug);
+    return market ? [market] : [];
+  });
   const vendorCount = saves.vendors.length;
 
-  if (!signedIn || (!savedMarkets.length && !vendorCount)) return null;
+  if (!signedIn || !ready || (!savedMarkets.length && !vendorCount)) return null;
 
   return (
     <HomePanel

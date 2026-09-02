@@ -90,7 +90,14 @@ export function ReviewCard({
         <div className="mt-2 grid grid-cols-2 gap-2">
           {photos.map((src) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={src} src={src} alt="" className="h-32 w-full object-cover" />
+            <img
+              key={src}
+              src={src}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="h-32 w-full object-cover"
+            />
           ))}
         </div>
       ) : null}

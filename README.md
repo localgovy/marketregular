@@ -13,7 +13,9 @@ Web first at [www.marketregular.com](https://www.marketregular.com). Source: [gi
 
 The public directory works from the bundled Toronto seed data until a Supabase project is connected. Auth, live posts, reviews, photos, admin, and vendor claims require Supabase.
 
-Launch covers the municipalities in `LAUNCH_CITIES` (`src/lib/launch.ts`). Markets in any other city stay hidden, and the same list gates the `directory_census` counts, so change both together.
+Launch covers Toronto and nearby halls currently published in the directory.
+The homepage census counts every published market, stall, and menu item — not a
+city allowlist — so new cities are included as soon as they are published.
 
 ## Local development
 

@@ -1,4 +1,4 @@
-/** Launch covers Toronto and the Greater Toronto Area. Cities outside this list stay in seed, hidden. */
+/** City used in titles and the default map. */
 export const LAUNCH_CITY = "Toronto";
 /** User-facing coverage when the rest of the GTA needs naming. */
 export const LAUNCH_COVERAGE = "Toronto, including GTA";
@@ -12,22 +12,31 @@ export const LAUNCH_ZOOM = 9;
 /** Census row id. Opaque — not a display name. */
 export const DIRECTORY_CENSUS_ID = "toronto";
 
-/** Official GTA municipalities plus city values used on listings. */
+/**
+ * Bundled seed and place chips. Live listings and the homepage census follow
+ * `status = published`, so a new city is counted as soon as it is published.
+ */
 export const LAUNCH_CITIES = [
   "Acton",
   "Ajax",
+  "Ancaster",
   "Aurora",
+  "Barrie",
+  "Bradford",
   "Brampton",
   "Brock",
   "Burlington",
   "Caledon",
   "Clarington",
+  "Dundas",
   "East Gwillimbury",
   "East York",
   "Etobicoke",
   "Georgetown",
   "Georgina",
   "Halton Hills",
+  "Hamilton",
+  "Innisfil",
   "King",
   "King City",
   "Markham",
@@ -43,16 +52,16 @@ export const LAUNCH_CITIES = [
   "Richmond Hill",
   "Scarborough",
   "Scugog",
+  "Stoney Creek",
   "Stouffville",
   "Toronto",
   "Uxbridge",
   "Vaughan",
+  "Waterdown",
   "Whitby",
   "Whitchurch-Stouffville",
   "Woodbridge",
 ] as const;
-
-export const LAUNCH_CITY_FILTER: string[] = [...LAUNCH_CITIES];
 
 const LAUNCH_CITY_SET = new Set(LAUNCH_CITIES.map((city) => city.toLowerCase()));
 

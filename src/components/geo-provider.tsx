@@ -1,26 +1,16 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { distanceMeters, type GeoMarket } from "@/lib/geo";
-
-export type { GeoMarket };
+import { createContext, useCallback, useContext, useState } from "react";
 
 type GeoState = {
   coords: { lat: number; lng: number } | null;
   error: string | null;
-  nearby: Array<GeoMarket & { distance: number }>;
   request: () => void;
 };
 
 const GeoContext = createContext<GeoState | null>(null);
 
-export function GeoProvider({
-  markets,
-  children,
-}: {
-  markets: GeoMarket[];
-  children: React.ReactNode;
-}) {
+export function GeoProvider({ children }: { children: React.ReactNode }) {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,21 +29,8 @@ export function GeoProvider({
     );
   }, []);
 
-  const nearby = useMemo(() => {
-    if (!coords) return [];
-    return markets
-      .map((m) => ({
-        ...m,
-        distance: distanceMeters(coords, { lat: m.lat, lng: m.lng }),
-      }))
-      .filter((m) => m.distance <= m.geofence_radius_m)
-      .sort((a, b) => a.distance - b.distance);
-  }, [coords, markets]);
-
   return (
-    <GeoContext.Provider value={{ coords, error, nearby, request }}>
-      {children}
-    </GeoContext.Provider>
+    <GeoContext.Provider value={{ coords, error, request }}>{children}</GeoContext.Provider>
   );
 }
 
@@ -63,7 +40,6 @@ export function useGeo() {
     return {
       coords: null,
       error: null,
-      nearby: [] as Array<GeoMarket & { distance: number }>,
       request: () => undefined,
     };
   }

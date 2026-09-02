@@ -1,8 +1,5 @@
-import { HomeGeo } from "@/components/home-geo";
-import { listMarkets } from "@/lib/data/catalog";
-import { toGeoMarket } from "@/lib/geo";
+import { GeoProvider } from "@/components/geo-provider";
 
-export async function SiteGeo({ children }: { children: React.ReactNode }) {
-  const markets = await listMarkets();
-  return <HomeGeo markets={markets.map(toGeoMarket)}>{children}</HomeGeo>;
+export function SiteGeo({ children }: { children: React.ReactNode }) {
+  return <GeoProvider>{children}</GeoProvider>;
 }

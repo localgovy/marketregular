@@ -1,5 +1,4 @@
 import "server-only";
-import { isLaunchCity } from "@/lib/launch";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 type MarketRow = { slug: string; city: string; status: string };
@@ -10,7 +9,7 @@ function firstRelation<T>(value: unknown): T | null {
 }
 
 /**
- * A listing that goes to draft, or a hall outside launch coverage, used to be a
+ * A listing that goes to draft used to be a public URL. Answering those with a
  * public URL. Answering those with a 404 leaves them in Search Console for
  * months, so send them somewhere useful instead. Anonymous reads are filtered
  * to published rows, so telling "retired" apart from "never existed" needs the
@@ -46,7 +45,7 @@ export async function retiredVendorTarget(slug: string): Promise<string | null> 
 
   for (const row of halls ?? []) {
     const market = firstRelation<MarketRow>((row as { markets?: unknown }).markets);
-    if (!market || market.status !== "published" || !isLaunchCity(market.city)) continue;
+    if (!market || market.status !== "published") continue;
     return `/markets/${market.slug}`;
   }
   return "/markets";

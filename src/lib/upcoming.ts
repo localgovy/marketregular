@@ -22,6 +22,45 @@ export type UpcomingGroup = {
   slots: UpcomingSlot[];
 };
 
+/** Visible rows before “Show more” on a week day card. */
+export const WEEK_DAY_PAGE = 7;
+
+/** Fields the week UI actually paints. Keeps full Market rows out of the client payload. */
+export type WeekListMarket = Pick<Market, "id" | "slug" | "name" | "city">;
+
+export type WeekListSlot = {
+  market: WeekListMarket;
+  hours: string;
+  open: boolean;
+};
+
+export type WeekListGroup = {
+  id: string;
+  label: string;
+  date: string;
+  open: boolean;
+  slots: WeekListSlot[];
+};
+
+export function slimUpcomingGroups(groups: UpcomingGroup[]): WeekListGroup[] {
+  return groups.map((group) => ({
+    id: group.id,
+    label: group.label,
+    date: group.date,
+    open: group.open,
+    slots: group.slots.map((slot) => ({
+      hours: slot.hours,
+      open: slot.open,
+      market: {
+        id: slot.market.id,
+        slug: slot.market.slug,
+        name: slot.market.name,
+        city: slot.market.city,
+      },
+    })),
+  }));
+}
+
 function torontoDateLabel(now: Date, offset: number, tz: string) {
   const ymd = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
