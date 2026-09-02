@@ -1,8 +1,6 @@
-import { DayPlanHoursRow } from "@/components/day-plan-plus";
+import { HoursRow } from "@/components/hours-row";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
-import { torontoYmd } from "@/lib/events-month";
-import type { DayPlanHall } from "@/lib/day-plan";
 import { marketListName } from "@/lib/listing-copy";
 
 type OpenMarket = {
@@ -19,7 +17,6 @@ type OpenMarket = {
 
 export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
   const countLabel = openNow.length === 1 ? "market" : "markets";
-  const date = torontoYmd();
 
   return (
     <nav
@@ -43,30 +40,18 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
       </div>
       {openNow.length ? (
         <ul className="grid gap-px border-t border-border bg-border sm:grid-cols-2">
-          {openNow.map((market) => {
-            const hall: DayPlanHall = {
-              slug: market.slug,
-              name: market.name,
-              address: market.address,
-              lat: market.lat,
-              lng: market.lng,
-              hours: market.hours,
-              date: market.date ?? date,
-            };
-            return (
-              <li key={market.id} className="bg-card">
-                <DayPlanHoursRow
-                  href={`/markets/${market.slug}`}
-                  name={marketListName(market.name, market.city ?? "")}
-                  hours={market.hours}
-                  hall={hall}
-                  hoursClassName="text-stamp"
-                  className="px-3 py-2.5 hover:bg-secondary/60 sm:px-4"
-                  save={<SaveButton kind="market" slug={market.slug} name={market.name} />}
-                />
-              </li>
-            );
-          })}
+          {openNow.map((market) => (
+            <li key={market.id} className="bg-card">
+              <HoursRow
+                href={`/markets/${market.slug}`}
+                name={marketListName(market.name, market.city ?? "")}
+                hours={market.hours}
+                hoursClassName="text-stamp"
+                className="px-3 py-2.5 hover:bg-secondary/60 sm:px-4"
+                save={<SaveButton kind="market" slug={market.slug} name={market.name} />}
+              />
+            </li>
+          ))}
         </ul>
       ) : (
         <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">

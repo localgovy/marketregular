@@ -1,13 +1,12 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DayPlanPlus } from "@/components/day-plan-plus";
 import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { Hours } from "@/components/hours";
-import { hallFromMarket, hoursOnIso } from "@/lib/day-plan";
+import { hallHours, hoursOnIso } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { isoForWeekday } from "@/lib/landing";
 import { marketPlaceLine } from "@/lib/listing-copy";
@@ -24,7 +23,7 @@ export function MarketCard({
   schedules?: MarketSchedule[];
   /** When the directory is filtered to one weekday, show that session, not the next one. */
   weekdays?: number[];
-  /** Frozen from the server so open-now and the plus stamp match first paint. */
+  /** Frozen from the server so open-now matches first paint. */
   now: string;
 }) {
   const clock = new Date(now);
@@ -43,14 +42,12 @@ export function MarketCard({
       : rows.length
         ? nextOpenLabel(rows, market.province, clock)
         : null;
-  const hall = hallFromMarket(market, rows, iso, clock);
-  const hours = sessionHours || hall.hours;
+  const hours = sessionHours || hallHours(market, rows, iso, clock);
   return (
     <div className="h-full">
       <Card className="h-full overflow-visible transition-shadow hover:shadow-md">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <DayPlanPlus hall={hall} />
             <SaveButton kind="market" slug={market.slug} name={market.name} />
             <p className="type-kicker min-w-0 flex-1 text-muted-foreground">
               {marketPlaceLine(market.address, market.city)}

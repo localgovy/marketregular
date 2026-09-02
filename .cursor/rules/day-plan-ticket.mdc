@@ -1,21 +1,19 @@
 ---
-description: The day planner is a ticket, never a slip
+description: Do not reintroduce a day planner, ticket, or plus-to-plan control
 alwaysApply: true
 ---
 
-# Day planner is a ticket
+# No day-plan ticket
 
-The planning device is a **ticket**. User-facing copy must use `DAY_PLAN_NAME` / `DAY_PLAN_TODAY` / `DAY_PLAN_SAVED_HREF` from `@/lib/constants`. Never call it a slip or a planner.
+There is no day planner. Markets and stalls use **Save** (`SaveButton`) only. Do not add plus stamps, punch controls, “Add to ticket”, overlays, hints, or localStorage for a visit plan.
 
 ```tsx
 // BAD
-<p>Today’s slip</p>
-<span>Add to planner</span>
+<DayPlanPlus hall={hall} />
+<span>Add to ticket</span>
 
 // GOOD
-import { DAY_PLAN_NAME, DAY_PLAN_TODAY } from "@/lib/constants";
-<p>{DAY_PLAN_TODAY}</p>
-<span>Add to {DAY_PLAN_NAME}</span>
+<SaveButton kind="market" slug={market.slug} name={market.name} />
 ```
 
-The sign-in overlay (`GuestSignInSlip`) is a different surface. `bg-ticket` / `--ticket` is the yellow plate color, not this name.
+The sign-in overlay (`GuestSignInSlip`) is a different surface. `bg-ticket` / `--ticket` is the plate color, not this feature. Inbox week mail (`EmailVisitButton`) is also separate — do not rebuild it as a ticket.

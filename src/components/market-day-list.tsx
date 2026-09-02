@@ -1,13 +1,10 @@
 import Link from "next/link";
-import { DayPlanPlus } from "@/components/day-plan-plus";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
-import { hallFromMarket } from "@/lib/day-plan";
 import { marketPlaceLine } from "@/lib/listing-copy";
 import type { MarketDayRow } from "@/lib/landing";
-import type { MarketSchedule } from "@/types/database";
 
 /**
  * Hours sit in an auto column that cannot shrink, and nothing here clips: this list is
@@ -15,21 +12,14 @@ import type { MarketSchedule } from "@/types/database";
  */
 export function MarketDayList({
   rows,
-  scheduleMap,
 }: {
   rows: MarketDayRow[];
-  scheduleMap: Map<string, MarketSchedule[]>;
 }) {
   if (!rows.length) return null;
 
   return (
     <ul className="mt-4 rounded-md bg-card ring-1 ring-border">
       {rows.map((row) => {
-        const hall = hallFromMarket(
-          row.market,
-          scheduleMap.get(row.market.id) ?? [],
-          row.date,
-        );
         return (
           <li
             key={row.market.id}
@@ -66,10 +56,7 @@ export function MarketDayList({
                 {row.openNow ? <NowLabel>Open now</NowLabel> : null}
                 <Hours value={row.hours} className="text-foreground" />
               </span>
-              <span className="flex items-center gap-1">
-                <DayPlanPlus hall={hall} />
-                <SaveButton kind="market" slug={row.market.slug} name={row.market.name} />
-              </span>
+              <SaveButton kind="market" slug={row.market.slug} name={row.market.name} />
             </span>
           </li>
         );

@@ -72,7 +72,6 @@ function MarketList({
 }) {
   return (
     <MarketDayList
-      scheduleMap={scheduleMap}
       rows={markets.map((market) =>
         marketNextOpenRow(
           market,

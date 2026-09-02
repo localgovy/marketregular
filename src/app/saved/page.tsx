@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SavedDayPlan } from "@/components/saved-day-plan";
 import { SavedDesk } from "@/components/saved-rail";
 import { loadMySaves } from "@/lib/data/account";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
 import { pageMeta } from "@/lib/seo";
-import { DAY_PLAN_NAME } from "@/lib/constants";
 import { EMPTY_SAVES } from "@/lib/saves";
 
 export const metadata: Metadata = pageMeta({
   title: "Saved markets and stalls",
   path: "/saved",
-  description: `Markets, stalls, and today’s ${DAY_PLAN_NAME} saved to your account.`,
+  description: "Markets and stalls saved to your account.",
   index: false,
 });
 
@@ -28,7 +26,7 @@ export default async function SavedPage() {
       <h1>Saved</h1>
       {profile ? (
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
-          Markets, stalls, and today’s {DAY_PLAN_NAME} on this account.
+          Markets and stalls on this account.
         </p>
       ) : (
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
@@ -42,12 +40,9 @@ export default async function SavedPage() {
           to save markets and stalls to this account.
         </p>
       )}
-      <div className="grid gap-10">
-        <SavedDayPlan vendors={vendors} />
-        {profile ? (
-          <SavedDesk markets={markets} vendors={vendors} followAccount initialSaves={saves} />
-        ) : null}
-      </div>
+      {profile ? (
+        <SavedDesk markets={markets} vendors={vendors} followAccount initialSaves={saves} />
+      ) : null}
     </div>
   );
 }

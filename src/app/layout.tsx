@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Barlow_Condensed, Mona_Sans, Schibsted_Grotesk } from "next/font/google";
 import Script from "next/script";
 import { AppToaster } from "@/components/app-toaster";
-import { DayPlanRoot } from "@/components/day-plan-root";
+import { SiteGeo } from "@/components/site-geo";
 import { GuestSignInSlip } from "@/components/guest-signin-slip";
 import { SiteAnalytics } from "@/components/site-analytics";
 import { SiteHeader } from "@/components/site-header";
@@ -67,7 +67,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${grotesk.variable} ${display.variable} ${nums.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <DayPlanRoot>
+        <SiteGeo>
           <JsonLd data={websiteJsonLd()} />
           <SiteHeader />
           <main className="flex-1">{children}</main>
@@ -76,7 +76,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <GuestSignInSlip />
           </Suspense>
           <AppToaster />
-        </DayPlanRoot>
+        </SiteGeo>
         <Script id="oauth-hash-scrub" strategy="beforeInteractive">
           {OAUTH_HASH_SCRUB_SCRIPT}
         </Script>

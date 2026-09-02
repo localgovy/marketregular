@@ -5,7 +5,6 @@ import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
 import { ListingScore } from "@/components/listing-score";
-import { DayPlanPlus } from "@/components/day-plan-plus";
 import { SaveButton } from "@/components/save-button";
 import { ListingAlsoLinks } from "@/components/listing-also-links";
 import { ListingComposer } from "@/components/listing-composer";
@@ -19,7 +18,6 @@ import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok, ListingF
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
-import { hallFromMarket } from "@/lib/day-plan";
 import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
@@ -79,7 +77,6 @@ export default async function MarketPage({
       ? avgRated.reduce((sum, item) => sum + (item.rating ?? 0), 0) / avgRated.length
       : null;
 
-  const hall = hallFromMarket(market, market.schedules, undefined, now);
   const siblings = await Promise.all(
     siblingSlugs(market.slug).map(async (slug) => {
       const other = await getMarketBySlug(slug);
@@ -109,7 +106,6 @@ export default async function MarketPage({
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{market.name}</h1>
         <div className="flex items-center gap-1">
-          <DayPlanPlus hall={hall} className="size-14" />
           <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
         </div>
       </div>
@@ -188,9 +184,7 @@ export default async function MarketPage({
         <div className="lg:col-span-2">
           <MarketVendors
             vendors={market.vendors}
-            market={market}
             todayWeekday={weekdayInToronto(now)}
-            now={now.toISOString()}
           />
         </div>
         <div className="lg:col-span-2">

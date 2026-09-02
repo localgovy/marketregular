@@ -16,10 +16,9 @@ import {
   tagLabel,
   tagsPresent,
 } from "@/lib/find-paths";
-import { hallFromStall } from "@/lib/day-plan";
 import { vendorFilterTags } from "@/lib/vendor-tags";
 import { cn } from "@/lib/utils";
-import type { Market, MarketDetail, MarketSchedule } from "@/types/database";
+import type { MarketDetail } from "@/types/database";
 
 type MarketStall = MarketDetail["vendors"][number];
 
@@ -105,16 +104,10 @@ function browseActive(find: StallBrowse) {
 
 export function MarketVendors({
   vendors,
-  market,
   todayWeekday,
-  now,
 }: {
   vendors: MarketStall[];
-  market: Pick<Market, "slug" | "name" | "address" | "lat" | "lng" | "province"> & {
-    schedules: MarketSchedule[];
-  };
   todayWeekday: number;
-  now: string;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -122,7 +115,6 @@ export function MarketVendors({
   const [draft, setDraft] = useState<StallBrowse>(EMPTY_BROWSE);
   const live = panelOpen ? draft : applied;
   const today = todayWeekday;
-  const clock = new Date(now);
   const stallDays = useMemo(() => {
     const days = new Set<number>();
     for (const vendor of vendors) {
@@ -358,7 +350,6 @@ export function MarketVendors({
                     stall={vendor.stall}
                     days={vendor.days}
                     halls={vendor.halls}
-                    punchHall={hallFromStall(market, market.schedules, vendor.days, clock)}
                   />
                 ))}
               </div>

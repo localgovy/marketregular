@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { CaretLeftMark, CaretRightMark } from "@/components/marks";
-import { DayPlanHoursRow } from "@/components/day-plan-plus";
+import { HoursRow } from "@/components/hours-row";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { Button } from "@/components/ui/button";
@@ -321,19 +321,10 @@ export function EventsCalendar({
                 key={`${selectedCell.iso}-${event.marketId}`}
                 className="border-b border-border/70 py-3 last:border-b-0"
               >
-                <DayPlanHoursRow
+                <HoursRow
                   href={`/markets/${event.marketSlug}`}
                   name={event.marketName}
                   hours={event.hours}
-                  hall={{
-                    slug: event.marketSlug,
-                    name: event.marketName,
-                    address: event.address,
-                    lat: event.lat,
-                    lng: event.lng,
-                    hours: event.hours,
-                    date: selectedCell.iso,
-                  }}
                   extra={event.open ? <NowLabel>Open</NowLabel> : null}
                   save={
                     <SaveButton kind="market" slug={event.marketSlug} name={event.marketName} />

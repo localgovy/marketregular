@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
-import { DayPlanPlus, DayPlanPunch } from "@/components/day-plan-plus";
 import { JsonLd } from "@/components/json-ld";
 import { ListingAlsoLinks } from "@/components/listing-also-links";
 import { ListingScore } from "@/components/listing-score";
@@ -17,7 +16,7 @@ import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
 import { WEEKDAYS } from "@/lib/constants";
-import { hallFromStall } from "@/lib/day-plan";
+import { stallNextDate } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
@@ -98,13 +97,10 @@ export default async function VendorPage({
 
   const now = new Date();
   const homeMarket = [...vendor.markets].sort((a, b) =>
-    hallFromStall(a, a.schedules, a.days, now).date.localeCompare(
-      hallFromStall(b, b.schedules, b.days, now).date,
+    stallNextDate(a, a.schedules, a.days, now).localeCompare(
+      stallNextDate(b, b.schedules, b.days, now),
     ),
   )[0];
-  const punchHall = homeMarket
-    ? hallFromStall(homeMarket, homeMarket.schedules, homeMarket.days, now)
-    : null;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -122,14 +118,6 @@ export default async function VendorPage({
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{vendor.name}</h1>
         <div className="flex items-center gap-1">
-          {punchHall ? (
-            <DayPlanPunch
-              hall={punchHall}
-              vendorSlug={vendor.slug}
-              vendorName={vendor.name}
-              className="size-14"
-            />
-          ) : null}
           <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
         </div>
       </div>
@@ -216,7 +204,6 @@ export default async function VendorPage({
               }
             >
               {vendor.markets.map((market) => {
-                const hall = hallFromStall(market, market.schedules, market.days, now);
                 const days = inSeasonDayLabels(market.days, market.schedules, market.province, now);
                 return (
                 <li key={market.id} className="flex items-start justify-between gap-2">
@@ -231,7 +218,6 @@ export default async function VendorPage({
                     </p>
                   </div>
                   <span className="flex shrink-0 items-center">
-                    <DayPlanPlus hall={hall} />
                     <SaveButton kind="market" slug={market.slug} name={market.name} />
                   </span>
                 </li>

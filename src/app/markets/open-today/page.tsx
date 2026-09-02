@@ -75,21 +75,21 @@ export default async function OpenTodayPage() {
       {openNow.length ? (
         <section className="mt-8">
           <h2>Open right now</h2>
-          <MarketDayList rows={openNow} scheduleMap={scheduleMap} />
+          <MarketDayList rows={openNow} />
         </section>
       ) : null}
 
       {laterToday.length ? (
         <section className="mt-8">
           <h2>Opening later today</h2>
-          <MarketDayList rows={laterToday} scheduleMap={scheduleMap} />
+          <MarketDayList rows={laterToday} />
         </section>
       ) : null}
 
       {closed.length ? (
         <section className="mt-8">
           <h2>Already closed today</h2>
-          <MarketDayList rows={closed} scheduleMap={scheduleMap} />
+          <MarketDayList rows={closed} />
         </section>
       ) : null}
 
@@ -106,7 +106,7 @@ export default async function OpenTodayPage() {
             </Link>
             .
           </p>
-          <MarketDayList rows={tomorrow.slice(0, 6)} scheduleMap={scheduleMap} />
+          <MarketDayList rows={tomorrow.slice(0, 6)} />
           {tomorrow.length > 6 ? (
             <p className="mt-2 text-sm">
               <Link

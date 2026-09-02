@@ -1,13 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useDayPlan } from "@/components/day-plan-provider";
 import { HomePanel } from "@/components/home-panel";
 import { ListingScore } from "@/components/listing-score";
 import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
-import { SavedRailSlip } from "@/components/saved-day-plan";
-import { DAY_PLAN_NAME } from "@/lib/constants";
 import { useHydratedSaves } from "@/lib/use-hydrated-saves";
 import { EMPTY_SAVES, type Saves } from "@/lib/saves";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
@@ -20,11 +17,10 @@ export function SavedRail({
 }) {
   const saves = useSaves();
   const signedIn = useAuthCookie();
-  const { plan } = useDayPlan();
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const vendorCount = saves.vendors.length;
 
-  if (!signedIn || (!savedMarkets.length && !vendorCount && !plan)) return null;
+  if (!signedIn || (!savedMarkets.length && !vendorCount)) return null;
 
   return (
     <HomePanel
@@ -34,7 +30,7 @@ export function SavedRail({
       icon={TicketMark}
       kicker="On your list"
       title="Saved"
-      how={`Markets, stalls, and today’s ${DAY_PLAN_NAME}.`}
+      how="Markets and stalls on this account."
       action={
         <Link href="/saved" className="hover:underline">
           Open list
@@ -42,13 +38,8 @@ export function SavedRail({
       }
     >
       <div className="grid gap-3">
-        {plan || savedMarkets.length ? (
+        {savedMarkets.length ? (
           <ul className="ring-1 ring-border">
-            {plan ? (
-              <li className="border-b border-border last:border-b-0">
-                <SavedRailSlip />
-              </li>
-            ) : null}
             {savedMarkets.map((market) => (
               <li
                 key={market.id}
@@ -100,10 +91,9 @@ export function SavedDesk({
   initialSaves?: Saves;
 }) {
   const saves = useHydratedSaves(initialSaves);
-  const { plan } = useDayPlan();
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
-  const empty = !savedMarkets.length && !savedVendors.length && !plan;
+  const empty = !savedMarkets.length && !savedVendors.length;
 
   return (
     <div className="grid gap-10">

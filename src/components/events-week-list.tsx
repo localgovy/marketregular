@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Hours } from "@/components/hours";
+import { HoursRow } from "@/components/hours-row";
+import { SaveButton } from "@/components/save-button";
 import { marketListName } from "@/lib/listing-copy";
 import type { UpcomingGroup } from "@/lib/upcoming";
 
@@ -25,19 +26,15 @@ export function EventsWeekList({ groups }: { groups: UpcomingGroup[] }) {
             </div>
             <ul className="divide-y divide-border/50">
               {group.slots.map((slot) => (
-                <li
-                  key={slot.market.id}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-3 py-1.5"
-                >
-                  <Link
+                <li key={slot.market.id} className="px-3 py-1.5">
+                  <HoursRow
                     href={`/markets/${slot.market.slug}`}
-                    className="text-base font-medium hover:underline"
-                  >
-                    {marketListName(slot.market.name, slot.market.city)}
-                  </Link>
-                  <Hours
-                    value={slot.hours}
-                    className={slot.open ? "text-stamp" : "text-muted-foreground"}
+                    name={marketListName(slot.market.name, slot.market.city)}
+                    hours={slot.hours}
+                    hoursClassName={slot.open ? "text-stamp" : "text-muted-foreground"}
+                    save={
+                      <SaveButton kind="market" slug={slot.market.slug} name={slot.market.name} />
+                    }
                   />
                 </li>
               ))}

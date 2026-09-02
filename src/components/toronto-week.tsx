@@ -2,34 +2,27 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
-import { DayPlanHoursRow } from "@/components/day-plan-plus";
+import { HoursRow } from "@/components/hours-row";
 import { HomePanel } from "@/components/home-panel";
 import { WeekMark } from "@/components/marks";
 import { NowLabel } from "@/components/now-label";
+import { SaveButton } from "@/components/save-button";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { marketListName } from "@/lib/listing-copy";
 import type { UpcomingGroup, UpcomingSlot } from "@/lib/upcoming";
 
 const DAY_PAGE = 7;
 
-function SlotRow({ slot, iso }: { slot: UpcomingSlot; iso: string }) {
+function SlotRow({ slot }: { slot: UpcomingSlot }) {
   return (
-    <DayPlanHoursRow
+    <HoursRow
       href={`/markets/${slot.market.slug}`}
       name={marketListName(slot.market.name, slot.market.city)}
       hours={slot.hours}
-      hall={{
-        slug: slot.market.slug,
-        name: slot.market.name,
-        address: slot.market.address,
-        lat: slot.market.lat,
-        lng: slot.market.lng,
-        hours: slot.hours,
-        date: iso,
-      }}
       extra={slot.open ? <NowLabel>Open</NowLabel> : null}
       hoursClassName={slot.open ? "text-stamp" : "text-muted-foreground"}
       className="px-3 py-1.5 hover:bg-primary/[0.045]"
+      save={<SaveButton kind="market" slug={slot.market.slug} name={slot.market.name} />}
     />
   );
 }
@@ -49,7 +42,7 @@ function DayCard({ group }: { group: UpcomingGroup }) {
       <ul className="divide-y divide-border/50">
         {group.slots.slice(0, shown).map((slot) => (
           <li key={slot.market.id}>
-            <SlotRow slot={slot} iso={group.iso} />
+            <SlotRow slot={slot} />
           </li>
         ))}
       </ul>

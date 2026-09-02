@@ -3,7 +3,6 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { mergeSaves } from "@/app/actions/saves";
-import { bootDayPlan } from "@/lib/day-plan";
 import { EMPTY_SAVES, bootSaves, getSaves, replaceSaves, sameSaves, unionSaves } from "@/lib/saves";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -17,7 +16,6 @@ export function SavesHydrator() {
   useEffect(() => {
     bootAuthCookie();
     bootSaves();
-    bootDayPlan();
 
     if (pathname.startsWith("/auth/")) return;
 

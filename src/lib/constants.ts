@@ -5,12 +5,6 @@ import { isTrustedSiteHost } from "@/lib/site-host";
 export const SITE_NAME = "MarketRegular";
 export const SITE_TAGLINE = `${LAUNCH_COVERAGE}, farmers' markets this week.`;
 
-/** User-facing name of the day planner. Never “slip” or “planner”. */
-export const DAY_PLAN_NAME = "ticket";
-export const DAY_PLAN_TODAY = `Today’s ${DAY_PLAN_NAME}`;
-export const DAY_PLAN_HASH = "ticket";
-export const DAY_PLAN_SAVED_HREF = `/saved#${DAY_PLAN_HASH}`;
-
 function canonicalSiteUrl() {
   const raw = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.marketregular.com").replace(
     /\/$/,
