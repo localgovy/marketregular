@@ -46,10 +46,8 @@ export function ListingScore({
   const noun = score.count === 1 ? "review" : "reviews";
 
   return (
-    <span
-      aria-label={listingScoreLabel(score)}
-      className={cn("inline-flex items-center gap-2 text-sm", className)}
-    >
+    <span className={cn("inline-flex items-center gap-2 text-sm", className)}>
+      <span className="sr-only">{listingScoreLabel(score)}</span>
       <ScorePlate>{avg}</ScorePlate>
       {compact ? null : (
         <span aria-hidden className="text-muted-foreground">

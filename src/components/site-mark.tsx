@@ -1,4 +1,8 @@
-import { SITE_WORDMARK, SITE_WORDMARK_GREEN, STUDIO_WORDMARK } from "@/lib/constants";
+import {
+  SITE_WORDMARK_GREEN_UI,
+  SITE_WORDMARK_UI,
+  STUDIO_WORDMARK_UI,
+} from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export function SiteWordmark({
@@ -12,11 +16,11 @@ export function SiteWordmark({
   if (green) {
     return (
       <img
-        src={SITE_WORDMARK_GREEN}
+        src={SITE_WORDMARK_GREEN_UI}
         alt=""
         aria-hidden
-        width={506}
-        height={75}
+        width={405}
+        height={60}
         loading="lazy"
         decoding="async"
         fetchPriority="low"
@@ -30,8 +34,8 @@ export function SiteWordmark({
       aria-hidden
       className={cn("site-wordmark", className)}
       style={{
-        WebkitMaskImage: `url(${SITE_WORDMARK})`,
-        maskImage: `url(${SITE_WORDMARK})`,
+        WebkitMaskImage: `url(${SITE_WORDMARK_UI})`,
+        maskImage: `url(${SITE_WORDMARK_UI})`,
       }}
     />
   );
@@ -46,8 +50,8 @@ export function StudioWordmark({ className }: { className?: string }) {
         className,
       )}
       style={{
-        WebkitMaskImage: `url(${STUDIO_WORDMARK})`,
-        maskImage: `url(${STUDIO_WORDMARK})`,
+        WebkitMaskImage: `url(${STUDIO_WORDMARK_UI})`,
+        maskImage: `url(${STUDIO_WORDMARK_UI})`,
       }}
     />
   );

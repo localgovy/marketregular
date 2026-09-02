@@ -309,6 +309,7 @@
 }
 
 .open-now-sprout {
+  position: relative;
   display: block;
   width: 1em;
   height: 1em;
@@ -317,47 +318,69 @@
   color: currentColor;
 }
 
+.open-now-sprout > span {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+.open-now-sprout svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
 .open-now-sprout__stem {
+  transform-origin: 50.625% 90%;
+  animation: open-now-sprout-stem 3200ms linear infinite both;
+}
+
+.open-now-sprout__stem path {
   fill: none;
   stroke: currentColor;
   stroke-width: 0.7;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  animation: open-now-sprout-stem 3200ms linear infinite both;
 }
 
 .open-now-sprout__leaf {
   fill: currentColor;
-  transform-box: fill-box;
+}
+
+.open-now-sprout__leaf ellipse {
+  fill: currentColor;
 }
 
 .open-now-sprout__leaf--left {
-  transform-origin: 94% 55%;
+  transform-origin: 47.9% 46%;
   animation: open-now-sprout-left 3200ms linear infinite both;
 }
 
 .open-now-sprout__leaf--right {
-  transform-origin: 6% 55%;
+  transform-origin: 53.3% 46%;
   animation: open-now-sprout-right 3200ms linear infinite both;
 }
 
 .open-now-sprout__leaf--top {
-  transform-origin: 50% 96%;
+  transform-origin: 50.6% 39.6%;
   animation: open-now-sprout-top 3200ms linear infinite both;
 }
 
 @keyframes open-now-sprout-stem {
   0% {
-    transform: scaleY(0);
+    transform: translateZ(0) scaleY(0);
     opacity: 0.35;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   12%,
   84% {
-    transform: scaleY(1);
+    transform: translateZ(0) scaleY(1);
     opacity: 1;
   }
 
@@ -367,7 +390,7 @@
 
   96%,
   100% {
-    transform: scaleY(0);
+    transform: translateZ(0) scaleY(0);
     opacity: 0.35;
   }
 }
@@ -375,7 +398,7 @@
 @keyframes open-now-sprout-left {
   0%,
   7% {
-    transform: scale(0) rotate(18deg);
+    transform: translateZ(0) scale(0) rotate(18deg);
     opacity: 0;
   }
 
@@ -384,13 +407,13 @@
   }
 
   16% {
-    transform: scale(1.025) rotate(-1deg);
+    transform: translateZ(0) scale(1.025) rotate(-1deg);
     opacity: 1;
   }
 
   19%,
   78% {
-    transform: scale(1) rotate(0);
+    transform: translateZ(0) scale(1) rotate(0);
     opacity: 1;
   }
 
@@ -399,13 +422,13 @@
   }
 
   81% {
-    transform: scale(1.025) rotate(-1deg);
+    transform: translateZ(0) scale(1.025) rotate(-1deg);
     opacity: 1;
   }
 
   93%,
   100% {
-    transform: scale(0) rotate(18deg);
+    transform: translateZ(0) scale(0) rotate(18deg);
     opacity: 0;
   }
 }
@@ -413,7 +436,7 @@
 @keyframes open-now-sprout-right {
   0%,
   13% {
-    transform: scale(0) rotate(-18deg);
+    transform: translateZ(0) scale(0) rotate(-18deg);
     opacity: 0;
   }
 
@@ -422,13 +445,13 @@
   }
 
   22% {
-    transform: scale(1.025) rotate(1deg);
+    transform: translateZ(0) scale(1.025) rotate(1deg);
     opacity: 1;
   }
 
   25%,
   72% {
-    transform: scale(1) rotate(0);
+    transform: translateZ(0) scale(1) rotate(0);
     opacity: 1;
   }
 
@@ -437,13 +460,13 @@
   }
 
   75% {
-    transform: scale(1.025) rotate(1deg);
+    transform: translateZ(0) scale(1.025) rotate(1deg);
     opacity: 1;
   }
 
   87%,
   100% {
-    transform: scale(0) rotate(-18deg);
+    transform: translateZ(0) scale(0) rotate(-18deg);
     opacity: 0;
   }
 }
@@ -451,7 +474,7 @@
 @keyframes open-now-sprout-top {
   0%,
   19% {
-    transform: scale(0) translateY(0.7px);
+    transform: translateZ(0) scale(0) translateY(0.7px);
     opacity: 0;
   }
 
@@ -460,13 +483,13 @@
   }
 
   28% {
-    transform: scale(1.025) translateY(-0.1px);
+    transform: translateZ(0) scale(1.025) translateY(-0.1px);
     opacity: 1;
   }
 
   31%,
   66% {
-    transform: scale(1) translateY(0);
+    transform: translateZ(0) scale(1) translateY(0);
     opacity: 1;
   }
 
@@ -475,13 +498,13 @@
   }
 
   69% {
-    transform: scale(1.025) translateY(-0.1px);
+    transform: translateZ(0) scale(1.025) translateY(-0.1px);
     opacity: 1;
   }
 
   81%,
   100% {
-    transform: scale(0) translateY(0.7px);
+    transform: translateZ(0) scale(0) translateY(0.7px);
     opacity: 0;
   }
 }
@@ -506,6 +529,7 @@
   .open-now-sprout__stem,
   .open-now-sprout__leaf {
     animation: none;
+    will-change: auto;
   }
 }
 

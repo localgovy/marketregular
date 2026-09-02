@@ -9,39 +9,22 @@ function CensusCell({
   value,
   word,
 }: {
-  href?: string;
+  href: string;
   value: number;
   word: string;
 }) {
-  const label = `${formatCount(value)} ${word}`;
-  const className =
-    "flex min-w-0 flex-col items-start gap-0.5 px-3 py-3 text-chalk sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2.5 sm:px-4 sm:py-3.5";
-  const inner = (
-    <>
+  return (
+    <Link
+      href={href}
+      className="flex min-w-0 flex-col items-start gap-0.5 px-3 py-3 text-chalk outline-none transition-colors hover:bg-white/12 focus-visible:bg-white/12 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-2.5 sm:px-4 sm:py-3.5"
+    >
       <span
-        aria-hidden
         className="type-census inline-block text-2xl leading-none sm:text-3xl"
         style={{ minWidth: `${formatCount(value).length}ch` }}
       >
         {formatCount(value)}
       </span>
       <span className="text-base font-medium">{word}</span>
-    </>
-  );
-  if (!href) {
-    return (
-      <p aria-label={label} className={className}>
-        {inner}
-      </p>
-    );
-  }
-  return (
-    <Link
-      href={href}
-      aria-label={label}
-      className={`${className} outline-none transition-colors hover:bg-white/12 focus-visible:bg-white/12`}
-    >
-      {inner}
     </Link>
   );
 }
