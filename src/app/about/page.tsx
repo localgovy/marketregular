@@ -15,7 +15,7 @@ export default function AboutPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <h1>About</h1>
-      <p className="type-lede mt-2 mb-8 text-muted-foreground">
+      <p className="type-lede mt-2 mb-8">
         {SITE_NAME} is the totally free all-in-one guide to shop local markets in {LAUNCH_CITY}.
         Find a market, discover their vendors, and either order for pickup or save to your
         profile so you can start planning your trip. We make it so that you can finally
@@ -28,7 +28,7 @@ export default function AboutPage() {
           <MapleMark className="h-7 w-14 shrink-0 text-stamp shadow-[0_0_0_1px_rgba(0,0,0,0.2)]" />
           Buy Canadian
         </h2>
-        <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-base leading-relaxed">
           Grocery aisles fill with whatever is cheapest to ship. When border tensions flare or a
           price jumps, the supply wobbles, and the farm that used to sell here has already sold
           elsewhere. Buying Canadian keeps the next season in Canadian dirt, paid in Canadian
@@ -40,7 +40,7 @@ export default function AboutPage() {
 
       <section className="mt-10">
         <h2>Why {SITE_NAME}?</h2>
-        <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-base leading-relaxed">
           There&apos;s no better time to shop local, we know that. But is there a better website
           or app available than {SITE_NAME} for shopping local? Fortunately for us, absolutely
           not. With a massive database of all markets in {LAUNCH_CITY}, we offer discovery and
@@ -66,9 +66,9 @@ export default function AboutPage() {
       <section className="mt-10">
         <h2>The team</h2>
         <p className="mt-2 text-base font-medium">{CONTACT_NAME}</p>
-        <p className="mt-1 text-base text-muted-foreground">
+        <p className="mt-1 text-base">
           Founder, CEO of{" "}
-          <a href={STUDIO_URL} rel="noreferrer" className="text-foreground hover:underline">LocalGovy</a>, the team behind {SITE_NAME}
+          <a href={STUDIO_URL} rel="noreferrer" className="hover:underline">LocalGovy</a>, the team behind {SITE_NAME}
         </p>
         <p className="mt-3 text-base">
           <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium hover:underline">
