@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SITE_NAME } from "@/lib/constants";
+import { MapleMark } from "@/components/marks";
+import { CONTACT_NAME, SITE_NAME, STUDIO_URL } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_COVERAGE } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 
@@ -23,34 +24,29 @@ export default function AboutPage() {
       </p>
 
       <section>
-        <h2>Buy Canadian</h2>
+        <h2 className="flex items-center gap-2.5">
+          <MapleMark className="h-7 w-14 shrink-0 text-stamp shadow-[0_0_0_1px_rgba(0,0,0,0.2)]" />
+          Buy Canadian
+        </h2>
         <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-          Grocery aisles fill with whatever is cheapest to ship. When a border tightens or a
-          price jumps, that supply wobbles, and the farm that used to sell here has already sold
+          Grocery aisles fill with whatever is cheapest to ship. When border tensions flare or a
+          price jumps, the supply wobbles, and the farm that used to sell here has already sold
           elsewhere. Buying Canadian keeps the next season in Canadian dirt, paid in Canadian
           wages. That is more important now than it has been in a long time: trade is a fight,
-          grocery bills already are, and a country that cannot feed itself waits on someone
-          else&apos;s truck.
-        </p>
-      </section>
-
-      <section className="mt-10">
-        <h2>Buy local</h2>
-        <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-          Canadian can still mean a warehouse two provinces over. Local means a stall you can
-          walk to this week: Ontario tomatoes in season, Niagara fruit, GTA bakers, cheese from a
-          name you can ask. The money stays with the grower and the neighbourhood instead of a
-          head office. A farmers&apos; market is that meeting. You see the food, you meet the
-          person, you decide.
+          grocery bills already are, and Canadians deserve a simple way to purchase goods grown
+          on our own soil.
         </p>
       </section>
 
       <section className="mt-10">
         <h2>Why this list</h2>
         <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-          Hours change. Stalls move. A good intention dies if you cannot tell which hall is open
-          on Tuesday. {SITE_NAME} keeps the directory, the week, and who is on the floor in one
-          place so the trip is about food, not guessing.
+          There&apos;s no better time to shop local, we know that. But is there a better website
+          or app available than {SITE_NAME} for shopping local? Fortunately for us, absolutely
+          not. With a massive database of all markets in {LAUNCH_CITY}, we offer discovery and
+          information no one else can. We are also partnering up with dozens of markets all over{" "}
+          {LAUNCH_CITY} to bring Torontonians pickup, offering the most convenient way to shop
+          fresh and local while putting cash back in the pockets of local farms and businesses.
         </p>
         <p className="mt-4 text-base">
           <Link href="/markets" className="font-medium hover:underline">
@@ -64,6 +60,15 @@ export default function AboutPage() {
           <Link href="/contact" className="font-medium hover:underline">
             Write us
           </Link>
+        </p>
+      </section>
+
+      <section className="mt-10">
+        <h2>The team</h2>
+        <p className="mt-2 text-base font-medium">{CONTACT_NAME}</p>
+        <p className="mt-1 text-base text-muted-foreground">
+          Founder, CEO of{" "}
+          <a href={STUDIO_URL} rel="noreferrer" className="text-foreground hover:underline">LocalGovy</a>, the team behind {SITE_NAME}
         </p>
       </section>
     </div>
