@@ -7,11 +7,11 @@ import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { Hours } from "@/components/hours";
 import { hallHours, hoursOnIso } from "@/lib/day-plan";
+import type { DirectoryMarketCard, DirectorySchedule } from "@/lib/directory-page";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { isoForWeekday } from "@/lib/landing";
 import { marketPlaceLine } from "@/lib/listing-copy";
 import { nextOpenLabel, nextOpenSlot, onlyWeekdayLabel } from "@/lib/schedule";
-import type { Market, MarketSchedule } from "@/types/database";
 
 export function MarketCard({
   market,
@@ -19,8 +19,8 @@ export function MarketCard({
   weekdays,
   now,
 }: {
-  market: Market;
-  schedules?: MarketSchedule[];
+  market: DirectoryMarketCard;
+  schedules?: DirectorySchedule[];
   /** When the directory is filtered to one weekday, show that session, not the next one. */
   weekdays?: number[];
   /** Frozen from the server so open-now matches first paint. */

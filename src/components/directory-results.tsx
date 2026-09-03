@@ -1,47 +1,99 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { getDirectorySlice } from "@/app/actions/directory";
 import { MarketCard } from "@/components/market-card";
 import { VendorCard } from "@/components/vendor-card";
 import { CaretUpMark } from "@/components/marks";
 import { ShowMore } from "@/components/show-more";
+import type {
+  DirectoryMarketCard,
+  DirectorySchedule,
+  DirectoryVendorCard,
+} from "@/lib/directory-page";
+import type { MarketsSearch } from "@/lib/find-paths";
 import { cn } from "@/lib/utils";
-import type { DirectoryVendor } from "@/lib/vendor-halls";
-import type { Market, MarketSchedule } from "@/types/database";
-
-const MARKET_PAGE = 10;
-const VENDOR_PAGE = 15;
 
 export function DirectoryResults({
-  markets,
-  vendors,
-  schedulesByMarket,
+  markets: initialMarkets,
+  vendors: initialVendors,
+  schedulesByMarket: initialSchedules,
+  marketTotal,
+  vendorTotal,
+  search,
   weekdays,
   now,
 }: {
-  markets: Market[];
-  vendors: DirectoryVendor[];
-  schedulesByMarket?: Record<string, MarketSchedule[]>;
+  markets: DirectoryMarketCard[];
+  vendors: DirectoryVendorCard[];
+  schedulesByMarket?: Record<string, DirectorySchedule[]>;
+  marketTotal: number;
+  vendorTotal: number;
+  search: MarketsSearch;
   weekdays?: number[];
   now: string;
 }) {
-  const [marketPages, setMarketPages] = useState(1);
-  const [vendorPages, setVendorPages] = useState(1);
-  const shownMarkets = markets.slice(0, marketPages * MARKET_PAGE);
-  const shownVendors = vendors.slice(0, vendorPages * VENDOR_PAGE);
+  const [markets, setMarkets] = useState(initialMarkets);
+  const [vendors, setVendors] = useState(initialVendors);
+  const [schedulesByMarket, setSchedulesByMarket] = useState(initialSchedules ?? {});
+  const marketsBusy = useRef(false);
+  const vendorsBusy = useRef(false);
+
+  async function moreMarkets() {
+    if (marketsBusy.current || markets.length >= marketTotal) return;
+    marketsBusy.current = true;
+    try {
+      const next = await getDirectorySlice({
+        search,
+        kind: "markets",
+        offset: markets.length,
+        now,
+      });
+      setMarkets((prev) => {
+        const seen = new Set(prev.map((market) => market.id));
+        return [...prev, ...next.markets.filter((market) => !seen.has(market.id))];
+      });
+      setSchedulesByMarket((prev) => ({ ...prev, ...next.schedulesByMarket }));
+    } catch {
+      // Keep the current page; the next click retries.
+    } finally {
+      marketsBusy.current = false;
+    }
+  }
+
+  async function moreVendors() {
+    if (vendorsBusy.current || vendors.length >= vendorTotal) return;
+    vendorsBusy.current = true;
+    try {
+      const next = await getDirectorySlice({
+        search,
+        kind: "vendors",
+        offset: vendors.length,
+        now,
+      });
+      setVendors((prev) => {
+        const seen = new Set(prev.map((vendor) => vendor.id));
+        return [...prev, ...next.vendors.filter((vendor) => !seen.has(vendor.id))];
+      });
+    } catch {
+      // Keep the current page; the next click retries.
+    } finally {
+      vendorsBusy.current = false;
+    }
+  }
 
   return (
     <>
       <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)] lg:gap-x-4">
         <section id="directory-markets" className="scroll-mt-24">
           <h2 className="mb-4">Markets</h2>
-          {markets.length ? (
+          {marketTotal ? (
             <div className="grid gap-4">
-              {shownMarkets.map((market) => (
+              {markets.map((market) => (
                 <MarketCard
                   key={market.id}
                   market={market}
-                  schedules={schedulesByMarket?.[market.id]}
+                  schedules={schedulesByMarket[market.id]}
                   weekdays={weekdays}
                   now={now}
                 />
@@ -51,18 +103,20 @@ export function DirectoryResults({
             <p className="text-muted-foreground">No markets match those filters.</p>
           )}
           <ShowMore
-            shown={shownMarkets.length}
-            total={markets.length}
+            shown={markets.length}
+            total={marketTotal}
             noun="markets"
-            onMore={() => setMarketPages((n) => n + 1)}
+            onMore={() => {
+              void moreMarkets();
+            }}
           />
         </section>
         <div aria-hidden data-directory-rule className="hidden w-0.5 self-stretch bg-board lg:block" />
         <section id="directory-vendors" className="scroll-mt-24">
           <h2 className="mb-4">Vendors</h2>
-          {vendors.length ? (
+          {vendorTotal ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              {shownVendors.map((vendor) => (
+              {vendors.map((vendor) => (
                 <VendorCard key={vendor.id} vendor={vendor} halls={vendor.halls} />
               ))}
             </div>
@@ -70,10 +124,12 @@ export function DirectoryResults({
             <p className="text-muted-foreground">No vendors match those filters.</p>
           )}
           <ShowMore
-            shown={shownVendors.length}
-            total={vendors.length}
+            shown={vendors.length}
+            total={vendorTotal}
             noun="vendors"
-            onMore={() => setVendorPages((n) => n + 1)}
+            onMore={() => {
+              void moreVendors();
+            }}
           />
         </section>
       </div>

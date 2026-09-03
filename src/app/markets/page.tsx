@@ -6,6 +6,7 @@ import { JsonLd } from "@/components/json-ld";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
 import { getDirectoryCensus, listMarkets, searchDirectory } from "@/lib/data/catalog";
+import { directoryInitialProps, filtersFromSearch } from "@/lib/directory-page";
 import {
   marketsCrumbs,
   parseDirectorySort,
@@ -60,30 +61,6 @@ export default async function MarketsPage({
   const tags = queryList(params.tag);
   const areas = queryList(params.area);
   const sort = parseDirectorySort(params.sort, Boolean(near));
-  const { markets, vendors, schedulesByMarket } = await searchDirectory(
-    {
-      q: params.q,
-      weekdays: weekdays.length ? weekdays : undefined,
-      tags: tags.length ? tags : undefined,
-      areas: areas.length ? areas : undefined,
-      setup: params.setup || undefined,
-      openNow: params.openNow === "1",
-      near,
-      sort,
-    },
-    now,
-  );
-  // Filter options come from the whole directory, not the narrowed result set.
-  const places = placeAreasForMarkets(await listMarkets());
-  const crumbs = marketsCrumbs({
-    weekdays,
-    setup: params.setup,
-    areas,
-    tags,
-    openNow: params.openNow === "1",
-    near: Boolean(near),
-    sort,
-  });
   const search: MarketsSearch = {
     q: params.q,
     weekdays,
@@ -95,6 +72,22 @@ export default async function MarketsPage({
     lng: params.lng,
     sort,
   };
+  const { markets, vendors, schedulesByMarket } = await searchDirectory(
+    filtersFromSearch(search),
+    now,
+  );
+  const directory = directoryInitialProps(markets, vendors, schedulesByMarket);
+  // Filter options come from the whole directory, not the narrowed result set.
+  const places = placeAreasForMarkets(await listMarkets());
+  const crumbs = marketsCrumbs({
+    weekdays,
+    setup: params.setup,
+    areas,
+    tags,
+    openNow: params.openNow === "1",
+    near: Boolean(near),
+    sort,
+  });
   const status = [LAUNCH_CITY, ...crumbs, `${markets.length} markets`].join(" · ");
   const summary = [
     `${markets.length} markets`,
@@ -147,7 +140,7 @@ export default async function MarketsPage({
         }}
       />
       <div className="mt-8">
-        <MarketMapLazy markets={markets} load="visible" />
+        <MarketMapLazy key={formKey} markets={directory.mapMarkets} load="click" />
       </div>
       <div className="mt-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-border pb-2">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
@@ -164,9 +157,12 @@ export default async function MarketsPage({
       <DirectoryResults
         key={formKey}
         now={nowIso}
-        markets={markets}
-        vendors={vendors}
-        schedulesByMarket={schedulesByMarket}
+        search={search}
+        markets={directory.markets}
+        vendors={directory.vendors}
+        schedulesByMarket={directory.schedulesByMarket}
+        marketTotal={directory.marketTotal}
+        vendorTotal={directory.vendorTotal}
         weekdays={weekdays}
       />
       <BrowseLinks className="mt-12" />

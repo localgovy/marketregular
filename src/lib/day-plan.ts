@@ -62,7 +62,7 @@ type HallMarket = {
 };
 
 export function hallHours(
-  market: HallMarket,
+  market: Pick<HallMarket, "province">,
   schedules: ScheduleRow[],
   date?: string,
   now = new Date(),

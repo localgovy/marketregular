@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getHomeMapMarkets } from "@/app/actions/home-lazy";
 import { BlocksMark } from "@/components/marks";
 import { cn } from "@/lib/utils";
-import type { Market } from "@/types/database";
+import type { MapMarket } from "@/lib/directory-page";
 
 const Inner = dynamic(
   () => import("@/components/market-map").then((m) => m.MarketMap),
@@ -17,11 +17,6 @@ export const MARKET_PROFILE_MAP =
 
 const MARKET_MAP_DEFAULT =
   "h-80 w-full overflow-hidden rounded-xl ring-1 ring-foreground/10";
-
-export type MapMarket = Pick<
-  Market,
-  "id" | "name" | "slug" | "lat" | "lng" | "city" | "address"
->;
 
 function MapPlaceholder({ onShow }: { onShow: () => void }) {
   return (
@@ -49,6 +44,10 @@ export function MarketMapLazy({
   const [points, setPoints] = useState<MapMarket[] | null>(markets ?? null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const reveal = useCallback(() => setReady(true), []);
+
+  useEffect(() => {
+    if (markets) setPoints(markets);
+  }, [markets]);
 
   useEffect(() => {
     if (!ready || points) return;

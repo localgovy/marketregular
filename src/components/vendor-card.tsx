@@ -17,7 +17,10 @@ export function VendorCard({
   days = [],
   halls = NO_HALLS,
 }: {
-  vendor: Vendor;
+  vendor: Pick<
+    Vendor,
+    "id" | "slug" | "name" | "about" | "logo_url" | "rating_avg" | "review_count" | "tags"
+  >;
   stall?: string | null;
   days?: number[];
   halls?: VendorHall[];

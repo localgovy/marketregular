@@ -7,7 +7,7 @@ export type ScheduleRow = {
   closes_at: string;
   season_start: string | null;
   season_end: string | null;
-  notes: string | null;
+  notes?: string | null;
 };
 
 export function parseHm(value: string) {
