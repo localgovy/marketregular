@@ -11,7 +11,7 @@ export const dynamic = "force-static";
 export const metadata: Metadata = pageMeta({
   title: "Blog",
   path: "/blog",
-  description: `Weekend hours for ${LAUNCH_CITY} farmers' markets, written as a roundup you can send someone.`,
+  description: `Weekend hours and neighbourhood guides for ${LAUNCH_CITY} farmers' markets, written so you can send someone the list.`,
 });
 
 export default function BlogIndexPage() {
@@ -21,7 +21,7 @@ export default function BlogIndexPage() {
       <JsonLd data={breadcrumbJsonLd([BLOG_CRUMB])} />
       <h1>Blog</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        Weekend hours for Toronto halls, written so you can send someone the list.
+        Weekend hours, and where to go in the east end.
       </p>
       {posts.length ? (
         <ul className="divide-y divide-border border-t border-border">
