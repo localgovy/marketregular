@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ListingScore } from "@/components/listing-score";
+import { SavedNotesSection, type SavedNote } from "@/components/saved-notes";
 import { SaveButton } from "@/components/save-button";
 import { useHydratedSaves } from "@/lib/use-hydrated-saves";
 import type { Saves } from "@/lib/saves";
@@ -10,12 +11,14 @@ import type { Market, Vendor } from "@/types/database";
 export function AccountSavedLists({
   markets,
   vendors,
+  notes,
   nextHours,
   vendorWhen,
   initialSaves,
 }: {
   markets: Market[];
   vendors: Vendor[];
+  notes: SavedNote[];
   nextHours: Record<string, string>;
   vendorWhen: Record<string, string>;
   initialSaves: Saves;
@@ -23,7 +26,8 @@ export function AccountSavedLists({
   const saves = useHydratedSaves(initialSaves);
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
-  const empty = !savedMarkets.length && !savedVendors.length;
+  const empty =
+    !savedMarkets.length && !savedVendors.length && !saves.blogs.length;
 
   if (empty) {
     return (
@@ -32,7 +36,11 @@ export function AccountSavedLists({
         <Link href="/markets" className="font-medium text-primary hover:underline">
           Open the directory
         </Link>{" "}
-        and press Save on a hall or stall. It follows this account.
+        or{" "}
+        <Link href="/blog" className="font-medium text-primary hover:underline">
+          the blog
+        </Link>{" "}
+        and press Save. It follows this account.
       </p>
     );
   }
@@ -117,6 +125,12 @@ export function AccountSavedLists({
           <p className="mt-2 text-sm text-muted-foreground">No stalls on the list.</p>
         )}
       </section>
+      <SavedNotesSection
+        notes={notes}
+        slugs={saves.blogs}
+        heading="h3"
+        listClassName="mt-2"
+      />
     </div>
   );
 }

@@ -35,7 +35,9 @@ export function SaveButton({
   const pathname = usePathname();
   const saves = useSaves();
   const saved = isSaved(kind, slug, saves);
-  const label = name ?? (kind === "market" ? "this market" : "this stall");
+  const label =
+    name ??
+    (kind === "market" ? "this market" : kind === "vendor" ? "this stall" : "this note");
 
   return (
     <button
@@ -59,7 +61,7 @@ export function SaveButton({
           .then((canonical) => {
             if (canonical) {
               replaceSaves(canonical);
-              if (pathname === "/account" || pathname.startsWith("/account/")) {
+              if (pathname === "/account" || pathname.startsWith("/account/") || pathname === "/saved") {
                 router.refresh();
               }
               return;

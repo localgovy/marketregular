@@ -4,6 +4,7 @@ import { BackButton } from "@/components/back-button";
 import { BlogBody } from "@/components/blog-body";
 import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
+import { SaveButton } from "@/components/save-button";
 import { getBlogPost, listBlogPosts } from "@/lib/blog";
 import { SITE_NAME, SITE_OG } from "@/lib/constants";
 import { BLOG_CRUMB, blogPostingJsonLd, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
@@ -74,7 +75,10 @@ export default async function BlogPostPage({
         <BackButton href="/blog" />
         <BlogPosted date={post.date} kicker={post.kicker} />
       </div>
-      <h1 className="mt-1">{post.title}</h1>
+      <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
+        <h1>{post.title}</h1>
+        <SaveButton kind="blog" slug={post.slug} name={post.title} size="lg" />
+      </div>
       <p className="type-lede mt-2 text-muted-foreground">{post.description}</p>
       <BlogBody markdown={post.body} />
     </div>

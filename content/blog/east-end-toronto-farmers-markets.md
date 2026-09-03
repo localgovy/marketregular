@@ -7,9 +7,9 @@ kicker: East end
 
 # East-end Toronto farmers’ markets: East Lynn, Leslieville, Withrow
 
-Three Danforth / Riverdale / Leslieville markets within a short streetcar ride of each other. Hours and stalls from [MarketRegular](https://www.marketregular.com). Tap a name for the live listing.
+Here’s the inside scoop on three Danforth, Riverdale, and Leslieville markets, all within a short streetcar ride of each other. Get all the hours, a peek at their vendors, and whatever else we could find all in one place.
 
-This is not another “every market in Toronto” list. It’s the east-end circuit Beach Metro readers actually use.
+Beach-Metro readers, you’re going to want to make an account and save this article.
 
 ---
 

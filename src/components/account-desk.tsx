@@ -5,6 +5,7 @@ import { AccountNameForm } from "@/components/account-name-form";
 import { DeleteOwnPostForm } from "@/components/delete-own-post-form";
 import { SignOutForm } from "@/components/sign-out-form";
 import { AccountSavedLists } from "@/components/account-saved";
+import type { SavedNote } from "@/components/saved-notes";
 import { DeleteAccountForm } from "@/components/delete-account-form";
 import { EmailVisitButton } from "@/components/email-visit-button";
 import { HomePanel } from "@/components/home-panel";
@@ -33,6 +34,7 @@ import { slimUpcomingGroups, type UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { ClaimRequest, Market, Profile, StallRef, Vendor } from "@/types/database";
 import type { AccountPost } from "@/lib/data/account";
+import type { Saves } from "@/lib/saves";
 
 function marketFromPost(markets: AccountPost["markets"]) {
   if (
@@ -75,6 +77,7 @@ export function AccountDesk({
   stalls,
   initialMarketId,
   posts,
+  notes,
   claims,
   saves,
   reviewCount,
@@ -93,8 +96,9 @@ export function AccountDesk({
   stalls: Array<Pick<StallRef, "id" | "name" | "slug" | "market_id" | "stall">>;
   initialMarketId?: string;
   posts: AccountPost[];
+  notes: SavedNote[];
   claims: ClaimRequest[];
-  saves: { markets: string[]; vendors: string[] };
+  saves: Saves;
   reviewCount: number;
   visitPlanEmailedAt?: string | null;
 }) {
@@ -189,6 +193,7 @@ export function AccountDesk({
             <AccountSavedLists
               markets={markets}
               vendors={vendors}
+              notes={notes}
               nextHours={nextHours}
               vendorWhen={vendorWhen}
               initialSaves={saves}

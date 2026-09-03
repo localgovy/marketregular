@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
+import { SaveButton } from "@/components/save-button";
 import { listBlogPosts } from "@/lib/blog";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { BLOG_CRUMB, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
@@ -27,15 +28,20 @@ export default function BlogIndexPage() {
         <ul className="divide-y divide-border border-t border-border">
           {posts.map((post) => (
             <li key={post.slug} className="py-6">
-              <BlogPosted date={post.date} kicker={post.kicker} />
-              <h2 className="mt-1">
-                <Link href={`/blog/${post.slug}`} className="hover:underline">
-                  {post.title}
-                </Link>
-              </h2>
-              <p className="mt-2 text-base leading-relaxed text-muted-foreground">
-                {post.description}
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <BlogPosted date={post.date} kicker={post.kicker} />
+                  <h2 className="mt-1">
+                    <Link href={`/blog/${post.slug}`} className="hover:underline">
+                      {post.title}
+                    </Link>
+                  </h2>
+                  <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+                    {post.description}
+                  </p>
+                </div>
+                <SaveButton kind="blog" slug={post.slug} name={post.title} />
+              </div>
             </li>
           ))}
         </ul>

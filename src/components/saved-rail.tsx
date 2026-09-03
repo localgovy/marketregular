@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getSavedRailMarkets, type SavedRailMarket } from "@/app/actions/home-lazy";
 import { HomePanel } from "@/components/home-panel";
 import { ListingScore } from "@/components/listing-score";
+import { SavedNotesSection, type SavedNote } from "@/components/saved-notes";
 import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
 import { useHydratedSaves } from "@/lib/use-hydrated-saves";
@@ -43,8 +44,9 @@ export function SavedRail() {
     return market ? [market] : [];
   });
   const vendorCount = saves.vendors.length;
+  const blogCount = saves.blogs.length;
 
-  if (!signedIn || !ready || (!savedMarkets.length && !vendorCount)) return null;
+  if (!signedIn || !ready || (!savedMarkets.length && !vendorCount && !blogCount)) return null;
 
   return (
     <HomePanel
@@ -54,7 +56,7 @@ export function SavedRail() {
       icon={TicketMark}
       kicker="On your list"
       title="Saved"
-      how="Markets and stalls on this account."
+      how="Markets, stalls, and notes on this account."
       action={
         <Link href="/saved" className="hover:underline">
           Open list
@@ -98,6 +100,13 @@ export function SavedRail() {
             </Link>
           </p>
         ) : null}
+        {blogCount ? (
+          <p className="text-sm text-muted-foreground">
+            <Link href="/saved" className="font-medium text-primary hover:underline">
+              {blogCount === 1 ? "1 saved note" : `${blogCount} saved notes`}
+            </Link>
+          </p>
+        ) : null}
       </div>
     </HomePanel>
   );
@@ -106,26 +115,28 @@ export function SavedRail() {
 export function SavedDesk({
   markets,
   vendors,
+  notes,
   followAccount = false,
   initialSaves = EMPTY_SAVES,
 }: {
   markets: Market[];
   vendors: Vendor[];
+  notes: SavedNote[];
   followAccount?: boolean;
   initialSaves?: Saves;
 }) {
   const saves = useHydratedSaves(initialSaves);
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
-  const empty = !savedMarkets.length && !savedVendors.length;
+  const empty = !savedMarkets.length && !savedVendors.length && !saves.blogs.length;
 
   return (
     <div className="grid gap-10">
       {empty ? (
         <p className="text-muted-foreground">
           {followAccount
-            ? "Nothing saved yet. Open a market or a stall and press Save. The list follows this account."
-            : "Sign in to save markets and stalls to this account."}
+            ? "Nothing saved yet. Open a market, a stall, or a note and press Save. The list follows this account."
+            : "Sign in to save markets, stalls, and notes to this account."}
         </p>
       ) : null}
       <section>
@@ -198,6 +209,12 @@ export function SavedDesk({
           <p className="mt-2 text-sm text-muted-foreground">No stalls on the list.</p>
         )}
       </section>
+      <SavedNotesSection
+        notes={notes}
+        slugs={saves.blogs}
+        heading="h2"
+        listClassName="mt-3 bg-card"
+      />
     </div>
   );
 }

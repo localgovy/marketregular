@@ -1,7 +1,8 @@
 "use server";
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import type { SaveKind, Saves } from "@/lib/saves";
+import { getBlogPost } from "@/lib/blog";
+import { savesFromRows, type SaveKind, type Saves } from "@/lib/saves";
 import { revalidatePath } from "next/cache";
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -11,17 +12,7 @@ function validSlug(slug: string) {
 }
 
 function validKind(kind: string): kind is SaveKind {
-  return kind === "market" || kind === "vendor";
-}
-
-function toSaves(rows: Array<{ kind: string; slug: string }> | null): Saves {
-  const markets: string[] = [];
-  const vendors: string[] = [];
-  for (const row of rows ?? []) {
-    if (row.kind === "market") markets.push(row.slug);
-    else if (row.kind === "vendor") vendors.push(row.slug);
-  }
-  return { markets, vendors };
+  return kind === "market" || kind === "vendor" || kind === "blog";
 }
 
 async function listSaves(
@@ -30,11 +21,12 @@ async function listSaves(
 ): Promise<Saves | null> {
   const { data, error } = await supabase.from("saves").select("kind, slug").eq("user_id", userId);
   if (error) return null;
-  return toSaves(data);
+  return savesFromRows(data);
 }
 
 export async function persistSave(kind: SaveKind, slug: string, saved: boolean): Promise<Saves | null> {
   if (!validKind(kind) || !validSlug(slug)) return null;
+  if (kind === "blog" && !getBlogPost(slug)) return null;
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
   const {
@@ -77,11 +69,17 @@ export async function mergeSaves(local: Saves): Promise<Saves | null> {
   for (const slug of local.vendors ?? []) {
     if (validSlug(slug)) rows.push({ user_id: user.id, kind: "vendor", slug });
   }
+  for (const slug of local.blogs ?? []) {
+    if (validSlug(slug) && getBlogPost(slug)) {
+      rows.push({ user_id: user.id, kind: "blog", slug });
+    }
+  }
   const existing = await listSaves(supabase, user.id);
   if (!existing) return null;
   const have = new Set([
     ...existing.markets.map((slug) => `market:${slug}`),
     ...existing.vendors.map((slug) => `vendor:${slug}`),
+    ...existing.blogs.map((slug) => `blog:${slug}`),
   ]);
   const novel = rows.filter((row) => !have.has(`${row.kind}:${row.slug}`));
   const room = Math.max(0, MAX_SAVES - have.size);

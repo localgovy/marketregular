@@ -1,24 +1,14 @@
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { fetchMyProfile } from "@/lib/my-profile";
-import { EMPTY_SAVES, type Saves } from "@/lib/saves";
+import { EMPTY_SAVES, savesFromRows, type Saves } from "@/lib/saves";
 import type { ClaimRequest } from "@/types/database";
-
-function toSaves(rows: Array<{ kind: string; slug: string }> | null): Saves {
-  const markets: string[] = [];
-  const vendors: string[] = [];
-  for (const row of rows ?? []) {
-    if (row.kind === "market") markets.push(row.slug);
-    else if (row.kind === "vendor") vendors.push(row.slug);
-  }
-  return { markets, vendors };
-}
 
 export async function loadMySaves(): Promise<Saves> {
   const { supabase, user } = await createAuthedServerClient();
   if (!supabase || !user) return EMPTY_SAVES;
   const { data, error } = await supabase.from("saves").select("kind, slug").eq("user_id", user.id);
   if (error) return EMPTY_SAVES;
-  return toSaves(data);
+  return savesFromRows(data);
 }
 
 export type AccountPost = {
@@ -64,7 +54,7 @@ export async function loadAccountDesk(userId: string) {
     return {
       email: user.email ?? null,
       visitPlanEmailedAt: me?.visit_plan_emailed_at ?? null,
-      saves: savesRes.error ? EMPTY_SAVES : toSaves(savesRes.data),
+      saves: savesRes.error ? EMPTY_SAVES : savesFromRows(savesRes.data),
       posts: (postsRes.data ?? []).map((row) => ({
         ...row,
         markets: null,
@@ -77,7 +67,7 @@ export async function loadAccountDesk(userId: string) {
   return {
     email: user.email ?? null,
     visitPlanEmailedAt: me?.visit_plan_emailed_at ?? null,
-    saves: toSaves(savesRes.data),
+    saves: savesFromRows(savesRes.data),
     posts: (postsRes.data ?? []).map((row) => ({
       ...row,
       markets: null,

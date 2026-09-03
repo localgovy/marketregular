@@ -7,6 +7,7 @@ import {
   listVendors,
 } from "@/lib/data/catalog";
 import { loadAccountDesk } from "@/lib/data/account";
+import { listBlogPosts } from "@/lib/blog";
 import { toGeoMarket } from "@/lib/geo";
 import { nextOpenLabel } from "@/lib/schedule";
 import { upcomingByDay } from "@/lib/upcoming";
@@ -23,7 +24,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = pageMeta({
   title: "Account",
   path: "/account",
-  description: `Your ${SITE_NAME} account — saved markets, this week’s hours, and reviews.`,
+  description: `Your ${SITE_NAME} account — saved markets, notes, this week’s hours, and reviews.`,
   index: false,
 });
 
@@ -108,6 +109,12 @@ export default async function AccountPage() {
       stalls={stalls}
       initialMarketId={savedMarket?.id}
       posts={posts}
+      notes={listBlogPosts().map(({ slug, title, date, kicker }) => ({
+        slug,
+        title,
+        date,
+        kicker,
+      }))}
       claims={desk.claims}
       saves={saves}
       reviewCount={desk.reviewCount}

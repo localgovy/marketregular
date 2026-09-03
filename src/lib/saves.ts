@@ -1,13 +1,20 @@
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 
-export type SaveKind = "market" | "vendor";
+export type SaveKind = "market" | "vendor" | "blog";
 
 export type Saves = {
   markets: string[];
   vendors: string[];
+  blogs: string[];
 };
 
-export const EMPTY_SAVES: Saves = { markets: [], vendors: [] };
+export const EMPTY_SAVES: Saves = { markets: [], vendors: [], blogs: [] };
+
+const SAVE_LIST: Record<SaveKind, keyof Saves> = {
+  market: "markets",
+  vendor: "vendors",
+  blog: "blogs",
+};
 
 const KEY = "mr-saves";
 const LEGACY_KEY = "mr-keeps";
@@ -16,11 +23,21 @@ let snapshot: Saves = cloneEmpty();
 let booted = false;
 
 function cloneEmpty(): Saves {
-  return { markets: [], vendors: [] };
+  return { markets: [], vendors: [], blogs: [] };
 }
 
 function clone(saves: Saves): Saves {
-  return { markets: [...saves.markets], vendors: [...saves.vendors] };
+  return {
+    markets: [...saves.markets],
+    vendors: [...saves.vendors],
+    blogs: [...saves.blogs],
+  };
+}
+
+function slugs(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
 function parse(raw: string | null): Saves {
@@ -28,12 +45,9 @@ function parse(raw: string | null): Saves {
   try {
     const parsed = JSON.parse(raw) as Partial<Saves>;
     return {
-      markets: Array.isArray(parsed.markets)
-        ? parsed.markets.filter((item): item is string => typeof item === "string")
-        : [],
-      vendors: Array.isArray(parsed.vendors)
-        ? parsed.vendors.filter((item): item is string => typeof item === "string")
-        : [],
+      markets: slugs(parsed.markets),
+      vendors: slugs(parsed.vendors),
+      blogs: slugs(parsed.blogs),
     };
   } catch {
     return clone(EMPTY_SAVES);
@@ -86,11 +100,11 @@ export function subscribeSaves(listener: () => void) {
 }
 
 export function isSaved(kind: SaveKind, slug: string, saves: Saves = snapshot) {
-  return saves[kind === "market" ? "markets" : "vendors"].includes(slug);
+  return saves[SAVE_LIST[kind]].includes(slug);
 }
 
 export function toggleSave(kind: SaveKind, slug: string) {
-  const key = kind === "market" ? "markets" : "vendors";
+  const key = SAVE_LIST[kind];
   const current = snapshot[key];
   const nextList = current.includes(slug)
     ? current.filter((item) => item !== slug)
@@ -102,13 +116,15 @@ export function replaceSaves(next: Saves) {
   emit({
     markets: [...new Set(next.markets.filter((item) => typeof item === "string" && item))],
     vendors: [...new Set(next.vendors.filter((item) => typeof item === "string" && item))],
+    blogs: [...new Set((next.blogs ?? []).filter((item) => typeof item === "string" && item))],
   });
 }
 
 export function sameSaves(left: Saves, right: Saves) {
   return (
     left.markets.join("\0") === right.markets.join("\0") &&
-    left.vendors.join("\0") === right.vendors.join("\0")
+    left.vendors.join("\0") === right.vendors.join("\0") &&
+    left.blogs.join("\0") === right.blogs.join("\0")
   );
 }
 
@@ -116,5 +132,18 @@ export function unionSaves(left: Saves, right: Saves): Saves {
   return {
     markets: [...new Set([...left.markets, ...right.markets])],
     vendors: [...new Set([...left.vendors, ...right.vendors])],
+    blogs: [...new Set([...left.blogs, ...right.blogs])],
   };
+}
+
+export function savesFromRows(rows: Array<{ kind: string; slug: string }> | null): Saves {
+  const markets: string[] = [];
+  const vendors: string[] = [];
+  const blogs: string[] = [];
+  for (const row of rows ?? []) {
+    if (row.kind === "market") markets.push(row.slug);
+    else if (row.kind === "vendor") vendors.push(row.slug);
+    else if (row.kind === "blog") blogs.push(row.slug);
+  }
+  return { markets, vendors, blogs };
 }
