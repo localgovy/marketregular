@@ -8,10 +8,16 @@ export type BlogPost = {
   slug: string;
   title: string;
   description: string;
+  /** Civil date in the file, shown as Published. */
   date: string;
   kicker?: string;
   body: string;
 };
+
+/** Noon on a civil date so Toronto does not slip to the previous day. */
+export function blogPostedIso(date: string) {
+  return date.includes("T") ? date : `${date}T12:00:00`;
+}
 
 function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {
   const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BlogPosted } from "@/components/blog-posted";
+import { JsonLd } from "@/components/json-ld";
 import { listBlogPosts } from "@/lib/blog";
 import { LAUNCH_CITY } from "@/lib/launch";
-import { formatPostedAt } from "@/lib/format";
 import { BLOG_CRUMB, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
-import { JsonLd } from "@/components/json-ld";
 
 export const dynamic = "force-static";
 
@@ -27,9 +27,7 @@ export default function BlogIndexPage() {
         <ul className="divide-y divide-border border-t border-border">
           {posts.map((post) => (
             <li key={post.slug} className="py-6">
-              <p className="type-kicker text-muted-foreground">
-                {post.kicker ?? formatPostedAt(`${post.date}T12:00:00`)}
-              </p>
+              <BlogPosted date={post.date} kicker={post.kicker} />
               <h2 className="mt-1">
                 <Link href={`/blog/${post.slug}`} className="hover:underline">
                   {post.title}

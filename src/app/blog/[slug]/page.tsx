@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { BlogBody } from "@/components/blog-body";
+import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
 import { getBlogPost, listBlogPosts } from "@/lib/blog";
 import { SITE_NAME, SITE_OG } from "@/lib/constants";
-import { formatPostedAt } from "@/lib/format";
 import { BLOG_CRUMB, blogPostingJsonLd, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
 
 export const dynamic = "force-static";
@@ -70,11 +70,9 @@ export default async function BlogPostPage({
           path,
         })}
       />
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1">
         <BackButton href="/blog" />
-        <p className="type-kicker text-muted-foreground">
-          {post.kicker ?? formatPostedAt(`${post.date}T12:00:00`)}
-        </p>
+        <BlogPosted date={post.date} kicker={post.kicker} />
       </div>
       <h1 className="mt-1">{post.title}</h1>
       <p className="type-lede mt-2 text-muted-foreground">{post.description}</p>

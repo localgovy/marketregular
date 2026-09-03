@@ -106,17 +106,32 @@ const MONTHS_SHORT = [
   "Dec",
 ] as const;
 
-/** Calendar date in `tz`. Numeric parts only — no locale month names. */
-export function formatPostedAt(iso: string, tz = LAUNCH_TZ) {
+function postedParts(iso: string, tz = LAUNCH_TZ) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
+    year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).formatToParts(new Date(iso));
   const month = Number(parts.find((part) => part.type === "month")?.value ?? 0);
   const day = Number(parts.find((part) => part.type === "day")?.value ?? 0);
-  if (month < 1 || month > 12 || !day) return iso;
-  return `${MONTHS_SHORT[month - 1]} ${day}`;
+  const year = parts.find((part) => part.type === "year")?.value;
+  if (month < 1 || month > 12 || !day || !year) return null;
+  return { month, day, year };
+}
+
+/** Calendar date in `tz`. Numeric parts only — no locale month names. */
+export function formatPostedAt(iso: string, tz = LAUNCH_TZ) {
+  const parts = postedParts(iso, tz);
+  if (!parts) return iso;
+  return `${MONTHS_SHORT[parts.month - 1]} ${parts.day}`;
+}
+
+/** Blog publish date: month, day, and year. */
+export function formatPostedOn(iso: string, tz = LAUNCH_TZ) {
+  const parts = postedParts(iso, tz);
+  if (!parts) return iso;
+  return `${MONTHS_SHORT[parts.month - 1]} ${parts.day}, ${parts.year}`;
 }
 
 export function timeAgo(iso: string, now = Date.now()) {
