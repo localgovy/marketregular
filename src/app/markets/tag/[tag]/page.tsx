@@ -88,18 +88,19 @@ function StallList({ vendors }: { vendors: Vendor[] }) {
     <ul className="mt-4 grid gap-3 sm:grid-cols-2">
       {vendors.map((vendor) => (
         <li key={vendor.id} className="rounded-md bg-card p-3 ring-1 ring-border">
-          <Link
-            href={`/vendors/${vendor.slug}`}
-            className="text-base font-medium hover:underline"
-          >
-            {vendor.name}
-          </Link>
-          <ListingScore
-            ratingAvg={vendor.rating_avg}
-            reviewCount={vendor.review_count}
-            compact
-            className="ml-2 align-middle"
-          />
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link
+              href={`/vendors/${vendor.slug}`}
+              className="text-base font-medium hover:underline"
+            >
+              {vendor.name}
+            </Link>
+            <ListingScore
+              ratingAvg={vendor.rating_avg}
+              reviewCount={vendor.review_count}
+              compact
+            />
+          </p>
           {vendor.about ? (
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{vendor.about}</p>
           ) : null}

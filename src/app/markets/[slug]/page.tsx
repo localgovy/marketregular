@@ -18,6 +18,7 @@ import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok, ListingF
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
+import { listingScore } from "@/lib/listing-score";
 import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
@@ -109,10 +110,19 @@ export default async function MarketPage({
           <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
         </div>
       </div>
-      {when === "Open now" ? (
-        <NowLabel className="mt-2">{when}</NowLabel>
-      ) : when ? (
-        <p className="mt-2 text-base font-medium text-primary">{when}</p>
+      {when || listingScore(market.rating_avg, market.review_count) ? (
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+          {when === "Open now" ? (
+            <NowLabel>{when}</NowLabel>
+          ) : when ? (
+            <span className="text-base font-medium text-primary">{when}</span>
+          ) : null}
+          <ListingScore
+            className="text-base"
+            ratingAvg={market.rating_avg}
+            reviewCount={market.review_count}
+          />
+        </div>
       ) : null}
       {listingNote(market.slug) ? (
         <p className="mt-2 max-w-2xl text-base text-muted-foreground">
@@ -134,11 +144,6 @@ export default async function MarketPage({
           ) : null}
         </p>
       ) : null}
-      <ListingScore
-        className="mt-3 text-base"
-        ratingAvg={market.rating_avg}
-        reviewCount={market.review_count}
-      />
       <TagList className="mt-4" tags={sortTagsForDisplay(market.tags)} />
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">

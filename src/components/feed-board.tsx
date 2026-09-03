@@ -251,13 +251,10 @@ export function FeedBoard({
                     scroll={false}
                     className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 text-sm hover:text-primary"
                   >
-                    <span>
+                    <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       <span className="font-medium">{place.name}</span>
                       {open.has(place.slug) ? (
-                        <>
-                          {" "}
-                          <NowLabel className="align-middle">Open</NowLabel>
-                        </>
+                        <NowLabel>Open</NowLabel>
                       ) : null}
                     </span>
                     <span className="type-nums shrink-0 text-muted-foreground">
