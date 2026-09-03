@@ -4,6 +4,8 @@ import { Hours } from "@/components/hours";
 type Inline =
   | { kind: "text"; value: string }
   | { kind: "bold"; value: string }
+  | { kind: "italic"; value: string }
+  | { kind: "hours"; value: string }
   | { kind: "link"; href: string; label: string };
 
 type Block =
@@ -14,19 +16,39 @@ type Block =
 
 const MARKET_ROW = /^(.*) · (.+)$/;
 
+function looksLikeHours(value: string) {
+  return /\d/.test(value) && /AM|PM/.test(value);
+}
+
+function sitePath(href: string): string {
+  try {
+    const url = new URL(href, "https://www.marketregular.com");
+    if (url.hostname === "www.marketregular.com" || url.hostname === "marketregular.com") {
+      return `${url.pathname}${url.search}${url.hash}` || "/";
+    }
+  } catch {
+    // keep the original href
+  }
+  return href;
+}
+
 function parseInlines(text: string): Inline[] {
   const out: Inline[] = [];
-  const token = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
+  const token = /(\*\*[^*]+\*\*|\*[^*]+\*|\[[^\]]+\]\([^)]+\))/g;
   let last = 0;
   for (const match of text.matchAll(token)) {
     const at = match.index ?? 0;
     if (at > last) out.push({ kind: "text", value: text.slice(last, at) });
     const chunk = match[0];
     if (chunk.startsWith("**")) {
-      out.push({ kind: "bold", value: chunk.slice(2, -2) });
+      const value = chunk.slice(2, -2);
+      if (looksLikeHours(value)) out.push({ kind: "hours", value });
+      else out.push({ kind: "bold", value });
+    } else if (chunk.startsWith("*")) {
+      out.push({ kind: "italic", value: chunk.slice(1, -1) });
     } else {
       const link = chunk.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-      if (link) out.push({ kind: "link", href: link[2], label: link[1] });
+      if (link) out.push({ kind: "link", href: sitePath(link[2]), label: link[1] });
       else out.push({ kind: "text", value: chunk });
     }
     last = at + chunk.length;
@@ -41,7 +63,8 @@ function parseBlocks(markdown: string): Block[] {
   let i = 0;
   while (i < lines.length) {
     const line = lines[i] ?? "";
-    if (!line.trim()) {
+    if (!line.trim() || /^---+$/.test(line.trim()) || line.startsWith("# ")) {
+      // Page already has the title. Bare `#` headings and `---` rules are skipped.
       i += 1;
       continue;
     }
@@ -60,7 +83,7 @@ function parseBlocks(markdown: string): Block[] {
       while (i < lines.length && (lines[i] ?? "").startsWith("- ")) {
         const raw = (lines[i] ?? "").slice(2).trim();
         const row = raw.match(MARKET_ROW);
-        if (row && /\d/.test(row[2]) && /AM|PM/.test(row[2])) {
+        if (row && looksLikeHours(row[2])) {
           items.push({ inlines: parseInlines(row[1].trim()), hours: row[2].trim() });
         } else {
           items.push({ inlines: parseInlines(raw) });
@@ -73,11 +96,14 @@ function parseBlocks(markdown: string): Block[] {
     const para: string[] = [];
     while (i < lines.length) {
       const next = lines[i] ?? "";
-      if (!next.trim() || next.startsWith("#") || next.startsWith("- ")) break;
+      if (!next.trim() || next.startsWith("#") || next.startsWith("- ") || /^---+$/.test(next.trim())) {
+        break;
+      }
       para.push(next.trim());
       i += 1;
     }
     if (para.length) blocks.push({ type: "p", inlines: parseInlines(para.join(" ")) });
+    else i += 1;
   }
   return blocks;
 }
@@ -93,6 +119,14 @@ function Inlines({ inlines }: { inlines: Inline[] }) {
               {part.value}
             </strong>
           );
+        }
+        if (part.kind === "italic") {
+          return (
+            <em key={index}>{part.value}</em>
+          );
+        }
+        if (part.kind === "hours") {
+          return <Hours key={index} value={part.value} className="text-foreground" />;
         }
         const internal = part.href.startsWith("/");
         const className = "font-medium text-foreground hover:underline";
