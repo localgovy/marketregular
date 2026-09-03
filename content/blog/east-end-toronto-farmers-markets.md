@@ -1,32 +1,49 @@
+# East-end Toronto farmers’ markets: East Lynn, Leslieville, Withrow
+
+Three Danforth / Riverdale / Leslieville markets within a short streetcar ride of each other. Hours and stalls from [MarketRegular](https://www.marketregular.com). Tap a name for the live listing.
+
+This is not another “every market in Toronto” list. It’s the east-end circuit Beach Metro readers actually use.
+
 ---
-title: East end Toronto farmers' markets
-description: Thursday at East Lynn on the Danforth, Saturday at Withrow Park, and Sunday outdoors at Leslieville in Greenwood Park.
-date: 2026-09-03
-kicker: East end
+
+## Thursday: East Lynn Park
+
+[East Lynn Park Farmers’ Market](https://www.marketregular.com/markets/east-lynn-park-farmers-market) · 1949 Danforth Avenue · **3 PM–7 PM** · Jun 4–Oct 8
+
+Volunteer-run with the Danforth East Community Association. Farmers sell what they grow, plus specialty food and drink, with weekly live music in season.
+
+**Stalls to look for this season:** Hooked, [St. John’s Bakery](https://www.marketregular.com/vendors/st-john-s-bakery), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), Mad Mexican, Warner’s Farm, Do Good Donuts.
+
 ---
 
-Three outdoor halls between the Danforth and Greenwood. Every name goes to the live listing.
+## Saturday: Withrow Park
 
-Hours follow each hall's published schedule. [All markets](/markets) · [This weekend](/blog/toronto-farmers-markets-this-weekend-sep-5-6)
+[Withrow Park Farmers’ Market](https://www.marketregular.com/markets/withrow-park-farmers-market) · 725 Logan Avenue · **9 AM–1 PM** · May 30–Oct 17
 
-## Thursday, East Lynn
+A Riverdale Saturday morning: produce, greens, seafood, and bakeries in the park.
 
-- [East Lynn Park Farmers’ Market](/markets/east-lynn-park-farmers-market) · 3 PM–7 PM
+**Stalls to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), [Lev Bakery](https://www.marketregular.com/vendors/lev-bakery), Cookstown Greens, Alma Bakery, Chirping Bird Bakery.
 
-1949 Danforth Avenue, in the park. June 4 to Oct 8. Farmers sell what they grow, with specialty food and drink, live music, and community pop-ups.
+---
 
-## Saturday, Withrow Park
+## Sunday: Leslieville outdoor
 
-- [Withrow Park Farmers’ Market](/markets/withrow-park-farmers-market) · 9 AM–1 PM
+[The Leslieville Farmers’ Market](https://www.marketregular.com/markets/the-leslieville-farmers-market) · 150 Greenwood · **9 AM–2 PM** · May 10–Oct 25
 
-725 Logan Avenue, northeast corner of the park. May 30 to Oct 17, rain or shine.
+The outdoor summer/fall market. **Not** the Leslieville East End Food Hub indoor season.
 
-## Sunday, Leslieville outdoors
+**Stalls to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), Alma Bakery, Bad Attitude Bread, Wheelbarrow Farm, Magic Oven.
 
-This is the Greenwood Park season, not the indoor East End Food Hub.
+---
 
-- [The Leslieville Farmers’ Market](/markets/the-leslieville-farmers-market) · 9 AM–2 PM
+## How to use the circuit
 
-150 Greenwood Avenue. May 10 to Oct 25.
+- **Thursday evening:** East Lynn on the Danforth.
+- **Saturday morning:** Withrow at Logan.
+- **Sunday morning:** Leslieville at Greenwood.
 
-Indoor Sundays either side of that season are at [Leslieville Farmers' Market at East End Food Hub](/markets/leslieville-farmers-market-east-end-food-hub).
+Save all three on [MarketRegular](https://www.marketregular.com), then filter by day when you only have one morning free.
+
+Made by Canadians, for Canadians, to shop Canadian. Pickup coming soon.
+
+*— MarketRegular · www.marketregular.com*
