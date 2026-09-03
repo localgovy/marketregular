@@ -9,6 +9,7 @@ export const SITE_NAV = [
 /** Header text links beside the account chip. Same face as Contact. */
 export const SITE_META_NAV = [
   { href: "/about", label: "About" },
+  { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
 ] as const;
 

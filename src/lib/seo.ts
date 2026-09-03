@@ -312,3 +312,27 @@ export function itemListJsonLd({
 }
 
 export const MARKETS_CRUMB = { name: `${LAUNCH_CITY} farmers' markets`, path: "/markets" };
+export const BLOG_CRUMB = { name: "Blog", path: "/blog" };
+
+export function blogPostingJsonLd(post: {
+  title: string;
+  description: string;
+  date: string;
+  path: string;
+}) {
+  const url = absoluteUrl(post.path);
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    dateModified: post.date,
+    inLanguage: "en-CA",
+    url,
+    mainEntityOfPage: url,
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    publisher: { "@id": `${SITE_URL}/#org` },
+    author: { "@id": `${SITE_URL}/#org` },
+  };
+}

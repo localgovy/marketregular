@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.dirname(fileURLToPath(import.meta.url)),
   },
+  // Markdown lives outside `src/`. Include it so /blog and sitemap can read it
+  // after the serverless trace, not only during `next build` on the builder.
+  outputFileTracingIncludes: {
+    "/blog": ["./content/blog/**/*"],
+    "/blog/[slug]": ["./content/blog/**/*"],
+    "/sitemap.xml": ["./content/blog/**/*"],
+  },
   images: {
     // Hobby Image Optimization is at the cap; serve originals so logos do not 402.
     unoptimized: true,

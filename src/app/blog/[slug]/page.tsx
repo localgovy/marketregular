@@ -1,0 +1,84 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { BackButton } from "@/components/back-button";
+import { BlogBody } from "@/components/blog-body";
+import { JsonLd } from "@/components/json-ld";
+import { getBlogPost, listBlogPosts } from "@/lib/blog";
+import { SITE_NAME, SITE_OG } from "@/lib/constants";
+import { formatPostedAt } from "@/lib/format";
+import { BLOG_CRUMB, blogPostingJsonLd, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
+
+export const dynamic = "force-static";
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return listBlogPosts().map((post) => ({ slug: post.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = getBlogPost(slug);
+  if (!post) return { title: "Blog" };
+  return {
+    ...pageMeta({
+      title: post.title,
+      description: post.description,
+      path: `/blog/${post.slug}`,
+    }),
+    openGraph: {
+      type: "article",
+      locale: "en_CA",
+      siteName: SITE_NAME,
+      publishedTime: post.date,
+      title: post.title,
+      description: post.description,
+      url: `/blog/${post.slug}`,
+      images: [
+        {
+          url: SITE_OG,
+          width: 1200,
+          height: 630,
+          alt: SITE_NAME,
+        },
+      ],
+    },
+  };
+}
+
+export default async function BlogPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const post = getBlogPost(slug);
+  if (!post) notFound();
+  const path = `/blog/${post.slug}`;
+
+  return (
+    <div className="mx-auto w-full max-w-3xl px-4 py-10">
+      <JsonLd data={breadcrumbJsonLd([BLOG_CRUMB, { name: post.title, path }])} />
+      <JsonLd
+        data={blogPostingJsonLd({
+          title: post.title,
+          description: post.description,
+          date: post.date,
+          path,
+        })}
+      />
+      <div className="flex items-center gap-1">
+        <BackButton href="/blog" />
+        <p className="type-kicker text-muted-foreground">
+          {post.kicker ?? formatPostedAt(`${post.date}T12:00:00`)}
+        </p>
+      </div>
+      <h1 className="mt-1">{post.title}</h1>
+      <p className="type-lede mt-2 text-muted-foreground">{post.description}</p>
+      <BlogBody markdown={post.body} />
+    </div>
+  );
+}
