@@ -5,9 +5,7 @@ date: 2026-09-03
 kicker: Sep 5–6
 ---
 
-Thursday still had halls on in the afternoon and evening. Saturday and Sunday hours are below. Every name goes to the live listing.
-
-Hours follow each hall's published schedule for 3, 5, and 6 September 2026. [All markets](/markets) · [This month's days](/events)
+---
 
 ## Thursday, Sep 3
 

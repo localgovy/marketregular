@@ -12,7 +12,7 @@ export const dynamic = "force-static";
 export const metadata: Metadata = pageMeta({
   title: "Blog",
   path: "/blog",
-  description: `Weekend hours and neighbourhood guides for ${LAUNCH_CITY} farmers' markets, written so you can send someone the list.`,
+  description: `Find out the latest schedules, vendors, and tidbits from your favourite farmers' markets in ${LAUNCH_CITY}. If you find an article with information that you don't want to lose, just save it to your profile.`,
 });
 
 export default function BlogIndexPage() {
@@ -22,7 +22,9 @@ export default function BlogIndexPage() {
       <JsonLd data={breadcrumbJsonLd([BLOG_CRUMB])} />
       <h1>Blog</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        Weekend hours, and where to go in the east end.
+        Find out the latest schedules, vendors, and tidbits from your favourite
+        farmers' markets in {LAUNCH_CITY}. If you find an article with
+        information that you don't want to lose, just save it to your profile.
       </p>
       {posts.length ? (
         <ul className="divide-y divide-border border-t border-border">
