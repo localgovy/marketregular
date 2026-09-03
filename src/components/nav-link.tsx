@@ -25,7 +25,7 @@ export function NavLink({
       prefetch={false}
       className={cn(
         tab
-          ? "inline-flex h-full min-w-0 shrink-0 items-center px-5 text-sm font-medium whitespace-nowrap text-muted-foreground hover:bg-card hover:text-foreground"
+          ? "inline-flex h-full min-w-0 shrink-0 items-center px-5 text-sm font-medium whitespace-nowrap text-foreground hover:bg-card"
           : "hover:underline",
         on &&
           (tab
