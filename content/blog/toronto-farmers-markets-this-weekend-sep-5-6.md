@@ -1,6 +1,6 @@
 ---
 title: Toronto farmers' markets this weekend
-description: Saturday and Sunday hours for Toronto farmers' markets, 5–6 September 2026, plus who is still on this Thursday.
+description: Saturday and Sunday hours for Toronto farmers' markets, 5–6 September 2026, plus who is still open.
 date: 2026-09-03
 kicker: Sep 5–6
 ---
