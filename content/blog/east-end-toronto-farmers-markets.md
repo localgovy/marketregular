@@ -1,3 +1,10 @@
+---
+title: East end Toronto farmers' markets
+description: Thursday at East Lynn on the Danforth, Saturday at Withrow Park, and Sunday outdoors at Leslieville in Greenwood Park.
+date: 2026-09-03
+kicker: East end
+---
+
 # East-end Toronto farmers’ markets: East Lynn, Leslieville, Withrow
 
 Three Danforth / Riverdale / Leslieville markets within a short streetcar ride of each other. Hours and stalls from [MarketRegular](https://www.marketregular.com). Tap a name for the live listing.
