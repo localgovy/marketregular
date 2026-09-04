@@ -45,7 +45,7 @@ Our picks for produce suppliers from our catalog:
 
 Start with the live hours list: [Toronto farmers’ markets this weekend](/blog/toronto-farmers-markets-this-weekend-sep-5-6).
 
-East-end circuit (Thu / Sat / Sun): [East end Toronto farmers’ markets](/blog/east-end-toronto-farmers-markets).
+East-end markets (Thu / Sat / Sun): [East end Toronto farmers’ markets](/blog/east-end-toronto-farmers-markets).
 
 Filter by day or neighbourhood on the [homepage](/).
 
