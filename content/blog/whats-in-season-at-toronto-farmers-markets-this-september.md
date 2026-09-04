@@ -1,7 +1,6 @@
 ---
 title: What's in season at Toronto farmers' markets this September
-description: "Early September is still summer in Ontario, with fall around the corner, here are a couple picks for what's still in season and what's just coming in.
-    Hours and vendors from [MarketRegular](/) — 85 markets, 1,418 vendors."
+description: "Early September is still summer in Ontario, with fall around the corner, here are a couple picks for what's still in season and what's just coming in. Hours and vendors from [MarketRegular](/) — 85 markets, 1,418 vendors."
 date: 2026-09-04
 kicker: September
 ---
