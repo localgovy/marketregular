@@ -1,5 +1,15 @@
 import Link from "next/link";
 import { Hours } from "@/components/hours";
+import { ListingScore } from "@/components/listing-score";
+import { ListingSaveButton } from "@/components/save-button";
+import {
+  loadBlogMarketPeeks,
+  peekKey,
+  weekdayFromHeading,
+  type BlogMarketPeek,
+  type BlogMarketPeekRequest,
+} from "@/lib/blog-market-peeks";
+import { listingFromInput } from "@/lib/listing-saves";
 
 type Inline =
   | { kind: "text"; value: string }
@@ -55,6 +65,63 @@ function parseInlines(text: string): Inline[] {
   }
   if (last < text.length) out.push({ kind: "text", value: text.slice(last) });
   return out;
+}
+
+function marketSlugFromInlines(inlines: Inline[]): string | null {
+  for (const part of inlines) {
+    if (part.kind !== "link") continue;
+    const match = part.href.match(/^\/markets\/([^/?#]+)$/);
+    if (match?.[1]) return decodeURIComponent(match[1]);
+  }
+  return null;
+}
+
+function inlineText(inlines: Inline[]): string {
+  return inlines
+    .map((part) => {
+      if (part.kind === "link") return part.label;
+      return part.value;
+    })
+    .join("")
+    .trim();
+}
+
+const MONTH = /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/;
+
+function headingWithDate(heading: string, dated: string | null) {
+  if (MONTH.test(heading) || !dated) return heading;
+  const datePart = dated.match(/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b.*$/)?.[0]?.trim();
+  return datePart ? `${heading}, ${datePart}` : heading;
+}
+
+function blockContext(blocks: Block[]): Array<{ weekday: number | null; heading: string | null }> {
+  let weekday: number | null = null;
+  let heading: string | null = null;
+  let dated: string | null = null;
+  return blocks.map((block) => {
+    if (block.type === "h2") {
+      weekday = weekdayFromHeading(block.text) ?? weekday;
+      if (MONTH.test(block.text)) dated = block.text;
+      heading = headingWithDate(block.text, dated);
+    }
+    return { weekday, heading };
+  });
+}
+
+function peekRequests(
+  blocks: Block[],
+  context: Array<{ weekday: number | null; heading: string | null }>,
+): BlogMarketPeekRequest[] {
+  const requests: BlogMarketPeekRequest[] = [];
+  blocks.forEach((block, index) => {
+    if (block.type !== "ul" || !block.items.every((item) => item.hours)) return;
+    const weekday = context[index]?.weekday ?? null;
+    for (const item of block.items) {
+      const slug = marketSlugFromInlines(item.inlines);
+      if (slug) requests.push({ slug, weekday });
+    }
+  });
+  return requests;
 }
 
 function parseBlocks(markdown: string): Block[] {
@@ -147,8 +214,70 @@ function Inlines({ inlines }: { inlines: Inline[] }) {
   );
 }
 
-export function BlogBody({ markdown }: { markdown: string }) {
+function StallPeek({ vendors }: { vendors: BlogMarketPeek["vendors"] }) {
+  return (
+    <p className="mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-3 text-sm leading-relaxed">
+      <span className="text-muted-foreground">Vendors</span>
+      <span className="min-w-0">
+        {vendors.map((vendor, vendorIndex) => (
+          <span key={vendor.slug}>
+            {vendorIndex ? ", " : null}
+            <Link href={`/vendors/${vendor.slug}`} className="text-foreground hover:underline">
+              {vendor.name}
+            </Link>
+          </span>
+        ))}
+      </span>
+    </p>
+  );
+}
+
+function MarketHoursRow({
+  item,
+  peek,
+  listing,
+}: {
+  item: { inlines: Inline[]; hours?: string };
+  peek: BlogMarketPeek | undefined;
+  listing: ReturnType<typeof listingFromInput>;
+}) {
+  return (
+    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-3">
+      <div className="min-w-0">
+        <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <span className="text-base font-medium">
+            <Inlines inlines={item.inlines} />
+          </span>
+          {peek ? (
+            <ListingScore
+              ratingAvg={peek.ratingAvg}
+              reviewCount={peek.reviewCount}
+              className="text-foreground"
+            />
+          ) : null}
+        </span>
+        {peek?.vendors.length ? <StallPeek vendors={peek.vendors} /> : null}
+      </div>
+      <span className="flex shrink-0 items-start gap-2">
+        {item.hours ? <Hours value={item.hours} className="text-foreground" /> : null}
+        {listing ? <ListingSaveButton listing={listing} /> : null}
+      </span>
+    </li>
+  );
+}
+
+export async function BlogBody({
+  markdown,
+  blogSlug,
+}: {
+  markdown: string;
+  blogSlug?: string;
+}) {
   const blocks = parseBlocks(markdown);
+  const context = blockContext(blocks);
+  const requests = peekRequests(blocks, context);
+  const peeks = requests.length ? await loadBlogMarketPeeks(requests) : null;
+
   return (
     <div className="mt-8">
       {blocks.map((block, index) => {
@@ -170,21 +299,49 @@ export function BlogBody({ markdown }: { markdown: string }) {
           const marketList = block.items.every((item) => item.hours);
           if (marketList) {
             return (
-              <ul key={index} className="mt-3 divide-y divide-border">
-                {block.items.map((item, itemIndex) => (
-                  <li
-                    key={itemIndex}
-                    className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 py-2 text-base"
-                  >
-                    <span className="min-w-0 font-medium">
-                      <Inlines inlines={item.inlines} />
+              <div key={index} className="mt-3">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 border-b border-border pb-2 text-sm text-muted-foreground">
+                  <span>Market</span>
+                  <span className="flex items-center gap-2">
+                    <span>Hours</span>
+                    <span className="invisible stall-chip-sm inline-flex h-8 px-2.5 text-sm" aria-hidden>
+                      Save
                     </span>
-                    {item.hours ? (
-                      <Hours value={item.hours} className="text-foreground" />
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
+                  </span>
+                </div>
+                <ul className="divide-y divide-border">
+                  {block.items.map((item, itemIndex) => {
+                    const slug = marketSlugFromInlines(item.inlines);
+                    const peek =
+                      slug && peeks
+                        ? peeks.get(peekKey(slug, context[index]?.weekday ?? null))
+                        : undefined;
+                    const heading = context[index]?.heading;
+                    const listing =
+                      blogSlug && slug && heading && item.hours
+                        ? listingFromInput({
+                            blog: blogSlug,
+                            heading,
+                            hours: item.hours,
+                            marketSlug: slug,
+                            marketName: inlineText(item.inlines),
+                            ratingAvg: peek?.ratingAvg ?? null,
+                            reviewCount: peek?.reviewCount ?? 0,
+                            vendors: peek?.vendors ?? [],
+                            order: index * 100 + itemIndex,
+                          })
+                        : null;
+                    return (
+                      <MarketHoursRow
+                        key={itemIndex}
+                        item={item}
+                        peek={peek}
+                        listing={listing}
+                      />
+                    );
+                  })}
+                </ul>
+              </div>
             );
           }
           return (

@@ -128,7 +128,7 @@ export function SavedDesk({
   const saves = useHydratedSaves(initialSaves);
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
-  const empty = !savedMarkets.length && !savedVendors.length && !saves.blogs.length;
+  const empty = !savedMarkets.length && !savedVendors.length && !saves.blogs.length && !saves.listings.length;
 
   return (
     <div className="grid gap-10">
@@ -212,6 +212,7 @@ export function SavedDesk({
       <SavedNotesSection
         notes={notes}
         slugs={saves.blogs}
+        listings={saves.listings}
         heading="h2"
         listClassName="mt-3 bg-card"
       />

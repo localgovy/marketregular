@@ -11,13 +11,14 @@ export function useHydratedSaves(initial: Saves) {
   const marketKey = initial.markets.join("\0");
   const vendorKey = initial.vendors.join("\0");
   const blogKey = initial.blogs.join("\0");
+  const listingKey = (initial.listings ?? []).map((row) => row.slug).join("\0");
 
   useEffect(() => {
     replaceSaves(unionSaves(initial, getSaves()));
     setHydrated(true);
     // `initial` is a new object each server render; the joined keys are the lists.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- marketKey / vendorKey / blogKey
-  }, [marketKey, vendorKey, blogKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- marketKey / vendorKey / blogKey / listingKey
+  }, [marketKey, vendorKey, blogKey, listingKey]);
 
   return hydrated ? live : initial;
 }

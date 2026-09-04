@@ -11,6 +11,7 @@ import { BLOG_CRUMB, blogPostingJsonLd, breadcrumbJsonLd, pageMeta } from "@/lib
 
 export const dynamic = "force-static";
 export const dynamicParams = false;
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   return listBlogPosts().map((post) => ({ slug: post.slug }));
@@ -80,7 +81,7 @@ export default async function BlogPostPage({
         <SaveButton kind="blog" slug={post.slug} name={post.title} size="lg" />
       </div>
       <p className="type-lede mt-2 text-muted-foreground">{post.description}</p>
-      <BlogBody markdown={post.body} />
+      <BlogBody markdown={post.body} blogSlug={post.slug} />
     </div>
   );
 }

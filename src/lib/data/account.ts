@@ -6,7 +6,10 @@ import type { ClaimRequest } from "@/types/database";
 export async function loadMySaves(): Promise<Saves> {
   const { supabase, user } = await createAuthedServerClient();
   if (!supabase || !user) return EMPTY_SAVES;
-  const { data, error } = await supabase.from("saves").select("kind, slug").eq("user_id", user.id);
+  const { data, error } = await supabase
+    .from("saves")
+    .select("kind, slug, detail")
+    .eq("user_id", user.id);
   if (error) return EMPTY_SAVES;
   return savesFromRows(data);
 }
@@ -33,7 +36,7 @@ export async function loadAccountDesk(userId: string) {
   }
 
   const [savesRes, postsRes, claimsRes, postCountRes, me] = await Promise.all([
-    supabase.from("saves").select("kind, slug").eq("user_id", user.id),
+    supabase.from("saves").select("kind, slug, detail").eq("user_id", user.id),
     supabase
       .from("posts")
       .select("id, body, created_at, market_id")

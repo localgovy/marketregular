@@ -27,7 +27,7 @@ export function AccountSavedLists({
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
   const empty =
-    !savedMarkets.length && !savedVendors.length && !saves.blogs.length;
+    !savedMarkets.length && !savedVendors.length && !saves.blogs.length && !saves.listings.length;
 
   if (empty) {
     return (
@@ -128,6 +128,7 @@ export function AccountSavedLists({
       <SavedNotesSection
         notes={notes}
         slugs={saves.blogs}
+        listings={saves.listings}
         heading="h3"
         listClassName="mt-2"
       />
