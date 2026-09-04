@@ -1,6 +1,6 @@
 ---
 title: What's in season at Toronto farmers' markets this September
-description: "Early September is still peak Ontario summer, with fall starting to show up at the stalls. Hours and vendors from [MarketRegular](/) — 85 markets, 1,418 vendors."
+description: "Early September is still summer in Ontario, with fall around the corner, here are a couple picks for what's still in season and what's just coming in. Hours and vendors from [MarketRegular](/) — 85 markets, 1,418 vendors."
 date: 2026-09-04
 kicker: September
 ---
@@ -53,7 +53,7 @@ Filter by day or neighbourhood on the [homepage](/).
 
 ## Shopper tips
 
-- Bring bags and clean containers. [Brick Works](/markets/evergreen-brick-works-saturday-farmers-market) and many other halls welcome BYO.
+- Bring bags and clean containers. [Brick Works](/markets/evergreen-brick-works-saturday-farmers-market) and many other markets welcome this.
 - Ask what’s good for the day of, produce cycles can change varying on the weather patterns.
 - Save markets and vendors you actually go to so next week's visit goes smoothly.
 
