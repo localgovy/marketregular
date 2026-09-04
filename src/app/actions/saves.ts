@@ -50,13 +50,20 @@ export async function persistSave(kind: SaveKind, slug: string, saved: boolean):
     if (error && error.code !== "23505") return null;
   } else {
     if (kind === "blog") {
-      const listingDelete = await supabase
-        .from("saves")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("kind", "listing")
-        .contains("detail", { blog: slug });
-      if (listingDelete.error) return null;
+      const existing = await listSaves(supabase, user.id);
+      if (!existing) return null;
+      const listingSlugs = existing.listings
+        .filter((row) => row.blog === slug)
+        .map((row) => row.slug);
+      if (listingSlugs.length) {
+        const listingDelete = await supabase
+          .from("saves")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("kind", "listing")
+          .in("slug", listingSlugs);
+        if (listingDelete.error) return null;
+      }
     }
     const { error } = await supabase
       .from("saves")
@@ -92,6 +99,7 @@ export async function persistListingSave(
       slug: listing.blog,
     });
     if (blogInsert.error && blogInsert.error.code !== "23505") return null;
+    const createdBlog = !blogInsert.error;
     const listingInsert = await supabase.from("saves").insert({
       user_id: user.id,
       kind: "listing",
@@ -100,6 +108,14 @@ export async function persistListingSave(
     });
     if (listingInsert.error && listingInsert.error.code !== "23505") {
       console.error("persistListingSave insert", listingInsert.error);
+      if (createdBlog) {
+        await supabase
+          .from("saves")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("kind", "blog")
+          .eq("slug", listing.blog);
+      }
       return null;
     }
   } else {

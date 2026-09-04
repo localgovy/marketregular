@@ -12,7 +12,7 @@ import {
   type BlogMarketPeekRequest,
 } from "@/lib/blog-market-peeks";
 import { externalHref } from "@/lib/format";
-import { listingFromInput, type SavedListing } from "@/lib/listing-saves";
+import { listingFromInput, validSaveSlug, type SavedListing } from "@/lib/listing-saves";
 import { cn } from "@/lib/utils";
 
 type Inline =
@@ -29,6 +29,8 @@ type Block =
   | { type: "ul"; items: Array<{ inlines: Inline[]; hours?: string }> };
 
 const MARKET_ROW = /^(.*) · (.+)$/;
+const HOURS_SPAN =
+  /\d{1,2}(?::\d{2})?\s*(?:AM|PM)\s*[–-]\s*\d{1,2}(?::\d{2})?\s*(?:AM|PM)/i;
 
 function looksLikeHours(value: string) {
   return /\d/.test(value) && /AM|PM/.test(value);
@@ -87,7 +89,17 @@ function marketLinkFromInlines(inlines: Inline[]): { slug: string; name: string 
   for (const part of inlines) {
     if (part.kind !== "link") continue;
     const match = part.href.match(/^\/markets\/([^/?#]+)$/);
-    if (match?.[1]) return { slug: decodeURIComponent(match[1]), name: part.label };
+    if (!match?.[1]) continue;
+    let slug: string;
+    try {
+      slug = decodeURIComponent(match[1]);
+    } catch {
+      continue;
+    }
+    if (!validSaveSlug(slug)) continue;
+    const name = part.label.trim();
+    if (!name) continue;
+    return { slug, name };
   }
   return null;
 }
@@ -96,7 +108,8 @@ function hoursFromInlines(inlines: Inline[]): string | null {
   for (const part of inlines) {
     if (part.kind === "hours") return part.value;
   }
-  return null;
+  const match = inlineText(inlines).match(HOURS_SPAN);
+  return match?.[0] ?? null;
 }
 
 function inlineText(inlines: Inline[]): string {
@@ -134,7 +147,11 @@ function blockContext(blocks: Block[]): Array<{ weekday: number | null; heading:
 function isMarketHoursList(
   block: Block,
 ): block is { type: "ul"; items: Array<{ inlines: Inline[]; hours?: string }> } {
-  return block.type === "ul" && block.items.every((item) => Boolean(item.hours));
+  return (
+    block.type === "ul" &&
+    block.items.length > 0 &&
+    block.items.every((item) => Boolean(item.hours))
+  );
 }
 
 function peekRequests(

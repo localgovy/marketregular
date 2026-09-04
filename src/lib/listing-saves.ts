@@ -138,13 +138,16 @@ export function listingFromInput(input: {
   vendors?: SavedListingVendor[];
   order?: number;
 }): SavedListing | null {
-  const slug = listingSaveSlug(input.blog, input.heading, input.marketSlug);
+  const heading = input.heading.trim().slice(0, MAX_HEADING);
+  const hours = input.hours.trim().slice(0, MAX_HOURS);
+  const marketName = input.marketName.trim().slice(0, MAX_NAME);
+  const slug = listingSaveSlug(input.blog, heading, input.marketSlug);
   return parseListingDetail(slug, {
     blog: input.blog,
-    heading: input.heading,
-    hours: input.hours,
+    heading,
+    hours,
     marketSlug: input.marketSlug,
-    marketName: input.marketName,
+    marketName,
     ratingAvg: input.ratingAvg ?? null,
     reviewCount: input.reviewCount ?? 0,
     vendors: input.vendors ?? [],

@@ -28,7 +28,11 @@ export function peekKey(slug: string, weekday: number | null) {
 }
 
 export function weekdayFromHeading(text: string): number | null {
-  const word = text.trim().split(/[\s,]+/)[0]?.toLowerCase();
+  const word = text
+    .trim()
+    .split(/[\s,]+/)[0]
+    ?.toLowerCase()
+    .replace(/[^a-z]/g, "");
   if (!word) return null;
   const index = WEEKDAYS.findIndex((day) => day.toLowerCase() === word);
   return index >= 0 ? index : null;
