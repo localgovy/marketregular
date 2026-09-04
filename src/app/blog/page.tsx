@@ -21,7 +21,7 @@ export default function BlogIndexPage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <JsonLd data={breadcrumbJsonLd([BLOG_CRUMB])} />
       <h1>Blog</h1>
-      <p className="type-lede mt-2 mb-8 text-muted-foreground">
+      <p className="type-lede mt-2 mb-8">
         Find out the latest schedules, vendors, and tidbits from your favourite
         farmers' markets in {LAUNCH_CITY}. If you find an article with
         information that you don't want to lose, just save it to your profile.
@@ -38,7 +38,7 @@ export default function BlogIndexPage() {
                       {post.title}
                     </Link>
                   </h2>
-                  <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+                  <p className="mt-2 text-base leading-relaxed">
                     {post.description}
                   </p>
                 </div>

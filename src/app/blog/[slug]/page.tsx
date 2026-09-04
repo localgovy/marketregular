@@ -80,7 +80,7 @@ export default async function BlogPostPage({
         <h1>{post.title}</h1>
         <SaveButton kind="blog" slug={post.slug} name={post.title} size="lg" />
       </div>
-      <p className="type-lede mt-2 text-muted-foreground">{post.description}</p>
+      <p className="type-lede mt-2">{post.description}</p>
       <BlogBody markdown={post.body} blogSlug={post.slug} />
     </div>
   );

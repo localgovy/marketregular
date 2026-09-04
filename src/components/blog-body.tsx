@@ -365,7 +365,7 @@ export async function BlogBody({
           );
         }
         return (
-          <p key={index} className="mt-3 text-base leading-relaxed text-muted-foreground">
+          <p key={index} className="mt-3 text-base leading-relaxed">
             <Inlines inlines={block.inlines} />
           </p>
         );
