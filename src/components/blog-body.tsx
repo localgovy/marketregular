@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
+import { MarketHoursHead } from "@/components/market-hours-head";
 import { ListingSaveButton } from "@/components/save-button";
 import { safePath } from "@/lib/auth-redirect";
 import {
@@ -313,16 +314,8 @@ export async function BlogBody({
           const marketList = block.items.every((item) => item.hours);
           if (marketList) {
             return (
-              <div key={index} className="mt-3">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 border-b border-border pb-2 text-sm text-muted-foreground">
-                  <span>Market</span>
-                  <span className="flex items-center gap-2">
-                    <span>Hours</span>
-                    <span className="invisible stall-chip-sm inline-flex h-8 px-2.5 text-sm" aria-hidden>
-                      Save
-                    </span>
-                  </span>
-                </div>
+              <div key={index} className="mt-3 min-w-0">
+                <MarketHoursHead />
                 <ul className="divide-y divide-border">
                   {block.items.map((item, itemIndex) => {
                     const slug = marketSlugFromInlines(item.inlines);

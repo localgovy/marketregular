@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
+import { MarketHoursHead } from "@/components/market-hours-head";
 import { ListingSaveButton, SaveButton } from "@/components/save-button";
 import { formatPostedOn } from "@/lib/format";
 import type { SavedListing } from "@/lib/saves";
@@ -151,14 +152,8 @@ export function SavedNotesSection({
                 ? listingGroups(row.listings).map((group) => (
                     <div key={group.heading} className="border-t border-border px-3 pb-1">
                       <p className="pt-3 text-sm text-muted-foreground">{group.heading}</p>
-                      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 text-sm text-muted-foreground">
-                        <span>Market</span>
-                        <span className="flex items-center gap-2">
-                          <span>Hours</span>
-                          <span className="invisible stall-chip-sm inline-flex h-8 px-2.5 text-sm" aria-hidden>
-                            Save
-                          </span>
-                        </span>
+                      <div className="mt-3 min-w-0">
+                        <MarketHoursHead />
                       </div>
                       <ul className="divide-y divide-border">
                         {group.rows.map((listing) => (
