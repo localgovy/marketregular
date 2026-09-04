@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
-import { BlogBody } from "@/components/blog-body";
+import { BlogBody, BlogInlines } from "@/components/blog-body";
 import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
 import { SaveButton } from "@/components/save-button";
-import { getBlogPost, listBlogPosts } from "@/lib/blog";
+import { getBlogPost, listBlogPosts, plainBlogText } from "@/lib/blog";
 import { SITE_NAME, SITE_OG } from "@/lib/constants";
 import { BLOG_CRUMB, blogPostingJsonLd, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
 
@@ -25,10 +25,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = getBlogPost(slug);
   if (!post) return { title: "Blog" };
+  const description = plainBlogText(post.description);
   return {
     ...pageMeta({
       title: post.title,
-      description: post.description,
+      description,
       path: `/blog/${post.slug}`,
     }),
     openGraph: {
@@ -37,7 +38,7 @@ export async function generateMetadata({
       siteName: SITE_NAME,
       publishedTime: post.date,
       title: post.title,
-      description: post.description,
+      description,
       url: `/blog/${post.slug}`,
       images: [
         {
@@ -67,7 +68,7 @@ export default async function BlogPostPage({
       <JsonLd
         data={blogPostingJsonLd({
           title: post.title,
-          description: post.description,
+          description: plainBlogText(post.description),
           date: post.date,
           path,
         })}
@@ -80,7 +81,9 @@ export default async function BlogPostPage({
         <h1>{post.title}</h1>
         <SaveButton kind="blog" slug={post.slug} name={post.title} size="lg" />
       </div>
-      <p className="type-lede mt-2">{post.description}</p>
+      <p className="type-lede mt-2 text-muted-foreground">
+        <BlogInlines text={post.description} />
+      </p>
       <BlogBody markdown={post.body} blogSlug={post.slug} />
     </div>
   );

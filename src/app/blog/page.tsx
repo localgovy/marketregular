@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
 import { SaveButton } from "@/components/save-button";
-import { listBlogPosts } from "@/lib/blog";
+import { listBlogPosts, plainBlogText } from "@/lib/blog";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { BLOG_CRUMB, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
 
@@ -21,7 +21,7 @@ export default function BlogIndexPage() {
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <JsonLd data={breadcrumbJsonLd([BLOG_CRUMB])} />
       <h1>Blog</h1>
-      <p className="type-lede mt-2 mb-8">
+      <p className="type-lede mt-2 mb-8 text-muted-foreground">
         Find out the latest schedules, vendors, and tidbits from your favourite
         farmers' markets in {LAUNCH_CITY}. If you find an article with
         information that you don't want to lose, just save it to your profile.
@@ -38,8 +38,8 @@ export default function BlogIndexPage() {
                       {post.title}
                     </Link>
                   </h2>
-                  <p className="mt-2 text-base leading-relaxed">
-                    {post.description}
+                  <p className="mt-2 text-base leading-relaxed text-muted-foreground">
+                    {plainBlogText(post.description)}
                   </p>
                 </div>
                 <SaveButton kind="blog" slug={post.slug} name={post.title} />

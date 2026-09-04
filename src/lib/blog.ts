@@ -19,6 +19,14 @@ export function blogPostedIso(date: string) {
   return date.includes("T") ? date : `${date}T12:00:00`;
 }
 
+/** Frontmatter may include markdown links; metadata and excerpts stay plain. */
+export function plainBlogText(text: string) {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1");
+}
+
 function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {
   const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) return { data: {}, body: raw.trim() };

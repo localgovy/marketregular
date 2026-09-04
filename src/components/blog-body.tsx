@@ -224,6 +224,10 @@ function Inlines({ inlines }: { inlines: Inline[] }) {
   );
 }
 
+export function BlogInlines({ text }: { text: string }) {
+  return <Inlines inlines={parseInlines(text)} />;
+}
+
 function StallPeek({ vendors }: { vendors: BlogMarketPeek["vendors"] }) {
   return (
     <p className="mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-3 text-sm leading-relaxed">
@@ -365,7 +369,7 @@ export async function BlogBody({
           );
         }
         return (
-          <p key={index} className="mt-3 text-base leading-relaxed">
+          <p key={index} className="mt-3 text-base leading-relaxed text-muted-foreground">
             <Inlines inlines={block.inlines} />
           </p>
         );
