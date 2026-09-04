@@ -17,9 +17,9 @@ Beach-Metro readers, you’re going to want to make an account and save this art
 
 [East Lynn Park Farmers’ Market](https://www.marketregular.com/markets/east-lynn-park-farmers-market) · 1949 Danforth Avenue · **3 PM–7 PM** · Jun 4–Oct 8
 
-Volunteer-run with the Danforth East Community Association. Farmers sell what they grow, plus specialty food and drink, with weekly live music in season.
+Volunteer-run with the Danforth East Community Association. Vendors with Canadian-grown produce, plus speciality food and drink, with weekly live music while in season.
 
-**Stalls to look for this season:** Hooked, [St. John’s Bakery](https://www.marketregular.com/vendors/st-john-s-bakery), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), Mad Mexican, Warner’s Farm, Do Good Donuts.
+**Vendors to look for this season:** Hooked, [St. John’s Bakery](https://www.marketregular.com/vendors/st-john-s-bakery), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), Mad Mexican, Warner’s Farm, Do Good Donuts.
 
 ---
 
@@ -27,9 +27,9 @@ Volunteer-run with the Danforth East Community Association. Farmers sell what th
 
 [Withrow Park Farmers’ Market](https://www.marketregular.com/markets/withrow-park-farmers-market) · 725 Logan Avenue · **9 AM–1 PM** · May 30–Oct 17
 
-A Riverdale Saturday morning: produce, greens, seafood, and bakeries in the park.
+Get produce, greens, seafood, and bakeries in the park. Opens bright and early at 9 AM.
 
-**Stalls to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), [Lev Bakery](https://www.marketregular.com/vendors/lev-bakery), Cookstown Greens, Alma Bakery, Chirping Bird Bakery.
+**Vendors to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), [Lev Bakery](https://www.marketregular.com/vendors/lev-bakery), Cookstown Greens, Alma Bakery, Chirping Bird Bakery.
 
 ---
 
@@ -39,18 +39,10 @@ A Riverdale Saturday morning: produce, greens, seafood, and bakeries in the park
 
 The outdoor summer/fall market. **Not** the Leslieville East End Food Hub indoor season.
 
-**Stalls to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), Alma Bakery, Bad Attitude Bread, Wheelbarrow Farm, Magic Oven.
+**Vendors to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), Alma Bakery, Bad Attitude Bread, Wheelbarrow Farm, Magic Oven.
 
 ---
 
-## How to use the circuit
+Made by Canadians, for Canadians, to shop Canadian. Pickup, pre-order, and a mobile app coming soon.
 
-- **Thursday evening:** East Lynn on the Danforth.
-- **Saturday morning:** Withrow at Logan.
-- **Sunday morning:** Leslieville at Greenwood.
-
-Save all three on [MarketRegular](https://www.marketregular.com), then filter by day when you only have one morning free.
-
-Made by Canadians, for Canadians, to shop Canadian. Pickup coming soon.
-
-*— MarketRegular · www.marketregular.com*
+*Noah Khan, MarketRegular*

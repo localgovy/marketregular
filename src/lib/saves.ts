@@ -25,9 +25,11 @@ const SAVE_LIST: Record<Exclude<SaveKind, "listing">, keyof Omit<Saves, "listing
 
 const KEY = "mr-saves";
 const LEGACY_KEY = "mr-keeps";
+const TOMB_KEY = "mr-saves-dropped";
 const listeners = new Set<() => void>();
 let snapshot: Saves = cloneEmpty();
 let booted = false;
+let tombstones = new Set<string>();
 
 function cloneEmpty(): Saves {
   return { markets: [], vendors: [], blogs: [], listings: [] };
@@ -79,10 +81,83 @@ function parse(raw: string | null): Saves {
   }
 }
 
-function emit(next: Saves) {
-  snapshot = next;
+function tombKey(kind: SaveKind, slug: string) {
+  return `${kind}:${slug}`;
+}
+
+function readTombstones(): Set<string> {
+  if (typeof window === "undefined") return new Set();
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(next));
+    const raw = window.sessionStorage.getItem(TOMB_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((item): item is string => typeof item === "string"));
+  } catch {
+    return new Set();
+  }
+}
+
+function writeTombstones() {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(TOMB_KEY, JSON.stringify([...tombstones]));
+  } catch {
+    /* private mode / quota */
+  }
+}
+
+export function clearTombstones() {
+  tombstones = new Set();
+  writeTombstones();
+}
+
+function dropKey(kind: SaveKind, slug: string) {
+  tombstones.add(tombKey(kind, slug));
+  writeTombstones();
+}
+
+function undropKey(kind: SaveKind, slug: string) {
+  tombstones.delete(tombKey(kind, slug));
+  writeTombstones();
+}
+
+function withoutTombstones(saves: Saves): Saves {
+  const blogs = saves.blogs.filter((slug) => !tombstones.has(tombKey("blog", slug)));
+  const droppedBlogs = new Set(
+    saves.blogs.filter((slug) => tombstones.has(tombKey("blog", slug))),
+  );
+  return {
+    markets: saves.markets.filter((slug) => !tombstones.has(tombKey("market", slug))),
+    vendors: saves.vendors.filter((slug) => !tombstones.has(tombKey("vendor", slug))),
+    blogs,
+    listings: saves.listings.filter(
+      (row) => !tombstones.has(tombKey("listing", row.slug)) && !droppedBlogs.has(row.blog),
+    ),
+  };
+}
+
+export function pruneTombstonesNotIn(server: Saves) {
+  const have = new Set([
+    ...server.markets.map((slug) => tombKey("market", slug)),
+    ...server.vendors.map((slug) => tombKey("vendor", slug)),
+    ...server.blogs.map((slug) => tombKey("blog", slug)),
+    ...server.listings.map((row) => tombKey("listing", row.slug)),
+  ]);
+  let changed = false;
+  for (const key of [...tombstones]) {
+    if (!have.has(key)) {
+      tombstones.delete(key);
+      changed = true;
+    }
+  }
+  if (changed) writeTombstones();
+}
+
+function emit(next: Saves, applyTombs = true) {
+  snapshot = applyTombs ? withoutTombstones(next) : clone(next);
+  try {
+    window.localStorage.setItem(KEY, JSON.stringify(snapshot));
   } catch {
     /* private mode / quota */
   }
@@ -91,7 +166,9 @@ function emit(next: Saves) {
 
 function onStorage(event: StorageEvent) {
   if (event.key !== KEY && event.key !== LEGACY_KEY) return;
-  snapshot = documentHasAuthCookie() ? parse(event.newValue) : clone(EMPTY_SAVES);
+  snapshot = documentHasAuthCookie()
+    ? withoutTombstones(parse(event.newValue))
+    : clone(EMPTY_SAVES);
   listeners.forEach((fn) => fn());
 }
 
@@ -99,9 +176,12 @@ function onStorage(event: StorageEvent) {
 export function bootSaves() {
   if (booted || typeof window === "undefined") return;
   booted = true;
+  tombstones = readTombstones();
   const stored = window.localStorage.getItem(KEY) ?? window.localStorage.getItem(LEGACY_KEY);
-  snapshot = documentHasAuthCookie() ? parse(stored) : clone(EMPTY_SAVES);
+  snapshot = documentHasAuthCookie() ? withoutTombstones(parse(stored)) : clone(EMPTY_SAVES);
   if (!documentHasAuthCookie()) {
+    tombstones = new Set();
+    writeTombstones();
     try {
       window.localStorage.setItem(KEY, JSON.stringify(EMPTY_SAVES));
       window.localStorage.removeItem(LEGACY_KEY);
@@ -134,7 +214,12 @@ export function toggleSave(kind: Exclude<SaveKind, "listing">, slug: string) {
   const current = snapshot[key];
   const exists = current.includes(slug);
   const nextList = exists ? current.filter((item) => item !== slug) : [...current, slug];
+  if (exists) dropKey(kind, slug);
+  else undropKey(kind, slug);
   if (kind === "blog" && exists) {
+    for (const row of snapshot.listings) {
+      if (row.blog === slug) dropKey("listing", row.slug);
+    }
     emit({
       ...snapshot,
       blogs: nextList,
@@ -148,12 +233,15 @@ export function toggleSave(kind: Exclude<SaveKind, "listing">, slug: string) {
 export function toggleListing(listing: SavedListing) {
   const exists = snapshot.listings.some((row) => row.slug === listing.slug);
   if (exists) {
+    dropKey("listing", listing.slug);
     emit({
       ...snapshot,
       listings: snapshot.listings.filter((row) => row.slug !== listing.slug),
     });
     return;
   }
+  undropKey("listing", listing.slug);
+  undropKey("blog", listing.blog);
   const blogs = snapshot.blogs.includes(listing.blog)
     ? snapshot.blogs
     : [...snapshot.blogs, listing.blog];
@@ -173,6 +261,24 @@ export function replaceSaves(next: Saves) {
   });
 }
 
+/** Roll back an optimistic toggle. Clears tombstones for keys present in `before`. */
+export function restoreSaves(before: Saves) {
+  for (const slug of before.markets) tombstones.delete(tombKey("market", slug));
+  for (const slug of before.vendors) tombstones.delete(tombKey("vendor", slug));
+  for (const slug of before.blogs) tombstones.delete(tombKey("blog", slug));
+  for (const row of before.listings) tombstones.delete(tombKey("listing", row.slug));
+  writeTombstones();
+  emit(
+    {
+      markets: [...new Set(before.markets.filter((item) => typeof item === "string" && item))],
+      vendors: [...new Set(before.vendors.filter((item) => typeof item === "string" && item))],
+      blogs: [...new Set((before.blogs ?? []).filter((item) => typeof item === "string" && item))],
+      listings: listings(before.listings ?? []),
+    },
+    false,
+  );
+}
+
 export function sameSaves(left: Saves, right: Saves) {
   return (
     left.markets.join("\0") === right.markets.join("\0") &&
@@ -188,12 +294,18 @@ export function unionSaves(left: Saves, right: Saves): Saves {
   for (const row of right.listings) {
     if (!listingMap.has(row.slug)) listingMap.set(row.slug, row);
   }
-  return {
+  return withoutTombstones({
     markets: [...new Set([...left.markets, ...right.markets])],
     vendors: [...new Set([...left.vendors, ...right.vendors])],
     blogs: [...new Set([...left.blogs, ...right.blogs])],
     listings: [...listingMap.values()],
-  };
+  });
+}
+
+/** First paint and later RSC payloads: never re-add keys this tab already dropped. */
+export function adoptServerSaves(server: Saves) {
+  replaceSaves(unionSaves(server, getSaves()));
+  pruneTombstonesNotIn(server);
 }
 
 export function savesFromRows(

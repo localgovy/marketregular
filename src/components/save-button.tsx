@@ -11,9 +11,11 @@ import {
   toggleSave,
   toggleListing,
   replaceSaves,
+  restoreSaves,
   type SaveKind,
   type SavedListing,
 } from "@/lib/saves";
+import { stashPendingSave } from "@/lib/pending-save";
 import { openSignInSlip } from "@/lib/signin-slip";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { cn } from "@/lib/utils";
@@ -88,6 +90,7 @@ export function SaveButton({
         const next = `${window.location.pathname}${window.location.search}`;
         const loginHref = `/login?next=${encodeURIComponent(next || "/account")}`;
         if (!documentHasAuthCookie()) {
+          stashPendingSave({ kind, slug });
           openSignInSlip({ next, name: label });
           return;
         }
@@ -101,11 +104,11 @@ export function SaveButton({
               refreshIfSavedPage(pathname, router);
               return;
             }
-            replaceSaves(before);
+            restoreSaves(before);
             if (!documentHasAuthCookie()) router.push(loginHref);
           })
           .catch(() => {
-            replaceSaves(before);
+            restoreSaves(before);
           });
       }}
       className={saveChipClass(size, saved)}
@@ -140,6 +143,7 @@ export function ListingSaveButton({
         const next = `${window.location.pathname}${window.location.search}`;
         const loginHref = `/login?next=${encodeURIComponent(next || "/account")}`;
         if (!documentHasAuthCookie()) {
+          stashPendingSave({ kind: "listing", listing });
           openSignInSlip({ next, name: label });
           return;
         }
@@ -153,11 +157,11 @@ export function ListingSaveButton({
               refreshIfSavedPage(pathname, router);
               return;
             }
-            replaceSaves(before);
+            restoreSaves(before);
             if (!documentHasAuthCookie()) router.push(loginHref);
           })
           .catch(() => {
-            replaceSaves(before);
+            restoreSaves(before);
           });
       }}
       className={saveChipClass(size, saved)}

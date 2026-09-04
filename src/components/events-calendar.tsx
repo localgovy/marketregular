@@ -51,16 +51,19 @@ export function EventsCalendar({
   schedules,
   initialMonth,
   initialDay,
+  nowMs,
 }: {
   markets: EventMarket[];
   schedules: MarketSchedule[];
   initialMonth?: string;
   initialDay?: string;
+  nowMs: number;
 }) {
   const pathname = usePathname();
-  const todayIso = torontoYmd();
+  const [now, setNow] = useState(() => new Date(nowMs));
+  const todayIso = torontoYmd(now);
   const [ty, tm] = todayIso.split("-").map(Number);
-  const seed = parseYearMonth(initialMonth);
+  const seed = parseYearMonth(initialMonth, new Date(nowMs));
   const [year, setYear] = useState(seed.year);
   const [month, setMonth] = useState(seed.month);
   const [slide, setSlide] = useState<"in" | "next" | "prev">("in");
@@ -76,9 +79,15 @@ export function EventsCalendar({
   const swipe = useRef<{ x: number; y: number } | null>(null);
   const skipClick = useRef(false);
 
+  useEffect(() => {
+    setNow(new Date());
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+
   const cells = useMemo(
-    () => monthGrid(year, month, markets, schedules),
-    [year, month, markets, schedules],
+    () => monthGrid(year, month, markets, schedules, now),
+    [year, month, markets, schedules, now],
   );
   const selectedCell = cells.find((cell) => cell.iso === selected) ?? cells.find((cell) => cell.inMonth);
   const monthEvents = cells.filter((cell) => cell.inMonth && cell.events.length).length;
@@ -138,7 +147,7 @@ export function EventsCalendar({
 
   function jumpMarket(direction: 1 | -1) {
     if (!selectedCell) return;
-    const hit = findMarketDay(selectedCell, direction, markets, schedules);
+    const hit = findMarketDay(selectedCell, direction, markets, schedules, now);
     if (!hit) return;
     const dir = direction > 0 ? "next" : "prev";
     show(hit, hit.month !== month || hit.year !== year ? dir : "in");

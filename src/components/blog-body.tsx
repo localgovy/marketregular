@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
 import { ListingSaveButton } from "@/components/save-button";
+import { safePath } from "@/lib/auth-redirect";
 import {
   loadBlogMarketPeeks,
   peekKey,
@@ -9,6 +10,7 @@ import {
   type BlogMarketPeek,
   type BlogMarketPeekRequest,
 } from "@/lib/blog-market-peeks";
+import { externalHref } from "@/lib/format";
 import { listingFromInput } from "@/lib/listing-saves";
 
 type Inline =
@@ -30,16 +32,21 @@ function looksLikeHours(value: string) {
   return /\d/.test(value) && /AM|PM/.test(value);
 }
 
-function sitePath(href: string): string {
+function markdownHref(href: string): string | null {
+  const value = href.trim();
+  if (!value || value.startsWith("//")) return null;
+  if (value.startsWith("/")) return safePath(value, "") || null;
+  if (!/^https?:\/\//i.test(value)) return null;
   try {
-    const url = new URL(href, "https://www.marketregular.com");
+    const url = new URL(value);
     if (url.hostname === "www.marketregular.com" || url.hostname === "marketregular.com") {
-      return `${url.pathname}${url.search}${url.hash}` || "/";
+      const path = `${url.pathname}${url.search}${url.hash}` || "/";
+      return safePath(path, "") || null;
     }
   } catch {
-    // keep the original href
+    return null;
   }
-  return href;
+  return externalHref(value);
 }
 
 function parseInlines(text: string): Inline[] {
@@ -58,8 +65,11 @@ function parseInlines(text: string): Inline[] {
       out.push({ kind: "italic", value: chunk.slice(1, -1) });
     } else {
       const link = chunk.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-      if (link) out.push({ kind: "link", href: sitePath(link[2]), label: link[1] });
-      else out.push({ kind: "text", value: chunk });
+      if (link) {
+        const href = markdownHref(link[2]);
+        if (href) out.push({ kind: "link", href, label: link[1] });
+        else out.push({ kind: "text", value: link[1] });
+      } else out.push({ kind: "text", value: chunk });
     }
     last = at + chunk.length;
   }

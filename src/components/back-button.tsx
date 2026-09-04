@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { CaretLeftMark } from "@/components/marks";
+import { goBackInApp } from "@/lib/nav-history";
 import { cn } from "@/lib/utils";
 
 export function BackButton({
@@ -14,16 +15,11 @@ export function BackButton({
   const router = useRouter();
 
   function go() {
-    try {
-      const from = document.referrer ? new URL(document.referrer) : null;
-      if (from && from.origin === window.location.origin) {
-        router.back();
-        return;
-      }
-    } catch {
-      // bad referrer — fall through
-    }
-    router.push(href);
+    goBackInApp(
+      () => router.back(),
+      (to) => router.push(to),
+      href,
+    );
   }
 
   return (

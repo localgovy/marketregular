@@ -31,6 +31,7 @@ export default async function EventsPage({
     scheduleMap.set(row.market_id, list);
   }
   const week = upcomingByDay(markets, scheduleMap);
+  const nowMs = Date.now();
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -52,6 +53,7 @@ export default async function EventsPage({
         schedules={schedules}
         initialMonth={m}
         initialDay={d}
+        nowMs={nowMs}
       />
     </div>
   );

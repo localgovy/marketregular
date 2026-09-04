@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useSaves } from "@/components/save-button";
-import { getSaves, replaceSaves, unionSaves, type Saves } from "@/lib/saves";
+import { adoptServerSaves, type Saves } from "@/lib/saves";
 
-/** Server saves plus whatever this browser already had, after hydration. */
+/** Server saves plus this tab’s live list, without resurrecting unsaves. */
 export function useHydratedSaves(initial: Saves) {
   const live = useSaves();
   const [hydrated, setHydrated] = useState(false);
@@ -14,7 +14,7 @@ export function useHydratedSaves(initial: Saves) {
   const listingKey = (initial.listings ?? []).map((row) => row.slug).join("\0");
 
   useEffect(() => {
-    replaceSaves(unionSaves(initial, getSaves()));
+    adoptServerSaves(initial);
     setHydrated(true);
     // `initial` is a new object each server render; the joined keys are the lists.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- marketKey / vendorKey / blogKey / listingKey

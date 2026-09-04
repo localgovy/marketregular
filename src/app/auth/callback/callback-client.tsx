@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { mergeSaves } from "@/app/actions/saves";
 import { OAUTH_HASH_STORAGE_KEY } from "@/lib/analytics";
 import { oauthValuesMatch, takeGoogleOAuthHandoff } from "@/lib/google-oauth";
+import { flushPendingSave } from "@/lib/pending-save";
 import { LOGIN_ERROR_COPY } from "@/lib/public-error";
 import { clearAuthNextCookie, readAuthNextCookie, safePath } from "@/lib/auth-redirect";
 import { getSaves } from "@/lib/saves";
@@ -120,6 +121,7 @@ export function AuthCallbackClient() {
 
       try {
         await mergeSaves(getSaves());
+        await flushPendingSave();
       } catch {
         /* Account hydrator retries. */
       }

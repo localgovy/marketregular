@@ -5,6 +5,7 @@ import Script from "next/script";
 import { AppToaster } from "@/components/app-toaster";
 import { SiteGeo } from "@/components/site-geo";
 import { GuestSignInSlip } from "@/components/guest-signin-slip";
+import { NavHistory } from "@/components/nav-history";
 import { SiteAnalytics } from "@/components/site-analytics";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <main className="flex-1">{children}</main>
           <SiteFooter />
           <Suspense fallback={null}>
+            <NavHistory />
             <GuestSignInSlip />
           </Suspense>
           <AppToaster />
