@@ -22,11 +22,14 @@ type Inline =
   | { kind: "hours"; value: string }
   | { kind: "link"; href: string; label: string };
 
+type ListItem = { inlines: Inline[]; hours?: string };
+type HoursListItem = { inlines: Inline[]; hours: string };
+
 type Block =
   | { type: "p"; inlines: Inline[] }
   | { type: "h2"; text: string }
   | { type: "h3"; text: string }
-  | { type: "ul"; items: Array<{ inlines: Inline[]; hours?: string }> };
+  | { type: "ul"; items: ListItem[] };
 
 const MARKET_ROW = /^(.*) · (.+)$/;
 const HOURS_SPAN =
@@ -146,11 +149,11 @@ function blockContext(blocks: Block[]): Array<{ weekday: number | null; heading:
 
 function isMarketHoursList(
   block: Block,
-): block is { type: "ul"; items: Array<{ inlines: Inline[]; hours?: string }> } {
+): block is { type: "ul"; items: HoursListItem[] } {
   return (
     block.type === "ul" &&
     block.items.length > 0 &&
-    block.items.every((item) => Boolean(item.hours))
+    block.items.every((item): item is HoursListItem => Boolean(item.hours))
   );
 }
 
@@ -431,13 +434,13 @@ export async function BlogBody({
           );
         }
         if (block.type === "ul") {
-          const marketList = isMarketHoursList(block);
-          if (marketList) {
+          const list = block;
+          if (isMarketHoursList(list)) {
             return (
               <div key={index} className="mt-3 min-w-0">
                 <MarketHoursHead />
                 <ul className="divide-y divide-border">
-                  {block.items.map((item, itemIndex) => {
+                  {list.items.map((item, itemIndex) => {
                     const slug = marketSlugFromInlines(item.inlines);
                     const peek =
                       slug && peeks
@@ -445,7 +448,7 @@ export async function BlogBody({
                         : undefined;
                     const heading = context[index]?.heading;
                     const listing =
-                      blogSlug && slug && heading && item.hours
+                      blogSlug && slug && heading
                         ? listingFromInput({
                             blog: blogSlug,
                             heading,
@@ -473,7 +476,7 @@ export async function BlogBody({
           }
           return (
             <ul key={index} className="mt-3 list-disc space-y-1 pl-5 text-base leading-relaxed">
-              {block.items.map((item, itemIndex) => (
+              {list.items.map((item, itemIndex) => (
                 <li key={itemIndex}>
                   <Inlines inlines={item.inlines} />
                 </li>
