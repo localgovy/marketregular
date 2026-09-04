@@ -1,0 +1,64 @@
+---
+title: What's in season at Toronto farmers' markets this September
+description: "Early September is still peak Ontario summer, with fall starting to show up at the stalls. Hours and vendors from [MarketRegular](/) — 85 markets, 1,418 vendors."
+date: 2026-09-04
+kicker: September
+---
+
+# What’s in season at Toronto farmers’ markets this September
+
+Tap a name for the live listing.
+
+This is a shopper guide for what’s actually on Ontario tables right now, not another citywide market list.
+
+---
+
+## What’s peaking now (Foodland Ontario)
+
+Still strong through September:
+
+- Field **tomatoes**, **sweet corn**, **peaches**, field **peppers**, **eggplant**
+- **Beets**, **zucchini**, **summer squash**, **beans**
+- Early **apples** and **pears**
+- First **pumpkins** and **winter squash**
+
+Availability shifts with weather and variety. Ask the farmer what’s picking this week.
+
+Source: [Foodland Ontario availability guide](https://www.ontario.ca/foodland/page/availability-guide).
+
+---
+
+## Produce stalls to look for
+
+Only farms we can link from the live catalog:
+
+- [Thames River Melons](/vendors/thames-river-melons) — family farm in Innerkip (often at [Etobicoke Civic Centre](/markets/etobicoke-civic-centre-farmers-market) and other halls)
+- [Knuckle Down Farm](/vendors/knuckle-down-farm) — small-scale organic market garden near Stirling / the Trent
+- [Kooner Farm Organics](/vendors/kooner-farms) — Caledon family farm, produce for 30+ years
+- [Wheelbarrow Farm](/vendors/wheelbarrow-farm) — 50+ vegetable crops outside Uxbridge
+- [Cutting Veg Toronto](/vendors/the-cutting-veg)
+- [Black Creek Community Farm](/vendors/black-creek-community-farm) — 8-acre urban farm in Jane-Finch
+- [Fish Tree Farm](/vendors/fish-tree-farm) — no-till market garden and wild weeds
+- [Kind Organics](/vendors/kind-organics) — organic salad blends, microgreens, herbs, edible flowers
+
+---
+
+## Where to go this weekend
+
+Start with the live hours list: [Toronto farmers’ markets this weekend](/blog/toronto-farmers-markets-this-weekend-sep-5-6).
+
+East-end circuit (Thu / Sat / Sun): [East end Toronto farmers’ markets](/blog/east-end-toronto-farmers-markets).
+
+Filter by day or neighbourhood on the [homepage](/).
+
+---
+
+## Shopper tips
+
+- Bring bags and clean containers. [Brick Works](/markets/evergreen-brick-works-saturday-farmers-market) and many other halls welcome BYO.
+- Ask what’s peaking *today* — corn and peaches don’t last the whole month the same way.
+- Save markets you actually go to so next Friday’s roundup is faster.
+
+Made by Canadians, for Canadians, to shop Canadian. Pickup coming soon.
+
+*Noah Khan, MarketRegular*
