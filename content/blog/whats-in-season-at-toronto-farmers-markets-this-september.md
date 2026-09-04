@@ -7,9 +7,7 @@ kicker: September
 
 # What’s in season at Toronto farmers’ markets this September
 
-Tap a name for the live listing.
-
-This is a shopper guide for what’s actually on Ontario tables right now, not another citywide market list.
+Here's a guide for what's still in season at Toronto Farmer's Markets
 
 ---
 
@@ -22,7 +20,7 @@ Still strong through September:
 - Early **apples** and **pears**
 - First **pumpkins** and **winter squash**
 
-Availability shifts with weather and variety. Ask the farmer what’s picking this week.
+Availability shifts with weather and variety. Ask the vendor for assistance.
 
 Source: [Foodland Ontario availability guide](https://www.ontario.ca/foodland/page/availability-guide).
 
@@ -30,7 +28,7 @@ Source: [Foodland Ontario availability guide](https://www.ontario.ca/foodland/pa
 
 ## Produce stalls to look for
 
-Only farms we can link from the live catalog:
+Our picks for produce suppliers from our catalog:
 
 - [Thames River Melons](/vendors/thames-river-melons) — family farm in Innerkip (often at [Etobicoke Civic Centre](/markets/etobicoke-civic-centre-farmers-market) and other halls)
 - [Knuckle Down Farm](/vendors/knuckle-down-farm) — small-scale organic market garden near Stirling / the Trent
@@ -56,8 +54,8 @@ Filter by day or neighbourhood on the [homepage](/).
 ## Shopper tips
 
 - Bring bags and clean containers. [Brick Works](/markets/evergreen-brick-works-saturday-farmers-market) and many other halls welcome BYO.
-- Ask what’s peaking *today* — corn and peaches don’t last the whole month the same way.
-- Save markets you actually go to so next Friday’s roundup is faster.
+- Ask what’s good for the day of, produce cycles can change varying on the weather patterns.
+- Save markets and vendors you actually go to so next week's visit goes smoothly.
 
 Made by Canadians, for Canadians, to shop Canadian. Pickup coming soon.
 
