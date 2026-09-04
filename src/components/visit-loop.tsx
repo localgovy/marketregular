@@ -82,8 +82,8 @@ export function HomeMosaic({
             id="find"
             tone="find"
             icon={SlatsMark}
-            kicker="When, where, or what"
-            title="Find a market"
+            kicker="Find market and vendor profiles, quick and simple."
+            title="Quick Market Finder"
             how="Choose when, a neighbourhood or city, what they sell, or a cuisine. Press Search when the list looks right."
           >
             <QuickFind
