@@ -33,7 +33,7 @@ Get produce, greens, seafood, and bakeries in the park. Opens bright and early a
 
 ---
 
-## Sunday: Leslieville outdoor
+## Sunday: Greenwood Park, Leslieville Outdoor Farmers’ Market
 
 [The Leslieville Farmers’ Market](https://www.marketregular.com/markets/the-leslieville-farmers-market) · 150 Greenwood · **9 AM–2 PM** · May 10–Oct 25
 

@@ -121,19 +121,19 @@ export function ContactClaim({
       </fieldset>
       <div className="grid gap-1.5">
         <label htmlFor="claim-listing-q" className="text-sm font-medium">
-          {kind === "market" ? "Find the market" : "Find the stall"}
+          {kind === "market" ? "Find the market" : "Find the vendor"}
         </label>
         <SearchField
           id="claim-listing-q"
           value={query}
           onChange={setQuery}
-          placeholder={kind === "market" ? "Market name" : "Stall or market name"}
+          placeholder={kind === "market" ? "Market name" : "Vendor name"}
           className="bg-card"
         />
       </div>
       {kind === "vendor" && !q ? (
         <p className="text-sm text-muted-foreground">
-          Type a stall name to see matches. There are hundreds.
+          Type a vendor name to see matches. There&apos;s 1,400+ and counting.
         </p>
       ) : items.length === 0 ? (
         <p className="text-sm text-muted-foreground">No listings match that name.</p>

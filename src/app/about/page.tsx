@@ -29,24 +29,21 @@ export default function AboutPage() {
           Buy Canadian
         </h2>
         <p className="mt-2 text-base leading-relaxed">
-          Grocery aisles fill with whatever is cheapest to ship. When border tensions flare or a
-          price jumps, the supply wobbles, and the farm that used to sell here has already sold
-          elsewhere. Buying Canadian keeps the next season in Canadian dirt, paid in Canadian
-          wages. That is more important now than it has been in a long time: trade is a fight,
-          grocery bills already are, and Canadians deserve a simple way to purchase goods grown
-          on our own soil.
+          Grocery aisles fill with whatever is cheapest to ship. Buying Canadian keeps the next
+          season in Canadian dirt, paid in Canadian wages. That is more important now than it has
+          been in a long time: trade is a fight, grocery bills already are, and Canadians deserve
+          a simple way to purchase goods grown on our own soil.
         </p>
       </section>
 
       <section className="mt-10">
         <h2>Why {SITE_NAME}?</h2>
         <p className="mt-2 text-base leading-relaxed">
-          There&apos;s no better time to shop local, we know that. But is there a better website
-          or app available than {SITE_NAME} for shopping local? Fortunately for us, absolutely
-          not. With a massive database of all markets in {LAUNCH_CITY}, we offer discovery and
-          information no one else can. We are also partnering up with dozens of markets all over{" "}
-          {LAUNCH_CITY} to bring Torontonians pickup, offering the most convenient way to shop
-          fresh and local while putting cash back in the pockets of local farms and businesses.
+          There&apos;s no better time to shop local, we know that. With a massive database of all
+          markets in {LAUNCH_CITY}, we offer discovery and information no one else can. We are
+          also partnering up with dozens of markets all over {LAUNCH_CITY} to bring Torontonians
+          pickup, offering the most convenient way to shop fresh and local while putting cash back
+          in the pockets of local farms and businesses.
         </p>
         <p className="mt-4 text-base">
           <Link href="/markets" className="font-medium hover:underline">
@@ -64,7 +61,7 @@ export default function AboutPage() {
       </section>
 
       <section className="mt-10">
-        <h2>The team</h2>
+        <h2>The Team</h2>
         <p className="mt-2 text-base font-medium">{CONTACT_NAME}</p>
         <p className="mt-1 text-base">
           Founder, CEO of{" "}
