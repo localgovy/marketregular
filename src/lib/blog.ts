@@ -22,9 +22,20 @@ export function blogPostedIso(date: string) {
 /** Frontmatter may include markdown links; metadata and excerpts stay plain. */
 export function plainBlogText(text: string) {
   return text
+    .replace(/\\n|\n/g, " ")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/\*([^*]+)\*/g, "$1");
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/ {2,}/g, " ")
+    .trim();
+}
+
+/** Lede lines in frontmatter, split on a real newline or a written `\n`. */
+export function blogLedeParagraphs(text: string) {
+  return text
+    .split(/\n|\\n/)
+    .map((part) => part.trim())
+    .filter(Boolean);
 }
 
 function parseFrontmatter(raw: string): { data: Record<string, string>; body: string } {

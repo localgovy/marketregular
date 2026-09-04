@@ -5,7 +5,7 @@ import { BlogBody, BlogInlines } from "@/components/blog-body";
 import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
 import { SaveButton } from "@/components/save-button";
-import { getBlogPost, listBlogPosts, plainBlogText } from "@/lib/blog";
+import { blogLedeParagraphs, getBlogPost, listBlogPosts, plainBlogText } from "@/lib/blog";
 import { SITE_NAME, SITE_OG } from "@/lib/constants";
 import { BLOG_CRUMB, blogPostingJsonLd, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
 
@@ -81,9 +81,11 @@ export default async function BlogPostPage({
         <h1>{post.title}</h1>
         <SaveButton kind="blog" slug={post.slug} name={post.title} size="lg" />
       </div>
-      <p className="type-lede mt-2 text-muted-foreground">
-        <BlogInlines text={post.description} />
-      </p>
+      {blogLedeParagraphs(post.description).map((para, index) => (
+        <p key={index} className="type-lede mt-2 text-muted-foreground">
+          <BlogInlines text={para} />
+        </p>
+      ))}
       <BlogBody markdown={post.body} blogSlug={post.slug} />
     </div>
   );
