@@ -20,7 +20,7 @@ Still strong through September:
 - Early **apples** and **pears**
 - First **pumpkins** and **winter squash**
 
-Availability shifts with weather and variety. Ask the vendor for assistance.
+Availability shifts with weather and variety. Ask the vendor for assistance if necessary.
 
 Source: [Foodland Ontario availability guide](https://www.ontario.ca/foodland/page/availability-guide).
 
