@@ -121,16 +121,18 @@ export function SaveButton({
 
 export function ListingSaveButton({
   listing,
+  name,
   size = "sm",
 }: {
   listing: SavedListing;
+  name?: string;
   size?: "sm" | "md" | "lg";
 }) {
   const router = useRouter();
   const pathname = usePathname();
   const saves = useSaves();
   const saved = isSaved("listing", listing.slug, saves);
-  const label = listing.marketName;
+  const label = name ?? listing.marketName;
 
   return (
     <button
