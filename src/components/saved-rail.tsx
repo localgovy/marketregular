@@ -103,7 +103,7 @@ export function SavedRail() {
         {blogCount ? (
           <p className="text-sm text-muted-foreground">
             <Link href="/saved" className="font-medium text-primary hover:underline">
-              {blogCount === 1 ? "1 saved note" : `${blogCount} saved notes`}
+              See more
             </Link>
           </p>
         ) : null}
