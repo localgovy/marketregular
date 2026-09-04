@@ -8,9 +8,9 @@ import { pageMeta } from "@/lib/seo";
 import { EMPTY_SAVES } from "@/lib/saves";
 
 export const metadata: Metadata = pageMeta({
-  title: "Saved markets, stalls, and notes",
+  title: "Saved markets, vendors, blog posts, and reviews",
   path: "/saved",
-  description: "Markets, stalls, and notes saved to your account.",
+  description: "Markets, vendors, blog posts, and reviews saved to your account.",
   index: false,
 });
 
@@ -28,7 +28,7 @@ export default async function SavedPage() {
       <h1>Saved</h1>
       {profile ? (
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
-          Markets, stalls, and notes on this account.
+          Markets, vendors, blog posts, and reviews on this account.
         </p>
       ) : (
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
@@ -39,7 +39,7 @@ export default async function SavedPage() {
           >
             Sign in
           </Link>{" "}
-          to save markets, stalls, and notes to this account.
+            to save markets, vendors, blog posts, and reviews to this account.
         </p>
       )}
       {profile ? (

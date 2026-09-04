@@ -56,7 +56,7 @@ export function SavedRail() {
       icon={TicketMark}
       kicker="On your list"
       title="Saved"
-      how="Markets, stalls, and notes on this account."
+      how="Markets, vendors, blog posts, and reviews on this account."
       action={
         <Link href="/saved" className="hover:underline">
           Open list
@@ -136,7 +136,7 @@ export function SavedDesk({
         <p className="text-muted-foreground">
           {followAccount
             ? "Nothing saved yet. Open a market, a stall, or a note and press Save. The list follows this account."
-            : "Sign in to save markets, stalls, and notes to this account."}
+            : "Sign in to save markets, vendors, blog posts, and reviews to this account."}
         </p>
       ) : null}
       <section>
