@@ -7,8 +7,6 @@ kicker: September
 
 # What’s in season at Toronto farmers’ markets this September
 
-Here's a guide for what's still in season at Toronto Farmer's Markets
-
 ---
 
 ## What’s peaking now (Foodland Ontario)
@@ -22,7 +20,7 @@ Still strong through September:
 
 Availability shifts with weather and variety. Ask the vendor for assistance if necessary.
 
-Source: [Foodland Ontario availability guide](https://www.ontario.ca/foodland/page/availability-guide).
+Learn more at: [Foodland Ontario availability guide](https://www.ontario.ca/foodland/page/availability-guide).
 
 ---
 
