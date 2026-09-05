@@ -68,8 +68,8 @@ export default async function OpenTodayPage() {
       <h1>Farmers&apos; markets open today in {LAUNCH_CITY}</h1>
       <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
         {today.length
-          ? `${today.length} ${LAUNCH_REGION} ${today.length === 1 ? "market runs" : "markets run"} on ${dayName(weekday)}. ${openNow.length ? `${openNow.length} ${openNow.length === 1 ? "is" : "are"} open right now.` : "None are open at this hour."}`
-          : `No ${LAUNCH_REGION} market in the directory runs on ${dayName(weekday)}.`}
+          ? `${today.length} ${LAUNCH_CITY} ${today.length === 1 ? "market runs" : "markets run"} on ${dayName(weekday)}. ${openNow.length ? `${openNow.length} ${openNow.length === 1 ? "is" : "are"} open right now.` : "None are open at this hour."}`
+          : `No ${LAUNCH_CITY} market in the directory runs on ${dayName(weekday)}.`}
       </p>
 
       {openNow.length ? (
