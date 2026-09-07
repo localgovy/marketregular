@@ -1,7 +1,7 @@
 /** City used in titles and the default map. */
 export const LAUNCH_CITY = "Toronto";
 /** User-facing coverage when the rest of the GTA needs naming. */
-export const LAUNCH_COVERAGE = "Toronto, including GTA";
+export const LAUNCH_COVERAGE = "Toronto, including the GTA";
 export const LAUNCH_REGION = "GTA";
 export const LAUNCH_REGION_NAME = "Greater Toronto Area";
 export const LAUNCH_PROVINCE = "ON";

@@ -9,7 +9,7 @@ import { QuickFind } from "@/components/quick-find";
 import { TorontoWeek } from "@/components/toronto-week";
 import type { DirectoryCensus } from "@/lib/data/catalog";
 import { FIND_ORIGINS, FIND_PRODUCTS, FIND_SETUP, homeAreas, tagsPresent } from "@/lib/find-paths";
-import { LAUNCH_CITY, LAUNCH_COVERAGE } from "@/lib/launch";
+import { LAUNCH_CITY } from "@/lib/launch";
 import { slimUpcomingGroups, type UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { Market, Vendor } from "@/types/database";
@@ -59,7 +59,7 @@ export function HomeMosaic({
           {LAUNCH_CITY} farmers&apos; markets
         </h1>
         <p className="type-lede mt-2 text-pretty text-muted-foreground">
-          Find out everything you want to know about markets in {LAUNCH_COVERAGE}.
+          Find out everything you want to know about farmers&apos; markets in {LAUNCH_CITY}.
         </p>
         <p className="mt-3 flex items-start gap-2 text-base font-medium leading-snug text-board sm:mt-3.5 sm:items-center sm:gap-2.5">
           <MapleMark className="mt-0.5 h-7 w-14 shrink-0 text-stamp shadow-[0_0_0_1px_rgba(0,0,0,0.2)] sm:mt-0" />
@@ -68,7 +68,7 @@ export function HomeMosaic({
               <span className="sm:after:content-['_']">Made by Canadians,</span>
               <span className="sm:after:content-['_']">for Canadians,</span>
               <span>to shop Canadian. </span>
-              <span>Pickup coming soon.</span>
+              <span>Pickup, pre-order, and a mobile app coming soon.</span>
             </span>
           </span>
         </p>
