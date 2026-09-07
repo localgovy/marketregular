@@ -33,6 +33,21 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/vendors/thames-river-farms",
+        destination: "/vendors/thames-river-melons",
+        permanent: true,
+      },
+      {
+        source: "/vendors/bitter-better-canda",
+        destination: "/vendors/bitter-better",
+        permanent: true,
+      },
+      {
+        source: "/vendors/molly-b-s-gluten-free",
+        destination: "/vendors/molly-b-s-gluten-free-kitchen",
+        permanent: true,
+      },
+      {
         source: "/markets/sickkids-market-indoor-winter",
         destination: "/markets/sickkids-market",
         permanent: true,
