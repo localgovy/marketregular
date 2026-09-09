@@ -63,7 +63,7 @@
 
 :root {
   /* Shared header + homepage rail so the brand column and reviews column meet. */
-  --header-bar-lg: 4rem;
+  --header-bar-lg: 5rem;
   --header-stripe: 2px;
   --header-lg: calc(var(--header-bar-lg) + var(--header-stripe));
   /* Warm paper, quiet leaf. Live/open accents use stamp red. */
@@ -187,6 +187,17 @@
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
+}
+
+/* Header board: lockup fills the green rail. Max-width keeps the stacked
+   credit + padding inside --header-bar-lg if the column is ever wider. */
+@utility site-wordmark-board {
+  width: 100%;
+  max-width: calc((var(--header-bar-lg) - 2rem) * 506 / 75);
+  height: auto;
+  aspect-ratio: 506 / 75;
+  -webkit-mask-position: left center;
+  mask-position: left center;
 }
 
 /* Baked green lockup — do not mask; the PNG is already board green. */
@@ -533,9 +544,14 @@
   }
 }
 
-/* Header + homepage: one column template so the green brand and reviews rail share an edge. */
+/* Header + homepage: one column template so the green brand and reviews rail share an edge.
+   Cap the first track so wide desktops don’t leave an empty awning beside the lockup. */
 @utility site-rail {
-  grid-template-columns: minmax(18rem, 26%) minmax(0, 1fr);
+  grid-template-columns: minmax(18rem, min(26%, 23rem)) minmax(0, 1fr);
+}
+
+@utility h-header-bar-lg {
+  height: var(--header-bar-lg);
 }
 
 @utility top-header-lg {
