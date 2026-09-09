@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HoursRow } from "@/components/hours-row";
+import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
 import { marketListName } from "@/lib/listing-copy";
 import type { UpcomingGroup } from "@/lib/upcoming";
@@ -31,6 +32,14 @@ export function EventsWeekList({ groups }: { groups: UpcomingGroup[] }) {
                     href={`/markets/${slot.market.slug}`}
                     name={marketListName(slot.market.name, slot.market.city)}
                     hours={slot.hours}
+                    extra={
+                      <ListingScore
+                        parens
+                        ratingAvg={slot.market.rating_avg}
+                        reviewCount={slot.market.review_count}
+                        className="text-muted-foreground"
+                      />
+                    }
                     hoursClassName={slot.open ? "text-stamp" : "text-muted-foreground"}
                     save={
                       <SaveButton kind="market" slug={slot.market.slug} name={slot.market.name} />

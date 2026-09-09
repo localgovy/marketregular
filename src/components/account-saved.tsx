@@ -129,6 +129,8 @@ export function AccountSavedLists({
         notes={notes}
         slugs={saves.blogs}
         listings={saves.listings}
+        markets={markets}
+        vendors={vendors}
         heading="h3"
         listClassName="mt-2"
       />

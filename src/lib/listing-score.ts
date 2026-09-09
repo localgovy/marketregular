@@ -34,6 +34,10 @@ export function listingScoreLabel(score: ListingScoreValue) {
   return `${formatRatingAvg(score.avg)} out of 5 from ${formatReviewCount(score.count)} ${noun}`;
 }
 
+export function listingScoreParens(score: ListingScoreValue) {
+  return `${formatRatingAvg(score.avg)} (${formatReviewCount(score.count)})`;
+}
+
 export function withListingStats<T extends { review_count?: unknown; rating_avg?: unknown }>(
   row: T,
 ): T & { review_count: number; rating_avg: number | null } {

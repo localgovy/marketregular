@@ -19,7 +19,7 @@ Beach-Metro readers, you’re going to want to make an account and save this art
 
 Volunteer-run with the Danforth East Community Association. Vendors with Canadian-grown produce, plus speciality food and drink, with weekly live music while in season.
 
-**Vendors to look for this season:** Hooked, [St. John’s Bakery](https://www.marketregular.com/vendors/st-john-s-bakery), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), Mad Mexican, Warner’s Farm, Do Good Donuts.
+**Vendors to look for this season:** [Hooked](https://www.marketregular.com/vendors/hooked), [St. John’s Bakery](https://www.marketregular.com/vendors/st-john-s-bakery), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), [Mad Mexican](https://www.marketregular.com/vendors/mad-mexican), [Warner’s Farm](https://www.marketregular.com/vendors/warner-s-farm), [Do Good Donuts](https://www.marketregular.com/vendors/do-good-donuts).
 
 ---
 
@@ -29,7 +29,7 @@ Volunteer-run with the Danforth East Community Association. Vendors with Canadia
 
 Get produce, greens, seafood, and bakeries in the park. Opens bright and early at 9 AM.
 
-**Vendors to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), [Lev Bakery](https://www.marketregular.com/vendors/lev-bakery), Cookstown Greens, Alma Bakery, Chirping Bird Bakery.
+**Vendors to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), [Lev Bakery](https://www.marketregular.com/vendors/lev-bakery), [Cookstown Greens](https://www.marketregular.com/vendors/cookstown-greens), [Alma Bakery](https://www.marketregular.com/vendors/alma-bakery-and-foods), [Chirping Bird Bakery](https://www.marketregular.com/vendors/chirping-bird-bakery).
 
 ---
 
@@ -39,7 +39,7 @@ Get produce, greens, seafood, and bakeries in the park. Opens bright and early a
 
 The outdoor summer/fall market. **Not** the Leslieville East End Food Hub indoor season.
 
-**Vendors to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), Alma Bakery, Bad Attitude Bread, Wheelbarrow Farm, Magic Oven.
+**Vendors to look for:** [First Fish](https://www.marketregular.com/vendors/first-fish), [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy), [Alma Bakery](https://www.marketregular.com/vendors/alma-bakery-and-foods), [Bad Attitude Bread](https://www.marketregular.com/vendors/bad-attitude-bread), [Wheelbarrow Farm](https://www.marketregular.com/vendors/wheelbarrow-farm), [Magic Oven](https://www.marketregular.com/vendors/magic-oven).
 
 ---
 

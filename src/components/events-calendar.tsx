@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { CaretLeftMark, CaretRightMark } from "@/components/marks";
 import { HoursRow } from "@/components/hours-row";
+import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { Button } from "@/components/ui/button";
@@ -334,7 +335,17 @@ export function EventsCalendar({
                   href={`/markets/${event.marketSlug}`}
                   name={event.marketName}
                   hours={event.hours}
-                  extra={event.open ? <NowLabel>Open</NowLabel> : null}
+                  extra={
+                    <>
+                      {event.open ? <NowLabel>Open</NowLabel> : null}
+                      <ListingScore
+                        parens
+                        ratingAvg={event.ratingAvg}
+                        reviewCount={event.reviewCount}
+                        className="text-muted-foreground"
+                      />
+                    </>
+                  }
                   save={
                     <SaveButton kind="market" slug={event.marketSlug} name={event.marketName} />
                   }

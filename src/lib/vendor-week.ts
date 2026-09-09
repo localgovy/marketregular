@@ -16,6 +16,8 @@ export type VendorTodayRow = {
   stall: string | null;
   hours: string;
   open: boolean;
+  ratingAvg: number | null;
+  reviewCount: number;
 };
 
 export type VendorWeekPick = {
@@ -23,6 +25,8 @@ export type VendorWeekPick = {
   vendorSlug: string;
   about: string | null;
   tags: string[];
+  ratingAvg: number | null;
+  reviewCount: number;
   where: Array<{ when: string; marketName: string; marketSlug: string }>;
 };
 
@@ -97,6 +101,8 @@ export function vendorsSellingToday(
       stall: stall.stall,
       hours: formatHours(row.opens_at, row.closes_at),
       open,
+      ratingAvg: vendor?.rating_avg ?? null,
+      reviewCount: vendor?.review_count ?? 0,
     });
   }
 
@@ -138,6 +144,8 @@ export function topVendorsThisWeek(
     slug: string;
     about: string | null;
     tags: string[];
+    ratingAvg: number | null;
+    reviewCount: number;
     appearances: number;
     markets: Set<string>;
     where: VendorWeekPick["where"];
@@ -159,6 +167,8 @@ export function topVendorsThisWeek(
         slug: vendor?.slug ?? stall.slug,
         about: vendor?.about ?? null,
         tags: vendorProductTags(vendor?.name ?? stall.name, vendor?.tags),
+        ratingAvg: vendor?.rating_avg ?? null,
+        reviewCount: vendor?.review_count ?? 0,
         appearances: 0,
         markets: new Set<string>(),
         where: [],
@@ -189,6 +199,8 @@ export function topVendorsThisWeek(
       vendorSlug: row.slug,
       about: row.about,
       tags: row.tags,
+      ratingAvg: row.ratingAvg,
+      reviewCount: row.reviewCount,
       where: row.where,
     }));
 }
@@ -242,6 +254,8 @@ export function savedVendorsThisWeek(
         vendorSlug: slug,
         about: vendor?.about ?? null,
         tags: vendorProductTags(vendor?.name ?? stall.name, vendor?.tags),
+        ratingAvg: vendor?.rating_avg ?? null,
+        reviewCount: vendor?.review_count ?? 0,
         where: [],
       };
       if (!current.where.some((place) => place.marketSlug === market.slug && place.when === when)) {

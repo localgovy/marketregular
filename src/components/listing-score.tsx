@@ -4,6 +4,7 @@ import {
   formatReviewCount,
   listingScore,
   listingScoreLabel,
+  listingScoreParens,
 } from "@/lib/listing-score";
 import { cn } from "@/lib/utils";
 
@@ -31,15 +32,27 @@ export function ListingScore({
   ratingAvg,
   reviewCount,
   compact = false,
+  parens = false,
   className,
 }: {
   ratingAvg?: number | string | null;
   reviewCount?: number | null;
   compact?: boolean;
+  /** Score then count in parentheses, e.g. 4.3 (1,783). */
+  parens?: boolean;
   className?: string;
 }) {
   const score = listingScore(ratingAvg, reviewCount);
   if (!score) return null;
+
+  if (parens) {
+    return (
+      <span className={cn("type-nums whitespace-nowrap text-sm", className)}>
+        <span className="sr-only">{listingScoreLabel(score)}</span>
+        <span aria-hidden>{listingScoreParens(score)}</span>
+      </span>
+    );
+  }
 
   const avg = formatRatingAvg(score.avg);
   const count = formatReviewCount(score.count);

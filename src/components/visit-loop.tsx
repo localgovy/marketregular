@@ -48,6 +48,8 @@ export function HomeMosaic({
       slug: slot.market.slug,
       hours: slot.hours,
       city: slot.market.city,
+      rating_avg: slot.market.rating_avg,
+      review_count: slot.market.review_count,
     })) ?? [];
 
   return (

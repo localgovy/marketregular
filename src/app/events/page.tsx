@@ -49,6 +49,8 @@ export default async function EventsPage({
           address: market.address,
           lat: market.lat,
           lng: market.lng,
+          rating_avg: market.rating_avg,
+          review_count: market.review_count,
         }))}
         schedules={schedules}
         initialMonth={m}

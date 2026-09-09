@@ -37,9 +37,17 @@ export function MarketRow({
       )}
     >
       <div className={cn("min-w-0 py-3", inset && "px-2")}>
-        <Link href={`/markets/${market.slug}`} className="text-base font-medium">
-          {market.name}
-        </Link>
+        <p className="min-w-0">
+          <Link href={`/markets/${market.slug}`} className="text-base font-medium">
+            {market.name}
+          </Link>
+          <ListingScore
+            parens
+            ratingAvg={market.rating_avg}
+            reviewCount={market.review_count}
+            className="ml-2 text-muted-foreground"
+          />
+        </p>
         <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           {open ? <NowLabel>Open now</NowLabel> : null}
           {open && hours ? (
@@ -51,15 +59,9 @@ export function MarketRow({
             </span>
           ) : null}
         </p>
-        <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
-          <span>{marketPlaceLine(market.address, market.city)}</span>
-          <ListingScore
-            ratingAvg={market.rating_avg}
-            reviewCount={market.review_count}
-            compact
-            className="text-foreground"
-          />
-        </span>
+        <p className="text-sm text-muted-foreground">
+          {marketPlaceLine(market.address, market.city)}
+        </p>
       </div>
       <span className={cn("flex shrink-0 items-start gap-1 py-3", inset ? "pr-2" : "pr-1")}>
         <SaveButton kind="market" slug={market.slug} name={market.name} />

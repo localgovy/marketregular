@@ -6,8 +6,11 @@ import { ListingSaveButton } from "@/components/save-button";
 import { safePath } from "@/lib/auth-redirect";
 import {
   loadBlogMarketPeeks,
+  loadBlogMarketScores,
+  loadBlogVendorScores,
   peekKey,
   weekdayFromHeading,
+  type BlogListingScore,
   type BlogMarketPeek,
   type BlogMarketPeekRequest,
 } from "@/lib/blog-market-peeks";
@@ -84,6 +87,68 @@ function parseInlines(text: string): Inline[] {
   return out;
 }
 
+function catalogSlugFromHref(href: string, kind: "markets" | "vendors"): string | null {
+  const match = href.match(kind === "markets" ? /^\/markets\/([^/?#]+)$/ : /^\/vendors\/([^/?#]+)$/);
+  if (!match?.[1]) return null;
+  let slug: string;
+  try {
+    slug = decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
+  return validSaveSlug(slug) ? slug : null;
+}
+
+function vendorSlugFromHref(href: string): string | null {
+  return catalogSlugFromHref(href, "vendors");
+}
+
+function marketSlugFromHref(href: string): string | null {
+  return catalogSlugFromHref(href, "markets");
+}
+
+function slugsFromInlines(
+  inlines: Inline[],
+  fromHref: (href: string) => string | null,
+): string[] {
+  const slugs: string[] = [];
+  for (const part of inlines) {
+    if (part.kind !== "link") continue;
+    const slug = fromHref(part.href);
+    if (slug) slugs.push(slug);
+  }
+  return slugs;
+}
+
+function vendorSlugsFromInlines(inlines: Inline[]): string[] {
+  return slugsFromInlines(inlines, vendorSlugFromHref);
+}
+
+function catalogScoreRequests(
+  blocks: Block[],
+  fromHref: (href: string) => string | null,
+): string[] {
+  const slugs = new Set<string>();
+  for (const block of blocks) {
+    if (block.type === "ul") {
+      for (const item of block.items) {
+        for (const slug of slugsFromInlines(item.inlines, fromHref)) slugs.add(slug);
+      }
+    } else if (block.type === "p") {
+      for (const slug of slugsFromInlines(block.inlines, fromHref)) slugs.add(slug);
+    }
+  }
+  return [...slugs];
+}
+
+function vendorScoreRequests(blocks: Block[]): string[] {
+  return catalogScoreRequests(blocks, vendorSlugFromHref);
+}
+
+function marketScoreRequests(blocks: Block[]): string[] {
+  return catalogScoreRequests(blocks, marketSlugFromHref);
+}
+
 function marketSlugFromInlines(inlines: Inline[]): string | null {
   return marketLinkFromInlines(inlines)?.slug ?? null;
 }
@@ -91,15 +156,8 @@ function marketSlugFromInlines(inlines: Inline[]): string | null {
 function marketLinkFromInlines(inlines: Inline[]): { slug: string; name: string } | null {
   for (const part of inlines) {
     if (part.kind !== "link") continue;
-    const match = part.href.match(/^\/markets\/([^/?#]+)$/);
-    if (!match?.[1]) continue;
-    let slug: string;
-    try {
-      slug = decodeURIComponent(match[1]);
-    } catch {
-      continue;
-    }
-    if (!validSaveSlug(slug)) continue;
+    const slug = marketSlugFromHref(part.href);
+    if (!slug) continue;
     const name = part.label.trim();
     if (!name) continue;
     return { slug, name };
@@ -306,7 +364,15 @@ function parseBlocks(markdown: string): Block[] {
   return blocks;
 }
 
-function Inlines({ inlines }: { inlines: Inline[] }) {
+function Inlines({
+  inlines,
+  vendorScores,
+  marketScores,
+}: {
+  inlines: Inline[];
+  vendorScores?: Map<string, BlogListingScore> | null;
+  marketScores?: Map<string, BlogListingScore> | null;
+}) {
   return (
     <>
       {inlines.map((part, index) => {
@@ -328,25 +394,50 @@ function Inlines({ inlines }: { inlines: Inline[] }) {
         }
         const internal = part.href.startsWith("/");
         const className = "font-medium text-foreground hover:underline";
-        if (internal) {
-          return (
-            <Link key={index} href={part.href} className={className}>
-              {part.label}
-            </Link>
-          );
-        }
-        return (
-          <a key={index} href={part.href} rel="noreferrer" className={className}>
+        const vendorSlug = vendorSlugFromHref(part.href);
+        const marketSlug = marketSlugFromHref(part.href);
+        const score = vendorSlug
+          ? vendorScores?.get(vendorSlug)
+          : marketSlug
+            ? marketScores?.get(marketSlug)
+            : undefined;
+        const link = internal ? (
+          <Link href={part.href} className={className}>
+            {part.label}
+          </Link>
+        ) : (
+          <a href={part.href} rel="noreferrer" className={className}>
             {part.label}
           </a>
+        );
+        if (!score) return <span key={index}>{link}</span>;
+        return (
+          <span key={index}>
+            {link}
+            <ListingScore
+              parens
+              ratingAvg={score.ratingAvg}
+              reviewCount={score.reviewCount}
+              className="ml-2 text-muted-foreground"
+            />
+          </span>
         );
       })}
     </>
   );
 }
 
-export function BlogInlines({ text }: { text: string }) {
-  return <Inlines inlines={parseInlines(text)} />;
+export async function BlogInlines({ text }: { text: string }) {
+  const inlines = parseInlines(text);
+  const vendorSlugs = vendorSlugsFromInlines(inlines);
+  const marketSlugs = slugsFromInlines(inlines, marketSlugFromHref);
+  const [vendorScores, marketScores] = await Promise.all([
+    vendorSlugs.length ? loadBlogVendorScores(vendorSlugs) : Promise.resolve(null),
+    marketSlugs.length ? loadBlogMarketScores(marketSlugs) : Promise.resolve(null),
+  ]);
+  return (
+    <Inlines inlines={inlines} vendorScores={vendorScores} marketScores={marketScores} />
+  );
 }
 
 function StallPeek({ vendors }: { vendors: BlogMarketPeek["vendors"] }) {
@@ -371,23 +462,26 @@ function MarketHoursRow({
   item,
   peek,
   listing,
+  vendorScores,
 }: {
   item: { inlines: Inline[]; hours?: string };
   peek: BlogMarketPeek | undefined;
   listing: ReturnType<typeof listingFromInput>;
+  vendorScores?: Map<string, BlogListingScore> | null;
 }) {
   return (
     <li className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-3">
       <div className="min-w-0">
         <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <span className="text-base font-medium">
-            <Inlines inlines={item.inlines} />
+            <Inlines inlines={item.inlines} vendorScores={vendorScores} />
           </span>
           {peek ? (
             <ListingScore
+              parens
               ratingAvg={peek.ratingAvg}
               reviewCount={peek.reviewCount}
-              className="text-foreground"
+              className="text-muted-foreground"
             />
           ) : null}
         </span>
@@ -411,7 +505,13 @@ export async function BlogBody({
   const blocks = parseBlocks(markdown);
   const context = blockContext(blocks);
   const requests = peekRequests(blocks, context);
-  const peeks = requests.length ? await loadBlogMarketPeeks(requests) : null;
+  const vendorSlugs = vendorScoreRequests(blocks);
+  const marketSlugs = marketScoreRequests(blocks);
+  const [peeks, vendorScores, marketScores] = await Promise.all([
+    requests.length ? loadBlogMarketPeeks(requests) : Promise.resolve(null),
+    vendorSlugs.length ? loadBlogVendorScores(vendorSlugs) : Promise.resolve(null),
+    marketSlugs.length ? loadBlogMarketScores(marketSlugs) : Promise.resolve(null),
+  ]);
 
   return (
     <div className="mt-8">
@@ -467,6 +567,7 @@ export async function BlogBody({
                         item={item}
                         peek={peek}
                         listing={listing}
+                        vendorScores={vendorScores}
                       />
                     );
                   })}
@@ -478,7 +579,11 @@ export async function BlogBody({
             <ul key={index} className="mt-3 list-disc space-y-1 pl-5 text-base leading-relaxed">
               {list.items.map((item, itemIndex) => (
                 <li key={itemIndex}>
-                  <Inlines inlines={item.inlines} />
+                  <Inlines
+                    inlines={item.inlines}
+                    vendorScores={vendorScores}
+                    marketScores={marketScores}
+                  />
                 </li>
               ))}
             </ul>
@@ -486,7 +591,11 @@ export async function BlogBody({
         }
         return (
           <p key={index} className="mt-3 text-base leading-relaxed text-muted-foreground">
-            <Inlines inlines={block.inlines} />
+            <Inlines
+              inlines={block.inlines}
+              vendorScores={vendorScores}
+              marketScores={marketScores}
+            />
           </p>
         );
       })}

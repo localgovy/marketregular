@@ -26,7 +26,10 @@ export type UpcomingGroup = {
 export const WEEK_DAY_PAGE = 7;
 
 /** Fields the week UI actually paints. Keeps full Market rows out of the client payload. */
-export type WeekListMarket = Pick<Market, "id" | "slug" | "name" | "city">;
+export type WeekListMarket = Pick<
+  Market,
+  "id" | "slug" | "name" | "city" | "rating_avg" | "review_count"
+>;
 
 export type WeekListSlot = {
   market: WeekListMarket;
@@ -56,6 +59,8 @@ export function slimUpcomingGroups(groups: UpcomingGroup[]): WeekListGroup[] {
         slug: slot.market.slug,
         name: slot.market.name,
         city: slot.market.city,
+        rating_avg: slot.market.rating_avg,
+        review_count: slot.market.review_count,
       },
     })),
   }));

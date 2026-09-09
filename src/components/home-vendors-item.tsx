@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Hours } from "@/components/hours";
+import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { ProductTag } from "@/components/product-tag";
 import { SaveButton } from "@/components/save-button";
@@ -42,9 +43,17 @@ export function VendorTodayItem({ row }: { row: VendorTodayRow }) {
     <li className="flex items-start gap-2 border-b border-border px-3 py-3 last:border-b-0">
       <Link
         href={`/vendors/${row.vendorSlug}`}
-        className="grid min-w-0 flex-1 gap-1 hover:text-primary"
+        className="group grid min-w-0 flex-1 gap-1"
       >
-        <span className="text-base font-medium">{row.vendorName}</span>
+        <span className="min-w-0">
+          <span className="text-base font-medium group-hover:text-primary">{row.vendorName}</span>
+          <ListingScore
+            parens
+            ratingAvg={row.ratingAvg}
+            reviewCount={row.reviewCount}
+            className="ml-2 text-muted-foreground"
+          />
+        </span>
         <span className="text-sm text-muted-foreground">
           {row.marketName}
           {row.stall ? ` · ${row.stall}` : null}
@@ -83,9 +92,17 @@ export function VendorWeekItem({
         </span>
       ) : null}
       <span className="min-w-0 flex-1">
-        <Link href={`/vendors/${pick.vendorSlug}`} className="text-base font-medium hover:underline">
-          {pick.vendorName}
-        </Link>
+        <span className="min-w-0">
+          <Link href={`/vendors/${pick.vendorSlug}`} className="text-base font-medium hover:underline">
+            {pick.vendorName}
+          </Link>
+          <ListingScore
+            parens
+            ratingAvg={pick.ratingAvg}
+            reviewCount={pick.reviewCount}
+            className="ml-2 text-muted-foreground"
+          />
+        </span>
         <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">
           {groupWhereByDay(pick.where).map((group, gi) => (
             <span key={group.when}>

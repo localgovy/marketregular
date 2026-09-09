@@ -1,4 +1,5 @@
 import { HoursRow } from "@/components/hours-row";
+import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { marketListName } from "@/lib/listing-copy";
@@ -9,6 +10,8 @@ type OpenMarket = {
   slug: string;
   hours: string;
   city?: string;
+  rating_avg?: number | null;
+  review_count?: number;
 };
 
 export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
@@ -42,6 +45,14 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
                 href={`/markets/${market.slug}`}
                 name={marketListName(market.name, market.city ?? "")}
                 hours={market.hours}
+                score={
+                  <ListingScore
+                    parens
+                    ratingAvg={market.rating_avg}
+                    reviewCount={market.review_count}
+                    className="ml-2 text-muted-foreground"
+                  />
+                }
                 hoursClassName="text-stamp"
                 className="px-3 py-2.5 hover:bg-secondary/60 sm:px-4"
                 save={<SaveButton kind="market" slug={market.slug} name={market.name} />}

@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
-import { MarketHoursHead } from "@/components/market-hours-head";
 import { ListingSaveButton, SaveButton } from "@/components/save-button";
 import { formatPostedOn } from "@/lib/format";
-import type { SavedListing } from "@/lib/saves";
+import type { SavedListing, SavedListingVendor } from "@/lib/saves";
 import { cn } from "@/lib/utils";
 
 export type SavedNote = {
@@ -14,6 +13,19 @@ export type SavedNote = {
   title: string;
   date: string;
   kicker?: string;
+};
+
+export type SavedListingMarket = {
+  slug: string;
+  address: string;
+  rating_avg: number | null;
+  review_count: number;
+};
+
+export type SavedListingVendorScore = {
+  slug: string;
+  rating_avg: number | null;
+  review_count: number;
 };
 
 function listingGroups(rows: SavedListing[]) {
@@ -29,47 +41,97 @@ function listingGroups(rows: SavedListing[]) {
   return groups;
 }
 
-function SavedListingRow({ listing }: { listing: SavedListing }) {
+function VendorPeeks({
+  vendors,
+  scores,
+}: {
+  vendors: SavedListingVendor[];
+  scores: Map<string, SavedListingVendorScore>;
+}) {
+  if (!vendors.length) return null;
+
   return (
-    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-3">
-      <div className="min-w-0">
-        <span className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <Link
-            href={`/markets/${listing.marketSlug}`}
-            className="text-base font-medium hover:underline"
-          >
-            {listing.marketName}
-          </Link>
-          <ListingScore
-            ratingAvg={listing.ratingAvg}
-            reviewCount={listing.reviewCount}
-            className="text-foreground"
-          />
-        </span>
-        {listing.vendors.length ? (
-          <p className="mt-1.5 grid grid-cols-[auto_minmax(0,1fr)] items-baseline gap-x-3 text-sm leading-relaxed">
-            <span className="text-muted-foreground">Vendors</span>
-            <span className="min-w-0">
-              {listing.vendors.map((vendor, vendorIndex) => (
-                <span key={vendor.slug}>
-                  {vendorIndex ? ", " : null}
-                  <Link
-                    href={`/vendors/${vendor.slug}`}
-                    className="text-foreground hover:underline"
-                  >
-                    {vendor.name}
-                  </Link>
-                </span>
-              ))}
-            </span>
-          </p>
-        ) : null}
-      </div>
-      <span className="flex shrink-0 items-start gap-2">
+    <ul className="mt-4 grid gap-1.5">
+      {vendors.map((vendor) => {
+        const score = scores.get(vendor.slug);
+        return (
+          <li key={vendor.slug} className="min-w-0 text-sm leading-relaxed">
+            <Link href={`/vendors/${vendor.slug}`} className="hover:underline">
+              {vendor.name}
+            </Link>
+            {score ? (
+              <ListingScore
+                parens
+                ratingAvg={score.rating_avg}
+                reviewCount={score.review_count}
+                className="ml-2 text-muted-foreground"
+              />
+            ) : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function SavedVisit({
+  listing,
+  heading,
+  market,
+  vendorScores,
+}: {
+  listing: SavedListing;
+  heading?: string;
+  market?: SavedListingMarket;
+  vendorScores: Map<string, SavedListingVendorScore>;
+}) {
+  const saveOnHeading = Boolean(heading);
+  const ratingAvg = market?.rating_avg ?? listing.ratingAvg;
+  const reviewCount = market?.review_count ?? listing.reviewCount;
+  const address = market?.address?.trim() || null;
+
+  const body = (
+    <div className="min-w-0">
+      <p>
+        <Link
+          href={`/markets/${listing.marketSlug}`}
+          className="text-base font-medium hover:underline"
+        >
+          {listing.marketName}
+        </Link>
+        <ListingScore
+          parens
+          ratingAvg={ratingAvg}
+          reviewCount={reviewCount}
+          className="ml-2 text-muted-foreground"
+        />
+      </p>
+      <p className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
+        {address ? <span className="text-muted-foreground">{address}</span> : null}
+        {address ? <span className="text-muted-foreground">·</span> : null}
         <Hours value={listing.hours} className="text-foreground" />
-        <ListingSaveButton listing={listing} />
-      </span>
-    </li>
+      </p>
+      <VendorPeeks vendors={listing.vendors} scores={vendorScores} />
+    </div>
+  );
+
+  return (
+    <div>
+      {heading ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="min-w-0 text-sm">{heading}</p>
+          <ListingSaveButton listing={listing} name={heading} />
+        </div>
+      ) : null}
+      {saveOnHeading ? (
+        <div className="mt-4">{body}</div>
+      ) : (
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
+          {body}
+          <ListingSaveButton listing={listing} />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -77,16 +139,22 @@ export function SavedNotesSection({
   notes,
   slugs,
   listings = [],
+  markets = [],
+  vendors = [],
   heading: Heading,
   listClassName,
 }: {
   notes: SavedNote[];
   slugs: string[];
   listings?: SavedListing[];
+  markets?: SavedListingMarket[];
+  vendors?: SavedListingVendorScore[];
   heading: "h2" | "h3";
   listClassName?: string;
 }) {
   const bySlug = new Map(notes.map((note) => [note.slug, note]));
+  const marketBySlug = new Map(markets.map((market) => [market.slug, market]));
+  const vendorScores = new Map(vendors.map((vendor) => [vendor.slug, vendor]));
   const listingsByBlog = new Map<string, SavedListing[]>();
   for (const listing of listings) {
     const rows = listingsByBlog.get(listing.blog) ?? [];
@@ -149,19 +217,36 @@ export function SavedNotesSection({
                 </span>
               </div>
               {row.listings.length
-                ? listingGroups(row.listings).map((group) => (
-                    <div key={group.heading} className="border-t border-border px-3 pb-1">
-                      <p className="pt-3 text-sm text-muted-foreground">{group.heading}</p>
-                      <div className="mt-3 min-w-0">
-                        <MarketHoursHead />
+                ? listingGroups(row.listings).map((group) => {
+                    const [only] = group.rows;
+                    return (
+                      <div key={group.heading} className="border-t border-border px-3 py-5">
+                        {only && group.rows.length === 1 ? (
+                          <SavedVisit
+                            listing={only}
+                            heading={group.heading}
+                            market={marketBySlug.get(only.marketSlug)}
+                            vendorScores={vendorScores}
+                          />
+                        ) : (
+                          <>
+                            <p className="text-sm">{group.heading}</p>
+                            <ul className="mt-3 grid gap-5">
+                              {group.rows.map((listing) => (
+                                <li key={listing.slug}>
+                                  <SavedVisit
+                                    listing={listing}
+                                    market={marketBySlug.get(listing.marketSlug)}
+                                    vendorScores={vendorScores}
+                                  />
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
                       </div>
-                      <ul className="divide-y divide-border">
-                        {group.rows.map((listing) => (
-                          <SavedListingRow key={listing.slug} listing={listing} />
-                        ))}
-                      </ul>
-                    </div>
-                  ))
+                    );
+                  })
                 : null}
             </li>
           ))}

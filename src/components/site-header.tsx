@@ -29,21 +29,21 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md lg:border-b-2 lg:border-board">
       <div className="flex h-14 w-full items-center gap-3 px-4 lg:grid lg:h-header-bar-lg lg:site-rail lg:gap-0 lg:px-0">
-        <div className="flex min-w-0 flex-1 items-center md:flex-none lg:h-header-bar-lg lg:flex-none lg:items-stretch lg:border-r lg:border-board lg:bg-board lg:px-5 xl:px-6">
-          <div className="flex min-w-0 items-center gap-2 lg:h-full lg:w-full lg:flex-col lg:items-start lg:justify-center lg:gap-1.5">
+        <div className="flex min-w-0 flex-1 items-center md:flex-none lg:h-header-bar-lg lg:flex-none lg:items-center lg:border-r lg:border-board lg:bg-board lg:px-5 xl:px-6">
+          <div className="flex min-w-0 items-center gap-2 lg:h-full">
             <Link
               href="/"
               prefetch={false}
               aria-label={`${SITE_NAME} home`}
-              className="inline-flex shrink-0 items-center text-board outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:w-full lg:max-w-full lg:text-chalk"
+              className="inline-flex shrink-0 items-center text-board outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk"
             >
-              <SiteWordmark className="lg:site-wordmark-board" />
+              <SiteWordmark />
             </Link>
             <a
               href={STUDIO_URL}
               rel="noreferrer"
               aria-label={`by ${STUDIO_NAME}`}
-              className="type-kicker inline-flex shrink-0 items-center gap-1 leading-none text-muted-foreground outline-none translate-y-0.5 hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:translate-y-0 lg:text-chalk/70"
+              className="type-kicker inline-flex shrink-0 items-center gap-1 leading-none text-muted-foreground outline-none translate-y-0.5 hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk/70"
             >
               <span>by</span>
               <StudioWordmark />

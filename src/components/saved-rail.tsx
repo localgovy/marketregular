@@ -75,16 +75,16 @@ export function SavedRail() {
                   href={`/markets/${market.slug}`}
                   className="min-w-0 flex-1 px-3 py-2.5 hover:bg-secondary/50"
                 >
-                  <span className="block text-base font-medium">{market.name}</span>
-                  <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
-                    <span>{market.address}</span>
+                  <span className="min-w-0">
+                    <span className="text-base font-medium">{market.name}</span>
                     <ListingScore
+                      parens
                       ratingAvg={market.rating_avg}
                       reviewCount={market.review_count}
-                      compact
-                      className="text-foreground"
+                      className="ml-2 text-muted-foreground"
                     />
                   </span>
+                  <span className="block text-sm text-muted-foreground">{market.address}</span>
                 </Link>
                 <span className="pr-2">
                   <SaveButton kind="market" slug={market.slug} name={market.name} />
@@ -213,6 +213,8 @@ export function SavedDesk({
         notes={notes}
         slugs={saves.blogs}
         listings={saves.listings}
+        markets={markets}
+        vendors={vendors}
         heading="h2"
         listClassName="mt-3 bg-card"
       />

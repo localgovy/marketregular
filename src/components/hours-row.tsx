@@ -8,6 +8,7 @@ export function HoursRow({
   name,
   hours,
   extra,
+  score,
   save,
   className,
   hoursClassName,
@@ -17,6 +18,7 @@ export function HoursRow({
   name: string;
   hours: string;
   extra?: ReactNode;
+  score?: ReactNode;
   save?: ReactNode;
   className?: string;
   hoursClassName?: string;
@@ -30,13 +32,16 @@ export function HoursRow({
       )}
     >
       <div className="min-w-0">
-        <Link
-          href={href}
-          prefetch={false}
-          className={cn("text-base font-medium", nameClassName)}
-        >
-          {name}
-        </Link>
+        <p className="min-w-0">
+          <Link
+            href={href}
+            prefetch={false}
+            className={cn("text-base font-medium", nameClassName)}
+          >
+            {name}
+          </Link>
+          {score}
+        </p>
         {extra || hours ? (
           <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
             {extra}

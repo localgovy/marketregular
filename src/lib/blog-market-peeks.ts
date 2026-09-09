@@ -27,6 +27,42 @@ export function peekKey(slug: string, weekday: number | null) {
   return weekday == null ? slug : `${slug}:${weekday}`;
 }
 
+export type BlogListingScore = {
+  ratingAvg: number | null;
+  reviewCount: number;
+};
+
+export type BlogVendorScore = BlogListingScore;
+
+function listingScoreMap<T extends { slug: string; rating_avg: number | null; review_count: number }>(
+  rows: T[],
+  slugs: string[],
+) {
+  const wanted = new Set(slugs);
+  const scores = new Map<string, BlogListingScore>();
+  if (!wanted.size) return scores;
+  for (const row of rows) {
+    if (!wanted.has(row.slug)) continue;
+    const score = listingScore(row.rating_avg, row.review_count);
+    if (!score) continue;
+    scores.set(row.slug, {
+      ratingAvg: score.avg,
+      reviewCount: score.count,
+    });
+  }
+  return scores;
+}
+
+export async function loadBlogVendorScores(slugs: string[]) {
+  if (!slugs.length) return new Map<string, BlogListingScore>();
+  return listingScoreMap(await listVendors(), slugs);
+}
+
+export async function loadBlogMarketScores(slugs: string[]) {
+  if (!slugs.length) return new Map<string, BlogListingScore>();
+  return listingScoreMap(await listMarkets(), slugs);
+}
+
 export function weekdayFromHeading(text: string): number | null {
   const word = text
     .trim()

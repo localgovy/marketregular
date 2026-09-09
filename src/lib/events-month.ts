@@ -3,7 +3,10 @@ import { LAUNCH_TZ } from "@/lib/launch";
 import { formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
 import type { Market, MarketSchedule } from "@/types/database";
 
-export type EventMarket = Pick<Market, "id" | "slug" | "name" | "address" | "city" | "lat" | "lng">;
+export type EventMarket = Pick<
+  Market,
+  "id" | "slug" | "name" | "address" | "city" | "lat" | "lng" | "rating_avg" | "review_count"
+>;
 
 export type CalendarEvent = {
   marketId: string;
@@ -16,6 +19,8 @@ export type CalendarEvent = {
   hours: string;
   notes: string | null;
   open: boolean;
+  ratingAvg: number | null;
+  reviewCount: number;
 };
 
 export type CalendarCell = {
@@ -168,6 +173,8 @@ function eventsForCivilDate(
       hours: formatHours(row.opens_at, row.closes_at),
       notes: row.notes,
       open,
+      ratingAvg: market.rating_avg,
+      reviewCount: market.review_count,
       opensMinutes: parseHm(row.opens_at),
     });
   }
