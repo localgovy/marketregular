@@ -11,7 +11,10 @@ export function onboardingExemptPath(path: string) {
     path.startsWith("/auth/") ||
     path === "/login" ||
     path === "/signup" ||
-    path === "/account/password"
+    path === "/account/password" ||
+    path === "/privacy" ||
+    path === "/terms" ||
+    path === "/contact"
   );
 }
 

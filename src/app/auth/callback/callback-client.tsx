@@ -9,7 +9,7 @@ import { oauthValuesMatch, takeGoogleOAuthHandoff } from "@/lib/google-oauth";
 import { flushPendingSave } from "@/lib/pending-save";
 import { LOGIN_ERROR_COPY } from "@/lib/public-error";
 import { clearAuthNextCookie, readAuthNextCookie, safePath } from "@/lib/auth-redirect";
-import { getSaves } from "@/lib/saves";
+import { bootSaves, droppedSaveKeys, getSaves } from "@/lib/saves";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 type CallbackPayload = {
@@ -120,7 +120,8 @@ export function AuthCallbackClient() {
       }
 
       try {
-        await mergeSaves(getSaves());
+        bootSaves();
+        await mergeSaves(getSaves(), droppedSaveKeys());
         await flushPendingSave();
       } catch {
         /* Account hydrator retries. */

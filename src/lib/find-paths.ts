@@ -168,6 +168,17 @@ export function sortTagsForDisplay(tags: string[]) {
   return [...tags].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 }
 
+export function unionById<T extends { id: string }>(left: T[], right: T[]) {
+  if (!right.length) return left;
+  const seen = new Set(left.map((row) => row.id));
+  const extra = right.filter((row) => {
+    if (seen.has(row.id)) return false;
+    seen.add(row.id);
+    return true;
+  });
+  return extra.length ? [...left, ...extra] : left;
+}
+
 export function applyDirectoryTags<
   M extends { id: string; tags: string[] },
   V extends { id: string; tags: string[]; searchTags?: string[] },

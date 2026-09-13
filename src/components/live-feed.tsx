@@ -22,7 +22,12 @@ export function LiveFeed({
       .channel(marketId ? `live-reviews-${marketId}` : "live-reviews")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "posts" },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "posts",
+          ...(marketId ? { filter: `market_id=eq.${marketId}` } : {}),
+        },
         (payload) => {
           const row = payload.new as Post;
           if (row.flagged) return;

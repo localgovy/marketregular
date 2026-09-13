@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { mergeSaves } from "@/app/actions/saves";
 import { flushPendingSave } from "@/lib/pending-save";
-import { EMPTY_SAVES, bootSaves, clearTombstones, getSaves, replaceSaves, sameSaves } from "@/lib/saves";
+import { EMPTY_SAVES, bootSaves, clearTombstones, droppedSaveKeys, getSaves, replaceSaves, sameSaves } from "@/lib/saves";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { bootAuthCookie } from "@/lib/supabase/use-auth-cookie";
@@ -46,7 +46,7 @@ export function SavesHydrator() {
 
       try {
         let before = getSaves();
-        let canonical = await mergeSaves(before);
+        let canonical = await mergeSaves(before, droppedSaveKeys());
         for (let attempt = 0; attempt < 3; attempt += 1) {
           if (cancelled) return;
           if (!canonical) return;
@@ -59,7 +59,7 @@ export function SavesHydrator() {
             return;
           }
           before = after;
-          canonical = await mergeSaves(before);
+          canonical = await mergeSaves(before, droppedSaveKeys());
         }
         if (cancelled || !canonical) return;
         replaceSaves(canonical);

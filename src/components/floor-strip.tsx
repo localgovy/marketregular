@@ -50,7 +50,7 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
                     parens
                     ratingAvg={market.rating_avg}
                     reviewCount={market.review_count}
-                    className="ml-2 text-muted-foreground"
+                    className="ml-2 text-stamp"
                   />
                 }
                 hoursClassName="text-stamp"

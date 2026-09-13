@@ -17,6 +17,7 @@ import {
   scopeVendorsToMarkets,
   searchWeekdays,
   slugsForPlaceQuery,
+  unionById,
 } from "@/lib/find-paths";
 import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
@@ -24,7 +25,7 @@ import { provinceTz } from "@/lib/constants";
 import { isLaunchCity } from "@/lib/launch";
 import { vendorHasSubstance } from "@/lib/listing-substance";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
-import { withVendorProductTags, vendorFilterTags } from "@/lib/vendor-tags";
+import { productTagsFromQuery, vendorFilterTags, withVendorProductTags } from "@/lib/vendor-tags";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
 import type {
   FloorItem,
@@ -85,33 +86,39 @@ export function localSearch(filters: SearchFilters, now = new Date()) {
   let vendors = localVendors();
 
   if (q) {
-    const origin = countryTagsFromQuery(q);
+    const queryTags = [...new Set([...productTagsFromQuery(q), ...countryTagsFromQuery(q)])];
     markets = markets.filter((m) =>
       haystack([m.name, m.city, m.province, m.about, m.tags.join(" "), m.address]).includes(q),
     );
     vendors = vendors.filter((v) => {
-      const marketNames = seedMarketVendors
-        .filter((mv) => mv.vendor_id === v.id)
-        .map((mv) => seedMarkets.find((m) => m.id === mv.market_id)?.name);
-      return (
-        haystack([v.name, v.about, vendorFilterTags(v).join(" "), ...marketNames]).includes(q) ||
-        origin.some((tag) => vendorFilterTags(v).includes(tag))
-      );
-    });
-    if (origin.length && vendors.length) {
-      const vendorIds = new Set(vendors.map((vendor) => vendor.id));
-      const hostIds = new Set(
-        seedMarketVendors
-          .filter((link) => vendorIds.has(link.vendor_id))
-          .map((link) => link.market_id),
-      );
-      const seen = new Set(markets.map((market) => market.id));
-      for (const market of localMarkets()) {
-        if (!hostIds.has(market.id) || seen.has(market.id)) continue;
-        markets.push(market);
-        seen.add(market.id);
+      const bits: Array<string | null | undefined> = [
+        v.name,
+        v.about,
+        vendorFilterTags(v).join(" "),
+      ];
+      if (!queryTags.length) {
+        bits.push(
+          ...seedMarketVendors
+            .filter((mv) => mv.vendor_id === v.id)
+            .map((mv) => seedMarkets.find((m) => m.id === mv.market_id)?.name),
+        );
       }
+      return haystack(bits).includes(q);
+    });
+    if (queryTags.length) {
+      const tagged = applyDirectoryTags(
+        localMarkets(),
+        localVendors(),
+        seedMarketVendors.map((link) => ({
+          market_id: link.market_id,
+          vendor_id: link.vendor_id,
+        })),
+        queryTags,
+      );
+      markets = unionById(markets, tagged.markets);
+      vendors = unionById(vendors, tagged.vendors);
       markets.sort((a, b) => a.name.localeCompare(b.name));
+      vendors.sort((a, b) => a.name.localeCompare(b.name));
     }
     const placeSlugs = new Set(slugsForPlaceQuery(q));
     if (placeSlugs.size) {

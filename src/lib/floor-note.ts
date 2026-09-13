@@ -101,32 +101,14 @@ export function reviewFromReview(row: Review): FloorItem {
 }
 
 export function mergeReviews(items: FloorItem[]): FloorItem[] {
-  const byKey = new Map<string, FloorItem>();
+  const byId = new Map<string, FloorItem>();
   const newest = [...items].sort(
     (a, b) => +new Date(b.created_at) - +new Date(a.created_at),
   );
   for (const item of newest) {
-    const key = `${(item.author_name ?? "").toLowerCase()}|${item.body.trim().toLowerCase().slice(0, 140)}`;
-    const current = byKey.get(key);
-    if (!current) {
-      byKey.set(key, { ...item, kind: "review" });
-      continue;
-    }
-    if (current.rating == null && item.rating != null) {
-      byKey.set(key, { ...current, rating: item.rating });
-    }
-    if (current.price_level == null && item.price_level != null) {
-      byKey.set(key, { ...byKey.get(key)!, price_level: item.price_level });
-    }
-    if (!current.vendor_slug && item.vendor_slug) {
-      byKey.set(key, {
-        ...byKey.get(key)!,
-        vendor_slug: item.vendor_slug,
-        vendor_name: item.vendor_name ?? current.vendor_name,
-      });
-    }
+    if (!byId.has(item.id)) byId.set(item.id, { ...item, kind: "review" });
   }
-  return [...byKey.values()].sort(
+  return [...byId.values()].sort(
     (a, b) => +new Date(b.created_at) - +new Date(a.created_at),
   );
 }

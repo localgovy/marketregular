@@ -64,7 +64,7 @@ function VendorPeeks({
                 parens
                 ratingAvg={score.rating_avg}
                 reviewCount={score.review_count}
-                className="ml-2 text-muted-foreground"
+                className="ml-2 text-stamp"
               />
             ) : null}
           </li>
@@ -103,7 +103,7 @@ function SavedVisit({
           parens
           ratingAvg={ratingAvg}
           reviewCount={reviewCount}
-          className="ml-2 text-muted-foreground"
+          className="ml-2 text-stamp"
         />
       </p>
       <p className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">

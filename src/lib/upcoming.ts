@@ -92,11 +92,13 @@ export function upcomingByDay(
   markets: Market[],
   scheduleMap: Map<string, MarketSchedule[]>,
   now = new Date(),
+  options?: { includeClosedToday?: boolean },
 ): UpcomingGroup[] {
   const tz = LAUNCH_TZ;
   const { weekday, minutes } = zonedParts(now, tz);
   const openNow: UpcomingSlot[] = [];
   const laterToday: UpcomingSlot[] = [];
+  const earlierToday: UpcomingSlot[] = [];
   const rest: UpcomingGroup[] = [];
 
   for (let offset = 0; offset < 7; offset += 1) {
@@ -108,7 +110,17 @@ export function upcomingByDay(
       if (!row) continue;
       const opens = parseHm(row.opens_at);
       const closes = parseHm(row.closes_at);
-      if (offset === 0 && minutes > closes) continue;
+      if (offset === 0 && minutes > closes) {
+        if (!options?.includeClosedToday) continue;
+        earlierToday.push({
+          market,
+          hours: formatHours(row.opens_at, row.closes_at),
+          open: false,
+          notes: row.notes,
+          opensMinutes: opens,
+        });
+        continue;
+      }
       const open = offset === 0 && minutes >= opens && minutes <= closes;
       slots.push({
         market,
@@ -159,6 +171,20 @@ export function upcomingByDay(
       iso: torontoIsoOffset(now, 0, tz),
       open: false,
       slots: laterToday,
+    });
+  }
+  if (earlierToday.length) {
+    earlierToday.sort(
+      (a, b) => a.opensMinutes - b.opensMinutes || a.market.name.localeCompare(b.market.name),
+    );
+    groups.push({
+      id: "earlier",
+      label: WEEKDAYS[weekday],
+      hint: "Already closed",
+      date: torontoDateLabel(now, 0, tz),
+      iso: torontoIsoOffset(now, 0, tz),
+      open: false,
+      slots: earlierToday,
     });
   }
   groups.push(...rest);

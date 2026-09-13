@@ -56,7 +56,7 @@ export function FloorComposer({
   initialVendorId?: string;
   className?: string;
 }) {
-  const { coords } = useGeo();
+  const { coords, requestAsync } = useGeo();
   const nearby = useMemo(() => {
     if (!coords) return [];
     return markets
@@ -98,7 +98,6 @@ export function FloorComposer({
 
   const tagged = stallOptions.find((s) => s.id === vendorId);
   const canWrite = signedIn;
-  const onSite = Boolean(market && nearby.some((item) => item.id === market.id));
   const manyStalls = stallOptions.length > 8;
 
   const marketMatches = useMemo(() => {
@@ -183,7 +182,6 @@ export function FloorComposer({
 
   function submit() {
     setMessage(null);
-    setExtra(null);
     if (!market) {
       setMessage("Pick a market first.");
       setPlaceStep("market");
@@ -191,10 +189,11 @@ export function FloorComposer({
       return;
     }
     start(async () => {
+      const here = coords ?? (await requestAsync());
       const result = await composeFloorNote({
         marketId: market.id,
         body,
-        ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+        ...(here ? { lat: here.lat, lng: here.lng } : {}),
         rating,
         vendorId: tagged?.id,
         vendorSlug: tagged?.slug,
@@ -217,7 +216,7 @@ export function FloorComposer({
         vendor_slug: tagged?.slug ?? null,
         rating: rating > 0 ? rating : null,
         price_level: tagged && price > 0 ? price : null,
-        verified_on_site: onSite,
+        verified_on_site: result.verifiedOnSite === true,
         tags,
         photos: [],
       });
@@ -411,7 +410,7 @@ export function FloorComposer({
               type="button"
               size="sm"
               onClick={submit}
-              disabled={pending || body.trim().length < 3 || !canWrite || !market}
+              disabled={pending || body.trim().length < 3 || !canWrite}
               className="h-8 rounded-full px-4"
             >
               {pending ? "…" : "Review"}
@@ -507,6 +506,9 @@ export function FloorComposer({
         </ExtraPanel>
       ) : null}
 
+      {signedIn && !market ? (
+        <p className="px-3 pb-2 text-sm text-muted-foreground">Pick a market first.</p>
+      ) : null}
       {message ? (
         <p className="px-3 pb-2 text-sm text-muted-foreground">{message}</p>
       ) : null}

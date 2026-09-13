@@ -1,6 +1,7 @@
 "use server";
 
 import { AUTH_NEXT_COOKIE, authOrigin, safePath } from "@/lib/auth-redirect";
+import { emailOtpType } from "@/lib/auth-callback";
 import {
   dbPublicError,
   isAuthRateLimited,
@@ -109,6 +110,26 @@ export async function requestPasswordReset(formData: FormData) {
   return { error: null, message: "Check your email for a reset link." };
 }
 
+export async function verifyEmailOtp(formData: FormData) {
+  const tokenHash = String(formData.get("token_hash") ?? "").trim();
+  const type = emailOtpType(String(formData.get("type") ?? "") || null);
+  const next = safePath(formData.get("next"));
+  if (!tokenHash || !type) redirect("/login?error=session");
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) redirect("/login?error=session");
+  const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+  if (error) {
+    console.error("auth.verifyOtp", error.code ?? "unknown");
+    const dest =
+      next !== "/account"
+        ? `/login?error=session&next=${encodeURIComponent(next)}`
+        : "/login?error=session";
+    redirect(dest);
+  }
+  revalidatePath("/", "layout");
+  redirect(next);
+}
+
 export async function updatePassword(formData: FormData) {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { error: "Supabase is not configured yet." };
@@ -176,8 +197,8 @@ export async function deleteAccount(formData: FormData) {
   }
   const admin = createServiceClient();
   if (!admin) return { error: "Account deletion is not configured." };
-  await supabase.auth.signOut({ scope: "global" });
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) return { error: "Could not delete the account." };
+  await supabase.auth.signOut({ scope: "global" });
   redirect("/");
 }

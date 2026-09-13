@@ -8,7 +8,7 @@ import { fetchMyProfile } from "@/lib/my-profile";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { visitPlanHtml, visitPlanText, weekPlanForSlugs } from "@/lib/visit-plan";
-import { visitPlanWaitCopy, visitPlanWaitMs, VISIT_PLAN_COOLDOWN_MS } from "@/lib/visit-plan-limit";
+import { visitPlanWaitCopy, visitPlanWaitMs } from "@/lib/visit-plan-limit";
 import type { MarketSchedule } from "@/types/database";
 import { Resend } from "resend";
 
@@ -59,15 +59,6 @@ export async function emailVisitPlan(slugs: string[]) {
     };
   }
 
-  const { data: reserved, error: reserveError } = await service.rpc(
-    "stamp_visit_plan_emailed_at",
-    { p_user_id: user.id },
-  );
-  if (reserveError) return { error: "Could not send right now." };
-  if (reserved !== true) {
-    return { error: null, wait: true, message: visitPlanWaitCopy(VISIT_PLAN_COOLDOWN_MS) };
-  }
-
   const [markets, schedules] = await Promise.all([listMarkets(), listSchedules()]);
   const scheduleMap = new Map<string, MarketSchedule[]>();
   for (const row of schedules) {
@@ -87,5 +78,6 @@ export async function emailVisitPlan(slugs: string[]) {
   });
   if (error) return { error: "Could not send right now." };
 
+  await service.rpc("stamp_visit_plan_emailed_at", { p_user_id: user.id });
   return { error: null, message: `Sent to ${user.email}` };
 }

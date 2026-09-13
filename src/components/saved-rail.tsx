@@ -156,10 +156,10 @@ export function SavedDesk({
                   <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
                     <span>{market.address}</span>
                     <ListingScore
+                      parens
                       ratingAvg={market.rating_avg}
                       reviewCount={market.review_count}
-                      compact
-                      className="text-foreground"
+                      className="text-stamp"
                     />
                   </span>
                 </Link>
@@ -192,10 +192,10 @@ export function SavedDesk({
                       <span className="line-clamp-1 min-w-0">{vendor.about}</span>
                     ) : null}
                     <ListingScore
+                      parens
                       ratingAvg={vendor.rating_avg}
                       reviewCount={vendor.review_count}
-                      compact
-                      className="text-foreground"
+                      className="text-stamp"
                     />
                   </span>
                 </Link>

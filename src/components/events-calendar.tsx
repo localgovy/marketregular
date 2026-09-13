@@ -342,7 +342,7 @@ export function EventsCalendar({
                         parens
                         ratingAvg={event.ratingAvg}
                         reviewCount={event.reviewCount}
-                        className="text-muted-foreground"
+                        className="text-stamp"
                       />
                     </>
                   }

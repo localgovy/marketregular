@@ -31,6 +31,10 @@ let snapshot: Saves = cloneEmpty();
 let booted = false;
 let tombstones = new Set<string>();
 
+export function droppedSaveKeys() {
+  return [...tombstones];
+}
+
 function cloneEmpty(): Saves {
   return { markets: [], vendors: [], blogs: [], listings: [] };
 }

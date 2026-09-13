@@ -134,7 +134,7 @@ export async function persistListingSave(
 
 const MAX_SAVES = 200;
 
-export async function mergeSaves(local: Saves): Promise<Saves | null> {
+export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<Saves | null> {
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
   const {
@@ -178,7 +178,11 @@ export async function mergeSaves(local: Saves): Promise<Saves | null> {
     ...existing.blogs.map((slug) => `blog:${slug}`),
     ...existing.listings.map((row) => `listing:${row.slug}`),
   ]);
-  const novel = rows.filter((row) => !have.has(`${row.kind}:${row.slug}`));
+  const skip = new Set(dropped.filter((key) => typeof key === "string" && key));
+  const novel = rows.filter((row) => {
+    const key = `${row.kind}:${row.slug}`;
+    return !have.has(key) && !skip.has(key);
+  });
   const room = Math.max(0, MAX_SAVES - have.size);
   const capped = novel.slice(0, room);
   if (capped.length) {

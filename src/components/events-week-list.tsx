@@ -37,7 +37,7 @@ export function EventsWeekList({ groups }: { groups: UpcomingGroup[] }) {
                         parens
                         ratingAvg={slot.market.rating_avg}
                         reviewCount={slot.market.review_count}
-                        className="text-muted-foreground"
+                        className="text-stamp"
                       />
                     }
                     hoursClassName={slot.open ? "text-stamp" : "text-muted-foreground"}

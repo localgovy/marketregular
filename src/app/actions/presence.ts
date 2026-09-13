@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 
 const FLAG_TABLES = new Set(["posts", "reviews"] as const);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const VENDOR_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 type FlagTable = typeof FLAG_TABLES extends Set<infer T> ? T : never;
 
 async function getClient() {
@@ -49,20 +50,21 @@ export async function createPost(input: {
   rating?: number;
   priceLevel?: number;
 }) {
-  const body = encodeFloorBody(
-    input.body,
-    input.tags ?? [],
-    input.vendorSlug,
-    input.rating,
-    input.vendorSlug ? input.priceLevel : undefined,
-  );
-  if (input.body.trim().length < 3) return { error: "Write a little more." };
-  if (body.length > 2000) return { error: "Reviews are limited to 2,000 characters." };
-
   const { supabase, user, demo } = await requireUser();
   if (demo) return { error: "Reviews aren't available right now. Try again later." };
   if (!supabase || !user) return { error: "Sign in to review." };
   if (!UUID.test(input.marketId)) return { error: "Pick a market." };
+
+  const vendorSlug = await rosterVendorSlug(supabase, input.marketId, input.vendorSlug);
+  const body = encodeFloorBody(
+    input.body,
+    input.tags ?? [],
+    vendorSlug,
+    input.rating,
+    vendorSlug ? input.priceLevel : undefined,
+  );
+  if (input.body.trim().length < 3) return { error: "Write a little more." };
+  if (body.length > 2000) return { error: "Reviews are limited to 2,000 characters." };
 
   const photos = allowedPostPhotos(user.id, input.photos ?? []);
   if (!photos) return { error: "Those photos could not be attached." };
@@ -94,12 +96,14 @@ export async function createPost(input: {
     return { error: dbPublicError(error, "Could not post that review.") };
   }
 
+  let verifiedOnSite = false;
   if (inserted && hasCoords(input.lat, input.lng)) {
-    await supabase.rpc("confirm_on_site", {
+    const { data } = await supabase.rpc("confirm_on_site", {
       p_post_id: inserted.id,
       p_lat: input.lat,
       p_lng: input.lng,
     });
+    verifiedOnSite = data === true;
   }
 
   const { data: market } = await supabase
@@ -112,73 +116,31 @@ export async function createPost(input: {
   revalidatePath("/account");
   revalidatePath("/feed");
   if (market?.slug) revalidatePath(`/markets/${market.slug}`);
-  if (input.vendorSlug) revalidatePath(`/vendors/${input.vendorSlug}`);
-  return { error: null, demo: false };
+  if (vendorSlug) revalidatePath(`/vendors/${vendorSlug}`);
+  return { error: null, demo: false, verifiedOnSite };
 }
 
-export async function createReview(input: {
-  marketId?: string;
-  vendorId?: string;
-  rating: number;
-  body: string;
-  lat?: number;
-  lng?: number;
-}) {
-  const body = input.body.trim();
-  if (!input.marketId && !input.vendorId) return { error: "Pick a market or vendor." };
-  if (input.marketId && !UUID.test(input.marketId)) return { error: "Pick a market or vendor." };
-  if (input.vendorId && !UUID.test(input.vendorId)) return { error: "Pick a market or vendor." };
-  if (input.rating < 1 || input.rating > 5) return { error: "Rating must be 1–5." };
-  if (body.length < 8) return { error: "Tell people a bit more about your visit." };
-
-  const { supabase, user, demo } = await requireUser();
-  if (demo) return { error: "Reviews aren't available right now. Try again later." };
-  if (!supabase || !user) return { error: "Sign in to post." };
-
-  let marketId = input.marketId;
-  if (!marketId && input.vendorId) {
-    const { data: link } = await supabase
-      .from("market_vendors")
-      .select("market_id")
-      .eq("vendor_id", input.vendorId)
-      .limit(1)
-      .maybeSingle();
-    marketId = link?.market_id;
-  }
-  if (!marketId) return { error: "Could not match this vendor to a market." };
-
-  const { data: inserted, error } = await supabase
-    .from("reviews")
-    .insert({
-      user_id: user.id,
-      market_id: input.vendorId ? input.marketId ?? null : marketId,
-      vendor_id: input.vendorId ?? null,
-      rating: input.rating,
-      body,
-      verified_on_site: false,
-    })
+async function rosterVendorSlug(
+  supabase: NonNullable<Awaited<ReturnType<typeof getClient>>>,
+  marketId: string,
+  raw?: string,
+) {
+  const slug = raw?.trim() ?? "";
+  if (!slug || !VENDOR_SLUG.test(slug)) return undefined;
+  const { data: vendor } = await supabase
+    .from("vendors")
     .select("id")
-    .single();
-  if (error) {
-    if (error.code === "23505") {
-      return { error: "You already reviewed this. One review per listing." };
-    }
-    if (error.message.includes("Daily review limit")) {
-      return { error: "Daily review limit reached. See you tomorrow." };
-    }
-    return { error: dbPublicError(error, "Could not post that review.") };
-  }
-
-  if (inserted && hasCoords(input.lat, input.lng)) {
-    await supabase.rpc("confirm_review_on_site", {
-      p_review_id: inserted.id,
-      p_lat: input.lat,
-      p_lng: input.lng,
-    });
-  }
-
-  revalidatePath("/");
-  return { error: null, demo: false };
+    .eq("slug", slug)
+    .eq("status", "published")
+    .maybeSingle();
+  if (!vendor?.id) return undefined;
+  const { data: link } = await supabase
+    .from("market_vendors")
+    .select("vendor_id")
+    .eq("market_id", marketId)
+    .eq("vendor_id", vendor.id)
+    .maybeSingle();
+  return link ? slug : undefined;
 }
 
 export async function composeFloorNote(input: {
@@ -207,7 +169,7 @@ export async function composeFloorNote(input: {
   });
   if (post.error) return post;
 
-  return { error: null, demo: post.demo };
+  return { error: null, demo: post.demo, verifiedOnSite: post.verifiedOnSite === true };
 }
 
 export async function deleteOwnPost(formData: FormData) {

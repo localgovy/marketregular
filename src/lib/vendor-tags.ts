@@ -165,6 +165,20 @@ export function guessVendorTags(name: string) {
   return tags;
 }
 
+/** Typed Find uses the same product tags as the directory chips. */
+export function productTagsFromQuery(q: string) {
+  const hay = fold(q).replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!hay) return [] as string[];
+  const tags: string[] = [];
+  const slug = hay.replace(/ /g, "-");
+  if (PRODUCT_SET.has(slug)) tags.push(slug);
+  for (const hint of HINTS) {
+    if (tags.includes(hint.tag)) continue;
+    if (hint.needles.some((needle) => mentions(hay, needle))) tags.push(hint.tag);
+  }
+  return tags;
+}
+
 /**
  * Roster-only shops arrive with no tags, and a name guess keeps them reachable through
  * the filters. The guess goes to `searchTags`, never to `tags`: a guess is not a fact and

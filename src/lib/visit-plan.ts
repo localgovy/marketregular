@@ -31,7 +31,7 @@ export function weekPlanForSlugs(
   const selected = slugs
     .map((slug) => bySlug.get(slug))
     .filter((market): market is Market => Boolean(market));
-  return upcomingByDay(selected, scheduleMap, now);
+  return upcomingByDay(selected, scheduleMap, now, { includeClosedToday: true });
 }
 
 export function visitPlanText(groups: UpcomingGroup[]) {

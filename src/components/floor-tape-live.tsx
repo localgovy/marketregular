@@ -84,7 +84,7 @@ function LoadedComposer({
 }
 
 export function FloorTapeLive({ children }: { children: ReactNode }) {
-  const signedIn = useAuthCookie(true);
+  const signedIn = useAuthCookie(false);
   const [bundle, setBundle] = useState<ComposerBundle | null>(null);
   const [extra, setExtra] = useState<FloorItem[]>([]);
   const [pending, setPending] = useState(false);
