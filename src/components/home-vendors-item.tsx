@@ -51,7 +51,7 @@ export function VendorTodayItem({ row }: { row: VendorTodayRow }) {
             parens
             ratingAvg={row.ratingAvg}
             reviewCount={row.reviewCount}
-            className="ml-2 text-muted-foreground"
+            className="ml-2 text-stamp"
           />
         </span>
         <span className="text-sm text-muted-foreground">
@@ -100,7 +100,7 @@ export function VendorWeekItem({
             parens
             ratingAvg={pick.ratingAvg}
             reviewCount={pick.reviewCount}
-            className="ml-2 text-muted-foreground"
+            className="ml-2 text-stamp"
           />
         </span>
         <span className="mt-1 block text-sm leading-relaxed text-muted-foreground">

@@ -17,7 +17,7 @@ export function WeekSlotRow({ slot }: { slot: WeekListSlot }) {
           parens
           ratingAvg={slot.market.rating_avg}
           reviewCount={slot.market.review_count}
-          className="ml-2 text-muted-foreground"
+          className="ml-2 text-stamp"
         />
       }
       hoursClassName={slot.open ? "text-stamp" : "text-muted-foreground"}

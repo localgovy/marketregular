@@ -45,7 +45,7 @@ export function MarketRow({
             parens
             ratingAvg={market.rating_avg}
             reviewCount={market.review_count}
-            className="ml-2 text-muted-foreground"
+            className="ml-2 text-stamp"
           />
         </p>
         <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
