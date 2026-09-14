@@ -32,7 +32,7 @@ export function useSaves() {
 
 function saveChipClass(size: "sm" | "md" | "lg", saved: boolean) {
   return cn(
-    "relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+    "relative inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
     size === "lg"
       ? "stall-chip h-14 min-w-[6.5rem] px-6 text-lg"
       : size === "md"
@@ -65,11 +65,15 @@ export function SaveButton({
   slug,
   name,
   size = "sm",
+  idleLabel,
+  savedLabel,
 }: {
   kind: Exclude<SaveKind, "listing">;
   slug: string;
   name?: string;
   size?: "sm" | "md" | "lg";
+  idleLabel?: string;
+  savedLabel?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -78,6 +82,8 @@ export function SaveButton({
   const label =
     name ??
     (kind === "market" ? "this market" : kind === "vendor" ? "this stall" : "this note");
+  const idle = idleLabel ?? (kind === "blog" ? "Save Article" : "Save");
+  const done = savedLabel ?? (kind === "blog" ? "Saved Article" : "Saved");
 
   return (
     <button
@@ -114,7 +120,7 @@ export function SaveButton({
       className={saveChipClass(size, saved)}
     >
       {saved ? null : <span aria-hidden className="stall-chip-fill" />}
-      <span className="relative">{saved ? "Saved" : "Save"}</span>
+      <span className="relative">{saved ? done : idle}</span>
     </button>
   );
 }
@@ -123,10 +129,14 @@ export function ListingSaveButton({
   listing,
   name,
   size = "sm",
+  idleLabel = "Save Info",
+  savedLabel = "Saved Info",
 }: {
   listing: SavedListing;
   name?: string;
   size?: "sm" | "md" | "lg";
+  idleLabel?: string;
+  savedLabel?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -169,7 +179,7 @@ export function ListingSaveButton({
       className={saveChipClass(size, saved)}
     >
       {saved ? null : <span aria-hidden className="stall-chip-fill" />}
-      <span className="relative">{saved ? "Saved" : "Save"}</span>
+      <span className="relative">{saved ? savedLabel : idleLabel}</span>
     </button>
   );
 }

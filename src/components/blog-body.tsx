@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
-import { MarketHoursHead } from "@/components/market-hours-head";
+import { HoursListHead, MarketHoursHead } from "@/components/market-hours-head";
 import { ListingSaveButton } from "@/components/save-button";
 import { safePath } from "@/lib/auth-redirect";
 import {
@@ -15,6 +15,7 @@ import {
   type BlogMarketPeekRequest,
 } from "@/lib/blog-market-peeks";
 import { externalHref } from "@/lib/format";
+import { SITE_NAME } from "@/lib/constants";
 import { listingFromInput, validSaveSlug, type SavedListing } from "@/lib/listing-saves";
 import { cn } from "@/lib/utils";
 
@@ -407,8 +408,12 @@ function Inlines({
       {inlines.map((part, index) => {
         if (part.kind === "text") return <span key={index}>{part.value}</span>;
         if (part.kind === "bold") {
+          const tip = part.value === `${SITE_NAME} Tip:`;
           return (
-            <strong key={index} className="font-medium text-foreground">
+            <strong
+              key={index}
+              className={cn("text-foreground", tip ? "font-semibold" : "font-medium")}
+            >
               {part.value}
             </strong>
           );
@@ -481,8 +486,8 @@ function CatalogHoursRow({
   marketScores?: Map<string, BlogListingScore> | null;
 }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-3">
-      <span className="min-w-0">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-3">
+      <span className="min-w-0 text-base font-medium">
         <Inlines
           inlines={inlinesWithoutHours(inlines)}
           vendorScores={vendorScores}
@@ -631,18 +636,27 @@ export async function BlogBody({
           }
           if (isHoursList(list)) {
             return (
-              <ul key={index} className="mt-3 min-w-0 text-base leading-relaxed">
-                {list.items.map((item, itemIndex) => (
-                  <li key={itemIndex} className="py-1.5">
-                    <CatalogHoursRow
-                      inlines={item.inlines}
-                      hours={item.hours}
-                      vendorScores={vendorScores}
-                      marketScores={marketScores}
-                    />
-                  </li>
-                ))}
-              </ul>
+              <div key={index} className="mt-3 min-w-0">
+                <HoursListHead
+                  name={
+                    list.items.every((item) => vendorSlugsFromInlines(item.inlines).length)
+                      ? "Vendor"
+                      : "Hours"
+                  }
+                />
+                <ul className="divide-y divide-border">
+                  {list.items.map((item, itemIndex) => (
+                    <li key={itemIndex}>
+                      <CatalogHoursRow
+                        inlines={item.inlines}
+                        hours={item.hours}
+                        vendorScores={vendorScores}
+                        marketScores={marketScores}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
             );
           }
           return (

@@ -1,0 +1,13 @@
+---
+description: Blog title saves say Save Article; in-article listing saves say Save Info
+globs: src/components/save-button.tsx,src/components/blog-body.tsx,src/app/blog/**/*.tsx
+alwaysApply: false
+---
+
+# Blog save labels
+
+The title chip on a post (and the index row for that post) is **Save Article** / **Saved Article**. That is `SaveButton` with `kind="blog"` — do not pass a custom idle label that says only Save.
+
+In-article hall/hours chips are **Save Info** / **Saved Info**. That is `ListingSaveButton`. Do not relabel those as Save Article.
+
+Markets and stalls elsewhere stay **Save** / **Saved**.

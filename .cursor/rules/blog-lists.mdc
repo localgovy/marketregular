@@ -1,0 +1,24 @@
+---
+description: Circuit and stall lists in blog posts use hours rows, not comma paragraphs
+globs: content/blog/**/*.md,src/components/blog-body.tsx
+alwaysApply: false
+---
+
+# Blog stall lists
+
+Named stalls at a hall are a **Vendor / Hours** timetable, not a comma sentence. Hours come from that hall. The renderer turns `· 8 AM–1 PM` rows into the same divided list as the weekend market table.
+
+```md
+**Vendors to look for:**
+
+- [Joyfully Organic](/vendors/joyfully-organic-farm) · 8 AM–1 PM
+- [St. John’s Bakery](/vendors/st-john-s-bakery) · 8 AM–1 PM
+```
+
+Citywide day lists stay market rows:
+
+```md
+- [The Junction Farmers Market](/markets/the-junction-farmers-market) · 9 AM–1 PM
+```
+
+Do not write `**Vendors to look for:** [A](/vendors/a), [B](/vendors/b).` Produce roundups without hall hours can stay disc lists with an em dash, not fake hours.
