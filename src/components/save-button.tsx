@@ -127,12 +127,14 @@ export function SaveButton({
 
 export function ListingSaveButton({
   listing,
+  listings,
   name,
   size = "sm",
   idleLabel = "Save Info",
   savedLabel = "Saved Info",
 }: {
   listing: SavedListing;
+  listings?: SavedListing[];
   name?: string;
   size?: "sm" | "md" | "lg";
   idleLabel?: string;
@@ -141,7 +143,8 @@ export function ListingSaveButton({
   const router = useRouter();
   const pathname = usePathname();
   const saves = useSaves();
-  const saved = isSaved("listing", listing.slug, saves);
+  const group = listings?.length ? listings : [listing];
+  const saved = group.every((row) => isSaved("listing", row.slug, saves));
   const label = name ?? listing.marketName;
 
   return (
@@ -155,26 +158,36 @@ export function ListingSaveButton({
         const next = `${window.location.pathname}${window.location.search}`;
         const loginHref = `/login?next=${encodeURIComponent(next || "/account")}`;
         if (!documentHasAuthCookie()) {
-          stashPendingSave({ kind: "listing", listing });
+          stashPendingSave(
+            group.length > 1
+              ? { kind: "listing", listing: group[0]!, listings: group }
+              : { kind: "listing", listing: group[0]! },
+          );
           openSignInSlip({ next, name: label });
           return;
         }
         const nextSaved = !saved;
         const before = copySaves();
-        toggleListing(listing);
-        void persistListingSave(listing, nextSaved)
-          .then((canonical) => {
-            if (canonical) {
-              replaceSaves(canonical);
-              refreshIfSavedPage(pathname, router);
-              return;
+        for (const row of group) {
+          if (isSaved("listing", row.slug) !== nextSaved) toggleListing(row);
+        }
+        void (async () => {
+          try {
+            let canonical: Awaited<ReturnType<typeof persistListingSave>> = null;
+            for (const row of group) {
+              canonical = await persistListingSave(row, nextSaved);
+              if (!canonical) {
+                restoreSaves(before);
+                if (!documentHasAuthCookie()) router.push(loginHref);
+                return;
+              }
             }
+            replaceSaves(canonical);
+            refreshIfSavedPage(pathname, router);
+          } catch {
             restoreSaves(before);
-            if (!documentHasAuthCookie()) router.push(loginHref);
-          })
-          .catch(() => {
-            restoreSaves(before);
-          });
+          }
+        })();
       }}
       className={saveChipClass(size, saved)}
     >

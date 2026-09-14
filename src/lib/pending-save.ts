@@ -6,7 +6,7 @@ const KEY = "mr-pending-save";
 
 export type PendingSave =
   | { kind: Exclude<SaveKind, "listing">; slug: string }
-  | { kind: "listing"; listing: SavedListing };
+  | { kind: "listing"; listing: SavedListing; listings?: SavedListing[] };
 
 export function stashPendingSave(save: PendingSave) {
   if (typeof window === "undefined") return;
@@ -25,7 +25,16 @@ function parsePending(raw: string): PendingSave | null {
       const row = (parsed as { listing?: unknown }).listing;
       if (!row || typeof row !== "object") return null;
       const listing = listingFromInput(row as SavedListing);
-      return listing ? { kind: "listing", listing } : null;
+      if (!listing) return null;
+      const extra = (parsed as { listings?: unknown }).listings;
+      const listings = Array.isArray(extra)
+        ? extra.flatMap((item) => {
+            if (!item || typeof item !== "object") return [];
+            const next = listingFromInput(item as SavedListing);
+            return next ? [next] : [];
+          })
+        : undefined;
+      return listings?.length ? { kind: "listing", listing, listings } : { kind: "listing", listing };
     }
     if (parsed.kind === "market" || parsed.kind === "vendor" || parsed.kind === "blog") {
       const slug = (parsed as { slug?: unknown }).slug;
@@ -54,9 +63,16 @@ export function takePendingSave(): PendingSave | null {
 export async function flushPendingSave() {
   const pending = takePendingSave();
   if (!pending) return;
-  const canonical =
-    pending.kind === "listing"
-      ? await persistListingSave(pending.listing, true)
-      : await persistSave(pending.kind, pending.slug, true);
+  if (pending.kind === "listing") {
+    const rows = pending.listings?.length ? pending.listings : [pending.listing];
+    let canonical = null;
+    for (const row of rows) {
+      canonical = await persistListingSave(row, true);
+      if (!canonical) return;
+    }
+    replaceSaves(canonical);
+    return;
+  }
+  const canonical = await persistSave(pending.kind, pending.slug, true);
   if (canonical) replaceSaves(canonical);
 }

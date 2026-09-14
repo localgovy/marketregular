@@ -8,6 +8,6 @@ alwaysApply: false
 
 The title chip on a post (and the index row for that post) is **Save Article** / **Saved Article**. That is `SaveButton` with `kind="blog"` — do not pass a custom idle label that says only Save.
 
-In-article hall/hours chips are **Save Info** / **Saved Info**. That is `ListingSaveButton`. Do not relabel those as Save Article.
+In-article hall/hours chips are **Save Info** / **Saved Info**. That is `ListingSaveButton`. Circuit guide headings that list those halls get the same chip (one control saves each market in the list). Do not relabel those as Save Article.
 
 Markets and stalls elsewhere stay **Save** / **Saved**.
