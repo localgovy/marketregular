@@ -205,14 +205,43 @@ function blockContext(blocks: Block[]): Array<{ weekday: number | null; heading:
   });
 }
 
-function isMarketHoursList(
-  block: Block,
-): block is { type: "ul"; items: HoursListItem[] } {
+function isHoursList(block: Block): block is { type: "ul"; items: HoursListItem[] } {
   return (
     block.type === "ul" &&
     block.items.length > 0 &&
     block.items.every((item): item is HoursListItem => Boolean(item.hours))
   );
+}
+
+function isMarketHoursList(
+  block: Block,
+): block is { type: "ul"; items: HoursListItem[] } {
+  return (
+    isHoursList(block) &&
+    block.items.every((item) => Boolean(marketSlugFromInlines(item.inlines)))
+  );
+}
+
+function inlinesWithoutHours(inlines: Inline[]): Inline[] {
+  const merged: Inline[] = [];
+  for (const part of inlines) {
+    if (part.kind === "hours") continue;
+    const last = merged.at(-1);
+    if (part.kind === "text" && last?.kind === "text") {
+      merged[merged.length - 1] = { kind: "text", value: last.value + part.value };
+    } else {
+      merged.push(part);
+    }
+  }
+  return merged
+    .map((part, index, all) => {
+      if (part.kind !== "text") return part;
+      let value = part.value.replace(/(?:\s*·\s*){2,}/g, " · ");
+      if (index === 0) value = value.replace(/^(?:\s*·\s*)+/, "");
+      if (index === all.length - 1) value = value.replace(/(?:\s*·\s*)+$/, "").trimEnd();
+      return { kind: "text" as const, value };
+    })
+    .filter((part) => part.kind !== "text" || part.value);
 }
 
 function peekRequests(
@@ -418,7 +447,7 @@ function Inlines({
               parens
               ratingAvg={score.ratingAvg}
               reviewCount={score.reviewCount}
-              className="ml-2 text-muted-foreground"
+              className="ml-2 text-stamp"
             />
           </span>
         );
@@ -437,6 +466,31 @@ export async function BlogInlines({ text }: { text: string }) {
   ]);
   return (
     <Inlines inlines={inlines} vendorScores={vendorScores} marketScores={marketScores} />
+  );
+}
+
+function CatalogHoursRow({
+  inlines,
+  hours,
+  vendorScores,
+  marketScores,
+}: {
+  inlines: Inline[];
+  hours: string;
+  vendorScores?: Map<string, BlogListingScore> | null;
+  marketScores?: Map<string, BlogListingScore> | null;
+}) {
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-x-3">
+      <span className="min-w-0">
+        <Inlines
+          inlines={inlinesWithoutHours(inlines)}
+          vendorScores={vendorScores}
+          marketScores={marketScores}
+        />
+      </span>
+      <Hours value={hours} className="text-foreground" />
+    </div>
   );
 }
 
@@ -481,7 +535,7 @@ function MarketHoursRow({
               parens
               ratingAvg={peek.ratingAvg}
               reviewCount={peek.reviewCount}
-              className="text-muted-foreground"
+              className="text-stamp"
             />
           ) : null}
         </span>
@@ -573,6 +627,22 @@ export async function BlogBody({
                   })}
                 </ul>
               </div>
+            );
+          }
+          if (isHoursList(list)) {
+            return (
+              <ul key={index} className="mt-3 min-w-0 text-base leading-relaxed">
+                {list.items.map((item, itemIndex) => (
+                  <li key={itemIndex} className="py-1.5">
+                    <CatalogHoursRow
+                      inlines={item.inlines}
+                      hours={item.hours}
+                      vendorScores={vendorScores}
+                      marketScores={marketScores}
+                    />
+                  </li>
+                ))}
+              </ul>
             );
           }
           return (
