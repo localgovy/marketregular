@@ -22,7 +22,7 @@ export function SiteFooter() {
               <span>by</span>
               <StudioWordmark className="lg:text-primary" />
             </a>
-            <span>– {LAUNCH_CITY}, farmers&apos; markets, all in one place</span>
+            <span>{LAUNCH_CITY}, farmers&apos; markets, all in one place</span>
           </p>
           <p>
             © {year} {LEGAL_ENTITY} {SITE_NAME}™
