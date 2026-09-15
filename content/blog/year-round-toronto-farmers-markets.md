@@ -7,9 +7,9 @@ kicker: Year-round
 
 # Year-round Toronto farmers’ markets: St. Lawrence North, Allan Gardens, Dufferin Grove
 
-Three markets that don’t shut when the outdoor season ends. Hours and stalls from [MarketRegular](https://www.marketregular.com). Tap a name for the live listing.
+Here are three markets that don’t shut you out when the cold weather starts, get the inside scoop on indoor farmers' markets in Toronto. Hours and stalls from [MarketRegular](https://www.marketregular.com). Tap a name for the live listing.
 
-Two Saturday indoors downtown, plus a Thursday park market west — not another citywide list. (St. Lawrence South permanent hall is a different stop; we’ll cover that separately.)
+We'll cover two markets for a Saturday spent downtown, plus a Thursday market at a park — not another citywide list. (St. Lawrence South permanent hall is a different stop; we’ll cover that separately.)
 
 ---
 
@@ -17,7 +17,7 @@ Two Saturday indoors downtown, plus a Thursday park market west — not another 
 
 [St. Lawrence Farmers’ Market](https://www.marketregular.com/markets/st-lawrence-farmers-market) · 92 Front Street East · **5 AM–3 PM** · year-round
 
-The North Market farmers’ market — Saturday only, year-round. This is not the South Market permanent hall.
+The North Market farmers’ market — Saturday only, year-round. This is **not** the South Market permanent hall.
 
 **Vendors to look for:**
 
@@ -33,7 +33,7 @@ The North Market farmers’ market — Saturday only, year-round. This is not th
 
 [Allan Gardens Farmers’ Market](https://www.marketregular.com/markets/allan-gardens-farmers-market) · 19 Horticultural Avenue · **10 AM–2 PM** · year-round
 
-Indoor Saturday under the conservatory. Start at North if you want the early open, then walk or streetcar over.
+Indoor Saturday under the conservatory. If you're an early-bird then start with North, then walk or take a streetcar over.
 
 **Vendors to look for:**
 
@@ -66,8 +66,8 @@ Park-based and Thursday — not a Saturday indoor hall. Same year-round habit, d
 ## MarketRegular Recommended year-round Guide:
 
 - **Saturday:** [St. Lawrence Farmers’ Market](https://www.marketregular.com/markets/st-lawrence-farmers-market) from **5 AM** (North Market), then [Allan Gardens](https://www.marketregular.com/markets/allan-gardens-farmers-market) from **10 AM** — one downtown circuit.
-- **Thursday:** [Dufferin Grove](https://www.marketregular.com/markets/dufferin-grove-organic-farmers-market) **3 PM–7 PM** if you’re west / park-side that day.
-- **MarketRegular Tip:** Don’t mix South Market into this list; it’s the permanent hall, not this farmers’ market day.
+- **Thursday:** [Dufferin Grove](https://www.marketregular.com/markets/dufferin-grove-organic-farmers-market) **3 PM–7 PM** if you’re on the west/park-side of town.
+- **MarketRegular Tip:** St. Lawrence can feel like one destination, but it’s actually *two* buildings sharing Front Street. The North Market is where the Saturday farmers’ market lives with farm vendors open at 5 AM, while South Market is the permanent hall of butchers, cheese counters, and the classic market crowd, open from 7 AM Saturdays and closed Mondays. If you’re already downtown early, just start at North and wander over to South when you’re ready.
 
 Filter by day on the [homepage](https://www.marketregular.com). West-end Saturday circuit: [West-end Saturday farmers’ markets](https://www.marketregular.com/blog/west-end-saturday-farmers-markets). East-end: [East end Toronto farmers’ markets](https://www.marketregular.com/blog/east-end-toronto-farmers-markets).
 
