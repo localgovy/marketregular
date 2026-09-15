@@ -17,7 +17,7 @@ We'll cover two markets for a Saturday spent downtown, plus a Thursday market at
 
 [St. Lawrence Farmers’ Market](https://www.marketregular.com/markets/st-lawrence-farmers-market) · 92 Front Street East · **5 AM–3 PM** · year-round
 
-The North Market farmers’ market — Saturday only, year-round. This is **not** the South Market permanent hall.
+The North Market farmers’ market — Saturday only, year-round. This is **not** the South Market permanent hall. First Saturday: [First-timer’s guide](https://www.marketregular.com/blog/st-lawrence-north-farmers-market-first-timer).
 
 **Vendors to look for:**
 
@@ -69,7 +69,7 @@ Park-based and Thursday — not a Saturday indoor hall. Same year-round habit, d
 - **Thursday:** [Dufferin Grove](https://www.marketregular.com/markets/dufferin-grove-organic-farmers-market) **3 PM–7 PM** if you’re on the west/park-side of town.
 - **MarketRegular Tip:** St. Lawrence can feel like one destination, but it’s actually *two* buildings sharing Front Street. The North Market is where the Saturday farmers’ market lives with farm vendors open at 5 AM, while South Market is the permanent hall of butchers, cheese counters, and the classic market crowd, open from 7 AM Saturdays and closed Mondays. If you’re already downtown early, just start at North and wander over to South when you’re ready.
 
-Filter by day on the [homepage](https://www.marketregular.com). West-end Saturday circuit: [West-end Saturday farmers’ markets](https://www.marketregular.com/blog/west-end-saturday-farmers-markets). East-end: [East end Toronto farmers’ markets](https://www.marketregular.com/blog/east-end-toronto-farmers-markets). Sunday on Eglinton: [Sunday farmers’ markets](https://www.marketregular.com/blog/marketregular-sunday-little-jamaica).
+Filter by day on the [homepage](https://www.marketregular.com). West-end Saturday circuit: [West-end Saturday farmers’ markets](https://www.marketregular.com/blog/west-end-saturday-farmers-markets). East-end: [East end Toronto farmers’ markets](https://www.marketregular.com/blog/east-end-toronto-farmers-markets). Sunday on Eglinton: [Sunday farmers’ markets](https://www.marketregular.com/blog/marketregular-sunday-little-jamaica). First Saturday at North: [First-timer’s guide](https://www.marketregular.com/blog/st-lawrence-north-farmers-market-first-timer).
 
 Made by Canadians, for Canadians, to shop Canadian. Pickup, pre-order, and a mobile app coming soon.
 

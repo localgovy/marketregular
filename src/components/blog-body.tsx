@@ -28,11 +28,14 @@ type Inline =
 type ListItem = { inlines: Inline[]; hours?: string };
 type HoursListItem = { inlines: Inline[]; hours: string };
 
+type TableCell = Inline[];
+
 type Block =
   | { type: "p"; inlines: Inline[] }
   | { type: "h2"; text: string }
   | { type: "h3"; text: string }
-  | { type: "ul"; items: ListItem[] };
+  | { type: "ul"; items: ListItem[] }
+  | { type: "table"; headers: TableCell[]; rows: TableCell[][] };
 
 const MARKET_ROW = /^(.*) · (.+)$/;
 const HOURS_SPAN =
@@ -136,6 +139,10 @@ function catalogScoreRequests(
       }
     } else if (block.type === "p") {
       for (const slug of slugsFromInlines(block.inlines, fromHref)) slugs.add(slug);
+    } else if (block.type === "table") {
+      for (const cell of [...block.headers, ...block.rows.flat()]) {
+        for (const slug of slugsFromInlines(cell, fromHref)) slugs.add(slug);
+      }
     }
   }
   return [...slugs];
@@ -457,6 +464,22 @@ function BlogSectionHeading({
   );
 }
 
+function isTableSep(line: string) {
+  const value = line.trim();
+  return value.startsWith("|") && /^\|?[\s:|-]+\|?$/.test(value) && /---/.test(value);
+}
+
+function splitTableRow(line: string): string[] {
+  const value = line.trim().replace(/^\|/, "").replace(/\|$/, "");
+  return value.split("|").map((cell) => cell.trim());
+}
+
+function padTableRow(row: string[], width: number) {
+  const next = row.slice(0, width);
+  while (next.length < width) next.push("");
+  return next;
+}
+
 function parseBlocks(markdown: string): Block[] {
   const blocks: Block[] = [];
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
@@ -478,6 +501,25 @@ function parseBlocks(markdown: string): Block[] {
       i += 1;
       continue;
     }
+    if (line.trim().startsWith("|")) {
+      const rawRows: string[][] = [];
+      while (i < lines.length && (lines[i] ?? "").trim().startsWith("|")) {
+        const raw = lines[i] ?? "";
+        i += 1;
+        if (isTableSep(raw)) continue;
+        rawRows.push(splitTableRow(raw));
+      }
+      const width = Math.max(0, ...rawRows.map((row) => row.length));
+      if (width && rawRows.length) {
+        const [header, ...body] = rawRows.map((row) => padTableRow(row, width));
+        blocks.push({
+          type: "table",
+          headers: (header ?? []).map(parseInlines),
+          rows: body.map((row) => row.map(parseInlines)),
+        });
+      }
+      continue;
+    }
     if (line.startsWith("- ")) {
       const items: Array<{ inlines: Inline[]; hours?: string }> = [];
       while (i < lines.length && (lines[i] ?? "").startsWith("- ")) {
@@ -496,7 +538,13 @@ function parseBlocks(markdown: string): Block[] {
     const para: string[] = [];
     while (i < lines.length) {
       const next = lines[i] ?? "";
-      if (!next.trim() || next.startsWith("#") || next.startsWith("- ") || /^---+$/.test(next.trim())) {
+      if (
+        !next.trim() ||
+        next.startsWith("#") ||
+        next.startsWith("- ") ||
+        next.trim().startsWith("|") ||
+        /^---+$/.test(next.trim())
+      ) {
         break;
       }
       para.push(next.trim());
@@ -706,6 +754,51 @@ export async function BlogBody({
             </h3>
           );
         }
+        if (block.type === "table") {
+          return (
+            <table key={index} className="mt-3 w-full table-fixed text-left text-base leading-relaxed">
+              <colgroup>
+                {block.headers.map((_, col) => (
+                  <col key={col} className={col === 0 ? "w-[22%]" : undefined} />
+                ))}
+              </colgroup>
+              <thead>
+                <tr className="border-b border-border text-sm text-muted-foreground">
+                  {block.headers.map((cell, col) => (
+                    <th key={col} className="min-w-0 py-2 pr-3 align-bottom font-medium">
+                      <Inlines
+                        inlines={cell}
+                        vendorScores={vendorScores}
+                        marketScores={marketScores}
+                      />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {block.rows.map((row, rowIndex) => (
+                  <tr key={rowIndex} className="border-b border-border">
+                    {row.map((cell, col) => (
+                      <td
+                        key={col}
+                        className={cn(
+                          "min-w-0 py-3 pr-3 align-top",
+                          col === 0 && "font-semibold text-foreground",
+                        )}
+                      >
+                        <Inlines
+                          inlines={cell}
+                          vendorScores={vendorScores}
+                          marketScores={marketScores}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        }
         if (block.type === "ul") {
           const list = block;
           if (isMarketHoursList(list)) {
@@ -753,7 +846,7 @@ export async function BlogBody({
               <div key={index} className="mt-3 min-w-0">
                 <HoursListHead
                   name={
-                    list.items.every((item) => vendorSlugsFromInlines(item.inlines).length)
+                    list.items.some((item) => vendorSlugsFromInlines(item.inlines).length)
                       ? "Vendor"
                       : "Hours"
                   }
