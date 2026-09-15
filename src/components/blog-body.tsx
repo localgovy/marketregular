@@ -15,7 +15,6 @@ import {
   type BlogMarketPeekRequest,
 } from "@/lib/blog-market-peeks";
 import { externalHref } from "@/lib/format";
-import { SITE_NAME } from "@/lib/constants";
 import { displayListingHeading, listingFromInput, MAX_VENDORS, validSaveSlug, type SavedListing, type SavedListingVendor } from "@/lib/listing-saves";
 import { cn } from "@/lib/utils";
 
@@ -523,11 +522,11 @@ function Inlines({
       {inlines.map((part, index) => {
         if (part.kind === "text") return <span key={index}>{part.value}</span>;
         if (part.kind === "bold") {
-          const tip = part.value === `${SITE_NAME} Tip:`;
+          const label = part.value.endsWith(":");
           return (
             <strong
               key={index}
-              className={cn("text-foreground", tip ? "font-semibold" : "font-medium")}
+              className={cn("text-foreground", label ? "font-semibold" : "font-medium")}
             >
               {part.value}
             </strong>
