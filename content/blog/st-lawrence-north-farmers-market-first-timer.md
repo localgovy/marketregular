@@ -9,8 +9,6 @@ kicker: North Market
 
 Here’s our take on how to do your first North Market Saturday (not to be confused with South Market, two very different markets). Hours and stalls from [MarketRegular](https://www.marketregular.com). Tap a name for the live listing.
 
-This is a first-timer guide to one building on one day — not another citywide list, and not a tour of the South hall.
-
 ---
 
 ## What you’re walking into
