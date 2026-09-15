@@ -63,7 +63,7 @@ Park-based and Thursday — not a Saturday indoor hall. Same year-round habit, d
 
 ---
 
-## MarketRegular Recommended year-round Guide:
+## MarketRegular Recommended Year-Round Guide:
 
 - **Saturday:** [St. Lawrence Farmers’ Market](https://www.marketregular.com/markets/st-lawrence-farmers-market) from **5 AM** (North Market), then [Allan Gardens](https://www.marketregular.com/markets/allan-gardens-farmers-market) from **10 AM** — one downtown circuit.
 - **Thursday:** [Dufferin Grove](https://www.marketregular.com/markets/dufferin-grove-organic-farmers-market) **3 PM–7 PM** if you’re on the west/park-side of town.
