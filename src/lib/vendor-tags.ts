@@ -133,7 +133,31 @@ const HINTS: Array<{ tag: (typeof PRODUCT_TAGS)[number]; needles: string[] }> = 
   },
   {
     tag: "produce",
-    needles: ["produce", "vegetable", "fruit", "orchard", "greengrocer", "farm", "microgreen"],
+    needles: [
+      "produce",
+      "vegetable",
+      "fruit",
+      "orchard",
+      "greengrocer",
+      "farm",
+      "microgreen",
+      "tomato",
+      "apple",
+      "berry",
+      "lettuce",
+      "kale",
+      "carrot",
+      "onion",
+      "potato",
+      "peach",
+      "pear",
+      "corn",
+      "garlic",
+      "herb",
+      "greens",
+      "veg",
+      "veggie",
+    ],
   },
 ];
 
@@ -177,6 +201,15 @@ export function productTagsFromQuery(q: string) {
     if (hint.needles.some((needle) => mentions(hay, needle))) tags.push(hint.tag);
   }
   return tags;
+}
+
+/** Typed tomato/apple/etc. — not the Produce chip slug itself. */
+export function isProductNounQuery(q: string) {
+  const hay = fold(q).replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!hay) return false;
+  const slug = hay.replace(/ /g, "-");
+  if (PRODUCT_SET.has(slug)) return false;
+  return productTagsFromQuery(q).length > 0;
 }
 
 /**

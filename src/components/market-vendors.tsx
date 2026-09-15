@@ -16,7 +16,7 @@ import {
   tagLabel,
   tagsPresent,
 } from "@/lib/find-paths";
-import { vendorFilterTags } from "@/lib/vendor-tags";
+import { productTagsFromQuery, vendorFilterTags } from "@/lib/vendor-tags";
 import { cn } from "@/lib/utils";
 import type { MarketDetail } from "@/types/database";
 
@@ -67,7 +67,8 @@ function stallMatches(vendor: MarketStall, query: string) {
       .join(" "),
   );
   if (tokens.every((token) => hay.includes(token))) return true;
-  return countryTagsFromQuery(query).some((tag) => searchable.includes(tag));
+  if (countryTagsFromQuery(query).some((tag) => searchable.includes(tag))) return true;
+  return productTagsFromQuery(query).some((tag) => searchable.includes(tag));
 }
 
 function stallFits(vendor: MarketStall, find: StallBrowse, today: number) {

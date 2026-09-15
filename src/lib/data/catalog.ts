@@ -27,7 +27,8 @@ import {
 } from "@/lib/find-paths";
 import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
-import { productTagsFromQuery, withVendorProductTags } from "@/lib/vendor-tags";
+import { productTagsFromQuery, isProductNounQuery, withVendorProductTags } from "@/lib/vendor-tags";
+import { preferQueryNameHits, hallsHostingNameHits } from "@/lib/search-rank";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { withListingStats } from "@/lib/listing-score";
@@ -403,18 +404,19 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
   const queryTags = raw
     ? [...new Set([...productTagsFromQuery(raw), ...countryTagsFromQuery(raw)])]
     : [];
+  const nounQuery = raw ? isProductNounQuery(raw) : false;
   const marketOr = raw
-    ? ["name", "city", "about", "address"]
+    ? (nounQuery ? ["name", "city", "address"] : ["name", "city", "about", "address"])
         .map((column) => postgrestIlike(column, raw))
         .filter((part): part is string => Boolean(part))
     : [];
   const vendorOr = raw
     ? [
-        ...["name", "about"]
-          .map((column) => postgrestIlike(column, raw))
-          .filter((part): part is string => Boolean(part)),
+        ...(nounQuery ? ["name"] : ["name", "about"]).map((column) =>
+          postgrestIlike(column, raw),
+        ),
         ...queryTags.slice(0, 8).map(tagContainsFilter),
-      ]
+      ].filter((part): part is string => Boolean(part))
     : [];
 
   // Built per page: the Data API caps a response at 1000 rows, so every read is ranged.
@@ -521,8 +523,20 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
         stalls.map((stall) => ({ market_id: stall.market_id, vendor_id: stall.id })),
         queryTags,
       );
-      markets = unionById(markets, tagged.markets);
       vendors = unionById(vendors, tagged.vendors);
+      if (nounQuery) {
+        const halls = hallsHostingNameHits(
+          stalls.map((stall) => ({ market_id: stall.market_id, vendor_id: stall.id })),
+          vendors,
+          raw,
+        );
+        markets = unionById(
+          markets,
+          allMarkets.filter((market) => halls.has(market.id)),
+        );
+      } else {
+        markets = unionById(markets, tagged.markets);
+      }
       markets.sort((a, b) => a.name.localeCompare(b.name));
       vendors.sort((a, b) => a.name.localeCompare(b.name));
     }
@@ -571,14 +585,20 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
   const marketsBySlug = new Map(allMarkets.map((market) => [market.slug, market]));
 
   return {
-    markets: sortDirectoryMarkets(markets, sort, {
-      near: filters.near,
-      schedulesFor: (id) => schedulesByMarket.get(id) ?? [],
-    }),
-    vendors: sortDirectoryVendors(withHalls, sort, {
-      near: filters.near,
-      marketsBySlug,
-    }),
+    markets: preferQueryNameHits(
+      sortDirectoryMarkets(markets, sort, {
+        near: filters.near,
+        schedulesFor: (id) => schedulesByMarket.get(id) ?? [],
+      }),
+      raw,
+    ),
+    vendors: preferQueryNameHits(
+      sortDirectoryVendors(withHalls, sort, {
+        near: filters.near,
+        marketsBySlug,
+      }),
+      raw,
+    ),
     schedulesByMarket: Object.fromEntries(schedulesByMarket),
   };
 }

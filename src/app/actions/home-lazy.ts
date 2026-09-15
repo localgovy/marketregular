@@ -1,6 +1,12 @@
 "use server";
 
-import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/catalog";
+import {
+  getOpenToday,
+  listMarkets,
+  listSchedules,
+  listStalls,
+  listVendors,
+} from "@/lib/data/catalog";
 import { toGeoMarket } from "@/lib/geo";
 import { vendorsSellingToday } from "@/lib/vendor-week";
 import type { Market, MarketSchedule } from "@/types/database";
@@ -16,7 +22,11 @@ function schedulesByMarket(schedules: MarketSchedule[]) {
 }
 
 export async function getComposerDirectory() {
-  const [markets, stalls] = await Promise.all([listMarkets(), listStalls()]);
+  const [markets, stalls, openNow] = await Promise.all([
+    listMarkets(),
+    listStalls(),
+    getOpenToday(),
+  ]);
   return {
     markets: markets.map(toGeoMarket),
     stalls: stalls.map((stall) => ({
@@ -26,6 +36,7 @@ export async function getComposerDirectory() {
       market_id: stall.market_id,
       stall: stall.stall,
     })),
+    initialMarketId: openNow[0]?.id,
   };
 }
 

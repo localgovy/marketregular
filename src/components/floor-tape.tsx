@@ -26,7 +26,15 @@ export function FloorTape({ initialItems }: { initialItems: FloorItem[] }) {
           </ol>
         ) : (
           <p className="px-3 py-4 text-base text-muted-foreground">
-            No reviews yet. Write the first one in the box above.
+            The live list is empty. Write what you saw in the box above, or browse{" "}
+            <Link href="/events" className="font-medium text-foreground hover:underline">
+              this week&apos;s hours
+            </Link>{" "}
+            and{" "}
+            <Link href="/markets" className="font-medium text-foreground hover:underline">
+              Find Markets
+            </Link>
+            .
           </p>
         )}
       </div>

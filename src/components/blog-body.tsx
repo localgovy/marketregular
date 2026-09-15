@@ -16,7 +16,7 @@ import {
 } from "@/lib/blog-market-peeks";
 import { externalHref } from "@/lib/format";
 import { SITE_NAME } from "@/lib/constants";
-import { listingFromInput, validSaveSlug, type SavedListing } from "@/lib/listing-saves";
+import { displayListingHeading, listingFromInput, MAX_VENDORS, validSaveSlug, type SavedListing, type SavedListingVendor } from "@/lib/listing-saves";
 import { cn } from "@/lib/utils";
 
 type Inline =
@@ -230,6 +230,57 @@ function isMarketHoursList(
   );
 }
 
+function vendorRowsFromHoursList(block: Block): SavedListingVendor[] {
+  if (!isHoursList(block) || isMarketHoursList(block)) return [];
+  const seen = new Set<string>();
+  const rows: SavedListingVendor[] = [];
+  for (const item of block.items) {
+    for (const part of item.inlines) {
+      if (part.kind !== "link") continue;
+      const slug = vendorSlugFromHref(part.href);
+      if (!slug || seen.has(slug)) continue;
+      const name = part.label.trim();
+      if (!name) continue;
+      seen.add(slug);
+      rows.push({ slug, name });
+      if (rows.length >= MAX_VENDORS) return rows;
+    }
+  }
+  return rows;
+}
+
+function vendorsNamedForMarket(blocks: Block[], marketSlug: string): SavedListingVendor[] {
+  for (let i = 0; i < blocks.length; i += 1) {
+    const block = blocks[i];
+    if (!block || block.type !== "p") continue;
+    const market = marketLinkFromInlines(block.inlines);
+    if (market?.slug !== marketSlug) continue;
+    const vendors: SavedListingVendor[] = [];
+    const seen = new Set<string>();
+    for (let j = i + 1; j < blocks.length; j += 1) {
+      const next = blocks[j];
+      if (!next || next.type === "h2") break;
+      for (const row of vendorRowsFromHoursList(next)) {
+        if (seen.has(row.slug)) continue;
+        seen.add(row.slug);
+        vendors.push(row);
+        if (vendors.length >= MAX_VENDORS) return vendors;
+      }
+    }
+    if (vendors.length) return vendors;
+  }
+  return [];
+}
+
+function listingVendors(
+  blocks: Block[],
+  marketSlug: string,
+  peek: BlogMarketPeek | undefined,
+): SavedListingVendor[] {
+  const named = vendorsNamedForMarket(blocks, marketSlug);
+  return named.length ? named : (peek?.vendors ?? []);
+}
+
 function inlinesWithoutHours(inlines: Inline[]): Inline[] {
   const merged: Inline[] = [];
   for (const part of inlines) {
@@ -288,6 +339,7 @@ function listingFromParagraph(
   weekday: number | null,
   peeks: Map<string, BlogMarketPeek> | null,
   order: number,
+  blocks: Block[],
 ): SavedListing | null {
   const market = marketLinkFromInlines(inlines);
   const hours = hoursFromInlines(inlines);
@@ -301,7 +353,7 @@ function listingFromParagraph(
     marketName: market.name,
     ratingAvg: peek?.ratingAvg ?? null,
     reviewCount: peek?.reviewCount ?? 0,
-    vendors: peek?.vendors ?? [],
+    vendors: listingVendors(blocks, market.slug, peek),
     order,
   });
 }
@@ -340,6 +392,7 @@ function headingListings(
       weekday,
       peeks,
       h2Index * 100,
+      blocks,
     );
     if (listing) paraListings.push(listing);
   }
@@ -368,7 +421,7 @@ function headingListings(
           marketName: market.name,
           ratingAvg: peek?.ratingAvg ?? null,
           reviewCount: peek?.reviewCount ?? 0,
-          vendors: peek?.vendors ?? [],
+          vendors: listingVendors(blocks, market.slug, peek),
           order,
         });
         if (!listing) continue;
@@ -391,13 +444,14 @@ function BlogSectionHeading({
   className?: string;
 }) {
   const listing = listings[0];
+  const title = displayListingHeading(text);
   if (!listing) {
-    return <h2 className={className}>{text}</h2>;
+    return <h2 className={className}>{title}</h2>;
   }
   return (
     <div className={cn("flex flex-wrap items-center justify-between gap-3", className)}>
-      <h2 className="min-w-0">{text}</h2>
-      <ListingSaveButton listing={listing} listings={listings} name={text} />
+      <h2 className="min-w-0">{title}</h2>
+      <ListingSaveButton listing={listing} listings={listings} name={title} />
     </div>
   );
 }
@@ -675,7 +729,7 @@ export async function BlogBody({
                             marketName: inlineText(item.inlines),
                             ratingAvg: peek?.ratingAvg ?? null,
                             reviewCount: peek?.reviewCount ?? 0,
-                            vendors: peek?.vendors ?? [],
+                            vendors: slug ? listingVendors(blocks, slug, peek) : [],
                             order: index * 100 + itemIndex,
                           })
                         : null;

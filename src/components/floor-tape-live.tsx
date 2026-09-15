@@ -14,6 +14,7 @@ type ComposerProps = {
   signedIn?: boolean;
   stalls: Array<Pick<StallRef, "id" | "name" | "slug" | "market_id" | "stall">>;
   markets: GeoMarket[];
+  initialMarketId?: string;
   onPosted: (item: FloorItem) => void;
 };
 
@@ -21,6 +22,7 @@ type ComposerBundle = {
   Composer: ComponentType<ComposerProps>;
   stalls: ComposerProps["stalls"];
   markets: GeoMarket[];
+  initialMarketId?: string;
 };
 
 function ComposerStart({
@@ -78,6 +80,7 @@ function LoadedComposer({
       signedIn={signedIn}
       stalls={bundle.stalls}
       markets={bundle.markets}
+      initialMarketId={bundle.initialMarketId}
       onPosted={onPosted}
     />
   );
@@ -98,6 +101,7 @@ export function FloorTapeLive({ children }: { children: ReactNode }) {
           Composer: mod.FloorComposer,
           stalls: dir.stalls,
           markets: dir.markets,
+          initialMarketId: dir.initialMarketId,
         });
       })
       .finally(() => setPending(false));

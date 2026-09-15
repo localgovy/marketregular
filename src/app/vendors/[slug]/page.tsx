@@ -15,36 +15,55 @@ import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
+import { Hours } from "@/components/hours";
 import { WEEKDAYS } from "@/lib/constants";
 import { stallNextDate } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
-import { sessionOnWeekday } from "@/lib/schedule";
+import { formatHours, sessionOnWeekday } from "@/lib/schedule";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 import type { MarketSchedule } from "@/types/database";
 
-function inSeasonDayLabels(
+function hallDayHours(
   days: number[],
   schedules: MarketSchedule[],
   province: string,
   now: Date,
 ) {
   return days.flatMap((day) => {
-    if (!sessionOnWeekday(schedules, day, province, now)) return [];
+    const session = sessionOnWeekday(schedules, day, province, now);
+    if (!session) return [];
     const name = WEEKDAYS[day]?.slice(0, 3);
-    return name ? [name] : [];
+    if (!name) return [];
+    return [{ day: name, hours: formatHours(session.opens_at, session.closes_at) }];
   });
 }
 
-function dayParen(
-  days: number[],
-  schedules: MarketSchedule[],
-  province: string,
-  now: Date,
-) {
-  const names = inSeasonDayLabels(days, schedules, province, now);
-  return names.length ? ` (${names.join(", ")})` : "";
+function HallHoursLabel({
+  days,
+  schedules,
+  province,
+  now,
+}: {
+  days: number[];
+  schedules: MarketSchedule[];
+  province: string;
+  now: Date;
+}) {
+  const rows = hallDayHours(days, schedules, province, now);
+  if (!rows.length) return null;
+  return (
+    <>
+      {rows.map((row, index) => (
+        <span key={`${row.day}-${row.hours}`}>
+          {index === 0 ? " · " : ", "}
+          {row.day}{" "}
+          <Hours value={row.hours} className="text-muted-foreground" />
+        </span>
+      ))}
+    </>
+  );
 }
 
 export const revalidate = 3600;
@@ -129,7 +148,12 @@ export default async function VendorPage({
               <Link href={`/markets/${market.slug}`} className="font-medium text-foreground hover:underline">
                 {market.name}
               </Link>
-              {dayParen(market.days, market.schedules, market.province, now)}
+              <HallHoursLabel
+                days={market.days}
+                schedules={market.schedules}
+                province={market.province}
+                now={now}
+              />
             </span>
           ))}
           .
@@ -184,7 +208,9 @@ export default async function VendorPage({
                 ))}
               </ol>
             ) : (
-              <p className="mt-4 text-base text-muted-foreground">No reviews yet.</p>
+              <p className="mt-4 text-base text-muted-foreground">
+                Nothing on the live list yet. Tell the next shopper what was on the tables.
+              </p>
             )}
           </section>
         </div>
@@ -204,7 +230,7 @@ export default async function VendorPage({
               }
             >
               {vendor.markets.map((market) => {
-                const days = inSeasonDayLabels(market.days, market.schedules, market.province, now);
+                const rows = hallDayHours(market.days, market.schedules, market.province, now);
                 return (
                 <li key={market.id} className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -214,8 +240,17 @@ export default async function VendorPage({
                     <p className="text-sm text-muted-foreground">
                       {market.address}
                       {market.stall ? ` · ${market.stall}` : ""}
-                      {days.length ? ` · ${days.join(", ")}` : ""}
                     </p>
+                    {rows.length ? (
+                      <p className="mt-0.5 grid grid-cols-[auto_auto] justify-start gap-x-2 gap-y-0.5">
+                        {rows.map((row) => (
+                          <span key={`${row.day}-${row.hours}`} className="contents">
+                            <span className="text-sm text-muted-foreground">{row.day}</span>
+                            <Hours value={row.hours} className="text-muted-foreground" />
+                          </span>
+                        ))}
+                      </p>
+                    ) : null}
                   </div>
                   <span className="flex shrink-0 items-center">
                     <SaveButton kind="market" slug={market.slug} name={market.name} />

@@ -20,7 +20,11 @@ const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const MAX_HEADING = 80;
 const MAX_HOURS = 40;
 const MAX_NAME = 120;
-const MAX_VENDORS = 5;
+export const MAX_VENDORS = 5;
+
+export function displayListingHeading(heading: string) {
+  return heading.replace(/:\s*$/, "");
+}
 
 export function validSaveSlug(slug: string) {
   return slug.length >= 1 && slug.length <= 160 && SLUG.test(slug);

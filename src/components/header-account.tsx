@@ -77,7 +77,11 @@ export function HeaderAccount() {
           Desk
         </Link>
       ) : null}
-      <Link href="/account" className={cn(buttonVariants({ variant: "outline" }), "shrink-0")}>
+      <Link
+        href="/account"
+        title={profile.display_name ?? "Account"}
+        className={cn(buttonVariants({ variant: "outline" }), "max-w-[7.5rem] min-w-0 shrink-0 truncate")}
+      >
         {profile.display_name ?? "Account"}
       </Link>
     </>

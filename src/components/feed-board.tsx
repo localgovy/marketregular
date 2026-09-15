@@ -39,12 +39,14 @@ export function FeedBoard({
   stalls,
   markets,
   openSlugs,
+  initialMarketId,
 }: {
   initialItems: FloorItem[];
   signedIn: boolean;
   stalls: StallPick[];
   markets: GeoMarket[];
   openSlugs: string[];
+  initialMarketId?: string;
 }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -212,6 +214,7 @@ export function FeedBoard({
             signedIn={signedIn}
             stalls={stalls}
             markets={markets}
+            initialMarketId={initialMarketId}
             onPosted={(item) => setExtra((current) => [item, ...current].slice(0, 80))}
           />
           {visible.length ? (
@@ -225,8 +228,8 @@ export function FeedBoard({
               {filtered
                 ? "No posts match that. Clear the search or pick a place from the rail."
                 : signedIn
-                  ? "No posts yet."
-                  : "No posts yet. Sign in to write the first one."}
+                  ? "The live list is empty. Write what you saw in the box above, or pick a hall from Events."
+                  : "The live list is empty. Sign in to write the first note, or browse markets."}
             </p>
           )}
         </div>

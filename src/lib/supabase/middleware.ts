@@ -29,7 +29,7 @@ export async function updateSession(request: NextRequest) {
   if (!url || !key) return supabaseResponse;
 
   const path = request.nextUrl.pathname;
-  const needsAuth = path.startsWith("/account") || path.startsWith("/admin");
+  const needsAuth = path.startsWith("/account");
   const hasAuthCookie = request.cookies
     .getAll()
     .some((cookie) => cookieLooksLikeSupabaseAuth(cookie.name));

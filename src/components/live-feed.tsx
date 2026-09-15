@@ -56,7 +56,11 @@ export function LiveFeed({
   }, [extra, initialItems]);
 
   if (!items.length) {
-    return <p className="text-base text-muted-foreground">No reviews yet.</p>;
+    return (
+      <p className="text-base text-muted-foreground">
+        Nothing on the live list yet. Tell the next shopper what was on the tables.
+      </p>
+    );
   }
 
   return (

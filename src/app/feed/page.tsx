@@ -8,6 +8,7 @@ import {
   listMarkets,
   listStalls,
 } from "@/lib/data/catalog";
+import { loadMySaves } from "@/lib/data/account";
 import { toGeoMarket } from "@/lib/geo";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
@@ -19,13 +20,19 @@ export const metadata: Metadata = pageMeta({
 });
 
 export default async function FeedPage() {
-  const [tape, markets, stalls, openNow, profile] = await Promise.all([
+  const [tape, markets, stalls, openNow, profile, saves] = await Promise.all([
     getFloorTape(80),
     listMarkets(),
     listStalls(),
     getOpenToday(),
     getCurrentProfile(),
+    loadMySaves(),
   ]);
+  const savedSlug = saves.markets[0];
+  const savedMarket = savedSlug
+    ? markets.find((market) => market.slug === savedSlug)
+    : undefined;
+  const initialMarketId = savedMarket?.id ?? openNow[0]?.id;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -46,6 +53,7 @@ export default async function FeedPage() {
           }))}
           markets={markets.map(toGeoMarket)}
           openSlugs={openNow.map((market) => market.slug)}
+          initialMarketId={initialMarketId}
         />
       </Suspense>
     </div>

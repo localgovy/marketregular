@@ -5,6 +5,7 @@ import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
 import { ListingSaveButton, SaveButton } from "@/components/save-button";
 import { formatPostedOn } from "@/lib/format";
+import { displayListingHeading } from "@/lib/listing-saves";
 import type { SavedListing, SavedListingVendor } from "@/lib/saves";
 import { cn } from "@/lib/utils";
 
@@ -119,8 +120,8 @@ function SavedVisit({
     <div>
       {heading ? (
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="min-w-0 text-sm">{heading}</p>
-          <ListingSaveButton listing={listing} name={heading} />
+          <p className="min-w-0 text-sm">{displayListingHeading(heading)}</p>
+          <ListingSaveButton listing={listing} name={displayListingHeading(heading)} />
         </div>
       ) : null}
       {saveOnHeading ? (
@@ -230,7 +231,7 @@ export function SavedNotesSection({
                           />
                         ) : (
                           <>
-                            <p className="text-sm">{group.heading}</p>
+                            <p className="text-sm">{displayListingHeading(group.heading)}</p>
                             <ul className="mt-3 grid gap-5">
                               {group.rows.map((listing) => (
                                 <li key={listing.slug}>

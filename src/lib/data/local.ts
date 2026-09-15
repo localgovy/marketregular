@@ -25,7 +25,8 @@ import { provinceTz } from "@/lib/constants";
 import { isLaunchCity } from "@/lib/launch";
 import { vendorHasSubstance } from "@/lib/listing-substance";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
-import { productTagsFromQuery, vendorFilterTags, withVendorProductTags } from "@/lib/vendor-tags";
+import { productTagsFromQuery, isProductNounQuery, vendorFilterTags, withVendorProductTags } from "@/lib/vendor-tags";
+import { preferQueryNameHits, hallsHostingNameHits } from "@/lib/search-rank";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
 import type {
   FloorItem,
@@ -87,15 +88,22 @@ export function localSearch(filters: SearchFilters, now = new Date()) {
 
   if (q) {
     const queryTags = [...new Set([...productTagsFromQuery(q), ...countryTagsFromQuery(q)])];
+    const nounQuery = isProductNounQuery(q);
     markets = markets.filter((m) =>
-      haystack([m.name, m.city, m.province, m.about, m.tags.join(" "), m.address]).includes(q),
+      haystack(
+        nounQuery
+          ? [m.name, m.city, m.province, m.address]
+          : [m.name, m.city, m.province, m.about, m.tags.join(" "), m.address],
+      ).includes(q),
     );
     vendors = vendors.filter((v) => {
-      const bits: Array<string | null | undefined> = [
-        v.name,
-        v.about,
-        vendorFilterTags(v).join(" "),
-      ];
+      const bits: Array<string | null | undefined> = nounQuery
+        ? [v.name]
+        : [
+            v.name,
+            v.about,
+            vendorFilterTags(v).join(" "),
+          ];
       if (!queryTags.length) {
         bits.push(
           ...seedMarketVendors
@@ -115,8 +123,23 @@ export function localSearch(filters: SearchFilters, now = new Date()) {
         })),
         queryTags,
       );
-      markets = unionById(markets, tagged.markets);
       vendors = unionById(vendors, tagged.vendors);
+      if (nounQuery) {
+        const halls = hallsHostingNameHits(
+          seedMarketVendors.map((link) => ({
+            market_id: link.market_id,
+            vendor_id: link.vendor_id,
+          })),
+          vendors,
+          q,
+        );
+        markets = unionById(
+          markets,
+          localMarkets().filter((market) => halls.has(market.id)),
+        );
+      } else {
+        markets = unionById(markets, tagged.markets);
+      }
       markets.sort((a, b) => a.name.localeCompare(b.name));
       vendors.sort((a, b) => a.name.localeCompare(b.name));
     }
@@ -180,14 +203,20 @@ export function localSearch(filters: SearchFilters, now = new Date()) {
   const marketsBySlug = new Map(allMarkets.map((market) => [market.slug, market]));
 
   return {
-    markets: sortDirectoryMarkets(markets, sort, {
-      near: filters.near,
-      schedulesFor,
-    }),
-    vendors: sortDirectoryVendors(withHalls, sort, {
-      near: filters.near,
-      marketsBySlug,
-    }),
+    markets: preferQueryNameHits(
+      sortDirectoryMarkets(markets, sort, {
+        near: filters.near,
+        schedulesFor,
+      }),
+      q ?? "",
+    ),
+    vendors: preferQueryNameHits(
+      sortDirectoryVendors(withHalls, sort, {
+        near: filters.near,
+        marketsBySlug,
+      }),
+      q ?? "",
+    ),
     schedulesByMarket: Object.fromEntries(
       markets.map((market) => [market.id, schedulesFor(market.id)]),
     ),
