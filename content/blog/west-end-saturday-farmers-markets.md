@@ -68,7 +68,7 @@ A west-end outdoor Saturday. If you did Brick Works or Wychwood first, it'd be b
 - **9 AM:** [Junction](https://www.marketregular.com/markets/the-junction-farmers-market) (Keele) if you want to finish the circuit outdoors, and choose from their collection of 50+ vendors.
 - **MarketRegular Tip:** [Cutting Veg](https://www.marketregular.com/vendors/the-cutting-veg) and [Monforte](https://www.marketregular.com/vendors/monforte-dairy) sell at both 8 AM markets, so pick Brick Works *or* The Stop, then finish at the Junction after 9. But remember that the Junction is only in season for about one more full month, so try to plan a visit in the coming weeks.
 
-Filter by Saturday on the [homepage](https://www.marketregular.com). East-end Thu/Sat/Sun circuit: [East end Toronto farmers’ markets](https://www.marketregular.com/blog/east-end-toronto-farmers-markets).
+Filter by Saturday on the [homepage](https://www.marketregular.com). East-end Thu/Sat/Sun circuit: [East end Toronto farmers’ markets](https://www.marketregular.com/blog/east-end-toronto-farmers-markets). Sunday on Eglinton: [Sunday farmers’ markets](https://www.marketregular.com/blog/marketregular-sunday-little-jamaica).
 
 Made by Canadians, for Canadians, to shop Canadian. Pickup, pre-order, and a mobile app coming soon.
 
