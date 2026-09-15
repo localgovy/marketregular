@@ -78,13 +78,22 @@ export async function persistSave(kind: SaveKind, slug: string, saved: boolean):
   return listSaves(supabase, user.id);
 }
 
-export async function persistListingSave(
-  input: Omit<SavedListing, "slug">,
+export async function persistListingSaves(
+  inputs: Array<Omit<SavedListing, "slug">>,
   saved: boolean,
 ): Promise<Saves | null> {
-  const listing = listingFromInput(input);
-  if (!listing) return null;
-  if (!getBlogPost(listing.blog)) return null;
+  const listings: SavedListing[] = [];
+  for (const input of inputs) {
+    const listing = listingFromInput(input);
+    if (!listing) {
+      console.error("persistListingSaves invalid listing");
+      return null;
+    }
+    if (!getBlogPost(listing.blog)) return null;
+    listings.push(listing);
+  }
+  if (!listings.length) return null;
+
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
   const {
@@ -93,30 +102,46 @@ export async function persistListingSave(
   if (!user) return null;
 
   if (saved) {
-    const blogInsert = await supabase.from("saves").insert({
-      user_id: user.id,
-      kind: "blog",
-      slug: listing.blog,
-    });
-    if (blogInsert.error && blogInsert.error.code !== "23505") return null;
-    const createdBlog = !blogInsert.error;
-    const listingInsert = await supabase.from("saves").insert({
-      user_id: user.id,
-      kind: "listing",
-      slug: listing.slug,
-      detail: listingDetailJson(listing),
-    });
-    if (listingInsert.error && listingInsert.error.code !== "23505") {
-      console.error("persistListingSave insert", listingInsert.error);
-      if (createdBlog) {
-        await supabase
-          .from("saves")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("kind", "blog")
-          .eq("slug", listing.blog);
+    const createdBlogs: string[] = [];
+    const blogs = new Set(listings.map((row) => row.blog));
+    for (const blog of blogs) {
+      const blogInsert = await supabase.from("saves").insert({
+        user_id: user.id,
+        kind: "blog",
+        slug: blog,
+      });
+      if (blogInsert.error && blogInsert.error.code !== "23505") return null;
+      if (!blogInsert.error) createdBlogs.push(blog);
+    }
+    const inserted: string[] = [];
+    for (const listing of listings) {
+      const listingInsert = await supabase.from("saves").insert({
+        user_id: user.id,
+        kind: "listing",
+        slug: listing.slug,
+        detail: listingDetailJson(listing),
+      });
+      if (listingInsert.error && listingInsert.error.code !== "23505") {
+        console.error("persistListingSaves insert", listingInsert.error);
+        if (inserted.length) {
+          await supabase
+            .from("saves")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("kind", "listing")
+            .in("slug", inserted);
+        }
+        if (createdBlogs.length) {
+          await supabase
+            .from("saves")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("kind", "blog")
+            .in("slug", createdBlogs);
+        }
+        return null;
       }
-      return null;
+      if (!listingInsert.error) inserted.push(listing.slug);
     }
   } else {
     const { error } = await supabase
@@ -124,12 +149,22 @@ export async function persistListingSave(
       .delete()
       .eq("user_id", user.id)
       .eq("kind", "listing")
-      .eq("slug", listing.slug);
+      .in(
+        "slug",
+        listings.map((row) => row.slug),
+      );
     if (error) return null;
   }
 
   touchSavedPaths();
   return listSaves(supabase, user.id);
+}
+
+export async function persistListingSave(
+  input: Omit<SavedListing, "slug">,
+  saved: boolean,
+): Promise<Saves | null> {
+  return persistListingSaves([input], saved);
 }
 
 const MAX_SAVES = 200;

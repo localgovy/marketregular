@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { persistListingSave, persistSave } from "@/app/actions/saves";
+import { persistListingSaves, persistSave } from "@/app/actions/saves";
+import { listingDetailJson } from "@/lib/listing-saves";
 import {
   EMPTY_SAVES,
   getSaves,
@@ -171,23 +172,17 @@ export function ListingSaveButton({
         for (const row of group) {
           if (isSaved("listing", row.slug) !== nextSaved) toggleListing(row);
         }
-        void (async () => {
-          try {
-            let canonical: Awaited<ReturnType<typeof persistListingSave>> = null;
-            for (const row of group) {
-              canonical = await persistListingSave(row, nextSaved);
-              if (!canonical) {
-                restoreSaves(before);
-                if (!documentHasAuthCookie()) router.push(loginHref);
-                return;
-              }
+        void persistListingSaves(group.map(listingDetailJson), nextSaved)
+          .then((canonical) => {
+            if (!canonical) {
+              restoreSaves(before);
+              if (!documentHasAuthCookie()) router.push(loginHref);
+              return;
             }
             replaceSaves(canonical);
             refreshIfSavedPage(pathname, router);
-          } catch {
-            restoreSaves(before);
-          }
-        })();
+          })
+          .catch(() => restoreSaves(before));
       }}
       className={saveChipClass(size, saved)}
     >

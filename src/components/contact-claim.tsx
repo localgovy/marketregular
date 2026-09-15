@@ -44,15 +44,13 @@ export function ContactClaim({
   const q = query.trim().toLowerCase();
 
   const { items, more } = useMemo(() => {
-    if (kind === "vendor" && !q) return { items: [] as ContactListingOption[], more: false };
-    const filtered = q
-      ? [...pool]
-          .filter((item) => matchesQuery(item, q))
-          .sort((a, b) => {
-            const rank = rankMatch(a, q) - rankMatch(b, q);
-            return rank !== 0 ? rank : a.name.localeCompare(b.name);
-          })
-      : pool;
+    if (!q) return { items: [] as ContactListingOption[], more: false };
+    const filtered = [...pool]
+      .filter((item) => matchesQuery(item, q))
+      .sort((a, b) => {
+        const rank = rankMatch(a, q) - rankMatch(b, q);
+        return rank !== 0 ? rank : a.name.localeCompare(b.name);
+      });
     if (kind === "vendor") {
       return { items: filtered.slice(0, VENDOR_MATCH_CAP), more: filtered.length > VENDOR_MATCH_CAP };
     }
@@ -131,9 +129,11 @@ export function ContactClaim({
           className="bg-card"
         />
       </div>
-      {kind === "vendor" && !q ? (
+      {!q ? (
         <p className="text-sm text-muted-foreground">
-          Type a vendor name to see matches. There&apos;s 1,400+ and counting.
+          {kind === "vendor"
+            ? "Type a vendor name to see matches. There's 1,400+ and counting."
+            : "Type a market name to see matches."}
         </p>
       ) : items.length === 0 ? (
         <p className="text-sm text-muted-foreground">No listings match that name.</p>

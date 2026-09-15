@@ -1,5 +1,5 @@
-import { persistListingSave, persistSave } from "@/app/actions/saves";
-import { listingFromInput, type SavedListing } from "@/lib/listing-saves";
+import { persistListingSaves, persistSave } from "@/app/actions/saves";
+import { listingDetailJson, listingFromInput, type SavedListing } from "@/lib/listing-saves";
 import { replaceSaves, type SaveKind } from "@/lib/saves";
 
 const KEY = "mr-pending-save";
@@ -65,12 +65,8 @@ export async function flushPendingSave() {
   if (!pending) return;
   if (pending.kind === "listing") {
     const rows = pending.listings?.length ? pending.listings : [pending.listing];
-    let canonical = null;
-    for (const row of rows) {
-      canonical = await persistListingSave(row, true);
-      if (!canonical) return;
-    }
-    replaceSaves(canonical);
+    const canonical = await persistListingSaves(rows.map(listingDetailJson), true);
+    if (canonical) replaceSaves(canonical);
     return;
   }
   const canonical = await persistSave(pending.kind, pending.slug, true);
