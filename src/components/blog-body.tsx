@@ -231,10 +231,12 @@ function isMarketHoursList(
 }
 
 function vendorRowsFromHoursList(block: Block): SavedListingVendor[] {
-  if (!isHoursList(block) || isMarketHoursList(block)) return [];
+  if (!isHoursList(block)) return [];
+  const items = block.items;
+  if (items.every((item) => Boolean(marketSlugFromInlines(item.inlines)))) return [];
   const seen = new Set<string>();
   const rows: SavedListingVendor[] = [];
-  for (const item of block.items) {
+  for (const item of items) {
     for (const part of item.inlines) {
       if (part.kind !== "link") continue;
       const slug = vendorSlugFromHref(part.href);
