@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import { FacebookMark, InstagramMark, SignMark, TikTokMark, type MarkProps } from "@/components/marks";
 import { buttonVariants } from "@/components/ui/button";
-import { externalHref, formatPhone } from "@/lib/format";
+import { externalHref, formatPhone, listingEmail } from "@/lib/format";
 
 export function ListingPhone({ phone }: { phone: string | null }) {
   if (!phone) return null;
@@ -22,6 +22,30 @@ export function ListingPhone({ phone }: { phone: string | null }) {
         formatPhone(phone)
       )}
     </p>
+  );
+}
+
+export function ListingContact({
+  phone,
+  email,
+}: {
+  phone: string | null;
+  email?: string | null;
+}) {
+  const mail = listingEmail(email);
+  if (!phone && !mail) return null;
+  return (
+    <div className="mt-4">
+      <h3>Contact</h3>
+      <ListingPhone phone={phone} />
+      {mail ? (
+        <p className="mt-2 text-sm">
+          <a className="break-all hover:underline" href={`mailto:${mail}`}>
+            {mail}
+          </a>
+        </p>
+      ) : null}
+    </div>
   );
 }
 

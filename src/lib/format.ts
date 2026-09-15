@@ -37,6 +37,23 @@ export function formatPhone(phone: string) {
   return phone;
 }
 
+const LISTING_EMAIL = /^[a-z0-9._%+\-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
+
+/** Public hall/stall contact mailbox, or null if the seed is not a safe mailto. */
+export function listingEmail(value: string | null | undefined) {
+  const email = value?.trim() ?? "";
+  if (!email || email.length > 120) return null;
+  if (!LISTING_EMAIL.test(email)) return null;
+  return email;
+}
+
+export function listingHasContact(
+  phone: string | null | undefined,
+  email?: string | null,
+) {
+  return Boolean(phone?.trim() || listingEmail(email));
+}
+
 export function externalHref(href: string | null | undefined) {
   const value = href?.trim();
   if (!value) return null;

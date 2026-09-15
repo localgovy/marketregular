@@ -63,6 +63,7 @@ export type Vendor = {
   tiktok: string | null;
   facebook: string | null;
   phone: string | null;
+  email?: string | null;
   logo_url: string | null;
   tags: string[];
   /**

@@ -134,7 +134,7 @@ export function MarketForm({ market }: { market?: Market }) {
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" defaultValue={market?.email ?? ""} />
+        <Input id="email" name="email" type="email" defaultValue={market?.email ?? ""} />
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
         <Label htmlFor="tags">Tags (comma separated)</Label>

@@ -10,7 +10,7 @@ import { ListingComposer } from "@/components/listing-composer";
 import { SaveButton } from "@/components/save-button";
 import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
-import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
+import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
@@ -21,6 +21,7 @@ import { stallNextDate } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
+import { listingHasContact } from "@/lib/format";
 import { formatHours, sessionOnWeekday } from "@/lib/schedule";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 import type { MarketSchedule } from "@/types/database";
@@ -217,14 +218,18 @@ export default async function VendorPage({
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
             <h3>Find them</h3>
-            <ListingPhone phone={vendor.phone} />
+            <ListingContact phone={vendor.phone} email={vendor.email} />
             <ListingWebsite href={vendor.website} />
             <ListingInstagram href={vendor.instagram} />
             <ListingTiktok href={vendor.tiktok} />
             <ListingFacebook href={vendor.facebook} />
             <ul
               className={
-                vendor.phone || vendor.website || vendor.instagram || vendor.tiktok || vendor.facebook
+                listingHasContact(vendor.phone, vendor.email) ||
+                vendor.website ||
+                vendor.instagram ||
+                vendor.tiktok ||
+                vendor.facebook
                   ? "mt-4 grid gap-3 border-t border-border pt-4"
                   : "mt-3 grid gap-3"
               }

@@ -25,7 +25,7 @@ type SeedMarket = Omit<
 
 type SeedVendor = Omit<
   Vendor,
-  "status" | "claimed_by" | "logo_url" | "review_count" | "rating_avg" | "instagram" | "tiktok" | "facebook"
+  "status" | "claimed_by" | "logo_url" | "review_count" | "rating_avg" | "instagram" | "tiktok" | "facebook" | "email"
 > & {
   logo_url?: string | null;
   review_count?: number;
@@ -33,6 +33,7 @@ type SeedVendor = Omit<
   instagram?: string | null;
   tiktok?: string | null;
   facebook?: string | null;
+  email?: string | null;
   menus: Omit<MenuItem, "id" | "vendor_id">[];
 };
 
@@ -14811,6 +14812,7 @@ export function toPublicVendor(v: SeedVendor): Vendor {
     tiktok: v.tiktok ?? null,
     facebook: v.facebook ?? null,
     phone: v.phone,
+    email: v.email ?? null,
     logo_url: v.logo_url ?? null,
     tags: v.tags,
     status: "published",

@@ -14,7 +14,7 @@ import { CaretDownMark } from "@/components/marks";
 import { MarketVendors } from "@/components/market-vendors";
 import { NowLabel } from "@/components/now-label";
 import { ScheduleList } from "@/components/schedule-list";
-import { ListingPhone, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
+import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
@@ -178,7 +178,7 @@ export default async function MarketPage({
               <br />
               {market.city}, {market.province} {market.postal_code}
             </address>
-            <ListingPhone phone={market.phone} />
+            <ListingContact phone={market.phone} email={market.email} />
             <ListingWebsite href={market.website} />
             <ListingInstagram href={market.instagram} />
             <ListingTiktok href={market.tiktok} />

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CLAIM_INBOX, SITE_NAME, SITE_URL, SITE_LOGO, SITE_OG, WEEKDAYS } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_REGION_NAME, LAUNCH_TZ } from "@/lib/launch";
 import { listingScore } from "@/lib/listing-score";
-import { externalHref } from "@/lib/format";
+import { externalHref, listingEmail } from "@/lib/format";
 import type { Market, MarketSchedule, MenuItem, Vendor } from "@/types/database";
 
 export const SITE_DESCRIPTION =
@@ -182,6 +182,7 @@ export function marketJsonLd(
     url,
     image: listingImage(market.logo_url),
     telephone: market.phone ?? undefined,
+    email: listingEmail(market.email) ?? undefined,
     sameAs: sameAsLinks(market.website, market.instagram, market.tiktok, market.facebook),
     address: postalAddress(market),
     geo: {
@@ -262,6 +263,7 @@ export function vendorJsonLd(
     url,
     image: listingImage(vendor.logo_url),
     telephone: vendor.phone ?? undefined,
+    email: listingEmail(vendor.email) ?? undefined,
     sameAs: sameAsLinks(vendor.website, vendor.instagram, vendor.tiktok, vendor.facebook),
     areaServed: { "@type": "AdministrativeArea", name: LAUNCH_REGION_NAME },
     ...(halls.length === 1 ? { containedInPlace: hallPlace(halls[0]) } : {}),

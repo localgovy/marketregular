@@ -64,11 +64,11 @@ function publicDb() {
 
 const PAGE = 1000;
 
-/** email / claimed_by are revoked from anon and authenticated. */
+/** claimed_by stays revoked from anon and authenticated. */
 const MARKET_PUBLIC =
-  "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, phone, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
+  "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, phone, email, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
 const VENDOR_PUBLIC =
-  "id, slug, name, about, website, phone, tags, status, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
+  "id, slug, name, about, website, phone, email, tags, status, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
 /** `research_notes` is sourcing detail for the desk, not visitor copy — never selected here. */
 const SCHEDULE_PUBLIC =
   "id, market_id, weekday, opens_at, closes_at, season_start, season_end, notes";

@@ -307,8 +307,9 @@ type SeedMarket = Omit<Market, "status" | "claimed_by" | "email" | "logo_url"> &
   schedules: Omit<MarketSchedule, "id" | "market_id">[];
 };
 
-type SeedVendor = Omit<Vendor, "status" | "claimed_by" | "logo_url"> & {
+type SeedVendor = Omit<Vendor, "status" | "claimed_by" | "logo_url" | "email"> & {
   logo_url?: string | null;
+  email?: string | null;
   menus: Omit<MenuItem, "id" | "vendor_id">[];
 };
 
@@ -370,6 +371,7 @@ export function toPublicVendor(v: SeedVendor): Vendor {
     tiktok: v.tiktok ?? null,
     facebook: v.facebook ?? null,
     phone: v.phone,
+    email: v.email ?? null,
     logo_url: v.logo_url ?? null,
     tags: v.tags,
     status: "published",

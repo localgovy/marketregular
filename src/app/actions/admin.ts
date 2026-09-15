@@ -91,6 +91,7 @@ export async function saveVendor(formData: FormData) {
     tiktok: String(formData.get("tiktok") ?? "") || null,
     facebook: String(formData.get("facebook") ?? "") || null,
     phone: String(formData.get("phone") ?? "") || null,
+    email: String(formData.get("email") ?? "").trim() || null,
     logo_url: String(formData.get("logo_url") ?? "").trim() || null,
     tags: String(formData.get("tags") ?? "")
       .split(",")

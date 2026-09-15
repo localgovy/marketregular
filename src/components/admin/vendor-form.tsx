@@ -87,6 +87,10 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
         <Label htmlFor="phone">Phone</Label>
         <Input id="phone" name="phone" defaultValue={vendor?.phone ?? ""} />
       </div>
+      <div className="grid gap-1.5">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" name="email" type="email" defaultValue={vendor?.email ?? ""} />
+      </div>
       <div className="grid gap-1.5 sm:col-span-2">
         <Label htmlFor="tags">Tags (comma separated)</Label>
         <Input
