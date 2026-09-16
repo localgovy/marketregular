@@ -10,6 +10,7 @@ import {
   parseHm,
   zonedParts,
 } from "@/lib/schedule";
+import { publicStallCount } from "@/lib/vendor-roster";
 import type { Market, MarketSchedule, StallRef, Vendor } from "@/types/database";
 
 export const DAY_SLUGS = [
@@ -98,7 +99,7 @@ export function marketsOnWeekday({
       opensMinutes: opens,
       notes: row.notes,
       openNow: offset === 0 && minutes >= opens && minutes <= closes,
-      stallCount: stallsByMarket.get(market.id) ?? 0,
+      stallCount: publicStallCount(market.slug, stallsByMarket.get(market.id) ?? 0),
       date: isoForWeekday(weekday, now),
     });
   }

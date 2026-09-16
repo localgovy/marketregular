@@ -28,6 +28,7 @@ import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { productTagsFromQuery, isProductNounQuery, vendorFilterTags, withVendorProductTags } from "@/lib/vendor-tags";
 import { preferQueryNameHits, hallsHostingNameHits } from "@/lib/search-rank";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
+import { publishesVendorRoster } from "@/lib/vendor-roster";
 import type {
   FloorItem,
   Market,
@@ -294,7 +295,7 @@ export function localMarketBySlug(slug: string): MarketDetail | null {
   return {
     ...market,
     schedules: schedulesFor(market.id),
-    vendors,
+    vendors: publishesVendorRoster(slug) ? vendors : [],
     reviews,
     posts,
     feed: feedForMarket(market.id),

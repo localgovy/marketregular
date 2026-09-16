@@ -23,6 +23,7 @@ import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle, marketPlaceLine } from "@/lib/listing-copy";
+import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { nextOpenLabel } from "@/lib/schedule";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
@@ -186,12 +187,14 @@ export default async function MarketPage({
           </div>
           <ClaimForm targetType="market" targetId={market.id} />
         </aside>
-        <div className="lg:col-span-2">
-          <MarketVendors
-            vendors={market.vendors}
-            todayWeekday={weekdayInToronto(now)}
-          />
-        </div>
+        {publishesVendorRoster(market.slug) ? (
+          <div className="lg:col-span-2">
+            <MarketVendors
+              vendors={market.vendors}
+              todayWeekday={weekdayInToronto(now)}
+            />
+          </div>
+        ) : null}
         <div className="lg:col-span-2">
           <ListingAlsoLinks
             heading="Other markets like this one"

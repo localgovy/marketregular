@@ -37,6 +37,7 @@ import { loadMyProfile } from "@/lib/my-profile";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
+import { publishesVendorRoster } from "@/lib/vendor-roster";
 import type {
   FloorItem,
   Market,
@@ -629,14 +630,15 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
   ]);
 
   const vendorIdList = (links ?? []).map((l: { vendor_id: string }) => l.vendor_id);
+  const showRoster = publishesVendorRoster(market.slug);
   // Scoped to this hall and its stalls. Reading the whole table would cap at 1000 rows.
   const reviewScope = [`market_id.eq.${market.id}`];
   if (vendorIdList.length) reviewScope.push(`vendor_id.in.(${vendorIdList.join(",")})`);
   const [{ data: vendors }, hallsMap, { data: reviews }] = await Promise.all([
-    vendorIdList.length > 0
+    showRoster && vendorIdList.length > 0
       ? supabase.from("vendors").select(VENDOR_PUBLIC).in("id", vendorIdList)
       : Promise.resolve({ data: [] as Vendor[] }),
-    hallsByVendorIds(vendorIdList),
+    showRoster ? hallsByVendorIds(vendorIdList) : Promise.resolve(new Map<string, VendorHall[]>()),
     fetchAllRows<Review>((from, to) =>
       supabase
         .from("reviews")
@@ -692,7 +694,7 @@ export async function getMarketBySlug(slug: string): Promise<MarketDetail | null
   return {
     ...withListingStats(market as Market),
     schedules: (schedules ?? []) as MarketSchedule[],
-    vendors: vendorList,
+    vendors: showRoster ? vendorList : [],
     reviews: mappedReviews,
     posts: mappedPosts,
     feed: mergeReviews([

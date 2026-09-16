@@ -18,6 +18,7 @@ import {
 import { LAUNCH_CITY } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 import { tagLabel } from "@/lib/tag-label";
+import { publicStallCount } from "@/lib/vendor-roster";
 import type { Market, MarketSchedule, Vendor } from "@/types/database";
 
 export const revalidate = 3600;
@@ -76,7 +77,7 @@ function MarketList({
         marketNextOpenRow(
           market,
           scheduleMap.get(market.id) ?? [],
-          stallCountByMarket.get(market.id) ?? 0,
+          publicStallCount(market.slug, stallCountByMarket.get(market.id) ?? 0),
         ),
       )}
     />
