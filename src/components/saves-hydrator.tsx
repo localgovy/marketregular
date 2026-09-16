@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { mergeSaves } from "@/app/actions/saves";
 import { flushPendingSave } from "@/lib/pending-save";
@@ -14,10 +14,12 @@ export function SavesHydrator() {
   const router = useRouter();
   const merged = useRef(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     bootAuthCookie();
     bootSaves();
+  }, []);
 
+  useEffect(() => {
     if (pathname.startsWith("/auth/")) return;
 
     let cancelled = false;

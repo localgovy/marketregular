@@ -5,7 +5,11 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { CloseMark } from "@/components/marks";
 import { buttonVariants } from "@/components/ui/button";
-import { homeWalkthroughSeen, rememberHomeWalkthrough } from "@/lib/home-walkthrough";
+import {
+  homeWalkthroughSeen,
+  rememberHomeWalkthrough,
+  subscribeHomeWalkthrough,
+} from "@/lib/home-walkthrough";
 import {
   isSignInSlipAuthPath,
   subscribeSignInSlip,
@@ -63,8 +67,14 @@ export function GuestSignInSlip() {
       startBrowseClock();
       return () => window.clearTimeout(timer);
     }
-    // First visit on home: the walkthrough is enough. Don't stack a second card.
-    return undefined;
+    const unsub = subscribeHomeWalkthrough(() => {
+      if (browseWasDismissed()) return;
+      startBrowseClock();
+    });
+    return () => {
+      window.clearTimeout(timer);
+      unsub();
+    };
   }, [guest, pathname]);
 
   useEffect(() => {

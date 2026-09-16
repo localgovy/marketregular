@@ -1,16 +1,40 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { isSignInSlipAuthPath } from "@/lib/signin-slip";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
+import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types/database";
 
+const SIGN_IN_CLASS = "shrink-0 text-sm font-medium hover:underline";
+const CHIP_CLASS = cn(
+  buttonVariants({ variant: "outline" }),
+  "max-w-[7.5rem] min-w-0 shrink-0 truncate",
+);
+
+function loginHref(pathname: string, query: string) {
+  if (isSignInSlipAuthPath(pathname)) return "/login";
+  const next = `${pathname}${query ? `?${query}` : ""}`;
+  return `/login?next=${encodeURIComponent(next || "/")}`;
+}
+
+export function HeaderAccountFallback() {
+  return (
+    <Link href="/login" rel="nofollow" className={SIGN_IN_CLASS}>
+      Sign in
+    </Link>
+  );
+}
+
 export function HeaderAccount() {
   const pathname = usePathname();
-  const [ready, setReady] = useState(false);
+  const searchParams = useSearchParams();
+  const hasCookie = useAuthCookie(false);
+  const query = searchParams.toString();
   const [profile, setProfile] = useState<{
     display_name: string | null;
     role: UserRole;
@@ -21,26 +45,19 @@ export function HeaderAccount() {
 
     if (!documentHasAuthCookie()) {
       setProfile(null);
-      setReady(true);
       return;
     }
 
     void (async () => {
       const { createBrowserSupabaseClient } = await import("@/lib/supabase/client");
       const supabase = createBrowserSupabaseClient();
-      if (!supabase) {
-        if (!cancelled) setReady(true);
-        return;
-      }
+      if (!supabase) return;
       const {
         data: { session },
       } = await supabase.auth.getSession();
       const user = session?.user;
       if (!user) {
-        if (!cancelled) {
-          setProfile(null);
-          setReady(true);
-        }
+        if (!cancelled) setProfile(null);
         return;
       }
       const [{ data }, { data: isAdmin }] = await Promise.all([
@@ -52,7 +69,6 @@ export function HeaderAccount() {
         display_name: data?.display_name ?? user.email?.split("@")[0] ?? "You",
         role: isAdmin === true ? "admin" : "user",
       });
-      setReady(true);
     })();
 
     return () => {
@@ -60,30 +76,36 @@ export function HeaderAccount() {
     };
   }, [pathname]);
 
-  if (!ready) return null;
-
-  if (!profile) {
+  if (profile) {
     return (
-      <Link href="/login" rel="nofollow" className="shrink-0 text-sm font-medium hover:underline">
-        Sign in
+      <>
+        {profile.role === "admin" ? (
+          <Link href="/admin" className={SIGN_IN_CLASS}>
+            Desk
+          </Link>
+        ) : null}
+        <Link
+          href="/account"
+          title={profile.display_name ?? "Account"}
+          className={CHIP_CLASS}
+        >
+          {profile.display_name ?? "Account"}
+        </Link>
+      </>
+    );
+  }
+
+  if (hasCookie) {
+    return (
+      <Link href="/account" title="Account" className={CHIP_CLASS}>
+        Account
       </Link>
     );
   }
 
   return (
-    <>
-      {profile.role === "admin" ? (
-        <Link href="/admin" className="shrink-0 text-sm font-medium hover:underline">
-          Desk
-        </Link>
-      ) : null}
-      <Link
-        href="/account"
-        title={profile.display_name ?? "Account"}
-        className={cn(buttonVariants({ variant: "outline" }), "max-w-[7.5rem] min-w-0 shrink-0 truncate")}
-      >
-        {profile.display_name ?? "Account"}
-      </Link>
-    </>
+    <Link href={loginHref(pathname, query)} rel="nofollow" className={SIGN_IN_CLASS}>
+      Sign in
+    </Link>
   );
 }

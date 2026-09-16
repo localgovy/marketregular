@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import Link from "next/link";
-import { HeaderAccount } from "@/components/header-account";
+import { HeaderAccount, HeaderAccountFallback } from "@/components/header-account";
 import { SavesHydrator } from "@/components/saves-hydrator";
 import { NavLink } from "@/components/nav-link";
 import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
@@ -75,7 +76,9 @@ export function SiteHeader() {
               </Link>
             ))}
           </div>
-          <HeaderAccount />
+          <Suspense fallback={<HeaderAccountFallback />}>
+            <HeaderAccount />
+          </Suspense>
         </div>
       </div>
       <HeaderSearch className="border-t border-border px-4 py-2 md:hidden" />

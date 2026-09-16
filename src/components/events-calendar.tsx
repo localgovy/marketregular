@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { CaretLeftMark, CaretRightMark } from "@/components/marks";
 import { HoursRow } from "@/components/hours-row";
 import { ListingScore } from "@/components/listing-score";
@@ -61,6 +61,7 @@ export function EventsCalendar({
   nowMs: number;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [now, setNow] = useState(() => new Date(nowMs));
   const todayIso = torontoYmd(now);
   const [ty, tm] = todayIso.split("-").map(Number);
@@ -94,12 +95,35 @@ export function EventsCalendar({
   const monthEvents = cells.filter((cell) => cell.inMonth && cell.events.length).length;
 
   useEffect(() => {
+    const seed = parseYearMonth(initialMonth, new Date(nowMs));
+    const today = torontoYmd(new Date(nowMs));
+    const [ty, tm] = today.split("-").map(Number);
+    const day = Number(initialDay);
+    const nextSelected =
+      Number.isFinite(day) && day >= 1 && day <= 31
+        ? isoDate(seed.year, seed.month, day)
+        : seed.year === ty && seed.month === tm
+          ? today
+          : isoDate(seed.year, seed.month, 1);
+    setYear(seed.year);
+    setMonth(seed.month);
+    setSelected(nextSelected);
+  }, [initialMonth, initialDay, nowMs]);
+
+  useEffect(() => {
     const day = Number(selected.slice(8, 10));
     const params = new URLSearchParams();
     params.set("m", `${year}-${pad(month)}`);
     if (Number.isFinite(day)) params.set("d", String(day));
-    window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
-  }, [year, month, selected, pathname]);
+    const href = `${pathname}?${params.toString()}`;
+    const current = new URLSearchParams(
+      typeof window === "undefined" ? "" : window.location.search,
+    );
+    if (current.get("m") === params.get("m") && current.get("d") === params.get("d")) {
+      return;
+    }
+    router.replace(href, { scroll: false });
+  }, [year, month, selected, pathname, router]);
 
   function show(cell: Pick<CalendarCell, "year" | "month" | "iso">, dir: "in" | "next" | "prev" = "in") {
     if (cell.year !== year || cell.month !== month) setSlide(dir);

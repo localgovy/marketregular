@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { persistListingSaves, persistSave } from "@/app/actions/saves";
 import { listingDetailJson } from "@/lib/listing-saves";
@@ -22,13 +22,7 @@ import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { cn } from "@/lib/utils";
 
 export function useSaves() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return useSyncExternalStore(
-    subscribeSaves,
-    mounted ? getSaves : () => EMPTY_SAVES,
-    () => EMPTY_SAVES,
-  );
+  return useSyncExternalStore(subscribeSaves, getSaves, () => EMPTY_SAVES);
 }
 
 function saveChipClass(size: "sm" | "md" | "lg", saved: boolean) {
