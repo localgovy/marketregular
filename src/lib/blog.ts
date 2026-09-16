@@ -94,3 +94,12 @@ export const getBlogPost = cache((slug: string): BlogPost | null => {
   if (!fs.existsSync(full)) return null;
   return readPostFile(file);
 });
+
+/** Next down the index (newest first). Wraps so the oldest post still has a next. */
+export function nextBlogPost(slug: string): BlogPost | null {
+  const posts = listBlogPosts();
+  if (posts.length < 2) return null;
+  const index = posts.findIndex((post) => post.slug === slug);
+  if (index < 0) return null;
+  return posts[(index + 1) % posts.length] ?? null;
+}

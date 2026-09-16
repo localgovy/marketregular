@@ -4,8 +4,9 @@ import { BackButton } from "@/components/back-button";
 import { BlogBody, BlogInlines } from "@/components/blog-body";
 import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
+import { NextArticleLink } from "@/components/next-article";
 import { SaveButton } from "@/components/save-button";
-import { blogLedeParagraphs, getBlogPost, listBlogPosts, plainBlogText } from "@/lib/blog";
+import { blogLedeParagraphs, getBlogPost, listBlogPosts, nextBlogPost, plainBlogText } from "@/lib/blog";
 import { SITE_NAME, SITE_OG } from "@/lib/constants";
 import { BLOG_CRUMB, blogPostingJsonLd, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
 
@@ -61,6 +62,7 @@ export default async function BlogPostPage({
   const post = getBlogPost(slug);
   if (!post) notFound();
   const path = `/blog/${post.slug}`;
+  const next = nextBlogPost(post.slug);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
@@ -76,6 +78,9 @@ export default async function BlogPostPage({
       <div className="flex flex-wrap items-center gap-1">
         <BackButton href="/blog" />
         <BlogPosted date={post.date} kicker={post.kicker} />
+        {next ? (
+          <NextArticleLink href={`/blog/${next.slug}`} name={next.title} className="ml-auto" />
+        ) : null}
       </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
         <h1>{post.title}</h1>
@@ -87,6 +92,11 @@ export default async function BlogPostPage({
         </p>
       ))}
       <BlogBody markdown={post.body} blogSlug={post.slug} />
+      {next ? (
+        <div className="mt-10 flex justify-end">
+          <NextArticleLink href={`/blog/${next.slug}`} name={next.title} />
+        </div>
+      ) : null}
     </div>
   );
 }
