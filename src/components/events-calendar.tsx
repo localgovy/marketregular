@@ -66,17 +66,17 @@ export function EventsCalendar({
   const todayIso = torontoYmd(now);
   const [ty, tm] = todayIso.split("-").map(Number);
   const seed = parseYearMonth(initialMonth, new Date(nowMs));
-  const [year, setYear] = useState(seed.year);
-  const [month, setMonth] = useState(seed.month);
-  const [slide, setSlide] = useState<"in" | "next" | "prev">("in");
-  const [selected, setSelected] = useState(() => {
+  const year = seed.year;
+  const month = seed.month;
+  const selected = useMemo(() => {
     const day = Number(initialDay);
     if (Number.isFinite(day) && day >= 1 && day <= 31) {
       return isoDate(seed.year, seed.month, day);
     }
     if (seed.year === ty && seed.month === tm) return todayIso;
     return isoDate(seed.year, seed.month, 1);
-  });
+  }, [initialDay, seed.year, seed.month, todayIso, ty, tm]);
+  const [slide, setSlide] = useState<"in" | "next" | "prev">("in");
   const dayPanel = useRef<HTMLElement>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
   const skipClick = useRef(false);
@@ -94,42 +94,41 @@ export function EventsCalendar({
   const selectedCell = cells.find((cell) => cell.iso === selected) ?? cells.find((cell) => cell.inMonth);
   const monthEvents = cells.filter((cell) => cell.inMonth && cell.events.length).length;
 
-  useEffect(() => {
-    const seed = parseYearMonth(initialMonth, new Date(nowMs));
-    const today = torontoYmd(new Date(nowMs));
-    const [ty, tm] = today.split("-").map(Number);
-    const day = Number(initialDay);
-    const nextSelected =
-      Number.isFinite(day) && day >= 1 && day <= 31
-        ? isoDate(seed.year, seed.month, day)
-        : seed.year === ty && seed.month === tm
-          ? today
-          : isoDate(seed.year, seed.month, 1);
-    setYear(seed.year);
-    setMonth(seed.month);
-    setSelected(nextSelected);
-  }, [initialMonth, initialDay, nowMs]);
-
-  useEffect(() => {
-    const day = Number(selected.slice(8, 10));
+  function eventsHref(nextYear: number, nextMonth: number, iso: string) {
+    const day = Number(iso.slice(8, 10));
     const params = new URLSearchParams();
-    params.set("m", `${year}-${pad(month)}`);
+    params.set("m", `${nextYear}-${pad(nextMonth)}`);
     if (Number.isFinite(day)) params.set("d", String(day));
-    const href = `${pathname}?${params.toString()}`;
-    const current = new URLSearchParams(
-      typeof window === "undefined" ? "" : window.location.search,
-    );
-    if (current.get("m") === params.get("m") && current.get("d") === params.get("d")) {
-      return;
-    }
-    router.replace(href, { scroll: false });
-  }, [year, month, selected, pathname, router]);
+    return `${pathname}?${params.toString()}`;
+  }
 
-  function show(cell: Pick<CalendarCell, "year" | "month" | "iso">, dir: "in" | "next" | "prev" = "in") {
+  function writeUrl(
+    nextYear: number,
+    nextMonth: number,
+    iso: string,
+    history: "push" | "replace",
+  ) {
+    const href = eventsHref(nextYear, nextMonth, iso);
+    const current = new URLSearchParams(window.location.search);
+    const next = new URL(href, window.location.origin).searchParams;
+    if (current.get("m") === next.get("m") && current.get("d") === next.get("d")) return;
+    if (history === "push") router.push(href, { scroll: false });
+    else router.replace(href, { scroll: false });
+  }
+
+  useEffect(() => {
+    writeUrl(year, month, selected, "replace");
+    // Fill a bare /events so the month is shareable; later writes are user actions.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only
+  }, []);
+
+  function show(
+    cell: Pick<CalendarCell, "year" | "month" | "iso">,
+    dir: "in" | "next" | "prev" = "in",
+    history: "push" | "replace" = "replace",
+  ) {
     if (cell.year !== year || cell.month !== month) setSlide(dir);
-    setYear(cell.year);
-    setMonth(cell.month);
-    setSelected(cell.iso);
+    writeUrl(cell.year, cell.month, cell.iso, history);
   }
 
   function goMonth(delta: number) {
@@ -137,16 +136,12 @@ export function EventsCalendar({
     const last = new Date(Date.UTC(next.year, next.month, 0)).getUTCDate();
     const day = Math.min(Number(selected.slice(8, 10)) || 1, last);
     setSlide(delta > 0 ? "next" : "prev");
-    setYear(next.year);
-    setMonth(next.month);
-    setSelected(isoDate(next.year, next.month, day));
+    writeUrl(next.year, next.month, isoDate(next.year, next.month, day), "push");
   }
 
   function goToday() {
     setSlide("in");
-    setYear(ty);
-    setMonth(tm);
-    setSelected(todayIso);
+    writeUrl(ty, tm, todayIso, "push");
   }
 
   function pick(cell: CalendarCell) {
@@ -156,7 +151,8 @@ export function EventsCalendar({
         : cell.year < year || cell.month < month
           ? "prev"
           : "in";
-    show(cell, dir);
+    const crossed = cell.year !== year || cell.month !== month;
+    show(cell, dir, crossed ? "push" : "replace");
     requestAnimationFrame(() => {
       dayPanel.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
@@ -167,7 +163,11 @@ export function EventsCalendar({
     const next = shiftDay(selectedCell.year, selectedCell.month, selectedCell.day, delta);
     const dir = delta > 0 ? "next" : "prev";
     const crossed = next.month !== month || next.year !== year;
-    show({ ...next, iso: isoDate(next.year, next.month, next.day) }, crossed ? dir : "in");
+    show(
+      { ...next, iso: isoDate(next.year, next.month, next.day) },
+      crossed ? dir : "in",
+      crossed ? "push" : "replace",
+    );
   }
 
   function jumpMarket(direction: 1 | -1) {
@@ -175,7 +175,8 @@ export function EventsCalendar({
     const hit = findMarketDay(selectedCell, direction, markets, schedules, now);
     if (!hit) return;
     const dir = direction > 0 ? "next" : "prev";
-    show(hit, hit.month !== month || hit.year !== year ? dir : "in");
+    const crossed = hit.month !== month || hit.year !== year;
+    show(hit, crossed ? dir : "in", crossed ? "push" : "replace");
   }
 
   const selectedTitle = selectedCell

@@ -1,11 +1,12 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useLayoutEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { persistListingSaves, persistSave } from "@/app/actions/saves";
 import { listingDetailJson } from "@/lib/listing-saves";
 import {
   EMPTY_SAVES,
+  bootSaves,
   getSaves,
   isSaved,
   subscribeSaves,
@@ -22,7 +23,13 @@ import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { cn } from "@/lib/utils";
 
 export function useSaves() {
-  return useSyncExternalStore(subscribeSaves, getSaves, () => EMPTY_SAVES);
+  const [saves, setSaves] = useState(EMPTY_SAVES);
+  useLayoutEffect(() => {
+    bootSaves();
+    setSaves(getSaves());
+    return subscribeSaves(() => setSaves(getSaves()));
+  }, []);
+  return saves;
 }
 
 function saveChipClass(size: "sm" | "md" | "lg", saved: boolean) {

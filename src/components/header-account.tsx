@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useLayoutEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { isSignInSlipAuthPath } from "@/lib/signin-slip";
@@ -16,29 +16,26 @@ const CHIP_CLASS = cn(
   "max-w-[7.5rem] min-w-0 shrink-0 truncate",
 );
 
-function loginHref(pathname: string, query: string) {
+function loginHref(pathname: string, search = "") {
   if (isSignInSlipAuthPath(pathname)) return "/login";
-  const next = `${pathname}${query ? `?${query}` : ""}`;
-  return `/login?next=${encodeURIComponent(next || "/")}`;
-}
-
-export function HeaderAccountFallback() {
-  return (
-    <Link href="/login" rel="nofollow" className={SIGN_IN_CLASS}>
-      Sign in
-    </Link>
-  );
+  const next = `${pathname || "/"}${search}`;
+  return `/login?next=${encodeURIComponent(next)}`;
 }
 
 export function HeaderAccount() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const hasCookie = useAuthCookie(false);
-  const query = searchParams.toString();
+  const [ready, setReady] = useState(false);
+  const [search, setSearch] = useState("");
   const [profile, setProfile] = useState<{
     display_name: string | null;
     role: UserRole;
   } | null>(null);
+
+  useLayoutEffect(() => {
+    setReady(true);
+    setSearch(window.location.search);
+  }, [pathname]);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +73,7 @@ export function HeaderAccount() {
     };
   }, [pathname]);
 
-  if (profile) {
+  if (profile && hasCookie) {
     return (
       <>
         {profile.role === "admin" ? (
@@ -95,7 +92,7 @@ export function HeaderAccount() {
     );
   }
 
-  if (hasCookie) {
+  if (ready && hasCookie) {
     return (
       <Link href="/account" title="Account" className={CHIP_CLASS}>
         Account
@@ -104,7 +101,7 @@ export function HeaderAccount() {
   }
 
   return (
-    <Link href={loginHref(pathname, query)} rel="nofollow" className={SIGN_IN_CLASS}>
+    <Link href={loginHref(pathname, search)} rel="nofollow" className={SIGN_IN_CLASS}>
       Sign in
     </Link>
   );
