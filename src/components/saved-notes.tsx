@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AddressLink } from "@/components/address-link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
 import { ListingSaveButton, SaveButton } from "@/components/save-button";
@@ -19,6 +20,9 @@ export type SavedNote = {
 export type SavedListingMarket = {
   slug: string;
   address: string;
+  city?: string;
+  lat?: number;
+  lng?: number;
   rating_avg: number | null;
   review_count: number;
 };
@@ -108,7 +112,16 @@ function SavedVisit({
         />
       </p>
       <p className="mt-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
-        {address ? <span className="text-muted-foreground">{address}</span> : null}
+        {address ? (
+          <AddressLink
+            className="text-muted-foreground"
+            address={address}
+            city={market?.city}
+            name={listing.marketName}
+            lat={market?.lat}
+            lng={market?.lng}
+          />
+        ) : null}
         {address ? <span className="text-muted-foreground">·</span> : null}
         <Hours value={listing.hours} className="text-foreground" />
       </p>

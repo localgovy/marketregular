@@ -41,10 +41,7 @@ export function listingScoreLabel(score: ListingScoreValue) {
 }
 
 export function listingScoreParens(score: ListingScoreValue) {
-  if (score.count >= 1000) {
-    return `${formatRatingAvg(score.avg)} · ${formatReviewCountShort(score.count)}`;
-  }
-  return `${formatRatingAvg(score.avg)} (${formatReviewCount(score.count)})`;
+  return `${formatRatingAvg(score.avg)} (${formatReviewCountShort(score.count)})`;
 }
 
 export function withListingStats<T extends { review_count?: unknown; rating_avg?: unknown }>(

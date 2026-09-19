@@ -4,7 +4,7 @@ import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { Hours } from "@/components/hours";
 import { hallHours } from "@/lib/day-plan";
-import { marketPlaceLine } from "@/lib/listing-copy";
+import { AddressLink } from "@/components/address-link";
 import { nextOpenLabel } from "@/lib/schedule";
 import { cn } from "@/lib/utils";
 import type { Market, MarketSchedule } from "@/types/database";
@@ -60,7 +60,14 @@ export function MarketRow({
           ) : null}
         </p>
         <p className="text-sm text-muted-foreground">
-          {marketPlaceLine(market.address, market.city)}
+          <AddressLink
+            address={market.address}
+            city={market.city}
+            province={market.province}
+            name={market.name}
+            lat={market.lat}
+            lng={market.lng}
+          />
         </p>
       </div>
       <span className={cn("flex shrink-0 items-start gap-1 py-3", inset ? "pr-2" : "pr-1")}>

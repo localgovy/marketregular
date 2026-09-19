@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
+import { AddressLink } from "@/components/address-link";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
@@ -176,7 +177,14 @@ export default async function VendorPage({
                       {market.name}
                     </Link>
                     <p className="text-sm text-muted-foreground">
-                      {market.address}
+                      <AddressLink
+                        address={market.address}
+                        city={market.city}
+                        province={market.province}
+                        name={market.name}
+                        lat={market.lat}
+                        lng={market.lng}
+                      />
                       {market.stall ? ` · ${market.stall}` : ""}
                     </p>
                     {rows.length ? (

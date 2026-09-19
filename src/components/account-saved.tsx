@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AddressLink } from "@/components/address-link";
 import { ListingScore } from "@/components/listing-score";
 import { SavedNotesSection, type SavedNote } from "@/components/saved-notes";
 import { SaveButton } from "@/components/save-button";
@@ -58,13 +59,19 @@ export function AccountSavedLists({
                   key={market.id}
                   className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-3 border-b border-border last:border-b-0"
                 >
-                  <Link
-                    href={`/markets/${market.slug}`}
-                    className="min-w-0 px-3 py-2.5 hover:bg-secondary/50"
-                  >
-                    <span className="block text-base font-medium">{market.name}</span>
+                  <div className="min-w-0 px-3 py-2.5">
+                    <Link href={`/markets/${market.slug}`} className="text-base font-medium hover:underline">
+                      {market.name}
+                    </Link>
                     <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
-                      <span>{market.address}</span>
+                      <AddressLink
+                        address={market.address}
+                        city={market.city}
+                        province={market.province}
+                        name={market.name}
+                        lat={market.lat}
+                        lng={market.lng}
+                      />
                       <ListingScore
                         parens
                         ratingAvg={market.rating_avg}
@@ -72,7 +79,7 @@ export function AccountSavedLists({
                         className="text-stamp"
                       />
                     </span>
-                  </Link>
+                  </div>
                   {hours ? (
                     <span className="shrink-0 whitespace-nowrap py-2.5 text-sm text-muted-foreground">
                       {hours}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
+import { AddressLink } from "@/components/address-link";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
@@ -21,7 +22,7 @@ import { listingScore } from "@/lib/listing-score";
 import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
-import { marketPageDescription, marketPageTitle, marketPlaceLine, directionsHref } from "@/lib/listing-copy";
+import { marketPageDescription, marketPageTitle, directionsHref } from "@/lib/listing-copy";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { nextOpenLabel } from "@/lib/schedule";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
@@ -103,7 +104,14 @@ export default async function MarketPage({
       <div className="flex items-center gap-1">
         <BackButton href="/markets" />
         <p className="type-kicker text-muted-foreground">
-          {marketPlaceLine(market.address, market.city)}
+          <AddressLink
+            address={market.address}
+            city={market.city}
+            province={market.province}
+            name={market.name}
+            lat={market.lat}
+            lng={market.lng}
+          />
         </p>
       </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
@@ -132,9 +140,19 @@ export default async function MarketPage({
           <h2>Hours</h2>
           <ScheduleList schedules={market.schedules} />
           <address className="mt-4 not-italic text-sm leading-6">
-            {market.address}
-            <br />
-            {market.city}, {market.province} {market.postal_code}
+            <AddressLink
+              className="block"
+              address={market.address}
+              city={market.city}
+              province={market.province}
+              name={market.name}
+              lat={market.lat}
+              lng={market.lng}
+            >
+              {market.address}
+              <br />
+              {market.city}, {market.province} {market.postal_code}
+            </AddressLink>
           </address>
           <a
             href={directionsHref(market.lat, market.lng)}

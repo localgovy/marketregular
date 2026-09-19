@@ -55,7 +55,7 @@ export async function getHomeMapMarkets() {
 
 export type SavedRailMarket = Pick<
   Market,
-  "id" | "slug" | "name" | "address" | "rating_avg" | "review_count"
+  "id" | "slug" | "name" | "address" | "city" | "lat" | "lng" | "rating_avg" | "review_count"
 >;
 
 export async function getSavedRailMarkets(slugs: string[]): Promise<SavedRailMarket[]> {
@@ -71,6 +71,9 @@ export async function getSavedRailMarkets(slugs: string[]): Promise<SavedRailMar
       slug: market.slug,
       name: market.name,
       address: market.address,
+      city: market.city,
+      lat: market.lat,
+      lng: market.lng,
       rating_avg: market.rating_avg,
       review_count: market.review_count,
     }));

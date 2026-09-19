@@ -19,6 +19,8 @@ export type DirectoryMarketCard = Pick<
   | "address"
   | "city"
   | "province"
+  | "lat"
+  | "lng"
   | "logo_url"
   | "rating_avg"
   | "review_count"
@@ -79,6 +81,8 @@ export function toDirectoryMarketCard(market: Market): DirectoryMarketCard {
     address: market.address,
     city: market.city,
     province: market.province,
+    lat: market.lat,
+    lng: market.lng,
     logo_url: market.logo_url,
     rating_avg: market.rating_avg,
     review_count: market.review_count,

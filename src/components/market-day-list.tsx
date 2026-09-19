@@ -3,7 +3,7 @@ import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
-import { marketPlaceLine } from "@/lib/listing-copy";
+import { AddressLink } from "@/components/address-link";
 import type { MarketDayRow } from "@/lib/landing";
 
 /**
@@ -33,7 +33,14 @@ export function MarketDayList({
                 {row.market.name}
               </Link>
               <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
-                <span>{marketPlaceLine(row.market.address, row.market.city)}</span>
+                <AddressLink
+                  address={row.market.address}
+                  city={row.market.city}
+                  province={row.market.province}
+                  name={row.market.name}
+                  lat={row.market.lat}
+                  lng={row.market.lng}
+                />
                 {row.stallCount > 0 ? (
                   <span>
                     <span className="type-nums text-foreground">{row.stallCount}</span>{" "}

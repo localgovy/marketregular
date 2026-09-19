@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AddressLink } from "@/components/address-link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
@@ -10,7 +11,6 @@ import { hallHours, hoursOnIso } from "@/lib/day-plan";
 import type { DirectoryMarketCard, DirectorySchedule } from "@/lib/directory-page";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { isoForWeekday } from "@/lib/landing";
-import { marketPlaceLine } from "@/lib/listing-copy";
 import { nextOpenLabel, nextOpenSlot, onlyWeekdayLabel } from "@/lib/schedule";
 
 export function MarketCard({
@@ -55,7 +55,14 @@ export function MarketCard({
           <div className="flex items-center gap-2">
             <SaveButton kind="market" slug={market.slug} name={market.name} />
             <p className="type-kicker min-w-0 flex-1 text-muted-foreground">
-              {marketPlaceLine(market.address, market.city)}
+              <AddressLink
+                address={market.address}
+                city={market.city}
+                province={market.province}
+                name={market.name}
+                lat={market.lat}
+                lng={market.lng}
+              />
             </p>
             <ListingMark src={market.logo_url} />
           </div>

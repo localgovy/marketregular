@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getSavedRailMarkets, type SavedRailMarket } from "@/app/actions/home-lazy";
+import { AddressLink } from "@/components/address-link";
 import { HomePanel } from "@/components/home-panel";
 import { ListingScore } from "@/components/listing-score";
 import { SavedNotesSection, type SavedNote } from "@/components/saved-notes";
@@ -71,21 +72,27 @@ export function SavedRail() {
                 key={market.id}
                 className="flex items-center gap-2 border-b border-border last:border-b-0"
               >
-                <Link
-                  href={`/markets/${market.slug}`}
-                  className="min-w-0 flex-1 px-3 py-2.5 hover:bg-secondary/50"
-                >
-                  <span className="min-w-0">
-                    <span className="text-base font-medium">{market.name}</span>
+                <div className="min-w-0 flex-1 px-3 py-2.5">
+                  <p className="min-w-0">
+                    <Link href={`/markets/${market.slug}`} className="text-base font-medium hover:underline">
+                      {market.name}
+                    </Link>
                     <ListingScore
                       parens
                       ratingAvg={market.rating_avg}
                       reviewCount={market.review_count}
                       className="ml-2 text-muted-foreground"
                     />
-                  </span>
-                  <span className="block text-sm text-muted-foreground">{market.address}</span>
-                </Link>
+                  </p>
+                  <AddressLink
+                    className="mt-0.5 block text-sm text-muted-foreground"
+                    address={market.address}
+                    city={market.city}
+                    name={market.name}
+                    lat={market.lat}
+                    lng={market.lng}
+                  />
+                </div>
                 <span className="pr-2">
                   <SaveButton kind="market" slug={market.slug} name={market.name} />
                 </span>
@@ -148,13 +155,21 @@ export function SavedDesk({
                 key={market.id}
                 className="flex items-center gap-2 border-b border-border last:border-b-0"
               >
-                <Link
-                  href={`/markets/${market.slug}`}
-                  className="min-w-0 flex-1 px-3 py-3 hover:bg-secondary/50"
-                >
-                  <span className="block text-base font-medium">{market.name}</span>
+                <div className="min-w-0 flex-1 px-3 py-3">
+                  <Link
+                    href={`/markets/${market.slug}`}
+                    className="block text-base font-medium hover:underline"
+                  >
+                    {market.name}
+                  </Link>
                   <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
-                    <span>{market.address}</span>
+                    <AddressLink
+                      address={market.address}
+                      city={market.city}
+                      name={market.name}
+                      lat={market.lat}
+                      lng={market.lng}
+                    />
                     <ListingScore
                       parens
                       ratingAvg={market.rating_avg}
@@ -162,7 +177,7 @@ export function SavedDesk({
                       className="text-stamp"
                     />
                   </span>
-                </Link>
+                </div>
                 <span className="pr-3">
                   <SaveButton kind="market" slug={market.slug} name={market.name} />
                 </span>

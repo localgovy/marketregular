@@ -21,7 +21,7 @@ import {
   type CalendarCell,
   type EventMarket,
 } from "@/lib/events-month";
-import { marketPlaceLine } from "@/lib/listing-copy";
+import { AddressLink } from "@/components/address-link";
 import { cn } from "@/lib/utils";
 import type { MarketSchedule } from "@/types/database";
 
@@ -378,7 +378,13 @@ export function EventsCalendar({
                   nameClassName="text-stamp underline-offset-2 hover:underline"
                 />
                 <p className="text-sm text-muted-foreground">
-                  {marketPlaceLine(event.address, event.city)}
+                  <AddressLink
+                    address={event.address}
+                    city={event.city}
+                    name={event.marketName}
+                    lat={event.lat}
+                    lng={event.lng}
+                  />
                 </p>
                 {event.notes ? (
                   <p className="mt-0.5 text-sm text-muted-foreground">{event.notes}</p>

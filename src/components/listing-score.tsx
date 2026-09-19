@@ -38,7 +38,7 @@ export function ListingScore({
   ratingAvg?: number | string | null;
   reviewCount?: number | null;
   compact?: boolean;
-  /** Score then count in parentheses, e.g. 4.3 (1,783). */
+  /** Score then count in parentheses, e.g. 4.3 (1,783) or 4.6 (23k+). */
   parens?: boolean;
   className?: string;
 }) {
