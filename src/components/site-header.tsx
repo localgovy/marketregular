@@ -24,7 +24,10 @@ function HeaderSearch({ className, q = "" }: { className?: string; q?: string })
         placeholder={SEARCH_PLACEHOLDER}
         className="bg-card"
       />
-      <button type="submit" className={cn(buttonVariants(), "hidden shrink-0 sm:inline-flex")}>
+      <button
+        type="submit"
+        className={cn(buttonVariants(), "max-sm:sr-only shrink-0")}
+      >
         Find
       </button>
     </form>
@@ -97,17 +100,24 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
   );
 }
 
-function SiteHeaderInner() {
-  const pathname = usePathname() || "/";
+function HeaderQuery({
+  pathname,
+  auth,
+}: {
+  pathname: string;
+  auth: boolean;
+}) {
   const params = useSearchParams();
   const q = pathname === "/markets" ? (params.get("q") ?? "") : "";
-  return <HeaderFrame auth={isAuthChromePath(pathname)} q={q} />;
+  return <HeaderFrame auth={auth} q={q} />;
 }
 
 export function SiteHeader() {
+  const pathname = usePathname() || "/";
+  const auth = isAuthChromePath(pathname);
   return (
-    <Suspense fallback={<HeaderFrame auth={false} q="" />}>
-      <SiteHeaderInner />
+    <Suspense fallback={<HeaderFrame auth={auth} q="" />}>
+      <HeaderQuery pathname={pathname} auth={auth} />
     </Suspense>
   );
 }

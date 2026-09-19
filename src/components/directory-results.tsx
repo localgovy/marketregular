@@ -115,6 +115,7 @@ export function DirectoryResults({
             shown={markets.length}
             total={marketTotal}
             noun="markets"
+            nounOne="market"
             onMore={() => {
               void moreMarkets();
             }}
@@ -138,6 +139,7 @@ export function DirectoryResults({
             shown={vendors.length}
             total={vendorTotal}
             noun="vendors"
+            nounOne="vendor"
             onMore={() => {
               void moreVendors();
             }}

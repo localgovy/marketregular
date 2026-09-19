@@ -24,7 +24,6 @@ import { stallNextDate } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
-import { listingHasContact } from "@/lib/format";
 import { formatHours, nextOpenSlot, sessionOnWeekday } from "@/lib/schedule";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 import type { MarketSchedule } from "@/types/database";
@@ -164,6 +163,43 @@ export default async function VendorPage({
       />
       <TagList className="mt-4" tags={sortTagsForDisplay(vendor.tags)} />
 
+      {ranked.length ? (
+        <section className="mt-6">
+          <h2>Markets</h2>
+          <ul className="mt-3 divide-y divide-border border-y border-border">
+            {ranked.map((market) => {
+              const rows = hallDayHours(market.days, market.schedules, market.province, now);
+              return (
+                <li key={market.id} className="flex items-start justify-between gap-2 py-2">
+                  <div className="min-w-0">
+                    <Link href={`/markets/${market.slug}`} className="font-medium hover:underline">
+                      {market.name}
+                    </Link>
+                    <p className="text-sm text-muted-foreground">
+                      {market.address}
+                      {market.stall ? ` · ${market.stall}` : ""}
+                    </p>
+                    {rows.length ? (
+                      <p className="mt-0.5 grid grid-cols-[auto_auto] justify-start gap-x-2 gap-y-0.5">
+                        {rows.map((row) => (
+                          <span key={`${row.day}-${row.hours}`} className="contents">
+                            <span className="text-sm text-muted-foreground">{row.day}</span>
+                            <Hours value={row.hours} className="text-muted-foreground" />
+                          </span>
+                        ))}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="flex shrink-0 items-center">
+                    <SaveButton kind="market" slug={market.slug} name={market.name} />
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
+
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">
           {vendor.about ? (
@@ -230,53 +266,12 @@ export default async function VendorPage({
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-            <h3>Markets</h3>
+            <h3>Contact</h3>
             <ListingContact phone={vendor.phone} email={vendor.email} />
             <ListingWebsite href={vendor.website} />
             <ListingInstagram href={vendor.instagram} />
             <ListingTiktok href={vendor.tiktok} />
             <ListingFacebook href={vendor.facebook} />
-            <ul
-              className={
-                listingHasContact(vendor.phone, vendor.email) ||
-                vendor.website ||
-                vendor.instagram ||
-                vendor.tiktok ||
-                vendor.facebook
-                  ? "mt-4 grid gap-3 border-t border-border pt-4"
-                  : "mt-3 grid gap-3"
-              }
-            >
-              {vendor.markets.map((market) => {
-                const rows = hallDayHours(market.days, market.schedules, market.province, now);
-                return (
-                <li key={market.id} className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <Link href={`/markets/${market.slug}`} className="font-medium hover:underline">
-                      {market.name}
-                    </Link>
-                    <p className="text-sm text-muted-foreground">
-                      {market.address}
-                      {market.stall ? ` · ${market.stall}` : ""}
-                    </p>
-                    {rows.length ? (
-                      <p className="mt-0.5 grid grid-cols-[auto_auto] justify-start gap-x-2 gap-y-0.5">
-                        {rows.map((row) => (
-                          <span key={`${row.day}-${row.hours}`} className="contents">
-                            <span className="text-sm text-muted-foreground">{row.day}</span>
-                            <Hours value={row.hours} className="text-muted-foreground" />
-                          </span>
-                        ))}
-                      </p>
-                    ) : null}
-                  </div>
-                  <span className="flex shrink-0 items-center">
-                    <SaveButton kind="market" slug={market.slug} name={market.name} />
-                  </span>
-                </li>
-                );
-              })}
-            </ul>
           </div>
           <ClaimForm targetType="vendor" targetId={vendor.id} />
         </aside>
