@@ -17,19 +17,19 @@ Seasons shift — confirm on the live page before you go. [St. Lawrence Market](
 
 | Day | What to expect |
 |---|---|
-| **Monday** | Sorauren — the uncommon Monday slot, park or Henderson indoor |
+| **Monday** | Sorauren park or Henderson indoor |
 | **Tuesday** | Morning East York and SickKids; afternoon Cabbagetown, Bellwoods, Davisville, Scarborough |
 | **Wednesday** | Midweek Annex, Junction, Danforth, Malvern |
 | **Thursday** | Underpass, year-round Dufferin Grove, East Lynn, North York morning |
-| **Friday** | Fewer options — Thorncliffe and Warden Woods |
-| **Saturday** | Biggest day — North from 5 AM, Brick Works, Withrow, Allan Gardens, Junction, The Stop |
+| **Friday** | Fewer options on this day but rich in quality like Thorncliffe and Warden Woods |
+| **Saturday** | Biggest day with markets like North from 5 AM, Brick Works, Withrow, Allan Gardens, Junction, The Stop |
 | **Sunday** | Eglinton Way early, Leslieville midday, Little Jamaica later |
 
 ---
 
 ## Monday
 
-Toronto’s rare Monday market. Same hours in the park and, in winter, indoors at Henderson.
+Toronto’s rare Monday market. Same hours year-round with indoors taking place at henderson.
 
 - [Sorauren Farmers’ Market](/markets/sorauren-farmers-market) · 3 PM–7 PM
 - [Sorauren Farmers' Market at Henderson Brewery](/markets/sorauren-farmers-market-henderson-brewery) · 3 PM–7 PM
@@ -133,8 +133,7 @@ Eglinton Way is Forest Hill on Burnaby, **not** Little Jamaica. Leslieville outd
 - **High-traffic stops:** [Underpass Park](/markets/underpass-park-farmers-market) (Thu), [Withrow](/markets/withrow-park-farmers-market) (Sat), [Brick Works](/markets/evergreen-brick-works-saturday-farmers-market) (Sat), [Malvern](/markets/malvern-urban-farm-farmers-market) (Wed), [Allan Gardens](/markets/allan-gardens-farmers-market) (Sat).
 - **Biggest Saturday:** North St. Lawrence from **5 AM**, then Brick Works, Withrow, Junction, or The Stop depending on your side of town.
 - **Sunday split:** Eglinton Way early (Burnaby), Leslieville midday (Greenwood), Afro-Caribbean later (Fairbank) — not the same strip.
-- **MarketRegular Tip:** [Open today](/markets/open-today) is how most people actually shop markets — not a giant “best of” list. Use that when you’re leaving the house, and this guide when you’re planning the week. Winter doesn’t kill the calendar: Brick Works and The Stop flip indoor, Allan Gardens and Dufferin Grove keep going, North St. Lawrence stays Saturday-only year-round, and Sorauren moves to Henderson.
-
+- **MarketRegular Tip:** [Open today](/markets/open-today) is how most people actually shop markets. Use that when you’re leaving the house, and this guide when you’re planning the week. It's good regardless of the time of year. 
 Filter by day on the [homepage](/). Year-round halls: [Year-round Toronto farmers’ markets](/blog/year-round-toronto-farmers-markets). West-end Saturday: [West-end Saturday farmers’ markets](/blog/west-end-saturday-farmers-markets). East end: [East end Toronto farmers’ markets](/blog/east-end-toronto-farmers-markets). St. Lawrence North first visit: [First-timer’s guide](/blog/st-lawrence-north-farmers-market-first-timer). Sunday on Eglinton: [Sunday farmers’ markets](/blog/marketregular-sunday-little-jamaica).
 
 Made by Canadians, for Canadians, to shop Canadian. Pickup, pre-order, and a mobile app coming soon.
