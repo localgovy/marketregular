@@ -32,7 +32,7 @@ export default async function MarketOgImage({
     lines: [
       marketPlaceLine(market.address, market.city),
       stalls
-        ? `${stalls} ${stalls === 1 ? "stall" : "stalls"}${sells ? ` · ${sells}` : ""}`
+        ? `${stalls} ${stalls === 1 ? "vendor" : "vendors"}${sells ? ` · ${sells}` : ""}`
         : sells,
     ].filter(Boolean),
   });

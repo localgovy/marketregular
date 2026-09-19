@@ -83,7 +83,7 @@ export function SaveButton({
   const saved = isSaved(kind, slug, saves);
   const label =
     name ??
-    (kind === "market" ? "this market" : kind === "vendor" ? "this stall" : "this note");
+    (kind === "market" ? "this market" : kind === "vendor" ? "this vendor" : "this note");
   const idle = idleLabel ?? (kind === "blog" ? "Save Article" : "Save");
   const done = savedLabel ?? (kind === "blog" ? "Saved Article" : "Saved");
 

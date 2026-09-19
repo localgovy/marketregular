@@ -144,7 +144,7 @@ export function AccountDesk({
             kicker="From your saved list"
             title="This week"
             how="Your saved markets' schedules throughout the week, click on a name for more info."
-            empty="Save a market or a stall and this week's hours show up here."
+            empty="Save a market or a vendor and this week's hours show up here."
             action={
               <Link href="/markets" className="hover:underline">
                 Full Markets List
@@ -157,14 +157,14 @@ export function AccountDesk({
               id="stalls-today"
               tone="vendors"
               icon={CrateMark}
-              kicker="From your stalls"
+              kicker="From your vendors"
               title="Selling today"
               how={
                 <>
-                  Saved stalls on today&apos;s calendar.
+                  Saved vendors on today&apos;s calendar.
                   <span className="mt-2 flex flex-wrap items-center gap-2">
                     <NowLabel>Selling now</NowLabel>
-                    <span>At the stall this minute.</span>
+                    <span>Selling this minute.</span>
                   </span>
                 </>
               }
@@ -213,7 +213,7 @@ export function AccountDesk({
             icon={TagMark}
             kicker="On the live list"
             title="Leave a review"
-            how="Give others a taste of what you experienced at a market or stall. Rate out of 5 and tag the market or vendor. Tell us how it really was."
+            how="Give others a taste of what you experienced at a market or vendor. Rate out of 5 and tag the market or vendor. Tell us how it really was."
           >
             <ListingComposer
               signedIn
@@ -230,7 +230,7 @@ export function AccountDesk({
             icon={AsteriskMark}
             kicker="Under your name"
             title="Your reviews"
-            how="These show on the market or stall. Delete one if you change your mind."
+            how="These show on the market or vendor. Delete one if you change your mind."
             action={
               <Link href="#note" className="hover:underline">
                 Write one
@@ -379,9 +379,9 @@ export function AccountDesk({
               place="rail"
               tone="menus"
               icon={TallyMark}
-              kicker="This week's stalls"
-              title="Your stalls this week"
-              how="Where the stalls you saved are on the calendar."
+              kicker="This week's vendors"
+              title="Your vendors this week"
+              how="Where the vendors you saved are on the calendar."
             >
               <ul className="ring-1 ring-border">
                 {stallWeek.map((pick) => (
@@ -398,7 +398,7 @@ export function AccountDesk({
               icon={SignMark}
               kicker="Listings"
               title="Claims"
-              how="Requests to run a market or stall page."
+              how="Requests to run a market or vendor page."
             >
               <ul className="ring-1 ring-border">
                 {claims.map((claim) => {

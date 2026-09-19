@@ -33,7 +33,7 @@ function copy(weekday: number, count: number, stalls: number) {
     title: `${day} farmers' markets in ${LAUNCH_CITY}`,
     description:
       count > 0
-        ? `${count} ${LAUNCH_REGION} farmers' ${count === 1 ? "market" : "markets"} open on ${day}, with hours, addresses and the ${stalls.toLocaleString("en-CA")} ${stalls === 1 ? "stall" : "stalls"} working that day.`
+        ? `${count} ${LAUNCH_REGION} farmers' ${count === 1 ? "market" : "markets"} open on ${day}, with hours, addresses and the ${stalls.toLocaleString("en-CA")} ${stalls === 1 ? "vendor" : "vendors"} working that day.`
         : `Which ${LAUNCH_REGION} farmers' markets open on ${day}, with hours and addresses.`,
   };
 }
@@ -111,12 +111,12 @@ export default async function MarketDayPage({
         <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
           {rows.length} {rows.length === 1 ? "market" : "markets"} {whenWord(weekday)}, sorted
           by opening time, with {stallCount.toLocaleString("en-CA")}{" "}
-          {stallCount === 1 ? "stall" : "stalls"} between them. Hours are the{" "}
+          {stallCount === 1 ? "vendor" : "vendors"} between them. Hours are the{" "}
           {name} session.
         </p>
       ) : (
         <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
-          No {LAUNCH_REGION} market in the directory runs on {name} right now. Seasonal halls
+          No {LAUNCH_REGION} market in the directory runs on {name} right now. Seasonal markets
           come back, so try {dayName(weekday + 1)} or {dayName(weekday - 1)}.
         </p>
       )}

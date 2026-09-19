@@ -5,7 +5,7 @@ import { OG_CONTENT_TYPE, OG_SIZE, ogCard } from "@/lib/og-card";
 
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
-export const alt = "Market stall on MarketRegular";
+export const alt = "Vendor on MarketRegular";
 
 export default async function VendorOgImage({
   params,
@@ -16,8 +16,8 @@ export default async function VendorOgImage({
   const vendor = await getVendorBySlug(slug);
   if (!vendor) {
     return ogCard({
-      kicker: `${LAUNCH_CITY} market stalls`,
-      title: "Stall",
+      kicker: `${LAUNCH_CITY} market vendors`,
+      title: "Vendor",
       lines: [],
     });
   }
@@ -27,7 +27,7 @@ export default async function VendorOgImage({
   const sells = sellsLine(vendor.tags, 3);
 
   return ogCard({
-    kicker: `${LAUNCH_CITY} farmers' market stall`,
+    kicker: `${LAUNCH_CITY} farmers' market vendor`,
     title: vendor.name,
     plate: sells || undefined,
     lines: [

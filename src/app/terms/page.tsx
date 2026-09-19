@@ -98,7 +98,7 @@ export default function TermsPage() {
       <section className="mt-10">
         <h2>If something goes wrong</h2>
         <p className={body}>
-          We work to keep hours and names right. We are not responsible if you travel to a hall
+          We work to keep hours and names right. We are not responsible if you travel to a market
           that is closed, if a third-party map or site fails, or if the network drops. These terms
           do not take away rights you have under Ontario consumer law.
         </p>

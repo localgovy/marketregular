@@ -8,7 +8,7 @@ import { pageMeta } from "@/lib/seo";
 export const metadata: Metadata = pageMeta({
   title: "About",
   path: "/about",
-  description: `Why ${SITE_NAME} exists: so people in ${LAUNCH_COVERAGE} can buy Canadian food from the stall that grew it.`,
+  description: `Why ${SITE_NAME} exists: so people in ${LAUNCH_COVERAGE} can buy Canadian food from the vendor that grew it.`,
 });
 
 export default function AboutPage() {

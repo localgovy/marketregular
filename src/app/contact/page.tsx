@@ -14,7 +14,7 @@ import type { Market, StallRef, Vendor } from "@/types/database";
 export const metadata: Metadata = pageMeta({
   title: "Contact",
   path: "/contact",
-  description: `Write ${SITE_NAME}, or claim a Toronto market or stall you run.`,
+  description: `Write ${SITE_NAME}, or claim a Toronto market or vendor you run.`,
 });
 
 export const revalidate = 3600;

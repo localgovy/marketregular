@@ -24,7 +24,7 @@ function HeaderSearch({ className, q = "" }: { className?: string; q?: string })
         placeholder={SEARCH_PLACEHOLDER}
         className="bg-card"
       />
-      <button type="submit" className={cn(buttonVariants(), "shrink-0")}>
+      <button type="submit" className={cn(buttonVariants(), "hidden shrink-0 sm:inline-flex")}>
         Find
       </button>
     </form>
@@ -34,8 +34,8 @@ function HeaderSearch({ className, q = "" }: { className?: string; q?: string })
 function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
   return (
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md lg:border-b-2 lg:border-board">
-      <div className="flex h-12 w-full items-center gap-3 px-4 lg:grid lg:h-header-bar-lg lg:site-rail lg:gap-0 lg:px-0">
-        <div className="flex min-w-0 items-center lg:h-header-bar-lg lg:items-center lg:border-r lg:border-board lg:bg-board lg:px-5 xl:px-6">
+      <div className="flex h-12 w-full items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:grid lg:h-header-bar-lg lg:site-rail lg:gap-0 lg:px-0">
+        <div className="flex shrink-0 items-center lg:h-header-bar-lg lg:items-center lg:border-r lg:border-board lg:bg-board lg:px-5 xl:px-6">
           <div className="flex min-w-0 items-center gap-2 lg:h-full">
             <Link
               href="/"
@@ -56,7 +56,7 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
             </a>
           </div>
         </div>
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-3 lg:h-header-bar-lg lg:px-6">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3 lg:h-header-bar-lg lg:px-6">
           {auth ? null : (
             <nav
               aria-label="Primary"
@@ -70,7 +70,7 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
             </nav>
           )}
           {auth ? null : (
-            <HeaderSearch className="min-w-0 flex-1 md:min-w-40 xl:ml-auto xl:max-w-md" q={q} />
+            <HeaderSearch className="min-w-0 flex-1 overflow-hidden md:min-w-40 xl:ml-auto xl:max-w-md" q={q} />
           )}
           <SavesHydrator />
           <HeaderAccount />

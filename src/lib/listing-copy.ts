@@ -222,7 +222,7 @@ export function marketPageDescription({
   const sells = sellsLine(tags);
   if (stallCount > 0) {
     parts.push(
-      `${stallCount} ${stallCount === 1 ? "stall" : "stalls"}${sells ? `: ${sells}` : ""}.`,
+      `${stallCount} ${stallCount === 1 ? "vendor" : "vendors"}${sells ? `: ${sells}` : ""}.`,
     );
   } else if (sells) {
     parts.push(`${sells}.`);

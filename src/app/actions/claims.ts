@@ -69,7 +69,7 @@ function claimEmail(fields: {
     ["Email", fields.email],
     ["Phone", fields.phone || "(not given)"],
     ["Role", fields.role],
-    ["Business or stall", fields.business || "(not given)"],
+    ["Business or vendor", fields.business || "(not given)"],
     ["Website or Instagram", fields.website || "(not given)"],
     ["Notes", fields.notes || "(none)"],
     ["Signed in", fields.signedIn ? "Yes" : "No"],
@@ -145,7 +145,7 @@ export async function submitClaim(formData: FormData) {
   }
 
   const listingUrl = `${SITE_URL}${listing.path}`;
-  const kind = target_type === "market" ? "market" : "stall";
+  const kind = target_type === "market" ? "market" : "vendor";
   const mail = claimEmail({
     listingName: listing.name,
     listingUrl,
@@ -177,7 +177,7 @@ export async function submitClaim(formData: FormData) {
       `Email: ${email}`,
       phone ? `Phone: ${phone}` : null,
       `Role: ${role}`,
-      business ? `Business or stall: ${business}` : null,
+      business ? `Business or vendor: ${business}` : null,
       website ? `Website or Instagram: ${website}` : null,
       notes ? `Notes: ${notes}` : null,
     ]

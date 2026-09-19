@@ -175,13 +175,13 @@ export function OnboardingDesk({
           tone="open"
           icon={CrateMark}
           kicker="This week starts here"
-          title="Favorite halls"
+          title="Favorite markets"
           how="Three markets you actually go to. They land on your saved list with hours."
         >
           <p className="text-sm text-muted-foreground">
             {picked.length === 3
-              ? "Three halls on the list. Click one to swap it."
-              : `Click a hall to add it. ${3 - picked.length} left.`}
+              ? "Three markets on the list. Click one to swap it."
+              : `Click a market to add it. ${3 - picked.length} left.`}
           </p>
           <Label htmlFor="market-search" className="mt-3">
             Narrow the list
@@ -277,16 +277,16 @@ export function OnboardingDesk({
         >
           <ol className="grid gap-3 text-base">
             <li>
-              <span className="font-medium">Search.</span> Home and Markets search every hall and
-              stall. Hours sit on the right of every row.
+              <span className="font-medium">Search.</span> Home and Markets search every market and
+              vendor. Hours sit on the right of every row.
             </li>
             <li>
-              <span className="font-medium">Save.</span> The chip on a market or stall. Those three
-              halls are already on your list.
+              <span className="font-medium">Save.</span> The chip on a market or vendor. Those three
+              markets are already on your list.
             </li>
             <li>
               <span className="font-medium">This week, in your inbox.</span> Hours and addresses for
-              the halls you picked, sent to {email ?? "the email on this account"}.
+              the markets you picked, sent to {email ?? "the email on this account"}.
             </li>
           </ol>
           <EmailVisitButton className="mt-4" slugs={picked} lastSentAt={visitPlanEmailedAt} />

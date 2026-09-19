@@ -11,7 +11,7 @@ import type { Metadata } from "next";
 import type { MarketSchedule } from "@/types/database";
 
 export const metadata: Metadata = pageMeta({
-  title: "Set up your plate",
+  title: "Set up your profile",
   path: "/onboarding",
   description: `Pick a handle and three ${SITE_NAME} markets.`,
   index: false,

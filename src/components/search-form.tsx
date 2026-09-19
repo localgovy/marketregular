@@ -81,7 +81,7 @@ export function SearchForm({
   places: PlaceAreas;
   resultCount?: number;
   /** Toronto weekday from the server so Today/Tomorrow options match first paint. */
-  todayWeekday: number;
+  todayWeekday?: number;
   variant?: "full" | "mini";
 }) {
   const router = useRouter();
@@ -491,7 +491,7 @@ function AllFilters({
     <div id="all-filters" className="border-t border-border bg-card px-4 py-5 sm:px-6 sm:py-6">
       <div className="grid items-start gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
         <FilterColumn title="When" lead={whenLead} options={whenRest} />
-        <FilterColumn title="Place" lead={placeLead} options={placeOptions} />
+        <FilterColumn title="Place" lead={placeLead} options={placeOptions} pageSize={5} />
         <FilterColumn title="Sells" options={sellOptions} />
         <FilterColumn title="Cuisine" options={cuisineOptions} />
       </div>

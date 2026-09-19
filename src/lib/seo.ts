@@ -6,7 +6,7 @@ import { externalHref, listingEmail } from "@/lib/format";
 import type { Market, MarketSchedule, MenuItem, Vendor } from "@/types/database";
 
 export const SITE_DESCRIPTION =
-  "Toronto farmers' markets and the stalls that work them: what's open today, this week's hours, addresses, maps, menus and reviews across the GTA.";
+  "Toronto farmers' markets and the vendors that work them: what's open today, this week's hours, addresses, maps, menus and reviews across the GTA.";
 
 const FOOD_TAGS = new Set(["prepared-food", "bakery", "coffee"]);
 

@@ -96,7 +96,7 @@ export function SavedRail() {
         {vendorCount ? (
           <p className="text-sm text-muted-foreground">
             <Link href="/saved" className="font-medium text-primary hover:underline">
-              {vendorCount === 1 ? "1 saved stall" : `${vendorCount} saved stalls`}
+              {vendorCount === 1 ? "1 saved vendor" : `${vendorCount} saved vendors`}
             </Link>
           </p>
         ) : null}
@@ -135,7 +135,7 @@ export function SavedDesk({
       {empty ? (
         <p className="text-muted-foreground">
           {followAccount
-            ? "Nothing saved yet. Open a market, a stall, or a note and press Save. The list follows this account."
+            ? "Nothing saved yet. Open a market, a vendor, or a note and press Save. The list follows this account."
             : "Sign in to save markets, vendors, blog posts, and reviews to this account."}
         </p>
       ) : null}

@@ -52,7 +52,7 @@ export async function generateMetadata({
   });
   const shops = category.scope === "markets" ? [] : vendorsWithTag(vendors, tag);
   const counted = shops.length
-    ? `${halls.length} ${halls.length === 1 ? "market" : "markets"} and ${shops.length} ${shops.length === 1 ? "stall" : "stalls"}`
+    ? `${halls.length} ${halls.length === 1 ? "market" : "markets"} and ${shops.length} ${shops.length === 1 ? "vendor" : "vendors"}`
     : `${halls.length} ${halls.length === 1 ? "market" : "markets"}`;
 
   return pageMeta({
@@ -184,10 +184,10 @@ export default async function MarketTagPage({
       {shops.length ? (
         <section className="mt-10">
           <h2>
-            {shops.length} {shops.length === 1 ? "stall" : "stalls"}
+            {shops.length} {shops.length === 1 ? "vendor" : "vendors"}
           </h2>
           <p className="mt-1 text-base text-muted-foreground">
-            Sorted by review score. Open a stall to see which markets it works and when.
+            Sorted by review score. Open a vendor to see which markets it works and when.
           </p>
           <StallList vendors={shops.slice(0, STALL_CAP)} />
           {shops.length > STALL_CAP ? (
@@ -196,7 +196,7 @@ export default async function MarketTagPage({
                 href={`/markets?tag=${encodeURIComponent(tag)}`}
                 className="font-medium text-primary hover:underline"
               >
-                Search all {shops.length} {tagLabel(tag).toLowerCase()} stalls
+                Search all {shops.length} {tagLabel(tag).toLowerCase()} vendors
               </Link>
             </p>
           ) : null}

@@ -37,7 +37,7 @@ export function weekPlanForSlugs(
 export function visitPlanText(groups: UpcomingGroup[]) {
   const lines = [`${SITE_NAME} by ${STUDIO_NAME}`, "", `This week at ${SITE_NAME}`, ""];
   if (!groups.length) {
-    lines.push("None of those halls are on the calendar this week. Check the live list:");
+    lines.push("None of those markets are on the calendar this week. Check the live list:");
     lines.push(`${SITE_URL}/markets`);
     return lines.join("\n");
   }
@@ -127,7 +127,7 @@ ${escapeHtml(slot.market.address)}<br/>
           return `<h2 style="font-size:18px;margin:20px 0 8px">${escapeHtml(group.label)} · ${escapeHtml(group.date)}</h2>${slots}`;
         })
         .join("")
-    : `<p>None of those halls are on the calendar this week. See <a href="${SITE_URL}/markets">${SITE_URL}/markets</a>.</p>`;
+    : `<p>None of those markets are on the calendar this week. See <a href="${SITE_URL}/markets">${SITE_URL}/markets</a>.</p>`;
 
   return visitEmail(`This week at ${SITE_NAME}`, rows);
 }

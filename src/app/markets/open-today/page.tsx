@@ -21,7 +21,7 @@ export const revalidate = 900;
 export const metadata: Metadata = pageMeta({
   title: `Farmers' markets open today in ${LAUNCH_CITY}`,
   path: "/markets/open-today",
-  description: `Which ${LAUNCH_REGION} farmers' markets are open today and which are still to come, with hours, addresses and how many stalls are working.`,
+  description: `Which ${LAUNCH_REGION} farmers' markets are open today and which are still to come, with hours, addresses and how many vendors are working.`,
 });
 
 export default async function OpenTodayPage() {

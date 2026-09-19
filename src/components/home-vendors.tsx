@@ -22,7 +22,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
           Tap a vendor for the menu.
           <span className="mt-2 flex flex-wrap items-center gap-2">
             <NowLabel>Selling now</NowLabel>
-            <span>At the stall this minute.</span>
+            <span>Selling this minute.</span>
           </span>
         </>
       }
@@ -51,7 +51,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
       place="rail"
       tone="menus"
       icon={TallyMark}
-      kicker="This week's stalls"
+      kicker="This week's vendors"
       title="Top 5 this week"
       how="The five vendors in the Toronto market game this week. Tap a name to learn more about them."
     >

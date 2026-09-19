@@ -37,7 +37,7 @@ export function MarketDayList({
                 {row.stallCount > 0 ? (
                   <span>
                     <span className="type-nums text-foreground">{row.stallCount}</span>{" "}
-                    {row.stallCount === 1 ? "stall" : "stalls"}
+                    {row.stallCount === 1 ? "vendor" : "vendors"}
                   </span>
                 ) : null}
                 <ListingScore

@@ -234,7 +234,7 @@ export default async function MarketPage({
           <h2>Reviews</h2>
           {avg ? (
             <p className="mt-1 text-sm text-muted-foreground">
-              Floor posts average {avg.toFixed(1)} / 5 from {avgRated.length} rated
+              Reviews average {avg.toFixed(1)} / 5 from {avgRated.length} rated
               {market.feed.length
                 ? ` · ${market.feed.length} ${market.feed.length === 1 ? "post" : "posts"}`
                 : ""}

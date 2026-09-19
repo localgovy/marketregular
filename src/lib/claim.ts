@@ -6,9 +6,9 @@ export const CLAIM_ROLES = {
     "Something else",
   ],
   vendor: [
-    "I run this stall",
+    "I run this vendor",
     "I grow or make what we sell",
-    "I work the stall",
+    "I work this vendor",
     "Something else",
   ],
 } as const;

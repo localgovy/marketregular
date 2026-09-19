@@ -21,7 +21,7 @@ export const revalidate = 900;
 export const metadata: Metadata = pageMeta({
   title: `${LAUNCH_CITY} farmers' markets by day of the week`,
   path: "/markets/day",
-  description: `Which ${LAUNCH_REGION} farmers' markets run on each day, Sunday through Saturday, with hours and how many stalls work each one.`,
+  description: `Which ${LAUNCH_REGION} farmers' markets run on each day, Sunday through Saturday, with hours and how many vendors work each one.`,
 });
 
 export default async function MarketDayHubPage() {

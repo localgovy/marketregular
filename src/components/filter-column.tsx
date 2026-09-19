@@ -57,12 +57,14 @@ export function FilterColumn({
   title,
   options,
   lead,
+  pageSize = FILTER_PAGE,
 }: {
   title: string;
   options: FilterOption[];
   lead?: FilterOption[];
+  pageSize?: number;
 }) {
-  const [shown, setShown] = useState(FILTER_PAGE);
+  const [shown, setShown] = useState(pageSize);
   const visible = pageOptions(options, shown);
   const more = shown < options.length;
 
@@ -77,7 +79,7 @@ export function FilterColumn({
             <div className="mt-3.5">
               <button
                 type="button"
-                onClick={() => setShown((n) => n + FILTER_PAGE)}
+                onClick={() => setShown((n) => n + pageSize)}
                 className="text-sm font-medium text-foreground underline underline-offset-4 hover:text-foreground outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
               >
                 Show more

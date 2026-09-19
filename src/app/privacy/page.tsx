@@ -51,7 +51,7 @@ export default function PrivacyPage() {
           claims tied to an account, and the last time we emailed you a week plan stay private.
         </p>
         <p className={body}>
-          You can claim a hall or stall without signing in. That form sends us your name, email,
+          You can claim a market or vendor without signing in. That form sends us your name, email,
           optional phone, role, business, website or Instagram, and notes. We use a hashed
           address of the request only to slow repeat sends.
         </p>
