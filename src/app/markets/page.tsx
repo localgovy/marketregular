@@ -17,6 +17,7 @@ import {
 } from "@/lib/find-paths";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
+import { countLabel } from "@/lib/format";
 
 /**
  * Canonical is always bare `/markets`, so every filter combination consolidates here
@@ -27,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return pageMeta({
     title: `Find ${LAUNCH_CITY} farmers' markets`,
     path: "/markets",
-    description: `All ${census.markets} farmers' markets across ${LAUNCH_CITY} and the ${LAUNCH_REGION}, with this week's hours, addresses, maps and the ${census.vendors.toLocaleString("en-CA")} stalls that work them.`,
+    description: `All ${census.markets} farmers' markets across ${LAUNCH_CITY} and the ${LAUNCH_REGION}, with this week's hours, addresses, maps and the ${census.vendors.toLocaleString("en-CA")} vendors that work them.`,
   });
 }
 
@@ -88,10 +89,12 @@ export default async function MarketsPage({
     near: Boolean(near),
     sort,
   });
-  const status = [LAUNCH_CITY, ...crumbs, `${markets.length} markets`].join(" · ");
+  const queried = Boolean(params.q?.trim());
+  const showVendors = queried || tags.length > 0;
+  const status = [LAUNCH_CITY, ...crumbs, countLabel(markets.length, "market", "markets")].join(" · ");
   const summary = [
-    `${markets.length} markets`,
-    `${vendors.length} vendors`,
+    countLabel(markets.length, "market", "markets"),
+    showVendors ? countLabel(vendors.length, "vendor", "vendors") : "",
     crumbs.join(", "),
   ]
     .filter(Boolean)
@@ -139,9 +142,6 @@ export default async function MarketsPage({
           sort,
         }}
       />
-      <div className="mt-8">
-        <MarketMapLazy key={formKey} markets={directory.mapMarkets} load="click" />
-      </div>
       <div className="mt-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-border pb-2">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <a
@@ -159,12 +159,18 @@ export default async function MarketsPage({
         now={nowIso}
         search={search}
         markets={directory.markets}
-        vendors={directory.vendors}
+        vendors={showVendors ? directory.vendors : []}
         schedulesByMarket={directory.schedulesByMarket}
         marketTotal={directory.marketTotal}
-        vendorTotal={directory.vendorTotal}
+        vendorTotal={showVendors ? directory.vendorTotal : 0}
         weekdays={weekdays}
+        showVendors={showVendors}
       />
+      {queried ? null : (
+        <div className="mt-8">
+          <MarketMapLazy key={formKey} markets={directory.mapMarkets} load="visible" className="h-56 w-full overflow-hidden rounded-xl ring-1 ring-foreground/10" />
+        </div>
+      )}
       <BrowseLinks className="mt-12" />
     </div>
   );

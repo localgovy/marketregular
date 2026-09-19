@@ -34,7 +34,7 @@ export function LiveFeed({
           if (marketId && row.market_id !== marketId) return;
           const item = reviewFromPost({
             ...row,
-            author_name: "Someone on the floor",
+              author_name: "A shopper",
             photos: row.photos ?? [],
           });
           setExtra((current) => {

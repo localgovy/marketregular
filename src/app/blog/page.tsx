@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
 import { SaveButton } from "@/components/save-button";
-import { listBlogPosts, plainBlogText } from "@/lib/blog";
+import { listPublicBlogPosts, plainBlogText } from "@/lib/blog";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { BLOG_CRUMB, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
 
@@ -12,19 +12,18 @@ export const dynamic = "force-static";
 export const metadata: Metadata = pageMeta({
   title: "Blog",
   path: "/blog",
-  description: `Find out the latest schedules, vendors, and tidbits from your favourite farmers' markets in ${LAUNCH_CITY}. If you find an article with information that you don't want to lose, just save it to your profile.`,
+  description: `Find out the latest schedules, vendors, and tidbits from your favourite farmers' markets in ${LAUNCH_CITY}.`,
 });
 
 export default function BlogIndexPage() {
-  const posts = listBlogPosts();
+  const posts = listPublicBlogPosts();
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <JsonLd data={breadcrumbJsonLd([BLOG_CRUMB])} />
       <h1>Blog</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
         Find out the latest schedules, vendors, and tidbits from your favourite
-        farmers' markets in {LAUNCH_CITY}. If you find an article with
-        information that you don't want to lose, just save it to your profile.
+        farmers&apos; markets in {LAUNCH_CITY}.
       </p>
       {posts.length ? (
         <ul className="divide-y divide-border border-t border-border">

@@ -1,10 +1,12 @@
 export const SITE_NAV = [
   { href: "/", label: "Home" },
   { href: "/events", label: "Events" },
-  { href: "/markets", label: "Find Markets" },
-  { href: "/feed", label: "Feed" },
+  { href: "/markets", label: "Markets" },
   { href: "/saved", label: "Saved" },
 ] as const;
+
+/** Footer only until the live list has posts. */
+export const SITE_FEED_NAV = { href: "/feed", label: "Feed" } as const;
 
 /** Header text links beside the account chip. Same face as Contact. */
 export const SITE_META_NAV = [
@@ -15,6 +17,7 @@ export const SITE_META_NAV = [
 
 export const SITE_FOOTER_NAV = [
   ...SITE_NAV,
+  SITE_FEED_NAV,
   ...SITE_META_NAV,
 ] as const;
 
@@ -23,3 +26,12 @@ export const SITE_LEGAL_NAV = [
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ] as const;
+
+export function isAuthChromePath(path: string) {
+  return (
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/onboarding" ||
+    path.startsWith("/auth/")
+  );
+}

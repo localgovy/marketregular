@@ -183,7 +183,7 @@ export function MarketVendors({
   }
 
   return (
-    <section id="vendors" className="scroll-mt-28 lg:scroll-mt-24">
+    <section id="vendors" className="scroll-mt-header">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <h2>Vendors</h2>
         {vendors.length ? (
@@ -210,9 +210,9 @@ export function MarketVendors({
                 key={applied.q}
                 name="q"
                 defaultValue={applied.q}
-                placeholder="Stall, cuisine, or tomato"
+                placeholder="Vendor, cuisine, or tomato"
                 className="h-10 bg-card"
-                aria-label="Search stalls"
+                aria-label="Search vendors"
                 onClear={() => {
                   if (applied.q.trim()) go({ ...applied, q: "" });
                 }}
@@ -357,12 +357,13 @@ export function MarketVendors({
               <ShowMore
                 shown={shown.length}
                 total={matches.length}
-                noun="stalls"
+                noun="vendors"
+                nounOne="vendor"
                 onMore={() => setPages((n) => n + 1)}
               />
             </>
           ) : (
-            <p className="mt-4 text-sm text-muted-foreground">No stalls match that.</p>
+            <p className="mt-4 text-sm text-muted-foreground">No vendors match that.</p>
           )}
         </>
       ) : (
@@ -395,8 +396,8 @@ function StallAllFilters({
   onClear: () => void;
   onApply: (next: StallBrowse) => void;
 }) {
-  const stallsLabel =
-    resultCount === 1 ? "Show 1 stall" : `Show ${resultCount} stalls`;
+  const vendorsLabel =
+    resultCount === 1 ? "Show 1 vendor" : `Show ${resultCount} vendors`;
 
   function setTag(tag: string, on: boolean) {
     onChange({
@@ -477,7 +478,7 @@ function StallAllFilters({
       <div className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-4">
         <FilterClearButton onClick={onClear} />
         <Button type="button" className="h-9 px-4" onClick={() => onApply(state)}>
-          {stallsLabel}
+          {vendorsLabel}
         </Button>
       </div>
     </div>

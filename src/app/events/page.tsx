@@ -39,7 +39,6 @@ export default async function EventsPage({
       <p className="type-lede mt-2 mb-8 max-w-2xl text-muted-foreground">
         Click on a day, find your market, and start planning your trip.
       </p>
-      <EventsWeekList groups={week} />
       <EventsCalendar
         markets={markets.map((market) => ({
           id: market.id,
@@ -57,6 +56,7 @@ export default async function EventsPage({
         initialDay={d}
         nowMs={nowMs}
       />
+      <EventsWeekList groups={week} />
     </div>
   );
 }

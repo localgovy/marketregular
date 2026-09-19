@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import {
   formatRatingAvg,
-  formatReviewCount,
+  formatReviewCountShort,
   listingScore,
   listingScoreLabel,
   listingScoreParens,
@@ -55,7 +55,7 @@ export function ListingScore({
   }
 
   const avg = formatRatingAvg(score.avg);
-  const count = formatReviewCount(score.count);
+  const count = formatReviewCountShort(score.count);
   const noun = score.count === 1 ? "review" : "reviews";
 
   return (

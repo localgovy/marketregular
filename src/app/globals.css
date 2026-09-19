@@ -63,9 +63,12 @@
 
 :root {
   /* Shared header + homepage rail so the brand column and reviews column meet. */
+  --header-bar: 3rem;
   --header-bar-lg: 3.5rem;
+  --header-nav: 2.5rem;
   --header-stripe: 2px;
-  --header-lg: calc(var(--header-bar-lg) + var(--header-stripe));
+  --header-offset: calc(var(--header-bar) + var(--header-nav));
+  --header-lg: var(--header-offset);
   /* Warm paper, quiet leaf. Live/open accents use stamp red. */
   --background: #f4f1ea;
   --foreground: #1c1916;
@@ -114,6 +117,20 @@
   --sidebar-ring: #3a6558;
 }
 
+@media (min-width: 1024px) {
+  :root {
+    --header-offset: calc(var(--header-bar-lg) + var(--header-nav));
+    --header-lg: var(--header-offset);
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --header-offset: calc(var(--header-bar-lg) + var(--header-stripe));
+    --header-lg: var(--header-offset);
+  }
+}
+
 @layer base {
   .market-map-pin {
     width: 22px;
@@ -134,6 +151,7 @@
   }
   html {
     @apply font-sans;
+    scroll-padding-top: var(--header-offset);
   }
   /* Mona for titles and figures. Grotesk (font-sans) for everything else. */
   h1,
@@ -551,8 +569,8 @@
   height: calc(100vh - var(--header-lg));
 }
 
-@utility h-header-stripe {
-  height: var(--header-stripe);
+@utility scroll-mt-header {
+  scroll-margin-top: var(--header-offset);
 }
 
 /* Header awning: beige–green–beige on the board, inverse on paper. */

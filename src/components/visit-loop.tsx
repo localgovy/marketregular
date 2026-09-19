@@ -1,16 +1,18 @@
 import { FloorStrip } from "@/components/floor-strip";
 import { HomeCensus } from "@/components/home-census";
-import { BlocksMark, MapleMark, SlatsMark } from "@/components/marks";
+import { BlocksMark, MapleMark, SignMark, SlatsMark } from "@/components/marks";
 import { HomePanel } from "@/components/home-panel";
 import { VendorsTodayPanel, VendorsWeekPanel } from "@/components/home-vendors";
 import { SavedRail } from "@/components/saved-rail";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { QuickFind } from "@/components/quick-find";
 import { TorontoWeek } from "@/components/toronto-week";
+import Link from "next/link";
 import type { DirectoryCensus } from "@/lib/data/catalog";
 import { FIND_ORIGINS, FIND_PRODUCTS, FIND_SETUP, homeAreas, tagsPresent } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { slimUpcomingGroups, type UpcomingGroup } from "@/lib/upcoming";
+import { plainBlogText } from "@/lib/blog";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { Market, Vendor } from "@/types/database";
 
@@ -22,6 +24,7 @@ export function HomeMosaic({
   weekVendors,
   census,
   today,
+  weeklyNote,
 }: {
   week: UpcomingGroup[];
   markets: Market[];
@@ -30,6 +33,12 @@ export function HomeMosaic({
   weekVendors: VendorWeekPick[];
   census: DirectoryCensus;
   today: number;
+  weeklyNote?: {
+    slug: string;
+    title: string;
+    kicker?: string;
+    description: string;
+  } | null;
 }) {
   const areas = homeAreas(markets);
   const sellOptions = tagsPresent([...markets, ...vendors], FIND_PRODUCTS);
@@ -100,17 +109,39 @@ export function HomeMosaic({
 
           <TorontoWeek groups={slimUpcomingGroups(week)} />
 
+          {weeklyNote ? (
+            <HomePanel
+              id="weekly"
+              tone="back"
+              icon={SignMark}
+              kicker={weeklyNote.kicker ?? "This week"}
+              title={weeklyNote.title}
+              how={plainBlogText(weeklyNote.description)}
+              action={
+                <Link href={`/blog/${weeklyNote.slug}`} className="hover:underline">
+                  Read
+                </Link>
+              }
+            >
+              <p className="px-4 pb-4 text-sm text-muted-foreground">
+                <Link href="/blog" className="font-medium text-foreground hover:underline">
+                  More on the blog
+                </Link>
+              </p>
+            </HomePanel>
+          ) : null}
+
           <HomePanel
             id="map"
             tone="map"
             icon={BlocksMark}
             kicker="Around Toronto"
             title="Map of Toronto markets"
-            how="Show the map, then click a pin for the name and address. Every market is also in the list below."
+            how="The map loads here. Click a pin or cluster for the name and address. Every market is also in the list below."
             className="order-last xl:order-none"
             flush
           >
-            <MarketMapLazy load="click" className="h-56 w-full overflow-hidden xl:h-72" />
+            <MarketMapLazy load="visible" className="h-56 w-full overflow-hidden xl:h-72" />
           </HomePanel>
         </div>
 

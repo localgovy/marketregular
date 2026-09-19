@@ -1,9 +1,11 @@
 import Link from "next/link";
 
-export function AuthLegalNote() {
+export function AuthLegalNote({ mode = "signup" }: { mode?: "signin" | "signup" }) {
+  const lead =
+    mode === "signin" ? "By signing in you agree to the" : "By creating an account you agree to the";
   return (
     <p className="text-sm text-muted-foreground">
-      By creating an account you agree to the{" "}
+      {lead}{" "}
       <Link href="/terms" className="font-medium text-foreground hover:underline">
         Terms
       </Link>{" "}

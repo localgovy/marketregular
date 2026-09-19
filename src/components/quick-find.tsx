@@ -6,6 +6,7 @@ import { SearchField } from "@/components/search-field";
 import { useGeo } from "@/components/geo-provider";
 import { formatDistance } from "@/lib/geo";
 import { distanceMeters } from "@/lib/geo";
+import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/lib/constants";
 import { tagLabel, whenOptions, type HomeAreas } from "@/lib/find-paths";
 import { cn } from "@/lib/utils";
 
@@ -139,7 +140,7 @@ export function QuickFind({
     <form action="/markets" className="grid gap-3 sm:gap-4">
       <div className="order-1">
         <label className="sr-only" htmlFor="home-search">
-          Search for a Toronto market, vendor, or neighbourhood
+          {SEARCH_LABEL}
         </label>
         <SearchField
           id="home-search"
@@ -148,7 +149,7 @@ export function QuickFind({
             setQ(next);
             setAreaQ((current) => (current && next.trim() !== current ? null : current));
           }}
-          placeholder="Market, neighbourhood, or cuisine"
+          placeholder={SEARCH_PLACEHOLDER}
           className="h-12 border-transparent bg-card px-3.5 text-base text-foreground focus-visible:border-foreground/20 focus-visible:ring-foreground/20"
         />
         {query ? <input type="hidden" name="q" value={query} /> : null}

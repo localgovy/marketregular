@@ -5,6 +5,10 @@ import { isTrustedSiteHost } from "@/lib/site-host";
 export const SITE_NAME = "MarketRegular";
 export const SITE_TAGLINE = `${LAUNCH_COVERAGE}, farmers' markets this week.`;
 
+/** One search field across the header, home finder, and directory. */
+export const SEARCH_PLACEHOLDER = "Market, vendor, cuisine, or neighbourhood";
+export const SEARCH_LABEL = "Search markets and vendors";
+
 function canonicalSiteUrl() {
   const raw = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.marketregular.com").replace(
     /\/$/,

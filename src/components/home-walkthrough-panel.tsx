@@ -13,27 +13,11 @@ import { cn } from "@/lib/utils";
 
 const DELAY_MS = 700;
 
-const STEPS = [
-  {
-    title: `Welcome to ${SITE_NAME}`,
-    body: "Toronto and GTA farmers' markets this week",
-  },
-  {
-    title: "Find a market",
-    body: "Pick a day, a neighbourhood or city, what they sell, or a cuisine. Then search.",
-  },
-  {
-    title: "Save the ones you go to",
-    body: "Sign in to keep halls and stalls on a list that follows you.",
-  },
-] as const;
-
 export function HomeWalkthroughPanel() {
   const titleId = useId();
   const copyId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(0);
 
   useEffect(() => {
     if (homeWalkthroughSeen()) return;
@@ -60,9 +44,6 @@ export function HomeWalkthroughPanel() {
 
   if (!open) return null;
 
-  const current = STEPS[step];
-  const last = step === STEPS.length - 1;
-
   return (
     <div
       ref={panelRef}
@@ -81,42 +62,19 @@ export function HomeWalkthroughPanel() {
       >
         <CloseMark className="size-4" />
       </button>
-      <p className="text-sm text-muted-foreground">
-        {step + 1} of {STEPS.length}
-      </p>
-      <h2 id={titleId} className="type-column mt-1 pr-8">
-        {current.title}
+      <h2 id={titleId} className="type-column pr-8">
+        Welcome to {SITE_NAME}
       </h2>
       <p id={copyId} className="mt-2 text-sm leading-snug text-muted-foreground">
-        {current.body}
+        Find Toronto markets and vendors, then save the ones you go to.
       </p>
-      <div className="mt-4 flex items-center justify-end gap-3">
-        {step > 0 ? (
-          <button
-            type="button"
-            onClick={() => setStep((n) => n - 1)}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Back
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={dismiss}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            Skip
-          </button>
-        )}
+      <div className="mt-4 flex items-center justify-end">
         <button
           type="button"
-          onClick={() => {
-            if (last) dismiss();
-            else setStep((n) => n + 1);
-          }}
+          onClick={dismiss}
           className={cn(buttonVariants({ size: "sm" }), "h-8 rounded-full px-4")}
         >
-          {last ? "Got it" : "Next"}
+          Got it
         </button>
       </div>
     </div>

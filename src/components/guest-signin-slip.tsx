@@ -5,116 +5,50 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { CloseMark } from "@/components/marks";
 import { buttonVariants } from "@/components/ui/button";
-import {
-  homeWalkthroughSeen,
-  rememberHomeWalkthrough,
-  subscribeHomeWalkthrough,
-} from "@/lib/home-walkthrough";
-import {
-  isSignInSlipAuthPath,
-  subscribeSignInSlip,
-} from "@/lib/signin-slip";
-import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
+import { rememberHomeWalkthrough } from "@/lib/home-walkthrough";
+import { isSignInSlipAuthPath, subscribeSignInSlip } from "@/lib/signin-slip";
+import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
 import { cn } from "@/lib/utils";
-
-const STORAGE_KEY = "mr-signin-slip";
-const BROWSE_DELAY_MS = 10_000;
-const BROWSE_COPY = "Keep markets, stalls, and notes on a list that follows you.";
-
-function browseWasDismissed() {
-  try {
-    return Boolean(window.localStorage.getItem(STORAGE_KEY));
-  } catch {
-    return false;
-  }
-}
-
-function rememberBrowseDismiss() {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, String(Date.now()));
-  } catch {
-    // private mode
-  }
-}
 
 export function GuestSignInSlip() {
   const pathname = usePathname() || "/";
   const searchParams = useSearchParams();
   const copyId = useId();
-  const [guest, setGuest] = useState(false);
-  const [browseDue, setBrowseDue] = useState(false);
-  const [source, setSource] = useState<"browse" | "save" | null>(null);
+  const signedIn = useAuthCookie();
   const [saveName, setSaveName] = useState("");
   const [saveCopy, setSaveCopy] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
 
   const query = searchParams.toString();
   const next = `${pathname}${query ? `?${query}` : ""}`;
   const onAuthPage = isSignInSlipAuthPath(pathname);
 
   useEffect(() => {
-    setGuest(!documentHasAuthCookie());
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!guest || browseWasDismissed()) return;
-    let timer = 0;
-    function startBrowseClock() {
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => setBrowseDue(true), BROWSE_DELAY_MS);
-    }
-    const onHome = pathname === "/";
-    if (homeWalkthroughSeen() || !onHome) {
-      startBrowseClock();
-      return () => window.clearTimeout(timer);
-    }
-    const unsub = subscribeHomeWalkthrough(() => {
-      if (browseWasDismissed()) return;
-      startBrowseClock();
-    });
-    return () => {
-      window.clearTimeout(timer);
-      unsub();
-    };
-  }, [guest, pathname]);
-
-  useEffect(() => {
-    if (!guest || !browseDue || source) return;
-    if (onAuthPage || browseWasDismissed()) return;
-    setSource("browse");
-  }, [browseDue, guest, onAuthPage, source]);
-
-  useEffect(() => {
     return subscribeSignInSlip((detail) => {
-      if (documentHasAuthCookie()) return;
+      if (signedIn) return;
       rememberHomeWalkthrough();
       setSaveName(detail.name);
       setSaveCopy(detail.copy ?? null);
-      setSource("save");
+      setOpen(true);
     });
-  }, []);
+  }, [signedIn]);
 
   useEffect(() => {
-    if (!source || onAuthPage) return;
+    if (!open || onAuthPage) return;
     function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") dismiss();
+      if (event.key === "Escape") setOpen(false);
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onAuthPage, source]);
+  }, [onAuthPage, open]);
 
-  function dismiss() {
-    setSource(null);
-    rememberBrowseDismiss();
-  }
+  if (signedIn || onAuthPage || !open) return null;
 
-  if (!guest || onAuthPage || !source) return null;
-
-  const copy =
-    source === "save" && saveCopy
-      ? saveCopy
-      : source === "save" && saveName
-        ? `Sign in to save ${saveName}.`
-        : BROWSE_COPY;
+  const copy = saveCopy
+    ? saveCopy
+    : saveName
+      ? `Sign in to save ${saveName}.`
+      : "Sign in to keep markets and vendors on a list that follows you.";
 
   return (
     <aside
@@ -125,7 +59,7 @@ export function GuestSignInSlip() {
       <button
         type="button"
         aria-label="Close"
-        onClick={dismiss}
+        onClick={() => setOpen(false)}
         className="absolute top-1.5 right-1.5 inline-flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground"
       >
         <CloseMark className="size-4" />
@@ -140,13 +74,6 @@ export function GuestSignInSlip() {
           className={cn(buttonVariants({ size: "sm" }), "h-8 rounded-full px-4")}
         >
           Sign in
-        </Link>
-        <Link
-          href={`/signup?next=${encodeURIComponent(next || "/")}`}
-          rel="nofollow"
-          className="text-sm font-medium text-foreground hover:underline"
-        >
-          Create one
         </Link>
       </div>
     </aside>

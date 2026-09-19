@@ -210,7 +210,7 @@ export const CATEGORIES: CategoryDef[] = [
     tag: "prepared-food",
     title: `Prepared food at ${LAUNCH_CITY} farmers' markets`,
     heading: `Prepared food at ${LAUNCH_CITY} farmers' markets`,
-    lede: "Lunch on the floor: stalls cooking to order, and the markets that host them.",
+    lede: "Lunch at the market: vendors cooking to order, and the markets that host them.",
     scope: "both",
   },
   {

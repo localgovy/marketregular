@@ -12,6 +12,7 @@ import {
   listStalls,
   listVendors,
 } from "@/lib/data/catalog";
+import { featuredBlogPost } from "@/lib/blog";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { weekdayInToronto } from "@/lib/find-paths";
 import { upcomingByDay } from "@/lib/upcoming";
@@ -37,6 +38,7 @@ export default async function HomePage() {
     listSchedules(),
     getDirectoryCensus(),
   ]);
+  const weeklyNote = featuredBlogPost();
 
   const scheduleMap = new Map<string, typeof schedules>();
   for (const row of schedules) {
@@ -79,6 +81,16 @@ export default async function HomePage() {
               weekVendors={weekVendors}
               census={census}
               today={weekdayInToronto(now)}
+              weeklyNote={
+                weeklyNote
+                  ? {
+                      slug: weeklyNote.slug,
+                      title: weeklyNote.title,
+                      kicker: weeklyNote.kicker,
+                      description: weeklyNote.description,
+                    }
+                  : null
+              }
             />
           ) : (
             <p className="text-base text-muted-foreground">Directory is empty.</p>

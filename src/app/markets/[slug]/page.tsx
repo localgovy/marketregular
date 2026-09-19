@@ -10,7 +10,6 @@ import { ListingAlsoLinks } from "@/components/listing-also-links";
 import { ListingComposer } from "@/components/listing-composer";
 import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
-import { CaretDownMark } from "@/components/marks";
 import { MarketVendors } from "@/components/market-vendors";
 import { NowLabel } from "@/components/now-label";
 import { ScheduleList } from "@/components/schedule-list";
@@ -22,10 +21,12 @@ import { listingScore } from "@/lib/listing-score";
 import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
-import { marketPageDescription, marketPageTitle, marketPlaceLine } from "@/lib/listing-copy";
+import { marketPageDescription, marketPageTitle, marketPlaceLine, directionsHref } from "@/lib/listing-copy";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { nextOpenLabel } from "@/lib/schedule";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
+import { EmptyReviews } from "@/components/empty-reviews";
+import { countLabel } from "@/lib/format";
 
 export const revalidate = 3600;
 
@@ -125,6 +126,52 @@ export default async function MarketPage({
           />
         </div>
       ) : null}
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(16rem,20rem)]">
+        <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
+          <h2>Hours</h2>
+          <ScheduleList schedules={market.schedules} />
+          <address className="mt-4 not-italic text-sm leading-6">
+            {market.address}
+            <br />
+            {market.city}, {market.province} {market.postal_code}
+          </address>
+          <a
+            href={directionsHref(market.lat, market.lng)}
+            rel="noreferrer"
+            className="mt-3 inline-flex text-sm font-medium text-primary hover:underline"
+          >
+            Directions
+          </a>
+        </div>
+        {publishesVendorRoster(market.slug) && market.vendors.length ? (
+          <div>
+            <h2>Vendors</h2>
+            <ul className="mt-3 divide-y divide-border border-y border-border">
+              {market.vendors.slice(0, 6).map((vendor) => (
+                <li key={vendor.id}>
+                  <Link
+                    href={`/vendors/${vendor.slug}`}
+                    className="flex items-baseline justify-between gap-3 py-2 hover:underline"
+                  >
+                    <span className="min-w-0 font-medium">{vendor.name}</span>
+                    {vendor.stall ? (
+                      <span className="type-nums shrink-0 text-sm text-muted-foreground">
+                        {vendor.stall}
+                      </span>
+                    ) : null}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            {market.vendors.length > 6 ? (
+              <a href="#vendors" className="mt-3 inline-flex text-sm font-medium hover:underline">
+                All {countLabel(market.vendors.length, "vendor", "vendors")}
+              </a>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
       {listingNote(market.slug) ? (
         <p className="mt-2 max-w-2xl text-base text-muted-foreground">
           {listingNote(market.slug)}
@@ -150,35 +197,16 @@ export default async function MarketPage({
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">
           <MarketMapLazy markets={[market]} load="visible" className={MARKET_PROFILE_MAP} />
-          {market.about || market.vendors.length ? (
+          {market.about ? (
             <section>
-              {market.about ? (
-                <>
-                  <h2>About</h2>
-                  <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>
-                </>
-              ) : null}
-              {market.vendors.length ? (
-                <a
-                  href="#vendors"
-                  className="stall-chip mt-4 inline-flex h-11 items-center gap-2 bg-primary px-5 text-base font-medium text-primary-foreground outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-foreground"
-                >
-                  Scroll down to see vendors
-                  <CaretDownMark className="size-4" />
-                </a>
-              ) : null}
+              <h2>About</h2>
+              <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>
             </section>
           ) : null}
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-            <h3>Hours</h3>
-            <ScheduleList schedules={market.schedules} />
-            <address className="mt-4 not-italic text-sm leading-6">
-              {market.address}
-              <br />
-              {market.city}, {market.province} {market.postal_code}
-            </address>
+            <h3>Contact</h3>
             <ListingContact phone={market.phone} email={market.email} />
             <ListingWebsite href={market.website} />
             <ListingInstagram href={market.instagram} />
@@ -214,24 +242,45 @@ export default async function MarketPage({
           ) : (
             <p className="mt-1 text-sm text-muted-foreground">
               Same posts as the live list. A score is optional.
-              {profile ? "" : " Sign in to write one."}
             </p>
           )}
-          <div className="mt-4">
-            <ListingComposer
-              signedIn={Boolean(profile)}
-              markets={[toGeoMarket(market)]}
-              stalls={market.vendors.map((vendor) => ({
-                id: vendor.id,
-                name: vendor.name,
-                slug: vendor.slug,
-                market_id: market.id,
-                stall: vendor.stall,
-              }))}
-              initialMarketId={market.id}
-            />
-            <LiveFeed initialItems={market.feed} marketId={market.id} />
-          </div>
+          {market.feed.length ? (
+            <div className="mt-4">
+              {profile ? (
+                <ListingComposer
+                  signedIn
+                  markets={[toGeoMarket(market)]}
+                  stalls={market.vendors.map((vendor) => ({
+                    id: vendor.id,
+                    name: vendor.name,
+                    slug: vendor.slug,
+                    market_id: market.id,
+                    stall: vendor.stall,
+                  }))}
+                  initialMarketId={market.id}
+                />
+              ) : null}
+              <LiveFeed initialItems={market.feed} marketId={market.id} />
+            </div>
+          ) : profile ? (
+            <div className="mt-4">
+              <EmptyReviews signedIn next={`/markets/${market.slug}`} />
+              <ListingComposer
+                signedIn
+                markets={[toGeoMarket(market)]}
+                stalls={market.vendors.map((vendor) => ({
+                  id: vendor.id,
+                  name: vendor.name,
+                  slug: vendor.slug,
+                  market_id: market.id,
+                  stall: vendor.stall,
+                }))}
+                initialMarketId={market.id}
+              />
+            </div>
+          ) : (
+            <EmptyReviews signedIn={false} next={`/markets/${market.slug}`} />
+          )}
         </section>
       </div>
     </div>

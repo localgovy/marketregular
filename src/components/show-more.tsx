@@ -2,14 +2,17 @@ export function ShowMore({
   shown,
   total,
   noun,
+  nounOne,
   onMore,
 }: {
   shown: number;
   total: number;
   noun: string;
+  nounOne?: string;
   onMore: () => void;
 }) {
   if (shown >= total) return null;
+  const word = total === 1 ? (nounOne ?? noun.replace(/s$/, "")) : noun;
   return (
     <div className="mt-6 flex flex-col items-start gap-2">
       <button
@@ -20,7 +23,7 @@ export function ShowMore({
         Show more
       </button>
       <p className="text-sm text-muted-foreground">
-        {shown} of {total} {noun}
+        {shown} of {total} {word}
       </p>
     </div>
   );

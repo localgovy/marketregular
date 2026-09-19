@@ -91,6 +91,13 @@ export function LoginForm({
 
   return (
     <div className="grid gap-8">
+      <div className="grid gap-3">
+        <GoogleSignIn next={next} />
+        <AuthLegalNote mode="signin" />
+      </div>
+
+      <p className="text-sm text-muted-foreground">or use email</p>
+
       <form action={passSubmit} className="grid gap-3">
         {queryError ? <p className="text-sm text-destructive">{queryError}</p> : null}
         <div className="grid gap-1.5">
@@ -121,11 +128,6 @@ export function LoginForm({
           <p className="text-sm text-destructive">{passState.error}</p>
         ) : null}
       </form>
-
-      <div className="grid gap-3">
-        <GoogleSignIn next={next} />
-        <AuthLegalNote />
-      </div>
 
       <p className="text-sm text-muted-foreground">
         No account?{" "}

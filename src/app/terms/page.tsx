@@ -38,10 +38,10 @@ export default function TermsPage() {
       <section className="mt-10">
         <h2>The directory</h2>
         <p className={body}>
-          {SITE_NAME} is a compiled guide to halls and stalls. It is not each market&apos;s
-          official notice. Hours move, stalls move, weather closes a floor. Check with the hall
+          {SITE_NAME} is a compiled guide to markets and vendors. It is not each market&apos;s
+          official notice. Hours move, vendors move, weather closes a market. Check with the market
           before you go. We are not the agent of every listing. Where About talks about partners,
-          that means halls we actually work with, not automatic affiliation with every name in the
+          that means markets we actually work with, not automatic affiliation with every name in the
           list.
         </p>
       </section>

@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import {
   LngLatBounds,
   Map,
-  Marker,
   NavigationControl,
   Popup,
   setWorkerUrl,
@@ -13,9 +12,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { LAUNCH_CENTER, LAUNCH_ZOOM } from "@/lib/launch";
 import { marketPlaceLine } from "@/lib/listing-copy";
 import type { Market } from "@/types/database";
+import type { GeoJSONSource, MapGeoJSONFeature } from "maplibre-gl";
 
-// Bundled MapLibre points the worker at this origin's HTML. Host the ESM worker
-// next to its shared chunk so the map does not load index.html as a module.
 setWorkerUrl("/maplibre/maplibre-gl-worker.mjs");
 
 function escapeHtml(value: string) {
@@ -27,20 +25,32 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#39;");
 }
 
-function pinElement() {
-  const el = document.createElement("div");
-  el.className = "market-map-pin";
-  el.setAttribute("aria-hidden", "true");
-  el.innerHTML =
-    '<svg viewBox="0 0 24 32" width="22" height="30" aria-hidden="true"><path fill="currentColor" d="M4.2 1.1h15.6L22.9 4.2v12.2l-3.1 3.1h-4.6L12 28.6 8.8 19.5H4.2l-3.1-3.1V4.2Z"/><path fill="none" stroke="var(--chalk)" stroke-width="1.7" d="M5 2.6h14l2.3 2.3v10.6L19 17.8h-4.3L12 25.4 9.3 17.8H5L2.7 15.5V4.9Z"/></svg>';
-  return el;
+type MapPoint = Pick<Market, "id" | "name" | "slug" | "lat" | "lng" | "city" | "address">;
+
+function featureCollection(markets: MapPoint[]) {
+  return {
+    type: "FeatureCollection" as const,
+    features: markets.map((market) => ({
+      type: "Feature" as const,
+      geometry: {
+        type: "Point" as const,
+        coordinates: [market.lng, market.lat] as [number, number],
+      },
+      properties: {
+        id: market.id,
+        name: market.name,
+        slug: market.slug,
+        place: marketPlaceLine(market.address, market.city),
+      },
+    })),
+  };
 }
 
 export function MarketMap({
   markets,
   className,
 }: {
-  markets: Array<Pick<Market, "id" | "name" | "slug" | "lat" | "lng" | "city" | "address">>;
+  markets: MapPoint[];
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -51,32 +61,105 @@ export function MarketMap({
     const map = new Map({
       container: ref.current,
       style: "https://tiles.openfreemap.org/styles/positron",
-      center: solo
-        ? [solo.lng, solo.lat]
-        : [LAUNCH_CENTER.lng, LAUNCH_CENTER.lat],
-      zoom: solo ? 14 : LAUNCH_ZOOM,
+      center: solo ? [solo.lng, solo.lat] : [LAUNCH_CENTER.lng, LAUNCH_CENTER.lat],
+      zoom: solo ? 14 : Math.max(LAUNCH_ZOOM, 10),
     });
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");
 
-    const bounds = new LngLatBounds();
-    for (const market of markets) {
-      bounds.extend([market.lng, market.lat]);
-      const href = `/markets/${encodeURIComponent(market.slug)}`;
-      const place = marketPlaceLine(market.address, market.city);
-      const popup = new Popup({ offset: 16 }).setHTML(
-        `<a href="${escapeHtml(href)}" style="font-weight:600;color:#1a1714">${escapeHtml(market.name)}</a><div style="color:#5e5a53">${escapeHtml(place)}</div>`,
-      );
-      const marker = new Marker({ element: pinElement(), anchor: "bottom" })
-        .setLngLat([market.lng, market.lat])
-        .setPopup(popup)
-        .addTo(map);
-      const node = marker.getElement();
-      node.removeAttribute("tabindex");
-      node.removeAttribute("role");
-      node.removeAttribute("aria-label");
-      node.setAttribute("aria-hidden", "true");
-    }
-    if (markets.length > 1) {
+    map.on("load", () => {
+      map.addSource("markets", {
+        type: "geojson",
+        data: featureCollection(markets),
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 46,
+      });
+
+      map.addLayer({
+        id: "clusters",
+        type: "circle",
+        source: "markets",
+        filter: ["has", "point_count"],
+        paint: {
+          "circle-color": "#2c4a40",
+          "circle-radius": ["step", ["get", "point_count"], 16, 8, 20, 25, 26],
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#f3eee4",
+        },
+      });
+      map.addLayer({
+        id: "cluster-count",
+        type: "symbol",
+        source: "markets",
+        filter: ["has", "point_count"],
+        layout: {
+          "text-field": ["get", "point_count_abbreviated"],
+          "text-size": 13,
+        },
+        paint: {
+          "text-color": "#f3eee4",
+        },
+      });
+      map.addLayer({
+        id: "unclustered",
+        type: "circle",
+        source: "markets",
+        filter: ["!", ["has", "point_count"]],
+        paint: {
+          "circle-color": "#9e4a3e",
+          "circle-radius": 7,
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#f3eee4",
+        },
+      });
+
+      map.on("click", "clusters", (event) => {
+        const feature = event.features?.[0];
+        if (!feature || feature.geometry.type !== "Point") return;
+        const clusterId = feature.properties?.cluster_id as number | undefined;
+        const source = map.getSource("markets") as GeoJSONSource;
+        if (clusterId == null) return;
+        const [lng, lat] = feature.geometry.coordinates as [number, number];
+        void source.getClusterExpansionZoom(clusterId).then((zoom) => {
+          map.easeTo({ center: [lng, lat], zoom });
+        });
+      });
+
+      map.on("click", "unclustered", (event) => {
+        const feature = event.features?.[0] as MapGeoJSONFeature | undefined;
+        if (!feature || feature.geometry.type !== "Point") return;
+        const slug = String(feature.properties?.slug ?? "");
+        const name = String(feature.properties?.name ?? "");
+        const place = String(feature.properties?.place ?? "");
+        const [lng, lat] = feature.geometry.coordinates;
+        const href = `/markets/${encodeURIComponent(slug)}`;
+        new Popup({ offset: 12 })
+          .setLngLat([lng, lat])
+          .setHTML(
+            `<a href="${escapeHtml(href)}" style="font-weight:600;color:#1a1714">${escapeHtml(name)}</a><div style="color:#5e5a53">${escapeHtml(place)}</div>`,
+          )
+          .addTo(map);
+      });
+
+      map.on("mouseenter", "clusters", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", "clusters", () => {
+        map.getCanvas().style.cursor = "";
+      });
+      map.on("mouseenter", "unclustered", () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+      map.on("mouseleave", "unclustered", () => {
+        map.getCanvas().style.cursor = "";
+      });
+    });
+
+    if (solo) {
+      // already centered
+    } else if (markets.length > 1 && markets.length <= 12) {
+      const bounds = new LngLatBounds();
+      for (const market of markets) bounds.extend([market.lng, market.lat]);
       map.fitBounds(bounds, { padding: 48, maxZoom: 13, duration: 0 });
     }
 

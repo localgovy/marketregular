@@ -5,6 +5,7 @@ import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
 import { ListingAlsoLinks } from "@/components/listing-also-links";
+import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
 import { ListingComposer } from "@/components/listing-composer";
 import { SaveButton } from "@/components/save-button";
@@ -15,14 +16,16 @@ import { TagList } from "@/components/tag-list";
 import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
+import { EmptyReviews } from "@/components/empty-reviews";
 import { Hours } from "@/components/hours";
+import { NowLabel } from "@/components/now-label";
 import { WEEKDAYS } from "@/lib/constants";
 import { stallNextDate } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
 import { listingHasContact } from "@/lib/format";
-import { formatHours, sessionOnWeekday } from "@/lib/schedule";
+import { formatHours, nextOpenSlot, sessionOnWeekday } from "@/lib/schedule";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 import type { MarketSchedule } from "@/types/database";
 
@@ -39,32 +42,6 @@ function hallDayHours(
     if (!name) return [];
     return [{ day: name, hours: formatHours(session.opens_at, session.closes_at) }];
   });
-}
-
-function HallHoursLabel({
-  days,
-  schedules,
-  province,
-  now,
-}: {
-  days: number[];
-  schedules: MarketSchedule[];
-  province: string;
-  now: Date;
-}) {
-  const rows = hallDayHours(days, schedules, province, now);
-  if (!rows.length) return null;
-  return (
-    <>
-      {rows.map((row, index) => (
-        <span key={`${row.day}-${row.hours}`}>
-          {index === 0 ? " · " : ", "}
-          {row.day}{" "}
-          <Hours value={row.hours} className="text-muted-foreground" />
-        </span>
-      ))}
-    </>
-  );
 }
 
 export const revalidate = 3600;
@@ -116,11 +93,24 @@ export default async function VendorPage({
   }
 
   const now = new Date();
-  const homeMarket = [...vendor.markets].sort((a, b) =>
+  const ranked = [...vendor.markets].sort((a, b) =>
     stallNextDate(a, a.schedules, a.days, now).localeCompare(
       stallNextDate(b, b.schedules, b.days, now),
     ),
-  )[0];
+  );
+  const nextMarket = ranked[0];
+  const nextRows = nextMarket
+    ? nextMarket.days.length
+      ? nextMarket.schedules.filter((row) => nextMarket.days.includes(Number(row.weekday)))
+      : nextMarket.schedules
+    : [];
+  const nextSlot = nextMarket ? nextOpenSlot(nextRows.length ? nextRows : nextMarket.schedules, nextMarket.province, now) : null;
+  const nextRow = nextSlot
+    ? nextRows.find((row) => Number(row.weekday) === nextSlot.weekday) ??
+      nextMarket?.schedules.find((row) => Number(row.weekday) === nextSlot.weekday)
+    : null;
+  const nextHours = nextRow ? formatHours(nextRow.opens_at, nextRow.closes_at) : "";
+  const homeMarket = nextMarket;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -136,28 +126,35 @@ export default async function VendorPage({
       />
       <BackButton href={homeMarket ? `/markets/${homeMarket.slug}` : "/markets"} />
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-        <h1>{vendor.name}</h1>
+        <div className="flex min-w-0 items-start gap-3">
+          <h1>{vendor.name}</h1>
+          <ListingMark src={vendor.logo_url} />
+        </div>
         <div className="flex items-center gap-1">
           <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
         </div>
       </div>
-      {vendor.markets.length ? (
+      {nextMarket && nextSlot ? (
         <p className="type-lede mt-2 max-w-3xl text-pretty text-muted-foreground">
-          {vendor.markets.map((market, index) => (
-            <span key={market.id}>
-              {index === 0 ? "At " : index === vendor.markets.length - 1 ? " and " : ", "}
-              <Link href={`/markets/${market.slug}`} className="font-medium text-foreground hover:underline">
-                {market.name}
-              </Link>
-              <HallHoursLabel
-                days={market.days}
-                schedules={market.schedules}
-                province={market.province}
-                now={now}
-              />
-            </span>
-          ))}
-          .
+          {nextSlot.waitMinutes === 0 ? (
+            <>
+              <NowLabel>Open now</NowLabel>
+              {" at "}
+            </>
+          ) : (
+            <>
+              {WEEKDAYS[nextSlot.weekday]} at{" "}
+            </>
+          )}
+          <Link href={`/markets/${nextMarket.slug}`} className="font-medium text-foreground hover:underline">
+            {nextMarket.name}
+          </Link>
+          {nextHours ? (
+            <>
+              {", "}
+              <Hours value={nextHours} className="text-muted-foreground" />
+            </>
+          ) : null}
         </p>
       ) : null}
       <ListingScore
@@ -184,40 +181,56 @@ export default async function VendorPage({
           <section>
             <h2>Reviews</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Anything written about this stall on the live list.
-              {profile ? "" : " Sign in to add one."}
+              Anything written about this vendor on the live list.
             </p>
-            {vendor.markets.length ? (
-              <ListingComposer
-                signedIn={Boolean(profile)}
-                markets={vendor.markets.map(toGeoMarket)}
-                stalls={vendor.markets.map((market) => ({
-                  id: vendor.id,
-                  name: vendor.name,
-                  slug: vendor.slug,
-                  market_id: market.id,
-                  stall: market.stall,
-                }))}
-                initialMarketId={vendor.markets[0]?.id}
-                initialVendorId={vendor.id}
-              />
-            ) : null}
             {vendor.feed.length ? (
-              <ol className={vendor.markets.length ? undefined : "mt-4"}>
-                {vendor.feed.map((item) => (
-                  <ReviewCard key={item.id} item={item} />
-                ))}
-              </ol>
+              <>
+                {profile && vendor.markets.length ? (
+                  <ListingComposer
+                    signedIn
+                    markets={vendor.markets.map(toGeoMarket)}
+                    stalls={vendor.markets.map((market) => ({
+                      id: vendor.id,
+                      name: vendor.name,
+                      slug: vendor.slug,
+                      market_id: market.id,
+                      stall: market.stall,
+                    }))}
+                    initialMarketId={vendor.markets[0]?.id}
+                    initialVendorId={vendor.id}
+                  />
+                ) : null}
+                <ol className={vendor.markets.length ? undefined : "mt-4"}>
+                  {vendor.feed.map((item) => (
+                    <ReviewCard key={item.id} item={item} />
+                  ))}
+                </ol>
+              </>
+            ) : profile && vendor.markets.length ? (
+              <>
+                <EmptyReviews signedIn next={`/vendors/${vendor.slug}`} />
+                <ListingComposer
+                  signedIn
+                  markets={vendor.markets.map(toGeoMarket)}
+                  stalls={vendor.markets.map((market) => ({
+                    id: vendor.id,
+                    name: vendor.name,
+                    slug: vendor.slug,
+                    market_id: market.id,
+                    stall: market.stall,
+                  }))}
+                  initialMarketId={vendor.markets[0]?.id}
+                  initialVendorId={vendor.id}
+                />
+              </>
             ) : (
-              <p className="mt-4 text-base text-muted-foreground">
-                Nothing on the live list yet. Tell the next shopper what was on the tables.
-              </p>
+              <EmptyReviews signedIn={Boolean(profile)} next={`/vendors/${vendor.slug}`} />
             )}
           </section>
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-            <h3>Find them</h3>
+            <h3>Markets</h3>
             <ListingContact phone={vendor.phone} email={vendor.email} />
             <ListingWebsite href={vendor.website} />
             <ListingInstagram href={vendor.instagram} />

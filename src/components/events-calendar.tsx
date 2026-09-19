@@ -197,7 +197,7 @@ export function EventsCalendar({
             >
               <CaretLeftMark />
             </Button>
-            <p className="type-column min-w-[12.5rem] text-center">{monthLabel(year, month)}</p>
+            <p className="type-column min-w-0 flex-1 text-center sm:min-w-[12.5rem]">{monthLabel(year, month)}</p>
             <Button
               type="button"
               variant="outline"

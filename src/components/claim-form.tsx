@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const CLAIM_COPY = {
   vendor: {
-    title: "Is this your stall?",
+    title: "Is this your listing?",
     lede: "Claim it to update hours, the menu, and how people find you.",
   },
   market: {
@@ -108,7 +108,7 @@ export function ClaimForm({
         ))}
       </fieldset>
       <div className="grid gap-1.5">
-        <Label htmlFor="claim-business">{stall ? "Business or stall name" : "Organization"}</Label>
+        <Label htmlFor="claim-business">{stall ? "Business or vendor name" : "Organization"}</Label>
         <Input
           id="claim-business"
           name="business"
@@ -137,7 +137,7 @@ export function ClaimForm({
           maxLength={2000}
           placeholder={
             stall
-              ? "Stall number, hours to fix, or a manager we can email."
+              ? "Hours to fix, or a manager we can email."
               : "Hours to fix, a manager we can email, or how this listing should read."
           }
           className="bg-card"

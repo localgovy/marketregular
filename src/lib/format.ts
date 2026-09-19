@@ -1,5 +1,9 @@
 import { LAUNCH_TZ } from "@/lib/launch";
 
+export function countLabel(count: number, one: string, many: string) {
+  return `${count.toLocaleString("en-CA")} ${count === 1 ? one : many}`;
+}
+
 export function slugify(value: string) {
   return value
     .toLowerCase()

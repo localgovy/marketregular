@@ -46,7 +46,7 @@ export function DirectorySort({ search }: { search: MarketsSearch }) {
   }
 
   /**
-   * Read the raw choice: `parseDirectorySort` folds "near" back to "name" until
+   * Read the raw choice: `parseDirectorySort` folds "near" back to "next" until
    * coordinates exist, so normalising first would swallow the request that is
    * supposed to trigger the location prompt.
    */

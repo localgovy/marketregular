@@ -103,3 +103,22 @@ export function nextBlogPost(slug: string): BlogPost | null {
   if (index < 0) return null;
   return posts[(index + 1) % posts.length] ?? null;
 }
+
+export function isStaleWeekendGuide(post: BlogPost, now = new Date()) {
+  if (!/this-weekend|this weekend/i.test(`${post.slug} ${post.title}`)) return false;
+  const posted = Date.parse(blogPostedIso(post.date));
+  return Number.isFinite(posted) && now.getTime() - posted > 9 * 24 * 60 * 60 * 1000;
+}
+
+export function listPublicBlogPosts(now = new Date()) {
+  return listBlogPosts().filter((post) => !isStaleWeekendGuide(post, now));
+}
+
+export function featuredBlogPost(now = new Date()) {
+  const posts = listPublicBlogPosts(now);
+  return (
+    posts.find((post) => /in season|this september|this month/i.test(post.title)) ??
+    posts[0] ??
+    null
+  );
+}

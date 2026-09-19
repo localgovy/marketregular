@@ -37,6 +37,13 @@ export function SignupForm({ next = "/account" }: { next?: string }) {
 
   return (
     <div className="grid gap-8">
+      <div className="grid gap-3">
+        <GoogleSignIn next={next} />
+        <AuthLegalNote mode="signup" />
+      </div>
+
+      <p className="text-sm text-muted-foreground">or use email</p>
+
       <form action={submit} className="grid gap-3">
         <div className="grid gap-1.5">
           <Label htmlFor="display_name">Name on posts</Label>
@@ -77,10 +84,7 @@ export function SignupForm({ next = "/account" }: { next?: string }) {
         {state && "message" in state && state.message ? (
           <p className="text-sm text-primary">{state.message}</p>
         ) : null}
-        <AuthLegalNote />
       </form>
-
-      <GoogleSignIn next={next} />
 
       <p className="text-sm text-muted-foreground">
         Already have an account?{" "}

@@ -51,7 +51,7 @@ export function visitPlanText(groups: UpcomingGroup[]) {
       lines.push("");
     }
   }
-  lines.push("Search halls and stalls: " + `${SITE_URL}/markets`);
+  lines.push("Search markets and vendors: " + `${SITE_URL}/markets`);
   lines.push("Your saved list: " + `${SITE_URL}/saved`);
   return lines.join("\n").trim() + "\n";
 }

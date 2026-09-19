@@ -10,23 +10,28 @@ import type { UpcomingGroup } from "@/lib/upcoming";
  * so without this the first crawl of /events sees an empty page. Held to the
  * next two market days so the calendar still opens near the top.
  */
+const PER_DAY = 5;
+
 export function EventsWeekList({ groups }: { groups: UpcomingGroup[] }) {
   if (!groups.length) return null;
   const days = [...new Set(groups.map((group) => group.iso))].slice(0, 2);
   const soon = groups.filter((group) => days.includes(group.iso));
 
   return (
-    <section aria-labelledby="next-two-days" className="mb-8">
+    <section aria-labelledby="next-two-days" className="mt-10">
       <h2 id="next-two-days">Next two market days</h2>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        {soon.map((group) => (
+        {soon.map((group) => {
+          const extra = Math.max(0, group.slots.length - PER_DAY);
+          const slots = group.slots.slice(0, PER_DAY);
+          return (
           <div key={group.id} className="bg-card ring-1 ring-border/70">
             <div className="flex items-baseline justify-between gap-2 border-b border-border/60 px-3 py-1.5">
               <h3>{group.label}</h3>
               <p className="type-kicker shrink-0 font-medium text-primary">{group.date}</p>
             </div>
             <ul className="divide-y divide-border/50">
-              {group.slots.map((slot) => (
+              {slots.map((slot) => (
                 <li key={slot.market.id} className="px-3 py-1.5">
                   <HoursRow
                     href={`/markets/${slot.market.slug}`}
@@ -48,14 +53,21 @@ export function EventsWeekList({ groups }: { groups: UpcomingGroup[] }) {
                 </li>
               ))}
             </ul>
+            {extra ? (
+              <p className="px-3 py-2 text-sm text-muted-foreground">
+                {extra === 1 ? "1 more on the calendar" : `${extra} more on the calendar`}
+              </p>
+            ) : null}
           </div>
-        ))}
+          );
+        })}
       </div>
       <p className="mt-3 text-base text-muted-foreground">
+        Pick any day on the calendar above, or see{" "}
         <Link href="/#week" className="font-medium text-foreground hover:underline">
-          The whole week
-        </Link>{" "}
-        is on the home page, or pick any day below.
+          the whole week
+        </Link>
+        .
       </p>
     </section>
   );

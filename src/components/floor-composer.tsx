@@ -622,9 +622,9 @@ function VendorStep({
           Change
         </button>
       </p>
-      <p className="mt-3 text-base font-medium">A stall?</p>
+      <p className="mt-3 text-base font-medium">A vendor?</p>
       <p className="mb-2 text-sm text-muted-foreground">
-        {stallCount ? "Optional. Skip if this post is about the market." : "No stalls listed yet."}
+        {stallCount ? "Optional. Skip if this post is about the market." : "No vendors listed yet."}
       </p>
       {stallCount ? (
         <>
@@ -634,7 +634,7 @@ function VendorStep({
               ref={searchRef}
               value={query}
               onChange={onQuery}
-              placeholder="Find a stall"
+              placeholder="Find a vendor"
               className="h-9 bg-background text-base md:text-base"
             />
           ) : null}
@@ -669,7 +669,7 @@ function VendorStep({
                 </PickRow>
               ))
             ) : searching ? (
-              <p className="px-2 py-1.5 text-sm text-muted-foreground">No stalls match that.</p>
+              <p className="px-2 py-1.5 text-sm text-muted-foreground">No vendors match that.</p>
             ) : null}
           </div>
         </>

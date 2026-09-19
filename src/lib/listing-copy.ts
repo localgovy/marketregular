@@ -235,6 +235,10 @@ export function marketPageDescription({
   return clipMeta(parts.join(" "));
 }
 
+export function directionsHref(lat: number, lng: number) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+}
+
 /** Meta descriptions only. Do not render as page copy — the Hours list is the schedule. */
 export function hoursLine(schedules: MarketSchedule[]) {
   return schedules

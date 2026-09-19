@@ -260,11 +260,11 @@ export function parseDirectorySort(
   value: string | undefined,
   hasNear: boolean,
 ): DirectorySort {
-  if (value === "near") return hasNear ? "near" : "name";
+  if (value === "near") return hasNear ? "near" : "next";
   if (value === "name" || value === "next" || value === "score") {
     return value;
   }
-  return hasNear ? "near" : "name";
+  return hasNear ? "near" : "next";
 }
 
 function directoryQuery(search: MarketsSearch) {
@@ -284,7 +284,7 @@ function directoryQuery(search: MarketsSearch) {
     query.set("lat", search.lat);
     query.set("lng", search.lng);
   }
-  const implied: DirectorySort = search.lat && search.lng ? "near" : "name";
+  const implied: DirectorySort = search.lat && search.lng ? "near" : "next";
   if (search.sort && search.sort !== implied) query.set("sort", search.sort);
   return query;
 }

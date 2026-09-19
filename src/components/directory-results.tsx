@@ -23,6 +23,7 @@ export function DirectoryResults({
   search,
   weekdays,
   now,
+  showVendors = true,
 }: {
   markets: DirectoryMarketCard[];
   vendors: DirectoryVendorCard[];
@@ -32,6 +33,7 @@ export function DirectoryResults({
   search: MarketsSearch;
   weekdays?: number[];
   now: string;
+  showVendors?: boolean;
 }) {
   const [markets, setMarkets] = useState(initialMarkets);
   const [vendors, setVendors] = useState(initialVendors);
@@ -84,8 +86,15 @@ export function DirectoryResults({
 
   return (
     <>
-      <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)] lg:gap-x-4">
-        <section id="directory-markets" className="scroll-mt-24">
+      <div
+        className={cn(
+          "mt-6 grid items-start gap-10",
+          showVendors
+            ? "lg:grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)] lg:gap-x-4"
+            : undefined,
+        )}
+      >
+        <section id="directory-markets" className="scroll-mt-header">
           <h2 className="mb-4">Markets</h2>
           {marketTotal ? (
             <div className="grid gap-4">
@@ -111,8 +120,10 @@ export function DirectoryResults({
             }}
           />
         </section>
+        {showVendors ? (
+          <>
         <div aria-hidden data-directory-rule className="hidden w-0.5 self-stretch bg-board lg:block" />
-        <section id="directory-vendors" className="scroll-mt-24">
+        <section id="directory-vendors" className="scroll-mt-header">
           <h2 className="mb-4">Vendors</h2>
           {vendorTotal ? (
             <div className="grid gap-4 sm:grid-cols-2">
@@ -132,6 +143,8 @@ export function DirectoryResults({
             }}
           />
         </section>
+          </>
+        ) : null}
       </div>
       <BackToTop />
     </>

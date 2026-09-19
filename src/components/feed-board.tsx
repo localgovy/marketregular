@@ -74,7 +74,7 @@ export function FeedBoard({
           const item = reviewFromPost(
             {
               ...row,
-              author_name: "Someone on the floor",
+              author_name: "A shopper",
               photos: row.photos ?? [],
             },
             stalls,
@@ -158,7 +158,7 @@ export function FeedBoard({
           <SearchField
             value={search}
             onChange={setSearch}
-            placeholder="Post, author, market, or stall"
+            placeholder="Post, author, market, or vendor"
             className="bg-card"
             aria-label="Find posts"
             onClear={() => {
@@ -210,13 +210,15 @@ export function FeedBoard({
         </p>
 
         <div className="mt-4">
-          <FloorComposer
-            signedIn={signedIn}
-            stalls={stalls}
-            markets={markets}
-            initialMarketId={initialMarketId}
-            onPosted={(item) => setExtra((current) => [item, ...current].slice(0, 80))}
-          />
+          {visible.length || filtered || signedIn ? (
+            <FloorComposer
+              signedIn={signedIn}
+              stalls={stalls}
+              markets={markets}
+              initialMarketId={items.length ? initialMarketId : undefined}
+              onPosted={(item) => setExtra((current) => [item, ...current].slice(0, 80))}
+            />
+          ) : null}
           {visible.length ? (
             <ol>
               {visible.map((item) => (
@@ -224,13 +226,41 @@ export function FeedBoard({
               ))}
             </ol>
           ) : (
-            <p className="px-3 py-4 text-base text-muted-foreground">
-              {filtered
-                ? "No posts match that. Clear the search or pick a place from the rail."
-                : signedIn
-                  ? "The live list is empty. Write what you saw in the box above, or pick a hall from Events."
-                  : "The live list is empty. Sign in to write the first note, or browse markets."}
-            </p>
+            <div className="px-3 py-4">
+              <p className="text-base text-muted-foreground">
+                {filtered
+                  ? "No posts match that. Clear the search or pick a place from the rail."
+                  : signedIn
+                    ? "The live list is empty. Write the first note, or pick a market from Events."
+                    : "The live list is empty. Sign in to write the first note, or start with a market that's open."}
+              </p>
+              {!filtered && !items.length ? (
+                <ul className="mt-3 grid gap-1">
+                  {markets
+                    .filter((market) => open.has(market.slug))
+                    .slice(0, 8)
+                    .map((market) => (
+                      <li key={market.slug}>
+                        <Link
+                          href={`/markets/${market.slug}`}
+                          className="font-medium hover:underline"
+                        >
+                          {market.name}
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              ) : null}
+              {!filtered && !items.length && !signedIn ? (
+                <Link
+                  href="/login?next=/feed"
+                  rel="nofollow"
+                  className="mt-4 inline-flex text-sm font-medium text-primary hover:underline"
+                >
+                  Sign in
+                </Link>
+              ) : null}
+            </div>
           )}
         </div>
       </div>
@@ -240,7 +270,7 @@ export function FeedBoard({
         <p className="mt-1 text-sm text-muted-foreground">
           Listed are mentions of markets and vendors.
           {!mentions.markets.length && !mentions.vendors.length
-            ? " No halls or stalls on these posts yet."
+            ? " No markets or vendors on these posts yet."
             : null}
         </p>
         {mentions.markets.length ? (
@@ -271,7 +301,7 @@ export function FeedBoard({
         ) : null}
         {mentions.vendors.length ? (
           <section className="mt-5">
-            <h3 className="text-sm font-medium">Stalls</h3>
+            <h3 className="text-sm font-medium">Vendors</h3>
             <ul className="mt-1">
               {mentions.vendors.map((place) => (
                 <li key={place.slug}>

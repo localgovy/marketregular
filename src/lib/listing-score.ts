@@ -29,12 +29,21 @@ export function formatReviewCount(count: number) {
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+/** Row chrome: 57234 → 57k+. Full count stays in listingScoreLabel. */
+export function formatReviewCountShort(count: number) {
+  if (count < 1000) return formatReviewCount(count);
+  return `${Math.floor(Math.abs(count) / 1000).toLocaleString("en-CA")}k+`;
+}
+
 export function listingScoreLabel(score: ListingScoreValue) {
   const noun = score.count === 1 ? "review" : "reviews";
   return `${formatRatingAvg(score.avg)} out of 5 from ${formatReviewCount(score.count)} ${noun}`;
 }
 
 export function listingScoreParens(score: ListingScoreValue) {
+  if (score.count >= 1000) {
+    return `${formatRatingAvg(score.avg)} · ${formatReviewCountShort(score.count)}`;
+  }
   return `${formatRatingAvg(score.avg)} (${formatReviewCount(score.count)})`;
 }
 

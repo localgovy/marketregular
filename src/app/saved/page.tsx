@@ -4,8 +4,10 @@ import { SavedDesk } from "@/components/saved-rail";
 import { listBlogPosts } from "@/lib/blog";
 import { loadMySaves } from "@/lib/data/account";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
+import { LAUNCH_CITY } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 import { EMPTY_SAVES } from "@/lib/saves";
+import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = pageMeta({
   title: "Saved markets, vendors, blog posts, and reviews",
@@ -22,6 +24,10 @@ export default async function SavedPage() {
     getCurrentProfile(),
   ]);
   const saves = profile ? await loadMySaves() : EMPTY_SAVES;
+  const suggested = [...markets]
+    .filter((market) => market.city.trim().toLowerCase() === LAUNCH_CITY.toLowerCase())
+    .sort((a, b) => b.review_count - a.review_count || a.name.localeCompare(b.name))
+    .slice(0, 3);
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
@@ -31,16 +37,28 @@ export default async function SavedPage() {
           Markets, vendors, blog posts, and reviews on this account.
         </p>
       ) : (
-        <p className="type-lede mt-2 mb-8 text-muted-foreground">
+        <>
+          <p className="type-lede mt-2 mb-6 text-muted-foreground">
+            Sign in to keep markets and vendors on a list that follows you.
+          </p>
+          {suggested.length ? (
+            <ul className="mb-6 divide-y divide-border ring-1 ring-border">
+              {suggested.map((market) => (
+                <li key={market.id} className="px-4 py-3">
+                  <p className="font-medium">{market.name}</p>
+                  <p className="text-sm text-muted-foreground">{market.city}</p>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           <Link
             href="/login?next=/saved"
             rel="nofollow"
-            className="font-medium text-foreground hover:underline"
+            className={buttonVariants()}
           >
             Sign in
-          </Link>{" "}
-            to save markets, vendors, blog posts, and reviews to this account.
-        </p>
+          </Link>
+        </>
       )}
       {profile ? (
         <SavedDesk

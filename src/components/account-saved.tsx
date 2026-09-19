@@ -122,7 +122,7 @@ export function AccountSavedLists({
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-sm text-muted-foreground">No stalls on the list.</p>
+          <p className="mt-2 text-sm text-muted-foreground">No vendors on the list.</p>
         )}
       </section>
       <SavedNotesSection
