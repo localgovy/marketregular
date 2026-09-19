@@ -9,7 +9,7 @@ kicker: By day
 
 Here’s our take on which Toronto farmers' markets run Monday through Sunday. Hours from [MarketRegular](/). Tap a name for the live listing, or jump to [markets open today](/markets/open-today) and the [day-by-day directory](/markets/day).
 
-Seasons shift — confirm on the live page before you go. [St. Lawrence Market](/markets/st-lawrence-market) (South) is the permanent specialty hall, open most weekdays and Sunday; the Saturday farmers’ market is [North](/markets/st-lawrence-farmers-market) only.
+Seasons shift — confirm on the live page before you go. [St. Lawrence Market](/markets/st-lawrence-market) (South) is the year-round specialty hall, open most weekdays and Sunday; the Saturday farmers’ market is [North](/markets/st-lawrence-farmers-market) only.
 
 ---
 
