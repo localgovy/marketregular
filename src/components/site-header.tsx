@@ -10,7 +10,7 @@ import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { SearchField } from "@/components/search-field";
 import { buttonVariants } from "@/components/ui/button";
 import { SEARCH_LABEL, SEARCH_PLACEHOLDER, SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
-import { isAuthChromePath, SITE_NAV } from "@/lib/nav";
+import { isAuthChromePath, SITE_BLOG_NAV, SITE_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
 function HeaderSearch({ className, q = "" }: { className?: string; q?: string }) {
@@ -74,6 +74,15 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
           )}
           {auth ? null : (
             <HeaderSearch className="min-w-0 flex-1 overflow-hidden md:min-w-40 xl:ml-auto xl:max-w-md" q={q} />
+          )}
+          {auth ? null : (
+            <Link
+              href={SITE_BLOG_NAV.href}
+              prefetch={false}
+              className="shrink-0 text-sm font-medium whitespace-nowrap hover:underline"
+            >
+              {SITE_BLOG_NAV.label}
+            </Link>
           )}
           <SavesHydrator />
           <HeaderAccount />

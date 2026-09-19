@@ -90,11 +90,10 @@ export default async function MarketsPage({
     sort,
   });
   const queried = Boolean(params.q?.trim());
-  const showVendors = queried || tags.length > 0;
   const status = [LAUNCH_CITY, ...crumbs, countLabel(markets.length, "market", "markets")].join(" · ");
   const summary = [
     countLabel(markets.length, "market", "markets"),
-    showVendors ? countLabel(vendors.length, "vendor", "vendors") : "",
+    countLabel(vendors.length, "vendor", "vendors"),
     crumbs.join(", "),
   ]
     .filter(Boolean)
@@ -159,12 +158,11 @@ export default async function MarketsPage({
         now={nowIso}
         search={search}
         markets={directory.markets}
-        vendors={showVendors ? directory.vendors : []}
+        vendors={directory.vendors}
         schedulesByMarket={directory.schedulesByMarket}
         marketTotal={directory.marketTotal}
-        vendorTotal={showVendors ? directory.vendorTotal : 0}
+        vendorTotal={directory.vendorTotal}
         weekdays={weekdays}
-        showVendors={showVendors}
       />
       {queried ? null : (
         <div className="mt-8">
