@@ -2,6 +2,7 @@ import { WEEKDAYS } from "@/lib/constants";
 import { listMarkets, listStalls, listVendors } from "@/lib/data/catalog";
 import { listingScore } from "@/lib/listing-score";
 import { vendorHasSubstance } from "@/lib/listing-substance";
+import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { guessVendorTags, vendorProductTags } from "@/lib/vendor-tags";
 import type { StallRef, Vendor } from "@/types/database";
 
@@ -169,7 +170,7 @@ export async function loadBlogMarketPeeks(requests: BlogMarketPeekRequest[]) {
     peeks.set(key, {
       ratingAvg: market.rating_avg,
       reviewCount: market.review_count,
-      vendors: pickVendors(ranked),
+      vendors: publishesVendorRoster(market.slug) ? pickVendors(ranked) : [],
     });
   }
 

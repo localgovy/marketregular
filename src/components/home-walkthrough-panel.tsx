@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { CloseMark } from "@/components/marks";
 import { buttonVariants } from "@/components/ui/button";
 import { SITE_NAME } from "@/lib/constants";
-import { LAUNCH_COVERAGE } from "@/lib/launch";
 import {
   rememberHomeWalkthrough,
   homeWalkthroughSeen,
@@ -17,7 +16,7 @@ const DELAY_MS = 700;
 const STEPS = [
   {
     title: `Welcome to ${SITE_NAME}`,
-    body: `${LAUNCH_COVERAGE}, farmers' markets this week — who's open, the hours, and who's on the floor.`,
+    body: "Toronto and GTA farmers' markets this week",
   },
   {
     title: "Find a market",
