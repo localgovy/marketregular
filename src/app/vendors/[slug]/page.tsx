@@ -266,7 +266,6 @@ export default async function VendorPage({
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-            <h3>Contact</h3>
             <ListingContact phone={vendor.phone} email={vendor.email} />
             <ListingWebsite href={vendor.website} />
             <ListingInstagram href={vendor.instagram} />
