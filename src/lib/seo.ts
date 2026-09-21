@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CLAIM_INBOX, SITE_NAME, SITE_URL, SITE_LOGO, SITE_OG, WEEKDAYS } from "@/lib/constants";
+import { CLAIM_INBOX, SITE_NAME, SITE_TITLE, SITE_URL, SITE_LOGO, SITE_OG, WEEKDAYS } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_REGION_NAME, LAUNCH_TZ } from "@/lib/launch";
 import { listingScore } from "@/lib/listing-score";
 import { externalHref, listingEmail } from "@/lib/format";
@@ -58,9 +58,9 @@ export function pageMeta({
   return {
     ...(title
       ? {
-          // The root layout template (`%s · MarketRegular`) applies to nested
-          // routes, not `/`. Set the full title there so the brand still shows.
-          title: path === "/" ? { absolute: `${title} · ${SITE_NAME}` } : title,
+          // Nested routes use the layout template (`%s · MarketRegular`). `/`
+          // does not, so pass the full document title (already includes the brand).
+          title: path === "/" ? { absolute: title } : title,
         }
       : {}),
     description,
@@ -95,6 +95,7 @@ export function websiteJsonLd() {
         "@id": `${SITE_URL}/#website`,
         url: SITE_URL,
         name: SITE_NAME,
+        alternateName: SITE_TITLE,
         description: SITE_DESCRIPTION,
         inLanguage: "en-CA",
         publisher: { "@id": `${SITE_URL}/#org` },

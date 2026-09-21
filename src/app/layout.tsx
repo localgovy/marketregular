@@ -11,7 +11,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
 import { OAUTH_HASH_SCRUB_SCRIPT } from "@/lib/analytics";
-import { SITE_NAME, SITE_TAGLINE, SITE_URL, SITE_OG } from "@/lib/constants";
+import { SITE_NAME, SITE_TITLE, SITE_URL, SITE_OG } from "@/lib/constants";
 import { SITE_DESCRIPTION, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
 
@@ -38,7 +38,7 @@ const nums = Barlow_Condensed({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} — ${SITE_TAGLINE}`,
+    default: SITE_TITLE,
     template: `%s · ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -47,6 +47,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_CA",
     siteName: SITE_NAME,
+    title: SITE_TITLE,
     images: [
       {
         url: SITE_OG,

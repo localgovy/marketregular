@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
-import { LEGAL_ENTITY, SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
-import { LAUNCH_CITY } from "@/lib/launch";
+import { LEGAL_ENTITY, SITE_NAME, SITE_TAGLINE, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
 import { SITE_FOOTER_NAV, SITE_LEGAL_NAV } from "@/lib/nav";
 
 export function SiteFooter() {
@@ -22,7 +21,7 @@ export function SiteFooter() {
               <span>by</span>
               <StudioWordmark className="lg:text-primary" />
             </a>
-            <span>{LAUNCH_CITY}, farmers&apos; markets, all in one place</span>
+            <span>{SITE_TAGLINE}</span>
           </p>
           <p>
             © {year} {LEGAL_ENTITY} {SITE_NAME}™

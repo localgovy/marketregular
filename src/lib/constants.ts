@@ -1,9 +1,10 @@
-import { LAUNCH_COVERAGE } from "@/lib/launch";
 import { isTrustedSiteHost } from "@/lib/site-host";
 
 /** One word. Never “Market Regular”. */
 export const SITE_NAME = "MarketRegular";
-export const SITE_TAGLINE = `${LAUNCH_COVERAGE}, farmers' markets this week.`;
+export const SITE_TAGLINE = "Toronto farmers' markets, all in one place";
+/** Homepage and default document title. Google uses this for the domain result. */
+export const SITE_TITLE = `${SITE_NAME} - ${SITE_TAGLINE}`;
 
 /** One search field across the header, home finder, and directory. */
 export const SEARCH_PLACEHOLDER = "Market, vendor, cuisine, or neighbourhood";

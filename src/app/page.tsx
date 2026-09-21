@@ -13,7 +13,7 @@ import {
   listVendors,
 } from "@/lib/data/catalog";
 import { featuredBlogPost } from "@/lib/blog";
-import { LAUNCH_CITY } from "@/lib/launch";
+import { SITE_TITLE } from "@/lib/constants";
 import { weekdayInToronto } from "@/lib/find-paths";
 import { upcomingByDay } from "@/lib/upcoming";
 import { topVendorsThisWeek, vendorsSellingToday } from "@/lib/vendor-week";
@@ -22,7 +22,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = pageMeta({
-  title: `What's open today at ${LAUNCH_CITY} farmers' markets`,
+  title: SITE_TITLE,
   path: "/",
   description: SITE_DESCRIPTION,
 });
