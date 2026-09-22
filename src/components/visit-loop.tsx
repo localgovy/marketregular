@@ -44,11 +44,6 @@ export function HomeMosaic({
   const sellOptions = tagsPresent([...markets, ...vendors], FIND_PRODUCTS);
   const cuisineOptions = tagsPresent(vendors, FIND_ORIGINS);
   const setup = [...tagsPresent(markets, FIND_SETUP)];
-  const nearMarkets = markets.map((market) => ({
-    name: market.name,
-    lat: market.lat,
-    lng: market.lng,
-  }));
   const openGroup = week.find((group) => group.open);
   const ticker =
     openGroup?.slots.map((slot) => ({
@@ -98,7 +93,6 @@ export function HomeMosaic({
             how="Choose when, a neighbourhood or city, what they sell, or a cuisine. Press Search when the list looks right."
           >
             <QuickFind
-              markets={nearMarkets}
               areas={areas}
               sellOptions={sellOptions}
               cuisineOptions={cuisineOptions}
