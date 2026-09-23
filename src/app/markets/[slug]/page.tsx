@@ -166,7 +166,7 @@ export default async function MarketPage({
           <div>
             <h2>Vendors</h2>
             <ul className="mt-3 divide-y divide-border border-y border-border">
-              {market.vendors.slice(0, 6).map((vendor) => (
+              {market.vendors.slice(0, 3).map((vendor) => (
                 <li key={vendor.id}>
                   <Link
                     href={`/vendors/${vendor.slug}`}
@@ -182,9 +182,12 @@ export default async function MarketPage({
                 </li>
               ))}
             </ul>
-            {market.vendors.length > 6 ? (
-              <a href="#vendors" className="mt-3 inline-flex text-sm font-medium hover:underline">
-                All {countLabel(market.vendors.length, "vendor", "vendors")}
+            {market.vendors.length > 3 ? (
+              <a
+                href="#vendors"
+                className="stall-chip mt-3 flex min-h-11 w-full items-center justify-center bg-primary px-4 py-3 text-center text-sm font-medium text-primary-foreground outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-foreground"
+              >
+                See all {countLabel(market.vendors.length, "vendor", "vendors")} for this market
               </a>
             ) : null}
           </div>
