@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from "react";
+import Link from "next/link";
 import type { MarkProps } from "@/components/marks";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +67,7 @@ export function HomePanel({
   icon: Icon,
   kicker,
   title,
+  titleHref,
   how,
   action,
   children,
@@ -78,6 +80,7 @@ export function HomePanel({
   icon: ComponentType<MarkProps>;
   kicker: string;
   title: string;
+  titleHref?: string;
   how: ReactNode;
   action?: React.ReactNode;
   children: React.ReactNode;
@@ -133,7 +136,15 @@ export function HomePanel({
                 </span>
               ) : null}
             </p>
-            <h2 className={rail ? "type-column" : undefined}>{title}</h2>
+            <h2 className={rail ? "type-column" : undefined}>
+              {titleHref ? (
+                <Link href={titleHref} className="hover:underline">
+                  {title}
+                </Link>
+              ) : (
+                title
+              )}
+            </h2>
           </div>
         </div>
         {!rail && action ? (

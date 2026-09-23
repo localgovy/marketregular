@@ -110,6 +110,7 @@ export function HomeMosaic({
               icon={SignMark}
               kicker={weeklyNote.kicker ?? "This week"}
               title={weeklyNote.title}
+              titleHref={`/blog/${weeklyNote.slug}`}
               how={plainBlogText(weeklyNote.description)}
               action={
                 <Link href={`/blog/${weeklyNote.slug}`} className="hover:underline">
