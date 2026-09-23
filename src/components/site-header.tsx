@@ -10,7 +10,7 @@ import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { SearchField } from "@/components/search-field";
 import { buttonVariants } from "@/components/ui/button";
 import { SEARCH_LABEL, SEARCH_PLACEHOLDER, SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
-import { isAuthChromePath, SITE_BLOG_NAV, SITE_NAV } from "@/lib/nav";
+import { isAuthChromePath, SITE_CLAIM_NAV, SITE_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
 function HeaderSearch({ className, q = "" }: { className?: string; q?: string }) {
@@ -77,11 +77,11 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
           )}
           {auth ? null : (
             <Link
-              href={SITE_BLOG_NAV.href}
+              href={SITE_CLAIM_NAV.href}
               prefetch={false}
               className="shrink-0 text-sm font-medium whitespace-nowrap hover:underline"
             >
-              {SITE_BLOG_NAV.label}
+              {SITE_CLAIM_NAV.label}
             </Link>
           )}
           <SavesHydrator />
@@ -91,14 +91,14 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
       {auth ? null : (
         <nav
           aria-label="Primary"
-          className="header-stripe-paper grid h-10 grid-cols-4 divide-x divide-border border-t border-border bg-secondary xl:hidden"
+          className="header-stripe-paper flex h-10 divide-x divide-border border-t border-border bg-secondary xl:hidden"
         >
           {SITE_NAV.map((item) => (
             <NavLink
               key={item.href}
               href={item.href}
               variant="tab"
-              className="h-10 w-full min-w-0 justify-center px-1 text-center"
+              className="h-10 min-w-0 flex-1 justify-center px-1 text-center"
             >
               {item.label}
             </NavLink>

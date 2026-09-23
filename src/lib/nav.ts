@@ -3,16 +3,16 @@ export const SITE_NAV = [
   { href: "/events", label: "Events" },
   { href: "/markets", label: "Markets" },
   { href: "/saved", label: "Saved" },
+  { href: "/blog", label: "Blog" },
 ] as const;
 
 /** Footer only until the live list has posts. */
 export const SITE_FEED_NAV = { href: "/feed", label: "Feed" } as const;
 
 /** Header text link beside the account chip. Same face as Sign in. */
-export const SITE_BLOG_NAV = { href: "/blog", label: "Blog" } as const;
+export const SITE_CLAIM_NAV = { href: "/contact", label: "Claim" } as const;
 
 export const SITE_META_NAV = [
-  SITE_BLOG_NAV,
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ] as const;
