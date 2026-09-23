@@ -8,16 +8,15 @@ import { JsonLd } from "@/components/json-ld";
 import { ListingAlsoLinks } from "@/components/listing-also-links";
 import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
-import { ListingComposer } from "@/components/listing-composer";
+import { ListingReviewGate } from "@/components/listing-review-gate";
 import { SaveButton } from "@/components/save-button";
 import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
-import { getCurrentProfile, getVendorBySlug } from "@/lib/data/catalog";
+import { getVendorBySlug } from "@/lib/data/catalog";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
-import { EmptyReviews } from "@/components/empty-reviews";
 import { Hours } from "@/components/hours";
 import { NowLabel } from "@/components/now-label";
 import { WEEKDAYS } from "@/lib/constants";
@@ -82,10 +81,7 @@ export default async function VendorPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [vendor, profile] = await Promise.all([
-    getVendorBySlug(slug),
-    getCurrentProfile(),
-  ]);
+  const vendor = await getVendorBySlug(slug);
   if (!vendor) {
     const retired = await retiredVendorTarget(slug);
     if (retired) permanentRedirect(retired);
@@ -227,49 +223,28 @@ export default async function VendorPage({
             <p className="mt-1 text-sm text-muted-foreground">
               Anything written about this vendor on the live list.
             </p>
+            <ListingReviewGate
+              hasFeed={vendor.feed.length > 0}
+              next={`/vendors/${vendor.slug}`}
+              canCompose={vendor.markets.length > 0}
+              markets={vendor.markets.map(toGeoMarket)}
+              stalls={vendor.markets.map((market) => ({
+                id: vendor.id,
+                name: vendor.name,
+                slug: vendor.slug,
+                market_id: market.id,
+                stall: market.stall,
+              }))}
+              initialMarketId={vendor.markets[0]?.id}
+              initialVendorId={vendor.id}
+            />
             {vendor.feed.length ? (
-              <>
-                {profile && vendor.markets.length ? (
-                  <ListingComposer
-                    signedIn
-                    markets={vendor.markets.map(toGeoMarket)}
-                    stalls={vendor.markets.map((market) => ({
-                      id: vendor.id,
-                      name: vendor.name,
-                      slug: vendor.slug,
-                      market_id: market.id,
-                      stall: market.stall,
-                    }))}
-                    initialMarketId={vendor.markets[0]?.id}
-                    initialVendorId={vendor.id}
-                  />
-                ) : null}
-                <ol className={vendor.markets.length ? undefined : "mt-4"}>
-                  {vendor.feed.map((item) => (
-                    <ReviewCard key={item.id} item={item} />
-                  ))}
-                </ol>
-              </>
-            ) : profile && vendor.markets.length ? (
-              <>
-                <EmptyReviews signedIn next={`/vendors/${vendor.slug}`} />
-                <ListingComposer
-                  signedIn
-                  markets={vendor.markets.map(toGeoMarket)}
-                  stalls={vendor.markets.map((market) => ({
-                    id: vendor.id,
-                    name: vendor.name,
-                    slug: vendor.slug,
-                    market_id: market.id,
-                    stall: market.stall,
-                  }))}
-                  initialMarketId={vendor.markets[0]?.id}
-                  initialVendorId={vendor.id}
-                />
-              </>
-            ) : (
-              <EmptyReviews signedIn={Boolean(profile)} next={`/vendors/${vendor.slug}`} />
-            )}
+              <ol className={vendor.markets.length ? undefined : "mt-4"}>
+                {vendor.feed.map((item) => (
+                  <ReviewCard key={item.id} item={item} />
+                ))}
+              </ol>
+            ) : null}
           </section>
         </div>
         <aside className="flex flex-col gap-6">

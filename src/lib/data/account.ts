@@ -39,7 +39,7 @@ export async function loadAccountDesk(userId: string) {
     supabase.from("saves").select("kind, slug, detail").eq("user_id", user.id),
     supabase
       .from("posts")
-      .select("id, body, created_at, market_id")
+      .select("id, body, created_at, market_id, markets(name, slug)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(30),
@@ -59,9 +59,12 @@ export async function loadAccountDesk(userId: string) {
       visitPlanEmailedAt: me?.visit_plan_emailed_at ?? null,
       saves: savesRes.error ? EMPTY_SAVES : savesFromRows(savesRes.data),
       posts: (postsRes.data ?? []).map((row) => ({
-        ...row,
+        id: row.id,
+        body: row.body,
+        created_at: row.created_at,
+        market_id: row.market_id,
         markets: null,
-      })) as AccountPost[],
+      })),
       claims: (claimsRes.data ?? []) as ClaimRequest[],
       reviewCount: postCountRes.count ?? 0,
     };
@@ -71,10 +74,20 @@ export async function loadAccountDesk(userId: string) {
     email: user.email ?? null,
     visitPlanEmailedAt: me?.visit_plan_emailed_at ?? null,
     saves: savesFromRows(savesRes.data),
-    posts: (postsRes.data ?? []).map((row) => ({
-      ...row,
-      markets: null,
-    })) as AccountPost[],
+    posts: (postsRes.data ?? []).map((row) => {
+      const raw = row.markets;
+      const market = Array.isArray(raw) ? raw[0] : raw;
+      return {
+        id: row.id,
+        body: row.body,
+        created_at: row.created_at,
+        market_id: row.market_id,
+        markets:
+          market && typeof market.name === "string" && typeof market.slug === "string"
+            ? { name: market.name, slug: market.slug }
+            : null,
+      };
+    }),
     claims: (claimsRes.data ?? []) as ClaimRequest[],
     reviewCount: postCountRes.count ?? 0,
   };

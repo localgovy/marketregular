@@ -60,10 +60,17 @@ export function FloorComposer({
   const nearby = useMemo(() => {
     if (!coords) return [];
     return markets
-      .map((market) => ({
-        ...market,
-        distance: distanceMeters(coords, { lat: market.lat, lng: market.lng }),
-      }))
+      .flatMap((market) => {
+        if (market.lat == null || market.lng == null) return [];
+        return [
+          {
+            ...market,
+            lat: market.lat,
+            lng: market.lng,
+            distance: distanceMeters(coords, { lat: market.lat, lng: market.lng }),
+          },
+        ];
+      })
       .filter((market) => market.distance <= market.geofence_radius_m)
       .sort((a, b) => a.distance - b.distance);
   }, [coords, markets]);

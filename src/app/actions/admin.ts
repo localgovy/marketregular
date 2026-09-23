@@ -2,11 +2,31 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { slugify } from "@/lib/format";
+import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 function fail(message: string): never {
   throw new Error(message);
+}
+
+function coordOrNull(value: FormDataEntryValue | null) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function listingPath(
+  supabase: SupabaseClient,
+  table: "markets" | "vendors",
+  id: string,
+) {
+  const { data } = await supabase.from(table).select("slug").eq("id", id).maybeSingle();
+  const slug = typeof data?.slug === "string" ? data.slug : "";
+  if (!slug) return null;
+  return table === "markets" ? `/markets/${slug}` : `/vendors/${slug}`;
 }
 
 function parseReviewStats(formData: FormData) {
@@ -34,8 +54,8 @@ export async function saveMarket(formData: FormData) {
     city: String(formData.get("city") ?? ""),
     province: String(formData.get("province") ?? ""),
     postal_code: String(formData.get("postal_code") ?? "") || null,
-    lat: Number(formData.get("lat")),
-    lng: Number(formData.get("lng")),
+    lat: coordOrNull(formData.get("lat")),
+    lng: coordOrNull(formData.get("lng")),
     geofence_radius_m: Number(formData.get("geofence_radius_m") || 250),
     website: String(formData.get("website") ?? "") || null,
     instagram: String(formData.get("instagram") ?? "") || null,
@@ -60,9 +80,7 @@ export async function saveMarket(formData: FormData) {
     const { error } = await supabase.from("markets").insert(payload);
     if (error) fail(error.message);
   }
-  revalidatePath("/");
-  revalidatePath("/markets");
-  revalidatePath(`/markets/${payload.slug}`);
+  revalidatePublishedDirectory([`/markets/${payload.slug}`]);
   revalidatePath("/admin");
   revalidatePath("/admin/markets");
   redirect("/admin/markets");
@@ -71,8 +89,10 @@ export async function saveMarket(formData: FormData) {
 export async function deleteMarket(id: string) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
+  const path = await listingPath(supabase, "markets", id);
   const { error } = await supabase.from("markets").delete().eq("id", id);
   if (error) fail(error.message);
+  revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath("/admin/markets");
   redirect("/admin/markets");
 }
@@ -107,17 +127,18 @@ export async function saveVendor(formData: FormData) {
     const { error } = await supabase.from("vendors").insert(payload);
     if (error) fail(error.message);
   }
+  revalidatePublishedDirectory([`/vendors/${payload.slug}`]);
   revalidatePath("/admin/vendors");
-  revalidatePath("/markets");
-  revalidatePath(`/vendors/${payload.slug}`);
   redirect("/admin/vendors");
 }
 
 export async function deleteVendor(id: string) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
+  const path = await listingPath(supabase, "vendors", id);
   const { error } = await supabase.from("vendors").delete().eq("id", id);
   if (error) fail(error.message);
+  revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath("/admin/vendors");
   redirect("/admin/vendors");
 }
@@ -136,13 +157,18 @@ export async function saveSchedule(formData: FormData) {
     notes: String(formData.get("notes") ?? "") || null,
   });
   if (error) fail(error.message);
+  const path = await listingPath(supabase, "markets", market_id);
+  revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/markets/${market_id}`);
 }
 
 export async function deleteSchedule(id: string, marketId: string) {
   const { supabase } = await requireAdmin();
-  if (!supabase) return;
-  await supabase.from("market_schedules").delete().eq("id", id);
+  if (!supabase) fail("Supabase is not configured yet.");
+  const { error } = await supabase.from("market_schedules").delete().eq("id", id);
+  if (error) fail(error.message);
+  const path = await listingPath(supabase, "markets", marketId);
+  revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/markets/${marketId}`);
 }
 
@@ -160,6 +186,8 @@ export async function linkVendorToMarket(formData: FormData) {
       .filter((n) => !Number.isNaN(n)),
   });
   if (error) fail(error.message);
+  const path = await listingPath(supabase, "markets", market_id);
+  revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/markets/${market_id}`);
 }
 
@@ -180,51 +208,29 @@ export async function saveMenuItem(formData: FormData) {
       .filter(Boolean),
   });
   if (error) fail(error.message);
+  const path = await listingPath(supabase, "vendors", vendor_id);
+  revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/vendors/${vendor_id}`);
 }
 
 export async function decideClaim(id: string, status: "approved" | "rejected", note?: string) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
-  const { data: claim, error } = await supabase
+  const { data: claim, error: lookupError } = await supabase
     .from("claim_requests")
-    .update({ status, admin_note: note ?? null })
+    .select("target_type, target_id")
     .eq("id", id)
-    .select("*")
-    .single();
-  if (error || !claim) fail(error?.message ?? "Claim not found");
-
-  if (status === "approved") {
-    const table = claim.target_type === "market" ? "markets" : "vendors";
-    const { data: listing } = await supabase
-      .from(table)
-      .select("claimed_by")
-      .eq("id", claim.target_id)
-      .maybeSingle();
-    if (listing?.claimed_by && listing.claimed_by !== claim.user_id) {
-      fail("That listing is already claimed.");
-    }
-    const { data: claimed, error: claimError } = await supabase
-      .from(table)
-      .update({ claimed_by: claim.user_id })
-      .eq("id", claim.target_id)
-      .or(`claimed_by.is.null,claimed_by.eq.${claim.user_id}`)
-      .select("id")
-      .maybeSingle();
-    if (claimError) fail(claimError.message);
-    if (!claimed) fail("That listing is already claimed.");
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", claim.user_id)
-      .maybeSingle();
-    if (profile?.role !== "admin") {
-      const { error: roleError } = await supabase
-        .from("profiles")
-        .update({ role: "vendor" })
-        .eq("id", claim.user_id);
-      if (roleError) fail(roleError.message);
-    }
-  }
+    .maybeSingle();
+  if (lookupError) fail(lookupError.message);
+  if (!claim) fail("Claim not found");
+  const { error } = await supabase.rpc("decide_claim", {
+    p_id: id,
+    p_status: status,
+    p_note: note ?? null,
+  });
+  if (error) fail(error.message);
+  const table = claim.target_type === "market" ? "markets" : "vendors";
+  const path = await listingPath(supabase, table, claim.target_id);
+  revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath("/admin/claims");
 }

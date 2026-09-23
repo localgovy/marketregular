@@ -164,6 +164,18 @@ function mapUrl(lat: number, lng: number) {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 }
 
+function geoFields(lat: number | null, lng: number | null) {
+  if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) return {};
+  return {
+    geo: {
+      "@type": "GeoCoordinates" as const,
+      latitude: lat,
+      longitude: lng,
+    },
+    hasMap: mapUrl(lat, lng),
+  };
+}
+
 function listingImage(logoUrl: string | null) {
   return externalHref(logoUrl) ?? absoluteUrl(SITE_OG);
 }
@@ -186,12 +198,7 @@ export function marketJsonLd(
     email: listingEmail(market.email) ?? undefined,
     sameAs: sameAsLinks(market.website, market.instagram, market.tiktok, market.facebook),
     address: postalAddress(market),
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: market.lat,
-      longitude: market.lng,
-    },
-    hasMap: mapUrl(market.lat, market.lng),
+    ...geoFields(market.lat, market.lng),
     areaServed: { "@type": "AdministrativeArea", name: LAUNCH_REGION_NAME },
     openingHoursSpecification: market.schedules.map((row) => ({
       "@type": "OpeningHoursSpecification",
@@ -215,11 +222,7 @@ function hallPlace(hall: VendorHallForJsonLd) {
     name: hall.name,
     url: absoluteUrl(`/markets/${hall.slug}`),
     address: postalAddress(hall),
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: hall.lat,
-      longitude: hall.lng,
-    },
+    ...geoFields(hall.lat, hall.lng),
   };
 }
 

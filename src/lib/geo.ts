@@ -34,8 +34,8 @@ export type GeoMarket = {
   id: string;
   name: string;
   slug: string;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   geofence_radius_m: number;
   address: string;
   city: string;

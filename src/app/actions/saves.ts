@@ -102,46 +102,41 @@ export async function persistListingSaves(
   if (!user) return null;
 
   if (saved) {
-    const createdBlogs: string[] = [];
-    const blogs = new Set(listings.map((row) => row.blog));
-    for (const blog of blogs) {
-      const blogInsert = await supabase.from("saves").insert({
+    const blogs = [...new Set(listings.map((row) => row.blog))];
+    const { data: existingBlogs, error: existingError } = await supabase
+      .from("saves")
+      .select("slug")
+      .eq("user_id", user.id)
+      .eq("kind", "blog")
+      .in("slug", blogs);
+    if (existingError) return null;
+    const already = new Set((existingBlogs ?? []).map((row) => row.slug));
+    const { error: blogError } = await supabase.from("saves").upsert(
+      blogs.map((slug) => ({ user_id: user.id, kind: "blog" as const, slug })),
+      { onConflict: "user_id,kind,slug", ignoreDuplicates: true },
+    );
+    if (blogError) return null;
+    const { error: listingError } = await supabase.from("saves").upsert(
+      listings.map((listing) => ({
         user_id: user.id,
-        kind: "blog",
-        slug: blog,
-      });
-      if (blogInsert.error && blogInsert.error.code !== "23505") return null;
-      if (!blogInsert.error) createdBlogs.push(blog);
-    }
-    const inserted: string[] = [];
-    for (const listing of listings) {
-      const listingInsert = await supabase.from("saves").insert({
-        user_id: user.id,
-        kind: "listing",
+        kind: "listing" as const,
         slug: listing.slug,
         detail: listingDetailJson(listing),
-      });
-      if (listingInsert.error && listingInsert.error.code !== "23505") {
-        console.error("persistListingSaves insert", listingInsert.error);
-        if (inserted.length) {
-          await supabase
-            .from("saves")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("kind", "listing")
-            .in("slug", inserted);
-        }
-        if (createdBlogs.length) {
-          await supabase
-            .from("saves")
-            .delete()
-            .eq("user_id", user.id)
-            .eq("kind", "blog")
-            .in("slug", createdBlogs);
-        }
-        return null;
+      })),
+      { onConflict: "user_id,kind,slug", ignoreDuplicates: true },
+    );
+    if (listingError) {
+      console.error("persistListingSaves insert", listingError);
+      const created = blogs.filter((slug) => !already.has(slug));
+      if (created.length) {
+        await supabase
+          .from("saves")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("kind", "blog")
+          .in("slug", created);
       }
-      if (!listingInsert.error) inserted.push(listing.slug);
+      return null;
     }
   } else {
     const { error } = await supabase

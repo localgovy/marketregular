@@ -12,6 +12,9 @@ export function safePath(next: unknown, fallback = "/account") {
   if (!value.startsWith("/") || value.startsWith("//")) return fallback;
   if (value.includes("\\") || value.includes("://")) return fallback;
   if (!SAFE_PATH.test(value)) return fallback;
+  const bare = value.split("?")[0]?.split("#")[0] ?? value;
+  // A next of /login or /signup sends a signed-in visit back to the same page.
+  if (fallback && (bare === "/login" || bare === "/signup")) return fallback;
   return value;
 }
 

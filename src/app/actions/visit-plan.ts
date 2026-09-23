@@ -78,6 +78,9 @@ export async function emailVisitPlan(slugs: string[]) {
   });
   if (error) return { error: "Could not send right now." };
 
-  await service.rpc("stamp_visit_plan_emailed_at", { p_user_id: user.id });
+  const { error: stampError } = await service.rpc("stamp_visit_plan_emailed_at", {
+    p_user_id: user.id,
+  });
+  if (stampError) return { error: "The email went out, but the send could not be recorded." };
   return { error: null, message: `Sent to ${user.email}` };
 }

@@ -22,8 +22,8 @@ export type Market = {
   city: string;
   province: string;
   postal_code: string | null;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   geofence_radius_m: number;
   website: string | null;
   instagram: string | null;

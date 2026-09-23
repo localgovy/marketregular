@@ -4,6 +4,17 @@ import { nextOpenSlot, type ScheduleRow } from "@/lib/schedule";
 import type { DirectoryVendor } from "@/lib/vendor-halls";
 import type { Market } from "@/types/database";
 
+function distanceOrFar(
+  here: { lat: number; lng: number },
+  lat: number | null,
+  lng: number | null,
+) {
+  if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return Number.POSITIVE_INFINITY;
+  }
+  return distanceMeters(here, { lat, lng });
+}
+
 function byName(a: { name: string }, b: { name: string }) {
   return a.name.localeCompare(b.name);
 }
@@ -32,8 +43,7 @@ export function sortDirectoryMarkets(
     const here = options.near;
     return list.sort(
       (a, b) =>
-        distanceMeters(here, { lat: a.lat, lng: a.lng }) -
-          distanceMeters(here, { lat: b.lat, lng: b.lng }) || byName(a, b),
+        distanceOrFar(here, a.lat, a.lng) - distanceOrFar(here, b.lat, b.lng) || byName(a, b),
     );
   }
   if (sort === "score") return list.sort(byScore);
@@ -68,7 +78,7 @@ export function sortDirectoryVendors(
       for (const hall of vendor.halls) {
         const market = options.marketsBySlug.get(hall.slug);
         if (!market) continue;
-        best = Math.min(best, distanceMeters(here, market));
+        best = Math.min(best, distanceOrFar(here, market.lat, market.lng));
       }
       return best;
     };

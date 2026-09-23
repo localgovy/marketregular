@@ -8,7 +8,7 @@ import { JsonLd } from "@/components/json-ld";
 import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
 import { ListingAlsoLinks } from "@/components/listing-also-links";
-import { ListingComposer } from "@/components/listing-composer";
+import { ListingReviewGate } from "@/components/listing-review-gate";
 import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
 import { MarketVendors } from "@/components/market-vendors";
@@ -16,7 +16,7 @@ import { NowLabel } from "@/components/now-label";
 import { ScheduleList } from "@/components/schedule-list";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
-import { getCurrentProfile, getMarketBySlug } from "@/lib/data/catalog";
+import { getMarketBySlug } from "@/lib/data/catalog";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
 import { listingScore } from "@/lib/listing-score";
 import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
@@ -26,7 +26,6 @@ import { marketPageDescription, marketPageTitle, directionsHref } from "@/lib/li
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { nextOpenLabel } from "@/lib/schedule";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
-import { EmptyReviews } from "@/components/empty-reviews";
 import { countLabel } from "@/lib/format";
 
 export const revalidate = 3600;
@@ -61,10 +60,7 @@ export default async function MarketPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [market, profile] = await Promise.all([
-    getMarketBySlug(slug),
-    getCurrentProfile(),
-  ]);
+  const market = await getMarketBySlug(slug);
   if (!market) {
     const retired = await retiredMarketTarget(slug);
     if (retired) permanentRedirect(retired);
@@ -265,43 +261,24 @@ export default async function MarketPage({
               Same posts as the live list. A score is optional.
             </p>
           )}
-          {market.feed.length ? (
-            <div className="mt-4">
-              {profile ? (
-                <ListingComposer
-                  signedIn
-                  markets={[toGeoMarket(market)]}
-                  stalls={market.vendors.map((vendor) => ({
-                    id: vendor.id,
-                    name: vendor.name,
-                    slug: vendor.slug,
-                    market_id: market.id,
-                    stall: vendor.stall,
-                  }))}
-                  initialMarketId={market.id}
-                />
-              ) : null}
+          <div className="mt-4">
+            <ListingReviewGate
+              hasFeed={market.feed.length > 0}
+              next={`/markets/${market.slug}`}
+              markets={[toGeoMarket(market)]}
+              stalls={market.vendors.map((vendor) => ({
+                id: vendor.id,
+                name: vendor.name,
+                slug: vendor.slug,
+                market_id: market.id,
+                stall: vendor.stall,
+              }))}
+              initialMarketId={market.id}
+            />
+            {market.feed.length ? (
               <LiveFeed initialItems={market.feed} marketId={market.id} />
-            </div>
-          ) : profile ? (
-            <div className="mt-4">
-              <EmptyReviews signedIn next={`/markets/${market.slug}`} />
-              <ListingComposer
-                signedIn
-                markets={[toGeoMarket(market)]}
-                stalls={market.vendors.map((vendor) => ({
-                  id: vendor.id,
-                  name: vendor.name,
-                  slug: vendor.slug,
-                  market_id: market.id,
-                  stall: vendor.stall,
-                }))}
-                initialMarketId={market.id}
-              />
-            </div>
-          ) : (
-            <EmptyReviews signedIn={false} next={`/markets/${market.slug}`} />
-          )}
+            ) : null}
+          </div>
         </section>
       </div>
     </div>
