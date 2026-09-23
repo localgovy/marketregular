@@ -28,15 +28,17 @@ export function ListingPhone({ phone }: { phone: string | null }) {
 export function ListingContact({
   phone,
   email,
+  heading = true,
 }: {
   phone: string | null;
   email?: string | null;
+  heading?: boolean;
 }) {
   const mail = listingEmail(email);
   if (!phone && !mail) return null;
   return (
     <div className="mt-4">
-      <h3>Contact</h3>
+      {heading ? <h3>Contact</h3> : null}
       <ListingPhone phone={phone} />
       {mail ? (
         <p className="mt-2 text-sm">

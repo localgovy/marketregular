@@ -228,7 +228,7 @@ export default async function MarketPage({
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
             <h3>Contact</h3>
-            <ListingContact phone={market.phone} email={market.email} />
+            <ListingContact phone={market.phone} email={market.email} heading={false} />
             <ListingWebsite href={market.website} />
             <ListingInstagram href={market.instagram} />
             <ListingTiktok href={market.tiktok} />
