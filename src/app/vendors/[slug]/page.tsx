@@ -44,6 +44,8 @@ function hallDayHours(
 }
 
 export const revalidate = 3600;
+// A dynamic segment stays uncached until this is set. The hour window is revalidate.
+export const dynamic = "force-static";
 
 export async function generateMetadata({
   params,

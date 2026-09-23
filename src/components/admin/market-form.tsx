@@ -73,11 +73,11 @@ export function MarketForm({ market }: { market?: Market }) {
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="lat">Latitude</Label>
-        <Input id="lat" name="lat" type="number" step="any" required defaultValue={market?.lat} />
+        <Input id="lat" name="lat" type="number" step="any" required defaultValue={market?.lat ?? ""} />
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="lng">Longitude</Label>
-        <Input id="lng" name="lng" type="number" step="any" required defaultValue={market?.lng} />
+        <Input id="lng" name="lng" type="number" step="any" required defaultValue={market?.lng ?? ""} />
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
         <Label htmlFor="logo_url">Logo URL</Label>

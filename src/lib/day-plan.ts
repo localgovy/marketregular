@@ -56,8 +56,8 @@ type HallMarket = {
   slug: string;
   name: string;
   address: string;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   province: string;
 };
 

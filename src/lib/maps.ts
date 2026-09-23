@@ -3,8 +3,8 @@ export type MapsPlace = {
   address: string;
   city?: string;
   province?: string;
-  lat?: number;
-  lng?: number;
+  lat?: number | null;
+  lng?: number | null;
 };
 
 function hasPin(place: MapsPlace) {

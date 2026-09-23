@@ -27,10 +27,17 @@ function escapeHtml(value: string) {
 
 type MapPoint = Pick<Market, "id" | "name" | "slug" | "lat" | "lng" | "city" | "address">;
 
+function withPin(markets: MapPoint[]) {
+  return markets.flatMap((market) => {
+    if (market.lat == null || market.lng == null) return [];
+    return [{ ...market, lat: market.lat, lng: market.lng }];
+  });
+}
+
 function featureCollection(markets: MapPoint[]) {
   return {
     type: "FeatureCollection" as const,
-    features: markets.map((market) => ({
+    features: withPin(markets).map((market) => ({
       type: "Feature" as const,
       geometry: {
         type: "Point" as const,
@@ -56,8 +63,9 @@ export function MarketMap({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!ref.current || markets.length === 0) return;
-    const solo = markets.length === 1 ? markets[0] : null;
+    const pinned = withPin(markets);
+    if (!ref.current || pinned.length === 0) return;
+    const solo = pinned.length === 1 ? pinned[0] : null;
     const map = new Map({
       container: ref.current,
       style: "https://tiles.openfreemap.org/styles/positron",
@@ -69,7 +77,7 @@ export function MarketMap({
     map.on("load", () => {
       map.addSource("markets", {
         type: "geojson",
-        data: featureCollection(markets),
+        data: featureCollection(pinned),
         cluster: true,
         clusterMaxZoom: 14,
         clusterRadius: 46,
@@ -157,9 +165,9 @@ export function MarketMap({
 
     if (solo) {
       // already centered
-    } else if (markets.length > 1 && markets.length <= 12) {
+    } else if (pinned.length > 1 && pinned.length <= 12) {
       const bounds = new LngLatBounds();
-      for (const market of markets) bounds.extend([market.lng, market.lat]);
+      for (const market of pinned) bounds.extend([market.lng, market.lat]);
       map.fitBounds(bounds, { padding: 48, maxZoom: 13, duration: 0 });
     }
 

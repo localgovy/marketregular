@@ -21,8 +21,8 @@ export type SavedListingMarket = {
   slug: string;
   address: string;
   city?: string;
-  lat?: number;
-  lng?: number;
+  lat?: number | null;
+  lng?: number | null;
   rating_avg: number | null;
   review_count: number;
 };

@@ -29,6 +29,8 @@ import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/s
 import { countLabel } from "@/lib/format";
 
 export const revalidate = 3600;
+// A dynamic segment stays uncached until this is set. The hour window is revalidate.
+export const dynamic = "force-static";
 
 export async function generateMetadata({
   params,
@@ -68,6 +70,7 @@ export default async function MarketPage({
   }
 
   const now = new Date();
+  const directions = directionsHref(market.lat, market.lng);
   const when = market.schedules.length
     ? nextOpenLabel(market.schedules, market.province, now)
     : null;
@@ -150,13 +153,15 @@ export default async function MarketPage({
               {market.city}, {market.province} {market.postal_code}
             </AddressLink>
           </address>
-          <a
-            href={directionsHref(market.lat, market.lng)}
-            rel="noreferrer"
-            className="mt-3 inline-flex text-sm font-medium text-primary hover:underline"
-          >
-            Directions
-          </a>
+          {directions ? (
+            <a
+              href={directions}
+              rel="noreferrer"
+              className="mt-3 inline-flex text-sm font-medium text-primary hover:underline"
+            >
+              Directions
+            </a>
+          ) : null}
         </div>
         {publishesVendorRoster(market.slug) && market.vendors.length ? (
           <div>

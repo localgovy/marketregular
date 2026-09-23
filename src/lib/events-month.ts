@@ -14,8 +14,8 @@ export type CalendarEvent = {
   marketSlug: string;
   address: string;
   city: string;
-  lat: number;
-  lng: number;
+  lat: number | null;
+  lng: number | null;
   hours: string;
   notes: string | null;
   open: boolean;

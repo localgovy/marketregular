@@ -235,7 +235,8 @@ export function marketPageDescription({
   return clipMeta(parts.join(" "));
 }
 
-export function directionsHref(lat: number, lng: number) {
+export function directionsHref(lat: number | null, lng: number | null) {
+  if (lat == null || lng == null || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
   return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 }
 
