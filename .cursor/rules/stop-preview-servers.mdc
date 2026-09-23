@@ -1,0 +1,18 @@
+---
+description: Stop local preview servers you started when the task is finished
+alwaysApply: true
+---
+
+# Stop preview servers
+
+When you start a local preview server for a task (`next dev`, `npm run dev`, `vite`, or similar), stop that process before you finish. Leave servers the user already had running.
+
+Stop only the process you started. Use its pid from the terminal session. Do not kill an unrelated process that happens to share the port.
+
+```bash
+# GOOD — the dev server you launched
+kill 36801
+
+# BAD — a server that was already running when the task began
+kill $(lsof -t -iTCP:3000)
+```
