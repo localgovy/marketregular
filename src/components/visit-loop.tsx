@@ -74,7 +74,7 @@ export function HomeMosaic({
               <span className="sm:after:content-['_']">Made by Canadians,</span>
               <span className="sm:after:content-['_']">for Canadians,</span>
               <span>to shop Canadian. </span>
-              <span>Pickup, pre-order, and a mobile app coming soon.</span>
+              <span>Pickup and Pre-Order now available at select markets and vendors.</span>
             </span>
           </span>
         </p>
