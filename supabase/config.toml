@@ -65,18 +65,15 @@ enabled = true
 sql_paths = ["./seed.sql"]
 
 [db.network_restrictions]
-# Enable management of network restrictions.
-enabled = false
-# List of IPv4 CIDR blocks allowed to connect to the database.
-# Defaults to allow all IPv4 connections. Set empty array to block all IPs.
-allowed_cidrs = ["0.0.0.0/0"]
-# List of IPv6 CIDR blocks allowed to connect to the database.
-# Defaults to allow all IPv6 connections. Set empty array to block all IPs.
-allowed_cidrs_v6 = ["::/0"]
+# Direct Postgres only. The Data API, Auth, Storage, and Realtime stay open.
+# Add another CIDR here and run `supabase network-restrictions update` when a
+# new machine needs `psql` or `supabase db`.
+enabled = true
+allowed_cidrs = ["70.26.111.243/32"]
+allowed_cidrs_v6 = []
 
-# Uncomment to reject non-secure connections to the database.
-# [db.ssl_enforcement]
-# enabled = true
+[db.ssl_enforcement]
+enabled = true
 
 [realtime]
 enabled = true
@@ -173,6 +170,8 @@ enable_anonymous_sign_ins = false
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
 minimum_password_length = 8
+# Hosted Auth has leaked-password checks on (Have I Been Pwned). That setting
+# is not in this file; turning it off in the dashboard would undo it.
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""

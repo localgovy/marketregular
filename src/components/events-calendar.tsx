@@ -7,6 +7,7 @@ import { HoursRow } from "@/components/hours-row";
 import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
+import { VerifiedName } from "@/components/verified-stamp";
 import { Button } from "@/components/ui/button";
 import { WEEKDAYS } from "@/lib/constants";
 import {
@@ -358,7 +359,7 @@ export function EventsCalendar({
               >
                 <HoursRow
                   href={`/markets/${event.marketSlug}`}
-                  name={event.marketName}
+                  name={<VerifiedName slug={event.marketSlug} name={event.marketName} />}
                   hours={event.hours}
                   extra={
                     <>

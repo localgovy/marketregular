@@ -5,6 +5,7 @@ import { AddressLink } from "@/components/address-link";
 import { ListingScore } from "@/components/listing-score";
 import { SavedNotesSection, type SavedNote } from "@/components/saved-notes";
 import { SaveButton } from "@/components/save-button";
+import { VerifiedName } from "@/components/verified-stamp";
 import { useHydratedSaves } from "@/lib/use-hydrated-saves";
 import type { Saves } from "@/lib/saves";
 import type { Market, Vendor } from "@/types/database";
@@ -61,7 +62,7 @@ export function AccountSavedLists({
                 >
                   <div className="min-w-0 px-3 py-2.5">
                     <Link href={`/markets/${market.slug}`} className="text-base font-medium hover:underline">
-                      {market.name}
+                      <VerifiedName slug={market.slug} name={market.name} />
                     </Link>
                     <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
                       <AddressLink

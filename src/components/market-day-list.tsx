@@ -4,6 +4,7 @@ import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { AddressLink } from "@/components/address-link";
+import { VerifiedName } from "@/components/verified-stamp";
 import type { MarketDayRow } from "@/lib/landing";
 
 /**
@@ -30,7 +31,7 @@ export function MarketDayList({
                 href={`/markets/${row.market.slug}`}
                 className="text-base font-medium hover:underline"
               >
-                {row.market.name}
+                <VerifiedName slug={row.market.slug} name={row.market.name} />
               </Link>
               <p className="mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm text-muted-foreground">
                 <AddressLink

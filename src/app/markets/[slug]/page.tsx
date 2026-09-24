@@ -16,6 +16,7 @@ import { NowLabel } from "@/components/now-label";
 import { ScheduleList } from "@/components/schedule-list";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
+import { VerifiedName } from "@/components/verified-stamp";
 import { getMarketBySlug } from "@/lib/data/catalog";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
 import { listingScore } from "@/lib/listing-score";
@@ -114,7 +115,9 @@ export default async function MarketPage({
         </p>
       </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-        <h1>{market.name}</h1>
+        <h1>
+          <VerifiedName slug={market.slug} name={market.name} />
+        </h1>
         <div className="flex items-center gap-1">
           <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
         </div>

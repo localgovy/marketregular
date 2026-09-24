@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HoursRow } from "@/components/hours-row";
 import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
+import { VerifiedName } from "@/components/verified-stamp";
 import { marketListName } from "@/lib/listing-copy";
 import type { UpcomingGroup } from "@/lib/upcoming";
 
@@ -35,7 +36,12 @@ export function EventsWeekList({ groups }: { groups: UpcomingGroup[] }) {
                 <li key={slot.market.id} className="px-3 py-1.5">
                   <HoursRow
                     href={`/markets/${slot.market.slug}`}
-                    name={marketListName(slot.market.name, slot.market.city)}
+                    name={
+                      <VerifiedName
+                        slug={slot.market.slug}
+                        name={marketListName(slot.market.name, slot.market.city)}
+                      />
+                    }
                     hours={slot.hours}
                     extra={
                       <ListingScore

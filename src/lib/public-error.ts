@@ -25,6 +25,7 @@ export function signInPublicError(error: AuthLike) {
   if (isAuthRateLimited(error)) return "Wait a bit, then try again.";
   const code = authCode(error);
   const message = authMessage(error);
+  if (code === "weak_password" && leakedPassword(error)) return LEAKED_PASSWORD;
   if (code === "email_not_confirmed" || message.includes("email not confirmed")) {
     return "Could not sign in.";
   }
@@ -34,10 +35,23 @@ export function signInPublicError(error: AuthLike) {
   return "Could not sign in.";
 }
 
+function leakedPassword(error: AuthLike) {
+  const message = authMessage(error);
+  return (
+    message.includes("pwned") ||
+    message.includes("leaked") ||
+    message.includes("data breach") ||
+    message.includes("known to be weak")
+  );
+}
+
+const LEAKED_PASSWORD = "That password has appeared in a data breach. Pick a different one.";
+
 export function signUpPublicError(error: AuthLike): { error: string | null; message?: string } {
   if (isAuthRateLimited(error)) return { error: "Wait a bit, then try again." };
   const code = authCode(error);
   const message = authMessage(error);
+  if (code === "weak_password" && leakedPassword(error)) return { error: LEAKED_PASSWORD };
   if (
     code === "email_exists" ||
     code === "user_already_exists" ||
@@ -56,6 +70,7 @@ export function passwordUpdatePublicError(error: AuthLike) {
   if (isAuthRateLimited(error)) return "Wait a bit, then try again.";
   const code = authCode(error);
   if (code === "same_password") return "Pick a password you have not used here.";
+  if (code === "weak_password" && leakedPassword(error)) return LEAKED_PASSWORD;
   if (code === "weak_password") return "Use at least 8 characters.";
   return "Could not update the password.";
 }

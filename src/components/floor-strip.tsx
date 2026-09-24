@@ -2,6 +2,7 @@ import { HoursRow } from "@/components/hours-row";
 import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
+import { VerifiedName } from "@/components/verified-stamp";
 import { marketListName } from "@/lib/listing-copy";
 
 type OpenMarket = {
@@ -43,7 +44,12 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
             <li key={market.id} className="bg-card">
               <HoursRow
                 href={`/markets/${market.slug}`}
-                name={marketListName(market.name, market.city ?? "")}
+                name={
+                  <VerifiedName
+                    slug={market.slug}
+                    name={marketListName(market.name, market.city ?? "")}
+                  />
+                }
                 hours={market.hours}
                 score={
                   <ListingScore

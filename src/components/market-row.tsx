@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
+import { VerifiedName } from "@/components/verified-stamp";
 import { Hours } from "@/components/hours";
 import { hallHours } from "@/lib/day-plan";
 import { AddressLink } from "@/components/address-link";
@@ -39,7 +40,7 @@ export function MarketRow({
       <div className={cn("min-w-0 py-3", inset && "px-2")}>
         <p className="min-w-0">
           <Link href={`/markets/${market.slug}`} className="text-base font-medium">
-            {market.name}
+            <VerifiedName slug={market.slug} name={market.name} />
           </Link>
           <ListingScore
             parens

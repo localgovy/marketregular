@@ -6,6 +6,7 @@ import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
+import { VerifiedName } from "@/components/verified-stamp";
 import { Hours } from "@/components/hours";
 import { hallHours, hoursOnIso } from "@/lib/day-plan";
 import type { DirectoryMarketCard, DirectorySchedule } from "@/lib/directory-page";
@@ -69,7 +70,7 @@ export function MarketCard({
         </CardHeader>
         <Link href={`/markets/${market.slug}`} className="flex flex-col gap-(--card-spacing)">
           <CardTitle className="type-column px-(--card-spacing)">
-            {market.name}
+            <VerifiedName slug={market.slug} name={market.name} />
           </CardTitle>
           <CardContent className="flex flex-col gap-3">
             <ListingScore ratingAvg={market.rating_avg} reviewCount={market.review_count} />

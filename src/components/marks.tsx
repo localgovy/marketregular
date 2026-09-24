@@ -261,6 +261,18 @@ export function CheckMark(props: MarkProps) {
   );
 }
 
+/** Cut-corner plate with a check punched out. Claimed listings. */
+export function VerifiedMark(props: MarkProps) {
+  return (
+    <Mark {...props}>
+      <path
+        fillRule="evenodd"
+        d={`${plate(1.6, 1.6, 20.8, 20.8, 3.6)}M9.2 16.5 5.2 12.5 7.1 10.6 9.2 12.7 16.2 5.7 18.1 7.6Z`}
+      />
+    </Mark>
+  );
+}
+
 /** Cut-corner stall plate with a plus punched through. */
 export function PlusMark(props: MarkProps) {
   return (

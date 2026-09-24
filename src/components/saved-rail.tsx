@@ -9,6 +9,7 @@ import { ListingScore } from "@/components/listing-score";
 import { SavedNotesSection, type SavedNote } from "@/components/saved-notes";
 import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
+import { VerifiedName } from "@/components/verified-stamp";
 import { useHydratedSaves } from "@/lib/use-hydrated-saves";
 import { EMPTY_SAVES, type Saves } from "@/lib/saves";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
@@ -75,7 +76,7 @@ export function SavedRail() {
                 <div className="min-w-0 flex-1 px-3 py-2.5">
                   <p className="min-w-0">
                     <Link href={`/markets/${market.slug}`} className="text-base font-medium hover:underline">
-                      {market.name}
+                      <VerifiedName slug={market.slug} name={market.name} />
                     </Link>
                     <ListingScore
                       parens
@@ -160,7 +161,7 @@ export function SavedDesk({
                     href={`/markets/${market.slug}`}
                     className="block text-base font-medium hover:underline"
                   >
-                    {market.name}
+                    <VerifiedName slug={market.slug} name={market.name} />
                   </Link>
                   <span className="flex flex-wrap items-baseline gap-x-2 text-sm text-muted-foreground">
                     <AddressLink

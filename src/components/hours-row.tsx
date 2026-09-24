@@ -15,7 +15,7 @@ export function HoursRow({
   nameClassName,
 }: {
   href: string;
-  name: string;
+  name: ReactNode;
   hours: string;
   extra?: ReactNode;
   score?: ReactNode;
