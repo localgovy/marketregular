@@ -48,6 +48,11 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
+        source: "/vendors/nemophillist-creations",
+        destination: "/vendors/nemophilist-creations",
+        permanent: true,
+      },
+      {
         source: "/markets/sickkids-market-indoor-winter",
         destination: "/markets/sickkids-market",
         permanent: true,
