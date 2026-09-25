@@ -35,6 +35,7 @@ export default async function AdminLayout({
     ["/admin/vendors", "Vendors"],
     ["/admin/moderation", "Moderation"],
     ["/admin/claims", "Claims"],
+    ["/admin/saves", "Saves"],
   ] as const;
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">

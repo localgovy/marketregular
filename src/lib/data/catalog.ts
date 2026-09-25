@@ -142,59 +142,106 @@ function stallsFromRows(rows: StallRow[]): StallRef[] {
   });
 }
 
-async function loadPublishedDirectory(): Promise<PublishedDirectory> {
+/**
+ * Next's data cache rejects a single entry over 2MB. The whole directory is
+ * past that, so one `unstable_cache` never stored and every page refetched it.
+ * Each table is its own entry, still under the cap, and still tagged `directory`.
+ */
+const DIRECTORY_CACHE = { revalidate: 120, tags: [DIRECTORY_TAG] };
+
+function requirePublicDb() {
   const supabase = publicDb();
   if (!supabase) directoryFailed(null);
-  const [markets, vendors, stallRows, schedules, menuIds] = await Promise.all([
-    fetchAllRows<Market>((from, to) =>
+  return supabase;
+}
+
+const loadCachedMarkets = unstable_cache(
+  async () => {
+    const supabase = requirePublicDb();
+    return fetchAllRows<Market>((from, to) =>
       supabase
         .from("markets")
         .select(MARKET_PUBLIC)
         .eq("status", "published")
         .order("name")
         .range(from, to),
-    ),
-    fetchAllRows<Vendor>((from, to) =>
+    );
+  },
+  ["published-directory-markets-v1"],
+  DIRECTORY_CACHE,
+);
+
+const loadCachedVendors = unstable_cache(
+  async () => {
+    const supabase = requirePublicDb();
+    return fetchAllRows<Vendor>((from, to) =>
       supabase
         .from("vendors")
         .select(VENDOR_PUBLIC)
         .eq("status", "published")
         .order("name")
         .range(from, to),
-    ),
-    fetchAllRows<StallRow>((from, to) =>
+    );
+  },
+  ["published-directory-vendors-v1"],
+  DIRECTORY_CACHE,
+);
+
+const loadCachedStallRows = unstable_cache(
+  async () => {
+    const supabase = requirePublicDb();
+    return fetchAllRows<StallRow>((from, to) =>
       supabase
         .from("market_vendors")
         .select("market_id, stall, days, vendors(id, name, slug, status), markets(city, status)")
         .order("market_id")
         .order("vendor_id")
         .range(from, to),
-    ),
-    fetchAllRows<MarketSchedule>((from, to) =>
+    );
+  },
+  ["published-directory-stalls-v1"],
+  DIRECTORY_CACHE,
+);
+
+const loadCachedSchedules = unstable_cache(
+  async () => {
+    const supabase = requirePublicDb();
+    return fetchAllRows<MarketSchedule>((from, to) =>
       supabase.from("market_schedules").select(SCHEDULE_PUBLIC).order("id").range(from, to),
-    ),
-    supabase.rpc("menu_vendor_ids"),
+    );
+  },
+  ["published-directory-schedules-v1"],
+  DIRECTORY_CACHE,
+);
+
+const loadCachedMenuVendorIds = unstable_cache(
+  async () => {
+    const supabase = requirePublicDb();
+    const menuIds = await supabase.rpc("menu_vendor_ids");
+    if (menuIds.error) directoryFailed(menuIds.error);
+    if (!Array.isArray(menuIds.data)) directoryFailed({ message: "Menu vendor ids were not a list" });
+    return menuIds.data.filter((id): id is string => typeof id === "string");
+  },
+  ["published-directory-menu-ids-v1"],
+  DIRECTORY_CACHE,
+);
+
+const getPublishedDirectory = cache(async function getPublishedDirectory() {
+  if (!publicDb()) directoryFailed(null);
+  const [markets, vendors, stallRows, schedules, menuVendorIds] = await Promise.all([
+    loadCachedMarkets(),
+    loadCachedVendors(),
+    loadCachedStallRows(),
+    loadCachedSchedules(),
+    loadCachedMenuVendorIds(),
   ]);
-  if (menuIds.error) directoryFailed(menuIds.error);
-  if (!Array.isArray(menuIds.data)) directoryFailed({ message: "Menu vendor ids were not a list" });
   return {
     markets,
     vendors,
     stalls: stallsFromRows(stallRows),
     schedules,
-    menuVendorIds: menuIds.data.filter((id): id is string => typeof id === "string"),
-  };
-}
-
-const loadPublishedDirectoryCached = unstable_cache(
-  loadPublishedDirectory,
-  ["published-directory-v1"],
-  { revalidate: 120, tags: [DIRECTORY_TAG] },
-);
-
-const getPublishedDirectory = cache(async function getPublishedDirectory() {
-  if (!publicDb()) directoryFailed(null);
-  return loadPublishedDirectoryCached();
+    menuVendorIds,
+  } satisfies PublishedDirectory;
 });
 
 export type DirectoryCensus = {
