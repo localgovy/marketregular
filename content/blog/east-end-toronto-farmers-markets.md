@@ -64,6 +64,8 @@ The outdoor summer/fall market. **Not** the Leslieville East End Food Hub indoor
 
 ---
 
+Plant-based stalls on this circuit: [Best farmers’ markets for vegans](https://www.marketregular.com/blog/best-vegan-farmers-markets-toronto).
+
 Made by Canadians, for Canadians, to shop Canadian. Pickup, pre-order, and a mobile app coming soon.
 
 *Noah Khan, MarketRegular*
