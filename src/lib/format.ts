@@ -76,11 +76,6 @@ export function externalHref(href: string | null | undefined) {
 }
 
 const SVG_SRC = /\.svg(\?|$)/i;
-const STORAGE_PUBLIC = "/storage/v1/object/public/";
-const STORAGE_RENDER = "/storage/v1/render/image/public/";
-
-/** Card lockup is 4.5rem × 3rem; 180px is 3× at 16px root. */
-export const LISTING_MARK_WIDTH = 180;
 
 /** Original public URL, or null for missing/SVG (drawn fallback). */
 export function listingMarkOriginal(src: string | null | undefined) {
@@ -90,26 +85,13 @@ export function listingMarkOriginal(src: string | null | undefined) {
 }
 
 /**
- * Supabase Storage transform for directory cards. Other hosts and failed
- * rewrites keep the original so a mark never disappears.
+ * Public object URL for a directory mark.
+ * Do not rewrite this to `/storage/v1/render/image/`. Supabase bills each
+ * distinct origin image that hits the transform API, and Pro includes 100
+ * per cycle. Wide marks are pre-sized in the listing-marks bucket instead.
  */
-export function listingMarkSrc(
-  src: string | null | undefined,
-  width = LISTING_MARK_WIDTH,
-) {
-  const url = listingMarkOriginal(src);
-  if (!url) return null;
-  try {
-    const parsed = new URL(url);
-    if (!parsed.pathname.includes(STORAGE_PUBLIC)) return url;
-    parsed.pathname = parsed.pathname.replace(STORAGE_PUBLIC, STORAGE_RENDER);
-    parsed.searchParams.set("width", String(width));
-    parsed.searchParams.set("resize", "contain");
-    parsed.searchParams.set("quality", "70");
-    return parsed.href;
-  } catch {
-    return url;
-  }
+export function listingMarkSrc(src: string | null | undefined) {
+  return listingMarkOriginal(src);
 }
 
 const MONTHS_SHORT = [

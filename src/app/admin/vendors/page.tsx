@@ -10,8 +10,7 @@ export default async function AdminVendorsPage() {
   if (!isSupabaseConfigured()) return null;
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
-  const { data } = await supabase.from("vendors").select("*").order("name");
-  const vendors = ((data ?? []) as Vendor[]).map(withListingStats);
+  const vendors = (await listAllVendors(supabase)).map(withListingStats);
   return (
     <div>
       <div className="mb-4 flex justify-end">
@@ -39,4 +38,24 @@ export default async function AdminVendorsPage() {
       </ul>
     </div>
   );
+}
+
+/** PostgREST returns at most 1000 rows unless the query pages. */
+async function listAllVendors(
+  supabase: NonNullable<Awaited<ReturnType<typeof requireAdmin>>["supabase"]>,
+) {
+  const page = 1000;
+  const rows: Vendor[] = [];
+  for (let from = 0; ; from += page) {
+    const { data, error } = await supabase
+      .from("vendors")
+      .select("*")
+      .order("name")
+      .range(from, from + page - 1);
+    if (error) return rows;
+    const chunk = (data ?? []) as Vendor[];
+    rows.push(...chunk);
+    if (chunk.length < page) return rows;
+  }
+  return rows;
 }

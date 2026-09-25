@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { listingMarkOriginal, listingMarkSrc } from "@/lib/format";
+import { listingMarkSrc } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export function ListingMark({
@@ -11,11 +11,8 @@ export function ListingMark({
   src: string | null | undefined;
   className?: string;
 }) {
-  const original = listingMarkOriginal(src);
-  const compact = listingMarkSrc(src);
-  const [useOriginal, setUseOriginal] = useState(false);
+  const url = listingMarkSrc(src);
   const [failed, setFailed] = useState(false);
-  const url = useOriginal ? original : compact;
   if (!url || failed) return null;
 
   return (
@@ -28,13 +25,7 @@ export function ListingMark({
         loading="lazy"
         decoding="async"
         className="h-full w-full object-contain object-right"
-        onError={() => {
-          if (!useOriginal && original && original !== url) {
-            setUseOriginal(true);
-            return;
-          }
-          setFailed(true);
-        }}
+        onError={() => setFailed(true)}
       />
     </span>
   );
