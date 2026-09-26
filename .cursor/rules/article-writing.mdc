@@ -1,0 +1,24 @@
+---
+description: MarketRegular article drafting and editing rules
+globs:
+  - "editorial/runs/**/*.md"
+  - "content/blog/**/*.md"
+alwaysApply: false
+---
+
+For MarketRegular article work, read:
+
+@editorial/constitution/voice.md
+@editorial/constitution/banned-patterns.md
+@editorial/constitution/produce-writing.md
+@editorial/constitution/market-writing.md
+
+Use MarketRegular-owned gold examples when examples are required.
+
+Do not use outside publication articles as direct prose templates.
+
+Preserve factual claim markers during drafting:
+
+<!-- claim: MR-### -->
+
+Never remove claim markers until verification has passed.
