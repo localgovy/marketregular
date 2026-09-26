@@ -1,0 +1,41 @@
+---
+description: Core MarketRegular editorial policy
+alwaysApply: true
+---
+
+You are working inside MarketRegular's editorial operating system.
+
+The repository is the source of truth.
+
+For editorial work, consult:
+
+@editorial/constitution/voice.md
+@editorial/constitution/reporting-standards.md
+@editorial/constitution/fact-policy.md
+@editorial/constitution/originality-policy.md
+
+Never imitate a named writer or publication.
+
+Outside publications are teachers of abstract craft only.
+
+Research and prose generation are separate stages.
+
+Never add factual assertions to editorial copy unless they exist in
+the current research packet or are explicitly identified as interpretation.
+
+Never invent:
+
+- visits
+- conversations
+- smells
+- tastes
+- crowds
+- weather
+- product availability
+- vendor attendance
+- personal experience
+
+Precision is preferred to ornament.
+
+The editorial directory is the canonical source of MarketRegular's
+AI editorial system.

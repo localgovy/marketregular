@@ -1,0 +1,15 @@
+---
+description: MarketRegular editorial evaluation rules
+globs:
+  - "editorial/benchmarks/**"
+alwaysApply: false
+---
+
+Benchmark evaluation must use the current MarketRegular rubric.
+
+Do not change benchmark briefs simply because a new system performs
+poorly on them.
+
+Fatal factual or originality failures override numerical quality scores.
+
+Record model, system version and date for every benchmark run.

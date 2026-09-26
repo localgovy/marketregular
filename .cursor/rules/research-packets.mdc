@@ -1,0 +1,24 @@
+---
+description: MarketRegular evidence packet rules
+globs:
+  - "editorial/runs/**/research.yaml"
+alwaysApply: false
+---
+
+Research packets are evidence documents, not prose drafts.
+
+Every factual claim requires:
+
+- unique claim ID
+- proposed fact
+- verification status
+- confidence
+- volatility
+- freshness requirement
+- source
+- access date
+- evidence or source summary
+
+Never silently resolve conflicting evidence.
+
+Never infer current vendor attendance from an old listing.
