@@ -9,8 +9,11 @@ export const SITE_NAV = [
 /** Footer only until the live list has posts. */
 export const SITE_FEED_NAV = { href: "/feed", label: "Feed" } as const;
 
-/** Header text link beside the account chip. Same face as Sign in. */
-export const SITE_CLAIM_NAV = { href: "/contact", label: "Claim" } as const;
+/** Header text link beside the account chip. Same destination as the contact claim form. Hidden on small screens; the footer shows it there. */
+export const SITE_CLAIM_NAV = {
+  href: "/contact",
+  label: "For Market and Vendor Operators",
+} as const;
 
 export const SITE_META_NAV = [
   { href: "/about", label: "About" },

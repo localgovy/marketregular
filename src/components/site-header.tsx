@@ -84,7 +84,7 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
             <Link
               href={SITE_CLAIM_NAV.href}
               prefetch={false}
-              className="shrink-0 text-sm font-medium whitespace-nowrap hover:underline"
+              className="hidden shrink-0 text-sm font-medium whitespace-nowrap hover:underline lg:inline"
             >
               {SITE_CLAIM_NAV.label}
             </Link>
