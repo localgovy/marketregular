@@ -1,5 +1,5 @@
 import { parseDirectorySort, type MarketsSearch } from "@/lib/find-paths";
-import type { DirectoryVendor } from "@/lib/vendor-halls";
+import { withVendorHalls } from "@/lib/vendor-halls";
 import type { Market, MarketSchedule, SearchFilters, Vendor, VendorHall } from "@/types/database";
 
 export const DIRECTORY_MARKET_PAGE = 10;
@@ -53,15 +53,25 @@ export function filtersFromSearch(search: MarketsSearch): SearchFilters {
   };
 }
 
+export function directoryVendorCards(
+  vendors: Vendor[],
+  halls: Map<string, VendorHall[]>,
+  offset = 0,
+  take = DIRECTORY_VENDOR_PAGE,
+) {
+  return withVendorHalls(vendors.slice(offset, offset + take), halls).map(toDirectoryVendorCard);
+}
+
 export function directoryInitialProps(
   markets: Market[],
-  vendors: DirectoryVendor[],
+  vendors: Vendor[],
   schedulesByMarket: Record<string, MarketSchedule[]>,
+  halls: Map<string, VendorHall[]>,
 ) {
   const marketSlice = markets.slice(0, DIRECTORY_MARKET_PAGE).map(toDirectoryMarketCard);
   return {
     markets: marketSlice,
-    vendors: vendors.slice(0, DIRECTORY_VENDOR_PAGE).map(toDirectoryVendorCard),
+    vendors: directoryVendorCards(vendors, halls),
     schedulesByMarket: schedulesForMarketIds(
       schedulesByMarket,
       marketSlice.map((market) => market.id),
@@ -90,7 +100,7 @@ export function toDirectoryMarketCard(market: Market): DirectoryMarketCard {
   };
 }
 
-export function toDirectoryVendorCard(vendor: DirectoryVendor): DirectoryVendorCard {
+export function toDirectoryVendorCard(vendor: Vendor & { halls: VendorHall[] }): DirectoryVendorCard {
   return {
     id: vendor.id,
     slug: vendor.slug,

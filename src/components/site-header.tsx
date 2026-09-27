@@ -66,7 +66,12 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
               className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary xl:flex"
             >
               {SITE_NAV.map((item) => (
-                <NavLink key={item.href} href={item.href} variant="tab">
+                <NavLink
+                  key={item.href}
+                  href={item.href}
+                  variant="tab"
+                  prefetch={item.href === "/markets"}
+                >
                   {item.label}
                 </NavLink>
               ))}
@@ -98,6 +103,7 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
               key={item.href}
               href={item.href}
               variant="tab"
+              prefetch={item.href === "/markets"}
               className="h-10 min-w-0 flex-1 justify-center px-1 text-center"
             >
               {item.label}

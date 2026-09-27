@@ -4,10 +4,10 @@ import { searchDirectory } from "@/lib/data/catalog";
 import {
   DIRECTORY_MARKET_PAGE,
   DIRECTORY_VENDOR_PAGE,
+  directoryVendorCards,
   filtersFromSearch,
   schedulesForMarketIds,
   toDirectoryMarketCard,
-  toDirectoryVendorCard,
   type DirectoryMarketCard,
   type DirectorySchedule,
   type DirectoryVendorCard,
@@ -58,7 +58,7 @@ export async function getDirectorySlice(input: {
   const take = kind === "markets" ? DIRECTORY_MARKET_PAGE : DIRECTORY_VENDOR_PAGE;
   const clock = input.now ? new Date(input.now) : new Date();
   const now = Number.isNaN(clock.getTime()) ? new Date() : clock;
-  const { markets, vendors, schedulesByMarket } = await searchDirectory(
+  const { markets, vendors, schedulesByMarket, halls } = await searchDirectory(
     filtersFromSearch(sanitizeSearch(input.search)),
     now,
   );
@@ -75,7 +75,7 @@ export async function getDirectorySlice(input: {
   }
   return {
     markets: [],
-    vendors: vendors.slice(offset, offset + take).map(toDirectoryVendorCard),
+    vendors: directoryVendorCards(vendors, halls, offset, take),
     schedulesByMarket: {},
   };
 }

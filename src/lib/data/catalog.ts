@@ -21,12 +21,14 @@ import {
   applyDirectoryTags,
   filterMarketsByAreas,
   parseDirectorySort,
+  placeAreasForMarkets,
   queryNamesHall,
   scopeVendorsToMarkets,
   searchWeekdays,
   slugsForPlaceQuery,
   unionById,
 } from "@/lib/find-paths";
+import { directoryInitialProps } from "@/lib/directory-page";
 import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort";
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { productTagsFromQuery, isProductNounQuery, withVendorProductTags } from "@/lib/vendor-tags";
@@ -255,9 +257,28 @@ export type DirectoryCensus = {
  * Published directory totals for the homepage ticket. Kept in `directory_census`
  * and refreshed on listing writes — not a hardcoded city list.
  */
+const loadCachedDirectoryCensus = unstable_cache(
+  async (): Promise<DirectoryCensus> => {
+    const supabase = requirePublicDb();
+    const { data, error } = await supabase
+      .from("directory_census")
+      .select("markets, vendors, menus, tallied_at")
+      .eq("id", DIRECTORY_CENSUS_ID)
+      .maybeSingle();
+    if (error || !data) directoryFailed(error);
+    return {
+      markets: data.markets,
+      vendors: data.vendors,
+      menus: data.menus ?? 0,
+      talliedAt: data.tallied_at,
+    };
+  },
+  ["directory-census-v1"],
+  DIRECTORY_CACHE,
+);
+
 export async function getDirectoryCensus(): Promise<DirectoryCensus> {
-  const supabase = publicDb();
-  if (!supabase) {
+  if (!publicDb()) {
     return {
       markets: localMarkets().length,
       vendors: localVendors().length,
@@ -265,18 +286,7 @@ export async function getDirectoryCensus(): Promise<DirectoryCensus> {
       talliedAt: null,
     };
   }
-  const { data, error } = await supabase
-    .from("directory_census")
-    .select("markets, vendors, menus, tallied_at")
-    .eq("id", DIRECTORY_CENSUS_ID)
-    .maybeSingle();
-  if (error || !data) directoryFailed(error);
-  return {
-    markets: data.markets,
-    vendors: data.vendors,
-    menus: data.menus ?? 0,
-    talliedAt: data.tallied_at,
-  };
+  return loadCachedDirectoryCensus();
 }
 
 export async function getCurrentProfile(): Promise<Profile | null> {
@@ -601,8 +611,19 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
   );
   const sort = parseDirectorySort(filters.sort, Boolean(filters.near));
   const halls = groupVendorHalls(stalls, allMarkets);
-  const withHalls = withVendorHalls(vendors, halls);
   const marketsBySlug = new Map(allMarkets.map((market) => [market.slug, market]));
+  // Near-sort needs every hall to order the list. Other sorts attach halls
+  // only to the page that is about to render.
+  const rankedVendors =
+    sort === "near"
+      ? sortDirectoryVendors(withVendorHalls(vendors, halls), sort, {
+          near: filters.near,
+          marketsBySlug,
+        })
+      : sortDirectoryVendors(vendors, sort, {
+          near: filters.near,
+          marketsBySlug,
+        });
 
   return {
     markets: preferQueryNameHits(
@@ -612,15 +633,40 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
       }),
       raw,
     ),
-    vendors: preferQueryNameHits(
-      sortDirectoryVendors(withHalls, sort, {
-        near: filters.near,
-        marketsBySlug,
-      }),
-      raw,
-    ),
+    vendors: preferQueryNameHits(rankedVendors, raw),
     schedulesByMarket: Object.fromEntries(schedulesByMarket),
+    halls,
   };
+}
+
+export type BareMarketsDirectory = {
+  directory: ReturnType<typeof directoryInitialProps>;
+  places: ReturnType<typeof placeAreasForMarkets>;
+  items: Array<{ name: string; path: string }>;
+};
+
+/** First page of unfiltered /markets. Small enough to store; the full vendor table is not. */
+async function buildBareMarketsDirectory(): Promise<BareMarketsDirectory> {
+  const { markets, vendors, schedulesByMarket, halls } = await searchDirectory({});
+  return {
+    directory: directoryInitialProps(markets, vendors, schedulesByMarket, halls),
+    places: placeAreasForMarkets(markets),
+    items: markets.map((market) => ({
+      name: market.name,
+      path: `/markets/${market.slug}`,
+    })),
+  };
+}
+
+const loadCachedBareMarketsDirectory = unstable_cache(
+  buildBareMarketsDirectory,
+  ["markets-page-bare-v1"],
+  DIRECTORY_CACHE,
+);
+
+export async function getBareMarketsDirectory(): Promise<BareMarketsDirectory> {
+  if (!publicDb()) return buildBareMarketsDirectory();
+  return loadCachedBareMarketsDirectory();
 }
 
 export const getMarketBySlug = cache(async function getMarketBySlug(

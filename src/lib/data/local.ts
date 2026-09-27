@@ -200,8 +200,17 @@ export function localSearch(filters: SearchFilters, now = new Date()) {
   const sort = parseDirectorySort(filters.sort, Boolean(filters.near));
   const allMarkets = localMarkets();
   const halls = groupVendorHalls(localStalls(), allMarkets);
-  const withHalls = withVendorHalls(vendors, halls);
   const marketsBySlug = new Map(allMarkets.map((market) => [market.slug, market]));
+  const rankedVendors =
+    sort === "near"
+      ? sortDirectoryVendors(withVendorHalls(vendors, halls), sort, {
+          near: filters.near,
+          marketsBySlug,
+        })
+      : sortDirectoryVendors(vendors, sort, {
+          near: filters.near,
+          marketsBySlug,
+        });
 
   return {
     markets: preferQueryNameHits(
@@ -211,16 +220,11 @@ export function localSearch(filters: SearchFilters, now = new Date()) {
       }),
       q ?? "",
     ),
-    vendors: preferQueryNameHits(
-      sortDirectoryVendors(withHalls, sort, {
-        near: filters.near,
-        marketsBySlug,
-      }),
-      q ?? "",
-    ),
+    vendors: preferQueryNameHits(rankedVendors, q ?? ""),
     schedulesByMarket: Object.fromEntries(
       markets.map((market) => [market.id, schedulesFor(market.id)]),
     ),
+    halls,
   };
 }
 

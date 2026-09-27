@@ -61,8 +61,15 @@ export function sortDirectoryMarkets(
   return list.sort(byName);
 }
 
-export function sortDirectoryVendors(
-  vendors: DirectoryVendor[],
+type SortableVendor = {
+  name: string;
+  rating_avg: number | null;
+  review_count: number;
+  halls?: DirectoryVendor["halls"];
+};
+
+export function sortDirectoryVendors<T extends SortableVendor>(
+  vendors: T[],
   sort: DirectorySort,
   options: {
     near?: { lat: number; lng: number };
@@ -73,9 +80,9 @@ export function sortDirectoryVendors(
   if (sort === "score") return list.sort(byScore);
   if (sort === "near" && options.near) {
     const here = options.near;
-    const dist = (vendor: DirectoryVendor) => {
+    const dist = (vendor: T) => {
       let best = Number.POSITIVE_INFINITY;
-      for (const hall of vendor.halls) {
+      for (const hall of vendor.halls ?? []) {
         const market = options.marketsBySlug.get(hall.slug);
         if (!market) continue;
         best = Math.min(best, distanceOrFar(here, market.lat, market.lng));

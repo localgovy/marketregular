@@ -9,11 +9,13 @@ export function NavLink({
   children,
   className,
   variant = "text",
+  prefetch = false,
 }: {
   href: string;
   children: React.ReactNode;
   className?: string;
   variant?: "text" | "tab";
+  prefetch?: boolean;
 }) {
   const path = usePathname();
   const on = path === href || (href !== "/" && path.startsWith(`${href}/`));
@@ -22,7 +24,7 @@ export function NavLink({
   return (
     <Link
       href={href}
-      prefetch={false}
+      prefetch={prefetch}
       className={cn(
         tab
           ? "inline-flex h-full min-w-0 shrink-0 items-center px-5 text-sm font-medium whitespace-nowrap text-foreground hover:bg-card"

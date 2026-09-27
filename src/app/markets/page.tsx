@@ -5,7 +5,7 @@ import { DirectorySort } from "@/components/directory-sort";
 import { JsonLd } from "@/components/json-ld";
 import { MarketMapLazy } from "@/components/market-map-lazy";
 import { SearchForm } from "@/components/search-form";
-import { getDirectoryCensus, listMarkets, searchDirectory } from "@/lib/data/catalog";
+import { getBareMarketsDirectory, getDirectoryCensus, listMarkets, searchDirectory } from "@/lib/data/catalog";
 import { directoryInitialProps, filtersFromSearch } from "@/lib/directory-page";
 import {
   marketsCrumbs,
@@ -18,6 +18,30 @@ import {
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 import { countLabel } from "@/lib/format";
+
+function isBareMarketsVisit(params: {
+  q?: string;
+  weekday?: string | string[];
+  tag?: string | string[];
+  area?: string | string[];
+  setup?: string;
+  openNow?: string;
+  lat?: string;
+  lng?: string;
+  sort?: string;
+}) {
+  return (
+    !params.q?.trim() &&
+    !params.setup &&
+    params.openNow !== "1" &&
+    !params.sort &&
+    !params.lat &&
+    !params.lng &&
+    queryList(params.weekday).length === 0 &&
+    queryList(params.tag).length === 0 &&
+    queryList(params.area).length === 0
+  );
+}
 
 /**
  * Canonical is always bare `/markets`, so every filter combination consolidates here
@@ -73,13 +97,34 @@ export default async function MarketsPage({
     lng: params.lng,
     sort,
   };
-  const { markets, vendors, schedulesByMarket } = await searchDirectory(
-    filtersFromSearch(search),
-    now,
-  );
-  const directory = directoryInitialProps(markets, vendors, schedulesByMarket);
+  const loaded = isBareMarketsVisit(params)
+    ? { kind: "bare" as const, page: await getBareMarketsDirectory() }
+    : { kind: "live" as const, page: await searchDirectory(filtersFromSearch(search), now) };
+  const directory =
+    loaded.kind === "bare"
+      ? loaded.page.directory
+      : directoryInitialProps(
+          loaded.page.markets,
+          loaded.page.vendors,
+          loaded.page.schedulesByMarket,
+          loaded.page.halls,
+        );
   // Filter options come from the whole directory, not the narrowed result set.
-  const places = placeAreasForMarkets(await listMarkets());
+  const places =
+    loaded.kind === "bare"
+      ? loaded.page.places
+      : placeAreasForMarkets(await listMarkets());
+  const listItems =
+    loaded.kind === "bare"
+      ? loaded.page.items
+      : loaded.page.markets.map((market) => ({
+          name: market.name,
+          path: `/markets/${market.slug}`,
+        }));
+  const marketCount =
+    loaded.kind === "bare" ? loaded.page.directory.marketTotal : loaded.page.markets.length;
+  const vendorCount =
+    loaded.kind === "bare" ? loaded.page.directory.vendorTotal : loaded.page.vendors.length;
   const crumbs = marketsCrumbs({
     weekdays,
     setup: params.setup,
@@ -90,10 +135,10 @@ export default async function MarketsPage({
     sort,
   });
   const queried = Boolean(params.q?.trim());
-  const status = [LAUNCH_CITY, ...crumbs, countLabel(markets.length, "market", "markets")].join(" · ");
+  const status = [LAUNCH_CITY, ...crumbs, countLabel(marketCount, "market", "markets")].join(" · ");
   const summary = [
-    countLabel(markets.length, "market", "markets"),
-    countLabel(vendors.length, "vendor", "vendors"),
+    countLabel(marketCount, "market", "markets"),
+    countLabel(vendorCount, "vendor", "vendors"),
     crumbs.join(", "),
   ]
     .filter(Boolean)
@@ -117,16 +162,13 @@ export default async function MarketsPage({
         data={itemListJsonLd({
           name: `${LAUNCH_CITY} farmers' markets`,
           path: "/markets",
-          items: markets.map((market) => ({
-            name: market.name,
-            path: `/markets/${market.slug}`,
-          })),
+          items: listItems,
         })}
       />
       <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
       <p className="type-kicker mt-2 mb-6 text-muted-foreground">{status}</p>
       <SearchForm
-        resultCount={markets.length}
+        resultCount={marketCount}
         places={places}
         todayWeekday={todayWeekday}
         defaults={{
