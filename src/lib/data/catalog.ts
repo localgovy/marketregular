@@ -41,6 +41,7 @@ import { loadMyProfile } from "@/lib/my-profile";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
+import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import type {
   FloorItem,
@@ -107,6 +108,8 @@ type PublishedDirectory = {
   markets: Market[];
   vendors: Vendor[];
   stalls: StallRef[];
+  /** Published vendors with a stall row, including halls that are not public. */
+  rosterVendorIds: string[];
   schedules: MarketSchedule[];
   menuVendorIds: string[];
 };
@@ -121,27 +124,48 @@ type StallRow = {
 
 function stallsFromRows(rows: StallRow[]): StallRef[] {
   return rows.flatMap((row) => {
-    const raw = row.vendors;
-    const vendor = Array.isArray(raw) ? raw[0] : raw;
-    if (!vendor || typeof vendor !== "object") return [];
-    const v = vendor as { id: string; name: string; slug: string; status: string };
-    if (v.status !== "published") return [];
-    const marketRaw = row.markets;
-    const market = Array.isArray(marketRaw) ? marketRaw[0] : marketRaw;
-    if (!market || typeof market !== "object") return [];
-    const hall = market as { city: string; status: string };
-    if (hall.status !== "published") return [];
+    const vendor = publishedVendorFromStall(row);
+    if (!vendor) return [];
+    const market = marketFromStall(row);
+    if (!market || market.status !== "published") return [];
     return [
       {
-        id: v.id,
-        name: v.name,
-        slug: v.slug,
+        id: vendor.id,
+        name: vendor.name,
+        slug: vendor.slug,
         market_id: row.market_id,
         stall: row.stall,
         days: Array.isArray(row.days) ? row.days : [],
       },
     ];
   });
+}
+
+/** Published shops keep a directory row even when their only hall is not public. */
+function rosterVendorIdsFromRows(rows: StallRow[]): string[] {
+  const ids = new Set<string>();
+  for (const row of rows) {
+    const vendor = publishedVendorFromStall(row);
+    if (!vendor || !marketFromStall(row)) continue;
+    ids.add(vendor.id);
+  }
+  return [...ids];
+}
+
+function publishedVendorFromStall(row: StallRow) {
+  const raw = row.vendors;
+  const vendor = Array.isArray(raw) ? raw[0] : raw;
+  if (!vendor || typeof vendor !== "object") return null;
+  const parsed = vendor as { id: string; name: string; slug: string; status: string };
+  if (parsed.status !== "published") return null;
+  return parsed;
+}
+
+function marketFromStall(row: StallRow) {
+  const raw = row.markets;
+  const market = Array.isArray(raw) ? raw[0] : raw;
+  if (!market || typeof market !== "object") return null;
+  return market as { city: string; status: string };
 }
 
 /**
@@ -241,6 +265,7 @@ const getPublishedDirectory = cache(async function getPublishedDirectory() {
     markets,
     vendors,
     stalls: stallsFromRows(stallRows),
+    rosterVendorIds: rosterVendorIdsFromRows(stallRows),
     schedules,
     menuVendorIds,
   } satisfies PublishedDirectory;
@@ -339,9 +364,11 @@ export const listMarkets = cache(async function listMarkets(): Promise<Market[]>
 
 export const listVendors = cache(async function listVendors(): Promise<Vendor[]> {
   if (!publicDb()) return localVendors();
-  const { vendors, stalls } = await getPublishedDirectory();
-  const atLaunch = new Set(stalls.map((stall) => stall.id));
-  return vendors.map(hydrateVendor).filter((vendor) => atLaunch.has(vendor.id));
+  const { vendors, stalls, rosterVendorIds } = await getPublishedDirectory();
+  const listed = new Set([...stalls.map((stall) => stall.id), ...rosterVendorIds]);
+  return vendors
+    .map(hydrateVendor)
+    .filter((vendor) => listed.has(vendor.id) || UNAFFILIATED_VENDOR_SLUGS.has(vendor.slug));
 });
 
 /** Same bar the stall page uses to decide `index`, so the sitemap never advertises a noindex URL. */
@@ -852,7 +879,15 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
     if (!m) return [];
     return [{ ...m, stall: link.stall, days: link.days, schedules: schedulesByMarket.get(m.id) ?? [] }];
   });
-  if (!vendorMarkets.length) return null;
+  if (
+    !vendorMarkets.length &&
+    !(links ?? []).length &&
+    !UNAFFILIATED_VENDOR_SLUGS.has(slug)
+  ) {
+    return null;
+  }
+
+  const publishedMarketIds = new Set((markets ?? []).map((market: Market) => market.id));
 
   const mappedReviews = (
     (reviews ?? []) as Array<
@@ -862,7 +897,9 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
         vendors?: { name: string; slug: string } | null;
       }
     >
-  ).map((r) => ({
+  )
+    .filter((row) => !row.market_id || publishedMarketIds.has(row.market_id))
+    .map((r) => ({
     ...r,
     author_name: r.profiles?.display_name ?? "Regular",
     market_name: r.markets?.name ?? null,
@@ -880,6 +917,7 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
     >
   )
     .filter((p) => {
+      if (p.market_id && !publishedMarketIds.has(p.market_id)) return false;
       const decoded = reviewFromPost({
         ...p,
         author_name: p.profiles?.display_name ?? "Regular",

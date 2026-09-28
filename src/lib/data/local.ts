@@ -29,6 +29,7 @@ import { productTagsFromQuery, isProductNounQuery, vendorFilterTags, withVendorP
 import { preferQueryNameHits, hallsHostingNameHits } from "@/lib/search-rank";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
+import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import type {
   FloorItem,
   Market,
@@ -64,12 +65,18 @@ export function localMarkets(): Market[] {
     .map(toPublicMarket);
 }
 
+function cityMarketIds() {
+  return new Set(seedMarkets.filter((m) => isLaunchCity(m.city)).map((m) => m.id));
+}
+
 export function localVendors(): Vendor[] {
-  const ids = launchMarketIds();
+  const ids = cityMarketIds();
   const vendorIds = new Set(
     seedMarketVendors.filter((link) => ids.has(link.market_id)).map((link) => link.vendor_id),
   );
-  return seedVendors.filter((v) => vendorIds.has(v.id)).map(publicVendor);
+  return seedVendors
+    .filter((v) => vendorIds.has(v.id) || UNAFFILIATED_VENDOR_SLUGS.has(v.slug))
+    .map(publicVendor);
 }
 
 export function localSitemapVendors(): Vendor[] {
@@ -322,7 +329,8 @@ export function localVendorBySlug(slug: string): VendorDetail | null {
     if (!m || !isLaunchCity(m.city) || (m.status ?? "published") !== "published") return [];
     return [{ ...toPublicMarket(m), stall: link.stall, days: link.days, schedules: schedulesFor(m.id) }];
   });
-  if (!markets.length) return null;
+  const listed = links.some((link) => cityMarketIds().has(link.market_id));
+  if (!listed && !UNAFFILIATED_VENDOR_SLUGS.has(slug)) return null;
   return {
     ...vendor,
     menus: menusFor(vendor.id),
