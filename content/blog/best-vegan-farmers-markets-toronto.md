@@ -1,13 +1,11 @@
 ---
 title: Toronto farmers' markets for vegan shoppers
-description: "A vegan who cooks should use [Brick Works](/markets/evergreen-brick-works-saturday-farmers-market) or [The Stop](/markets/the-stops-farmers-market) on Saturday. The vegan foods these markets name are snacks, not lunch."
+description: "A vegan who cooks should use [Brick Works](https://www.marketregular.com/markets/evergreen-brick-works-saturday-farmers-market) or [The Stop](https://www.marketregular.com/markets/the-stops-farmers-market) for their fresh produce on Saturday, and should stop by [Earth & City](https://www.marketregular.com/vendors/earth-city) and [Live on Chocolate](https://www.marketregular.com/vendors/live-on-chocolate) for delectable vegan snacks."
 date: 2026-09-27
 kicker: Market guide
 ---
 
 # Toronto farmers’ markets for vegan shoppers
-
-A vegan who cooks should use [Brick Works](https://www.marketregular.com/markets/evergreen-brick-works-saturday-farmers-market) or [The Stop](https://www.marketregular.com/markets/the-stops-farmers-market) for their fresh produce on Saturday, and should stop by [Earth & City](https://www.marketregular.com/vendors/earth-city) and [Live on Chocolate](https://www.marketregular.com/vendors/live-on-chocolate) for delectable vegan snacks.
 
 ---
 
