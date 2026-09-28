@@ -18,7 +18,7 @@ Seasons shift — confirm on the live page before you go. [St. Lawrence Market](
 | Day | What to expect |
 |---|---|
 | **Monday** | Sorauren park or Henderson indoor |
-| **Tuesday** | Morning East York and SickKids; afternoon Cabbagetown, Bellwoods, Davisville, Scarborough |
+| **Tuesday** | Morning East York and SickKids; afternoon Cabbagetown, Davisville, Scarborough |
 | **Wednesday** | Midweek Annex, Junction, Danforth, Malvern |
 | **Thursday** | Underpass, year-round Dufferin Grove, East Lynn, North York morning |
 | **Friday** | Fewer options on this day but rich in quality like Thorncliffe and Warden Woods |
@@ -47,7 +47,6 @@ East York and SickKids in the morning; the rest of the city in the afternoon. Si
 - [Harmony Community Food Market](/markets/harmony-community-food-market) · 2:45 PM–4:45 PM
 - [Cabbagetown Farmers’ Market](/markets/cabbagetown-farmers-market) · 3 PM–7 PM
 - [Davisville Village Market](/markets/davisville-village-market) · 3 PM–7 PM
-- [Trinity Bellwoods Farmers’ Market](/markets/trinity-bellwoods-farmers-market) · 3 PM–7 PM
 - [Scarborough Farmers’ Market](/markets/scarborough-farmers-market) · 3:30 PM–7:30 PM
 
 ---

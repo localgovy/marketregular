@@ -51,11 +51,17 @@ function haystack(parts: Array<string | null | undefined>) {
 }
 
 function launchMarketIds() {
-  return new Set(seedMarkets.filter((m) => isLaunchCity(m.city)).map((m) => m.id));
+  return new Set(
+    seedMarkets
+      .filter((m) => isLaunchCity(m.city) && (m.status ?? "published") === "published")
+      .map((m) => m.id),
+  );
 }
 
 export function localMarkets(): Market[] {
-  return seedMarkets.filter((m) => isLaunchCity(m.city)).map(toPublicMarket);
+  return seedMarkets
+    .filter((m) => isLaunchCity(m.city) && (m.status ?? "published") === "published")
+    .map(toPublicMarket);
 }
 
 export function localVendors(): Vendor[] {
@@ -278,7 +284,7 @@ function feedForVendor(vendorId: string, slug: string): FloorItem[] {
 
 export function localMarketBySlug(slug: string): MarketDetail | null {
   const seed = seedMarkets.find((m) => m.slug === slug);
-  if (!seed || !isLaunchCity(seed.city)) return null;
+  if (!seed || !isLaunchCity(seed.city) || (seed.status ?? "published") !== "published") return null;
   const market = toPublicMarket(seed);
   const vendorLinks = seedMarketVendors.filter((mv) => mv.market_id === market.id);
   const hallsMap = groupVendorHalls(localStalls(), localMarkets());
@@ -313,7 +319,7 @@ export function localVendorBySlug(slug: string): VendorDetail | null {
   const links = seedMarketVendors.filter((mv) => mv.vendor_id === vendor.id);
   const markets = links.flatMap((link) => {
     const m = seedMarkets.find((x) => x.id === link.market_id);
-    if (!m || !isLaunchCity(m.city)) return [];
+    if (!m || !isLaunchCity(m.city) || (m.status ?? "published") !== "published") return [];
     return [{ ...toPublicMarket(m), stall: link.stall, days: link.days, schedules: schedulesFor(m.id) }];
   });
   if (!markets.length) return null;

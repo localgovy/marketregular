@@ -36,7 +36,7 @@ lines.push(
   launchMarkets
     .map(
       (m) =>
-        `  (${sqlStr(m.id)}, ${sqlStr(m.slug)}, ${sqlStr(m.name)}, ${sqlStr(m.about)}, ${sqlStr(m.address)}, ${sqlStr(m.city)}, ${sqlStr(m.province)}, ${sqlStr(m.postal_code)}, ${m.lat}, ${m.lng}, ${m.geofence_radius_m}, ${sqlStr(m.website)}, ${sqlStr(m.phone)}, ${sqlStr(m.email ?? null)}, ${sqlArr(m.tags)}, 'published', ${m.featured})`,
+        `  (${sqlStr(m.id)}, ${sqlStr(m.slug)}, ${sqlStr(m.name)}, ${sqlStr(m.about)}, ${sqlStr(m.address)}, ${sqlStr(m.city)}, ${sqlStr(m.province)}, ${sqlStr(m.postal_code)}, ${m.lat}, ${m.lng}, ${m.geofence_radius_m}, ${sqlStr(m.website)}, ${sqlStr(m.phone)}, ${sqlStr(m.email ?? null)}, ${sqlArr(m.tags)}, ${sqlStr(m.status ?? "published")}, ${m.featured})`,
     )
     .join(",\n") +
     "\non conflict (id) do update set slug = excluded.slug, name = excluded.name, about = excluded.about, address = excluded.address, city = excluded.city, province = excluded.province, postal_code = excluded.postal_code, lat = excluded.lat, lng = excluded.lng, geofence_radius_m = excluded.geofence_radius_m, website = excluded.website, phone = excluded.phone, email = excluded.email, tags = excluded.tags, status = excluded.status, featured = excluded.featured;\n",

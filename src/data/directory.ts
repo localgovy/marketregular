@@ -14,6 +14,7 @@ type SeedMarket = Omit<
   "status" | "claimed_by" | "email" | "logo_url" | "review_count" | "rating_avg" | "instagram" | "tiktok" | "facebook"
 > & {
   email?: string;
+  status?: Market["status"];
   logo_url?: string | null;
   review_count?: number;
   rating_avg?: number | null;
@@ -288,6 +289,7 @@ export const seedMarkets: SeedMarket[] = [
     website: "https://www.tbfm.ca/",
     phone: null,
     email: "hello@tbfm.ca",
+    status: "draft",
     tags: ["organic", "prepared-food", "outdoor", "seasonal", "transit", "accessible"],
     featured: false,
     schedules: [
@@ -14782,7 +14784,7 @@ export function toPublicMarket(m: SeedMarket): Market {
     email: m.email ?? null,
     logo_url: m.logo_url ?? null,
     tags: m.tags,
-    status: "published",
+    status: m.status ?? "published",
     featured: m.featured,
     review_count: m.review_count ?? stats?.review_count ?? 0,
     rating_avg: m.rating_avg ?? stats?.rating_avg ?? null,
