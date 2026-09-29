@@ -56,17 +56,17 @@ export default async function EditMarketPage({
         </ul>
         <form action={saveSchedule} className="mt-4 grid gap-2 sm:grid-cols-5">
           <input type="hidden" name="market_id" value={id} />
-          <select name="weekday" className="h-8 rounded-lg border border-input px-2 text-sm">
+          <select name="weekday" aria-label="Weekday" className="h-8 rounded-lg border border-input px-2 text-sm">
             {WEEKDAYS.map((d, i) => (
               <option key={d} value={i}>
                 {d}
               </option>
             ))}
           </select>
-          <Input name="opens_at" type="time" required />
-          <Input name="closes_at" type="time" required />
-          <Input name="season_start" placeholder="MM-DD" />
-          <Input name="season_end" placeholder="MM-DD" />
+          <Input name="opens_at" type="time" required aria-label="Opens" />
+          <Input name="closes_at" type="time" required aria-label="Closes" />
+          <Input name="season_start" placeholder="MM-DD" aria-label="Season start" />
+          <Input name="season_end" placeholder="MM-DD" aria-label="Season end" />
           <Button type="submit" className="sm:col-span-5 w-fit">
             Add hours
           </Button>
@@ -76,15 +76,15 @@ export default async function EditMarketPage({
         <h2>Attach a vendor</h2>
         <form action={linkVendorToMarket} className="mt-3 grid gap-2 sm:grid-cols-3">
           <input type="hidden" name="market_id" value={id} />
-          <select name="vendor_id" className="h-8 rounded-lg border border-input px-2 text-sm">
+          <select name="vendor_id" aria-label="Vendor" className="h-8 rounded-lg border border-input px-2 text-sm">
             {((vendors ?? []) as Pick<Vendor, "id" | "name">[]).map((v) => (
               <option key={v.id} value={v.id}>
                 {v.name}
               </option>
             ))}
           </select>
-          <Input name="stall" placeholder="Stall" />
-          <Input name="days" placeholder="Days 0-6 comma sep" />
+          <Input name="stall" placeholder="Stall" aria-label="Stall" />
+          <Input name="days" placeholder="Days 0-6 comma sep" aria-label="Days" />
           <Button type="submit" className="w-fit">
             Link
           </Button>

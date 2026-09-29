@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { isSignInSlipAuthPath } from "@/lib/signin-slip";
-import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
+import { useMounted } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types/database";
 
@@ -25,25 +25,23 @@ function loginHref(pathname: string, search = "") {
 export function HeaderAccount() {
   const pathname = usePathname();
   const hasCookie = useAuthCookie(false);
-  const [ready, setReady] = useState(false);
-  const [search, setSearch] = useState("");
+  const ready = useMounted();
+  const search = useSyncExternalStore(
+    (onStoreChange) => {
+      window.addEventListener("popstate", onStoreChange);
+      return () => window.removeEventListener("popstate", onStoreChange);
+    },
+    () => window.location.search,
+    () => "",
+  );
   const [profile, setProfile] = useState<{
     display_name: string | null;
     role: UserRole;
   } | null>(null);
 
-  useLayoutEffect(() => {
-    setReady(true);
-    setSearch(window.location.search);
-  }, [pathname]);
-
   useEffect(() => {
+    if (!hasCookie) return;
     let cancelled = false;
-
-    if (!documentHasAuthCookie()) {
-      setProfile(null);
-      return;
-    }
 
     void (async () => {
       const { createBrowserSupabaseClient } = await import("@/lib/supabase/client");
@@ -71,22 +69,24 @@ export function HeaderAccount() {
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, [pathname, hasCookie]);
 
-  if (profile && hasCookie) {
+  const shown = hasCookie ? profile : null;
+
+  if (shown) {
     return (
       <>
-        {profile.role === "admin" ? (
+        {shown.role === "admin" ? (
           <Link href="/admin" className={SIGN_IN_CLASS}>
             Desk
           </Link>
         ) : null}
         <Link
           href="/account"
-          title={profile.display_name ?? "Account"}
+          title={shown.display_name ?? "Account"}
           className={CHIP_CLASS}
         >
-          {profile.display_name ?? "Account"}
+          {shown.display_name ?? "Account"}
         </Link>
       </>
     );

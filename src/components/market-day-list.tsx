@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
@@ -6,6 +8,8 @@ import { SaveButton } from "@/components/save-button";
 import { AddressLink } from "@/components/address-link";
 import { VerifiedName } from "@/components/verified-stamp";
 import type { MarketDayRow } from "@/lib/landing";
+import { sessionIsOpen } from "@/lib/open-state";
+import { useNow } from "@/lib/use-now";
 
 /**
  * Hours sit in an auto column that cannot shrink, and nothing here clips: this list is
@@ -13,9 +17,12 @@ import type { MarketDayRow } from "@/lib/landing";
  */
 export function MarketDayList({
   rows,
+  nowMs,
 }: {
   rows: MarketDayRow[];
+  nowMs: number;
 }) {
+  const now = useNow(nowMs);
   if (!rows.length) return null;
 
   return (
@@ -61,7 +68,7 @@ export function MarketDayList({
             </div>
             <span className="flex shrink-0 flex-col items-end gap-1">
               <span className="flex items-center gap-2">
-                {row.openNow ? <NowLabel>Open now</NowLabel> : null}
+                {sessionIsOpen(row, new Date(now)) ? <NowLabel>Open now</NowLabel> : null}
                 <Hours value={row.hours} className="text-foreground" />
               </span>
               <SaveButton kind="market" slug={row.market.slug} name={row.market.name} />

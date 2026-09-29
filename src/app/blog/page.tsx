@@ -8,6 +8,7 @@ import { LAUNCH_CITY } from "@/lib/launch";
 import { BLOG_CRUMB, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
 
 export const dynamic = "force-static";
+export const revalidate = 3600;
 
 export const metadata: Metadata = pageMeta({
   title: "Blog",

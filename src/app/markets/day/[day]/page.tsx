@@ -16,6 +16,7 @@ import {
   weekdayFromSlug,
   whenWord,
 } from "@/lib/landing";
+import { serverNowMs } from "@/lib/clock";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
@@ -121,7 +122,7 @@ export default async function MarketDayPage({
         </p>
       )}
 
-      <MarketDayList rows={rows} />
+      <MarketDayList rows={rows} nowMs={serverNowMs()} />
 
       <nav aria-label="Other days" className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
         <Link href={`/markets/day/${previous}`} className="text-base font-medium hover:underline">

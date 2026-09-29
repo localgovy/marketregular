@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { persistListingSaves, persistSave } from "@/app/actions/saves";
 import { listingDetailJson } from "@/lib/listing-saves";
@@ -22,14 +22,13 @@ import { openSignInSlip } from "@/lib/signin-slip";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
 import { cn } from "@/lib/utils";
 
+function subscribeBootedSaves(listener: () => void) {
+  bootSaves();
+  return subscribeSaves(listener);
+}
+
 export function useSaves() {
-  const [saves, setSaves] = useState(EMPTY_SAVES);
-  useLayoutEffect(() => {
-    bootSaves();
-    setSaves(getSaves());
-    return subscribeSaves(() => setSaves(getSaves()));
-  }, []);
-  return saves;
+  return useSyncExternalStore(subscribeBootedSaves, getSaves, () => EMPTY_SAVES);
 }
 
 function saveChipClass(size: "sm" | "md" | "lg", saved: boolean) {

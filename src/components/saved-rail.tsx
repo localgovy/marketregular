@@ -18,27 +18,25 @@ import type { Market, Vendor } from "@/types/database";
 export function SavedRail() {
   const saves = useSaves();
   const signedIn = useAuthCookie();
-  const [markets, setMarkets] = useState<SavedRailMarket[]>([]);
-  const [ready, setReady] = useState(false);
+  const [loaded, setLoaded] = useState<{ key: string; rows: SavedRailMarket[] } | null>(null);
   const saveKey = saves.markets.join(" ");
+  const idle = !signedIn || !saves.markets.length;
 
   useEffect(() => {
-    if (!signedIn || !saves.markets.length) {
-      setMarkets([]);
-      setReady(true);
-      return;
-    }
+    if (idle) return;
     let cancelled = false;
-    setReady(false);
-    void getSavedRailMarkets(saves.markets).then((rows) => {
-      if (cancelled) return;
-      setMarkets(rows);
-      setReady(true);
+    const key = saveKey;
+    const slugs = key.split(" ").filter(Boolean);
+    void getSavedRailMarkets(slugs).then((rows) => {
+      if (!cancelled) setLoaded({ key, rows });
     });
     return () => {
       cancelled = true;
     };
-  }, [signedIn, saveKey, saves.markets]);
+  }, [idle, saveKey]);
+
+  const markets = idle || loaded?.key !== saveKey ? [] : loaded.rows;
+  const ready = idle || loaded?.key === saveKey;
 
   const bySlug = new Map(markets.map((market) => [market.slug, market]));
   const savedMarkets = saves.markets.flatMap((slug) => {

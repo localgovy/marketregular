@@ -4,6 +4,7 @@ import { EventsWeekList } from "@/components/events-week-list";
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
+import { serverNowMs } from "@/lib/clock";
 import { upcomingByDay } from "@/lib/upcoming";
 import type { MarketSchedule } from "@/types/database";
 
@@ -31,7 +32,7 @@ export default async function EventsPage({
     scheduleMap.set(row.market_id, list);
   }
   const week = upcomingByDay(markets, scheduleMap);
-  const nowMs = Date.now();
+  const nowMs = serverNowMs();
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">

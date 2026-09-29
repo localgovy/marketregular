@@ -26,6 +26,7 @@ import { NowLabel } from "@/components/now-label";
 import { TorontoWeek } from "@/components/toronto-week";
 import { Button } from "@/components/ui/button";
 import { SITE_NAME } from "@/lib/constants";
+import { externalHref } from "@/lib/format";
 import { TimeAgo } from "@/components/time-ago";
 import { decodeFloorBody } from "@/lib/floor-note";
 import { tagLabel } from "@/lib/find-paths";
@@ -317,11 +318,12 @@ export function AccountDesk({
             how="Your handle is your unique name, but your 'Name on posts' is what people actually see."
           >
             <div className="flex items-center gap-3 pb-4">
-              {profile.avatar_url && !/\.svg([?#]|$)/i.test(profile.avatar_url) ? (
+              {externalHref(profile.avatar_url) &&
+              !/\.svg([?#]|$)/i.test(profile.avatar_url ?? "") ? (
                 // Google (and similar) profile photos are off our image host list.
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={profile.avatar_url}
+                  src={externalHref(profile.avatar_url) ?? undefined}
                   alt=""
                   width={40}
                   height={40}

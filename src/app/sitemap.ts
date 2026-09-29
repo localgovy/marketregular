@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
-import { listBlogPosts } from "@/lib/blog";
+import { listPublicBlogPosts } from "@/lib/blog";
 import { listMarkets, listSitemapVendors } from "@/lib/data/catalog";
 import { CATEGORIES, DAY_SLUGS } from "@/lib/landing";
 
@@ -43,7 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     loc("/feed", { changeFrequency: "daily", priority: 0.5 }),
     loc("/about", { changeFrequency: "yearly", priority: 0.3 }),
     loc("/blog", { changeFrequency: "weekly", priority: 0.6 }),
-    ...listBlogPosts().map((post) =>
+    ...listPublicBlogPosts().map((post) =>
       loc(`/blog/${post.slug}`, {
         lastModified: post.date,
         changeFrequency: "monthly",

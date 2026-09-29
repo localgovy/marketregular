@@ -169,7 +169,23 @@ const localSavesSchema = z.object({
   markets: z.array(z.string()).optional(),
   vendors: z.array(z.string()).optional(),
   blogs: z.array(z.string()).optional(),
-  listings: z.array(z.unknown()).optional(),
+  listings: z
+    .array(
+      z.object({
+        blog: z.string(),
+        heading: z.string(),
+        hours: z.string(),
+        marketSlug: z.string(),
+        marketName: z.string(),
+        ratingAvg: z.number().nullable().optional(),
+        reviewCount: z.number().nullable().optional(),
+        vendors: z
+          .array(z.object({ name: z.string(), slug: z.string() }).passthrough())
+          .optional(),
+        order: z.number().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<Saves | null> {

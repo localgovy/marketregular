@@ -65,9 +65,11 @@ export async function saveMarket(formData: FormData) {
   if (!supabase) fail(adminError === "supabase" ? "Supabase is not configured yet." : "Admins only.");
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
+  const slug = listingSlug(formData.get("slug"), name);
+  if (!slug) fail("Add a name.");
   const payload = {
     name,
-    slug: String(formData.get("slug") ?? "") || slugify(name),
+    slug,
     about: String(formData.get("about") ?? "") || null,
     address: String(formData.get("address") ?? ""),
     city: String(formData.get("city") ?? ""),
@@ -92,14 +94,17 @@ export async function saveMarket(formData: FormData) {
     ...parseReviewStats(formData),
   };
 
+  const nextPath = `/markets/${payload.slug}`;
   if (id) {
+    const previous = await listingPath(supabase, "markets", id);
     const { error } = await supabase.from("markets").update(payload).eq("id", id);
-    if (error) fail(error.message);
+    if (error) failDb(error, "Could not save that market.");
+    revalidatePublishedDirectory(previous && previous !== nextPath ? [nextPath, previous] : [nextPath]);
   } else {
     const { error } = await supabase.from("markets").insert(payload);
-    if (error) fail(error.message);
+    if (error) failDb(error, "Could not save that market.");
+    revalidatePublishedDirectory([nextPath]);
   }
-  revalidatePublishedDirectory([`/markets/${payload.slug}`]);
   revalidatePath("/admin");
   revalidatePath("/admin/markets");
   redirect("/admin/markets");
@@ -110,7 +115,7 @@ export async function deleteMarket(id: string) {
   if (!supabase) fail("Supabase is not configured yet.");
   const path = await listingPath(supabase, "markets", id);
   const { error } = await supabase.from("markets").delete().eq("id", id);
-  if (error) fail(error.message);
+  if (error) failDb(error, "Could not delete that market.");
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath("/admin/markets");
   redirect("/admin/markets");
@@ -121,9 +126,11 @@ export async function saveVendor(formData: FormData) {
   if (!supabase) fail("Supabase is not configured yet.");
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "").trim();
+  const slug = listingSlug(formData.get("slug"), name);
+  if (!slug) fail("Add a name.");
   const payload = {
     name,
-    slug: String(formData.get("slug") ?? "") || slugify(name),
+    slug,
     about: String(formData.get("about") ?? "") || null,
     website: String(formData.get("website") ?? "") || null,
     instagram: String(formData.get("instagram") ?? "") || null,
@@ -136,17 +143,20 @@ export async function saveVendor(formData: FormData) {
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean),
-    status: String(formData.get("status") ?? "draft") as "draft" | "published",
+    status: listingStatus(formData.get("status")),
     ...parseReviewStats(formData),
   };
+  const nextPath = `/vendors/${payload.slug}`;
   if (id) {
+    const previous = await listingPath(supabase, "vendors", id);
     const { error } = await supabase.from("vendors").update(payload).eq("id", id);
-    if (error) fail(error.message);
+    if (error) failDb(error, "Could not save that vendor.");
+    revalidatePublishedDirectory(previous && previous !== nextPath ? [nextPath, previous] : [nextPath]);
   } else {
     const { error } = await supabase.from("vendors").insert(payload);
-    if (error) fail(error.message);
+    if (error) failDb(error, "Could not save that vendor.");
+    revalidatePublishedDirectory([nextPath]);
   }
-  revalidatePublishedDirectory([`/vendors/${payload.slug}`]);
   revalidatePath("/admin/vendors");
   redirect("/admin/vendors");
 }
@@ -156,7 +166,7 @@ export async function deleteVendor(id: string) {
   if (!supabase) fail("Supabase is not configured yet.");
   const path = await listingPath(supabase, "vendors", id);
   const { error } = await supabase.from("vendors").delete().eq("id", id);
-  if (error) fail(error.message);
+  if (error) failDb(error, "Could not delete that vendor.");
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath("/admin/vendors");
   redirect("/admin/vendors");
@@ -175,7 +185,7 @@ export async function saveSchedule(formData: FormData) {
     season_end: String(formData.get("season_end") ?? "") || null,
     notes: String(formData.get("notes") ?? "") || null,
   });
-  if (error) fail(error.message);
+  if (error) failDb(error, "Could not save that schedule.");
   const path = await listingPath(supabase, "markets", market_id);
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/markets/${market_id}`);
@@ -185,7 +195,7 @@ export async function deleteSchedule(id: string, marketId: string) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
   const { error } = await supabase.from("market_schedules").delete().eq("id", id);
-  if (error) fail(error.message);
+  if (error) failDb(error, "Could not delete that schedule.");
   const path = await listingPath(supabase, "markets", marketId);
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/markets/${marketId}`);
@@ -204,7 +214,7 @@ export async function linkVendorToMarket(formData: FormData) {
       .map((d) => Number(d.trim()))
       .filter((n) => !Number.isNaN(n)),
   });
-  if (error) fail(error.message);
+  if (error) failDb(error, "Could not link that vendor.");
   const path = await listingPath(supabase, "markets", market_id);
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/markets/${market_id}`);
@@ -226,7 +236,7 @@ export async function saveMenuItem(formData: FormData) {
       .map((t) => t.trim())
       .filter(Boolean),
   });
-  if (error) fail(error.message);
+  if (error) failDb(error, "Could not save that menu item.");
   const path = await listingPath(supabase, "vendors", vendor_id);
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/vendors/${vendor_id}`);
@@ -235,19 +245,21 @@ export async function saveMenuItem(formData: FormData) {
 export async function decideClaim(id: string, status: "approved" | "rejected", note?: string) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
+  if (status !== "approved" && status !== "rejected") fail("Could not update that claim.");
   const { data: claim, error: lookupError } = await supabase
     .from("claim_requests")
     .select("target_type, target_id")
     .eq("id", id)
     .maybeSingle();
-  if (lookupError) fail(lookupError.message);
+  if (lookupError) failDb(lookupError, "Could not update that claim.");
   if (!claim) fail("Claim not found");
+  const clipped = (note ?? "").trim().slice(0, 500);
   const { error } = await supabase.rpc("decide_claim", {
     p_id: id,
     p_status: status,
-    p_note: note ?? null,
+    p_note: clipped || null,
   });
-  if (error) fail(error.message);
+  if (error) failDb(error, "Could not update that claim.");
   const table = claim.target_type === "market" ? "markets" : "vendors";
   const path = await listingPath(supabase, table, claim.target_id);
   revalidatePublishedDirectory(path ? [path] : []);

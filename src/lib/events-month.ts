@@ -75,7 +75,7 @@ export function parseYearMonth(value?: string, now = new Date()) {
   if (!match) return { year: ty, month: tm };
   const year = Number(match[1]);
   const month = Number(match[2]);
-  if (month < 1 || month > 12) return { year: ty, month: tm };
+  if (month < 1 || month > 12 || year < ty - 1 || year > ty + 2) return { year: ty, month: tm };
   return { year, month };
 }
 

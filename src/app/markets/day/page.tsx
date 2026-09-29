@@ -4,7 +4,7 @@ import { BackButton } from "@/components/back-button";
 import { BrowseLinks } from "@/components/browse-links";
 import { Hours } from "@/components/hours";
 import { JsonLd } from "@/components/json-ld";
-import { NowLabel } from "@/components/now-label";
+import { DayOpenMark } from "@/components/live-open";
 import { listMarkets, listSchedules, listStalls } from "@/lib/data/catalog";
 import {
   DAY_SLUGS,
@@ -13,6 +13,7 @@ import {
   offsetToWeekday,
   scheduleMapFrom,
 } from "@/lib/landing";
+import { serverNowMs } from "@/lib/clock";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
@@ -25,6 +26,7 @@ export const metadata: Metadata = pageMeta({
 });
 
 export default async function MarketDayHubPage() {
+  const nowMs = serverNowMs();
   const [markets, schedules, stalls] = await Promise.all([
     listMarkets(),
     listSchedules(),
@@ -67,15 +69,12 @@ export default async function MarketDayHubPage() {
                   {day.name}
                 </Link>
               </h2>
-              {day.openNow ? (
-                <NowLabel>Open now</NowLabel>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  <span className="type-nums text-foreground">{day.rows.length}</span>{" "}
-                  {day.rows.length === 1 ? "market" : "markets"}
-                  {day.isToday ? " · today" : ""}
-                </p>
-              )}
+              <DayOpenMark
+                rows={day.rows}
+                nowMs={nowMs}
+                count={day.rows.length}
+                isToday={day.isToday}
+              />
             </div>
             {day.rows.length ? (
               <ul className="mt-3 grid gap-1.5">

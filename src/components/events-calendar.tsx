@@ -10,6 +10,7 @@ import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
 import { Button } from "@/components/ui/button";
 import { WEEKDAYS } from "@/lib/constants";
+import { useNow } from "@/lib/use-now";
 import {
   findMarketDay,
   isoDate,
@@ -63,7 +64,8 @@ export function EventsCalendar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [now, setNow] = useState(() => new Date(nowMs));
+  const nowMsLive = useNow(nowMs);
+  const now = useMemo(() => new Date(nowMsLive), [nowMsLive]);
   const todayIso = torontoYmd(now);
   const [ty, tm] = todayIso.split("-").map(Number);
   const seed = parseYearMonth(initialMonth, new Date(nowMs));
@@ -81,12 +83,6 @@ export function EventsCalendar({
   const dayPanel = useRef<HTMLElement>(null);
   const swipe = useRef<{ x: number; y: number } | null>(null);
   const skipClick = useRef(false);
-
-  useEffect(() => {
-    setNow(new Date());
-    const id = window.setInterval(() => setNow(new Date()), 60_000);
-    return () => window.clearInterval(id);
-  }, []);
 
   const cells = useMemo(
     () => monthGrid(year, month, markets, schedules, now),
@@ -279,13 +275,14 @@ export function EventsCalendar({
           <div
             key={`${year}-${month}`}
             className={cn(
-              "grid grid-cols-7 gap-px bg-border/50",
               slide === "next" && "cal-next",
               slide === "prev" && "cal-prev",
               slide === "in" && "cal-in",
             )}
           >
-            {cells.map((cell) => {
+            {Array.from({ length: Math.ceil(cells.length / 7) }, (_, week) => (
+              <div key={week} role="row" className="grid grid-cols-7 gap-px bg-border/50">
+                {cells.slice(week * 7, week * 7 + 7).map((cell) => {
               const on = cell.iso === selected;
               const count = cell.events.length;
               return (
@@ -328,6 +325,8 @@ export function EventsCalendar({
                 </button>
               );
             })}
+              </div>
+            ))}
           </div>
         </div>
         <p className="type-kicker mt-3 text-muted-foreground">

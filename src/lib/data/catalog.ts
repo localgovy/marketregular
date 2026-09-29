@@ -78,6 +78,10 @@ const VENDOR_PUBLIC =
 /** `research_notes` is sourcing detail for the desk, not visitor copy — never selected here. */
 const SCHEDULE_PUBLIC =
   "id, market_id, weekday, opens_at, closes_at, season_start, season_end, notes";
+const POST_PUBLIC = "id, user_id, market_id, body, photos, flagged, created_at";
+const REVIEW_PUBLIC = "id, user_id, market_id, vendor_id, rating, body, flagged, created_at";
+const MENU_PUBLIC = "id, vendor_id, name, description, price_cents, season, dietary";
+const STALL_PUBLIC = "market_id, vendor_id, stall, days";
 
 /** Score, then the tag guesses that keep name-only roster shops inside the filters. */
 function hydrateVendor(vendor: Vendor) {
@@ -408,7 +412,7 @@ async function hallsByVendorIds(vendorIds: string[]): Promise<Map<string, Vendor
   const stalls: StallRef[] = [];
   const markets: Pick<Market, "id" | "slug" | "name">[] = [];
   const seenMarket = new Set<string>();
-  for (const row of data as Array<{
+  for (const row of data as unknown as Array<{
     vendor_id: string;
     markets:
       | { id: string; slug: string; name: string; city: string; status: string }
@@ -455,7 +459,7 @@ export async function getTablePeek(vendorIds: string[]): Promise<TablePeek[]> {
 
   const seen = new Set<string>();
   const lines: TablePeek[] = [];
-  for (const row of data as Array<{
+  for (const row of data as unknown as Array<{
     name: string;
     price_cents: number | null;
     vendor_id: string;
@@ -713,10 +717,10 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
 
   const [schedulesRes, linksRes, postsRes] = await Promise.all([
     supabase.from("market_schedules").select(SCHEDULE_PUBLIC).eq("market_id", market.id),
-    supabase.from("market_vendors").select("*").eq("market_id", market.id),
+    supabase.from("market_vendors").select(STALL_PUBLIC).eq("market_id", market.id),
     supabase
       .from("posts")
-      .select("*, profiles(display_name, avatar_url)")
+      .select(`${POST_PUBLIC}, profiles(display_name, avatar_url)`)
       .eq("market_id", market.id)
       .eq("flagged", false)
       .order("created_at", { ascending: false })
@@ -742,7 +746,7 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
     fetchAllRows<Review>((from, to) =>
       supabase
         .from("reviews")
-        .select("*, profiles(display_name), vendors(name, slug), markets(name, slug)")
+        .select(`${REVIEW_PUBLIC}, profiles(display_name), vendors(name, slug), markets(name, slug)`)
         .eq("flagged", false)
         .or(reviewScope.join(","))
         .order("created_at", { ascending: false })
@@ -758,7 +762,7 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
   const vendorIds = new Set(vendorIdList);
 
   const mappedReviews = (
-    (reviews ?? []) as Array<
+    (reviews ?? []) as unknown as Array<
       Review & {
         profiles?: { display_name: string | null };
         vendors?: { name: string; slug: string } | null;
@@ -777,7 +781,7 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
     }));
 
   const mappedPosts = (
-    (posts ?? []) as Array<Post & { profiles?: { display_name: string | null; avatar_url: string | null } }>
+    (posts ?? []) as unknown as Array<Post & { profiles?: { display_name: string | null; avatar_url: string | null } }>
   ).map((p) => ({
     ...p,
     author_name: p.profiles?.display_name ?? "Regular",
@@ -822,11 +826,11 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
   if (!vendor) return null;
 
   const [menusRes, linksRes, reviewsRes] = await Promise.all([
-    supabase.from("vendor_menus").select("*").eq("vendor_id", vendor.id),
-    supabase.from("market_vendors").select("*").eq("vendor_id", vendor.id),
+    supabase.from("vendor_menus").select(MENU_PUBLIC).eq("vendor_id", vendor.id),
+    supabase.from("market_vendors").select(STALL_PUBLIC).eq("vendor_id", vendor.id),
     supabase
       .from("reviews")
-      .select("*, profiles(display_name), markets(name, slug), vendors(name, slug)")
+      .select(`${REVIEW_PUBLIC}, profiles(display_name), markets(name, slug), vendors(name, slug)`)
       .eq("vendor_id", vendor.id)
       .eq("flagged", false)
       .order("created_at", { ascending: false }),
@@ -850,7 +854,7 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
     marketIds.length > 0
       ? supabase
           .from("posts")
-          .select("*, profiles(display_name), markets(name, slug, city)")
+          .select(`${POST_PUBLIC}, profiles(display_name), markets(name, slug, city)`)
           .eq("flagged", false)
           .in("market_id", marketIds)
           .order("created_at", { ascending: false })
@@ -890,7 +894,7 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
   const publishedMarketIds = new Set((markets ?? []).map((market: Market) => market.id));
 
   const mappedReviews = (
-    (reviews ?? []) as Array<
+    (reviews ?? []) as unknown as Array<
       Review & {
         profiles?: { display_name: string | null };
         markets?: { name: string; slug: string } | null;
@@ -909,7 +913,7 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
   }));
 
   const mappedPosts = (
-    (posts ?? []) as Array<
+    (posts ?? []) as unknown as Array<
       Post & {
         profiles?: { display_name: string | null };
         markets?: { name: string; slug: string; city: string };
@@ -952,14 +956,14 @@ export async function getLivePosts(limit = 20): Promise<Post[]> {
   if (!supabase) return [];
   const { data, error } = await supabase
     .from("posts")
-    .select("*, profiles(display_name, avatar_url), markets!inner(name, slug, city, status)")
+    .select(`${POST_PUBLIC}, profiles(display_name, avatar_url), markets!inner(name, slug, city, status)`)
     .eq("flagged", false)
     .eq("markets.status", "published")
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error || !data?.length) return [];
   return (
-    data as Array<
+    data as unknown as Array<
       Post & {
         profiles?: { display_name: string | null; avatar_url: string | null };
         markets?: { name: string; slug: string; city: string };
@@ -984,14 +988,14 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
     await Promise.all([
       supabase
         .from("posts")
-        .select("*, profiles(display_name), markets!inner(name, slug, city, status)")
+        .select(`${POST_PUBLIC}, profiles(display_name), markets!inner(name, slug, city, status)`)
         .eq("flagged", false)
         .eq("markets.status", "published")
         .order("created_at", { ascending: false })
         .limit(limit),
       supabase
         .from("reviews")
-        .select("*, profiles(display_name), markets!inner(name, slug, city, status), vendors(name, slug)")
+        .select(`${REVIEW_PUBLIC}, profiles(display_name), markets!inner(name, slug, city, status), vendors(name, slug)`)
         .eq("flagged", false)
         .eq("markets.status", "published")
         .order("created_at", { ascending: false })
@@ -1001,7 +1005,7 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
   if (postError && reviewError) return [];
 
   const fromPosts = (
-    (posts ?? []) as Array<
+    (posts ?? []) as unknown as Array<
       Post & {
         profiles?: { display_name: string | null };
         markets?: { name: string; slug: string; city?: string };
@@ -1018,7 +1022,7 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
     );
 
   const fromReviews = (
-    (reviews ?? []) as Array<
+    (reviews ?? []) as unknown as Array<
       Review & {
         profiles?: { display_name: string | null };
         markets?: { name: string; slug: string; city?: string } | null;

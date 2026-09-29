@@ -16,13 +16,18 @@ export function NotFoundSearch() {
   useEffect(() => {
     const query = q.trim();
     if (query.length < 2) return;
+    let cancelled = false;
     const id = window.setTimeout(() => {
       void suggestListings(query).then((next) => {
+        if (cancelled) return;
         setMarkets(next.markets);
         setVendors(next.vendors);
       });
     }, 180);
-    return () => window.clearTimeout(id);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(id);
+    };
   }, [q]);
 
   const searching = q.trim().length >= 2;

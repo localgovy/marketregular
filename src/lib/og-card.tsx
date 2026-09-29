@@ -74,8 +74,8 @@ export function ogCard({
               </div>
             </div>
           ) : null}
-          {lines.slice(0, 2).map((line) => (
-            <div key={line} style={{ fontSize: 34, color: MUTED, marginTop: 6 }}>
+          {lines.slice(0, 2).map((line, index) => (
+            <div key={index} style={{ fontSize: 34, color: MUTED, marginTop: 6 }}>
               {line}
             </div>
           ))}

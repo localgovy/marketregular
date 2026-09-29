@@ -12,7 +12,7 @@ import { ListingReviewGate } from "@/components/listing-review-gate";
 import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
 import { MarketVendors } from "@/components/market-vendors";
-import { NowLabel } from "@/components/now-label";
+import { LiveOpenState } from "@/components/live-open";
 import { ScheduleList } from "@/components/schedule-list";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
@@ -25,7 +25,7 @@ import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle, directionsHref } from "@/lib/listing-copy";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
-import { nextOpenLabel } from "@/lib/schedule";
+import { serverNowMs } from "@/lib/clock";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 import { countLabel } from "@/lib/format";
 
@@ -70,11 +70,9 @@ export default async function MarketPage({
     notFound();
   }
 
-  const now = new Date();
+  const nowMs = serverNowMs();
+  const now = new Date(nowMs);
   const directions = directionsHref(market.lat, market.lng);
-  const when = market.schedules.length
-    ? nextOpenLabel(market.schedules, market.province, now)
-    : null;
   const avgRated = market.feed.filter((item) => item.rating != null);
   const avg =
     avgRated.length > 0
@@ -122,12 +120,14 @@ export default async function MarketPage({
           <SaveButton kind="market" slug={market.slug} name={market.name} size="lg" />
         </div>
       </div>
-      {when || listingScore(market.rating_avg, market.review_count) ? (
+      {market.schedules.length || listingScore(market.rating_avg, market.review_count) ? (
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-          {when === "Open now" ? (
-            <NowLabel>{when}</NowLabel>
-          ) : when ? (
-            <span className="text-base font-medium text-primary">{when}</span>
+          {market.schedules.length ? (
+            <LiveOpenState
+              schedules={market.schedules}
+              province={market.province}
+              nowMs={nowMs}
+            />
           ) : null}
           <ListingScore
             className="text-base"

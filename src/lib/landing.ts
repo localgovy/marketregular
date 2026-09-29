@@ -48,6 +48,7 @@ export type MarketDayRow = {
   market: Market;
   hours: string;
   opensMinutes: number;
+  closesMinutes: number;
   notes: string | null;
   /** Only ever true when the day being viewed is today. */
   openNow: boolean;
@@ -97,6 +98,7 @@ export function marketsOnWeekday({
       market,
       hours: formatHours(row.opens_at, row.closes_at),
       opensMinutes: opens,
+      closesMinutes: closes,
       notes: row.notes,
       openNow: offset === 0 && minutes >= opens && minutes <= closes,
       stallCount: publicStallCount(market.slug, stallsByMarket.get(market.id) ?? 0),
@@ -129,6 +131,7 @@ export function marketNextOpenRow(
       market,
       hours: "See schedule",
       opensMinutes: 0,
+      closesMinutes: 0,
       notes: null,
       openNow: false,
       stallCount,
@@ -147,6 +150,7 @@ export function marketNextOpenRow(
       ? formatHours(session.opens_at, session.closes_at)
       : formatTime(slot.opensAt),
     opensMinutes: session ? parseHm(session.opens_at) : parseHm(slot.opensAt),
+    closesMinutes: session ? parseHm(session.closes_at) : parseHm(slot.opensAt),
     notes: session?.notes ?? null,
     openNow: slot.waitMinutes === 0,
     stallCount,

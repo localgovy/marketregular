@@ -41,11 +41,11 @@ export default async function EditVendorPage({
         </ul>
         <form action={saveMenuItem} className="mt-4 grid gap-2 sm:grid-cols-2">
           <input type="hidden" name="vendor_id" value={id} />
-          <Input name="name" placeholder="Item name" required />
-          <Input name="price_cents" placeholder="Price CAD (e.g. 8.50)" />
-          <Input name="description" placeholder="Description" className="sm:col-span-2" />
-          <Input name="season" placeholder="Season" />
-          <Input name="dietary" placeholder="Dietary tags, comma sep" />
+          <Input name="name" placeholder="Item name" required aria-label="Item name" />
+          <Input name="price_cents" placeholder="Price CAD (e.g. 8.50)" aria-label="Price" />
+          <Input name="description" placeholder="Description" aria-label="Description" className="sm:col-span-2" />
+          <Input name="season" placeholder="Season" aria-label="Season" />
+          <Input name="dietary" placeholder="Dietary tags, comma sep" aria-label="Dietary tags" />
           <Button type="submit" className="w-fit">
             Add item
           </Button>

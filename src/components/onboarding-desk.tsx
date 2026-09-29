@@ -49,8 +49,11 @@ export function OnboardingDesk({
 }) {
   const [step, setStep] = useState(1);
   const [username, setUsername] = useState("");
-  const [availability, setAvailability] = useState<string | null>(null);
-  const [handleOk, setHandleOk] = useState(false);
+  const [checked, setChecked] = useState<{
+    handle: string;
+    available: boolean;
+    error: string;
+  } | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [pages, setPages] = useState(1);
@@ -67,21 +70,29 @@ export function OnboardingDesk({
   const localError = username ? usernameError(username) : "Pick a handle.";
 
   useEffect(() => {
-    if (localError) {
-      setHandleOk(false);
-      setAvailability(localError === "Pick a handle." ? null : localError);
-      return;
-    }
-    setHandleOk(false);
-    setAvailability("Checking…");
+    if (localError) return;
     const timer = window.setTimeout(() => {
       void usernameAvailable(normalized).then((result) => {
-        setHandleOk(result.available);
-        setAvailability(result.available ? `@${normalized} is free` : result.error);
+        setChecked({
+          handle: normalized,
+          available: result.available,
+          error: result.available ? "" : (result.error ?? "That handle is taken."),
+        });
       });
     }, 300);
     return () => window.clearTimeout(timer);
   }, [localError, normalized]);
+
+  const handleOk = !localError && checked?.handle === normalized && checked.available;
+  const availability = localError
+    ? localError === "Pick a handle."
+      ? null
+      : localError
+    : checked?.handle === normalized
+      ? checked.available
+        ? `@${normalized} is free`
+        : checked.error
+      : "Checking…";
 
   const visible = useMemo(() => {
     const q = fold(query);

@@ -18,13 +18,14 @@ import { getVendorBySlug } from "@/lib/data/catalog";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
 import { Hours } from "@/components/hours";
-import { NowLabel } from "@/components/now-label";
+import { VendorNextLine } from "@/components/live-open";
 import { WEEKDAYS } from "@/lib/constants";
+import { serverNowMs } from "@/lib/clock";
 import { stallNextDate } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
-import { formatHours, nextOpenSlot, sessionOnWeekday } from "@/lib/schedule";
+import { formatHours, sessionOnWeekday } from "@/lib/schedule";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 import type { MarketSchedule } from "@/types/database";
 
@@ -90,25 +91,14 @@ export default async function VendorPage({
     notFound();
   }
 
-  const now = new Date();
+  const nowMs = serverNowMs();
+  const now = new Date(nowMs);
   const ranked = [...vendor.markets].sort((a, b) =>
     stallNextDate(a, a.schedules, a.days, now).localeCompare(
       stallNextDate(b, b.schedules, b.days, now),
     ),
   );
-  const nextMarket = ranked[0];
-  const nextRows = nextMarket
-    ? nextMarket.days.length
-      ? nextMarket.schedules.filter((row) => nextMarket.days.includes(Number(row.weekday)))
-      : nextMarket.schedules
-    : [];
-  const nextSlot = nextMarket ? nextOpenSlot(nextRows.length ? nextRows : nextMarket.schedules, nextMarket.province, now) : null;
-  const nextRow = nextSlot
-    ? nextRows.find((row) => Number(row.weekday) === nextSlot.weekday) ??
-      nextMarket?.schedules.find((row) => Number(row.weekday) === nextSlot.weekday)
-    : null;
-  const nextHours = nextRow ? formatHours(nextRow.opens_at, nextRow.closes_at) : "";
-  const homeMarket = nextMarket;
+  const homeMarket = ranked[0];
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -132,29 +122,7 @@ export default async function VendorPage({
           <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
         </div>
       </div>
-      {nextMarket && nextSlot ? (
-        <p className="type-lede mt-2 max-w-3xl text-pretty text-muted-foreground">
-          {nextSlot.waitMinutes === 0 ? (
-            <>
-              <NowLabel>Open now</NowLabel>
-              {" at "}
-            </>
-          ) : (
-            <>
-              {WEEKDAYS[nextSlot.weekday]} at{" "}
-            </>
-          )}
-          <Link href={`/markets/${nextMarket.slug}`} className="font-medium text-foreground hover:underline">
-            {nextMarket.name}
-          </Link>
-          {nextHours ? (
-            <>
-              {", "}
-              <Hours value={nextHours} className="text-muted-foreground" />
-            </>
-          ) : null}
-        </p>
-      ) : null}
+      <VendorNextLine halls={vendor.markets} nowMs={nowMs} />
       <ListingScore
         className="mt-3 text-base"
         ratingAvg={vendor.rating_avg}

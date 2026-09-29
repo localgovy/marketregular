@@ -6,6 +6,7 @@ import { BrowseLinks } from "@/components/browse-links";
 import { JsonLd } from "@/components/json-ld";
 import { MarketDayList } from "@/components/market-day-list";
 import { ListingScore } from "@/components/listing-score";
+import { serverNowMs } from "@/lib/clock";
 import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/catalog";
 import {
   CATEGORIES,
@@ -73,6 +74,7 @@ function MarketList({
 }) {
   return (
     <MarketDayList
+      nowMs={serverNowMs()}
       rows={markets.map((market) =>
         marketNextOpenRow(
           market,

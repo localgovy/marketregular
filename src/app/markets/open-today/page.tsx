@@ -11,6 +11,7 @@ import {
   marketsOnWeekday,
   scheduleMapFrom,
 } from "@/lib/landing";
+import { serverNowMs } from "@/lib/clock";
 import { LAUNCH_CITY, LAUNCH_REGION, LAUNCH_TZ } from "@/lib/launch";
 import { zonedParts } from "@/lib/schedule";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
@@ -25,7 +26,7 @@ export const metadata: Metadata = pageMeta({
 });
 
 export default async function OpenTodayPage() {
-  const now = new Date();
+  const now = new Date(serverNowMs());
   const { weekday, minutes } = zonedParts(now, LAUNCH_TZ);
   const [markets, schedules, stalls] = await Promise.all([
     listMarkets(),
@@ -75,21 +76,21 @@ export default async function OpenTodayPage() {
       {openNow.length ? (
         <section className="mt-8">
           <h2>Open right now</h2>
-          <MarketDayList rows={openNow} />
+          <MarketDayList rows={openNow} nowMs={now.getTime()} />
         </section>
       ) : null}
 
       {laterToday.length ? (
         <section className="mt-8">
           <h2>Opening later today</h2>
-          <MarketDayList rows={laterToday} />
+          <MarketDayList rows={laterToday} nowMs={now.getTime()} />
         </section>
       ) : null}
 
       {closed.length ? (
         <section className="mt-8">
           <h2>Already closed today</h2>
-          <MarketDayList rows={closed} />
+          <MarketDayList rows={closed} nowMs={now.getTime()} />
         </section>
       ) : null}
 
@@ -106,7 +107,7 @@ export default async function OpenTodayPage() {
             </Link>
             .
           </p>
-          <MarketDayList rows={tomorrow.slice(0, 6)} />
+          <MarketDayList rows={tomorrow.slice(0, 6)} nowMs={now.getTime()} />
           {tomorrow.length > 6 ? (
             <p className="mt-2 text-sm">
               <Link

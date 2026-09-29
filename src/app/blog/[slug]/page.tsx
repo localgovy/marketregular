@@ -6,7 +6,14 @@ import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
 import { NextArticleLink } from "@/components/next-article";
 import { SaveButton } from "@/components/save-button";
-import { blogLedeParagraphs, getBlogPost, listBlogPosts, nextBlogPost, plainBlogText } from "@/lib/blog";
+import {
+  blogLedeParagraphs,
+  getBlogPost,
+  isStaleWeekendGuide,
+  listBlogPosts,
+  nextBlogPost,
+  plainBlogText,
+} from "@/lib/blog";
 import { SITE_NAME, SITE_OG } from "@/lib/constants";
 import { BLOG_CRUMB, blogPostingJsonLd, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
 
@@ -27,11 +34,14 @@ export async function generateMetadata({
   const post = getBlogPost(slug);
   if (!post) return { title: "Blog" };
   const description = plainBlogText(post.description);
+  const stale = isStaleWeekendGuide(post);
   return {
     ...pageMeta({
       title: post.title,
       description,
       path: `/blog/${post.slug}`,
+      index: !stale,
+      follow: stale,
     }),
     openGraph: {
       type: "article",

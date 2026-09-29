@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { emailVisitPlan } from "@/app/actions/visit-plan";
 import { Button } from "@/components/ui/button";
+import { useClientNow } from "@/lib/use-now";
 import { visitPlanWaitCopy, visitPlanWaitMs } from "@/lib/visit-plan-limit";
 
 export function EmailVisitButton({
@@ -18,16 +19,10 @@ export function EmailVisitButton({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sentAt, setSentAt] = useState(lastSentAt);
-  const [now, setNow] = useState<number | null>(null);
+  const now = useClientNow();
   const busy = useRef(false);
-  const waitMs = visitPlanWaitMs(sentAt, now ?? 0);
-  const cooling = waitMs > 0;
-
-  useEffect(() => {
-    setNow(Date.now());
-    const id = setInterval(() => setNow(Date.now()), 15_000);
-    return () => clearInterval(id);
-  }, []);
+  const waitMs = now == null ? 0 : visitPlanWaitMs(sentAt, now);
+  const cooling = now != null && waitMs > 0;
 
   function send() {
     if (busy.current || cooling || slugs.length === 0) return;

@@ -41,19 +41,16 @@ export function MarketMapLazy({
   load?: "click" | "visible";
 }) {
   const [ready, setReady] = useState(false);
-  const [points, setPoints] = useState<MapMarket[] | null>(markets ?? null);
+  const [fetched, setFetched] = useState<MapMarket[] | null>(null);
+  const points = markets ?? fetched;
   const wrapRef = useRef<HTMLDivElement>(null);
   const reveal = useCallback(() => setReady(true), []);
-
-  useEffect(() => {
-    if (markets) setPoints(markets);
-  }, [markets]);
 
   useEffect(() => {
     if (!ready || points) return;
     let cancelled = false;
     void getHomeMapMarkets().then((next) => {
-      if (!cancelled) setPoints(next);
+      if (!cancelled) setFetched(next);
     });
     return () => {
       cancelled = true;
