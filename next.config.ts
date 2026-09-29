@@ -73,6 +73,9 @@ const nextConfig: NextConfig = {
     const dev = process.env.NODE_ENV !== "production";
     const csp = [
       "default-src 'self'",
+      // 'unsafe-inline' stays. Nonces would make the root layout dynamic and
+      // drop force-static / ISR on every market and vendor page. Next's own
+      // bootstrap is inline, so a hash list cannot replace this either.
       // React reconstructs call stacks with eval() in development only.
       `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://va.vercel-scripts.com https://*.googletagmanager.com${dev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",

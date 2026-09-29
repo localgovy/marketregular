@@ -1,5 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
-import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
+import { supabaseAnonKey, supabaseCookieOptions, supabaseUrl } from "@/lib/supabase/env";
 
 export function createBrowserSupabaseClient() {
   const url = supabaseUrl();
@@ -7,5 +7,6 @@ export function createBrowserSupabaseClient() {
   if (!url || !key) return null;
   return createBrowserClient(url, key, {
     auth: { detectSessionInUrl: false },
+    cookieOptions: supabaseCookieOptions(),
   });
 }

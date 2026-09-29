@@ -1,6 +1,6 @@
 import { loadMyProfile } from "@/lib/my-profile";
 import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
-import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
+import { supabaseAnonKey, supabaseCookieOptions, supabaseUrl } from "@/lib/supabase/env";
 import { onboardingExemptPath, onboardingHref } from "@/lib/onboarding";
 import { safePath } from "@/lib/auth-redirect";
 import { NextResponse, type NextRequest } from "next/server";
@@ -29,13 +29,14 @@ export async function updateSession(request: NextRequest) {
   if (!url || !key) return supabaseResponse;
 
   const path = request.nextUrl.pathname;
+  const navigation = request.method === "GET" || request.method === "HEAD";
   const needsAuth = path.startsWith("/account");
   const hasAuthCookie = request.cookies
     .getAll()
     .some((cookie) => cookieLooksLikeSupabaseAuth(cookie.name));
 
   if (!hasAuthCookie) {
-    if (!needsAuth && path !== "/onboarding") return supabaseResponse;
+    if (!navigation || (!needsAuth && path !== "/onboarding")) return supabaseResponse;
     if (path === "/onboarding") {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/login";
@@ -46,6 +47,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   const supabase = createServerClient(url, key, {
+    cookieOptions: supabaseCookieOptions(),
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -65,6 +67,8 @@ export async function updateSession(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (!navigation) return supabaseResponse;
 
   if (needsAuth && !user) {
     return copyCookies(supabaseResponse, loginRedirect(request));

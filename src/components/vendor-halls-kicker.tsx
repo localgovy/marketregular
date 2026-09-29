@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -42,18 +42,18 @@ export function VendorHallsKicker({ halls }: { halls: VendorHall[] }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ x: 0, y: 0 });
 
-  function cancelClose() {
+  const cancelClose = useCallback(() => {
     if (closeTimer.current) {
       clearTimeout(closeTimer.current);
       closeTimer.current = null;
     }
-  }
+  }, []);
 
-  function hide() {
+  const hide = useCallback(() => {
     cancelClose();
     pinnedRef.current = false;
     setOpen(false);
-  }
+  }, [cancelClose]);
 
   function showAt(event: { clientX: number; clientY: number }, pin: boolean) {
     cancelClose();
@@ -97,9 +97,9 @@ export function VendorHallsKicker({ halls }: { halls: VendorHall[] }) {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("pointerdown", onPointerDown);
     };
-  }, [open]);
+  }, [open, hide]);
 
-  useEffect(() => () => cancelClose(), []);
+  useEffect(() => () => cancelClose(), [cancelClose]);
 
   if (!count) {
     return <p className="type-kicker min-w-0 flex-1 text-muted-foreground">No markets</p>;

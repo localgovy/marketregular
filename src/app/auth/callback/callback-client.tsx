@@ -1,153 +1,42 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { mergeSaves } from "@/app/actions/saves";
 import { OAUTH_HASH_STORAGE_KEY } from "@/lib/analytics";
-import { oauthValuesMatch, takeGoogleOAuthHandoff } from "@/lib/google-oauth";
-import { flushPendingSave } from "@/lib/pending-save";
-import { LOGIN_ERROR_COPY } from "@/lib/public-error";
 import { clearAuthNextCookie, readAuthNextCookie, safePath } from "@/lib/auth-redirect";
-import { bootSaves, droppedSaveKeys, getSaves } from "@/lib/saves";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-
-type CallbackPayload = {
-  cancelled: boolean;
-  token: string | null;
-  state: string | null;
-  handoff: ReturnType<typeof takeGoogleOAuthHandoff>;
-};
-
-let payload: CallbackPayload | undefined;
-let finishKey: string | null = null;
-
-function consumeGoogleCallback(): CallbackPayload {
-  if (payload) return payload;
-  const stashed = sessionStorage.getItem(OAUTH_HASH_STORAGE_KEY);
-  if (stashed) sessionStorage.removeItem(OAUTH_HASH_STORAGE_KEY);
-  const hash = new URLSearchParams((stashed ?? window.location.hash).replace(/^#/, ""));
-  const query = new URLSearchParams(window.location.search);
-  payload = {
-    cancelled: Boolean(
-      hash.get("error") ||
-        hash.get("error_description") ||
-        query.get("error") ||
-        query.get("error_description"),
-    ),
-    token: hash.get("id_token"),
-    state: hash.get("state") ?? query.get("state"),
-    handoff: takeGoogleOAuthHandoff(),
-  };
-  window.history.replaceState(null, "", window.location.pathname);
-  return payload;
-}
-
-function loginHref(next: string, key: "oauth" | "session") {
-  const url = new URL("/login", window.location.origin);
-  url.searchParams.set("error", key);
-  if (next !== "/account") url.searchParams.set("next", next);
-  return `${url.pathname}${url.search}`;
-}
 
 export function AuthCallbackClient() {
   const router = useRouter();
-  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    void (async () => {
-      const arriving = new URLSearchParams(window.location.search);
-      if (arriving.has("token_hash")) {
-        window.location.replace(`/auth/confirm${window.location.search}`);
-        return;
-      }
-      if (
-        arriving.has("code") ||
-        arriving.has("error") ||
-        arriving.has("error_description")
-      ) {
-        window.location.replace(`/auth/pkce${window.location.search}`);
-        return;
-      }
-
-      const { cancelled: oauthCancelled, token, state, handoff } = consumeGoogleCallback();
-      const attempt = `${token ?? ""}:${state ?? ""}:${oauthCancelled ? "1" : "0"}`;
-      if (finishKey === attempt) return;
-      finishKey = attempt;
-
-      const next = safePath(handoff?.next ?? readAuthNextCookie());
-
-      const fail = (key: "oauth" | "session") => {
-        clearAuthNextCookie();
-        setFailed(true);
-        router.replace(loginHref(next, key));
-      };
-
-      if (oauthCancelled) {
-        fail("oauth");
-        return;
-      }
-      if (!token) {
-        clearAuthNextCookie();
-        router.replace(next);
-        return;
-      }
-      if (!handoff || !state || !oauthValuesMatch(state, handoff.state)) {
-        fail("oauth");
-        return;
-      }
-
-      const supabase = createBrowserSupabaseClient();
-      if (!supabase) {
-        fail("session");
-        return;
-      }
-
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: "google",
-        token,
-        nonce: handoff.nonce,
-      });
-      if (error) {
-        console.error("auth.idToken", error.code ?? "unknown");
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (!session?.user) {
-          fail("session");
-          return;
-        }
-      }
-
-      try {
-        bootSaves();
-        await mergeSaves(getSaves(), droppedSaveKeys());
-        await flushPendingSave();
-      } catch {
-        /* Account hydrator retries. */
-      }
-
-      clearAuthNextCookie();
-      router.replace(next);
-      router.refresh();
-    })();
+    try {
+      sessionStorage.removeItem(OAUTH_HASH_STORAGE_KEY);
+    } catch {
+      /* private mode */
+    }
+    const arriving = new URLSearchParams(window.location.search);
+    if (arriving.has("token_hash")) {
+      window.location.replace(`/auth/confirm${window.location.search}`);
+      return;
+    }
+    if (
+      arriving.has("code") ||
+      arriving.has("error") ||
+      arriving.has("error_description")
+    ) {
+      window.location.replace(`/auth/pkce${window.location.search}`);
+      return;
+    }
+    const next = safePath(readAuthNextCookie());
+    clearAuthNextCookie();
+    router.replace(next);
+    router.refresh();
   }, [router]);
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">
-      <h1>{failed ? "Sign in" : "Signing in"}</h1>
-      <p className="type-lede mt-2 text-muted-foreground">
-        {failed ? (
-          <>
-            {LOGIN_ERROR_COPY.oauth}{" "}
-            <Link href="/login" className="font-medium text-foreground hover:underline">
-              Back to sign in
-            </Link>
-          </>
-        ) : (
-          "Continuing with Google…"
-        )}
-      </p>
+      <h1>Signing in</h1>
+      <p className="type-lede mt-2 text-muted-foreground">Continuing…</p>
     </div>
   );
 }

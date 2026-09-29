@@ -3,10 +3,12 @@ import { headers } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { VISIT_PLAN_DAY_LIMIT, VISIT_PLAN_HOUR_LIMIT } from "@/lib/visit-plan-limit";
 
-export type MailKind = "claim" | "visit";
+export type MailKind = "claim" | "claim_ip" | "visit";
 
 export const MAIL_LIMITS: Record<MailKind, { hour: number; day: number }> = {
   claim: { hour: 3, day: 10 },
+  /** Shared by every guest claim from one address, whatever email they type. */
+  claim_ip: { hour: 20, day: 40 },
   visit: { hour: VISIT_PLAN_HOUR_LIMIT, day: VISIT_PLAN_DAY_LIMIT },
 };
 
@@ -45,4 +47,18 @@ export async function takeMailSlot(
   });
   if (error) return false;
   return data === true;
+}
+
+/** Drop the slots just taken when the send itself fails. */
+export async function releaseMailSlot(
+  service: SupabaseClient,
+  kind: MailKind,
+  keys: string[],
+) {
+  if (!keys.length) return;
+  const { error } = await service.rpc("release_mail_slot", {
+    p_kind: kind,
+    p_keys: keys,
+  });
+  if (error) console.error("mail.release", error.message);
 }

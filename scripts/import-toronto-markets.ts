@@ -245,7 +245,7 @@ for (const row of roster) {
     let vendorId = vendorIdByKey.get(key);
     if (!vendorId) {
       vendorId = id(101 + vendors.length);
-      let slug = slugify(rec.name) || "vendor";
+      const slug = slugify(rec.name) || "vendor";
       let unique = slug;
       let n = 2;
       while (usedSlugs.has(unique)) {

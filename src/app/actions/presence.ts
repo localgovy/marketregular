@@ -6,6 +6,7 @@ import { dbPublicError } from "@/lib/public-error";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 const FLAG_TABLES = new Set(["posts", "reviews"] as const);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -26,14 +27,17 @@ async function requireUser() {
   return { supabase, user, demo: false as const };
 }
 
-function hasCoords(lat?: number, lng?: number) {
-  return (
-    typeof lat === "number" &&
-    typeof lng === "number" &&
-    Number.isFinite(lat) &&
-    Number.isFinite(lng)
-  );
-}
+const TAG = /^[a-z0-9-]{1,40}$/;
+
+const postSchema = z.object({
+  marketId: z.string().regex(UUID),
+  body: z.string().max(4000),
+  photos: z.array(z.string().max(2048)).max(8).optional(),
+  tags: z.array(z.string().regex(TAG)).max(12).optional(),
+  vendorSlug: z.string().max(160).optional(),
+  rating: z.number().int().min(0).max(5).optional(),
+  priceLevel: z.number().int().min(0).max(3).optional(),
+});
 
 function isFlagTable(table: string): table is FlagTable {
   return FLAG_TABLES.has(table as FlagTable);
@@ -42,31 +46,28 @@ function isFlagTable(table: string): table is FlagTable {
 export async function createPost(input: {
   marketId: string;
   body: string;
-  lat?: number;
-  lng?: number;
   photos?: string[];
   tags?: string[];
   vendorSlug?: string;
   rating?: number;
   priceLevel?: number;
 }) {
+  const parsed = postSchema.safeParse(input);
+  if (!parsed.success) return { error: "That review could not be posted." };
+  const note = parsed.data;
   const { supabase, user, demo } = await requireUser();
   if (demo) return { error: "Reviews aren't available right now. Try again later." };
   if (!supabase || !user) return { error: "Sign in to review." };
-  if (!UUID.test(input.marketId)) return { error: "Pick a market." };
 
-  const vendorSlug = await rosterVendorSlug(supabase, input.marketId, input.vendorSlug);
-  const body = encodeFloorBody(
-    input.body,
-    input.tags ?? [],
-    vendorSlug,
-    input.rating,
-    vendorSlug ? input.priceLevel : undefined,
-  );
-  if (input.body.trim().length < 3) return { error: "Write a little more." };
+  const vendorSlug = await rosterVendorSlug(supabase, note.marketId, note.vendorSlug);
+  const rating = note.rating && note.rating >= 1 ? note.rating : undefined;
+  const priceLevel =
+    vendorSlug && note.priceLevel && note.priceLevel >= 1 ? note.priceLevel : undefined;
+  const body = encodeFloorBody(note.body, note.tags ?? [], vendorSlug, rating, priceLevel);
+  if (note.body.trim().length < 3) return { error: "Write a little more." };
   if (body.length > 2000) return { error: "Reviews are limited to 2,000 characters." };
 
-  const photos = allowedPostPhotos(user.id, input.photos ?? []);
+  const photos = allowedPostPhotos(user.id, note.photos ?? []);
   if (!photos) return { error: "Those photos could not be attached." };
 
   const { count } = await supabase
@@ -78,17 +79,13 @@ export async function createPost(input: {
     return { error: "Daily review limit reached. See you tomorrow." };
   }
 
-  const { data: inserted, error } = await supabase
-    .from("posts")
-    .insert({
-      user_id: user.id,
-      market_id: input.marketId,
-      body,
-      photos,
-      verified_on_site: false,
-    })
-    .select("id")
-    .single();
+  const { error } = await supabase.from("posts").insert({
+    user_id: user.id,
+    market_id: note.marketId,
+    body,
+    photos,
+    verified_on_site: false,
+  });
   if (error) {
     if (error.message.includes("Daily review limit")) {
       return { error: "Daily review limit reached. See you tomorrow." };
@@ -96,20 +93,10 @@ export async function createPost(input: {
     return { error: dbPublicError(error, "Could not post that review.") };
   }
 
-  let verifiedOnSite = false;
-  if (inserted && hasCoords(input.lat, input.lng)) {
-    const { data } = await supabase.rpc("confirm_on_site", {
-      p_post_id: inserted.id,
-      p_lat: input.lat,
-      p_lng: input.lng,
-    });
-    verifiedOnSite = data === true;
-  }
-
   const { data: market } = await supabase
     .from("markets")
     .select("slug")
-    .eq("id", input.marketId)
+    .eq("id", note.marketId)
     .maybeSingle();
   revalidatePath("/");
   revalidatePath("/markets");
@@ -117,7 +104,7 @@ export async function createPost(input: {
   revalidatePath("/feed");
   if (market?.slug) revalidatePath(`/markets/${market.slug}`);
   if (vendorSlug) revalidatePath(`/vendors/${vendorSlug}`);
-  return { error: null, demo: false, verifiedOnSite };
+  return { error: null, demo: false };
 }
 
 async function rosterVendorSlug(
@@ -146,30 +133,31 @@ async function rosterVendorSlug(
 export async function composeFloorNote(input: {
   marketId: string;
   body: string;
-  lat?: number;
-  lng?: number;
   rating: number;
   vendorId?: string;
   vendorSlug?: string;
   tags: string[];
   priceLevel?: number;
 }) {
+  const parsed = postSchema
+    .extend({
+      vendorId: z.string().max(80).optional(),
+      rating: z.number().int().min(0).max(5),
+      tags: z.array(z.string().regex(TAG)).max(12),
+    })
+    .safeParse(input);
+  if (!parsed.success) return { error: "That review could not be posted." };
+  const note = parsed.data;
   const post = await createPost({
-    marketId: input.marketId,
-    body: input.body,
-    lat: input.lat,
-    lng: input.lng,
-    tags: input.tags,
-    vendorSlug: input.vendorSlug,
-    rating: input.rating >= 1 ? input.rating : undefined,
-    priceLevel:
-      input.vendorId && input.priceLevel && input.priceLevel >= 1 && input.priceLevel <= 3
-        ? input.priceLevel
-        : undefined,
+    marketId: note.marketId,
+    body: note.body,
+    tags: note.tags,
+    vendorSlug: note.vendorSlug,
+    rating: note.rating >= 1 ? note.rating : undefined,
+    priceLevel: note.vendorId && note.priceLevel ? note.priceLevel : undefined,
   });
   if (post.error) return post;
-
-  return { error: null, demo: post.demo, verifiedOnSite: post.verifiedOnSite === true };
+  return { error: null, demo: post.demo };
 }
 
 export async function deleteOwnPost(formData: FormData) {

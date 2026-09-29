@@ -102,7 +102,6 @@ export type Post = {
   market_id: string;
   body: string;
   photos: string[];
-  verified_on_site: boolean;
   flagged: boolean;
   created_at: string;
   author_name?: string | null;
@@ -122,7 +121,6 @@ export type Review = {
   vendor_id: string | null;
   rating: number;
   body: string;
-  verified_on_site: boolean;
   flagged: boolean;
   created_at: string;
   author_name?: string | null;
@@ -177,7 +175,6 @@ export type FloorItem = {
   vendor_slug: string | null;
   rating: number | null;
   price_level: number | null;
-  verified_on_site: boolean;
   tags: string[];
   photos: string[];
 };

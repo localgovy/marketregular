@@ -15,3 +15,12 @@ export function supabaseAnonKey() {
     ""
   );
 }
+
+/** Session cookies are JS-readable by design. Production still needs Secure. */
+export function supabaseCookieOptions() {
+  return {
+    path: "/",
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+  };
+}

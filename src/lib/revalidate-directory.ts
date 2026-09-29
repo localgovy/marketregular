@@ -6,6 +6,10 @@ export function revalidatePublishedDirectory(extra: string[] = []) {
   updateTag(DIRECTORY_TAG);
   revalidatePath("/");
   revalidatePath("/markets", "layout");
+  revalidatePath("/vendors", "layout");
+  revalidatePath("/contact");
+  revalidatePath("/events");
+  revalidatePath("/feed");
   revalidatePath("/sitemap.xml");
   for (const path of extra) {
     if (path) revalidatePath(path);

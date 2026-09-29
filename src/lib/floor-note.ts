@@ -74,7 +74,6 @@ export function reviewFromPost(
     vendor_slug: slug ?? tagged?.slug ?? null,
     rating: decoded.rating,
     price_level: decoded.priceLevel,
-    verified_on_site: post.verified_on_site,
     tags: post.tags?.length ? post.tags : decoded.tags,
     photos: post.photos ?? [],
   };
@@ -94,7 +93,6 @@ export function reviewFromReview(row: Review): FloorItem {
     vendor_slug: row.vendor_slug ?? decoded.vendorSlug,
     rating: row.rating,
     price_level: decoded.priceLevel,
-    verified_on_site: row.verified_on_site,
     tags: decoded.tags,
     photos: [],
   };

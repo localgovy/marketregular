@@ -56,7 +56,7 @@ export function FloorComposer({
   initialVendorId?: string;
   className?: string;
 }) {
-  const { coords, requestAsync } = useGeo();
+  const { coords } = useGeo();
   const nearby = useMemo(() => {
     if (!coords) return [];
     return markets
@@ -196,11 +196,9 @@ export function FloorComposer({
       return;
     }
     start(async () => {
-      const here = coords ?? (await requestAsync());
       const result = await composeFloorNote({
         marketId: market.id,
         body,
-        ...(here ? { lat: here.lat, lng: here.lng } : {}),
         rating,
         vendorId: tagged?.id,
         vendorSlug: tagged?.slug,
@@ -223,7 +221,6 @@ export function FloorComposer({
         vendor_slug: tagged?.slug ?? null,
         rating: rating > 0 ? rating : null,
         price_level: tagged && price > 0 ? price : null,
-        verified_on_site: result.verifiedOnSite === true,
         tags,
         photos: [],
       });

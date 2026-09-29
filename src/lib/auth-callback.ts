@@ -1,6 +1,6 @@
 import { AUTH_NEXT_COOKIE, callbackOrigin, safePath } from "@/lib/auth-redirect";
 import type { LoginErrorKey } from "@/lib/public-error";
-import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
+import { supabaseAnonKey, supabaseCookieOptions, supabaseUrl } from "@/lib/supabase/env";
 import { createServerClient } from "@supabase/ssr";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
@@ -38,6 +38,7 @@ export function createAuthRouteClient(request: NextRequest, redirectTo: URL) {
 
   let response = authRedirect(request, redirectTo);
   const supabase = createServerClient(url, key, {
+    cookieOptions: supabaseCookieOptions(),
     cookies: {
       getAll() {
         return request.cookies.getAll();
