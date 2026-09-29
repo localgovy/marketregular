@@ -10,6 +10,7 @@ import {
 } from "@/lib/listing-saves";
 import { savesFromRows, type SaveKind, type Saves } from "@/lib/saves";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 function validKind(kind: string): kind is Exclude<SaveKind, "listing"> {
   return kind === "market" || kind === "vendor" || kind === "blog";
@@ -164,7 +165,18 @@ export async function persistListingSave(
 
 const MAX_SAVES = 200;
 
+const localSavesSchema = z.object({
+  markets: z.array(z.string()).optional(),
+  vendors: z.array(z.string()).optional(),
+  blogs: z.array(z.string()).optional(),
+  listings: z.array(z.unknown()).optional(),
+});
+
 export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<Saves | null> {
+  const parsed = localSavesSchema.safeParse(local);
+  if (!parsed.success) return null;
+  const droppedParsed = z.array(z.string().max(200)).max(400).safeParse(dropped);
+  const source = parsed.data;
   const supabase = await createServerSupabaseClient();
   if (!supabase) return null;
   const {
@@ -178,18 +190,18 @@ export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<
     slug: string;
     detail?: ReturnType<typeof listingDetailJson>;
   }> = [];
-  for (const slug of local.markets ?? []) {
+  for (const slug of source.markets ?? []) {
     if (validSaveSlug(slug)) rows.push({ user_id: user.id, kind: "market", slug });
   }
-  for (const slug of local.vendors ?? []) {
+  for (const slug of source.vendors ?? []) {
     if (validSaveSlug(slug)) rows.push({ user_id: user.id, kind: "vendor", slug });
   }
-  for (const slug of local.blogs ?? []) {
+  for (const slug of source.blogs ?? []) {
     if (validSaveSlug(slug) && getBlogPost(slug)) {
       rows.push({ user_id: user.id, kind: "blog", slug });
     }
   }
-  for (const item of local.listings ?? []) {
+  for (const item of source.listings ?? []) {
     const listing = listingFromInput(item);
     if (!listing || !getBlogPost(listing.blog)) continue;
     rows.push({ user_id: user.id, kind: "blog", slug: listing.blog });
@@ -208,7 +220,7 @@ export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<
     ...existing.blogs.map((slug) => `blog:${slug}`),
     ...existing.listings.map((row) => `listing:${row.slug}`),
   ]);
-  const skip = new Set(dropped.filter((key) => typeof key === "string" && key));
+  const skip = new Set(droppedParsed.success ? droppedParsed.data : []);
   const novel = rows.filter((row) => {
     const key = `${row.kind}:${row.slug}`;
     return !have.has(key) && !skip.has(key);

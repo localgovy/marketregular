@@ -5,7 +5,7 @@ import { isBlockedBot } from "@/lib/bot-check";
 import { isClaimRole } from "@/lib/claim";
 import { CLAIM_INBOX, SITE_NAME, SITE_URL } from "@/lib/constants";
 import { sanitizeMailAddress, sanitizeMailHeader } from "@/lib/mail-header";
-import { clientIp, hashMailKey, takeMailSlot } from "@/lib/mail-limit";
+import { clientIp, hashMailKey, releaseMailSlot, takeMailSlot } from "@/lib/mail-limit";
 import { dbPublicError } from "@/lib/public-error";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
@@ -141,10 +141,16 @@ export async function submitClaim(formData: FormData) {
     return { error: `Mail is not set up yet. Write ${CLAIM_INBOX} directly.` };
   }
   const ip = await clientIp();
+  const ipKey = hashMailKey(`ip:${ip}`);
   const keys = [hashMailKey(`ip:${ip}|email:${email}`)];
   if (user) keys.push(hashMailKey(`user:${user.id}`));
+  const ipAllowed = await takeMailSlot(service, "claim_ip", [ipKey]);
+  if (!ipAllowed) {
+    return { error: "Wait a bit before sending another claim." };
+  }
   const allowed = await takeMailSlot(service, "claim", keys);
   if (!allowed) {
+    await releaseMailSlot(service, "claim_ip", [ipKey]);
     return { error: "Wait a bit before sending another claim." };
   }
 
@@ -173,7 +179,11 @@ export async function submitClaim(formData: FormData) {
     text: mail.text,
     html: mail.html,
   });
-  if (sendError) return { error: "Could not send right now. Write us if it keeps failing." };
+  if (sendError) {
+    await releaseMailSlot(service, "claim_ip", [ipKey]);
+    await releaseMailSlot(service, "claim", keys);
+    return { error: "Could not send right now. Write us if it keeps failing." };
+  }
 
   if (user && supabase) {
     const evidence = [

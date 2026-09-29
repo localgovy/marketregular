@@ -2,6 +2,7 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { slugify } from "@/lib/format";
+import { dbPublicError } from "@/lib/public-error";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -9,6 +10,24 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 function fail(message: string): never {
   throw new Error(message);
+}
+
+function failDb(error: { message?: string; code?: string }, fallback: string): never {
+  console.error("admin", error.message);
+  throw new Error(dbPublicError(error, fallback));
+}
+
+function listingSlug(raw: FormDataEntryValue | null, name: string) {
+  return slugify(String(raw ?? "").trim()) || slugify(name);
+}
+
+function listingStatus(value: FormDataEntryValue | null): "draft" | "published" {
+  return value === "published" ? "published" : "draft";
+}
+
+function geofenceMetres(value: FormDataEntryValue | null) {
+  const n = Number(value || 250);
+  return Number.isFinite(n) && n > 0 && n < 100_000 ? Math.round(n) : 250;
 }
 
 function coordOrNull(value: FormDataEntryValue | null) {
@@ -56,7 +75,7 @@ export async function saveMarket(formData: FormData) {
     postal_code: String(formData.get("postal_code") ?? "") || null,
     lat: coordOrNull(formData.get("lat")),
     lng: coordOrNull(formData.get("lng")),
-    geofence_radius_m: Number(formData.get("geofence_radius_m") || 250),
+    geofence_radius_m: geofenceMetres(formData.get("geofence_radius_m")),
     website: String(formData.get("website") ?? "") || null,
     instagram: String(formData.get("instagram") ?? "") || null,
     tiktok: String(formData.get("tiktok") ?? "") || null,
@@ -68,7 +87,7 @@ export async function saveMarket(formData: FormData) {
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean),
-    status: String(formData.get("status") ?? "draft") as "draft" | "published",
+    status: listingStatus(formData.get("status")),
     featured: formData.get("featured") === "on",
     ...parseReviewStats(formData),
   };

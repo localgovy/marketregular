@@ -13,33 +13,45 @@ import {
   type DirectoryVendorCard,
 } from "@/lib/directory-page";
 import { parseDirectorySort, type MarketsSearch } from "@/lib/find-paths";
+import { z } from "zod";
 
 function clampOffset(offset: number) {
   if (!Number.isFinite(offset)) return 0;
   return Math.max(0, Math.min(4_000, Math.floor(offset)));
 }
 
-function sanitizeSearch(raw: MarketsSearch): MarketsSearch {
-  const weekdays = (raw.weekdays ?? []).filter(
+const searchSchema = z.object({
+  q: z.string().max(200).optional(),
+  weekdays: z.array(z.number()).max(7).optional(),
+  tags: z.array(z.string().max(80)).max(24).optional(),
+  areas: z.array(z.string().max(80)).max(24).optional(),
+  setup: z.string().max(40).optional(),
+  openNow: z.boolean().optional(),
+  lat: z.string().max(32).optional(),
+  lng: z.string().max(32).optional(),
+  sort: z.string().max(20).optional(),
+});
+
+function sanitizeSearch(raw: unknown): MarketsSearch {
+  const parsed = searchSchema.safeParse(raw);
+  if (!parsed.success) return {};
+  const search = parsed.data;
+  const weekdays = (search.weekdays ?? []).filter(
     (day) => Number.isInteger(day) && day >= 0 && day <= 6,
   );
-  const lat = typeof raw.lat === "string" ? raw.lat.trim() : "";
-  const lng = typeof raw.lng === "string" ? raw.lng.trim() : "";
-  const hasNear =
-    Number.isFinite(lat === "" ? Number.NaN : Number(lat)) &&
-    Number.isFinite(lng === "" ? Number.NaN : Number(lng));
+  const lat = search.lat?.trim() ?? "";
+  const lng = search.lng?.trim() ?? "";
+  const hasNear = Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) && lat !== "" && lng !== "";
   return {
-    q: raw.q?.trim() || undefined,
+    q: search.q?.trim().slice(0, 80) || undefined,
     weekdays: weekdays.length ? weekdays : undefined,
-    tags: raw.tags?.filter((tag) => typeof tag === "string" && tag.length > 0 && tag.length < 80),
-    areas: raw.areas?.filter(
-      (area) => typeof area === "string" && area.length > 0 && area.length < 80,
-    ),
-    setup: raw.setup?.trim() || undefined,
-    openNow: Boolean(raw.openNow),
+    tags: search.tags?.filter((tag) => tag.length > 0),
+    areas: search.areas?.filter((area) => area.length > 0),
+    setup: search.setup?.trim() || undefined,
+    openNow: Boolean(search.openNow),
     lat: lat || undefined,
     lng: lng || undefined,
-    sort: parseDirectorySort(raw.sort, hasNear),
+    sort: parseDirectorySort(search.sort, hasNear),
   };
 }
 
@@ -53,13 +65,24 @@ export async function getDirectorySlice(input: {
   vendors: DirectoryVendorCard[];
   schedulesByMarket: Record<string, DirectorySchedule[]>;
 }> {
-  const kind = input.kind === "vendors" ? "vendors" : "markets";
-  const offset = clampOffset(input.offset);
+  const parsed = z
+    .object({
+      search: z.unknown().optional(),
+      kind: z.enum(["markets", "vendors"]).optional(),
+      offset: z.number().optional(),
+      now: z.string().max(40).optional(),
+    })
+    .safeParse(input);
+  if (!parsed.success) {
+    return { markets: [], vendors: [], schedulesByMarket: {} };
+  }
+  const kind = parsed.data.kind === "vendors" ? "vendors" : "markets";
+  const offset = clampOffset(parsed.data.offset ?? 0);
   const take = kind === "markets" ? DIRECTORY_MARKET_PAGE : DIRECTORY_VENDOR_PAGE;
-  const clock = input.now ? new Date(input.now) : new Date();
+  const clock = parsed.data.now ? new Date(parsed.data.now) : new Date();
   const now = Number.isNaN(clock.getTime()) ? new Date() : clock;
   const { markets, vendors, schedulesByMarket, halls } = await searchDirectory(
-    filtersFromSearch(sanitizeSearch(input.search)),
+    filtersFromSearch(sanitizeSearch(parsed.data.search)),
     now,
   );
   if (kind === "markets") {

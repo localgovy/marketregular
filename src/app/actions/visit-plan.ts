@@ -3,7 +3,7 @@
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
 import { SITE_NAME } from "@/lib/constants";
 import { sanitizeMailHeader } from "@/lib/mail-header";
-import { clientIp, hashMailKey, takeMailSlot } from "@/lib/mail-limit";
+import { clientIp, hashMailKey, releaseMailSlot, takeMailSlot } from "@/lib/mail-limit";
 import { fetchMyProfile } from "@/lib/my-profile";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -11,6 +11,7 @@ import { visitPlanHtml, visitPlanText, weekPlanForSlugs } from "@/lib/visit-plan
 import { visitPlanWaitCopy, visitPlanWaitMs } from "@/lib/visit-plan-limit";
 import type { MarketSchedule } from "@/types/database";
 import { Resend } from "resend";
+import { z } from "zod";
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
@@ -19,6 +20,8 @@ function validSlug(slug: string) {
 }
 
 export async function emailVisitPlan(slugs: string[]) {
+  const parsedSlugs = z.array(z.string()).safeParse(slugs);
+  if (!parsedSlugs.success) return { error: "Pick at least one market first." };
   const key = process.env.RESEND_API_KEY?.trim();
   const from = process.env.RESEND_FROM?.trim();
   if (!key || !from) {
@@ -36,7 +39,8 @@ export async function emailVisitPlan(slugs: string[]) {
   if (!profile) return { error: "Sign in first." };
 
   const stored = profile.favorite_market_slugs;
-  const picked = (slugs.length ? slugs : stored).filter(validSlug);
+  const requested = parsedSlugs.data;
+  const picked = (requested.length ? requested : stored).filter(validSlug);
   const unique = [...new Set(picked)].slice(0, 3);
   if (unique.length === 0) return { error: "Pick at least one market first." };
 
@@ -76,7 +80,10 @@ export async function emailVisitPlan(slugs: string[]) {
     text: visitPlanText(groups),
     html: visitPlanHtml(groups),
   });
-  if (error) return { error: "Could not send right now." };
+  if (error) {
+    await releaseMailSlot(service, "visit", keys);
+    return { error: "Could not send right now." };
+  }
 
   const { error: stampError } = await service.rpc("stamp_visit_plan_emailed_at", {
     p_user_id: user.id,

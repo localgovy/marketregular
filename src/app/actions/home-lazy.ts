@@ -10,6 +10,7 @@ import {
 import { toGeoMarket } from "@/lib/geo";
 import { vendorsSellingToday } from "@/lib/vendor-week";
 import type { Market, MarketSchedule } from "@/types/database";
+import { z } from "zod";
 
 function schedulesByMarket(schedules: MarketSchedule[]) {
   const map = new Map<string, MarketSchedule[]>();
@@ -59,8 +60,11 @@ export type SavedRailMarket = Pick<
 >;
 
 export async function getSavedRailMarkets(slugs: string[]): Promise<SavedRailMarket[]> {
+  const parsed = z.array(z.string().max(160)).safeParse(slugs);
   const wanted = new Set(
-    slugs.filter((slug): slug is string => typeof slug === "string" && slug.length > 0).slice(0, 80),
+    (parsed.success ? parsed.data : [])
+      .filter((slug) => slug.length > 0)
+      .slice(0, 80),
   );
   if (!wanted.size) return [];
   const markets = await listMarkets();

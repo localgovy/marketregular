@@ -93,9 +93,7 @@ export async function completeOnboarding(formData: FormData) {
       (value) => typeof value === "string" && value.trim(),
     );
     const displayName =
-      (typeof fromMeta === "string" ? fromMeta.trim() : "") ||
-      user.email?.split("@")[0] ||
-      "Regular";
+      (typeof fromMeta === "string" ? fromMeta.trim().slice(0, 60) : "") || "Regular";
     const avatar =
       (typeof meta.avatar_url === "string" && meta.avatar_url) ||
       (typeof meta.picture === "string" && meta.picture) ||
