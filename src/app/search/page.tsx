@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { ProductHitList, VendorHitList } from "@/components/product-results";
+import { SortableProductHits } from "@/components/product-sort-list";
+import { VendorHitList } from "@/components/product-results";
 import { listMarkets } from "@/lib/data/catalog";
 import { searchProducts, searchVendorsByName } from "@/lib/data/product-search";
 import { WEEKDAYS } from "@/lib/constants";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { torontoWeekday } from "@/lib/product-sort";
 import { pageMeta } from "@/lib/seo";
 
 const selectClass =
@@ -54,6 +56,7 @@ export default async function SearchPage({
   const seen = new Set(products.map((hit) => hit.vendorSlug));
   const shops = vendors.filter((vendor) => !seen.has(vendor.slug));
   const halls = [...markets].sort((a, b) => a.name.localeCompare(b.name));
+  const today = torontoWeekday();
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10">
@@ -107,7 +110,7 @@ export default async function SearchPage({
             <h2>Products</h2>
             {products.length ? (
               <div className="mt-4">
-                <ProductHitList hits={products} />
+                <SortableProductHits hits={products} today={today} />
               </div>
             ) : (
               <p className="mt-3 text-base text-muted-foreground">No products match that search.</p>

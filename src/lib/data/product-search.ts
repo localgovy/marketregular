@@ -8,14 +8,14 @@ import {
   type ProductMarketHit,
   type VendorHit,
 } from "@/lib/product-hits";
-import { daysLabel, visitBadge, type VisitHall } from "@/lib/product-visit";
+import { visitBadge, soonestWait, type VisitHall } from "@/lib/product-visit";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import type { MarketSchedule } from "@/types/database";
 
 export type FindMarket = {
   name: string;
   slug: string;
-  daysLabel: string | null;
+  days: number[];
 };
 
 export type FindVendor = {
@@ -24,6 +24,8 @@ export type FindVendor = {
   items: Array<{ name: string; priceCents: number | null }>;
   markets: FindMarket[];
   badge: "Open today" | "This weekend" | null;
+  /** 0 means open today. Higher means later in the week. 8 means no upcoming day. */
+  waitDays: number;
 };
 
 type MenuRow = {
@@ -114,7 +116,7 @@ export async function listFindVendors(matchSlugs: string[], now = new Date()): P
         marketRows.push({
           name: market.name,
           slug: market.slug,
-          daysLabel: daysLabel(stall.days),
+          days: stall.days,
         });
       }
       marketRows.sort((a, b) => a.name.localeCompare(b.name));
@@ -124,6 +126,7 @@ export async function listFindVendors(matchSlugs: string[], now = new Date()): P
         items: [],
         markets: marketRows,
         badge: visitBadge(halls, now),
+        waitDays: soonestWait(halls, now),
       };
       grouped.set(vendor.id, group);
     }
@@ -135,10 +138,10 @@ export async function listFindVendors(matchSlugs: string[], now = new Date()): P
 
   return [...grouped.values()]
     .map((vendor) => {
-      vendor.items.sort((a, b) => a.name.localeCompare(b.name));
+      vendor.items.sort((a, b) => a.name.localeCompare(b.name, "en-CA"));
       return vendor;
     })
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => a.waitDays - b.waitDays || a.name.localeCompare(b.name, "en-CA"));
 }
 
 export async function searchProducts(args: {

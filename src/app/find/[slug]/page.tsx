@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { JsonLd } from "@/components/json-ld";
-import { FindVendorList } from "@/components/product-results";
+import { SortableFindVendors } from "@/components/product-sort-list";
 import { FIND_PAGES, findPageBySlug } from "@/data/find-pages";
 import { findTitle, listFindVendors, pageIsAlcohol } from "@/lib/data/product-search";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { sortFindVendors, torontoWeekday } from "@/lib/product-sort";
 import { itemListJsonLd, pageMeta } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -41,7 +42,9 @@ export default async function FindProductPage({
   const page = findPageBySlug(slug);
   if (!page) notFound();
   const title = findTitle(page.term, LAUNCH_CITY);
-  const vendors = await listFindVendors(page.matchSlugs);
+  const now = new Date();
+  const today = torontoWeekday(now);
+  const vendors = sortFindVendors(await listFindVendors(page.matchSlugs, now), "next", today);
   const alcohol = pageIsAlcohol(page.category);
 
   return (
@@ -67,7 +70,11 @@ export default async function FindProductPage({
           Prices show when the vendor has added them.
         </p>
       )}
-      <FindVendorList vendors={vendors} />
+      {vendors.length ? (
+        <SortableFindVendors vendors={vendors} today={today} />
+      ) : (
+        <p className="mt-6 text-base text-muted-foreground">No published stalls list this yet.</p>
+      )}
     </div>
   );
 }
