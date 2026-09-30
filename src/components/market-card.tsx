@@ -70,7 +70,7 @@ export function MarketCard({
         </CardHeader>
         <Link href={`/markets/${market.slug}`} className="flex flex-col gap-(--card-spacing)">
           <CardTitle className="type-column px-(--card-spacing)">
-            <VerifiedName slug={market.slug} name={market.name} />
+            <VerifiedName slug={market.slug} name={market.name} size="lg" />
           </CardTitle>
           <CardContent className="flex flex-col gap-3">
             <ListingScore ratingAvg={market.rating_avg} reviewCount={market.review_count} />
