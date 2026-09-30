@@ -1,0 +1,130 @@
+import type { Metadata } from "next";
+import { ProductHitList, VendorHitList } from "@/components/product-results";
+import { listMarkets } from "@/lib/data/catalog";
+import { searchProducts, searchVendorsByName } from "@/lib/data/product-search";
+import { WEEKDAYS } from "@/lib/constants";
+import { LAUNCH_CITY } from "@/lib/launch";
+import { pageMeta } from "@/lib/seo";
+
+const selectClass =
+  "h-9 w-full max-w-full rounded-none border border-input bg-card px-2.5 text-sm";
+
+function dayParam(value: string | undefined) {
+  if (value == null || value === "") return null;
+  const day = Number(value);
+  if (!Number.isInteger(day) || day < 0 || day > 6) return null;
+  return day;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}): Promise<Metadata> {
+  const { q } = await searchParams;
+  const query = q?.trim() ?? "";
+  return pageMeta({
+    title: query ? `${query} at ${LAUNCH_CITY} farmers' markets` : "Search products",
+    description: `Search products and vendors at ${LAUNCH_CITY} farmers' markets.`,
+    path: "/search",
+    index: false,
+  });
+}
+
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    q?: string;
+    open?: string;
+    market?: string;
+    day?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const q = params.q?.trim() ?? "";
+  const openToday = params.open === "1";
+  const marketSlug = params.market?.trim() || null;
+  const day = dayParam(params.day);
+  const [markets, products, vendors] = await Promise.all([
+    listMarkets(),
+    q ? searchProducts({ q, openToday, marketSlug, day }) : Promise.resolve([]),
+    q ? searchVendorsByName(q) : Promise.resolve([]),
+  ]);
+  const seen = new Set(products.map((hit) => hit.vendorSlug));
+  const shops = vendors.filter((vendor) => !seen.has(vendor.slug));
+  const halls = [...markets].sort((a, b) => a.name.localeCompare(b.name));
+
+  return (
+    <div className="mx-auto w-full max-w-4xl px-4 py-10">
+      <h1>{q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Search products"}</h1>
+      <form action="/search" className="mt-6 grid gap-4">
+        <input type="hidden" name="q" value={q} />
+        <label className="flex items-center gap-2 text-base">
+          <input
+            type="checkbox"
+            name="open"
+            value="1"
+            defaultChecked={openToday}
+            className="accent-primary"
+          />
+          Open today
+        </label>
+        <label className="grid gap-1.5 text-sm font-medium">
+          Market
+          <select name="market" defaultValue={marketSlug ?? ""} className={selectClass} aria-label="Market">
+            <option value="">Any market</option>
+            {halls.map((market) => (
+              <option key={market.slug} value={market.slug}>
+                {market.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1.5 text-sm font-medium">
+          Day
+          <select name="day" defaultValue={day == null ? "" : String(day)} className={selectClass} aria-label="Day">
+            <option value="">Any day</option>
+            {WEEKDAYS.map((name, index) => (
+              <option key={name} value={index}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+        {/* TODO: Pickup available. Hide until vendors have a pickup flag. Do not invent one. */}
+        <button type="submit" className="justify-self-start text-base font-medium hover:underline">
+          Apply
+        </button>
+      </form>
+      {!q ? (
+        <p className="mt-8 text-base text-muted-foreground">
+          Type a product or a vendor in the search box.
+        </p>
+      ) : (
+        <div className="mt-8 grid gap-8">
+          <section>
+            <h2>Products</h2>
+            {products.length ? (
+              <div className="mt-4">
+                <ProductHitList hits={products} />
+              </div>
+            ) : (
+              <p className="mt-3 text-base text-muted-foreground">No products match that search.</p>
+            )}
+          </section>
+          <section>
+            <h2>Vendors</h2>
+            {shops.length ? (
+              <div className="mt-4">
+                <VendorHitList vendors={shops} />
+              </div>
+            ) : (
+              <p className="mt-3 text-base text-muted-foreground">No other vendors match that name.</p>
+            )}
+          </section>
+        </div>
+      )}
+    </div>
+  );
+}

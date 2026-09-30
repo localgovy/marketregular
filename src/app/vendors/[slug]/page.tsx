@@ -231,7 +231,9 @@ export default async function VendorPage({
             <ListingTiktok href={vendor.tiktok} />
             <ListingFacebook href={vendor.facebook} />
           </div>
-          <ClaimForm targetType="vendor" targetId={vendor.id} />
+          <div id="claim" className="scroll-mt-28">
+            <ClaimForm targetType="vendor" targetId={vendor.id} />
+          </div>
         </aside>
         <div className="lg:col-span-2">
           <ListingAlsoLinks

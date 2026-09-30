@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
 import { listPublicBlogPosts } from "@/lib/blog";
 import { listMarkets, listSitemapVendors } from "@/lib/data/catalog";
+import { FIND_PAGES } from "@/data/find-pages";
 import { CATEGORIES, DAY_SLUGS } from "@/lib/landing";
 
 export const revalidate = 3600;
@@ -38,6 +39,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
     ...CATEGORIES.map((category) =>
       loc(`/markets/tag/${category.tag}`, { changeFrequency: "weekly", priority: 0.7 }),
+    ),
+    ...FIND_PAGES.map((page) =>
+      loc(`/find/${page.slug}`, { changeFrequency: "weekly", priority: 0.6 }),
     ),
     loc("/events", { changeFrequency: "daily", priority: 0.6 }),
     loc("/feed", { changeFrequency: "daily", priority: 0.5 }),

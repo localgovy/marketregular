@@ -113,9 +113,14 @@ export default async function HomePage() {
             title="Toronto markets"
             how="Open ones first. Tap a name, then save the ones you actually go to."
             action={
-              <Link href="/markets" className="hover:underline">
-                All {census.markets}
-              </Link>
+              <span className="flex flex-wrap gap-x-4">
+                <Link href="/markets#products" className="hover:underline">
+                  Browse by product
+                </Link>
+                <Link href="/markets" className="hover:underline">
+                  All {census.markets}
+                </Link>
+              </span>
             }
           >
             <div className="rounded-md bg-card ring-1 ring-border">

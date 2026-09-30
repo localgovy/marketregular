@@ -7,32 +7,10 @@ import { HeaderAccount } from "@/components/header-account";
 import { SavesHydrator } from "@/components/saves-hydrator";
 import { NavLink } from "@/components/nav-link";
 import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
-import { SearchField } from "@/components/search-field";
-import { buttonVariants } from "@/components/ui/button";
-import { SEARCH_LABEL, SEARCH_PLACEHOLDER, SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
+import { HeaderSearch } from "@/components/header-search";
+import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
 import { isAuthChromePath, SITE_CLAIM_NAV, SITE_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
-
-function HeaderSearch({ className, q = "" }: { className?: string; q?: string }) {
-  return (
-    <form action="/markets" className={cn("flex min-w-0 items-center gap-2", className)}>
-      <SearchField
-        key={q}
-        name="q"
-        defaultValue={q}
-        aria-label={SEARCH_LABEL}
-        placeholder={SEARCH_PLACEHOLDER}
-        className="bg-card"
-      />
-      <button
-        type="submit"
-        className={cn(buttonVariants(), "max-sm:sr-only shrink-0")}
-      >
-        Find
-      </button>
-    </form>
-  );
-}
 
 function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
   return (
@@ -78,7 +56,11 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
             </nav>
           )}
           {auth ? null : (
-            <HeaderSearch className="min-w-0 flex-1 overflow-hidden md:min-w-40 xl:ml-auto xl:max-w-md" q={q} />
+            <HeaderSearch
+              key={q}
+              initialQuery={q}
+              className="min-w-0 flex-1 md:min-w-40 xl:ml-auto xl:max-w-md"
+            />
           )}
           {auth ? null : (
             <Link
@@ -123,7 +105,8 @@ function HeaderQuery({
   auth: boolean;
 }) {
   const params = useSearchParams();
-  const q = pathname === "/markets" ? (params.get("q") ?? "") : "";
+  const q =
+    pathname === "/markets" || pathname === "/search" ? (params.get("q") ?? "") : "";
   return <HeaderFrame auth={auth} q={q} />;
 }
 

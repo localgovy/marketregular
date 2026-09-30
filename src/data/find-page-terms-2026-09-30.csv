@@ -1,0 +1,156 @@
+term,slug,find_path,distinct_vendors,category
+vegetables,vegetables,/find/vegetables-toronto,88,vegetables
+honey,honey,/find/honey-toronto,53,honey
+tomatoes,tomatoes,/find/tomatoes-toronto,36,vegetables
+maple syrup,maple-syrup,/find/maple-syrup-toronto,35,maple
+garlic,garlic,/find/garlic-toronto,34,vegetables
+eggs,eggs,/find/eggs-toronto,32,eggs
+cookies,cookies,/find/cookies-toronto,30,pies-and-sweets
+bread,bread,/find/bread-toronto,29,bread-and-bakery
+carrots,carrots,/find/carrots-toronto,29,vegetables
+apples,apples,/find/apples-toronto,26,apples-and-fruit
+beans,beans,/find/beans-toronto,25,vegetables
+strawberries,strawberries,/find/strawberries-toronto,25,apples-and-fruit
+beets,beets,/find/beets-toronto,24,vegetables
+raspberries,raspberries,/find/raspberries-toronto,24,apples-and-fruit
+herbs,herbs,/find/herbs-toronto,23,vegetables
+peppers,peppers,/find/peppers-toronto,23,vegetables
+fruit,fruit,/find/fruit-toronto,20,apples-and-fruit
+chicken,chicken,/find/chicken-toronto,19,meat-and-turkey
+cucumbers,cucumbers,/find/cucumbers-toronto,19,vegetables
+pies,pies,/find/pies-toronto,19,pies-and-sweets
+potatoes,potatoes,/find/potatoes-toronto,19,vegetables
+beef,beef,/find/beef-toronto,18,meat-and-turkey
+eggplant,eggplant,/find/eggplant-toronto,17,vegetables
+pork,pork,/find/pork-toronto,16,meat-and-turkey
+butter tarts,butter-tarts,/find/butter-tarts-toronto,15,pies-and-sweets
+cheese,cheese,/find/cheese-toronto,15,cheese-and-dairy
+onions,onions,/find/onions-toronto,15,vegetables
+pumpkins,pumpkins,/find/pumpkins-toronto,15,vegetables
+sweet corn,sweet-corn,/find/sweet-corn-toronto,15,vegetables
+asparagus,asparagus,/find/asparagus-toronto,14,vegetables
+blueberries,blueberries,/find/blueberries-toronto,14,apples-and-fruit
+broccoli,broccoli,/find/broccoli-toronto,14,vegetables
+kale,kale,/find/kale-toronto,14,vegetables
+sausages,sausages,/find/sausages-toronto,14,meat-and-turkey
+soups,soups,/find/soups-toronto,14,prepared-foods
+zucchini,zucchini,/find/zucchini-toronto,14,vegetables
+cherries,cherries,/find/cherries-toronto,13,apples-and-fruit
+croissants,croissants,/find/croissants-toronto,13,bread-and-bakery
+jams,jams,/find/jams-toronto,13,preserves-and-sauces
+lettuce,lettuce,/find/lettuce-toronto,13,vegetables
+plums,plums,/find/plums-toronto,13,apples-and-fruit
+spinach,spinach,/find/spinach-toronto,13,vegetables
+squash,squash,/find/squash-toronto,13,vegetables
+tea,tea,/find/tea-toronto,13,coffee-and-tea
+coffee,coffee,/find/coffee-toronto,12,coffee-and-tea
+peaches,peaches,/find/peaches-toronto,12,apples-and-fruit
+pears,pears,/find/pears-toronto,12,apples-and-fruit
+pickles,pickles,/find/pickles-toronto,12,preserves-and-sauces
+microgreens,microgreens,/find/microgreens-toronto,11,vegetables
+radishes,radishes,/find/radishes-toronto,11,vegetables
+arugula,arugula,/find/arugula-toronto,10,vegetables
+cakes,cakes,/find/cakes-toronto,10,pies-and-sweets
+cauliflower,cauliflower,/find/cauliflower-toronto,10,vegetables
+cinnamon buns,cinnamon-buns,/find/cinnamon-buns-toronto,10,pies-and-sweets
+heirloom tomatoes,heirloom-tomatoes,/find/heirloom-tomatoes-toronto,10,vegetables
+lamb,lamb,/find/lamb-toronto,10,meat-and-turkey
+peas,peas,/find/peas-toronto,10,vegetables
+pizza,pizza,/find/pizza-toronto,10,prepared-foods
+preserves,preserves,/find/preserves-toronto,10,preserves-and-sauces
+scones,scones,/find/scones-toronto,10,bread-and-bakery
+apple pie,apple-pie,/find/apple-pie-toronto,9,pies-and-sweets
+bagels,bagels,/find/bagels-toronto,9,bread-and-bakery
+brownies,brownies,/find/brownies-toronto,9,pies-and-sweets
+chocolate chip cookies,chocolate-chip-cookies,/find/chocolate-chip-cookies-toronto,9,pies-and-sweets
+corn,corn,/find/corn-toronto,9,vegetables
+focaccia,focaccia,/find/focaccia-toronto,9,bread-and-bakery
+grass fed beef,grass-fed-beef,/find/grass-fed-beef-toronto,9,meat-and-turkey
+leeks,leeks,/find/leeks-toronto,9,vegetables
+maple butter,maple-butter,/find/maple-butter-toronto,9,maple
+nectarines,nectarines,/find/nectarines-toronto,9,apples-and-fruit
+pastries,pastries,/find/pastries-toronto,9,pies-and-sweets
+sandwiches,sandwiches,/find/sandwiches-toronto,9,prepared-foods
+apricots,apricots,/find/apricots-toronto,8,apples-and-fruit
+bacon,bacon,/find/bacon-toronto,8,meat-and-turkey
+butter chicken,butter-chicken,/find/butter-chicken-toronto,8,prepared-foods
+cherry tomatoes,cherry-tomatoes,/find/cherry-tomatoes-toronto,8,vegetables
+comb honey,comb-honey,/find/comb-honey-toronto,8,honey
+creamed honey,creamed-honey,/find/creamed-honey-toronto,8,honey
+cupcakes,cupcakes,/find/cupcakes-toronto,8,pies-and-sweets
+dried fruits,dried-fruits,/find/dried-fruits-toronto,8,nuts-and-snacks
+green beans,green-beans,/find/green-beans-toronto,8,vegetables
+meats,meats,/find/meats-toronto,8,meat-and-turkey
+rhubarb,rhubarb,/find/rhubarb-toronto,8,apples-and-fruit
+smoothies,smoothies,/find/smoothies-toronto,8,beverages
+tarts,tarts,/find/tarts-toronto,8,pies-and-sweets
+bee pollen,bee-pollen,/find/bee-pollen-toronto,7,honey
+burgers,burgers,/find/burgers-toronto,7,prepared-foods
+grapes,grapes,/find/grapes-toronto,7,apples-and-fruit
+jellies,jellies,/find/jellies-toronto,7,preserves-and-sauces
+muffins,muffins,/find/muffins-toronto,7,bread-and-bakery
+mushrooms,mushrooms,/find/mushrooms-toronto,7,vegetables
+oranges,oranges,/find/oranges-toronto,7,apples-and-fruit
+pepperettes,pepperettes,/find/pepperettes-toronto,7,meat-and-turkey
+romaine lettuce,romaine-lettuce,/find/romaine-lettuce-toronto,7,vegetables
+rosemary,rosemary,/find/rosemary-toronto,7,vegetables
+sauces,sauces,/find/sauces-toronto,7,preserves-and-sauces
+spices,spices,/find/spices-toronto,7,preserves-and-sauces
+summer sausage,summer-sausage,/find/summer-sausage-toronto,7,meat-and-turkey
+sweet potatoes,sweet-potatoes,/find/sweet-potatoes-toronto,7,vegetables
+tacos,tacos,/find/tacos-toronto,7,prepared-foods
+turkey,turkey,/find/turkey-toronto,7,meat-and-turkey
+almond croissant,almond-croissant,/find/almond-croissant-toronto,6,bread-and-bakery
+apple butter,apple-butter,/find/apple-butter-toronto,6,preserves-and-sauces
+bananas,bananas,/find/bananas-toronto,6,apples-and-fruit
+basil,basil,/find/basil-toronto,6,vegetables
+blackberries,blackberries,/find/blackberries-toronto,6,apples-and-fruit
+bok choy,bok-choy,/find/bok-choy-toronto,6,vegetables
+free range chicken,free-range-chicken,/find/free-range-chicken-toronto,6,meat-and-turkey
+honeycomb,honeycomb,/find/honeycomb-toronto,6,honey
+hot sauce,hot-sauce,/find/hot-sauce-toronto,6,preserves-and-sauces
+lemon,lemon,/find/lemon-toronto,6,apples-and-fruit
+mango,mango,/find/mango-toronto,6,apples-and-fruit
+matcha,matcha,/find/matcha-toronto,6,coffee-and-tea
+meat pies,meat-pies,/find/meat-pies-toronto,6,prepared-foods
+okra,okra,/find/okra-toronto,6,vegetables
+olive oil,olive-oil,/find/olive-oil-toronto,6,preserves-and-sauces
+peameal bacon,peameal-bacon,/find/peameal-bacon-toronto,6,meat-and-turkey
+sausage roll,sausage-roll,/find/sausage-roll-toronto,6,prepared-foods
+apple cider,apple-cider,/find/apple-cider-toronto,5,beverages
+apple fritter,apple-fritter,/find/apple-fritter-toronto,5,pies-and-sweets
+baked goods,baked-goods,/find/baked-goods-toronto,5,bread-and-bakery
+black garlic,black-garlic,/find/black-garlic-toronto,5,vegetables
+breakfast sausage,breakfast-sausage,/find/breakfast-sausage-toronto,5,meat-and-turkey
+broccoli microgreens,broccoli-microgreens,/find/broccoli-microgreens-toronto,5,vegetables
+cabbage,cabbage,/find/cabbage-toronto,5,vegetables
+caesar salad,caesar-salad,/find/caesar-salad-toronto,5,prepared-foods
+celery,celery,/find/celery-toronto,5,vegetables
+cheesecake,cheesecake,/find/cheesecake-toronto,5,pies-and-sweets
+chutneys,chutneys,/find/chutneys-toronto,5,preserves-and-sauces
+desserts,desserts,/find/desserts-toronto,5,pies-and-sweets
+dill,dill,/find/dill-toronto,5,vegetables
+donuts,donuts,/find/donuts-toronto,5,pies-and-sweets
+fish,fish,/find/fish-toronto,5,seafood
+garlic powder,garlic-powder,/find/garlic-powder-toronto,5,preserves-and-sauces
+garlic scapes,garlic-scapes,/find/garlic-scapes-toronto,5,vegetables
+greek salad,greek-salad,/find/greek-salad-toronto,5,prepared-foods
+green onions,green-onions,/find/green-onions-toronto,5,vegetables
+greens,greens,/find/greens-toronto,5,vegetables
+ice cream,ice-cream,/find/ice-cream-toronto,5,pies-and-sweets
+jerk chicken,jerk-chicken,/find/jerk-chicken-toronto,5,prepared-foods
+juices,juices,/find/juices-toronto,5,beverages
+lemonade,lemonade,/find/lemonade-toronto,5,beverages
+melons,melons,/find/melons-toronto,5,apples-and-fruit
+milk,milk,/find/milk-toronto,5,cheese-and-dairy
+parsley,parsley,/find/parsley-toronto,5,vegetables
+parsnips,parsnips,/find/parsnips-toronto,5,vegetables
+perogies,perogies,/find/perogies-toronto,5,prepared-foods
+pineapple,pineapple,/find/pineapple-toronto,5,apples-and-fruit
+poultry,poultry,/find/poultry-toronto,5,meat-and-turkey
+pumpkin pie,pumpkin-pie,/find/pumpkin-pie-toronto,5,pies-and-sweets
+quiche,quiche,/find/quiche-toronto,5,prepared-foods
+riesling,riesling,/find/riesling-toronto,5,alcohol
+salads,salads,/find/salads-toronto,5,vegetables
+thyme,thyme,/find/thyme-toronto,5,vegetables
+turnip,turnip,/find/turnip-toronto,5,vegetables

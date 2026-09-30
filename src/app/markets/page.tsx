@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BrowseLinks } from "@/components/browse-links";
+import { ProductBrowse } from "@/components/product-browse";
 import { DirectoryResults } from "@/components/directory-results";
 import { DirectorySort } from "@/components/directory-sort";
 import { JsonLd } from "@/components/json-ld";
@@ -212,6 +213,7 @@ export default async function MarketsPage({
         </div>
       )}
       <BrowseLinks className="mt-12" />
+      <ProductBrowse />
     </div>
   );
 }

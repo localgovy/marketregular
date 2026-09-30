@@ -7,9 +7,11 @@ export const SITE_TAGLINE = "Toronto farmers' markets, all in one place";
 /** Homepage and default document title. Google uses this for the domain result. */
 export const SITE_TITLE = `${SITE_NAME} - ${SITE_TAGLINE}`;
 
-/** One search field across the header, home finder, and directory. */
+/** Home finder and the markets directory. The header uses the product search copy. */
 export const SEARCH_PLACEHOLDER = "Market, vendor, cuisine, or neighbourhood";
 export const SEARCH_LABEL = "Search markets and vendors";
+export const PRODUCT_SEARCH_PLACEHOLDER = "Bread, eggs, honey, or a vendor";
+export const PRODUCT_SEARCH_LABEL = "Search products and vendors";
 
 function canonicalSiteUrl() {
   const raw = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.marketregular.com").replace(
