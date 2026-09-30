@@ -25,7 +25,7 @@ export type FindVendor = {
   slug: string;
   items: Array<{ name: string; priceCents: number | null }>;
   markets: FindMarket[];
-  badge: "Open today" | "This weekend" | null;
+  badge: "Open today" | "Selling this weekend" | null;
   /** 0 means open today. Higher means later in the week. 8 means no upcoming day. */
   waitDays: number;
 };

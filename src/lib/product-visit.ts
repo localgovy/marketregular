@@ -23,16 +23,16 @@ export function soonestWait(halls: VisitHall[], now = new Date()) {
   return 8;
 }
 
-/** Open today, otherwise the coming Saturday or Sunday. Sunday evening stays quiet. */
+/** Open today, otherwise selling on the coming Saturday or Sunday. Sunday evening stays quiet. */
 export function visitBadge(
   halls: VisitHall[],
   now = new Date(),
-): "Open today" | "This weekend" | null {
+): "Open today" | "Selling this weekend" | null {
   const today = zonedParts(now, LAUNCH_TZ).weekday;
   if (halls.some((hall) => sells(today, hall, now))) return "Open today";
   const weekend = today === 0 ? [] : today === 6 ? [0] : [6, 0];
   if (weekend.some((day) => halls.some((hall) => sells(day, hall, now)))) {
-    return "This weekend";
+    return "Selling this weekend";
   }
   return null;
 }
