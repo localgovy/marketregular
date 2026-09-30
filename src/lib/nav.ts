@@ -3,8 +3,8 @@ export const SITE_NAV = [
   { href: "/events", label: "Events" },
   { href: "/markets", label: "Markets" },
   { href: "/products", label: "Products" },
-  { href: "/saved", label: "Saved" },
   { href: "/blog", label: "Blog" },
+  { href: "/saved", label: "Saved" },
 ] as const;
 
 /** Footer only until the live list has posts. */
