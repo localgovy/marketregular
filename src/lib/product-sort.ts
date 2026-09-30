@@ -43,14 +43,17 @@ function byName(a: string, b: string) {
   return a.localeCompare(b, "en-CA");
 }
 
-function priceRank(cents: number | null) {
-  return cents == null ? Number.POSITIVE_INFINITY : cents;
+function comparePrice(a: number | null, b: number | null) {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  return a - b;
 }
 
 function sortItems<T extends { name: string; priceCents: number | null }>(items: T[], sort: FindSort | SearchSort) {
   return [...items].sort((a, b) => {
     if (sort === "price") {
-      const price = priceRank(knownPrice(a.priceCents)) - priceRank(knownPrice(b.priceCents));
+      const price = comparePrice(knownPrice(a.priceCents), knownPrice(b.priceCents));
       if (price !== 0) return price;
     }
     return byName(a.name, b.name);
@@ -61,7 +64,15 @@ function dayOffset(day: number, today: number) {
   return (day - today + 7) % 7;
 }
 
-export function marketWait(days: number[], today: number, openToday = false) {
+export function marketWait(days: number[], today: number) {
+  const offsets = days
+    .filter((day) => day >= 0 && day <= 6)
+    .map((day) => dayOffset(day, today));
+  if (!offsets.length) return 8;
+  return Math.min(...offsets);
+}
+
+function hitWait(days: number[], today: number, openToday: boolean) {
   if (openToday) return 0;
   const later = days
     .filter((day) => day >= 0 && day <= 6)
@@ -88,7 +99,7 @@ export function sortFindVendors(vendors: FindVendor[], sort: FindSort, today: nu
     }))
     .sort((a, b) => {
       if (sort === "price") {
-        const price = priceRank(lowestPrice(a.items)) - priceRank(lowestPrice(b.items));
+        const price = comparePrice(lowestPrice(a.items), lowestPrice(b.items));
         if (price !== 0) return price;
       } else if (sort === "next") {
         if (a.waitDays !== b.waitDays) return a.waitDays - b.waitDays;
@@ -103,21 +114,12 @@ export function sortProductHits(hits: ProductHit[], sort: SearchSort, today: num
     .sort((a, b) => {
       if (sort === "match") return a.index - b.index;
       if (sort === "price") {
-        const price =
-          priceRank(knownPrice(a.hit.priceCents)) - priceRank(knownPrice(b.hit.priceCents));
+        const price = comparePrice(knownPrice(a.hit.priceCents), knownPrice(b.hit.priceCents));
         if (price !== 0) return price;
       } else if (sort === "next") {
         const wait =
-          marketWait(
-            a.hit.markets.flatMap((market) => market.days),
-            today,
-            a.hit.openToday,
-          ) -
-          marketWait(
-            b.hit.markets.flatMap((market) => market.days),
-            today,
-            b.hit.openToday,
-          );
+          hitWait(a.hit.markets.flatMap((market) => market.days), today, a.hit.openToday) -
+          hitWait(b.hit.markets.flatMap((market) => market.days), today, b.hit.openToday);
         if (wait !== 0) return wait;
       }
       const name = byName(a.hit.vendorName, b.hit.vendorName);
