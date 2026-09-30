@@ -18,17 +18,28 @@ export type FindMarket = {
   slug: string;
   days: number[];
   hours: Array<{ day: string; hours: string }>;
+  ratingAvg: number | null;
+  reviewCount: number;
 };
 
 export type FindVendor = {
   name: string;
   slug: string;
+  ratingAvg: number | null;
+  reviewCount: number;
   items: Array<{ name: string; priceCents: number | null }>;
   markets: FindMarket[];
   badge: "Open today" | "Selling this weekend" | null;
   /** 0 means open today. Higher means later in the week. 8 means no upcoming day. */
   waitDays: number;
 };
+
+function reviewFields(row: { rating_avg?: number | null; review_count?: number } | undefined) {
+  return {
+    ratingAvg: row?.rating_avg ?? null,
+    reviewCount: row?.review_count ?? 0,
+  };
+}
 
 type MenuRow = {
   name: string;
@@ -141,12 +152,14 @@ export async function listFindVendors(matchSlugs: string[], now = new Date()): P
           slug: market.slug,
           days: stall.days,
           hours: hallDayHours(stall.days, marketSchedules, market.province, now),
+          ...reviewFields(market),
         });
       }
       marketRows.sort((a, b) => a.name.localeCompare(b.name));
       group = {
         name: vendor.name,
         slug: vendor.slug,
+        ...reviewFields(vendor),
         items: [],
         markets: marketRows,
         badge: visitBadge(halls, now),
@@ -181,7 +194,7 @@ export async function searchProducts(args: {
   if (!supabase) return [];
   const now = args.now ?? new Date();
   const day = args.day != null && args.day >= 0 && args.day <= 6 ? args.day : null;
-  const [{ data, error }, markets, schedules] = await Promise.all([
+  const [{ data, error }, markets, schedules, vendors] = await Promise.all([
     supabase.rpc("search_products", {
       q,
       open_today: Boolean(args.openToday),
@@ -191,10 +204,12 @@ export async function searchProducts(args: {
     }),
     listMarkets(),
     listSchedules(),
+    listVendors(),
   ]);
   if (error) throw new Error("Could not search products");
   assertPublicSearchPayload(data);
   const marketBySlug = new Map(markets.map((market) => [market.slug, market]));
+  const vendorBySlug = new Map(vendors.map((vendor) => [vendor.slug, vendor]));
   const schedulesByMarket = new Map<string, MarketSchedule[]>();
   for (const row of schedules) {
     const list = schedulesByMarket.get(row.market_id) ?? [];
@@ -209,6 +224,7 @@ export async function searchProducts(args: {
     priceCents: visiblePriceCents(row.product_category, row.price_cents),
     vendorName: row.vendor_name,
     vendorSlug: row.vendor_slug,
+    ...reviewFields(vendorBySlug.get(row.vendor_slug)),
     markets: (row.markets ?? []).map((market) => {
       const days = asDays(market.days);
       const hall = marketBySlug.get(market.slug);
@@ -219,6 +235,7 @@ export async function searchProducts(args: {
         hours: hall
           ? hallDayHours(days, schedulesByMarket.get(hall.id) ?? [], hall.province, now)
           : [],
+        ...reviewFields(hall),
       };
     }),
     openToday: Boolean(row.open_today),
@@ -239,6 +256,7 @@ export async function searchVendorsByName(q: string, limit = 20): Promise<Vendor
       name: vendor.name,
       slug: vendor.slug,
       href: `/vendors/${vendor.slug}`,
+      ...reviewFields(vendor),
     }));
 }
 

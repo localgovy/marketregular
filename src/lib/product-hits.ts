@@ -5,6 +5,8 @@ export type ProductMarketHit = {
   slug: string;
   days: number[];
   hours: Array<{ day: string; hours: string }>;
+  ratingAvg: number | null;
+  reviewCount: number;
 };
 
 export type ProductHit = {
@@ -14,6 +16,8 @@ export type ProductHit = {
   priceCents: number | null;
   vendorName: string;
   vendorSlug: string;
+  ratingAvg: number | null;
+  reviewCount: number;
   markets: ProductMarketHit[];
   openToday: boolean;
   href: string;
@@ -23,6 +27,8 @@ export type VendorHit = {
   name: string;
   slug: string;
   href: string;
+  ratingAvg: number | null;
+  reviewCount: number;
 };
 
 const BANNED_KEYS = new Set([

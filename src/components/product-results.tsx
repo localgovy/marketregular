@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Hours } from "@/components/hours";
+import { ListingScore } from "@/components/listing-score";
 import { formatPrice } from "@/lib/format";
 import { WEEKDAYS } from "@/lib/constants";
 import type { FindVendor } from "@/lib/data/product-search";
@@ -70,17 +71,23 @@ type ListingMarket = {
   slug: string;
   days: number[];
   hours: Array<{ day: string; hours: string }>;
+  ratingAvg: number | null;
+  reviewCount: number;
 };
 
 function ProductListing({
   vendorName,
   vendorSlug,
+  ratingAvg,
+  reviewCount,
   badge,
   items,
   markets,
 }: {
   vendorName: string;
   vendorSlug: string;
+  ratingAvg: number | null;
+  reviewCount: number;
   badge: string | null;
   items: ListingItem[];
   markets: ListingMarket[];
@@ -88,9 +95,17 @@ function ProductListing({
   return (
     <li className="rounded-xl bg-card ring-1 ring-foreground/10">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
-        <Link href={`/vendors/${vendorSlug}`} className="min-w-0 text-base font-medium hover:underline">
-          {vendorName}
-        </Link>
+        <p className="min-w-0">
+          <Link href={`/vendors/${vendorSlug}`} className="text-base font-medium hover:underline">
+            {vendorName}
+          </Link>
+          <ListingScore
+            parens
+            ratingAvg={ratingAvg}
+            reviewCount={reviewCount}
+            className="ml-2"
+          />
+        </p>
         {badge ? <Badge>{badge}</Badge> : <span />}
       </div>
       {items.length ? (
@@ -127,12 +142,20 @@ function ProductListing({
             const days = shortDays(market.days);
             return (
               <li key={market.slug} className="border-b border-border px-4 py-2.5">
-                <Link
-                  href={`/markets/${market.slug}`}
-                  className="min-w-0 text-base font-medium hover:underline"
-                >
-                  {market.name}
-                </Link>
+                <p className="min-w-0">
+                  <Link
+                    href={`/markets/${market.slug}`}
+                    className="text-base font-medium hover:underline"
+                  >
+                    {market.name}
+                  </Link>
+                  <ListingScore
+                    parens
+                    ratingAvg={market.ratingAvg}
+                    reviewCount={market.reviewCount}
+                    className="ml-2 text-stamp"
+                  />
+                </p>
                 {market.hours.length ? (
                   <p className="mt-0.5 grid grid-cols-[auto_auto] justify-start gap-x-3 gap-y-0.5">
                     {market.hours.map((row) => (
@@ -168,6 +191,8 @@ export function FindVendorList({ vendors }: { vendors: FindVendor[] }) {
           key={vendor.slug}
           vendorName={vendor.name}
           vendorSlug={vendor.slug}
+          ratingAvg={vendor.ratingAvg}
+          reviewCount={vendor.reviewCount}
           badge={vendor.badge}
           items={vendor.items}
           markets={vendor.markets}
@@ -186,6 +211,8 @@ export function ProductHitList({ hits }: { hits: ProductHit[] }) {
           key={`${hit.vendorSlug}-${index}`}
           vendorName={hit.vendorName}
           vendorSlug={hit.vendorSlug}
+          ratingAvg={hit.ratingAvg}
+          reviewCount={hit.reviewCount}
           badge={hit.openToday ? "Open today" : null}
           items={[{ name: hit.itemName, href: hit.href, priceCents: hit.priceCents }]}
           markets={hit.markets}
@@ -202,9 +229,17 @@ export function VendorHitList({ vendors }: { vendors: VendorHit[] }) {
       {vendors.map((vendor) => (
         <li key={vendor.slug} className="rounded-xl bg-card ring-1 ring-foreground/10">
           <div className="border-b border-border px-4 py-3">
-            <Link href={vendor.href} className="text-base font-medium hover:underline">
-              {vendor.name}
-            </Link>
+            <p className="min-w-0">
+              <Link href={vendor.href} className="text-base font-medium hover:underline">
+                {vendor.name}
+              </Link>
+              <ListingScore
+                parens
+                ratingAvg={vendor.ratingAvg}
+                reviewCount={vendor.reviewCount}
+                className="ml-2 text-stamp"
+              />
+            </p>
           </div>
           <div className="px-4 py-3">
             <ProductVendorActions slug={vendor.slug} />
