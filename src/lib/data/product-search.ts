@@ -9,6 +9,7 @@ import {
   type VendorHit,
 } from "@/lib/product-hits";
 import { visitBadge, soonestWait, type VisitHall } from "@/lib/product-visit";
+import { hallDayHours } from "@/lib/schedule";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import type { MarketSchedule } from "@/types/database";
 
@@ -16,6 +17,7 @@ export type FindMarket = {
   name: string;
   slug: string;
   days: number[];
+  hours: Array<{ day: string; hours: string }>;
 };
 
 export type FindVendor = {
@@ -117,6 +119,7 @@ export async function listFindVendors(matchSlugs: string[], now = new Date()): P
           name: market.name,
           slug: market.slug,
           days: stall.days,
+          hours: hallDayHours(stall.days, marketSchedules, market.province, now),
         });
       }
       marketRows.sort((a, b) => a.name.localeCompare(b.name));
@@ -149,21 +152,34 @@ export async function searchProducts(args: {
   openToday?: boolean;
   marketSlug?: string | null;
   day?: number | null;
+  now?: Date;
 }): Promise<ProductHit[]> {
   const q = args.q.trim();
   if (!q) return [];
   const supabase = createPublicSupabaseClient();
   if (!supabase) return [];
+  const now = args.now ?? new Date();
   const day = args.day != null && args.day >= 0 && args.day <= 6 ? args.day : null;
-  const { data, error } = await supabase.rpc("search_products", {
-    q,
-    open_today: Boolean(args.openToday),
-    market_slug: args.marketSlug?.trim() || null,
-    day,
-    lim: 40,
-  });
+  const [{ data, error }, markets, schedules] = await Promise.all([
+    supabase.rpc("search_products", {
+      q,
+      open_today: Boolean(args.openToday),
+      market_slug: args.marketSlug?.trim() || null,
+      day,
+      lim: 40,
+    }),
+    listMarkets(),
+    listSchedules(),
+  ]);
   if (error) throw new Error("Could not search products");
   assertPublicSearchPayload(data);
+  const marketBySlug = new Map(markets.map((market) => [market.slug, market]));
+  const schedulesByMarket = new Map<string, MarketSchedule[]>();
+  for (const row of schedules) {
+    const list = schedulesByMarket.get(row.market_id) ?? [];
+    list.push(row);
+    schedulesByMarket.set(row.market_id, list);
+  }
   const rows = (data ?? []) as RpcRow[];
   return rows.map((row) => ({
     itemName: row.item_name,
@@ -172,11 +188,18 @@ export async function searchProducts(args: {
     priceCents: visiblePriceCents(row.product_category, row.price_cents),
     vendorName: row.vendor_name,
     vendorSlug: row.vendor_slug,
-    markets: (row.markets ?? []).map((market) => ({
-      name: market.name,
-      slug: market.slug,
-      days: asDays(market.days),
-    })),
+    markets: (row.markets ?? []).map((market) => {
+      const days = asDays(market.days);
+      const hall = marketBySlug.get(market.slug);
+      return {
+        name: market.name,
+        slug: market.slug,
+        days,
+        hours: hall
+          ? hallDayHours(days, schedulesByMarket.get(hall.id) ?? [], hall.province, now)
+          : [],
+      };
+    }),
     openToday: Boolean(row.open_today),
     href: productHref(row.product_slug, row.item_name),
   }));

@@ -29,6 +29,24 @@ export function formatHours(opensAt: string, closesAt: string) {
   return `${formatTime(opensAt)}–${formatTime(closesAt)}`;
 }
 
+export type HallDayHours = { day: string; hours: string };
+
+/** The days this stall works, with that day's market hours. Same lines as a vendor page. */
+export function hallDayHours(
+  days: number[],
+  schedules: ScheduleRow[],
+  province: string,
+  now = new Date(),
+): HallDayHours[] {
+  return days.flatMap((day) => {
+    const session = sessionOnWeekday(schedules, day, province, now);
+    if (!session) return [];
+    const name = WEEKDAYS[day]?.slice(0, 3);
+    if (!name) return [];
+    return [{ day: name, hours: formatHours(session.opens_at, session.closes_at) }];
+  });
+}
+
 const MONTH_DAY = /^\d{2}-\d{2}$/;
 
 function seasonBound(value: string | null) {

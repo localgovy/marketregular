@@ -4,6 +4,7 @@ export type ProductMarketHit = {
   name: string;
   slug: string;
   days: number[];
+  hours: Array<{ day: string; hours: string }>;
 };
 
 export type ProductHit = {

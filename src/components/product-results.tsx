@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Hours } from "@/components/hours";
 import { formatPrice } from "@/lib/format";
 import { WEEKDAYS } from "@/lib/constants";
 import type { FindVendor } from "@/lib/data/product-search";
@@ -45,6 +46,7 @@ type ListingMarket = {
   name: string;
   slug: string;
   days: number[];
+  hours: Array<{ day: string; hours: string }>;
 };
 
 function ProductListing({
@@ -101,17 +103,25 @@ function ProductListing({
           {markets.map((market) => {
             const days = shortDays(market.days);
             return (
-              <li
-                key={market.slug}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-border px-4 py-2.5"
-              >
+              <li key={market.slug} className="border-b border-border px-4 py-2.5">
                 <Link
                   href={`/markets/${market.slug}`}
                   className="min-w-0 text-base font-medium hover:underline"
                 >
                   {market.name}
                 </Link>
-                {days ? <span className="type-nums shrink-0 whitespace-nowrap text-sm">{days}</span> : null}
+                {market.hours.length ? (
+                  <p className="mt-0.5 grid grid-cols-[auto_auto] justify-start gap-x-3 gap-y-0.5">
+                    {market.hours.map((row) => (
+                      <span key={`${market.slug}-${row.day}`} className="contents">
+                        <span className="text-sm text-muted-foreground">{row.day}</span>
+                        <Hours value={row.hours} className="text-muted-foreground" />
+                      </span>
+                    ))}
+                  </p>
+                ) : days ? (
+                  <p className="type-nums mt-0.5 text-sm">{days}</p>
+                ) : null}
               </li>
             );
           })}

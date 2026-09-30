@@ -19,30 +19,13 @@ import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
 import { Hours } from "@/components/hours";
 import { VendorNextLine } from "@/components/live-open";
-import { WEEKDAYS } from "@/lib/constants";
 import { serverNowMs } from "@/lib/clock";
 import { stallNextDate } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
-import { formatHours, sessionOnWeekday } from "@/lib/schedule";
+import { hallDayHours, sessionOnWeekday } from "@/lib/schedule";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
-import type { MarketSchedule } from "@/types/database";
-
-function hallDayHours(
-  days: number[],
-  schedules: MarketSchedule[],
-  province: string,
-  now: Date,
-) {
-  return days.flatMap((day) => {
-    const session = sessionOnWeekday(schedules, day, province, now);
-    if (!session) return [];
-    const name = WEEKDAYS[day]?.slice(0, 3);
-    if (!name) return [];
-    return [{ day: name, hours: formatHours(session.opens_at, session.closes_at) }];
-  });
-}
 
 export const revalidate = 3600;
 // A dynamic segment stays uncached until this is set. The hour window is revalidate.
