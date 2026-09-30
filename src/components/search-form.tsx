@@ -176,7 +176,6 @@ export function SearchForm({
     nearOn;
   const tagsOn = applied.tags.length > 0;
   const anythingOn = browseOn || tagsOn || Boolean(applied.q.trim());
-  const fieldH = mini ? "h-9" : "h-10";
   const chipSize = mini ? "sm" : "md";
   const productChips = productChipRow(applied.tags);
   const productOn = new Set<string>(productChips);
@@ -266,8 +265,8 @@ export function SearchForm({
           key={defaults?.q ?? ""}
           name="q"
           defaultValue={defaults?.q}
+          size="panel"
           placeholder={SEARCH_PLACEHOLDER}
-          className={cn(fieldH, "bg-card")}
           aria-label={SEARCH_LABEL}
           onClear={() => {
             if (applied.q.trim()) go({ ...applied, q: "" });
@@ -276,8 +275,7 @@ export function SearchForm({
         <button
           type="submit"
           className={cn(
-            "find-go stall-chip-sm inline-flex shrink-0 items-center px-5 text-sm font-medium text-receipt outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
-            fieldH,
+            "find-go stall-chip-sm inline-flex h-12 shrink-0 items-center px-5 text-sm font-medium text-receipt outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
           )}
         >
           Find

@@ -550,8 +550,8 @@ function MarketStep({
         ref={searchRef}
         value={query}
         onChange={onQuery}
+        size="bar"
         placeholder="Wychwood, Junction, St. Lawrence…"
-        className="h-9 bg-background text-base md:text-base"
       />
       <div className="mt-2 max-h-44 overflow-y-auto">
         {!searching && current && onKeep ? (
@@ -638,8 +638,8 @@ function VendorStep({
               ref={searchRef}
               value={query}
               onChange={onQuery}
+              size="bar"
               placeholder="Find a vendor"
-              className="h-9 bg-background text-base md:text-base"
             />
           ) : null}
           <div className="mt-2 max-h-44 overflow-y-auto">

@@ -210,8 +210,8 @@ export function MarketVendors({
                 key={applied.q}
                 name="q"
                 defaultValue={applied.q}
+                size="panel"
                 placeholder="Vendor, cuisine, or tomato"
-                className="h-10 bg-card"
                 aria-label="Search vendors"
                 onClear={() => {
                   if (applied.q.trim()) go({ ...applied, q: "" });
@@ -219,7 +219,7 @@ export function MarketVendors({
               />
               <button
                 type="submit"
-                className="find-go stall-chip-sm inline-flex h-10 shrink-0 items-center px-5 text-sm font-medium text-receipt outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                className="find-go stall-chip-sm inline-flex h-12 shrink-0 items-center px-5 text-sm font-medium text-receipt outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
               >
                 Find
               </button>

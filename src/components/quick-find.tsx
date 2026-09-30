@@ -146,7 +146,6 @@ export function QuickFind({
             setAreaQ((current) => (current && next.trim() !== current ? null : current));
           }}
           placeholder={SEARCH_PLACEHOLDER}
-          className="h-12 border-transparent bg-card px-3.5 text-base text-foreground focus-visible:border-foreground/20 focus-visible:ring-foreground/20"
         />
         {query ? <input type="hidden" name="q" value={query} /> : null}
       </div>

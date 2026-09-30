@@ -74,7 +74,6 @@ export default async function ProductsPage({
           defaultValue={q}
           aria-label={PRODUCT_SEARCH_LABEL}
           placeholder={PRODUCT_SEARCH_PLACEHOLDER}
-          className="bg-card"
         />
         <label className="flex items-center gap-2 text-base">
           <input

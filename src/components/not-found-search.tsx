@@ -46,7 +46,6 @@ export function NotFoundSearch() {
           value={q}
           onChange={setQ}
           placeholder={SEARCH_PLACEHOLDER}
-          className="bg-card"
           aria-label={SEARCH_LABEL}
         />
       </form>

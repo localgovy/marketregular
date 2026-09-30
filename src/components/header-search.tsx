@@ -86,7 +86,7 @@ export function HeaderSearch({
     <form
       action="/products"
       role="search"
-      className={cn("relative flex min-w-0 items-center gap-2", className)}
+      className={cn("relative min-w-0", className)}
       onSubmit={(event) => {
         if (active >= 0 && options[active]) {
           event.preventDefault();
@@ -94,43 +94,52 @@ export function HeaderSearch({
         }
       }}
     >
-      <SearchField
-        name="q"
-        value={query}
-        onChange={(value) => {
-          setQuery(value);
-          setOpen(true);
-        }}
-        role="combobox"
-        aria-label={PRODUCT_SEARCH_LABEL}
-        aria-autocomplete="list"
-        aria-controls={listId}
-        aria-expanded={showList}
-        aria-activedescendant={active >= 0 ? options[active]?.id : undefined}
-        placeholder={PRODUCT_SEARCH_PLACEHOLDER}
-        className="bg-card"
-        onFocus={() => setOpen(true)}
-        onBlur={() => {
-          window.setTimeout(() => setOpen(false), 120);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            setOpen(false);
-            return;
-          }
-          if (!showList || options.length === 0) return;
-          if (event.key === "ArrowDown") {
-            event.preventDefault();
-            setActive((index) => Math.min(options.length - 1, index + 1));
-          } else if (event.key === "ArrowUp") {
-            event.preventDefault();
-            setActive((index) => Math.max(0, index - 1));
-          }
-        }}
-      />
-      <button type="submit" className={cn(buttonVariants(), "max-sm:sr-only shrink-0")}>
-        Find
-      </button>
+      <div className="flex min-w-0 items-stretch rounded-[2px] border border-[#cfc6b6] bg-receipt shadow-[inset_0_1px_0_#fff] focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
+        <SearchField
+          name="q"
+          value={query}
+          onChange={(value) => {
+            setQuery(value);
+            setOpen(true);
+          }}
+          size="bar"
+          joined
+          role="combobox"
+          aria-label={PRODUCT_SEARCH_LABEL}
+          aria-autocomplete="list"
+          aria-controls={listId}
+          aria-expanded={showList}
+          aria-activedescendant={active >= 0 ? options[active]?.id : undefined}
+          placeholder={PRODUCT_SEARCH_PLACEHOLDER}
+          onFocus={() => setOpen(true)}
+          onBlur={() => {
+            window.setTimeout(() => setOpen(false), 120);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setOpen(false);
+              return;
+            }
+            if (!showList || options.length === 0) return;
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setActive((index) => Math.min(options.length - 1, index + 1));
+            } else if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setActive((index) => Math.max(0, index - 1));
+            }
+          }}
+        />
+        <button
+          type="submit"
+          className={cn(
+            buttonVariants(),
+            "h-10 shrink-0 self-stretch rounded-none px-3 lg:h-11 max-sm:sr-only",
+          )}
+        >
+          Find
+        </button>
+      </div>
       {showList ? (
         <ul
           id={listId}

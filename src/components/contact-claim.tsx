@@ -126,7 +126,6 @@ export function ContactClaim({
           value={query}
           onChange={setQuery}
           placeholder={kind === "market" ? "Market name" : "Vendor name"}
-          className="bg-card"
         />
       </div>
       {!q ? (

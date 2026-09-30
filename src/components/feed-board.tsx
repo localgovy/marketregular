@@ -159,7 +159,6 @@ export function FeedBoard({
             value={search}
             onChange={setSearch}
             placeholder="Post, author, market, or vendor"
-            className="bg-card"
             aria-label="Find posts"
             onClear={() => {
               if (query.q) go({ ...query, q: "" });
@@ -167,7 +166,7 @@ export function FeedBoard({
           />
           <button
             type="submit"
-            className="h-8 bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/80"
+            className="h-14 bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/80"
           >
             Find
           </button>

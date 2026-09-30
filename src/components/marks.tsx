@@ -60,6 +60,19 @@ export function TicketMark(props: MarkProps) {
   );
 }
 
+/** Filled lens — search. */
+export function SearchMark(props: MarkProps) {
+  return (
+    <Mark {...props}>
+      <path
+        fillRule="evenodd"
+        d="M10.2 2.6a7.4 7.4 0 1 0 .02 14.8 7.4 7.4 0 0 0-.02-14.8Zm0 3.15a4.25 4.25 0 1 1 0 8.5 4.25 4.25 0 0 1 0-8.5Z"
+      />
+      <path d="m15.15 14.55 2.15-2.15 4.55 4.55-2.15 2.15z" />
+    </Mark>
+  );
+}
+
 /** Stacked stall plates — find / filters. */
 export function SlatsMark(props: MarkProps) {
   return (
