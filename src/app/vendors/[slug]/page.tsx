@@ -14,7 +14,7 @@ import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
-import { getVendorBySlug } from "@/lib/data/catalog";
+import { getListingContact, getVendorBySlug } from "@/lib/data/catalog";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
 import { Hours } from "@/components/hours";
@@ -54,7 +54,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const vendor = await getVendorBySlug(slug);
+  const [vendor, contact] = await Promise.all([
+    getVendorBySlug(slug),
+    getListingContact("vendor", slug),
+  ]);
   if (!vendor) return { title: "Vendor" };
   const now = new Date();
   const marketNames = vendor.markets.map((market) => market.name);
@@ -73,7 +76,7 @@ export async function generateMetadata({
     }),
     path: `/vendors/${vendor.slug}`,
     // Name-and-markets pages stay out of the index but keep passing equity to the halls.
-    index: vendorHasSubstance(vendor),
+    index: vendorHasSubstance(vendor, contact),
     follow: true,
   });
 }
@@ -84,7 +87,10 @@ export default async function VendorPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const vendor = await getVendorBySlug(slug);
+  const [vendor, contact] = await Promise.all([
+    getVendorBySlug(slug),
+    getListingContact("vendor", slug),
+  ]);
   if (!vendor) {
     const retired = await retiredVendorTarget(slug);
     if (retired) permanentRedirect(retired);
@@ -102,7 +108,7 @@ export default async function VendorPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <JsonLd data={vendorJsonLd(vendor)} />
+      <JsonLd data={vendorJsonLd(vendor, contact)} />
       <JsonLd
         data={breadcrumbJsonLd([
           MARKETS_CRUMB,
@@ -219,7 +225,7 @@ export default async function VendorPage({
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-            <ListingContact phone={vendor.phone} email={vendor.email} />
+            <ListingContact phone={contact.phone} email={contact.email} />
             <ListingWebsite href={vendor.website} />
             <ListingInstagram href={vendor.instagram} />
             <ListingTiktok href={vendor.tiktok} />

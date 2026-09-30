@@ -17,7 +17,7 @@ import { ScheduleList } from "@/components/schedule-list";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { VerifiedName } from "@/components/verified-stamp";
-import { getMarketBySlug } from "@/lib/data/catalog";
+import { getListingContact, getMarketBySlug } from "@/lib/data/catalog";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
 import { listingScore } from "@/lib/listing-score";
 import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
@@ -72,6 +72,7 @@ export default async function MarketPage({
 
   const nowMs = serverNowMs();
   const now = new Date(nowMs);
+  const contact = await getListingContact("market", market.slug);
   const directions = directionsHref(market.lat, market.lng);
   const avgRated = market.feed.filter((item) => item.rating != null);
   const avg =
@@ -92,7 +93,7 @@ export default async function MarketPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <JsonLd data={marketJsonLd(market, now)} />
+      <JsonLd data={marketJsonLd(market, now, contact)} />
       <JsonLd
         data={breadcrumbJsonLd([
           MARKETS_CRUMB,
@@ -232,7 +233,7 @@ export default async function MarketPage({
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
             <h3>Contact</h3>
-            <ListingContact phone={market.phone} email={market.email} heading={false} />
+            <ListingContact phone={contact.phone} email={contact.email} heading={false} />
             <ListingWebsite href={market.website} />
             <ListingInstagram href={market.instagram} />
             <ListingTiktok href={market.tiktok} />
