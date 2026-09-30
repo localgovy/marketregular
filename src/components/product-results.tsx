@@ -12,6 +12,7 @@ function Badge({ children }: { children: string }) {
 export function ClaimProfileLink({ slug }: { slug: string }) {
   return (
     <p className="text-sm">
+      Do you operate or work for this vendor?{" "}
       <Link href={`/vendors/${slug}#claim`} className="font-medium hover:underline">
         Claim this profile to add prices and items
       </Link>
@@ -99,9 +100,9 @@ function ProductListing({
             return (
               <li
                 key={`${vendorSlug}-item-${index}`}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-dashed border-border px-4 py-2.5"
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-dashed border-border bg-secondary px-4 py-2.5 text-foreground"
               >
-                <p className="min-w-0 text-base">
+                <p className="min-w-0 text-base font-medium">
                   {item.href ? (
                     <Link href={item.href} className="hover:underline">
                       {item.name}
@@ -111,7 +112,7 @@ function ProductListing({
                   )}
                 </p>
                 {price ? (
-                  <span className="type-nums shrink-0 self-start whitespace-nowrap bg-stamp px-1.5 py-0.5 text-sm text-chalk">
+                  <span className="type-nums shrink-0 self-start whitespace-nowrap text-sm text-foreground">
                     {price}
                   </span>
                 ) : null}
