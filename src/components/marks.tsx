@@ -261,13 +261,19 @@ export function CheckMark(props: MarkProps) {
   );
 }
 
-/** Cut-corner plate with a check punched out. Claimed listings. */
+/** Faceted hall seal with a chalk check. Claimed listings. */
 export function VerifiedMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <path
-        fillRule="evenodd"
-        d={`${plate(1.6, 1.6, 20.8, 20.8, 3.6)}M9.2 16.5 5.2 12.5 7.1 10.6 9.2 12.7 16.2 5.7 18.1 7.6Z`}
+    <Mark {...props} shapeRendering="geometricPrecision">
+      <polygon points="12,1.4 19.5,4.5 22.6,12 19.5,19.5 12,22.6 4.5,19.5 1.4,12 4.5,4.5" />
+      <polygon
+        fill="var(--chalk)"
+        points="12,2.65 18.61,5.39 21.35,12 18.61,18.61 12,21.35 5.39,18.61 2.65,12 5.39,5.39"
+      />
+      <polygon points="12,4.45 17.34,6.66 19.55,12 17.34,17.34 12,19.55 6.66,17.34 4.45,12 6.66,6.66" />
+      <polygon
+        fill="var(--chalk)"
+        points="8.97,9.83 11.08,10.98 15.23,7.04 16.91,8.81 11.49,13.95 7.81,11.98"
       />
     </Mark>
   );

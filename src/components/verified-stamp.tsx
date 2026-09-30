@@ -8,7 +8,7 @@ export function isVerifiedListing(slug: string) {
 
 export function VerifiedStamp() {
   return (
-    <span className="ml-[0.28em] inline-block size-[0.72em] translate-y-[0.06em] align-[-0.08em] text-stamp">
+    <span className="ml-[0.28em] inline-block size-[0.92em] translate-y-[0.12em] align-[-0.02em] text-stamp">
       <VerifiedMark className="size-full" />
       <span className="sr-only"> Verified</span>
     </span>
