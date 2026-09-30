@@ -105,7 +105,7 @@ function HeaderQuery({
 }) {
   const params = useSearchParams();
   const q =
-    pathname === "/markets" || pathname === "/search" ? (params.get("q") ?? "") : "";
+    pathname === "/markets" || pathname === "/products" ? (params.get("q") ?? "") : "";
   return <HeaderFrame auth={auth} q={q} />;
 }
 

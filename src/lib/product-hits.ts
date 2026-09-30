@@ -60,5 +60,5 @@ export function visiblePriceCents(category: string | null | undefined, cents: nu
 export function productHref(productSlug: string | null, itemName: string) {
   const page = findPageForProductSlug(productSlug);
   if (page) return `/find/${page.slug}`;
-  return `/search?q=${encodeURIComponent(itemName)}`;
+  return `/products?q=${encodeURIComponent(itemName)}`;
 }

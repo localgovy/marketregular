@@ -105,3 +105,30 @@ export function siblingSlugs(slug: string) {
 export function siblingLead(slug: string) {
   return BY_SLUG.get(slug)?.siblingLead ?? null;
 }
+
+/** A second listing that is only another season of `into`. It stays in the database and redirects. */
+const SEASON_ALIASES = [
+  {
+    slug: "leslieville-farmers-market-east-end-food-hub",
+    into: "the-leslieville-farmers-market",
+  },
+] as const;
+
+export function seasonAliasTarget(slug: string) {
+  return SEASON_ALIASES.find((alias) => alias.slug === slug)?.into ?? null;
+}
+
+export function isSeasonAlias(slug: string) {
+  return seasonAliasTarget(slug) != null;
+}
+
+/** Outdoor or indoor label for a hall that shares one market profile. */
+export function seasonPlace(slug: string): { label: string; place: string } | null {
+  if (slug === "the-leslieville-farmers-market") {
+    return { label: "Outdoor", place: "Greenwood Park" };
+  }
+  if (slug === "leslieville-farmers-market-east-end-food-hub") {
+    return { label: "Indoor", place: "East End Food Hub" };
+  }
+  return null;
+}

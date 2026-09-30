@@ -13,6 +13,7 @@ import { LiveFeed } from "@/components/live-feed";
 import { MARKET_PROFILE_MAP, MarketMapLazy } from "@/components/market-map-lazy";
 import { MarketVendors } from "@/components/market-vendors";
 import { LiveOpenState } from "@/components/live-open";
+import { MarketSeasons, type SeasonPlace } from "@/components/market-seasons";
 import { ScheduleList } from "@/components/schedule-list";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
@@ -20,7 +21,7 @@ import { VerifiedName } from "@/components/verified-stamp";
 import { getListingContact, getMarketBySlug } from "@/lib/data/catalog";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
 import { listingScore } from "@/lib/listing-score";
-import { listingNote, listingQualifier, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
+import { listingNote, listingQualifier, seasonAliasTarget, seasonPlace, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle, directionsHref } from "@/lib/listing-copy";
@@ -63,6 +64,8 @@ export default async function MarketPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const alias = seasonAliasTarget(slug);
+  if (alias) permanentRedirect(`/markets/${alias}`);
   const market = await getMarketBySlug(slug);
   if (!market) {
     const retired = await retiredMarketTarget(slug);
@@ -80,20 +83,39 @@ export default async function MarketPage({
       ? avgRated.reduce((sum, item) => sum + (item.rating ?? 0), 0) / avgRated.length
       : null;
 
-  const siblings = await Promise.all(
-    siblingSlugs(market.slug).map(async (slug) => {
-      const other = await getMarketBySlug(slug);
-      return other ? { slug, name: other.name } : null;
-    }),
-  );
-  const otherFloors = siblings.filter(
-    (entry): entry is { slug: string; name: string } => entry !== null,
-  );
+  const siblingMarkets = (
+    await Promise.all(siblingSlugs(market.slug).map((item) => getMarketBySlug(item)))
+  ).filter((item) => item != null);
+  const seasonSources: SeasonPlace[] = [market, ...siblingMarkets].flatMap((item) => {
+    const place = seasonPlace(item.slug);
+    if (!place) return [];
+    return [
+      {
+        label: place.label,
+        place: place.place,
+        name: item.name,
+        address: item.address,
+        city: item.city,
+        province: item.province,
+        postalCode: item.postal_code,
+        lat: item.lat,
+        lng: item.lng,
+        schedules: item.schedules,
+      },
+    ];
+  });
+  const showSeasons = seasonSources.length > 1;
+  const openSchedules = showSeasons
+    ? seasonSources.flatMap((place) => place.schedules)
+    : market.schedules;
+  const otherFloors = siblingMarkets
+    .filter((item) => !seasonPlace(item.slug))
+    .map((item) => ({ slug: item.slug, name: item.name }));
   const lead = siblingLead(market.slug);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <JsonLd data={marketJsonLd(market, now, contact)} />
+      <JsonLd data={marketJsonLd({ ...market, schedules: openSchedules }, now, contact)} />
       <JsonLd
         data={breadcrumbJsonLd([
           MARKETS_CRUMB,
@@ -103,14 +125,18 @@ export default async function MarketPage({
       <div className="flex items-center gap-1">
         <BackButton href="/markets" />
         <p className="type-kicker text-muted-foreground">
-          <AddressLink
-            address={market.address}
-            city={market.city}
-            province={market.province}
-            name={market.name}
-            lat={market.lat}
-            lng={market.lng}
-          />
+          {showSeasons ? (
+            "Greenwood Park and the East End Food Hub"
+          ) : (
+            <AddressLink
+              address={market.address}
+              city={market.city}
+              province={market.province}
+              name={market.name}
+              lat={market.lat}
+              lng={market.lng}
+            />
+          )}
         </p>
       </div>
       <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
@@ -125,7 +151,7 @@ export default async function MarketPage({
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
           {market.schedules.length ? (
             <LiveOpenState
-              schedules={market.schedules}
+              schedules={openSchedules}
               province={market.province}
               nowMs={nowMs}
             />
@@ -141,31 +167,39 @@ export default async function MarketPage({
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(16rem,20rem)]">
         <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
           <h2>Hours</h2>
-          <ScheduleList schedules={market.schedules} />
-          <address className="mt-4 not-italic text-sm leading-6">
-            <AddressLink
-              className="block"
-              address={market.address}
-              city={market.city}
-              province={market.province}
-              name={market.name}
-              lat={market.lat}
-              lng={market.lng}
-            >
-              {market.address}
-              <br />
-              {market.city}, {market.province} {market.postal_code}
-            </AddressLink>
-          </address>
-          {directions ? (
-            <a
-              href={directions}
-              rel="noreferrer"
-              className="mt-3 inline-flex text-sm font-medium text-primary hover:underline"
-            >
-              Directions
-            </a>
-          ) : null}
+          {showSeasons ? (
+            <div className="mt-4">
+              <MarketSeasons places={seasonSources} now={now} />
+            </div>
+          ) : (
+            <>
+              <ScheduleList schedules={market.schedules} />
+              <address className="mt-4 not-italic text-sm leading-6">
+                <AddressLink
+                  className="block"
+                  address={market.address}
+                  city={market.city}
+                  province={market.province}
+                  name={market.name}
+                  lat={market.lat}
+                  lng={market.lng}
+                >
+                  {market.address}
+                  <br />
+                  {market.city}, {market.province} {market.postal_code}
+                </AddressLink>
+              </address>
+              {directions ? (
+                <a
+                  href={directions}
+                  rel="noreferrer"
+                  className="mt-3 inline-flex text-sm font-medium text-primary hover:underline"
+                >
+                  Directions
+                </a>
+              ) : null}
+            </>
+          )}
         </div>
         {publishesVendorRoster(market.slug) && market.vendors.length ? (
           <div>
@@ -198,7 +232,7 @@ export default async function MarketPage({
           </div>
         ) : null}
       </div>
-      {listingNote(market.slug) ? (
+      {listingNote(market.slug) && !showSeasons ? (
         <p className="mt-2 max-w-2xl text-base text-muted-foreground">
           {listingNote(market.slug)}
           {lead && otherFloors.length ? (
@@ -222,7 +256,11 @@ export default async function MarketPage({
 
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="flex flex-col gap-8">
-          <MarketMapLazy markets={[market]} load="visible" className={MARKET_PROFILE_MAP} />
+          <MarketMapLazy
+            markets={showSeasons ? [market, ...siblingMarkets] : [market]}
+            load="visible"
+            className={MARKET_PROFILE_MAP}
+          />
           {market.about ? (
             <section>
               <h2>About</h2>

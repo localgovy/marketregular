@@ -2,6 +2,7 @@ export const SITE_NAV = [
   { href: "/", label: "Home" },
   { href: "/events", label: "Events" },
   { href: "/markets", label: "Markets" },
+  { href: "/products", label: "Products" },
   { href: "/saved", label: "Saved" },
   { href: "/blog", label: "Blog" },
 ] as const;

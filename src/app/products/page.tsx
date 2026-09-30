@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { ProductBrowse } from "@/components/product-browse";
 import { SortableProductHits } from "@/components/product-sort-list";
 import { VendorHitList } from "@/components/product-results";
+import { SearchField } from "@/components/search-field";
 import { listMarkets } from "@/lib/data/catalog";
 import { searchProducts, searchVendorsByName } from "@/lib/data/product-search";
-import { WEEKDAYS } from "@/lib/constants";
+import { PRODUCT_SEARCH_LABEL, PRODUCT_SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { torontoWeekday } from "@/lib/product-sort";
 import { pageMeta } from "@/lib/seo";
@@ -21,19 +23,20 @@ function dayParam(value: string | undefined) {
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; open?: string; market?: string; day?: string }>;
 }): Promise<Metadata> {
-  const { q } = await searchParams;
-  const query = q?.trim() ?? "";
+  const params = await searchParams;
+  const query = params.q?.trim() ?? "";
+  const filtered = Boolean(query || params.open === "1" || params.market?.trim() || params.day);
   return pageMeta({
-    title: query ? `${query} at ${LAUNCH_CITY} farmers' markets` : "Search products",
-    description: `Search products and vendors at ${LAUNCH_CITY} farmers' markets.`,
-    path: "/search",
-    index: false,
+    title: query ? `${query} at ${LAUNCH_CITY} farmers' markets` : "Products",
+    description: `Search products and the vendors who sell them at ${LAUNCH_CITY} farmers' markets.`,
+    path: "/products",
+    index: !filtered,
   });
 }
 
-export default async function SearchPage({
+export default async function ProductsPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -55,14 +58,24 @@ export default async function SearchPage({
   ]);
   const seen = new Set(products.map((hit) => hit.vendorSlug));
   const shops = vendors.filter((vendor) => !seen.has(vendor.slug));
-  const halls = [...markets].sort((a, b) => a.name.localeCompare(b.name));
+  const halls = [...markets].sort((a, b) => a.name.localeCompare(b.name, "en-CA"));
   const today = torontoWeekday();
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10">
-      <h1>{q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Search products"}</h1>
-      <form action="/search" className="mt-6 grid gap-4">
-        <input type="hidden" name="q" value={q} />
+      <h1>{q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Products"}</h1>
+      <p className="type-lede mt-3">
+        Search what the stalls sell, then open the vendor to see where they set up.
+      </p>
+      <form action="/products" className="mt-6 grid gap-4">
+        <SearchField
+          name="q"
+          key={q}
+          defaultValue={q}
+          aria-label={PRODUCT_SEARCH_LABEL}
+          placeholder={PRODUCT_SEARCH_PLACEHOLDER}
+          className="bg-card"
+        />
         <label className="flex items-center gap-2 text-base">
           <input
             type="checkbox"
@@ -75,7 +88,7 @@ export default async function SearchPage({
         </label>
         <label className="grid gap-1.5 text-sm font-medium">
           Market
-          <select name="market" defaultValue={marketSlug ?? ""} className={selectClass} aria-label="Market">
+          <select name="market" defaultValue={marketSlug ?? ""} className={selectClass}>
             <option value="">Any market</option>
             {halls.map((market) => (
               <option key={market.slug} value={market.slug}>
@@ -86,7 +99,7 @@ export default async function SearchPage({
         </label>
         <label className="grid gap-1.5 text-sm font-medium">
           Day
-          <select name="day" defaultValue={day == null ? "" : String(day)} className={selectClass} aria-label="Day">
+          <select name="day" defaultValue={day == null ? "" : String(day)} className={selectClass}>
             <option value="">Any day</option>
             {WEEKDAYS.map((name, index) => (
               <option key={name} value={index}>
@@ -100,11 +113,7 @@ export default async function SearchPage({
           Apply
         </button>
       </form>
-      {!q ? (
-        <p className="mt-8 text-base text-muted-foreground">
-          Type a product or a vendor in the search box.
-        </p>
-      ) : (
+      {q ? (
         <div className="mt-8 grid gap-8">
           <section>
             <h2>Products</h2>
@@ -127,6 +136,8 @@ export default async function SearchPage({
             )}
           </section>
         </div>
+      ) : (
+        <ProductBrowse />
       )}
     </div>
   );

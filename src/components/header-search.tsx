@@ -84,7 +84,7 @@ export function HeaderSearch({
 
   return (
     <form
-      action="/search"
+      action="/products"
       role="search"
       className={cn("relative flex min-w-0 items-center gap-2", className)}
       onSubmit={(event) => {

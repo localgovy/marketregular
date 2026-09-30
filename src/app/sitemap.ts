@@ -32,6 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     loc("/", { changeFrequency: "daily", priority: 1 }),
     loc("/markets", { lastModified: newestMarket, changeFrequency: "daily", priority: 0.9 }),
+    loc("/products", { changeFrequency: "weekly", priority: 0.8 }),
     loc("/markets/day", { changeFrequency: "weekly", priority: 0.8 }),
     loc("/markets/open-today", { changeFrequency: "daily", priority: 0.8 }),
     ...DAY_SLUGS.map((day) =>

@@ -75,6 +75,8 @@ const nextConfig: NextConfig = {
       { source: "/find/corn-toronto", destination: "/find/sweet-corn-toronto", permanent: true },
       { source: "/find/turnips-toronto", destination: "/find/turnip-toronto", permanent: true },
       { source: "/find/celery-toronto", destination: "/find/vegetables-toronto", permanent: true },
+      { source: "/markets/leslieville-farmers-market-east-end-food-hub", destination: "/markets/the-leslieville-farmers-market", permanent: true },
+      { source: "/search", destination: "/products", permanent: true },
       // Stall pages stay at /vendors/[slug]. The A–Z index cannibalized market
       // queries (title was too close to /markets). Query strings pass through.
       { source: "/vendors", destination: "/markets", permanent: true },

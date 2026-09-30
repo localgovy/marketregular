@@ -20,13 +20,35 @@ export function ClaimProfileLink({ slug }: { slug: string }) {
 }
 
 /**
- * TODO: Reserve for Pickup. Show the button only when the vendor is on the
- * Pickup program. There is no such column yet, so do not render it.
- * If pickup ever applies to alcohol, the line is:
- * reserve on MarketRegular, pay and show ID at the stall.
+ * Turns on only when a vendor is actually on the Pickup program.
+ * There is no such column yet, so callers omit `pickup` and this renders nothing.
+ * When it does show: "Reserve for pickup".
+ * Alcohol uses "reserve on MarketRegular, pay and show ID at the stall".
  */
+export function ReserveForPickup({
+  pickup = false,
+  alcohol = false,
+}: {
+  pickup?: boolean;
+  alcohol?: boolean;
+}) {
+  if (!pickup) return null;
+  return (
+    <p className="text-sm font-medium">
+      {alcohol
+        ? "Reserve on MarketRegular, pay and show ID at the stall"
+        : "Reserve for pickup"}
+    </p>
+  );
+}
+
 export function ProductVendorActions({ slug }: { slug: string }) {
-  return <ClaimProfileLink slug={slug} />;
+  return (
+    <div className="grid gap-2">
+      <ReserveForPickup />
+      <ClaimProfileLink slug={slug} />
+    </div>
+  );
 }
 
 /** Same short days as a vendor card, so the hours column stays one line. */

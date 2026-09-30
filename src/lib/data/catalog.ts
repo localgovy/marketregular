@@ -41,6 +41,7 @@ import { loadMyProfile } from "@/lib/my-profile";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
+import { isSeasonAlias, seasonAliasTarget } from "@/lib/listing-siblings";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import type {
@@ -265,15 +266,36 @@ const getPublishedDirectory = cache(async function getPublishedDirectory() {
     loadCachedSchedules(),
     loadCachedMenuVendorIds(),
   ]);
+  const folded = foldSeasonAliases(markets, schedules);
   return {
-    markets,
+    markets: folded.markets,
     vendors,
     stalls: stallsFromRows(stallRows),
     rosterVendorIds: rosterVendorIdsFromRows(stallRows),
-    schedules,
+    schedules: folded.schedules,
     menuVendorIds,
   } satisfies PublishedDirectory;
 });
+
+/** One search card. The alias's Sunday hours still count on the host market. */
+function foldSeasonAliases<T extends { id: string; slug: string }, S extends { market_id: string }>(
+  markets: T[],
+  schedules: S[],
+) {
+  let nextMarkets = markets;
+  let nextSchedules = schedules;
+  for (const market of markets) {
+    const hostSlug = seasonAliasTarget(market.slug);
+    if (!hostSlug) continue;
+    const host = markets.find((item) => item.slug === hostSlug);
+    if (!host) continue;
+    nextSchedules = nextSchedules.map((row) =>
+      row.market_id === market.id ? { ...row, market_id: host.id } : row,
+    );
+    nextMarkets = nextMarkets.filter((item) => item.slug !== market.slug);
+  }
+  return { markets: nextMarkets, schedules: nextSchedules };
+}
 
 export type DirectoryCensus = {
   markets: number;
@@ -361,7 +383,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 }
 
 export const listMarkets = cache(async function listMarkets(): Promise<Market[]> {
-  if (!publicDb()) return localMarkets();
+  if (!publicDb()) return localMarkets().filter((market) => !isSeasonAlias(market.slug));
   const { markets } = await getPublishedDirectory();
   return markets.map(withListingStats);
 });
