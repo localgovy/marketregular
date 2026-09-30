@@ -7,7 +7,7 @@ const chip =
 export function ProductBrowse() {
   const groups = findPagesByCategory();
   return (
-    <section id="products" className="scroll-mt-28 border-t border-border pt-6">
+    <section id="products" className="mt-12 scroll-mt-28 border-t border-border pt-6">
       <h2 className="type-column">Browse by product</h2>
       {groups.map((group) => (
         <div key={group.id} className="mt-4">

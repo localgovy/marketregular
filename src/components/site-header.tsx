@@ -10,7 +10,6 @@ import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { HeaderSearch } from "@/components/header-search";
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
 import { isAuthChromePath, SITE_CLAIM_NAV, SITE_NAV } from "@/lib/nav";
-import { cn } from "@/lib/utils";
 
 function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
   return (

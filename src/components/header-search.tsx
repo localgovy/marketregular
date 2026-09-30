@@ -22,32 +22,45 @@ export function HeaderSearch({
   const [query, setQuery] = useState(initialQuery);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
-  const [products, setProducts] = useState<ProductHit[]>([]);
-  const [vendors, setVendors] = useState<VendorHit[]>([]);
+  const [result, setResult] = useState<{
+    q: string;
+    products: ProductHit[];
+    vendors: VendorHit[];
+  }>({ q: "", products: [], vendors: [] });
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) {
-      setProducts([]);
-      setVendors([]);
-      return;
-    }
+    if (q.length < 2) return;
+    let cancelled = false;
     const handle = window.setTimeout(() => {
       const params = new URLSearchParams({ q });
       void fetch(`/api/search?${params.toString()}`)
         .then((response) => (response.ok ? response.json() : null))
         .then((body: { products?: ProductHit[]; vendors?: VendorHit[] } | null) => {
-          setProducts(body?.products ?? []);
-          setVendors(body?.vendors ?? []);
+          if (cancelled) return;
+          setResult({
+            q,
+            products: body?.products ?? [],
+            vendors: body?.vendors ?? [],
+          });
           setActive(-1);
         })
         .catch(() => {
-          setProducts([]);
-          setVendors([]);
+          if (cancelled) return;
+          setResult({ q, products: [], vendors: [] });
         });
     }, 250);
-    return () => window.clearTimeout(handle);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(handle);
+    };
   }, [query]);
+
+  const needle = query.trim();
+  const ready = needle.length >= 2 && result.q === needle;
+  const products = ready ? result.products : [];
+  const vendors = ready ? result.vendors : [];
+  const pending = needle.length >= 2 && !ready;
 
   const options: Option[] = [
     ...products.map((hit, index) => ({
@@ -88,6 +101,7 @@ export function HeaderSearch({
           setQuery(value);
           setOpen(true);
         }}
+        role="combobox"
         aria-label={PRODUCT_SEARCH_LABEL}
         aria-autocomplete="list"
         aria-controls={listId}
@@ -121,10 +135,12 @@ export function HeaderSearch({
         <ul
           id={listId}
           role="listbox"
-          className="absolute top-full right-0 left-0 z-50 mt-1 max-h-80 overflow-y-auto rounded-xl bg-card py-1 ring-1 ring-foreground/10"
+          className="absolute top-full right-0 left-0 z-50 mt-14 max-h-80 overflow-y-auto rounded-xl bg-card py-1 ring-1 ring-foreground/10 xl:mt-1"
         >
           {options.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-muted-foreground">No matches yet</li>
+            <li className="px-3 py-2 text-sm text-muted-foreground">
+              {pending ? "Searching" : "No matches yet"}
+            </li>
           ) : (
             options.map((option, index) => (
               <li key={option.id} role="presentation">

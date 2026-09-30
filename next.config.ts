@@ -62,7 +62,6 @@ const nextConfig: NextConfig = {
       // crawler never sees the 404 Search Console picked up.
       { source: "/markets/gould-street-tmu", destination: "/markets", permanent: true },
       { source: "/markets/trinity-bellwoods-farmers-market", destination: "/markets", permanent: true },
-      { source: "/search", destination: "/markets", permanent: true },
       // Stall pages stay at /vendors/[slug]. The A–Z index cannibalized market
       // queries (title was too close to /markets). Query strings pass through.
       { source: "/vendors", destination: "/markets", permanent: true },

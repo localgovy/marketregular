@@ -63,11 +63,11 @@ export function FindVendorList({ vendors }: { vendors: FindVendor[] }) {
             {vendor.badge ? <Badge>{vendor.badge}</Badge> : null}
           </div>
           <ul className="mt-3 grid gap-1">
-            {vendor.items.map((item) => {
+            {vendor.items.map((item, index) => {
               const price = formatPrice(item.priceCents);
               return (
                 <li
-                  key={`${vendor.slug}-${item.name}-${price ?? ""}`}
+                  key={`${vendor.slug}-${index}`}
                   className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3"
                 >
                   <span>{item.name}</span>
@@ -88,10 +88,10 @@ export function ProductHitList({ hits }: { hits: ProductHit[] }) {
   if (!hits.length) return null;
   return (
     <ul className="grid gap-4">
-      {hits.map((hit) => {
+      {hits.map((hit, index) => {
         const price = formatPrice(hit.priceCents);
         return (
-          <li key={`${hit.vendorSlug}-${hit.itemName}`} className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+          <li key={`${hit.vendorSlug}-${index}`} className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
               <Link href={hit.href} className="text-base font-medium hover:underline">
                 {hit.itemName}

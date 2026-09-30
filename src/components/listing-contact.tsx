@@ -38,7 +38,7 @@ export function ListingContact({
   if (!phone && !mail) return null;
   return (
     <div className="mt-4">
-      {heading ? <h3>Contact</h3> : null}
+      {heading ? <h3>Find them</h3> : null}
       <ListingPhone phone={phone} />
       {mail ? (
         <p className="mt-2 text-sm">

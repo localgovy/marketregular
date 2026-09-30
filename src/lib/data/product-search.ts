@@ -1,4 +1,3 @@
-import { findPageBySlug } from "@/data/find-pages";
 import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/catalog";
 import {
   assertPublicSearchPayload,
@@ -94,7 +93,7 @@ export async function listFindVendors(matchSlugs: string[], now = new Date()): P
     stallsByVendor.set(stall.id, list);
   }
 
-  const grouped = new Map<string, FindVendor & { halls: VisitHall[] }>();
+  const grouped = new Map<string, FindVendor>();
   for (const menu of menus) {
     const vendor = vendorById.get(menu.vendor_id);
     const vendorStalls = stallsByVendor.get(menu.vendor_id);
@@ -125,7 +124,6 @@ export async function listFindVendors(matchSlugs: string[], now = new Date()): P
         items: [],
         markets: marketRows,
         badge: visitBadge(halls, now),
-        halls,
       };
       grouped.set(vendor.id, group);
     }
@@ -136,7 +134,7 @@ export async function listFindVendors(matchSlugs: string[], now = new Date()): P
   }
 
   return [...grouped.values()]
-    .map(({ halls: _halls, ...vendor }) => {
+    .map((vendor) => {
       vendor.items.sort((a, b) => a.name.localeCompare(b.name));
       return vendor;
     })
@@ -199,10 +197,6 @@ export async function searchVendorsByName(q: string, limit = 20): Promise<Vendor
 
 export function findTitle(term: string, city: string) {
   return `${term} at ${city} farmers' markets`;
-}
-
-export function findPageOrNull(slug: string) {
-  return findPageBySlug(slug);
 }
 
 export function pageIsAlcohol(category: string) {
