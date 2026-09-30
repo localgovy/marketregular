@@ -62,6 +62,19 @@ const nextConfig: NextConfig = {
       // crawler never sees the 404 Search Console picked up.
       { source: "/markets/gould-street-tmu", destination: "/markets", permanent: true },
       { source: "/markets/trinity-bellwoods-farmers-market", destination: "/markets", permanent: true },
+      { source: "/find/lemon-toronto", destination: "/find/citrus-toronto", permanent: true },
+      { source: "/find/lemons-toronto", destination: "/find/citrus-toronto", permanent: true },
+      { source: "/find/oranges-toronto", destination: "/find/citrus-toronto", permanent: true },
+      { source: "/find/mango-toronto", destination: "/find/tropical-fruit-toronto", permanent: true },
+      { source: "/find/mangoes-toronto", destination: "/find/tropical-fruit-toronto", permanent: true },
+      { source: "/find/pineapple-toronto", destination: "/find/tropical-fruit-toronto", permanent: true },
+      { source: "/find/pineapples-toronto", destination: "/find/tropical-fruit-toronto", permanent: true },
+      { source: "/find/bananas-toronto", destination: "/find/tropical-fruit-toronto", permanent: true },
+      { source: "/find/matcha-toronto", destination: "/find/tea-toronto", permanent: true },
+      { source: "/find/cheesecake-toronto", destination: "/find/cakes-toronto", permanent: true },
+      { source: "/find/corn-toronto", destination: "/find/sweet-corn-toronto", permanent: true },
+      { source: "/find/turnips-toronto", destination: "/find/turnip-toronto", permanent: true },
+      { source: "/find/celery-toronto", destination: "/find/vegetables-toronto", permanent: true },
       // Stall pages stay at /vendors/[slug]. The A–Z index cannibalized market
       // queries (title was too close to /markets). Query strings pass through.
       { source: "/vendors", destination: "/markets", permanent: true },

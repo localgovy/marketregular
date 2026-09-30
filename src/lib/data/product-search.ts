@@ -54,6 +54,26 @@ function asDays(value: unknown): number[] {
   return value.filter((day): day is number => typeof day === "number");
 }
 
+const FOOD_CATEGORIES = [
+  "bread-and-bakery",
+  "eggs",
+  "honey",
+  "cheese-and-dairy",
+  "maple",
+  "apples-and-fruit",
+  "vegetables",
+  "meat-and-turkey",
+  "pies-and-sweets",
+  "prepared-foods",
+  "preserves-and-sauces",
+  "coffee-and-tea",
+  "alcohol",
+  "seafood",
+  "flour-and-grains",
+  "nuts-and-snacks",
+  "beverages",
+] as const;
+
 async function menuRows(slugs: string[]): Promise<MenuRow[]> {
   const supabase = createPublicSupabaseClient();
   if (!supabase || slugs.length === 0) return [];
@@ -63,6 +83,7 @@ async function menuRows(slugs: string[]): Promise<MenuRow[]> {
       .from("vendor_menus")
       .select("name, product_category, product_slug, price_cents, vendor_id")
       .in("product_slug", slugs)
+      .in("product_category", [...FOOD_CATEGORIES])
       .order("id")
       .range(from, from + 999);
     if (error) throw new Error("Could not load this product");

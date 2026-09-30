@@ -45,6 +45,7 @@ export default async function FindProductPage({
   const now = new Date();
   const today = torontoWeekday(now);
   const vendors = sortFindVendors(await listFindVendors(page.matchSlugs, now), "next", today);
+  if (vendors.length < 5) notFound();
   const alcohol = pageIsAlcohol(page.category);
 
   return (
@@ -70,11 +71,7 @@ export default async function FindProductPage({
           Prices show when the vendor has added them.
         </p>
       )}
-      {vendors.length ? (
-        <SortableFindVendors vendors={vendors} today={today} />
-      ) : (
-        <p className="mt-6 text-base text-muted-foreground">No published stalls list this yet.</p>
-      )}
+      <SortableFindVendors vendors={vendors} today={today} />
     </div>
   );
 }
