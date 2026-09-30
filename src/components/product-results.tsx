@@ -6,7 +6,7 @@ import type { FindVendor } from "@/lib/data/product-search";
 import type { ProductHit, VendorHit } from "@/lib/product-hits";
 
 function Badge({ children }: { children: string }) {
-  return <p className="text-sm font-medium whitespace-nowrap text-ticket">{children}</p>;
+  return <p className="text-sm font-medium whitespace-nowrap">{children}</p>;
 }
 
 export function ClaimProfileLink({ slug }: { slug: string }) {
@@ -86,7 +86,7 @@ function ProductListing({
 }) {
   return (
     <li className="rounded-xl bg-card ring-1 ring-foreground/10">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-border px-4 py-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
         <Link href={`/vendors/${vendorSlug}`} className="min-w-0 text-base font-medium hover:underline">
           {vendorName}
         </Link>

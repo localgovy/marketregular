@@ -50,11 +50,22 @@ function comparePrice(a: number | null, b: number | null) {
   return a - b;
 }
 
+/** Priced rows first. Zero means both have a price, or neither does. */
+function pricedFirst(a: number | null | undefined, b: number | null | undefined) {
+  const aKnown = knownPrice(a) != null;
+  const bKnown = knownPrice(b) != null;
+  if (aKnown === bKnown) return 0;
+  return aKnown ? -1 : 1;
+}
+
 function sortItems<T extends { name: string; priceCents: number | null }>(items: T[], sort: FindSort | SearchSort) {
   return [...items].sort((a, b) => {
     if (sort === "price") {
       const price = comparePrice(knownPrice(a.priceCents), knownPrice(b.priceCents));
       if (price !== 0) return price;
+    } else {
+      const priced = pricedFirst(a.priceCents, b.priceCents);
+      if (priced !== 0) return priced;
     }
     return byName(a.name, b.name);
   });
@@ -101,8 +112,10 @@ export function sortFindVendors(vendors: FindVendor[], sort: FindSort, today: nu
       if (sort === "price") {
         const price = comparePrice(lowestPrice(a.items), lowestPrice(b.items));
         if (price !== 0) return price;
-      } else if (sort === "next") {
-        if (a.waitDays !== b.waitDays) return a.waitDays - b.waitDays;
+      } else {
+        const priced = pricedFirst(lowestPrice(a.items), lowestPrice(b.items));
+        if (priced !== 0) return priced;
+        if (sort === "next" && a.waitDays !== b.waitDays) return a.waitDays - b.waitDays;
       }
       return byName(a.name, b.name);
     });
@@ -112,6 +125,10 @@ export function sortProductHits(hits: ProductHit[], sort: SearchSort, today: num
   return hits
     .map((hit, index) => ({ hit, index }))
     .sort((a, b) => {
+      if (sort !== "price") {
+        const priced = pricedFirst(a.hit.priceCents, b.hit.priceCents);
+        if (priced !== 0) return priced;
+      }
       if (sort === "match") return a.index - b.index;
       if (sort === "price") {
         const price = comparePrice(knownPrice(a.hit.priceCents), knownPrice(b.hit.priceCents));
