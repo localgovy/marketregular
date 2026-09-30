@@ -10,9 +10,9 @@ import { EMPTY_SAVES } from "@/lib/saves";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = pageMeta({
-  title: "Saved markets, vendors, blog posts, and reviews",
+  title: "Saved markets, vendors, products, and notes",
   path: "/saved",
-  description: "Markets, vendors, blog posts, and reviews saved to your account.",
+  description: "Markets, vendors, products, blog posts, and reviews saved to your account.",
   index: false,
 });
 
@@ -34,12 +34,12 @@ export default async function SavedPage() {
       <h1>Saved</h1>
       {profile ? (
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
-          Markets, vendors, blog posts, and reviews on this account.
+          Markets, vendors, products, blog posts, and reviews on this account.
         </p>
       ) : (
         <>
           <p className="type-lede mt-2 mb-6 text-muted-foreground">
-            Sign in to keep markets and vendors on a list that follows you.
+            Sign in to keep markets, vendors, and products on a list that follows you.
           </p>
           {suggested.length ? (
             <ul className="mb-6 divide-y divide-border ring-1 ring-border">

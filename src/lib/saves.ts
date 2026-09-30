@@ -3,21 +3,32 @@ import {
   parseListingDetail,
   type SavedListing,
 } from "@/lib/listing-saves";
+import { parseProductDetail, type SavedProduct } from "@/lib/product-saves";
 
 export type { SavedListing, SavedListingVendor } from "@/lib/listing-saves";
+export type { SavedProduct } from "@/lib/product-saves";
 
-export type SaveKind = "market" | "vendor" | "blog" | "listing";
+export type SaveKind = "market" | "vendor" | "blog" | "listing" | "product";
 
 export type Saves = {
   markets: string[];
   vendors: string[];
   blogs: string[];
   listings: SavedListing[];
+  products: SavedProduct[];
 };
 
-export const EMPTY_SAVES: Saves = { markets: [], vendors: [], blogs: [], listings: [] };
+export const EMPTY_SAVES: Saves = {
+  markets: [],
+  vendors: [],
+  blogs: [],
+  listings: [],
+  products: [],
+};
 
-const SAVE_LIST: Record<Exclude<SaveKind, "listing">, keyof Omit<Saves, "listings">> = {
+type SlugSaveKind = Exclude<SaveKind, "listing" | "product">;
+
+const SAVE_LIST: Record<SlugSaveKind, "markets" | "vendors" | "blogs"> = {
   market: "markets",
   vendor: "vendors",
   blog: "blogs",
@@ -36,7 +47,19 @@ export function droppedSaveKeys() {
 }
 
 function cloneEmpty(): Saves {
-  return { markets: [], vendors: [], blogs: [], listings: [] };
+  return { markets: [], vendors: [], blogs: [], listings: [], products: [] };
+}
+
+function cloneProduct(product: SavedProduct): SavedProduct {
+  return {
+    ...product,
+    items: product.items.map((item) => ({ ...item })),
+    markets: product.markets.map((market) => ({
+      ...market,
+      days: [...market.days],
+      hours: market.hours.map((row) => ({ ...row })),
+    })),
+  };
 }
 
 function clone(saves: Saves): Saves {
@@ -45,6 +68,7 @@ function clone(saves: Saves): Saves {
     vendors: [...saves.vendors],
     blogs: [...saves.blogs],
     listings: saves.listings.map((row) => ({ ...row, vendors: [...row.vendors] })),
+    products: (saves.products ?? []).map(cloneProduct),
   };
 }
 
@@ -52,6 +76,22 @@ function slugs(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string")
     : [];
+}
+
+function products(value: unknown): SavedProduct[] {
+  if (!Array.isArray(value)) return [];
+  const out: SavedProduct[] = [];
+  const seen = new Set<string>();
+  for (const item of value) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as { slug?: unknown };
+    if (typeof row.slug !== "string") continue;
+    const parsed = parseProductDetail(row.slug, item);
+    if (!parsed || seen.has(parsed.slug)) continue;
+    seen.add(parsed.slug);
+    out.push(parsed);
+  }
+  return out;
 }
 
 function listings(value: unknown): SavedListing[] {
@@ -79,6 +119,7 @@ function parse(raw: string | null): Saves {
       vendors: slugs(parsed.vendors),
       blogs: slugs(parsed.blogs),
       listings: listings(parsed.listings),
+      products: products(parsed.products),
     };
   } catch {
     return clone(EMPTY_SAVES);
@@ -138,6 +179,7 @@ function withoutTombstones(saves: Saves): Saves {
     listings: saves.listings.filter(
       (row) => !tombstones.has(tombKey("listing", row.slug)) && !droppedBlogs.has(row.blog),
     ),
+    products: (saves.products ?? []).filter((row) => !tombstones.has(tombKey("product", row.slug))),
   };
 }
 
@@ -147,6 +189,7 @@ export function pruneTombstonesNotIn(server: Saves) {
     ...server.vendors.map((slug) => tombKey("vendor", slug)),
     ...server.blogs.map((slug) => tombKey("blog", slug)),
     ...server.listings.map((row) => tombKey("listing", row.slug)),
+    ...(server.products ?? []).map((row) => tombKey("product", row.slug)),
   ]);
   let changed = false;
   for (const key of [...tombstones]) {
@@ -210,10 +253,11 @@ export function subscribeSaves(listener: () => void) {
 
 export function isSaved(kind: SaveKind, slug: string, saves: Saves = snapshot) {
   if (kind === "listing") return saves.listings.some((row) => row.slug === slug);
+  if (kind === "product") return (saves.products ?? []).some((row) => row.slug === slug);
   return saves[SAVE_LIST[kind]].includes(slug);
 }
 
-export function toggleSave(kind: Exclude<SaveKind, "listing">, slug: string) {
+export function toggleSave(kind: SlugSaveKind, slug: string) {
   const key = SAVE_LIST[kind];
   const current = snapshot[key];
   const exists = current.includes(slug);
@@ -232,6 +276,24 @@ export function toggleSave(kind: Exclude<SaveKind, "listing">, slug: string) {
     return;
   }
   emit({ ...snapshot, [key]: nextList });
+}
+
+export function toggleProduct(product: SavedProduct) {
+  const current = snapshot.products ?? [];
+  const exists = current.some((row) => row.slug === product.slug);
+  if (exists) {
+    dropKey("product", product.slug);
+    emit({
+      ...snapshot,
+      products: current.filter((row) => row.slug !== product.slug),
+    });
+    return;
+  }
+  undropKey("product", product.slug);
+  emit({
+    ...snapshot,
+    products: [...current, product],
+  });
 }
 
 export function toggleListing(listing: SavedListing) {
@@ -262,6 +324,7 @@ export function replaceSaves(next: Saves) {
     vendors: [...new Set(next.vendors.filter((item) => typeof item === "string" && item))],
     blogs: [...new Set((next.blogs ?? []).filter((item) => typeof item === "string" && item))],
     listings: listings(next.listings ?? []),
+    products: products(next.products ?? []),
   });
 }
 
@@ -271,6 +334,7 @@ export function restoreSaves(before: Saves) {
   for (const slug of before.vendors) tombstones.delete(tombKey("vendor", slug));
   for (const slug of before.blogs) tombstones.delete(tombKey("blog", slug));
   for (const row of before.listings) tombstones.delete(tombKey("listing", row.slug));
+  for (const row of before.products ?? []) tombstones.delete(tombKey("product", row.slug));
   writeTombstones();
   emit(
     {
@@ -278,6 +342,7 @@ export function restoreSaves(before: Saves) {
       vendors: [...new Set(before.vendors.filter((item) => typeof item === "string" && item))],
       blogs: [...new Set((before.blogs ?? []).filter((item) => typeof item === "string" && item))],
       listings: listings(before.listings ?? []),
+      products: products(before.products ?? []),
     },
     false,
   );
@@ -289,7 +354,9 @@ export function sameSaves(left: Saves, right: Saves) {
     left.vendors.join("\0") === right.vendors.join("\0") &&
     left.blogs.join("\0") === right.blogs.join("\0") &&
     left.listings.map((row) => row.slug).join("\0") ===
-      right.listings.map((row) => row.slug).join("\0")
+      right.listings.map((row) => row.slug).join("\0") &&
+    (left.products ?? []).map((row) => row.slug).join("\0") ===
+      (right.products ?? []).map((row) => row.slug).join("\0")
   );
 }
 
@@ -298,11 +365,16 @@ export function unionSaves(left: Saves, right: Saves): Saves {
   for (const row of right.listings) {
     if (!listingMap.has(row.slug)) listingMap.set(row.slug, row);
   }
+  const productMap = new Map((left.products ?? []).map((row) => [row.slug, row]));
+  for (const row of right.products ?? []) {
+    if (!productMap.has(row.slug)) productMap.set(row.slug, row);
+  }
   return withoutTombstones({
     markets: [...new Set([...left.markets, ...right.markets])],
     vendors: [...new Set([...left.vendors, ...right.vendors])],
     blogs: [...new Set([...left.blogs, ...right.blogs])],
     listings: [...listingMap.values()],
+    products: [...productMap.values()],
   });
 }
 
@@ -319,7 +391,9 @@ export function savesFromRows(
   const vendors: string[] = [];
   const blogs: string[] = [];
   const listingsRows: SavedListing[] = [];
+  const productRows: SavedProduct[] = [];
   const listingSeen = new Set<string>();
+  const productSeen = new Set<string>();
   for (const row of rows ?? []) {
     if (row.kind === "market") markets.push(row.slug);
     else if (row.kind === "vendor") vendors.push(row.slug);
@@ -329,7 +403,12 @@ export function savesFromRows(
       if (!parsed || listingSeen.has(parsed.slug)) continue;
       listingSeen.add(parsed.slug);
       listingsRows.push(parsed);
+    } else if (row.kind === "product") {
+      const parsed = parseProductDetail(row.slug, row.detail);
+      if (!parsed || productSeen.has(parsed.slug)) continue;
+      productSeen.add(parsed.slug);
+      productRows.push(parsed);
     }
   }
-  return { markets, vendors, blogs, listings: listingsRows };
+  return { markets, vendors, blogs, listings: listingsRows, products: productRows };
 }

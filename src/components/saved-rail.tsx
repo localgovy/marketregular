@@ -7,6 +7,7 @@ import { AddressLink } from "@/components/address-link";
 import { HomePanel } from "@/components/home-panel";
 import { ListingScore } from "@/components/listing-score";
 import { SavedNotesSection, type SavedNote } from "@/components/saved-notes";
+import { SavedProductsSection } from "@/components/saved-products";
 import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
@@ -45,8 +46,11 @@ export function SavedRail() {
   });
   const vendorCount = saves.vendors.length;
   const blogCount = saves.blogs.length;
+  const productCount = saves.products?.length ?? 0;
 
-  if (!signedIn || !ready || (!savedMarkets.length && !vendorCount && !blogCount)) return null;
+  if (!signedIn || !ready || (!savedMarkets.length && !vendorCount && !blogCount && !productCount)) {
+    return null;
+  }
 
   return (
     <HomePanel
@@ -56,7 +60,7 @@ export function SavedRail() {
       icon={TicketMark}
       kicker="On your list"
       title="Saved"
-      how="Markets, vendors, blog posts, and reviews on this account."
+      how="Markets, vendors, products, blog posts, and reviews on this account."
       action={
         <Link href="/saved" className="hover:underline">
           Open list
@@ -106,6 +110,13 @@ export function SavedRail() {
             </Link>
           </p>
         ) : null}
+        {productCount ? (
+          <p className="text-sm text-muted-foreground">
+            <Link href="/saved" className="font-medium text-primary hover:underline">
+              {productCount === 1 ? "1 saved product" : `${productCount} saved products`}
+            </Link>
+          </p>
+        ) : null}
         {blogCount ? (
           <p className="text-sm text-muted-foreground">
             <Link href="/saved" className="font-medium text-primary hover:underline">
@@ -134,15 +145,20 @@ export function SavedDesk({
   const saves = useHydratedSaves(initialSaves);
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
-  const empty = !savedMarkets.length && !savedVendors.length && !saves.blogs.length && !saves.listings.length;
+  const empty =
+    !savedMarkets.length &&
+    !savedVendors.length &&
+    !saves.blogs.length &&
+    !saves.listings.length &&
+    !(saves.products ?? []).length;
 
   return (
     <div className="grid gap-10">
       {empty ? (
         <p className="text-muted-foreground">
           {followAccount
-            ? "Nothing saved yet. Open a market, a vendor, or a note and press Save. The list follows this account."
-            : "Sign in to save markets, vendors, blog posts, and reviews to this account."}
+            ? "Nothing saved yet. Open a market, a vendor, a product, or a note and press Save. The list follows this account."
+            : "Sign in to save markets, vendors, products, and notes to this account."}
         </p>
       ) : null}
       <section>
@@ -223,6 +239,12 @@ export function SavedDesk({
           <p className="mt-2 text-sm text-muted-foreground">No vendors on the list.</p>
         )}
       </section>
+      <SavedProductsSection
+        products={saves.products ?? []}
+        markets={markets}
+        vendors={vendors}
+        heading="h2"
+      />
       <SavedNotesSection
         notes={notes}
         slugs={saves.blogs}

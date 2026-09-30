@@ -1,7 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
+import { ProductSaveButton } from "@/components/save-button";
 import { formatPrice } from "@/lib/format";
+import { productFromInput } from "@/lib/product-saves";
 import { WEEKDAYS } from "@/lib/constants";
 import type { FindVendor } from "@/lib/data/product-search";
 import type { ProductHit, VendorHit } from "@/lib/product-hits";
@@ -92,9 +96,18 @@ function ProductListing({
   items: ListingItem[];
   markets: ListingMarket[];
 }) {
+  const product = productFromInput({
+    vendorSlug,
+    vendorName,
+    ratingAvg,
+    reviewCount,
+    items,
+    markets,
+  });
+
   return (
     <li className="rounded-xl bg-card ring-1 ring-foreground/10">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
         <p className="min-w-0">
           <Link href={`/vendors/${vendorSlug}`} className="text-base font-medium hover:underline">
             {vendorName}
@@ -106,7 +119,10 @@ function ProductListing({
             className="ml-2"
           />
         </p>
-        {badge ? <Badge>{badge}</Badge> : <span />}
+        <span className="flex shrink-0 items-center gap-2">
+          {badge ? <Badge>{badge}</Badge> : null}
+          {product ? <ProductSaveButton product={product} /> : null}
+        </span>
       </div>
       {items.length ? (
         <ul>

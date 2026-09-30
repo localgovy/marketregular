@@ -1,12 +1,14 @@
-import { persistListingSaves, persistSave } from "@/app/actions/saves";
+import { persistListingSaves, persistProductSave, persistSave } from "@/app/actions/saves";
 import { listingDetailJson, listingFromInput, type SavedListing } from "@/lib/listing-saves";
+import { productDetailJson, productFromInput, type SavedProduct } from "@/lib/product-saves";
 import { replaceSaves, type SaveKind } from "@/lib/saves";
 
 const KEY = "mr-pending-save";
 
 export type PendingSave =
-  | { kind: Exclude<SaveKind, "listing">; slug: string }
-  | { kind: "listing"; listing: SavedListing; listings?: SavedListing[] };
+  | { kind: Exclude<SaveKind, "listing" | "product">; slug: string }
+  | { kind: "listing"; listing: SavedListing; listings?: SavedListing[] }
+  | { kind: "product"; product: SavedProduct };
 
 export function stashPendingSave(save: PendingSave) {
   if (typeof window === "undefined") return;
@@ -35,6 +37,12 @@ function parsePending(raw: string): PendingSave | null {
           })
         : undefined;
       return listings?.length ? { kind: "listing", listing, listings } : { kind: "listing", listing };
+    }
+    if (parsed.kind === "product") {
+      const row = (parsed as { product?: unknown }).product;
+      const product = productFromInput(row);
+      if (!product) return null;
+      return { kind: "product", product };
     }
     if (parsed.kind === "market" || parsed.kind === "vendor" || parsed.kind === "blog") {
       const slug = (parsed as { slug?: unknown }).slug;
@@ -66,6 +74,11 @@ export async function flushPendingSave() {
   if (pending.kind === "listing") {
     const rows = pending.listings?.length ? pending.listings : [pending.listing];
     const canonical = await persistListingSaves(rows.map(listingDetailJson), true);
+    if (canonical) replaceSaves(canonical);
+    return;
+  }
+  if (pending.kind === "product") {
+    const canonical = await persistProductSave(productDetailJson(pending.product), true);
     if (canonical) replaceSaves(canonical);
     return;
   }

@@ -2,8 +2,9 @@
 
 import { useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { persistListingSaves, persistSave } from "@/app/actions/saves";
+import { persistListingSaves, persistProductSave, persistSave } from "@/app/actions/saves";
 import { listingDetailJson } from "@/lib/listing-saves";
+import { productDetailJson, productSaveLabel, type SavedProduct } from "@/lib/product-saves";
 import {
   EMPTY_SAVES,
   bootSaves,
@@ -12,6 +13,7 @@ import {
   subscribeSaves,
   toggleSave,
   toggleListing,
+  toggleProduct,
   replaceSaves,
   restoreSaves,
   type SaveKind,
@@ -58,6 +60,15 @@ function copySaves() {
     vendors: [...current.vendors],
     blogs: [...current.blogs],
     listings: current.listings.map((row) => ({ ...row, vendors: [...row.vendors] })),
+    products: (current.products ?? []).map((row) => ({
+      ...row,
+      items: row.items.map((item) => ({ ...item })),
+      markets: row.markets.map((market) => ({
+        ...market,
+        days: [...market.days],
+        hours: market.hours.map((hours) => ({ ...hours })),
+      })),
+    })),
   };
 }
 
@@ -69,7 +80,7 @@ export function SaveButton({
   idleLabel,
   savedLabel,
 }: {
-  kind: Exclude<SaveKind, "listing">;
+  kind: Exclude<SaveKind, "listing" | "product">;
   slug: string;
   name?: string;
   size?: "sm" | "md" | "lg";
@@ -188,6 +199,57 @@ export function ListingSaveButton({
     >
       {saved ? null : <span aria-hidden className="stall-chip-fill" />}
       <span className="relative">{saved ? savedLabel : idleLabel}</span>
+    </button>
+  );
+}
+
+export function ProductSaveButton({
+  product,
+  size = "sm",
+}: {
+  product: SavedProduct;
+  size?: "sm" | "md" | "lg";
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const saves = useSaves();
+  const saved = isSaved("product", product.slug, saves);
+  const label = productSaveLabel(product);
+
+  return (
+    <button
+      type="button"
+      aria-pressed={saved}
+      aria-label={saved ? `Remove ${label} from saved` : `Save ${label}`}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const next = `${window.location.pathname}${window.location.search}`;
+        const loginHref = `/login?next=${encodeURIComponent(next || "/account")}`;
+        if (!documentHasAuthCookie()) {
+          stashPendingSave({ kind: "product", product });
+          openSignInSlip({ next, name: label });
+          return;
+        }
+        const nextSaved = !saved;
+        const before = copySaves();
+        toggleProduct(product);
+        void persistProductSave(productDetailJson(product), nextSaved)
+          .then((canonical) => {
+            if (!canonical) {
+              restoreSaves(before);
+              if (!documentHasAuthCookie()) router.push(loginHref);
+              return;
+            }
+            replaceSaves(canonical);
+            refreshIfSavedPage(pathname, router);
+          })
+          .catch(() => restoreSaves(before));
+      }}
+      className={saveChipClass(size, saved)}
+    >
+      {saved ? null : <span aria-hidden className="stall-chip-fill" />}
+      <span className="relative">{saved ? "Saved" : "Save"}</span>
     </button>
   );
 }

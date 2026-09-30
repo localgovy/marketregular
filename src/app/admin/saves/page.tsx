@@ -2,6 +2,7 @@ import { requireAdmin } from "@/lib/admin";
 import { listBlogPosts } from "@/lib/blog";
 import { isSupabaseConfigured } from "@/lib/constants";
 import { displayListingHeading, parseListingDetail } from "@/lib/listing-saves";
+import { parseProductDetail } from "@/lib/product-saves";
 
 type SaveRow = {
   user_id: string;
@@ -47,6 +48,15 @@ function saveLabel(
   }
   if (row.kind === "blog") {
     return { key, kind: "Note", name: blogs.get(row.slug) ?? row.slug };
+  }
+  if (row.kind === "product") {
+    const product = parseProductDetail(row.slug, row.detail);
+    if (!product) return { key, kind: "Product", name: row.slug };
+    const items = product.items
+      .slice(0, 3)
+      .map((item) => item.name)
+      .join(", ");
+    return { key, kind: "Product", name: items ? `${product.vendorName} · ${items}` : product.vendorName };
   }
   const listing = parseListingDetail(row.slug, row.detail);
   if (!listing) return { key, kind: "Listing", name: row.slug };

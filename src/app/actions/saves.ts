@@ -8,12 +8,27 @@ import {
   validSaveSlug,
   type SavedListing,
 } from "@/lib/listing-saves";
+import { productDetailJson, productFromInput, type SavedProduct } from "@/lib/product-saves";
 import { savesFromRows, type SaveKind, type Saves } from "@/lib/saves";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-function validKind(kind: string): kind is Exclude<SaveKind, "listing"> {
+function validKind(kind: string): kind is Exclude<SaveKind, "listing" | "product"> {
   return kind === "market" || kind === "vendor" || kind === "blog";
+}
+
+async function publishedVendorSlugs(
+  supabase: NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>,
+  slugs: string[],
+) {
+  if (!slugs.length) return new Set<string>();
+  const { data, error } = await supabase
+    .from("vendors")
+    .select("slug")
+    .eq("status", "published")
+    .in("slug", slugs);
+  if (error) return null;
+  return new Set((data ?? []).map((row) => row.slug));
 }
 
 async function listSaves(
@@ -156,6 +171,43 @@ export async function persistListingSaves(
   return listSaves(supabase, user.id);
 }
 
+export async function persistProductSave(
+  input: unknown,
+  saved: boolean,
+): Promise<Saves | null> {
+  const product = productFromInput(input);
+  if (!product) return null;
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  if (saved) {
+    const published = await publishedVendorSlugs(supabase, [product.vendorSlug]);
+    if (!published?.has(product.vendorSlug)) return null;
+    const { error } = await supabase.from("saves").insert({
+      user_id: user.id,
+      kind: "product",
+      slug: product.slug,
+      detail: productDetailJson(product),
+    });
+    if (error && error.code !== "23505") return null;
+  } else {
+    const { error } = await supabase
+      .from("saves")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("kind", "product")
+      .eq("slug", product.slug);
+    if (error) return null;
+  }
+
+  touchSavedPaths();
+  return listSaves(supabase, user.id);
+}
+
 export async function persistListingSave(
   input: Omit<SavedListing, "slug">,
   saved: boolean,
@@ -186,6 +238,7 @@ const localSavesSchema = z.object({
       }),
     )
     .optional(),
+  products: z.array(z.unknown()).max(MAX_SAVES).optional(),
 });
 
 export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<Saves | null> {
@@ -204,7 +257,7 @@ export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<
     user_id: string;
     kind: SaveKind;
     slug: string;
-    detail?: ReturnType<typeof listingDetailJson>;
+    detail?: ReturnType<typeof listingDetailJson> | ReturnType<typeof productDetailJson>;
   }> = [];
   for (const slug of source.markets ?? []) {
     if (validSaveSlug(slug)) rows.push({ user_id: user.id, kind: "market", slug });
@@ -228,6 +281,25 @@ export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<
       detail: listingDetailJson(listing),
     });
   }
+  const productRows: SavedProduct[] = [];
+  for (const item of source.products ?? []) {
+    const product = productFromInput(item);
+    if (product) productRows.push(product);
+  }
+  const published = await publishedVendorSlugs(
+    supabase,
+    [...new Set(productRows.map((product) => product.vendorSlug))],
+  );
+  if (!published) return null;
+  for (const product of productRows) {
+    if (!published.has(product.vendorSlug)) continue;
+    rows.push({
+      user_id: user.id,
+      kind: "product",
+      slug: product.slug,
+      detail: productDetailJson(product),
+    });
+  }
   const existing = await listSaves(supabase, user.id);
   if (!existing) return null;
   const have = new Set([
@@ -235,6 +307,7 @@ export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<
     ...existing.vendors.map((slug) => `vendor:${slug}`),
     ...existing.blogs.map((slug) => `blog:${slug}`),
     ...existing.listings.map((row) => `listing:${row.slug}`),
+    ...(existing.products ?? []).map((row) => `product:${row.slug}`),
   ]);
   const skip = new Set(droppedParsed.success ? droppedParsed.data : []);
   const novel = rows.filter((row) => {

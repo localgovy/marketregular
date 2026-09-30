@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AddressLink } from "@/components/address-link";
 import { ListingScore } from "@/components/listing-score";
 import { SavedNotesSection, type SavedNote } from "@/components/saved-notes";
+import { SavedProductsSection } from "@/components/saved-products";
 import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
 import { useHydratedSaves } from "@/lib/use-hydrated-saves";
@@ -29,7 +30,11 @@ export function AccountSavedLists({
   const savedMarkets = markets.filter((market) => saves.markets.includes(market.slug));
   const savedVendors = vendors.filter((vendor) => saves.vendors.includes(vendor.slug));
   const empty =
-    !savedMarkets.length && !savedVendors.length && !saves.blogs.length && !saves.listings.length;
+    !savedMarkets.length &&
+    !savedVendors.length &&
+    !saves.blogs.length &&
+    !saves.listings.length &&
+    !(saves.products ?? []).length;
 
   if (empty) {
     return (
@@ -37,8 +42,12 @@ export function AccountSavedLists({
         Nothing on the list yet.{" "}
         <Link href="/markets" className="font-medium text-primary hover:underline">
           Open the directory
-        </Link>{" "}
-        or{" "}
+        </Link>
+        ,{" "}
+        <Link href="/products" className="font-medium text-primary hover:underline">
+          products
+        </Link>
+        , or{" "}
         <Link href="/blog" className="font-medium text-primary hover:underline">
           the blog
         </Link>{" "}
@@ -133,6 +142,12 @@ export function AccountSavedLists({
           <p className="mt-2 text-sm text-muted-foreground">No vendors on the list.</p>
         )}
       </section>
+      <SavedProductsSection
+        products={saves.products ?? []}
+        markets={markets}
+        vendors={vendors}
+        heading="h3"
+      />
       <SavedNotesSection
         notes={notes}
         slugs={saves.blogs}
