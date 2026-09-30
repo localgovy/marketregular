@@ -36,7 +36,7 @@ import { preferQueryNameHits, hallsHostingNameHits } from "@/lib/search-rank";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { withListingStats } from "@/lib/listing-score";
-import { vendorHasSubstance } from "@/lib/listing-substance";
+import { vendorHasSubstance, type ListingContactFields } from "@/lib/listing-substance";
 import { loadMyProfile } from "@/lib/my-profile";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -70,11 +70,11 @@ function publicDb() {
 
 const PAGE = 1000;
 
-/** claimed_by stays revoked from anon and authenticated. */
+/** claimed_by, phone, and email stay off anon list selects. Contact is get_listing_contact. */
 const MARKET_PUBLIC =
-  "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, phone, email, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
+  "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
 const VENDOR_PUBLIC =
-  "id, slug, name, about, website, phone, email, tags, status, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
+  "id, slug, name, about, website, tags, status, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
 /** `research_notes` is sourcing detail for the desk, not visitor copy — never selected here. */
 const SCHEDULE_PUBLIC =
   "id, market_id, weekday, opens_at, closes_at, season_start, season_end, notes";
@@ -699,6 +699,36 @@ export async function getBareMarketsDirectory(): Promise<BareMarketsDirectory> {
   if (!publicDb()) return buildBareMarketsDirectory();
   return loadCachedBareMarketsDirectory();
 }
+
+const EMPTY_CONTACT: ListingContactFields = { phone: null, email: null };
+
+/** One published listing's phone and email. Not used by directory lists. */
+export const getListingContact = cache(async function getListingContact(
+  kind: "market" | "vendor",
+  slug: string,
+): Promise<ListingContactFields> {
+  const supabase = publicDb();
+  if (!supabase) {
+    if (kind === "market") {
+      const market = localMarketBySlug(slug);
+      return { phone: market?.phone ?? null, email: market?.email ?? null };
+    }
+    const vendor = localVendorBySlug(slug);
+    return { phone: vendor?.phone ?? null, email: vendor?.email ?? null };
+  }
+  const { data, error } = await supabase.rpc("get_listing_contact", {
+    p_kind: kind,
+    p_slug: slug,
+  });
+  if (error || data == null) return EMPTY_CONTACT;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || typeof row !== "object") return EMPTY_CONTACT;
+  const record = row as { phone?: unknown; email?: unknown };
+  return {
+    phone: typeof record.phone === "string" ? record.phone : null,
+    email: typeof record.email === "string" ? record.email : null,
+  };
+});
 
 export const getMarketBySlug = cache(async function getMarketBySlug(
   slug: string,

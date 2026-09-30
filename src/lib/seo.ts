@@ -183,6 +183,7 @@ function listingImage(logoUrl: string | null) {
 export function marketJsonLd(
   market: Market & { schedules: MarketSchedule[] },
   now = new Date(),
+  contact?: { phone: string | null; email: string | null } | null,
 ) {
   const aggregateRating = aggregateRatingJsonLd(market);
   const url = absoluteUrl(`/markets/${market.slug}`);
@@ -194,8 +195,8 @@ export function marketJsonLd(
     description: market.about ?? undefined,
     url,
     image: listingImage(market.logo_url),
-    telephone: market.phone ?? undefined,
-    email: listingEmail(market.email) ?? undefined,
+    telephone: contact?.phone ?? undefined,
+    email: listingEmail(contact?.email) ?? undefined,
     sameAs: sameAsLinks(market.website, market.instagram, market.tiktok, market.facebook),
     address: postalAddress(market),
     ...geoFields(market.lat, market.lng),
@@ -250,6 +251,7 @@ function stallMenu(url: string, menus: MenuItem[]) {
 
 export function vendorJsonLd(
   vendor: Vendor & { menus?: MenuItem[]; markets?: VendorHallForJsonLd[] },
+  contact?: { phone: string | null; email: string | null } | null,
 ) {
   const aggregateRating = aggregateRatingJsonLd(vendor);
   const url = absoluteUrl(`/vendors/${vendor.slug}`);
@@ -266,8 +268,8 @@ export function vendorJsonLd(
     description: vendor.about ?? undefined,
     url,
     image: listingImage(vendor.logo_url),
-    telephone: vendor.phone ?? undefined,
-    email: listingEmail(vendor.email) ?? undefined,
+    telephone: contact?.phone ?? undefined,
+    email: listingEmail(contact?.email) ?? undefined,
     sameAs: sameAsLinks(vendor.website, vendor.instagram, vendor.tiktok, vendor.facebook),
     areaServed: { "@type": "AdministrativeArea", name: LAUNCH_REGION_NAME },
     ...(halls.length === 1 ? { containedInPlace: hallPlace(halls[0]) } : {}),
