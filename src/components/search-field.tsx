@@ -15,7 +15,7 @@ export type SearchFieldSize = keyof typeof sizes;
 
 type SearchFieldProps = Omit<
   ComponentProps<typeof Input>,
-  "onChange" | "value" | "defaultValue" | "type"
+  "onChange" | "value" | "defaultValue" | "type" | "size"
 > & {
   value?: string;
   defaultValue?: string;
