@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { AddressLink } from "@/components/address-link";
 import { BackButton } from "@/components/back-button";
 import { ClaimForm } from "@/components/claim-form";
 import { JsonLd } from "@/components/json-ld";
@@ -17,14 +15,14 @@ import { TagList } from "@/components/tag-list";
 import { getListingContact, getVendorBySlug } from "@/lib/data/catalog";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
-import { Hours } from "@/components/hours";
+import { VendorMarketList } from "@/components/vendor-market-list";
 import { VendorNextLine } from "@/components/live-open";
 import { serverNowMs } from "@/lib/clock";
-import { stallNextDate } from "@/lib/day-plan";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
 import { hallDayHours, sessionOnWeekday } from "@/lib/schedule";
+import { rankVendorMarkets } from "@/lib/vendor-markets";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -82,12 +80,20 @@ export default async function VendorPage({
 
   const nowMs = serverNowMs();
   const now = new Date(nowMs);
-  const ranked = [...vendor.markets].sort((a, b) =>
-    stallNextDate(a, a.schedules, a.days, now).localeCompare(
-      stallNextDate(b, b.schedules, b.days, now),
-    ),
-  );
+  const ranked = rankVendorMarkets(vendor.markets, now);
   const homeMarket = ranked[0];
+  const marketRows = ranked.map((market) => ({
+    id: market.id,
+    slug: market.slug,
+    name: market.name,
+    address: market.address,
+    city: market.city,
+    province: market.province,
+    lat: market.lat,
+    lng: market.lng,
+    stall: market.stall,
+    hours: hallDayHours(market.days, market.schedules, market.province, now),
+  }));
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
@@ -119,47 +125,10 @@ export default async function VendorPage({
       />
       <TagList className="mt-4" tags={sortTagsForDisplay(vendor.tags)} />
 
-      {ranked.length ? (
+      {marketRows.length ? (
         <section className="mt-6">
           <h2>Markets</h2>
-          <ul className="mt-3 divide-y divide-border border-y border-border">
-            {ranked.map((market) => {
-              const rows = hallDayHours(market.days, market.schedules, market.province, now);
-              return (
-                <li key={market.id} className="flex items-start justify-between gap-2 py-2">
-                  <div className="min-w-0">
-                    <Link href={`/markets/${market.slug}`} className="font-medium hover:underline">
-                      {market.name}
-                    </Link>
-                    <p className="text-sm text-muted-foreground">
-                      <AddressLink
-                        address={market.address}
-                        city={market.city}
-                        province={market.province}
-                        name={market.name}
-                        lat={market.lat}
-                        lng={market.lng}
-                      />
-                      {market.stall ? ` · ${market.stall}` : ""}
-                    </p>
-                    {rows.length ? (
-                      <p className="mt-0.5 grid grid-cols-[auto_auto] justify-start gap-x-2 gap-y-0.5">
-                        {rows.map((row) => (
-                          <span key={`${row.day}-${row.hours}`} className="contents">
-                            <span className="text-sm text-muted-foreground">{row.day}</span>
-                            <Hours value={row.hours} className="text-muted-foreground" />
-                          </span>
-                        ))}
-                      </p>
-                    ) : null}
-                  </div>
-                  <span className="flex shrink-0 items-center">
-                    <SaveButton kind="market" slug={market.slug} name={market.name} />
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+          <VendorMarketList markets={marketRows} />
         </section>
       ) : null}
 
