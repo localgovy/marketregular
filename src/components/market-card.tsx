@@ -12,7 +12,7 @@ import { hallHours, hoursOnIso } from "@/lib/day-plan";
 import type { DirectoryMarketCard, DirectorySchedule } from "@/lib/directory-page";
 import { sortTagsForDisplay } from "@/lib/find-paths";
 import { isoForWeekday } from "@/lib/landing";
-import { nextOpenLabel, nextOpenSlot, onlyWeekdayLabel } from "@/lib/schedule";
+import { formatHours, nextOpenDateLabel, nextOpenLabel, nextOpenSlot, onlyWeekdayLabel } from "@/lib/schedule";
 
 export function MarketCard({
   market,
@@ -44,7 +44,9 @@ export function MarketCard({
         ? nextOpenLabel(rows, market.province, clock)
         : null;
   const hours = sessionHours || hallHours(market, rows, iso, clock);
-  const onlyDay = onlyWeekdayLabel(rows);
+  const farDate = weekday == null && slot && slot.offset >= 7 ? nextOpenDateLabel(market.province, clock, slot) : null;
+  const range = farDate && slot ? formatHours(slot.opensAt, slot.closesAt) : hours;
+  const onlyDay = farDate ? null : onlyWeekdayLabel(rows);
   const dayName = onlyDay?.replace(/ only$/, "") ?? null;
   const whenRepeatsDay = Boolean(
     dayName && when && when !== "Open now" && when.startsWith(`${dayName} `),
@@ -77,15 +79,16 @@ export function MarketCard({
             <p className="line-clamp-3 text-sm text-muted-foreground">
               {market.about}
             </p>
-            {(openNow || (when && when !== "Open now") || hours || onlyDay) ? (
+            {(openNow || (when && when !== "Open now") || range || onlyDay || farDate) ? (
             <p className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm font-medium text-primary">
               {openNow ? <NowLabel>Open now</NowLabel> : null}
-              {(openNow || whenRepeatsDay) && hours ? (
-                <Hours value={hours} className="text-primary" />
+              {(openNow || whenRepeatsDay || farDate) && range ? (
+                <Hours value={range} className="text-primary" />
               ) : null}
-              {!openNow && when && when !== "Open now" && !whenRepeatsDay ? (
+              {!openNow && when && when !== "Open now" && !whenRepeatsDay && !farDate ? (
                 <span>{when}</span>
               ) : null}
+              {farDate ? <span>{farDate}</span> : null}
               {onlyDay ? <span>{onlyDay}</span> : null}
             </p>
             ) : null}

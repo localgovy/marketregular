@@ -4,7 +4,6 @@ import { LAUNCH_CITY, LAUNCH_TZ } from "@/lib/launch";
 import {
   civilDateAtOffset,
   formatHours,
-  formatTime,
   inSeason,
   nextOpenSlot,
   parseHm,
@@ -148,9 +147,9 @@ export function marketNextOpenRow(
     market,
     hours: session
       ? formatHours(session.opens_at, session.closes_at)
-      : formatTime(slot.opensAt),
+      : formatHours(slot.opensAt, slot.closesAt),
     opensMinutes: session ? parseHm(session.opens_at) : parseHm(slot.opensAt),
-    closesMinutes: session ? parseHm(session.closes_at) : parseHm(slot.opensAt),
+    closesMinutes: session ? parseHm(session.closes_at) : parseHm(slot.closesAt),
     notes: session?.notes ?? null,
     openNow: slot.waitMinutes === 0,
     stallCount,

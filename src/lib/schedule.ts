@@ -209,8 +209,10 @@ export function formatMonthDay(value: string) {
 export function formatSeasonRange(start: string | null, end: string | null) {
   const from = seasonBound(start);
   const to = seasonBound(end);
-  if (!from || !to) return "Year-round";
-  return `${formatMonthDay(from)} to ${formatMonthDay(to)}`;
+  if (from && to) return `${formatMonthDay(from)} to ${formatMonthDay(to)}`;
+  if (from) return `From ${formatMonthDay(from)}`;
+  if (to) return `Until ${formatMonthDay(to)}`;
+  return "Year-round";
 }
 
 /** When every session is the same weekday: "Saturday only". */
@@ -245,6 +247,7 @@ export type NextOpenSlot = {
   offset: number;
   weekday: number;
   opensAt: string;
+  closesAt: string;
 };
 
 const NEXT_OPEN_HORIZON = 366;
@@ -279,7 +282,13 @@ export function nextOpenSlot(
         waitMinutes = offset * 24 * 60 - minutes + opens;
       }
       if (!best || waitMinutes < best.waitMinutes) {
-        best = { waitMinutes, offset, weekday: day, opensAt: row.opens_at };
+        best = {
+          waitMinutes,
+          offset,
+          weekday: day,
+          opensAt: row.opens_at,
+          closesAt: row.closes_at,
+        };
       }
     }
     if (best) return best;
@@ -287,13 +296,9 @@ export function nextOpenSlot(
   return null;
 }
 
-export function nextOpenLabel(schedules: ScheduleRow[], province: string, now = new Date()) {
-  const slot = nextOpenSlot(schedules, province, now);
-  if (!slot) return "See schedule";
-  if (slot.waitMinutes === 0) return "Open now";
-  if (slot.offset === 0) return `Later today ${formatTime(slot.opensAt)}`;
-  if (slot.offset === 1) return `Tomorrow ${formatTime(slot.opensAt)}`;
-  if (slot.offset < 7) return `${WEEKDAYS[slot.weekday]} ${formatTime(slot.opensAt)}`;
+/** Calendar date for a session a week or more away. Null when the weekday label is enough. */
+export function nextOpenDateLabel(province: string, now: Date, slot: NextOpenSlot) {
+  if (slot.offset < 7) return null;
   const tz = provinceTz(province);
   const when = civilDateAtOffset(now, slot.offset, tz);
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -310,7 +315,18 @@ export function nextOpenLabel(schedules: ScheduleRow[], province: string, now = 
     year: "numeric",
   }).format(now);
   const date = formatMonthDay(`${month}-${day}`);
-  const clock = formatTime(slot.opensAt);
-  if (year && year !== nowYear) return `${date} ${year} ${clock}`;
-  return `${date} ${clock}`;
+  if (year && year !== nowYear) return `${date} ${year}`;
+  return date;
+}
+
+export function nextOpenLabel(schedules: ScheduleRow[], province: string, now = new Date()) {
+  const slot = nextOpenSlot(schedules, province, now);
+  if (!slot) return "See schedule";
+  if (slot.waitMinutes === 0) return "Open now";
+  if (slot.offset === 0) return `Later today ${formatTime(slot.opensAt)}`;
+  if (slot.offset === 1) return `Tomorrow ${formatTime(slot.opensAt)}`;
+  if (slot.offset < 7) return `${WEEKDAYS[slot.weekday]} ${formatTime(slot.opensAt)}`;
+  const date = nextOpenDateLabel(province, now, slot);
+  const hours = formatHours(slot.opensAt, slot.closesAt);
+  return `${date}, ${hours}`;
 }
