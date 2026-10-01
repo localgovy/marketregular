@@ -53,7 +53,7 @@ export default async function FeedPage() {
           }))}
           markets={markets.map(toGeoMarket)}
           openSlugs={openNow.map((market) => market.slug)}
-          initialMarketId={tape.length ? initialMarketId : undefined}
+          initialMarketId={initialMarketId}
         />
       </Suspense>
     </div>

@@ -7,7 +7,6 @@ import {
   STUDIO_URL,
 } from "@/lib/constants";
 import { listMarkets, listStalls, listVendors } from "@/lib/data/catalog";
-import { LAUNCH_CITY } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 import type { Market, StallRef, Vendor } from "@/types/database";
 
@@ -68,9 +67,8 @@ export default async function ContactPage() {
       <section>
         <h2>Claim a listing</h2>
         <p className="mt-2 mb-6 text-base text-muted-foreground">
-          If you run/work for a {LAUNCH_CITY} market or vendor, send in a claim today so we can
-          make sure your profile is accurate. Also accepting select markets and vendors for pickup
-          and pre-order.
+          If you run or work for a market or vendor, send a claim so the hours, the stall list,
+          and the contact details stay accurate.
         </p>
         <ContactClaim markets={listings.markets} vendors={listings.vendors} />
       </section>

@@ -33,6 +33,22 @@ export function useSaves() {
   return useSyncExternalStore(subscribeBootedSaves, getSaves, () => EMPTY_SAVES);
 }
 
+/** False during server render so a saved item is not first painted as unsaved. */
+function useSaveReady() {
+  return useSyncExternalStore(
+    (listener) => {
+      bootSaves();
+      return subscribeSaves(listener);
+    },
+    () => true,
+    () => false,
+  );
+}
+
+function SavePlaceholder({ size }: { size: "sm" | "md" | "lg" }) {
+  return <span className={saveChipClass(size, false)} aria-hidden />;
+}
+
 function saveChipClass(size: "sm" | "md" | "lg", saved: boolean) {
   return cn(
     "relative inline-flex shrink-0 cursor-pointer items-center justify-center whitespace-nowrap font-medium outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
@@ -89,8 +105,10 @@ export function SaveButton({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const ready = useSaveReady();
   const saves = useSaves();
   const saved = isSaved(kind, slug, saves);
+  if (!ready) return <SavePlaceholder size={size} />;
   const label =
     name ??
     (kind === "market" ? "this market" : kind === "vendor" ? "this vendor" : "this note");
@@ -154,7 +172,9 @@ export function ListingSaveButton({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const ready = useSaveReady();
   const saves = useSaves();
+  if (!ready) return <SavePlaceholder size={size} />;
   const group = listings?.length ? listings : [listing];
   const saved = group.every((row) => isSaved("listing", row.slug, saves));
   const label = name ?? listing.marketName;
@@ -212,7 +232,9 @@ export function ProductSaveButton({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const ready = useSaveReady();
   const saves = useSaves();
+  if (!ready) return <SavePlaceholder size={size} />;
   const saved = isSaved("product", product.slug, saves);
   const label = productSaveLabel(product);
 

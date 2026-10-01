@@ -17,10 +17,7 @@ export default function AboutPage() {
       <h1>About</h1>
       <p className="type-lede mt-2 mb-8">
         {SITE_NAME} is the totally free all-in-one guide to shop local markets in {LAUNCH_CITY}.
-        Find a market, discover their vendors, and either order for pickup or save to your
-        profile so you can start planning your trip. We make it so that you can finally
-        purchase fresh, local food without scouring the internet, all while supporting your
-        fellow Canadians.
+        Find a market, see who is selling, and save the ones you actually go to.
       </p>
 
       <section>
@@ -39,11 +36,8 @@ export default function AboutPage() {
       <section className="mt-10">
         <h2>Why {SITE_NAME}?</h2>
         <p className="mt-2 text-base leading-relaxed">
-          There&apos;s no better time to shop local, we know that. With a massive database of all
-          markets in {LAUNCH_CITY}, we offer discovery and information no one else can. We are
-          also partnering up with dozens of markets all over {LAUNCH_CITY} to bring Torontonians
-          pickup, offering the most convenient way to shop fresh and local while putting cash back
-          in the pockets of local farms and businesses.
+          The directory lists the markets, the stalls, and the hours, so you can see what is
+          selling and go. That keeps the money with the farms and businesses at the market.
         </p>
         <p className="mt-4 text-base">
           <Link href="/markets" className="font-medium hover:underline">

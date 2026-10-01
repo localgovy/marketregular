@@ -10,6 +10,7 @@ type Hit = { href: string; name: string };
 
 export function NotFoundSearch() {
   const [q, setQ] = useState("");
+  const [settled, setSettled] = useState("");
   const [markets, setMarkets] = useState<Hit[]>([]);
   const [vendors, setVendors] = useState<Hit[]>([]);
 
@@ -18,11 +19,19 @@ export function NotFoundSearch() {
     if (query.length < 2) return;
     let cancelled = false;
     const id = window.setTimeout(() => {
-      void suggestListings(query).then((next) => {
-        if (cancelled) return;
-        setMarkets(next.markets);
-        setVendors(next.vendors);
-      });
+      void suggestListings(query)
+        .then((next) => {
+          if (cancelled) return;
+          setMarkets(next.markets);
+          setVendors(next.vendors);
+          setSettled(query);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setMarkets([]);
+          setVendors([]);
+          setSettled(query);
+        });
     }, 180);
     return () => {
       cancelled = true;
@@ -30,9 +39,11 @@ export function NotFoundSearch() {
     };
   }, [q]);
 
-  const searching = q.trim().length >= 2;
-  const shownMarkets = searching ? markets : [];
-  const shownVendors = searching ? vendors : [];
+  const query = q.trim();
+  const searching = query.length >= 2;
+  const pending = searching && settled !== query;
+  const shownMarkets = searching && !pending ? markets : [];
+  const shownVendors = searching && !pending ? vendors : [];
 
   return (
     <div className="mt-8">
@@ -80,8 +91,10 @@ export function NotFoundSearch() {
             </section>
           ) : null}
         </div>
+      ) : pending ? (
+        <p className="mt-3 text-sm text-muted-foreground">Searching.</p>
       ) : searching ? (
-        <p className="mt-3 text-sm text-muted-foreground">No matches yet. Keep typing.</p>
+        <p className="mt-3 text-sm text-muted-foreground">No matches.</p>
       ) : null}
     </div>
   );

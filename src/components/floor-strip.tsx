@@ -68,7 +68,7 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
         </ul>
       ) : (
         <p className="border-t border-border px-4 py-3 text-sm text-muted-foreground">
-          No Toronto market is open this minute.
+          No market is open this minute.
         </p>
       )}
     </nav>

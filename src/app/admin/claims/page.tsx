@@ -1,6 +1,6 @@
 import { decideClaim } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
-import { requireAdmin } from "@/lib/admin";
+import { fetchAllRows, requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/constants";
 import type { ClaimRequest } from "@/types/database";
 
@@ -8,12 +8,14 @@ export default async function ClaimsPage() {
   if (!isSupabaseConfigured()) return null;
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
-  const { data } = await supabase
-    .from("claim_requests")
-    .select("*, profiles(display_name)")
-    .order("created_at", { ascending: false });
-
-  const claims = (data ?? []) as Array<ClaimRequest & { profiles?: { display_name: string | null } }>;
+  const claims = await fetchAllRows<ClaimRequest & { profiles?: { display_name: string | null } }>(
+    (from, to) =>
+      supabase
+        .from("claim_requests")
+        .select("*, profiles(display_name)")
+        .order("created_at", { ascending: false })
+        .range(from, to),
+  );
 
   return (
     <ul className="grid gap-4">

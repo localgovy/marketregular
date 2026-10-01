@@ -73,8 +73,7 @@ export function HomeMosaic({
             <span className="flex flex-col gap-y-1 sm:block sm:text-pretty">
               <span className="sm:after:content-['_']">Made by Canadians,</span>
               <span className="sm:after:content-['_']">for Canadians,</span>
-              <span>to shop Canadian. </span>
-              <span>Pickup and Pre-Order now available at select markets and vendors.</span>
+              <span>to shop Canadian.</span>
             </span>
           </span>
         </p>

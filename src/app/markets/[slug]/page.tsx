@@ -25,6 +25,7 @@ import { listingNote, listingQualifier, seasonAliasTarget, seasonPlace, siblingL
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle, directionsHref } from "@/lib/listing-copy";
+import { sessionToday } from "@/lib/schedule";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { serverNowMs } from "@/lib/clock";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
@@ -75,6 +76,8 @@ export default async function MarketPage({
 
   const nowMs = serverNowMs();
   const now = new Date(nowMs);
+  const todaySession = sessionToday(market.schedules, market.province, now);
+  const todayStill = todaySession === "open" || todaySession === "later";
   const contact = await getListingContact("market", market.slug);
   const directions = directionsHref(market.lat, market.lng);
   const avgRated = market.feed.filter((item) => item.rating != null);
@@ -284,9 +287,15 @@ export default async function MarketPage({
             <MarketVendors
               vendors={market.vendors}
               todayWeekday={weekdayInToronto(now)}
+              todayStill={todayStill}
             />
           </div>
-        ) : null}
+        ) : (
+          <p className="text-base text-muted-foreground lg:col-span-2">
+            This market does not publish its stall list on this page. Search for a vendor by name
+            to open their stall.
+          </p>
+        )}
         <div className="lg:col-span-2">
           <ListingAlsoLinks
             heading="Other markets like this one"

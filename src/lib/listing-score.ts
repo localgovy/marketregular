@@ -36,7 +36,7 @@ export function formatReviewCountShort(count: number) {
 }
 
 export function listingScoreLabel(score: ListingScoreValue) {
-  const noun = score.count === 1 ? "review" : "reviews";
+  const noun = score.count === 1 ? "rating" : "ratings";
   return `${formatRatingAvg(score.avg)} out of 5 from ${formatReviewCount(score.count)} ${noun}`;
 }
 

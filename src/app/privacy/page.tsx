@@ -56,8 +56,9 @@ export default function PrivacyPage() {
           address of the request only to slow repeat sends.
         </p>
         <p className={body}>
-          Nearby markets can use your location if you allow it in the browser. Those coordinates
-          stay on your device. We do not send them to our servers.
+          Nearby markets can use your location if you allow it in the browser. Near me sends those
+          coordinates with that search so the list can be sorted by distance, and they show in the
+          page address. We do not save them on your account.
         </p>
       </section>
 

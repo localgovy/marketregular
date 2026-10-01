@@ -161,6 +161,30 @@ export function isOpenOnWeekday(
   );
 }
 
+/** Today's session at this hall: still ahead, underway, already over, or not scheduled. */
+export function sessionToday(
+  schedules: ScheduleRow[],
+  province: string,
+  now = new Date(),
+): "open" | "later" | "done" | "off" {
+  const tz = provinceTz(province);
+  const { weekday, minutes } = zonedParts(now, tz);
+  let later = false;
+  let done = false;
+  for (const row of schedules) {
+    if (Number(row.weekday) !== weekday) continue;
+    if (!inSeason(now, row.season_start, row.season_end, tz)) continue;
+    const opens = parseHm(row.opens_at);
+    const closes = parseHm(row.closes_at);
+    if (minutes > closes) done = true;
+    else if (minutes >= opens) return "open";
+    else later = true;
+  }
+  if (later) return "later";
+  if (done) return "done";
+  return "off";
+}
+
 const MONTHS_SHORT = [
   "Jan",
   "Feb",
@@ -274,10 +298,19 @@ export function nextOpenLabel(schedules: ScheduleRow[], province: string, now = 
   const when = civilDateAtOffset(now, slot.offset, tz);
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
+    year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).formatToParts(when);
   const month = parts.find((p) => p.type === "month")?.value ?? "01";
   const day = parts.find((p) => p.type === "day")?.value ?? "01";
-  return `${formatMonthDay(`${month}-${day}`)} ${formatTime(slot.opensAt)}`;
+  const year = parts.find((p) => p.type === "year")?.value;
+  const nowYear = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+  }).format(now);
+  const date = formatMonthDay(`${month}-${day}`);
+  const clock = formatTime(slot.opensAt);
+  if (year && year !== nowYear) return `${date} ${year} ${clock}`;
+  return `${date} ${clock}`;
 }

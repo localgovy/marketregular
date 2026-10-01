@@ -110,7 +110,7 @@ export default async function HomePage() {
             tone="directory"
             icon={RulesMark}
             kicker="A short list"
-            title="Toronto markets"
+            title="Markets"
             how="Open ones first. Tap a name, then save the ones you actually go to."
             action={
               <span className="flex flex-wrap gap-x-4">

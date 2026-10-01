@@ -37,7 +37,7 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
         </ul>
       ) : (
         <p className="text-sm leading-relaxed text-muted-foreground">
-          No vendors are on the calendar for today. See this week&apos;s markets above.
+          No vendors are still selling today. See this week&apos;s markets above.
         </p>
       )}
     </HomePanel>
@@ -53,7 +53,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
       icon={TallyMark}
       kicker="This week's vendors"
       title="Top 5 this week"
-      how="The five vendors in the Toronto market game this week. Tap a name to learn more about them."
+      how="Five stalls with the most going on this week. Tap a name to learn more."
     >
       {picks.length ? (
         <ol className="ring-1 ring-border">

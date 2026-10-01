@@ -38,6 +38,7 @@ export function DirectoryResults({
   const [schedulesByMarket, setSchedulesByMarket] = useState(initialSchedules ?? {});
   const marketsBusy = useRef(false);
   const vendorsBusy = useRef(false);
+  const [moreError, setMoreError] = useState<string | null>(null);
 
   async function moreMarkets() {
     if (marketsBusy.current || markets.length >= marketTotal) return;
@@ -54,8 +55,9 @@ export function DirectoryResults({
         return [...prev, ...next.markets.filter((market) => !seen.has(market.id))];
       });
       setSchedulesByMarket((prev) => ({ ...prev, ...next.schedulesByMarket }));
+      setMoreError(null);
     } catch {
-      // Keep the current page; the next click retries.
+      setMoreError("Couldn't load more markets. Try again.");
     } finally {
       marketsBusy.current = false;
     }
@@ -75,8 +77,9 @@ export function DirectoryResults({
         const seen = new Set(prev.map((vendor) => vendor.id));
         return [...prev, ...next.vendors.filter((vendor) => !seen.has(vendor.id))];
       });
+      setMoreError(null);
     } catch {
-      // Keep the current page; the next click retries.
+      setMoreError("Couldn't load more vendors. Try again.");
     } finally {
       vendorsBusy.current = false;
     }
@@ -135,6 +138,7 @@ export function DirectoryResults({
           />
         </section>
       </div>
+      {moreError ? <p className="mt-4 text-base text-muted-foreground">{moreError}</p> : null}
       <BackToTop />
     </>
   );

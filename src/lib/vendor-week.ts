@@ -91,7 +91,10 @@ export function vendorsSellingToday(
     const row = scheduleForDay(scheduleMap.get(market.id) ?? [], weekday, today, tz);
     if (!row) continue;
     const vendor = byId.get(stall.id);
-    const open = minutes >= parseHm(row.opens_at) && minutes <= parseHm(row.closes_at);
+    const opens = parseHm(row.opens_at);
+    const closes = parseHm(row.closes_at);
+    if (minutes > closes) continue;
+    const open = minutes >= opens && minutes <= closes;
     rows.push({
       vendorName: stall.name,
       vendorSlug: stall.slug,
@@ -129,7 +132,7 @@ export function topVendorsThisWeek(
   limit = 5,
 ): VendorWeekPick[] {
   const tz = LAUNCH_TZ;
-  const { weekday } = zonedParts(now, tz);
+  const { weekday, minutes } = zonedParts(now, tz);
   const byId = new Map(vendors.map((v) => [v.id, v]));
   const weekMs = 7 * 24 * 3600 * 1000;
   const mentionCounts = new Map<string, number>();
@@ -160,7 +163,9 @@ export function topVendorsThisWeek(
       if (!stall.days.includes(day)) continue;
       const market = markets.find((m) => m.id === stall.market_id);
       if (!market) continue;
-      if (!scheduleForDay(scheduleMap.get(market.id) ?? [], day, on, tz)) continue;
+      const schedule = scheduleForDay(scheduleMap.get(market.id) ?? [], day, on, tz);
+      if (!schedule) continue;
+      if (offset === 0 && minutes > parseHm(schedule.closes_at)) continue;
       const vendor = byId.get(stall.id);
       const current = acc.get(stall.id) ?? {
         name: vendor?.name ?? stall.name,
@@ -233,7 +238,7 @@ export function savedVendorsThisWeek(
   if (!savedSlugs.length) return [];
   const saved = new Set(savedSlugs);
   const tz = LAUNCH_TZ;
-  const { weekday } = zonedParts(now, tz);
+  const { weekday, minutes } = zonedParts(now, tz);
   const byId = new Map(vendors.map((vendor) => [vendor.id, vendor]));
   const acc = new Map<string, VendorWeekPick>();
 
@@ -248,7 +253,9 @@ export function savedVendorsThisWeek(
       if (!stall.days.includes(day)) continue;
       const market = markets.find((row) => row.id === stall.market_id);
       if (!market) continue;
-      if (!scheduleForDay(scheduleMap.get(market.id) ?? [], day, on, tz)) continue;
+      const schedule = scheduleForDay(scheduleMap.get(market.id) ?? [], day, on, tz);
+      if (!schedule) continue;
+      if (offset === 0 && minutes > parseHm(schedule.closes_at)) continue;
       const current = acc.get(slug) ?? {
         vendorName: vendor?.name ?? stall.name,
         vendorSlug: slug,

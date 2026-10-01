@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SavedDesk } from "@/components/saved-rail";
 import { listBlogPosts } from "@/lib/blog";
-import { loadMySaves } from "@/lib/data/account";
+import { readMySaves } from "@/lib/data/account";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
@@ -23,7 +23,8 @@ export default async function SavedPage() {
     listVendors(),
     getCurrentProfile(),
   ]);
-  const saves = profile ? await loadMySaves() : EMPTY_SAVES;
+  const loaded = profile ? await readMySaves() : { saves: EMPTY_SAVES, failed: false };
+  const saves = loaded.saves;
   const suggested = [...markets]
     .filter((market) => market.city.trim().toLowerCase() === LAUNCH_CITY.toLowerCase())
     .sort((a, b) => b.review_count - a.review_count || a.name.localeCompare(b.name))
@@ -45,7 +46,9 @@ export default async function SavedPage() {
             <ul className="mb-6 divide-y divide-border ring-1 ring-border">
               {suggested.map((market) => (
                 <li key={market.id} className="px-4 py-3">
-                  <p className="font-medium">{market.name}</p>
+                  <Link href={`/markets/${market.slug}`} className="font-medium hover:underline">
+                    {market.name}
+                  </Link>
                   <p className="text-sm text-muted-foreground">{market.city}</p>
                 </li>
               ))}
@@ -60,7 +63,12 @@ export default async function SavedPage() {
           </Link>
         </>
       )}
-      {profile ? (
+      {profile && loaded.failed ? (
+        <p className="text-base text-muted-foreground">
+          Couldn&apos;t load your saves. Refresh the page.
+        </p>
+      ) : null}
+      {profile && !loaded.failed ? (
         <SavedDesk
           markets={markets}
           vendors={vendors}

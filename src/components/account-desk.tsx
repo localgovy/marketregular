@@ -134,8 +134,8 @@ export function AccountDesk({
             <p className="type-kicker text-muted-foreground">Your profile</p>
             <h1>{name}</h1>
             <p className="type-lede mt-2 text-muted-foreground">
-              Your {SITE_NAME} identity – post reviews, save markets, and purchase your
-              favourite goods ahead of time, all in one profile.
+              Your {SITE_NAME} identity. Post notes, save markets, and keep this week&apos;s hours
+              in one profile.
             </p>
           </header>
 
@@ -162,7 +162,7 @@ export function AccountDesk({
               title="Selling today"
               how={
                 <>
-                  Saved vendors on today&apos;s calendar.
+                  Saved vendors still selling today, or opening later today.
                   <span className="mt-2 flex flex-wrap items-center gap-2">
                     <NowLabel>Selling now</NowLabel>
                     <span>Selling this minute.</span>

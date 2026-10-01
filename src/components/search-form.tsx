@@ -20,7 +20,6 @@ import {
   type MarketsSearch,
   type PlaceAreas,
 } from "@/lib/find-paths";
-import { LAUNCH_COVERAGE } from "@/lib/launch";
 import { cn } from "@/lib/utils";
 
 export type SearchFormDefaults = {
@@ -218,7 +217,7 @@ export function SearchForm({
         compact({ areas: value ? [value] : [] });
       }}
     >
-      <option value="">Anywhere in {LAUNCH_COVERAGE}</option>
+      <option value="">Anywhere</option>
       {applied.areas.length > 1 ? (
         <option value="multi">{applied.areas.length} places</option>
       ) : null}

@@ -1,7 +1,9 @@
+import { cache } from "react";
 import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/catalog";
 import {
   assertPublicSearchPayload,
   isAlcoholCategory,
+  PRODUCT_PAGE,
   productHref,
   visiblePriceCents,
   type ProductHit,
@@ -29,7 +31,7 @@ export type FindVendor = {
   reviewCount: number;
   items: Array<{ name: string; priceCents: number | null }>;
   markets: FindMarket[];
-  badge: "Open today" | "Selling this weekend" | null;
+  badge: "Open now" | "Later today" | "Selling this weekend" | null;
   /** 0 means open today. Higher means later in the week. 8 means no upcoming day. */
   waitDays: number;
 };
@@ -105,7 +107,10 @@ async function menuRows(slugs: string[]): Promise<MenuRow[]> {
   }
 }
 
-export async function listFindVendors(matchSlugs: string[], now = new Date()): Promise<FindVendor[]> {
+export const listFindVendors = cache(async function listFindVendors(
+  matchSlugs: string[],
+  now = new Date(),
+): Promise<FindVendor[]> {
   const [menus, vendors, stalls, markets, schedules] = await Promise.all([
     menuRows(matchSlugs),
     listVendors(),
@@ -179,13 +184,14 @@ export async function listFindVendors(matchSlugs: string[], now = new Date()): P
       return vendor;
     })
     .sort((a, b) => a.waitDays - b.waitDays || a.name.localeCompare(b.name, "en-CA"));
-}
+});
 
 export async function searchProducts(args: {
   q: string;
   openToday?: boolean;
   marketSlug?: string | null;
   day?: number | null;
+  offset?: number;
   now?: Date;
 }): Promise<ProductHit[]> {
   const q = args.q.trim();
@@ -200,7 +206,8 @@ export async function searchProducts(args: {
       open_today: Boolean(args.openToday),
       market_slug: args.marketSlug?.trim() || null,
       day,
-      lim: 40,
+      lim: PRODUCT_PAGE,
+      off: Math.max(0, args.offset ?? 0),
     }),
     listMarkets(),
     listSchedules(),
@@ -217,15 +224,8 @@ export async function searchProducts(args: {
     schedulesByMarket.set(row.market_id, list);
   }
   const rows = (data ?? []) as RpcRow[];
-  return rows.map((row) => ({
-    itemName: row.item_name,
-    category: row.product_category,
-    productSlug: row.product_slug,
-    priceCents: visiblePriceCents(row.product_category, row.price_cents),
-    vendorName: row.vendor_name,
-    vendorSlug: row.vendor_slug,
-    ...reviewFields(vendorBySlug.get(row.vendor_slug)),
-    markets: (row.markets ?? []).map((market) => {
+  const hits = rows.map((row) => {
+    const markets = (row.markets ?? []).map((market) => {
       const days = asDays(market.days);
       const hall = marketBySlug.get(market.slug);
       return {
@@ -237,26 +237,94 @@ export async function searchProducts(args: {
           : [],
         ...reviewFields(hall),
       };
-    }),
-    openToday: Boolean(row.open_today),
-    href: productHref(row.product_slug, row.item_name),
-  }));
+    });
+    const halls: VisitHall[] = markets.flatMap((market) => {
+      const hall = marketBySlug.get(market.slug);
+      if (!hall) return [];
+      return [
+        {
+          days: market.days,
+          province: hall.province,
+          schedules: schedulesByMarket.get(hall.id) ?? [],
+        },
+      ];
+    });
+    const badge = visitBadge(halls, now);
+    const openToday = badge === "Open now" || badge === "Later today";
+    return {
+      itemName: row.item_name,
+      category: row.product_category,
+      productSlug: row.product_slug,
+      priceCents: visiblePriceCents(row.product_category, row.price_cents),
+      vendorName: row.vendor_name,
+      vendorSlug: row.vendor_slug,
+      ...reviewFields(vendorBySlug.get(row.vendor_slug)),
+      markets,
+      openToday,
+      badge,
+      href: productHref(row.product_slug, row.item_name),
+    };
+  });
+  if (!args.openToday) return hits;
+  return hits.filter((hit) => hit.openToday);
 }
 
 export async function searchVendorsByName(q: string, limit = 20): Promise<VendorHit[]> {
   const needle = q.trim().toLowerCase();
   if (needle.length < 2) return [];
-  const [vendors, stalls] = await Promise.all([listVendors(), listStalls()]);
-  const linked = new Set(stalls.map((stall) => stall.id));
-  return vendors
-    .filter((vendor) => linked.has(vendor.id) && vendor.name.toLowerCase().includes(needle))
-    .sort((a, b) => a.name.localeCompare(b.name))
+  const supabase = createPublicSupabaseClient();
+  if (!supabase) {
+    const [vendors, stalls] = await Promise.all([listVendors(), listStalls()]);
+    const linked = new Set(stalls.map((stall) => stall.id));
+    return vendors
+      .filter((vendor) => linked.has(vendor.id) && vendor.name.toLowerCase().includes(needle))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .slice(0, limit)
+      .map((vendor) => ({
+        name: vendor.name,
+        slug: vendor.slug,
+        href: `/vendors/${vendor.slug}`,
+        ...reviewFields(vendor),
+      }));
+  }
+  const pattern = `%${needle.replace(/[%_\\]/g, "\\$&")}%`;
+  const { data, error } = await supabase
+    .from("vendors")
+    .select("id, slug, name, rating_avg, review_count")
+    .eq("status", "published")
+    .ilike("name", pattern)
+    .order("name")
+    .limit(Math.max(limit * 4, limit));
+  if (error) throw new Error("Could not search vendors");
+  assertPublicSearchPayload(data);
+  const rows = (data ?? []) as Array<{
+    id: string;
+    slug: string;
+    name: string;
+    rating_avg: number | null;
+    review_count: number | null;
+  }>;
+  if (!rows.length) return [];
+  const { data: links, error: linkError } = await supabase
+    .from("market_vendors")
+    .select("vendor_id")
+    .in(
+      "vendor_id",
+      rows.map((row) => row.id),
+    );
+  if (linkError) throw new Error("Could not search vendors");
+  const linked = new Set((links ?? []).map((link) => link.vendor_id as string));
+  return rows
+    .filter((vendor) => linked.has(vendor.id))
     .slice(0, limit)
     .map((vendor) => ({
       name: vendor.name,
       slug: vendor.slug,
       href: `/vendors/${vendor.slug}`,
-      ...reviewFields(vendor),
+      ...reviewFields({
+        rating_avg: vendor.rating_avg,
+        review_count: vendor.review_count ?? 0,
+      }),
     }));
 }
 

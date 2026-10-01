@@ -6,14 +6,14 @@ export default async function AdminHomePage() {
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
   const [markets, vendors, posts, claims] = await Promise.all([
-    supabase.from("markets").select("id", { count: "exact", head: true }),
-    supabase.from("vendors").select("id", { count: "exact", head: true }),
+    supabase.from("markets").select("id", { count: "exact", head: true }).eq("status", "published"),
+    supabase.from("vendors").select("id", { count: "exact", head: true }).eq("status", "published"),
     supabase.from("posts").select("id", { count: "exact", head: true }).eq("flagged", false),
     supabase.from("claim_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
   ]);
   const stats = [
-    { label: "Markets", value: markets.count ?? 0 },
-    { label: "Vendors", value: vendors.count ?? 0 },
+    { label: "Published markets", value: markets.count ?? 0 },
+    { label: "Published vendors", value: vendors.count ?? 0 },
     { label: "Live posts", value: posts.count ?? 0 },
     { label: "Open claims", value: claims.count ?? 0 },
   ];

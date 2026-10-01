@@ -171,8 +171,9 @@ export async function updatePassword(formData: FormData) {
   const current = String(formData.get("current_password") ?? "");
   if (password.length < 8) return { error: "Use at least 8 characters." };
   if (password !== confirm) return { error: "Those passwords do not match." };
-  const steppedUp =
-    (await confirmCurrentPassword(user, current)) || recentlySignedIn(user);
+  const steppedUp = hasPasswordIdentity(user)
+    ? await confirmCurrentPassword(user, current)
+    : recentlySignedIn(user);
   if (!steppedUp) {
     return hasPasswordIdentity(user)
       ? { error: "Enter your current password." }
@@ -219,8 +220,9 @@ export async function deleteAccount(formData: FormData) {
   const confirm = String(formData.get("confirm") ?? "").trim().toLowerCase();
   if (confirm !== "delete") return { error: "Type delete to confirm." };
   const current = String(formData.get("current_password") ?? "");
-  const steppedUp =
-    (await confirmCurrentPassword(user, current)) || recentlySignedIn(user);
+  const steppedUp = hasPasswordIdentity(user)
+    ? await confirmCurrentPassword(user, current)
+    : recentlySignedIn(user);
   if (!steppedUp) {
     return hasPasswordIdentity(user)
       ? { error: "Enter your current password." }

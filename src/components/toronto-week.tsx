@@ -4,7 +4,6 @@ import { HomePanel } from "@/components/home-panel";
 import { WeekMark } from "@/components/marks";
 import { WeekDayCard } from "@/components/week-day-card";
 import { WeekSlotRow } from "@/components/week-slot-row";
-import { LAUNCH_CITY } from "@/lib/launch";
 import { WEEK_DAY_PAGE, type WeekListGroup } from "@/lib/upcoming";
 
 function DayCard({ group }: { group: WeekListGroup }) {
@@ -29,7 +28,7 @@ export function TorontoWeek({
   title = "Upcoming markets",
   how = "Open now means the market is selling right now. Tap a name for vendors and the map.",
   action,
-  empty = `No ${LAUNCH_CITY} markets are on the calendar for the next seven days.`,
+  empty = "Nothing on the calendar for the next seven days.",
   className = "xl:shrink-0",
 }: {
   groups: WeekListGroup[];
@@ -43,7 +42,7 @@ export function TorontoWeek({
 }) {
   const open = groups.find((g) => g.open);
   const rest = groups.filter((g) => !g.open);
-  const weekKicker = kicker ?? `${LAUNCH_CITY} this week`;
+  const weekKicker = kicker ?? "This week";
   const weekAction = action ?? (
     <Link href="/events" className="hover:underline">
       Month calendar

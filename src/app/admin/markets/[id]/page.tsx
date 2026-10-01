@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { MarketForm } from "@/components/admin/market-form";
-import { requireAdmin } from "@/lib/admin";
+import { fetchAllRows, requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured, WEEKDAYS } from "@/lib/constants";
 import { withListingStats } from "@/lib/listing-score";
 import { formatHours } from "@/lib/schedule";
@@ -20,9 +20,11 @@ export default async function EditMarketPage({
   if (!supabase) return null;
   const { data: market } = await supabase.from("markets").select("*").eq("id", id).maybeSingle();
   if (!market) notFound();
-  const [{ data: schedules }, { data: vendors }] = await Promise.all([
+  const [{ data: schedules }, vendors] = await Promise.all([
     supabase.from("market_schedules").select("*").eq("market_id", id),
-    supabase.from("vendors").select("id, name").order("name"),
+    fetchAllRows<Pick<Vendor, "id" | "name">>((from, to) =>
+      supabase.from("vendors").select("id, name").order("name").range(from, to),
+    ),
   ]);
 
   async function remove() {

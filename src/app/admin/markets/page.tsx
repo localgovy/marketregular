@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/admin";
+import { fetchAllRows, requireAdmin } from "@/lib/admin";
 import { ListingScore } from "@/components/listing-score";
 import { buttonVariants } from "@/components/ui/button";
 import { isSupabaseConfigured } from "@/lib/constants";
@@ -10,8 +10,11 @@ export default async function AdminMarketsPage() {
   if (!isSupabaseConfigured()) return null;
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
-  const { data } = await supabase.from("markets").select("*").order("name");
-  const markets = ((data ?? []) as Market[]).map(withListingStats);
+  const markets = (
+    await fetchAllRows<Market>((from, to) =>
+      supabase.from("markets").select("*").order("name").range(from, to),
+    )
+  ).map(withListingStats);
   return (
     <div>
       <div className="mb-4 flex justify-end">

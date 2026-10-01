@@ -324,7 +324,7 @@ const loadCachedDirectoryCensus = unstable_cache(
       talliedAt: data.tallied_at,
     };
   },
-  ["directory-census-v1"],
+  ["directory-census-v2"],
   DIRECTORY_CACHE,
 );
 
@@ -624,6 +624,10 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
       vendors.sort((a, b) => a.name.localeCompare(b.name));
     }
   }
+  if (!raw && !tagNeedles.length) {
+    const stalled = new Set(stalls.map((stall) => stall.id));
+    vendors = vendors.filter((vendor) => stalled.has(vendor.id));
+  }
   const days = filters.openNow ? [] : searchWeekdays(filters);
   if (days.length) {
     markets = markets.filter((m) =>
@@ -713,7 +717,7 @@ async function buildBareMarketsDirectory(): Promise<BareMarketsDirectory> {
 
 const loadCachedBareMarketsDirectory = unstable_cache(
   buildBareMarketsDirectory,
-  ["markets-page-bare-v1"],
+  ["markets-page-bare-v2"],
   DIRECTORY_CACHE,
 );
 

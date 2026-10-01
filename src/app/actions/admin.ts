@@ -211,8 +211,10 @@ export async function linkVendorToMarket(formData: FormData) {
     stall: String(formData.get("stall") ?? "") || null,
     days: String(formData.get("days") ?? "")
       .split(",")
-      .map((d) => Number(d.trim()))
-      .filter((n) => !Number.isNaN(n)),
+      .map((d) => d.trim())
+      .filter((d) => d !== "")
+      .map((d) => Number(d))
+      .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6),
   });
   if (error) failDb(error, "Could not link that vendor.");
   const path = await listingPath(supabase, "markets", market_id);

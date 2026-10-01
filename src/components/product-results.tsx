@@ -14,49 +14,6 @@ function Badge({ children }: { children: string }) {
   return <p className="text-sm font-medium whitespace-nowrap">{children}</p>;
 }
 
-export function ClaimProfileLink({ slug }: { slug: string }) {
-  return (
-    <p className="text-sm">
-      Do you operate or work for this vendor?{" "}
-      <Link href={`/vendors/${slug}#claim`} className="font-medium hover:underline">
-        Claim this profile to add prices and items
-      </Link>
-    </p>
-  );
-}
-
-/**
- * Turns on only when a vendor is actually on the Pickup program.
- * There is no such column yet, so callers omit `pickup` and this renders nothing.
- * When it does show: "Reserve for pickup".
- * Alcohol uses "reserve on MarketRegular, pay and show ID at the stall".
- */
-export function ReserveForPickup({
-  pickup = false,
-  alcohol = false,
-}: {
-  pickup?: boolean;
-  alcohol?: boolean;
-}) {
-  if (!pickup) return null;
-  return (
-    <p className="text-sm font-medium">
-      {alcohol
-        ? "Reserve on MarketRegular, pay and show ID at the stall"
-        : "Reserve for pickup"}
-    </p>
-  );
-}
-
-export function ProductVendorActions({ slug }: { slug: string }) {
-  return (
-    <div className="grid gap-2">
-      <ReserveForPickup />
-      <ClaimProfileLink slug={slug} />
-    </div>
-  );
-}
-
 /** Same short days as a vendor card, so the hours column stays one line. */
 function shortDays(days: number[]) {
   const names = [...new Set(days.filter((day) => day >= 0 && day <= 6))].sort((a, b) => a - b);
@@ -189,9 +146,6 @@ function ProductListing({
           })}
         </ul>
       ) : null}
-      <div className="px-4 py-3">
-        <ProductVendorActions slug={vendorSlug} />
-      </div>
     </li>
   );
 }
@@ -229,7 +183,7 @@ export function ProductHitList({ hits }: { hits: ProductHit[] }) {
           vendorSlug={hit.vendorSlug}
           ratingAvg={hit.ratingAvg}
           reviewCount={hit.reviewCount}
-          badge={hit.openToday ? "Open today" : null}
+          badge={hit.badge}
           items={[{ name: hit.itemName, href: hit.href, priceCents: hit.priceCents }]}
           markets={hit.markets}
         />
@@ -256,9 +210,6 @@ export function VendorHitList({ vendors }: { vendors: VendorHit[] }) {
                 className="ml-2 text-stamp"
               />
             </p>
-          </div>
-          <div className="px-4 py-3">
-            <ProductVendorActions slug={vendor.slug} />
           </div>
         </li>
       ))}

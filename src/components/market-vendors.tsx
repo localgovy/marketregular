@@ -106,9 +106,12 @@ function browseActive(find: StallBrowse) {
 export function MarketVendors({
   vendors,
   todayWeekday,
+  todayStill = true,
 }: {
   vendors: MarketStall[];
   todayWeekday: number;
+  /** False after today's session has closed, or when the hall is not open today. */
+  todayStill?: boolean;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -137,14 +140,22 @@ export function MarketVendors({
   const cuisineTags = useMemo(() => tagsPresent(vendors, COUNTRY_TAGS), [vendors]);
   const recordTags = useMemo(() => tagsPresent(vendors, FIND_RECORD), [vendors]);
   const matches = useMemo(
-    () => vendors.filter((vendor) => stallFits(vendor, applied, today)),
-    [vendors, applied, today],
+    () =>
+      vendors.filter((vendor) => {
+        if (applied.hereToday && !todayStill) return false;
+        return stallFits(vendor, applied, today);
+      }),
+    [vendors, applied, today, todayStill],
   );
   const [pages, setPages] = useState(1);
   const shown = matches.slice(0, pages * STALL_PAGE);
   const draftCount = useMemo(
-    () => vendors.filter((vendor) => stallFits(vendor, live, today)).length,
-    [vendors, live, today],
+    () =>
+      vendors.filter((vendor) => {
+        if (live.hereToday && !todayStill) return false;
+        return stallFits(vendor, live, today);
+      }).length,
+    [vendors, live, today, todayStill],
   );
   const filtering = browseActive(applied);
   const canAllFilters =
@@ -363,7 +374,11 @@ export function MarketVendors({
               />
             </>
           ) : (
-            <p className="mt-4 text-sm text-muted-foreground">No vendors match that.</p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              {applied.hereToday && !todayStill
+                ? "Today's hours are over."
+                : "No vendors match that."}
+            </p>
           )}
         </>
       ) : (

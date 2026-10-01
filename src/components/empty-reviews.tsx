@@ -12,7 +12,7 @@ export function EmptyReviews({
   return (
     <div className="mt-4 rounded-xl bg-card p-5 ring-1 ring-foreground/10">
       <p className="text-base text-muted-foreground">
-        No reviews yet. Tell the next shopper what was on the tables.
+        No notes on MarketRegular yet. Tell the next shopper what was on the tables.
       </p>
       {signedIn ? null : (
         <Link

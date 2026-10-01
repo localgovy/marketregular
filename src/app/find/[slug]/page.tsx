@@ -26,10 +26,12 @@ export async function generateMetadata({
   const page = findPageBySlug(slug);
   if (!page) return { title: "Product" };
   const title = findTitle(page.term, LAUNCH_CITY);
+  const vendors = await listFindVendors(page.matchSlugs);
   return pageMeta({
     title,
     description: `${title}. Stalls that list it, the markets they sell at, and the days they are there.`,
     path: `/find/${page.slug}`,
+    index: vendors.length >= 5,
   });
 }
 
@@ -44,8 +46,7 @@ export default async function FindProductPage({
   const title = findTitle(page.term, LAUNCH_CITY);
   const now = new Date();
   const today = torontoWeekday(now);
-  const vendors = sortFindVendors(await listFindVendors(page.matchSlugs, now), "next", today);
-  if (vendors.length < 5) notFound();
+  const vendors = sortFindVendors(await listFindVendors(page.matchSlugs), "next", today);
   const alcohol = pageIsAlcohol(page.category);
 
   return (

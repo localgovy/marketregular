@@ -214,7 +214,7 @@ export function FeedBoard({
               signedIn={signedIn}
               stalls={stalls}
               markets={markets}
-              initialMarketId={items.length ? initialMarketId : undefined}
+              initialMarketId={initialMarketId}
               onPosted={(item) => setExtra((current) => [item, ...current].slice(0, 80))}
             />
           ) : null}

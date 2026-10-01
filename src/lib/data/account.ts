@@ -3,15 +3,20 @@ import { fetchMyProfile } from "@/lib/my-profile";
 import { EMPTY_SAVES, savesFromRows, type Saves } from "@/lib/saves";
 import type { ClaimRequest } from "@/types/database";
 
-export async function loadMySaves(): Promise<Saves> {
+export async function readMySaves(): Promise<{ saves: Saves; failed: boolean }> {
   const { supabase, user } = await createAuthedServerClient();
-  if (!supabase || !user) return EMPTY_SAVES;
+  if (!supabase || !user) return { saves: EMPTY_SAVES, failed: false };
   const { data, error } = await supabase
     .from("saves")
     .select("kind, slug, detail")
     .eq("user_id", user.id);
-  if (error) return EMPTY_SAVES;
-  return savesFromRows(data);
+  if (error) return { saves: EMPTY_SAVES, failed: true };
+  return { saves: savesFromRows(data), failed: false };
+}
+
+export async function loadMySaves(): Promise<Saves> {
+  const { saves } = await readMySaves();
+  return saves;
 }
 
 export type AccountPost = {

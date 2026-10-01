@@ -56,7 +56,7 @@ export function ListingScore({
 
   const avg = formatRatingAvg(score.avg);
   const count = formatReviewCountShort(score.count);
-  const noun = score.count === 1 ? "review" : "reviews";
+  const noun = score.count === 1 ? "rating" : "ratings";
 
   return (
     <span className={cn("inline-flex items-center gap-2 text-sm", className)}>

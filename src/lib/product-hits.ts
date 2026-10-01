@@ -1,5 +1,7 @@
 import { findPageForProductSlug } from "@/data/find-pages";
 
+export const PRODUCT_PAGE = 40;
+
 export type ProductMarketHit = {
   name: string;
   slug: string;
@@ -19,7 +21,9 @@ export type ProductHit = {
   ratingAvg: number | null;
   reviewCount: number;
   markets: ProductMarketHit[];
+  /** Hall is open now or still opens later today. */
   openToday: boolean;
+  badge: "Open now" | "Later today" | "Selling this weekend" | null;
   href: string;
 };
 

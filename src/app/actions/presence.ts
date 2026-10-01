@@ -191,6 +191,7 @@ export async function flagItem(table: "posts" | "reviews", id: string) {
   if (error) return { error: "Could not update that." };
   revalidatePath("/admin");
   revalidatePath("/");
+  revalidatePath("/feed");
   return { error: null };
 }
 
@@ -205,5 +206,7 @@ export async function unflagItem(table: "posts" | "reviews", id: string) {
   const { error } = await service.from(table).update({ flagged: false }).eq("id", id);
   if (error) return { error: "Could not update that." };
   revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath("/feed");
   return { error: null };
 }

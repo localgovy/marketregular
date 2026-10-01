@@ -107,12 +107,14 @@ export async function suggestListings(q: string) {
   const query = q.trim().slice(0, 80);
   if (query.length < 2) return { markets: [] as { href: string; name: string }[], vendors: [] as { href: string; name: string }[] };
   const { markets, vendors } = await searchDirectory({ q: query }, new Date());
+  const needle = query.toLowerCase();
+  const named = vendors.filter((vendor) => vendor.name.toLowerCase().includes(needle));
   return {
     markets: markets.slice(0, 6).map((market) => ({
       href: `/markets/${market.slug}`,
       name: market.name,
     })),
-    vendors: vendors.slice(0, 6).map((vendor) => ({
+    vendors: named.slice(0, 6).map((vendor) => ({
       href: `/vendors/${vendor.slug}`,
       name: vendor.name,
     })),

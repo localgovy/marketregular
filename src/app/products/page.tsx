@@ -83,7 +83,7 @@ export default async function ProductsPage({
             defaultChecked={openToday}
             className="accent-primary"
           />
-          Open today
+          Selling today
         </label>
         <label className="grid gap-1.5 text-sm font-medium">
           Market
@@ -118,7 +118,11 @@ export default async function ProductsPage({
             <h2>Products</h2>
             {products.length ? (
               <div className="mt-4">
-                <SortableProductHits hits={products} today={today} />
+                <SortableProductHits
+                  hits={products}
+                  today={today}
+                  page={{ q, openToday, marketSlug, day }}
+                />
               </div>
             ) : (
               <p className="mt-3 text-base text-muted-foreground">No products match that search.</p>
