@@ -1,6 +1,7 @@
 "use server";
 
 import { searchDirectory } from "@/lib/data/catalog";
+import { takeCatalogSlot } from "@/lib/mail-limit";
 import {
   DIRECTORY_MARKET_PAGE,
   DIRECTORY_VENDOR_PAGE,
@@ -76,6 +77,9 @@ export async function getDirectorySlice(input: {
   if (!parsed.success) {
     return { markets: [], vendors: [], schedulesByMarket: {} };
   }
+  if (!(await takeCatalogSlot())) {
+    return { markets: [], vendors: [], schedulesByMarket: {} };
+  }
   const kind = parsed.data.kind === "vendors" ? "vendors" : "markets";
   const offset = clampOffset(parsed.data.offset ?? 0);
   const take = kind === "markets" ? DIRECTORY_MARKET_PAGE : DIRECTORY_VENDOR_PAGE;
@@ -106,6 +110,9 @@ export async function getDirectorySlice(input: {
 export async function suggestListings(q: string) {
   const query = q.trim().slice(0, 80);
   if (query.length < 2) return { markets: [] as { href: string; name: string }[], vendors: [] as { href: string; name: string }[] };
+  if (!(await takeCatalogSlot())) {
+    return { markets: [], vendors: [] };
+  }
   const { markets, vendors } = await searchDirectory({ q: query }, new Date());
   const needle = query.toLowerCase();
   const named = vendors.filter((vendor) => vendor.name.toLowerCase().includes(needle));

@@ -59,7 +59,7 @@ export async function createPost(input: {
   if (demo) return { error: "Reviews aren't available right now. Try again later." };
   if (!supabase || !user) return { error: "Sign in to review." };
 
-  const vendorSlug = await rosterVendorSlug(supabase, note.marketId, note.vendorSlug);
+  const vendorSlug = await rosterVendorSlug(note.marketId, note.vendorSlug);
   const rating = note.rating && note.rating >= 1 ? note.rating : undefined;
   const priceLevel =
     vendorSlug && note.priceLevel && note.priceLevel >= 1 ? note.priceLevel : undefined;
@@ -93,11 +93,16 @@ export async function createPost(input: {
     return { error: dbPublicError(error, "Could not post that review.") };
   }
 
-  const { data: market } = await supabase
-    .from("markets")
-    .select("slug")
-    .eq("id", note.marketId)
-    .maybeSingle();
+  const catalog = createServiceClient();
+  const market = catalog
+    ? (
+        await catalog
+          .from("published_markets")
+          .select("slug")
+          .eq("id", note.marketId)
+          .maybeSingle()
+      ).data
+    : null;
   revalidatePath("/");
   revalidatePath("/markets");
   revalidatePath("/account");
@@ -107,22 +112,20 @@ export async function createPost(input: {
   return { error: null, demo: false };
 }
 
-async function rosterVendorSlug(
-  supabase: NonNullable<Awaited<ReturnType<typeof getClient>>>,
-  marketId: string,
-  raw?: string,
-) {
+async function rosterVendorSlug(marketId: string, raw?: string) {
   const slug = raw?.trim() ?? "";
   if (!slug || !VENDOR_SLUG.test(slug)) return undefined;
-  const { data: vendor } = await supabase
-    .from("vendors")
+  const catalog = createServiceClient();
+  if (!catalog) return undefined;
+  const { data: vendor } = await catalog
+    .from("published_vendors")
     .select("id")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
   if (!vendor?.id) return undefined;
-  const { data: link } = await supabase
-    .from("market_vendors")
+  const { data: link } = await catalog
+    .from("published_stalls")
     .select("vendor_id")
     .eq("market_id", marketId)
     .eq("vendor_id", vendor.id)

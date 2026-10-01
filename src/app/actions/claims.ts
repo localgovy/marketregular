@@ -8,7 +8,6 @@ import { sanitizeMailAddress, sanitizeMailHeader } from "@/lib/mail-header";
 import { clientIp, hashMailKey, releaseMailSlot, takeMailSlot } from "@/lib/mail-limit";
 import { dbPublicError } from "@/lib/public-error";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
@@ -31,18 +30,18 @@ async function listingFor(
   targetType: "market" | "vendor",
   targetId: string,
 ): Promise<{ name: string; path: string } | null> {
-  const supabase = createPublicSupabaseClient();
+  const supabase = createServiceClient();
   if (!supabase) return null;
   if (targetType === "market") {
     const { data } = await supabase
-      .from("markets")
+      .from("published_markets")
       .select("name, slug")
       .eq("id", targetId)
       .maybeSingle();
     return data?.slug ? { name: data.name, path: `/markets/${data.slug}` } : null;
   }
   const { data } = await supabase
-    .from("vendors")
+    .from("published_vendors")
     .select("name, slug")
     .eq("id", targetId)
     .maybeSingle();

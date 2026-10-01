@@ -38,6 +38,7 @@ import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note
 import { withListingStats } from "@/lib/listing-score";
 import { vendorHasSubstance, type ListingContactFields } from "@/lib/listing-substance";
 import { loadMyProfile } from "@/lib/my-profile";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
@@ -65,13 +66,19 @@ async function db() {
   return createServerSupabaseClient();
 }
 
+/** Published directory views. Service role only; the anon key cannot read these tables. */
 function publicDb() {
+  return createServiceClient();
+}
+
+/** Posts and reviews stay on the anon key so row policies still hide flagged notes. */
+function visitorDb() {
   return createPublicSupabaseClient();
 }
 
 const PAGE = 1000;
 
-/** claimed_by, phone, and email stay off anon list selects. Contact is get_listing_contact. */
+/** Private columns stay off these views. Contact is get_listing_contact, service role only. */
 const MARKET_PUBLIC =
   "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
 const VENDOR_PUBLIC =
@@ -191,7 +198,7 @@ const loadCachedMarkets = unstable_cache(
     const supabase = requirePublicDb();
     return fetchAllRows<Market>((from, to) =>
       supabase
-        .from("markets")
+        .from("published_markets")
         .select(MARKET_PUBLIC)
         .eq("status", "published")
         .order("name")
@@ -207,7 +214,7 @@ const loadCachedVendors = unstable_cache(
     const supabase = requirePublicDb();
     return fetchAllRows<Vendor>((from, to) =>
       supabase
-        .from("vendors")
+        .from("published_vendors")
         .select(VENDOR_PUBLIC)
         .eq("status", "published")
         .order("name")
@@ -221,14 +228,38 @@ const loadCachedVendors = unstable_cache(
 const loadCachedStallRows = unstable_cache(
   async () => {
     const supabase = requirePublicDb();
-    return fetchAllRows<StallRow>((from, to) =>
+    const rows = await fetchAllRows<{
+      market_id: string;
+      stall: string | null;
+      days: number[] | null;
+      vendor_id: string;
+      vendor_name: string;
+      vendor_slug: string;
+      vendor_status: string;
+      market_city: string;
+      market_status: string;
+    }>((from, to) =>
       supabase
-        .from("market_vendors")
-        .select("market_id, stall, days, vendors(id, name, slug, status), markets(city, status)")
+        .from("published_stalls")
+        .select(
+          "market_id, stall, days, vendor_id, vendor_name, vendor_slug, vendor_status, market_city, market_status",
+        )
         .order("market_id")
         .order("vendor_id")
         .range(from, to),
     );
+    return rows.map((row) => ({
+      market_id: row.market_id,
+      stall: row.stall,
+      days: row.days ?? [],
+      vendors: {
+        id: row.vendor_id,
+        name: row.vendor_name,
+        slug: row.vendor_slug,
+        status: row.vendor_status,
+      },
+      markets: { city: row.market_city, status: row.market_status },
+    }));
   },
   ["published-directory-stalls-v1"],
   DIRECTORY_CACHE,
@@ -238,7 +269,7 @@ const loadCachedSchedules = unstable_cache(
   async () => {
     const supabase = requirePublicDb();
     return fetchAllRows<MarketSchedule>((from, to) =>
-      supabase.from("market_schedules").select(SCHEDULE_PUBLIC).order("id").range(from, to),
+      supabase.from("published_schedules").select(SCHEDULE_PUBLIC).order("id").range(from, to),
     );
   },
   ["published-directory-schedules-v1"],
@@ -425,8 +456,8 @@ async function hallsByVendorIds(vendorIds: string[]): Promise<Map<string, Vendor
   if (!supabase) return groupVendorHalls(localStalls(), localMarkets());
 
   const { data, error } = await supabase
-    .from("market_vendors")
-    .select("vendor_id, markets(id, slug, name, city, status)")
+    .from("published_stalls")
+    .select("vendor_id, market_id, market_slug, market_name, market_city, market_status")
     .in("vendor_id", vendorIds);
   if (error) directoryFailed(error);
   if (!data?.length) return new Map();
@@ -436,14 +467,20 @@ async function hallsByVendorIds(vendorIds: string[]): Promise<Map<string, Vendor
   const seenMarket = new Set<string>();
   for (const row of data as unknown as Array<{
     vendor_id: string;
-    markets:
-      | { id: string; slug: string; name: string; city: string; status: string }
-      | { id: string; slug: string; name: string; city: string; status: string }[]
-      | null;
+    market_id: string;
+    market_slug: string;
+    market_name: string;
+    market_city: string;
+    market_status: string;
   }>) {
-    const raw = row.markets;
-    const market = Array.isArray(raw) ? raw[0] : raw;
-    if (!market || market.status !== "published") continue;
+    if (row.market_status !== "published") continue;
+    const market = {
+      id: row.market_id,
+      slug: row.market_slug,
+      name: row.market_name,
+      city: row.market_city,
+      status: row.market_status,
+    };
     stalls.push({
       id: row.vendor_id,
       name: "",
@@ -473,23 +510,30 @@ export async function getTablePeek(vendorIds: string[]): Promise<TablePeek[]> {
   const supabase = publicDb();
   if (!supabase) return localTablePeek(vendorIds);
   const { data, error } = await supabase
-    .from("vendor_menus")
-    .select("name, price_cents, vendor_id, vendors(name, slug)")
+    .from("published_menus")
+    .select("name, price_cents, vendor_id")
     .in("vendor_id", vendorIds)
     .limit(12);
   if (error || !data?.length) return [];
-
-  const seen = new Set<string>();
-  const lines: TablePeek[] = [];
-  for (const row of data as unknown as Array<{
+  const menuRows = data as Array<{
     name: string;
     price_cents: number | null;
     vendor_id: string;
-    vendors: { name: string; slug: string } | { name: string; slug: string }[] | null;
-  }>) {
+  }>;
+  const { data: vendorRows, error: vendorError } = await supabase
+    .from("published_vendors")
+    .select("id, name, slug")
+    .in("id", [...new Set(menuRows.map((row) => row.vendor_id))]);
+  if (vendorError || !vendorRows?.length) return [];
+  const vendorById = new Map(
+    (vendorRows as Array<{ id: string; name: string; slug: string }>).map((vendor) => [vendor.id, vendor]),
+  );
+
+  const seen = new Set<string>();
+  const lines: TablePeek[] = [];
+  for (const row of menuRows) {
     if (seen.has(row.vendor_id)) continue;
-    const raw = row.vendors;
-    const vendor = Array.isArray(raw) ? raw[0] : raw;
+    const vendor = vendorById.get(row.vendor_id);
     if (!vendor) continue;
     seen.add(row.vendor_id);
     lines.push({
@@ -763,7 +807,7 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
   if (!supabase) return localMarketBySlug(slug);
 
   const { data: market, error } = await supabase
-    .from("markets")
+    .from("published_markets")
     .select(MARKET_PUBLIC)
     .eq("slug", slug)
     .eq("status", "published")
@@ -771,16 +815,19 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
   if (error) directoryFailed(error);
   if (!market) return null;
 
+  const visitor = visitorDb();
   const [schedulesRes, linksRes, postsRes] = await Promise.all([
-    supabase.from("market_schedules").select(SCHEDULE_PUBLIC).eq("market_id", market.id),
-    supabase.from("market_vendors").select(STALL_PUBLIC).eq("market_id", market.id),
-    supabase
-      .from("posts")
-      .select(`${POST_PUBLIC}, profiles(display_name, avatar_url)`)
-      .eq("market_id", market.id)
-      .eq("flagged", false)
-      .order("created_at", { ascending: false })
-      .limit(40),
+    supabase.from("published_schedules").select(SCHEDULE_PUBLIC).eq("market_id", market.id),
+    supabase.from("published_stalls").select(STALL_PUBLIC).eq("market_id", market.id),
+    visitor
+      ? visitor
+          .from("posts")
+          .select(`${POST_PUBLIC}, profiles(display_name, avatar_url)`)
+          .eq("market_id", market.id)
+          .eq("flagged", false)
+          .order("created_at", { ascending: false })
+          .limit(40)
+      : Promise.resolve({ data: [] as Post[], error: null }),
   ]);
   if (schedulesRes.error) directoryFailed(schedulesRes.error);
   if (linksRes.error) directoryFailed(linksRes.error);
@@ -796,18 +843,20 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
   if (vendorIdList.length) reviewScope.push(`vendor_id.in.(${vendorIdList.join(",")})`);
   const [vendorRes, hallsMap, reviews] = await Promise.all([
     showRoster && vendorIdList.length > 0
-      ? supabase.from("vendors").select(VENDOR_PUBLIC).in("id", vendorIdList)
+      ? supabase.from("published_vendors").select(VENDOR_PUBLIC).in("id", vendorIdList)
       : Promise.resolve({ data: [] as Vendor[], error: null }),
     showRoster ? hallsByVendorIds(vendorIdList) : Promise.resolve(new Map<string, VendorHall[]>()),
-    fetchAllRows<Review>((from, to) =>
-      supabase
-        .from("reviews")
-        .select(`${REVIEW_PUBLIC}, profiles(display_name), vendors(name, slug), markets(name, slug)`)
-        .eq("flagged", false)
-        .or(reviewScope.join(","))
-        .order("created_at", { ascending: false })
-        .range(from, to),
-    ),
+    visitor
+      ? fetchAllRows<Review>((from, to) =>
+          visitor
+            .from("reviews")
+            .select(`${REVIEW_PUBLIC}, profiles(display_name)`)
+            .eq("flagged", false)
+            .or(reviewScope.join(","))
+            .order("created_at", { ascending: false })
+            .range(from, to),
+        )
+      : Promise.resolve([] as Review[]),
   ]);
   if (vendorRes.error) directoryFailed(vendorRes.error);
   const vendors = vendorRes.data;
@@ -816,25 +865,60 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
     (vendors ?? []).map((v: Vendor) => [v.id, hydrateVendor(v)]),
   );
   const vendorIds = new Set(vendorIdList);
+  const missingVendorIds = [
+    ...new Set(
+      (reviews ?? [])
+        .map((row) => row.vendor_id)
+        .filter((id): id is string => typeof id === "string" && !vendorMap.has(id)),
+    ),
+  ];
+  if (missingVendorIds.length) {
+    const { data: named, error: namedError } = await supabase
+      .from("published_vendors")
+      .select(VENDOR_PUBLIC)
+      .in("id", missingVendorIds);
+    if (namedError) directoryFailed(namedError);
+    for (const row of named ?? []) vendorMap.set(row.id, hydrateVendor(row));
+  }
+  const reviewMarketIds = [
+    ...new Set(
+      (reviews ?? [])
+        .map((row) => row.market_id)
+        .filter((id): id is string => typeof id === "string" && id !== market.id),
+    ),
+  ];
+  const reviewMarkets = new Map<string, { name: string; slug: string }>([
+    [market.id, { name: market.name, slug: market.slug }],
+  ]);
+  if (reviewMarketIds.length) {
+    const { data: namedMarkets, error: namedMarketError } = await supabase
+      .from("published_markets")
+      .select("id, name, slug")
+      .in("id", reviewMarketIds);
+    if (namedMarketError) directoryFailed(namedMarketError);
+    for (const row of namedMarkets ?? []) reviewMarkets.set(row.id, { name: row.name, slug: row.slug });
+  }
 
   const mappedReviews = (
     (reviews ?? []) as unknown as Array<
       Review & {
         profiles?: { display_name: string | null };
-        vendors?: { name: string; slug: string } | null;
-        markets?: { name: string; slug: string } | null;
       }
     >
   )
     .filter((row) => row.market_id === market.id || (row.vendor_id && vendorIds.has(row.vendor_id)))
-    .map((r) => ({
-      ...r,
-      author_name: r.profiles?.display_name ?? "Regular",
-      market_name: r.markets?.name ?? market.name,
-      market_slug: r.markets?.slug ?? market.slug,
-      vendor_name: r.vendors?.name ?? null,
-      vendor_slug: r.vendors?.slug ?? null,
-    }));
+    .map((r) => {
+      const stall = r.vendor_id ? vendorMap.get(r.vendor_id) : undefined;
+      const hall = r.market_id ? reviewMarkets.get(r.market_id) : undefined;
+      return {
+        ...r,
+        author_name: r.profiles?.display_name ?? "Regular",
+        market_name: hall?.name ?? market.name,
+        market_slug: hall?.slug ?? market.slug,
+        vendor_name: stall?.name ?? null,
+        vendor_slug: stall?.slug ?? null,
+      };
+    });
 
   const mappedPosts = (
     (posts ?? []) as unknown as Array<Post & { profiles?: { display_name: string | null; avatar_url: string | null } }>
@@ -873,7 +957,7 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
   if (!supabase) return localVendorBySlug(slug);
 
   const { data: vendor, error } = await supabase
-    .from("vendors")
+    .from("published_vendors")
     .select(VENDOR_PUBLIC)
     .eq("slug", slug)
     .eq("status", "published")
@@ -881,15 +965,18 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
   if (error) directoryFailed(error);
   if (!vendor) return null;
 
+  const visitor = visitorDb();
   const [menusRes, linksRes, reviewsRes] = await Promise.all([
-    supabase.from("vendor_menus").select(MENU_PUBLIC).eq("vendor_id", vendor.id),
-    supabase.from("market_vendors").select(STALL_PUBLIC).eq("vendor_id", vendor.id),
-    supabase
-      .from("reviews")
-      .select(`${REVIEW_PUBLIC}, profiles(display_name), markets(name, slug), vendors(name, slug)`)
-      .eq("vendor_id", vendor.id)
-      .eq("flagged", false)
-      .order("created_at", { ascending: false }),
+    supabase.from("published_menus").select(MENU_PUBLIC).eq("vendor_id", vendor.id),
+    supabase.from("published_stalls").select(STALL_PUBLIC).eq("vendor_id", vendor.id),
+    visitor
+      ? visitor
+          .from("reviews")
+          .select(`${REVIEW_PUBLIC}, profiles(display_name)`)
+          .eq("vendor_id", vendor.id)
+          .eq("flagged", false)
+          .order("created_at", { ascending: false })
+      : Promise.resolve({ data: [] as Review[], error: null }),
   ]);
   if (menusRes.error) directoryFailed(menusRes.error);
   if (linksRes.error) directoryFailed(linksRes.error);
@@ -902,22 +989,22 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
   const [marketsRes, postsRes, scheduleRes] = await Promise.all([
     marketIds.length > 0
       ? supabase
-          .from("markets")
+          .from("published_markets")
           .select(MARKET_PUBLIC)
           .eq("status", "published")
           .in("id", marketIds)
       : Promise.resolve({ data: [] as Market[], error: null }),
-    marketIds.length > 0
-      ? supabase
+    marketIds.length > 0 && visitor
+      ? visitor
           .from("posts")
-          .select(`${POST_PUBLIC}, profiles(display_name), markets(name, slug, city)`)
+          .select(`${POST_PUBLIC}, profiles(display_name)`)
           .eq("flagged", false)
           .in("market_id", marketIds)
           .order("created_at", { ascending: false })
           .limit(120)
       : Promise.resolve({ data: [] as Post[], error: null }),
     marketIds.length > 0
-      ? supabase.from("market_schedules").select(SCHEDULE_PUBLIC).in("market_id", marketIds)
+      ? supabase.from("published_schedules").select(SCHEDULE_PUBLIC).in("market_id", marketIds)
       : Promise.resolve({ data: [] as MarketSchedule[], error: null }),
   ]);
   if (marketsRes.error) directoryFailed(marketsRes.error);
@@ -953,47 +1040,51 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
     (reviews ?? []) as unknown as Array<
       Review & {
         profiles?: { display_name: string | null };
-        markets?: { name: string; slug: string } | null;
-        vendors?: { name: string; slug: string } | null;
       }
     >
   )
     .filter((row) => !row.market_id || publishedMarketIds.has(row.market_id))
-    .map((r) => ({
-    ...r,
-    author_name: r.profiles?.display_name ?? "Regular",
-    market_name: r.markets?.name ?? null,
-    market_slug: r.markets?.slug ?? null,
-    vendor_name: r.vendors?.name ?? (vendor as Vendor).name,
-    vendor_slug: r.vendors?.slug ?? (vendor as Vendor).slug,
-  }));
+    .map((r) => {
+      const hall = r.market_id ? marketMap.get(r.market_id) : undefined;
+      return {
+        ...r,
+        author_name: r.profiles?.display_name ?? "Regular",
+        market_name: hall?.name ?? null,
+        market_slug: hall?.slug ?? null,
+        vendor_name: (vendor as Vendor).name,
+        vendor_slug: (vendor as Vendor).slug,
+      };
+    });
 
   const mappedPosts = (
     (posts ?? []) as unknown as Array<
       Post & {
         profiles?: { display_name: string | null };
-        markets?: { name: string; slug: string; city: string };
       }
     >
   )
     .filter((p) => {
       if (p.market_id && !publishedMarketIds.has(p.market_id)) return false;
+      const hall = p.market_id ? marketMap.get(p.market_id) : undefined;
       const decoded = reviewFromPost({
         ...p,
         author_name: p.profiles?.display_name ?? "Regular",
-        market_name: p.markets?.name,
-        market_slug: p.markets?.slug,
+        market_name: hall?.name,
+        market_slug: hall?.slug,
       });
       return decoded.vendor_slug === slug;
     })
-    .map((p) => ({
-      ...p,
-      author_name: p.profiles?.display_name ?? "Regular",
-      market_name: p.markets?.name,
-      market_slug: p.markets?.slug,
-      vendor_name: (vendor as Vendor).name,
-      vendor_slug: (vendor as Vendor).slug,
-    }));
+    .map((p) => {
+      const hall = p.market_id ? marketMap.get(p.market_id) : undefined;
+      return {
+        ...p,
+        author_name: p.profiles?.display_name ?? "Regular",
+        market_name: hall?.name,
+        market_slug: hall?.slug,
+        vendor_name: (vendor as Vendor).name,
+        vendor_slug: (vendor as Vendor).slug,
+      };
+    });
 
   return {
     ...hydrateVendor(vendor as Vendor),
@@ -1008,13 +1099,16 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
 });
 
 export async function getLivePosts(limit = 20): Promise<Post[]> {
-  const supabase = publicDb();
-  if (!supabase) return [];
-  const { data, error } = await supabase
+  const visitor = visitorDb();
+  if (!visitor || !publicDb()) return [];
+  const markets = await listMarkets();
+  const marketById = new Map(markets.map((market) => [market.id, market]));
+  if (!marketById.size) return [];
+  const { data, error } = await visitor
     .from("posts")
-    .select(`${POST_PUBLIC}, profiles(display_name, avatar_url), markets!inner(name, slug, city, status)`)
+    .select(`${POST_PUBLIC}, profiles(display_name, avatar_url)`)
     .eq("flagged", false)
-    .eq("markets.status", "published")
+    .in("market_id", [...marketById.keys()])
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error || !data?.length) return [];
@@ -1022,38 +1116,44 @@ export async function getLivePosts(limit = 20): Promise<Post[]> {
     data as unknown as Array<
       Post & {
         profiles?: { display_name: string | null; avatar_url: string | null };
-        markets?: { name: string; slug: string; city: string };
       }
     >
-  )
-    .map((p) => ({
-    ...p,
-    author_name: p.profiles?.display_name ?? "Regular",
-    author_avatar: p.profiles?.avatar_url,
-    market_name: p.markets?.name,
-    market_slug: p.markets?.slug,
-    market_city: p.markets?.city,
-  }));
+  ).flatMap((p) => {
+    const hall = marketById.get(p.market_id);
+    if (!hall) return [];
+    return [{
+      ...p,
+      author_name: p.profiles?.display_name ?? "Regular",
+      author_avatar: p.profiles?.avatar_url,
+      market_name: hall.name,
+      market_slug: hall.slug,
+      market_city: hall.city,
+    }];
+  });
 }
 
 export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
-  const supabase = publicDb();
-  if (!supabase) return [];
+  const visitor = visitorDb();
+  if (!visitor || !publicDb()) return [];
+  const [markets, vendors] = await Promise.all([listMarkets(), listVendors()]);
+  const marketById = new Map(markets.map((market) => [market.id, market]));
+  const vendorById = new Map(vendors.map((vendor) => [vendor.id, vendor]));
+  if (!marketById.size) return [];
 
   const [{ data: posts, error: postError }, { data: reviews, error: reviewError }] =
     await Promise.all([
-      supabase
+      visitor
         .from("posts")
-        .select(`${POST_PUBLIC}, profiles(display_name), markets!inner(name, slug, city, status)`)
+        .select(`${POST_PUBLIC}, profiles(display_name)`)
         .eq("flagged", false)
-        .eq("markets.status", "published")
+        .in("market_id", [...marketById.keys()])
         .order("created_at", { ascending: false })
         .limit(limit),
-      supabase
+      visitor
         .from("reviews")
-        .select(`${REVIEW_PUBLIC}, profiles(display_name), markets!inner(name, slug, city, status), vendors(name, slug)`)
+        .select(`${REVIEW_PUBLIC}, profiles(display_name)`)
         .eq("flagged", false)
-        .eq("markets.status", "published")
+        .in("market_id", [...marketById.keys()])
         .order("created_at", { ascending: false })
         .limit(limit),
     ]);
@@ -1064,38 +1164,42 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
     (posts ?? []) as unknown as Array<
       Post & {
         profiles?: { display_name: string | null };
-        markets?: { name: string; slug: string; city?: string };
       }
     >
-  )
-    .map((p) =>
+  ).flatMap((p) => {
+    const hall = marketById.get(p.market_id);
+    if (!hall) return [];
+    return [
       reviewFromPost({
         ...p,
         author_name: p.profiles?.display_name ?? "Regular",
-        market_name: p.markets?.name ?? null,
-        market_slug: p.markets?.slug ?? null,
+        market_name: hall.name,
+        market_slug: hall.slug,
       }),
-    );
+    ];
+  });
 
   const fromReviews = (
     (reviews ?? []) as unknown as Array<
       Review & {
         profiles?: { display_name: string | null };
-        markets?: { name: string; slug: string; city?: string } | null;
-        vendors?: { name: string; slug: string };
       }
     >
-  )
-    .map((r) =>
-    reviewFromReview({
-      ...r,
-      author_name: r.profiles?.display_name ?? "Regular",
-      market_name: r.markets?.name ?? null,
-      market_slug: r.markets?.slug ?? null,
-      vendor_name: r.vendors?.name ?? null,
-      vendor_slug: r.vendors?.slug ?? null,
-    }),
-  );
+  ).flatMap((r) => {
+    const hall = r.market_id ? marketById.get(r.market_id) : undefined;
+    if (!hall) return [];
+    const stall = r.vendor_id ? vendorById.get(r.vendor_id) : undefined;
+    return [
+      reviewFromReview({
+        ...r,
+        author_name: r.profiles?.display_name ?? "Regular",
+        market_name: hall.name,
+        market_slug: hall.slug,
+        vendor_name: stall?.name ?? null,
+        vendor_slug: stall?.slug ?? null,
+      }),
+    ];
+  });
 
   const merged = mergeReviews([...fromPosts, ...fromReviews]);
   return merged.slice(0, limit);

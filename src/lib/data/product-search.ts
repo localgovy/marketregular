@@ -12,7 +12,7 @@ import {
 } from "@/lib/product-hits";
 import { visitBadge, soonestWait, type VisitHall } from "@/lib/product-visit";
 import { hallDayHours } from "@/lib/schedule";
-import { createPublicSupabaseClient } from "@/lib/supabase/public";
+import { createServiceClient } from "@/lib/supabase/admin";
 import type { MarketSchedule } from "@/types/database";
 
 export type FindMarket = {
@@ -88,12 +88,12 @@ const FOOD_CATEGORIES = [
 ] as const;
 
 async function menuRows(slugs: string[]): Promise<MenuRow[]> {
-  const supabase = createPublicSupabaseClient();
+  const supabase = createServiceClient();
   if (!supabase || slugs.length === 0) return [];
   const rows: MenuRow[] = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
-      .from("vendor_menus")
+      .from("published_menus")
       .select("name, product_category, product_slug, price_cents, vendor_id")
       .in("product_slug", slugs)
       .in("product_category", [...FOOD_CATEGORIES])
@@ -196,7 +196,7 @@ export async function searchProducts(args: {
 }): Promise<ProductHit[]> {
   const q = args.q.trim();
   if (!q) return [];
-  const supabase = createPublicSupabaseClient();
+  const supabase = createServiceClient();
   if (!supabase) return [];
   const now = args.now ?? new Date();
   const day = args.day != null && args.day >= 0 && args.day <= 6 ? args.day : null;
@@ -272,7 +272,7 @@ export async function searchProducts(args: {
 export async function searchVendorsByName(q: string, limit = 20): Promise<VendorHit[]> {
   const needle = q.trim().toLowerCase();
   if (needle.length < 2) return [];
-  const supabase = createPublicSupabaseClient();
+  const supabase = createServiceClient();
   if (!supabase) {
     const [vendors, stalls] = await Promise.all([listVendors(), listStalls()]);
     const linked = new Set(stalls.map((stall) => stall.id));
@@ -289,7 +289,7 @@ export async function searchVendorsByName(q: string, limit = 20): Promise<Vendor
   }
   const pattern = `%${needle.replace(/[%_\\]/g, "\\$&")}%`;
   const { data, error } = await supabase
-    .from("vendors")
+    .from("published_vendors")
     .select("id, slug, name, rating_avg, review_count")
     .eq("status", "published")
     .ilike("name", pattern)
@@ -306,7 +306,7 @@ export async function searchVendorsByName(q: string, limit = 20): Promise<Vendor
   }>;
   if (!rows.length) return [];
   const { data: links, error: linkError } = await supabase
-    .from("market_vendors")
+    .from("published_stalls")
     .select("vendor_id")
     .in(
       "vendor_id",

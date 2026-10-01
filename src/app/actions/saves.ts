@@ -1,5 +1,6 @@
 "use server";
 
+import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getBlogPost } from "@/lib/blog";
 import {
@@ -17,13 +18,12 @@ function validKind(kind: string): kind is Exclude<SaveKind, "listing" | "product
   return kind === "market" || kind === "vendor" || kind === "blog";
 }
 
-async function publishedVendorSlugs(
-  supabase: NonNullable<Awaited<ReturnType<typeof createServerSupabaseClient>>>,
-  slugs: string[],
-) {
+async function publishedVendorSlugs(slugs: string[]) {
   if (!slugs.length) return new Set<string>();
+  const supabase = createServiceClient();
+  if (!supabase) return null;
   const { data, error } = await supabase
-    .from("vendors")
+    .from("published_vendors")
     .select("slug")
     .eq("status", "published")
     .in("slug", slugs);
@@ -185,7 +185,7 @@ export async function persistProductSave(
   if (!user) return null;
 
   if (saved) {
-    const published = await publishedVendorSlugs(supabase, [product.vendorSlug]);
+    const published = await publishedVendorSlugs([product.vendorSlug]);
     if (!published?.has(product.vendorSlug)) return null;
     const { error } = await supabase.from("saves").insert({
       user_id: user.id,
@@ -286,10 +286,9 @@ export async function mergeSaves(local: Saves, dropped: string[] = []): Promise<
     const product = productFromInput(item);
     if (product) productRows.push(product);
   }
-  const published = await publishedVendorSlugs(
-    supabase,
-    [...new Set(productRows.map((product) => product.vendorSlug))],
-  );
+  const published = await publishedVendorSlugs([
+    ...new Set(productRows.map((product) => product.vendorSlug)),
+  ]);
   if (!published) return null;
   for (const product of productRows) {
     if (!published.has(product.vendorSlug)) continue;

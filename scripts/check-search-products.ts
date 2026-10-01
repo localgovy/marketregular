@@ -65,8 +65,8 @@ async function rpc(url: string, key: string, body: Record<string, unknown>) {
 
 loadEnv(join(import.meta.dirname, "..", ".env.local"));
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-if (!url || !key) throw new Error("Missing publishable Supabase env");
+const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!url || !key) throw new Error("Missing service role Supabase env");
 
 const sourdough = (await rpc(url, key, { q: "sourdough" })) as Array<{ product_slug?: string }>;
 if (!sourdough.length) throw new Error("sourdough returned no rows");
