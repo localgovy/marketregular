@@ -58,14 +58,14 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
             <HeaderSearch
               key={q}
               initialQuery={q}
-              className="min-w-0 flex-1 md:min-w-40 xl:ml-auto xl:max-w-md"
+              className="min-w-0 flex-1 xl:min-w-80 xl:max-w-lg"
             />
           )}
           {auth ? null : (
             <Link
               href={SITE_CLAIM_NAV.href}
               prefetch={false}
-              className="hidden shrink-0 text-sm font-medium whitespace-nowrap hover:underline lg:inline"
+              className="hidden shrink-0 text-sm font-medium whitespace-nowrap hover:underline min-[100rem]:inline"
             >
               {SITE_CLAIM_NAV.label}
             </Link>
@@ -104,8 +104,7 @@ function HeaderQuery({
   auth: boolean;
 }) {
   const params = useSearchParams();
-  const q =
-    pathname === "/markets" || pathname === "/products" ? (params.get("q") ?? "") : "";
+  const q = pathname === "/markets" ? (params.get("q") ?? "") : "";
   return <HeaderFrame auth={auth} q={q} />;
 }
 

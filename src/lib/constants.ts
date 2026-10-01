@@ -7,7 +7,7 @@ export const SITE_TAGLINE = "Toronto farmers' markets, all in one place";
 /** Homepage and default document title. Google uses this for the domain result. */
 export const SITE_TITLE = `${SITE_NAME} - ${SITE_TAGLINE}`;
 
-/** Home finder and the markets directory. The header uses the product search copy. */
+/** Home finder, the markets directory, and the header search. */
 export const SEARCH_PLACEHOLDER = "Market, vendor, cuisine, or neighbourhood";
 export const SEARCH_LABEL = "Search markets and vendors";
 export const PRODUCT_SEARCH_PLACEHOLDER = "Bread, eggs, honey, or a vendor";
