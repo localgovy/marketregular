@@ -1,4 +1,3 @@
-import { persistListingSaves, persistProductSave, persistSave } from "@/app/actions/saves";
 import { listingDetailJson, listingFromInput, type SavedListing } from "@/lib/listing-saves";
 import { productDetailJson, productFromInput, type SavedProduct } from "@/lib/product-saves";
 import { replaceSaves, type SaveKind } from "@/lib/saves";
@@ -67,21 +66,35 @@ export function takePendingSave(): PendingSave | null {
   }
 }
 
+/** When persist returns nothing, the clip goes back. A canonical list means it stuck. */
+export function pendingToRestore<T>(pending: PendingSave, canonical: T | null) {
+  return canonical ? null : pending;
+}
+
+export function restorePendingSave(pending: PendingSave) {
+  stashPendingSave(pending);
+}
+
 /** Persist a Save the guest started before sign-in. One clip, same chip. */
 export async function flushPendingSave() {
   const pending = takePendingSave();
   if (!pending) return;
-  if (pending.kind === "listing") {
-    const rows = pending.listings?.length ? pending.listings : [pending.listing];
-    const canonical = await persistListingSaves(rows.map(listingDetailJson), true);
-    if (canonical) replaceSaves(canonical);
+  const { persistListingSaves, persistProductSave, persistSave } = await import(
+    "@/app/actions/saves"
+  );
+  const canonical =
+    pending.kind === "listing"
+      ? await persistListingSaves(
+          (pending.listings?.length ? pending.listings : [pending.listing]).map(listingDetailJson),
+          true,
+        )
+      : pending.kind === "product"
+        ? await persistProductSave(productDetailJson(pending.product), true)
+        : await persistSave(pending.kind, pending.slug, true);
+  const restore = pendingToRestore(pending, canonical);
+  if (restore) {
+    restorePendingSave(restore);
     return;
   }
-  if (pending.kind === "product") {
-    const canonical = await persistProductSave(productDetailJson(pending.product), true);
-    if (canonical) replaceSaves(canonical);
-    return;
-  }
-  const canonical = await persistSave(pending.kind, pending.slug, true);
   if (canonical) replaceSaves(canonical);
 }

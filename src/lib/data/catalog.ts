@@ -1132,7 +1132,7 @@ export async function getLivePosts(limit = 20): Promise<Post[]> {
   });
 }
 
-export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
+async function loadFloorTape(limit: number): Promise<FloorItem[]> {
   const visitor = visitorDb();
   if (!visitor || !publicDb()) return [];
   const [markets, vendors] = await Promise.all([listMarkets(), listVendors()]);
@@ -1203,6 +1203,18 @@ export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
 
   const merged = mergeReviews([...fromPosts, ...fromReviews]);
   return merged.slice(0, limit);
+}
+
+const loadCachedFloorTape = unstable_cache(
+  async (limit: number) => loadFloorTape(limit),
+  ["floor-tape-v1"],
+  { revalidate: 120 },
+);
+
+export async function getFloorTape(limit = 24): Promise<FloorItem[]> {
+  const size = Number.isFinite(limit) ? Math.trunc(limit) : 24;
+  if (size < 1) return [];
+  return loadCachedFloorTape(size);
 }
 
 export async function getFeaturedMarkets() {

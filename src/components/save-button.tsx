@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { persistListingSaves, persistProductSave, persistSave } from "@/app/actions/saves";
 import { listingDetailJson } from "@/lib/listing-saves";
@@ -19,6 +19,7 @@ import {
   type SaveKind,
   type SavedListing,
 } from "@/lib/saves";
+import { acceptSaveResult } from "@/lib/save-generation";
 import { stashPendingSave } from "@/lib/pending-save";
 import { openSignInSlip } from "@/lib/signin-slip";
 import { documentHasAuthCookie } from "@/lib/supabase/auth-cookie";
@@ -105,6 +106,7 @@ export function SaveButton({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const generation = useRef(0);
   const ready = useSaveReady();
   const saves = useSaves();
   const saved = isSaved(kind, slug, saves);
@@ -132,9 +134,11 @@ export function SaveButton({
         }
         const nextSaved = !saved;
         const before = copySaves();
+        const clickGeneration = ++generation.current;
         toggleSave(kind, slug);
         void persistSave(kind, slug, nextSaved)
           .then((canonical) => {
+            if (!acceptSaveResult(clickGeneration, generation.current)) return;
             if (canonical) {
               replaceSaves(canonical);
               refreshIfSavedPage(pathname, router);
@@ -144,6 +148,7 @@ export function SaveButton({
             if (!documentHasAuthCookie()) router.push(loginHref);
           })
           .catch(() => {
+            if (!acceptSaveResult(clickGeneration, generation.current)) return;
             restoreSaves(before);
           });
       }}
@@ -172,6 +177,7 @@ export function ListingSaveButton({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const generation = useRef(0);
   const ready = useSaveReady();
   const saves = useSaves();
   if (!ready) return <SavePlaceholder size={size} />;
@@ -200,11 +206,13 @@ export function ListingSaveButton({
         }
         const nextSaved = !saved;
         const before = copySaves();
+        const clickGeneration = ++generation.current;
         for (const row of group) {
           if (isSaved("listing", row.slug) !== nextSaved) toggleListing(row);
         }
         void persistListingSaves(group.map(listingDetailJson), nextSaved)
           .then((canonical) => {
+            if (!acceptSaveResult(clickGeneration, generation.current)) return;
             if (!canonical) {
               restoreSaves(before);
               if (!documentHasAuthCookie()) router.push(loginHref);
@@ -213,7 +221,10 @@ export function ListingSaveButton({
             replaceSaves(canonical);
             refreshIfSavedPage(pathname, router);
           })
-          .catch(() => restoreSaves(before));
+          .catch(() => {
+            if (!acceptSaveResult(clickGeneration, generation.current)) return;
+            restoreSaves(before);
+          });
       }}
       className={saveChipClass(size, saved)}
     >
@@ -232,6 +243,7 @@ export function ProductSaveButton({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const generation = useRef(0);
   const ready = useSaveReady();
   const saves = useSaves();
   if (!ready) return <SavePlaceholder size={size} />;
@@ -255,9 +267,11 @@ export function ProductSaveButton({
         }
         const nextSaved = !saved;
         const before = copySaves();
+        const clickGeneration = ++generation.current;
         toggleProduct(product);
         void persistProductSave(productDetailJson(product), nextSaved)
           .then((canonical) => {
+            if (!acceptSaveResult(clickGeneration, generation.current)) return;
             if (!canonical) {
               restoreSaves(before);
               if (!documentHasAuthCookie()) router.push(loginHref);
@@ -266,7 +280,10 @@ export function ProductSaveButton({
             replaceSaves(canonical);
             refreshIfSavedPage(pathname, router);
           })
-          .catch(() => restoreSaves(before));
+          .catch(() => {
+            if (!acceptSaveResult(clickGeneration, generation.current)) return;
+            restoreSaves(before);
+          });
       }}
       className={saveChipClass(size, saved)}
     >

@@ -1,6 +1,6 @@
 "use server";
 
-import { searchProducts } from "@/lib/data/product-search";
+import { normalizeSearchQuery, searchProducts } from "@/lib/data/product-search";
 import { takeCatalogSlot } from "@/lib/mail-limit";
 import type { ProductHit } from "@/lib/product-hits";
 import { z } from "zod";
@@ -20,7 +20,7 @@ export async function moreProducts(input: {
   day?: number | null;
   offset: number;
 }): Promise<ProductHit[]> {
-  const parsed = moreSchema.safeParse(input);
+  const parsed = moreSchema.safeParse({ ...input, q: normalizeSearchQuery(input.q) });
   if (!parsed.success) return [];
   if (!(await takeCatalogSlot())) return [];
   return searchProducts({

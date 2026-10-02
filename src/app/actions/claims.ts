@@ -1,7 +1,7 @@
 "use server";
 
 import { Resend } from "resend";
-import { isBlockedBot } from "@/lib/bot-check";
+import { isHumanRequest } from "@/lib/bot-check";
 import { isClaimRole } from "@/lib/claim";
 import { CLAIM_INBOX, SITE_NAME, SITE_URL } from "@/lib/constants";
 import { sanitizeMailAddress, sanitizeMailHeader } from "@/lib/mail-header";
@@ -93,7 +93,7 @@ function claimEmail(fields: {
 }
 
 export async function submitClaim(formData: FormData) {
-  if (await isBlockedBot()) {
+  if (!(await isHumanRequest())) {
     return { error: "Could not send right now. Write us if it keeps failing." };
   }
   if (clip(formData.get("_gotcha"), 80)) {

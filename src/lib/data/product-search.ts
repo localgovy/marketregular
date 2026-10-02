@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/catalog";
 import {
@@ -65,6 +66,13 @@ type RpcRow = {
 function asDays(value: unknown): number[] {
   if (!Array.isArray(value)) return [];
   return value.filter((day): day is number => typeof day === "number");
+}
+
+/** Shared by the products page, `/api/search`, and paging. */
+export const SEARCH_QUERY_MAX = 80;
+
+export function normalizeSearchQuery(q: string) {
+  return q.trim().replace(/\s+/g, " ").slice(0, SEARCH_QUERY_MAX);
 }
 
 const FOOD_CATEGORIES = [
@@ -186,6 +194,32 @@ export const listFindVendors = cache(async function listFindVendors(
     .sort((a, b) => a.waitDays - b.waitDays || a.name.localeCompare(b.name, "en-CA"));
 });
 
+const loadCachedSearchRows = unstable_cache(
+  async (
+    q: string,
+    openToday: boolean,
+    marketSlug: string,
+    day: number,
+    offset: number,
+  ): Promise<RpcRow[]> => {
+    const supabase = createServiceClient();
+    if (!supabase) return [];
+    const { data, error } = await supabase.rpc("search_products", {
+      q,
+      open_today: openToday,
+      market_slug: marketSlug || null,
+      day: day >= 0 && day <= 6 ? day : null,
+      lim: PRODUCT_PAGE,
+      off: offset,
+    });
+    if (error) throw new Error("Could not search products");
+    assertPublicSearchPayload(data);
+    return (data ?? []) as RpcRow[];
+  },
+  ["search-products-v1"],
+  { revalidate: 60 },
+);
+
 export async function searchProducts(args: {
   q: string;
   openToday?: boolean;
@@ -194,27 +228,22 @@ export async function searchProducts(args: {
   offset?: number;
   now?: Date;
 }): Promise<ProductHit[]> {
-  const q = args.q.trim();
+  const q = normalizeSearchQuery(args.q);
   if (!q) return [];
-  const supabase = createServiceClient();
-  if (!supabase) return [];
   const now = args.now ?? new Date();
-  const day = args.day != null && args.day >= 0 && args.day <= 6 ? args.day : null;
-  const [{ data, error }, markets, schedules, vendors] = await Promise.all([
-    supabase.rpc("search_products", {
-      q,
-      open_today: Boolean(args.openToday),
-      market_slug: args.marketSlug?.trim() || null,
-      day,
-      lim: PRODUCT_PAGE,
-      off: Math.max(0, args.offset ?? 0),
-    }),
+  const day = args.day != null && args.day >= 0 && args.day <= 6 ? args.day : -1;
+  const marketSlug = args.marketSlug?.trim().slice(0, 160) ?? "";
+  const rawOffset = args.offset ?? 0;
+  const offset = Number.isFinite(rawOffset)
+    ? Math.max(0, Math.min(Math.trunc(rawOffset), 4000))
+    : 0;
+  const openToday = Boolean(args.openToday);
+  const [data, markets, schedules, vendors] = await Promise.all([
+    loadCachedSearchRows(q, openToday, marketSlug, day, offset),
     listMarkets(),
     listSchedules(),
     listVendors(),
   ]);
-  if (error) throw new Error("Could not search products");
-  assertPublicSearchPayload(data);
   const marketBySlug = new Map(markets.map((market) => [market.slug, market]));
   const vendorBySlug = new Map(vendors.map((vendor) => [vendor.slug, vendor]));
   const schedulesByMarket = new Map<string, MarketSchedule[]>();
@@ -270,7 +299,7 @@ export async function searchProducts(args: {
 }
 
 export async function searchVendorsByName(q: string, limit = 20): Promise<VendorHit[]> {
-  const needle = q.trim().toLowerCase();
+  const needle = normalizeSearchQuery(q).toLowerCase();
   if (needle.length < 2) return [];
   const supabase = createServiceClient();
   if (!supabase) {

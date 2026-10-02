@@ -1,7 +1,7 @@
 "use server";
 
 import { AUTH_NEXT_COOKIE, authOrigin, safePath } from "@/lib/auth-redirect";
-import { isBlockedBot } from "@/lib/bot-check";
+import { isBlockedBot, isHumanRequest } from "@/lib/bot-check";
 import { emailOtpType } from "@/lib/auth-callback";
 import {
   dbPublicError,
@@ -96,7 +96,7 @@ export async function signInWithPassword(formData: FormData) {
 }
 
 export async function signUpWithPassword(formData: FormData) {
-  if (await isBlockedBot()) return { error: "Could not create that account." };
+  if (!(await isHumanRequest())) return { error: "Could not create that account." };
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { error: "Supabase is not configured yet." };
   const email = String(formData.get("email") ?? "").trim();
@@ -124,7 +124,7 @@ export async function signUpWithPassword(formData: FormData) {
 }
 
 export async function requestPasswordReset(formData: FormData) {
-  if (await isBlockedBot()) return { error: "Wait a bit, then try again." };
+  if (!(await isHumanRequest())) return { error: "Wait a bit, then try again." };
   const supabase = await createServerSupabaseClient();
   if (!supabase) return { error: "Supabase is not configured yet." };
   const email = String(formData.get("email") ?? "").trim();

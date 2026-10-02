@@ -1,5 +1,6 @@
 "use server";
 
+import { isHumanRequest } from "@/lib/bot-check";
 import { encodeFloorBody } from "@/lib/floor-note";
 import { allowedPostPhotos } from "@/lib/post-photos";
 import { dbPublicError } from "@/lib/public-error";
@@ -58,6 +59,7 @@ export async function createPost(input: {
   const { supabase, user, demo } = await requireUser();
   if (demo) return { error: "Reviews aren't available right now. Try again later." };
   if (!supabase || !user) return { error: "Sign in to review." };
+  if (!(await isHumanRequest())) return { error: "Could not post that review." };
 
   const vendorSlug = await rosterVendorSlug(note.marketId, note.vendorSlug);
   const rating = note.rating && note.rating >= 1 ? note.rating : undefined;

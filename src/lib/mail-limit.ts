@@ -23,6 +23,9 @@ export function hashMailKey(value: string) {
 export async function clientIp() {
   const h = await headers();
   const vercel = h.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (process.env.NODE_ENV === "production") {
+    return (vercel || "unknown").slice(0, 64);
+  }
   const real = h.get("x-real-ip")?.trim();
   const cf = h.get("cf-connecting-ip")?.trim();
   const forwarded = h.get("x-forwarded-for");
