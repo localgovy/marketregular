@@ -52,7 +52,7 @@ Redirect URLs (localhost only on this list, not as Site URL):
 
 To turn on Continue with Google: create a Google Cloud OAuth 2.0 Web client, then enable the Google provider in Supabase Auth with that client ID and secret.
 
-On that same Web client, keep the Supabase callback and add the MarketRegular callbacks. Google’s account picker shows the host of the **redirect URI the app sends**. Continue with Google on this site sends people to `/auth/callback` here, so the picker says marketregular.com. If the app sends them to `*.supabase.co/auth/v1/callback` instead, the picker says supabase.co even when the site callbacks are already on the Cloud client.
+Google’s consent screen names the host of the Auth callback (`redirect_uri`), not this site’s `/auth/callback`. That callback must stay `https://auth.marketregular.com/auth/v1/callback`. Continue with Google refuses to open Google when the callback host is anything else, including `*.supabase.co`. DNS for `auth` is in [DOMAIN.md](DOMAIN.md). App name **MarketRegular** on that screen also needs the published Google brand (home `https://www.marketregular.com`, privacy `/privacy`, terms `/terms`).
 
 **Authorized JavaScript origins**
 
@@ -62,10 +62,10 @@ On that same Web client, keep the Supabase callback and add the MarketRegular ca
 
 **Authorized redirect URIs**
 
-- `https://<project-ref>.supabase.co/auth/v1/callback` (keep this for Vercel preview hosts)
-- `https://www.marketregular.com/auth/callback`
-- `https://marketregular.com/auth/callback`
-- `http://localhost:3000/auth/callback` (local only)
+- `https://auth.marketregular.com/auth/v1/callback`
+- `http://127.0.0.1:54321/auth/v1/callback` (local Supabase only)
+
+Do not add `https://<project-ref>.supabase.co/auth/v1/callback`. Google would show that host on the consent screen.
 
 Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars.
 
