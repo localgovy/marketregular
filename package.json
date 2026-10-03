@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --import ./scripts/register-test-alias.mjs --test scripts/schedule.test.ts scripts/save-generation.test.ts scripts/pending-save.test.ts scripts/vendor-portal.test.ts scripts/selling.test.ts scripts/vendor-password.test.ts",
+    "test": "node --experimental-strip-types --import ./scripts/register-test-alias.mjs --test scripts/schedule.test.ts scripts/save-generation.test.ts scripts/pending-save.test.ts scripts/vendor-portal.test.ts scripts/selling.test.ts scripts/vendor-password.test.ts scripts/google-oauth-host.test.ts",
+    "check:google-oauth": "node --experimental-strip-types scripts/check-google-oauth-host.ts",
     "seed:sql": "node --experimental-strip-types scripts/generate-seed-sql.ts",
     "seed:import": "node --experimental-strip-types scripts/import-toronto-markets.ts"
   },
@@ -37,6 +38,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
