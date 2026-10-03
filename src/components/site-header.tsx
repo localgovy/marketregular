@@ -36,11 +36,11 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
             </a>
           </div>
         </div>
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 sm:gap-3 lg:h-header-bar-lg lg:px-6">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:h-header-bar-lg lg:px-6">
           {auth ? null : (
             <nav
               aria-label="Primary"
-              className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary xl:flex"
+              className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary xl:mr-auto xl:flex"
             >
               {SITE_NAV.map((item) => (
                 <NavLink
@@ -58,7 +58,7 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
             <HeaderSearch
               key={q}
               initialQuery={q}
-              className="min-w-0 flex-1 xl:min-w-80 xl:max-w-lg"
+              className="min-w-0 flex-1 xl:max-w-lg xl:flex-[0_1_32rem]"
             />
           )}
           {auth ? null : (
