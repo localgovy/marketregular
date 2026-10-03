@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { mustSetPassword } from "@/lib/password-gate";
 import { createAccountSession } from "@/lib/stall-payments";
 import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeConnectConfigured } from "@/lib/stripe";
@@ -16,6 +17,9 @@ export async function POST(request: Request) {
   }
   const { supabase, user } = await createAuthedServerClient();
   if (!supabase || !user) return NextResponse.json({ error: "Sign in first." }, { status: 401 });
+  if (mustSetPassword(user.app_metadata)) {
+    return NextResponse.json({ error: "Set a password first." }, { status: 403 });
+  }
   let vendorId = "";
   try {
     const body = (await request.json()) as { vendorId?: unknown };

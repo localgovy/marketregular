@@ -1,6 +1,12 @@
 "use server";
 
-import { AUTH_NEXT_COOKIE, authOrigin, safePath } from "@/lib/auth-redirect";
+import {
+  AUTH_NEXT_COOKIE,
+  PASSWORD_RECOVERY_COOKIE,
+  authOrigin,
+  passwordRecoveryCookie,
+  safePath,
+} from "@/lib/auth-redirect";
 import { isBlockedBot, isHumanRequest } from "@/lib/bot-check";
 import { emailOtpType } from "@/lib/auth-callback";
 import {
@@ -11,7 +17,7 @@ import {
   signUpPublicError,
 } from "@/lib/public-error";
 import { saveChosenVendorPassword, syncChosenVendorPassword } from "@/lib/issue-vendor-password";
-import { mustSetPassword } from "@/lib/password-gate";
+import { canChangePassword, mustSetPassword } from "@/lib/password-gate";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -158,6 +164,11 @@ export async function verifyEmailOtp(formData: FormData) {
     redirect(dest);
   }
   revalidatePath("/", "layout");
+  if (type === "recovery") {
+    const jar = await cookies();
+    jar.set(PASSWORD_RECOVERY_COOKIE, "1", passwordRecoveryCookie(600));
+    redirect("/account/password");
+  }
   redirect(next);
 }
 
@@ -172,11 +183,17 @@ export async function updatePassword(formData: FormData) {
   const confirm = String(formData.get("confirm") ?? "");
   const current = String(formData.get("current_password") ?? "");
   const forced = mustSetPassword(user.app_metadata);
+  const jar = await cookies();
+  const recovery = jar.get(PASSWORD_RECOVERY_COOKIE)?.value === "1";
   if (password.length < 8) return { error: "Use at least 8 characters." };
   if (password !== confirm) return { error: "Those passwords do not match." };
-  const steppedUp = hasPasswordIdentity(user)
-    ? await confirmCurrentPassword(user, current)
-    : recentlySignedIn(user);
+  const hasPassword = hasPasswordIdentity(user);
+  const steppedUp = canChangePassword({
+    recovery,
+    hasPassword,
+    currentOk: !recovery && hasPassword ? await confirmCurrentPassword(user, current) : false,
+    recentSignIn: recentlySignedIn(user),
+  });
   if (!steppedUp) {
     return hasPasswordIdentity(user)
       ? { error: "Enter your current password." }
@@ -198,6 +215,7 @@ export async function updatePassword(formData: FormData) {
     }
     if (forced || saved.wrote) revalidatePath("/admin/vendors", "layout");
   }
+  jar.set(PASSWORD_RECOVERY_COOKIE, "", passwordRecoveryCookie(0));
   if (forced) {
     await supabase.auth.refreshSession();
     await supabase.auth.signOut({ scope: "others" });

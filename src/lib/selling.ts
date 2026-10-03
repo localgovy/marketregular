@@ -81,6 +81,47 @@ export function checkoutAmountMatches(
   return typeof amount === "number" && amount === chargeCents;
 }
 
+/**
+ * A connected account can create its own Checkout Session and put any order id
+ * in the metadata. Only the session this app stored, on that stall's account,
+ * can pay or expire the order. A missing event account still has to match the
+ * stored session id.
+ */
+export function stallCheckoutBinds(input: {
+  storedSessionId: string | null;
+  sessionId: string;
+  eventAccount: string | null;
+  vendorAccount: string | null;
+}) {
+  if (!input.storedSessionId || input.storedSessionId !== input.sessionId) return false;
+  if (!input.vendorAccount) return false;
+  if (input.eventAccount && input.eventAccount !== input.vendorAccount) return false;
+  return true;
+}
+
+export function stallExpireBinds(storedSessionId: string | null, sessionId: string) {
+  return storedSessionId !== null && storedSessionId === sessionId;
+}
+
+/** Stall fees are charged on the platform account, and only for a session we opened. */
+export function platformFeeBinds(input: {
+  eventAccount: string | null;
+  currency: string | null | undefined;
+  expectedVendorId: string | null;
+  expectedAmountCents: number | null;
+  sessionVendorId: string | null;
+  paidAmountCents: number | null;
+}) {
+  if (input.eventAccount) return false;
+  if (input.currency?.toLowerCase() !== "cad") return false;
+  if (!input.expectedVendorId || input.expectedAmountCents == null) return false;
+  if (!input.sessionVendorId || input.paidAmountCents == null) return false;
+  return (
+    input.sessionVendorId === input.expectedVendorId &&
+    input.paidAmountCents === input.expectedAmountCents
+  );
+}
+
 /** Money already back with the buyer. A later reversal does not shrink an earlier one. */
 export function returnedCents(chargeCents: number, alreadyCents: number, incomingCents: number) {
   wholeCents(chargeCents, "Charge");

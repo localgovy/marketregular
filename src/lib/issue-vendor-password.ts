@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   alignIssuedPassword,
+  CHOSEN_PASSWORD_MARKER,
   claimPasswordAction,
   decryptVendorPassword,
   encryptVendorPassword,
@@ -128,11 +129,10 @@ export async function syncChosenVendorPassword(admin: SupabaseClient, user: User
 }
 
 export async function saveChosenVendorPassword(admin: SupabaseClient, user: User, password: string) {
-  const key = vendorPasswordKey();
-  if (!key) return { error: "Could not save that password.", stored: false, wrote: false };
+  if (password.length < 8) return { error: "Could not save that password.", stored: false, wrote: false };
   const { error: storeError } = await admin.from("vendor_sign_in_secrets").upsert({
     user_id: user.id,
-    ciphertext: encryptVendorPassword(password, key),
+    ciphertext: CHOSEN_PASSWORD_MARKER,
     chosen: true,
   });
   if (storeError) return { error: "Could not save that password.", stored: false, wrote: false };

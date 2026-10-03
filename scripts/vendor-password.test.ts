@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { test } from "node:test";
-import { mustSetPassword, passwordChangeAllowed } from "../src/lib/password-gate.ts";
+import { canChangePassword, mustSetPassword, passwordChangeAllowed } from "../src/lib/password-gate.ts";
 import {
   alignIssuedPassword,
+  CHOSEN_PASSWORD_MARKER,
   claimPasswordAction,
   decryptVendorPassword,
   encryptVendorPassword,
   generateVendorPassword,
+  readVendorPassword,
   secretAfterFailedAuth,
   vendorPasswordKey,
 } from "../src/lib/vendor-password.ts";
@@ -69,6 +71,28 @@ test("a later approval does not rotate a chosen or still-pending password", () =
   assert.equal(claimPasswordAction({ chosen: false }, true), "resend");
   assert.equal(claimPasswordAction({ chosen: true }, false), "skip");
   assert.equal(claimPasswordAction({ chosen: true }, true), "skip");
+});
+
+test("a recovery link can replace the password and a chosen secret is not readable", () => {
+  assert.equal(
+    canChangePassword({ recovery: true, hasPassword: true, currentOk: false, recentSignIn: false }),
+    true,
+  );
+  assert.equal(
+    canChangePassword({ recovery: false, hasPassword: true, currentOk: false, recentSignIn: true }),
+    false,
+  );
+  assert.equal(
+    canChangePassword({ recovery: false, hasPassword: true, currentOk: true, recentSignIn: false }),
+    true,
+  );
+  assert.equal(
+    canChangePassword({ recovery: false, hasPassword: false, currentOk: false, recentSignIn: true }),
+    true,
+  );
+  assert.equal(readVendorPassword(CHOSEN_PASSWORD_MARKER, true), null);
+  assert.equal(readVendorPassword("v1.still-sealed", true), null);
+  assert.equal(CHOSEN_PASSWORD_MARKER.length >= 20, true);
 });
 
 test("the first sign-in can only open the new-password page", () => {

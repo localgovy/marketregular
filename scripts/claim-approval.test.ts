@@ -4,7 +4,7 @@ import { before, describe, test } from "node:test";
 import { applyClaimDecision } from "../src/lib/claim-approval.ts";
 import { prepareVendorClaimPassword, saveChosenVendorPassword } from "../src/lib/issue-vendor-password.ts";
 import { needsOnboarding, onboardingExemptPath, skipsShopperOnboarding } from "../src/lib/onboarding.ts";
-import { decryptVendorPassword, encryptVendorPassword } from "../src/lib/vendor-password.ts";
+import { CHOSEN_PASSWORD_MARKER, decryptVendorPassword, encryptVendorPassword } from "../src/lib/vendor-password.ts";
 import { sendVendorPortalMail, vendorPortalLetter } from "../src/lib/vendor-portal-mail.ts";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
@@ -543,7 +543,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
     const saved = await saveChosenVendorPassword(desk.client, { id: USER } as User, "chosen-pass-1");
     assert.deepEqual(saved, { error: null, stored: true, wrote: true });
     assert.equal(desk.state.secrets[0]?.chosen, true);
-    assert.equal(decryptVendorPassword(desk.state.secrets[0]!.ciphertext, key), "chosen-pass-1");
+    assert.equal(desk.state.secrets[0]?.ciphertext, CHOSEN_PASSWORD_MARKER);
     assert.deepEqual(desk.state.users.get(USER)?.app_metadata, {
       must_set_password: false,
       provider: "email",
@@ -562,11 +562,14 @@ describe("vendor claim approval", { concurrency: false }, () => {
     delete process.env.VENDOR_PASSWORD_KEY;
     try {
       const locked = createDesk();
+      locked.state.users.get(USER)!.app_metadata = { must_set_password: true };
       const missing = await saveChosenVendorPassword(locked.client, { id: USER } as User, "chosen-pass-3");
-      assert.deepEqual(missing, { error: "Could not save that password.", stored: false, wrote: false });
-      assert.equal(locked.state.secrets.length, 0);
+      assert.equal(missing.error, null);
+      assert.equal(locked.state.secrets[0]?.ciphertext, CHOSEN_PASSWORD_MARKER);
+      assert.equal(locked.state.users.get(USER)?.app_metadata.must_set_password, false);
     } finally {
-      process.env.VENDOR_PASSWORD_KEY = previous;
+      if (previous === undefined) delete process.env.VENDOR_PASSWORD_KEY;
+      else process.env.VENDOR_PASSWORD_KEY = previous;
     }
   });
 

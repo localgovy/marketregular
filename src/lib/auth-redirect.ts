@@ -4,6 +4,17 @@ import { isTrustedSiteHost } from "@/lib/site-host";
 const SAFE_PATH = /^\/[A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%\-]*$/;
 
 export const AUTH_NEXT_COOKIE = "mr-auth-next";
+export const PASSWORD_RECOVERY_COOKIE = "mr-password-recovery";
+
+export function passwordRecoveryCookie(maxAge: number) {
+  return {
+    httpOnly: true,
+    path: "/",
+    maxAge,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+  };
+}
 
 export function safePath(next: unknown, fallback = "/account") {
   if (typeof next !== "string") return fallback;

@@ -34,8 +34,9 @@ export async function POST(request: Request) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded": {
         const session = event.data.object as Stripe.Checkout.Session;
-        await recordStallCheckout(session);
-        await recordPlatformFee(session);
+        const account = event.account ?? null;
+        await recordStallCheckout(session, account);
+        await recordPlatformFee(session, account);
         break;
       }
       case "checkout.session.expired":

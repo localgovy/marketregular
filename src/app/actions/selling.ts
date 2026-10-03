@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/admin";
+import { mustSetPassword } from "@/lib/password-gate";
 import { parseCheckoutDetails, saleReady, VENDOR_SALES_OPEN } from "@/lib/selling";
 import {
   confirmFeeCheckout,
@@ -19,6 +20,9 @@ import { redirect } from "next/navigation";
 async function ownedListing(vendorId: string) {
   const { supabase, user } = await createAuthedServerClient();
   if (!supabase || !user) return { error: "Sign in first." as const, user: null, listing: null };
+  if (mustSetPassword(user.app_metadata)) {
+    return { error: "Set a password first." as const, user: null, listing: null };
+  }
   if (!isUuid(vendorId)) return { error: "That stall is missing." as const, user: null, listing: null };
   const { data, error } = await supabase.rpc("owns_vendor", { p_id: vendorId });
   if (error || data !== true) {

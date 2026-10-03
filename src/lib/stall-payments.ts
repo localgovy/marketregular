@@ -10,7 +10,10 @@ import {
   checkoutAmountMatches,
   feeAfterRefund,
   MIN_FEE_PAYMENT_CENTS,
+  platformFeeBinds,
   returnedCents,
+  stallCheckoutBinds,
+  stallExpireBinds,
   torontoDate,
   VENDOR_SALES_OPEN,
   type CheckoutDetails,
@@ -245,6 +248,17 @@ export async function createAccountSession(vendorId: string) {
   return session.client_secret;
 }
 
+async function stallAccountId(vendorId: string) {
+  const db = service();
+  if (!db) return null;
+  const { data } = await db
+    .from("vendor_stripe_accounts")
+    .select("stripe_account_id")
+    .eq("vendor_id", vendorId)
+    .maybeSingle();
+  return typeof data?.stripe_account_id === "string" ? data.stripe_account_id : null;
+}
+
 async function loadOrder(id: string) {
   const db = service();
   if (!db) return null;
@@ -280,7 +294,10 @@ async function syncFee(order: OrderRow) {
   if (error && error.code !== "23505") console.error("stall fee", error.code);
 }
 
-export async function recordStallCheckout(session: Stripe.Checkout.Session) {
+export async function recordStallCheckout(
+  session: Stripe.Checkout.Session,
+  stripeAccount: string | null,
+) {
   if (session.metadata?.kind !== "stall_order") return;
   if (session.payment_status !== "paid") return;
   const orderId = session.metadata.order_id;
@@ -298,7 +315,15 @@ export async function recordStallCheckout(session: Stripe.Checkout.Session) {
     console.error("stall checkout amount mismatch", session.id);
     return;
   }
-  if (order.stripe_checkout_session_id && order.stripe_checkout_session_id !== session.id) {
+  const vendorAccount = await stallAccountId(order.vendor_id);
+  if (
+    !stallCheckoutBinds({
+      storedSessionId: order.stripe_checkout_session_id,
+      sessionId: session.id,
+      eventAccount: stripeAccount,
+      vendorAccount,
+    })
+  ) {
     console.error("stall checkout session mismatch", session.id);
     return;
   }
@@ -325,34 +350,61 @@ export async function recordStallCheckout(session: Stripe.Checkout.Session) {
   refreshDirectoryLater([slug ? `/vendors/${slug}` : ""]);
 }
 
-export async function recordPlatformFee(session: Stripe.Checkout.Session) {
+export async function recordPlatformFee(
+  session: Stripe.Checkout.Session,
+  stripeAccount: string | null,
+) {
   if (session.metadata?.kind !== "platform_fee") return;
   if (session.payment_status !== "paid") return;
-  const vendorId = session.metadata.vendor_id;
-  const amount = session.amount_total;
-  if (!vendorId || amount == null || amount < MIN_FEE_PAYMENT_CENTS) return;
   const db = service();
   if (!db) return;
+  const { data: expected } = await db
+    .from("platform_fee_sessions")
+    .select("vendor_id, amount_cents")
+    .eq("stripe_checkout_session_id", session.id)
+    .maybeSingle();
+  const vendorId = session.metadata.vendor_id ?? null;
+  const amount = session.amount_total;
+  const expectedVendorId = typeof expected?.vendor_id === "string" ? expected.vendor_id : null;
+  const expectedAmountCents =
+    typeof expected?.amount_cents === "number" ? expected.amount_cents : null;
+  if (
+    !platformFeeBinds({
+      eventAccount: stripeAccount,
+      currency: session.currency,
+      expectedVendorId,
+      expectedAmountCents,
+      sessionVendorId: vendorId,
+      paidAmountCents: amount,
+    }) ||
+    !expectedVendorId ||
+    expectedAmountCents == null
+  ) {
+    return;
+  }
   const { error } = await db.from("platform_fee_payments").insert({
-    vendor_id: vendorId,
-    amount_cents: amount,
+    vendor_id: expectedVendorId,
+    amount_cents: expectedAmountCents,
     stripe_checkout_session_id: session.id,
   });
   if (error && error.code !== "23505") console.error("stall fee payment", error.code);
-  refreshDirectoryLater([`/vendor/${vendorId}`]);
+  refreshDirectoryLater([`/vendor/${expectedVendorId}`]);
 }
 
 export async function expireStallCheckout(session: Stripe.Checkout.Session) {
   if (session.metadata?.kind !== "stall_order") return;
   const orderId = session.metadata.order_id;
   if (!orderId) return;
+  const order = await loadOrder(orderId);
+  if (!order || !stallExpireBinds(order.stripe_checkout_session_id, session.id)) return;
   const db = service();
   if (!db) return;
   await db
     .from("orders")
-    .update({ status: "expired", stripe_checkout_session_id: session.id })
+    .update({ status: "expired" })
     .eq("id", orderId)
-    .eq("status", "pending");
+    .eq("status", "pending")
+    .eq("stripe_checkout_session_id", session.id);
 }
 
 async function findOrderForCharge(charge: Stripe.Charge, stripeAccount: string | null) {
@@ -366,21 +418,41 @@ async function findOrderForCharge(charge: Stripe.Charge, stripeAccount: string |
     .select("*")
     .eq("stripe_payment_intent_id", paymentIntent)
     .maybeSingle();
-  if (data) return data as OrderRow;
+  if (data) {
+    const order = data as OrderRow;
+    if (!stripeAccount) return order;
+    const accountId = await stallAccountId(order.vendor_id);
+    return accountId === stripeAccount ? order : null;
+  }
   if (!stripeAccount) return null;
   const listed = await stripe.checkout.sessions.list(
     { payment_intent: paymentIntent, limit: 1 },
     { stripeAccount },
   );
-  const orderId = listed.data[0]?.metadata?.order_id;
-  if (!orderId) return null;
-  return loadOrder(orderId);
+  const sessionId = listed.data[0]?.id;
+  if (!sessionId) return null;
+  const { data: bySession } = await db
+    .from("orders")
+    .select("*")
+    .eq("stripe_checkout_session_id", sessionId)
+    .maybeSingle();
+  if (!bySession) return null;
+  const order = bySession as OrderRow;
+  const accountId = await stallAccountId(order.vendor_id);
+  return accountId === stripeAccount ? order : null;
 }
 
 async function applyReturnedAmount(order: OrderRow, returned: number, paymentIntent: string | null) {
   const db = service();
   if (!db) return;
   const refunded = returnedCents(order.charge_cents, order.refunded_cents, returned);
+  if (
+    paymentIntent &&
+    order.stripe_payment_intent_id &&
+    order.stripe_payment_intent_id !== paymentIntent
+  ) {
+    return;
+  }
   const status =
     order.status === "pending" || order.status === "expired"
       ? order.status
@@ -390,9 +462,12 @@ async function applyReturnedAmount(order: OrderRow, returned: number, paymentInt
     .update({
       refunded_cents: refunded,
       status,
-      ...(paymentIntent ? { stripe_payment_intent_id: paymentIntent } : {}),
+      ...(paymentIntent && !order.stripe_payment_intent_id
+        ? { stripe_payment_intent_id: paymentIntent }
+        : {}),
     })
-    .eq("id", order.id);
+    .eq("id", order.id)
+    .lte("refunded_cents", refunded);
   const fresh = await loadOrder(order.id);
   if (fresh) await syncFee(fresh);
 }
@@ -598,10 +673,16 @@ export async function startStallCheckout(input: {
       await db.from("orders").update({ status: "expired" }).eq("id", orderId).eq("status", "pending");
       return { error: "Could not start that payment." as const };
     }
-    await db
+    const saved = await db
       .from("orders")
       .update({ stripe_checkout_session_id: session.id })
-      .eq("id", orderId);
+      .eq("id", orderId)
+      .eq("status", "pending")
+      .select("id");
+    if (saved.error || !saved.data?.length) {
+      await db.from("orders").update({ status: "expired" }).eq("id", orderId).eq("status", "pending");
+      return { error: "Could not start that payment." as const };
+    }
     return { error: null, url: session.url };
   } catch (err) {
     console.error("stall checkout", err instanceof Error ? err.message : "stripe");
@@ -632,11 +713,32 @@ export async function confirmStallCheckout(input: {
       stripeAccount: accountId,
     });
     if (session.metadata?.order_id !== order.id) return order;
-    await recordStallCheckout(session);
+    await recordStallCheckout(session, accountId);
   } catch (err) {
     console.error("stall checkout confirm", err instanceof Error ? err.message : "stripe");
   }
   return (await loadOrder(order.id)) ?? order;
+}
+
+async function rememberFeeSession(vendorId: string, sessionId: string, amountCents: number) {
+  const db = service();
+  if (!db) return false;
+  const { error } = await db.from("platform_fee_sessions").insert({
+    stripe_checkout_session_id: sessionId,
+    vendor_id: vendorId,
+    amount_cents: amountCents,
+  });
+  if (!error) return true;
+  if (error.code !== "23505") {
+    console.error("stall fee session", error.code);
+    return false;
+  }
+  const { data } = await db
+    .from("platform_fee_sessions")
+    .select("vendor_id, amount_cents")
+    .eq("stripe_checkout_session_id", sessionId)
+    .maybeSingle();
+  return data?.vendor_id === vendorId && data?.amount_cents === amountCents;
 }
 
 export async function startFeeCheckout(vendorId: string, balanceCents: number, email: string | null) {
@@ -669,7 +771,10 @@ export async function startFeeCheckout(vendorId: string, balanceCents: number, e
       },
       { idempotencyKey: `stall-fee-${vendorId}-${balanceCents}-${origin}`.slice(0, 255) },
     );
+    const remembered = await rememberFeeSession(vendorId, session.id, balanceCents);
+    if (!remembered) return { error: "Could not start that payment." as const, url: null };
     if (session.payment_status === "paid") {
+      await recordPlatformFee(session, null);
       return {
         error: null,
         url: `${origin}/vendor/${vendorId}?fee=paid&session_id=${session.id}`,
@@ -688,5 +793,5 @@ export async function confirmFeeCheckout(vendorId: string, sessionId: string) {
   if (!stripe) return;
   const session = await stripe.checkout.sessions.retrieve(sessionId);
   if (session.metadata?.vendor_id !== vendorId) return;
-  await recordPlatformFee(session);
+  await recordPlatformFee(session, null);
 }

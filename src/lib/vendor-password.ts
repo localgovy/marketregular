@@ -2,6 +2,9 @@ import { createCipheriv, createDecipheriv, randomBytes, randomInt } from "node:c
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
 
+/** Row stays so a later approval does not rotate the password. The secret does not. */
+export const CHOSEN_PASSWORD_MARKER = "chosen.v1.password-not-stored";
+
 export function generateVendorPassword() {
   let password = "";
   for (let i = 0; i < 12; i++) password += ALPHABET[randomInt(ALPHABET.length)];
@@ -64,7 +67,8 @@ export function claimPasswordAction(
 }
 
 export function readVendorPassword(ciphertext: string, chosen: boolean) {
-  const label = chosen ? "Password" : "One-time password";
+  if (chosen || ciphertext === CHOSEN_PASSWORD_MARKER) return null;
+  const label = "One-time password";
   const key = vendorPasswordKey();
   if (!key) return { label, value: "The stall password key is not set." };
   try {

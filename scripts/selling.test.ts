@@ -5,6 +5,9 @@ import { originFromHost } from "../src/lib/site-host.ts";
 import {
   checkoutAmountMatches,
   checkoutFeeCents,
+  platformFeeBinds,
+  stallCheckoutBinds,
+  stallExpireBinds,
   earliestUncoveredEarnedOn,
   feeAfterRefund,
   feeBalanceCents,
@@ -36,6 +39,42 @@ test("a checkout counts when the cad subtotal matches the menu price", () => {
   assert.equal(checkoutAmountMatches("usd", 1000, 1000, 1000), false);
   assert.equal(checkoutAmountMatches("cad", 900, 900, 1000), false);
   assert.equal(checkoutAmountMatches("cad", null, null, 1000), false);
+});
+
+test("a connected-account checkout cannot stand in for the session we stored", () => {
+  const real = {
+    storedSessionId: "cs_real",
+    sessionId: "cs_real",
+    eventAccount: "acct_stall",
+    vendorAccount: "acct_stall",
+  };
+  assert.equal(stallCheckoutBinds(real), true);
+  assert.equal(stallCheckoutBinds({ ...real, eventAccount: null }), true);
+  assert.equal(stallCheckoutBinds({ ...real, sessionId: "cs_decoy" }), false);
+  assert.equal(stallCheckoutBinds({ ...real, storedSessionId: null }), false);
+  assert.equal(stallCheckoutBinds({ ...real, eventAccount: "acct_other" }), false);
+  assert.equal(stallCheckoutBinds({ ...real, vendorAccount: null }), false);
+  assert.equal(stallExpireBinds("cs_real", "cs_real"), true);
+  assert.equal(stallExpireBinds("cs_real", "cs_decoy"), false);
+  assert.equal(stallExpireBinds(null, "cs_decoy"), false);
+});
+
+test("a platform fee counts only for the session and amount we opened", () => {
+  const paid = {
+    eventAccount: null,
+    currency: "cad",
+    expectedVendorId: "vendor-1",
+    expectedAmountCents: 850,
+    sessionVendorId: "vendor-1",
+    paidAmountCents: 850,
+  };
+  assert.equal(platformFeeBinds(paid), true);
+  assert.equal(platformFeeBinds({ ...paid, currency: "CAD" }), true);
+  assert.equal(platformFeeBinds({ ...paid, eventAccount: "acct_stall" }), false);
+  assert.equal(platformFeeBinds({ ...paid, currency: "usd" }), false);
+  assert.equal(platformFeeBinds({ ...paid, paidAmountCents: 50 }), false);
+  assert.equal(platformFeeBinds({ ...paid, sessionVendorId: "vendor-2" }), false);
+  assert.equal(platformFeeBinds({ ...paid, expectedVendorId: null, expectedAmountCents: null }), false);
 });
 
 test("a reversal the size of the charge voids the fee and a smaller one keeps the 25 cents", () => {

@@ -13,6 +13,7 @@ import {
   type PortalMarketHit,
   type PortalResult,
 } from "@/lib/vendor-portal";
+import { mustSetPassword } from "@/lib/password-gate";
 import { saleReady, VENDOR_SALES_OPEN } from "@/lib/selling";
 const LOGO_BYTES = 5 * 1024 * 1024;
 const LOGO_TYPES: Record<string, string> = {
@@ -58,6 +59,9 @@ function revalidateListing(listing: PortalListing, extra: string[] = []) {
 async function requireOwned(id: string) {
   const { supabase, user } = await session();
   if (!supabase || !user) return { error: "Sign in first." as const, supabase: null, user: null };
+  if (mustSetPassword(user.app_metadata)) {
+    return { error: "Set a password first." as const, supabase: null, user: null };
+  }
   if (!isUuid(id)) return { error: "That stall is missing." as const, supabase: null, user: null };
   const { data, error } = await supabase.rpc("owns_vendor", { p_id: id });
   if (error || data !== true) {
@@ -297,6 +301,7 @@ export async function searchPortalMarkets(
 ): Promise<{ error: string | null; markets: PortalMarketHit[] }> {
   const { supabase, user } = await session();
   if (!supabase || !user) return { error: "Sign in first.", markets: [] };
+  if (mustSetPassword(user.app_metadata)) return { error: "Set a password first.", markets: [] };
   const { data: owns, error: ownsError } = await supabase.rpc("has_owned_vendor");
   if (ownsError || owns !== true) return { error: "That stall is not yours.", markets: [] };
 
