@@ -5,9 +5,11 @@ import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import {
+  imageKind,
   isUuid,
   ownedLogoObjectName,
   parseVendorPortal,
+  portalListingHref,
   priceCents,
   type PortalListing,
   type PortalMarketHit,
@@ -16,10 +18,10 @@ import {
 import { mustSetPassword } from "@/lib/password-gate";
 import { saleReady, VENDOR_SALES_OPEN } from "@/lib/selling";
 const LOGO_BYTES = 5 * 1024 * 1024;
-const LOGO_TYPES: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
+const LOGO_CONTENT: Record<"jpg" | "png" | "webp", string> = {
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
 };
 
 function portalError(
@@ -82,14 +84,26 @@ export async function saveOwnedVendor(formData: FormData): Promise<PortalResult>
     .getAll("tags")
     .map((value) => String(value))
     .filter(Boolean);
+  const links = ["website", "instagram", "tiktok", "facebook"] as const;
+  const hrefs: Record<(typeof links)[number], string> = {
+    website: "",
+    instagram: "",
+    tiktok: "",
+    facebook: "",
+  };
+  for (const name of links) {
+    const href = portalListingHref(text(formData, name));
+    if (href === "bad") return { error: "That link could not be saved." };
+    hrefs[name] = href ?? "";
+  }
   const { error } = await gate.supabase.rpc("save_owned_vendor", {
     p_id: id,
     p_name: text(formData, "name"),
     p_about: text(formData, "about"),
-    p_website: text(formData, "website"),
-    p_instagram: text(formData, "instagram"),
-    p_tiktok: text(formData, "tiktok"),
-    p_facebook: text(formData, "facebook"),
+    p_website: hrefs.website,
+    p_instagram: hrefs.instagram,
+    p_tiktok: hrefs.tiktok,
+    p_facebook: hrefs.facebook,
     p_phone: text(formData, "phone"),
     p_email: text(formData, "email"),
     p_tags: tags,
@@ -230,16 +244,16 @@ export async function uploadOwnedLogo(formData: FormData): Promise<PortalResult>
   const file = formData.get("logo");
   if (!(file instanceof File) || file.size === 0) return { error: "Choose an image." };
   if (file.size > LOGO_BYTES) return { error: "Use an image under 5 MB." };
-  const ext = LOGO_TYPES[file.type];
-  if (!ext) return { error: "Use a JPEG, PNG, or WebP image." };
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const kind = imageKind(bytes);
+  if (!kind) return { error: "Use a JPEG, PNG, or WebP image." };
 
   const service = createServiceClient();
   if (!service) return { error: "Could not save that image." };
   const before = await loadOwned(gate.supabase, id);
-  const objectName = `vendors/${id}/${crypto.randomUUID()}.${ext}`;
-  const bytes = new Uint8Array(await file.arrayBuffer());
+  const objectName = `vendors/${id}/${crypto.randomUUID()}.${kind}`;
   const { error: uploadError } = await service.storage.from("listing-marks").upload(objectName, bytes, {
-    contentType: file.type,
+    contentType: LOGO_CONTENT[kind],
     upsert: false,
   });
   if (uploadError) return { error: "Could not save that image." };

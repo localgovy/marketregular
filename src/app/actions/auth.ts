@@ -17,7 +17,7 @@ import {
   signUpPublicError,
 } from "@/lib/public-error";
 import { saveChosenVendorPassword, syncChosenVendorPassword } from "@/lib/issue-vendor-password";
-import { canChangePassword, mustSetPassword } from "@/lib/password-gate";
+import { canChangePassword, mustSetPassword, recoveryMatchesUser } from "@/lib/password-gate";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -99,6 +99,8 @@ export async function signInWithPassword(formData: FormData) {
   const next = safePath(formData.get("next"));
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: signInPublicError(error) };
+  const jar = await cookies();
+  jar.set(PASSWORD_RECOVERY_COOKIE, "", passwordRecoveryCookie(0));
   revalidatePath("/", "layout");
   redirect(next);
 }
@@ -125,6 +127,8 @@ export async function signUpWithPassword(formData: FormData) {
   });
   if (error) return signUpPublicError(error);
   if (data.session) {
+    const jar = await cookies();
+    jar.set(PASSWORD_RECOVERY_COOKIE, "", passwordRecoveryCookie(0));
     revalidatePath("/", "layout");
     redirect(next);
   }
@@ -154,7 +158,7 @@ export async function verifyEmailOtp(formData: FormData) {
   if (!tokenHash || !type) redirect("/login?error=session");
   const supabase = await createServerSupabaseClient();
   if (!supabase) redirect("/login?error=session");
-  const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
+  const { data, error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
   if (error) {
     console.error("auth.verifyOtp", error.code ?? "unknown");
     const dest =
@@ -165,8 +169,11 @@ export async function verifyEmailOtp(formData: FormData) {
   }
   revalidatePath("/", "layout");
   if (type === "recovery") {
-    const jar = await cookies();
-    jar.set(PASSWORD_RECOVERY_COOKIE, "1", passwordRecoveryCookie(600));
+    const userId = data.user?.id;
+    if (userId) {
+      const jar = await cookies();
+      jar.set(PASSWORD_RECOVERY_COOKIE, userId, passwordRecoveryCookie(600));
+    }
     redirect("/account/password");
   }
   redirect(next);
@@ -184,7 +191,7 @@ export async function updatePassword(formData: FormData) {
   const current = String(formData.get("current_password") ?? "");
   const forced = mustSetPassword(user.app_metadata);
   const jar = await cookies();
-  const recovery = jar.get(PASSWORD_RECOVERY_COOKIE)?.value === "1";
+  const recovery = recoveryMatchesUser(jar.get(PASSWORD_RECOVERY_COOKIE)?.value, user.id);
   if (password.length < 8) return { error: "Use at least 8 characters." };
   if (password !== confirm) return { error: "Those passwords do not match." };
   const hasPassword = hasPasswordIdentity(user);
@@ -228,6 +235,8 @@ export async function updatePassword(formData: FormData) {
 export async function signOut() {
   const supabase = await createServerSupabaseClient();
   if (supabase) await supabase.auth.signOut();
+  const jar = await cookies();
+  jar.set(PASSWORD_RECOVERY_COOKIE, "", passwordRecoveryCookie(0));
   redirect("/");
 }
 

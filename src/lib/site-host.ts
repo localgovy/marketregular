@@ -11,9 +11,15 @@ export function isTrustedSiteHost(hostname: string) {
 /** Checkout return URL. Local and trusted hosts stay put; anything else uses the public site. */
 export function originFromHost(hostHeader: string | null, protoHeader: string | null, fallback: string) {
   const host = (hostHeader ?? "").split(",")[0]?.trim() ?? "";
-  const hostname = host.split(":")[0] ?? "";
-  if (!host || !isTrustedSiteHost(hostname)) return fallback;
+  if (!host || /[@/\\\s]/.test(host)) return fallback;
+  const parts = host.split(":");
+  if (parts.length > 2) return fallback;
+  const hostname = parts[0] ?? "";
+  const port = parts[1];
+  if (port != null && !/^\d+$/.test(port)) return fallback;
+  if (!isTrustedSiteHost(hostname)) return fallback;
+  const raw = (protoHeader ?? "").split(",")[0]?.trim().toLowerCase();
+  if (raw && raw !== "http" && raw !== "https") return fallback;
   const local = hostname === "localhost" || hostname === "127.0.0.1";
-  const proto = local ? "http" : (protoHeader ?? "https").split(",")[0]?.trim() || "https";
-  return `${proto}://${host}`;
+  return `${local ? "http" : "https"}://${host}`;
 }

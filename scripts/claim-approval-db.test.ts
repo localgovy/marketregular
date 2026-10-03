@@ -171,9 +171,16 @@ create table public.claim_requests (
 ${extractFunction("supabase/migrations/20261002183516_vendor_portal.sql", "portal_tags")}
 ${extractFunction("supabase/migrations/20260825022654_public_release_security.sql", "owns_vendor")}
 ${extractFunction("supabase/migrations/20261002183516_vendor_portal.sql", "save_owned_vendor")}
+${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "listing_href_ok")}
+${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "guard_listing_hrefs")}
 ${decideClaimSql}
 ${extractFunction("supabase/migrations/20261002195358_stall_checkout.sql", "protect_vendor_privilege_columns")}
 ${extractFunction("supabase/migrations/20261002232211_buyer_order_email.sql", "my_vendor_portal")}
+
+create trigger guard_listing_hrefs
+  before insert or update on public.vendors
+  for each row
+  execute function public.guard_listing_hrefs();
 
 create trigger protect_vendor_privilege_columns
   before update on public.vendors
@@ -417,6 +424,169 @@ test("only the approved owner can see and edit the stall", async () => {
     (await db.query<{ name: string }>("select name from public.vendors where id = $1", [VENDOR])).rows[0]?.name,
     "River Fruit Co",
   );
+});
+
+async function ownedProfile(db: PGlite) {
+  const saved = await db.query<{
+    name: string;
+    about: string | null;
+    website: string | null;
+    instagram: string | null;
+    tiktok: string | null;
+    facebook: string | null;
+    phone: string | null;
+    email: string | null;
+    tags: string[];
+    slug: string;
+    status: string;
+    claimed_by: string;
+    selling_approved: boolean;
+  }>(
+    `select name, about, website, instagram, tiktok, facebook, phone, email, tags, slug,
+            status::text as status, claimed_by::text as claimed_by, selling_approved
+     from public.vendors where id = $1`,
+    [VENDOR],
+  );
+  return saved.rows[0];
+}
+
+async function saveProfile(
+  db: PGlite,
+  fields: {
+    name?: string;
+    about?: string | null;
+    website?: string | null;
+    instagram?: string | null;
+    tiktok?: string | null;
+    facebook?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    tags?: string[];
+  } = {},
+) {
+  await db.query(
+    `select public.save_owned_vendor($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::text[])`,
+    [
+      VENDOR,
+      fields.name ?? "River Fruit",
+      fields.about ?? null,
+      fields.website ?? null,
+      fields.instagram ?? null,
+      fields.tiktok ?? null,
+      fields.facebook ?? null,
+      fields.phone ?? null,
+      fields.email ?? null,
+      fields.tags ?? [],
+    ],
+  );
+}
+
+test("an owner can trim the profile and clear it without touching the address", async () => {
+  const db = await database();
+  await seedDirectory(db);
+  await seedVendorClaim(db, CLAIM, OWNER);
+  await setAuth(db, "service_role", null);
+  await db.query("select public.decide_claim($1, 'approved', null)", [CLAIM]);
+  await setAuth(db, "authenticated", OWNER);
+
+  await saveProfile(db, {
+    name: "  River Fruit Co  ",
+    about: "  Peaches  ",
+    website: "https://example.com",
+    instagram: "https://instagram.com/river",
+    tiktok: "https://www.tiktok.com/@river",
+    facebook: "https://facebook.com/river",
+    phone: " 416-555-0100 ",
+    email: "Stall@Example.com",
+    tags: ["Produce", "jamaican"],
+  });
+  const saved = await ownedProfile(db);
+  assert.equal(saved?.name, "River Fruit Co");
+  assert.equal(saved?.about, "Peaches");
+  assert.equal(saved?.website, "https://example.com");
+  assert.equal(saved?.instagram, "https://instagram.com/river");
+  assert.equal(saved?.tiktok, "https://www.tiktok.com/@river");
+  assert.equal(saved?.facebook, "https://facebook.com/river");
+  assert.equal(saved?.phone, "416-555-0100");
+  assert.equal(saved?.email, "stall@example.com");
+  assert.deepEqual(saved?.tags, ["produce", "jamaican"]);
+  assert.equal(saved?.slug, "river-fruit");
+  assert.equal(saved?.status, "published");
+  assert.equal(saved?.claimed_by, OWNER);
+  assert.equal(saved?.selling_approved, false);
+
+  await saveProfile(db, {
+    name: "River Fruit Co",
+    about: "   ",
+    website: "",
+    instagram: "",
+    tiktok: "",
+    facebook: "",
+    phone: "",
+    email: "",
+    tags: [],
+  });
+  const cleared = await ownedProfile(db);
+  assert.equal(cleared?.name, "River Fruit Co");
+  assert.equal(cleared?.about, null);
+  assert.equal(cleared?.website, null);
+  assert.equal(cleared?.instagram, null);
+  assert.equal(cleared?.tiktok, null);
+  assert.equal(cleared?.facebook, null);
+  assert.equal(cleared?.phone, null);
+  assert.equal(cleared?.email, null);
+  assert.deepEqual(cleared?.tags, []);
+  assert.equal(cleared?.slug, "river-fruit");
+  assert.equal(cleared?.claimed_by, OWNER);
+});
+
+test("a bad profile write does not change the stall", async () => {
+  const db = await database();
+  await seedDirectory(db);
+  await seedVendorClaim(db, CLAIM, OWNER);
+  await setAuth(db, "service_role", null);
+  await db.query("select public.decide_claim($1, 'approved', null)", [CLAIM]);
+  await setAuth(db, "authenticated", OWNER);
+  await saveProfile(db, {
+    name: "River Fruit Co",
+    about: "Peaches",
+    website: "https://example.com",
+    phone: "4165550100",
+    email: "stall@example.com",
+    tags: ["produce"],
+  });
+
+  const attempts: Array<{ fields: Parameters<typeof saveProfile>[1]; message: RegExp }> = [
+    { fields: { name: "   " }, message: /Add a name/ },
+    { fields: { name: "River Fruit Co", phone: "call me" }, message: /phone number is not allowed/ },
+    { fields: { name: "River Fruit Co", email: "not-an-email" }, message: /email is not allowed/ },
+    { fields: { name: "River Fruit Co", tags: ["nope!"] }, message: /tag is not allowed/ },
+    {
+      fields: { name: "River Fruit Co", tags: Array.from({ length: 25 }, (_, index) => `tag${index}`) },
+      message: /Too many tags/,
+    },
+    { fields: { name: "River Fruit Co", website: "javascript:alert(1)" }, message: /Listing URL is not allowed/ },
+  ];
+  for (const attempt of attempts) {
+    const raised = await expectRaise(() => saveProfile(db, attempt.fields));
+    assert.equal(raised.code, "P0001", attempt.message.source);
+    assert.match(raised.message, attempt.message);
+  }
+
+  const row = await ownedProfile(db);
+  assert.equal(row?.name, "River Fruit Co");
+  assert.equal(row?.about, "Peaches");
+  assert.equal(row?.website, "https://example.com");
+  assert.equal(row?.phone, "4165550100");
+  assert.equal(row?.email, "stall@example.com");
+  assert.deepEqual(row?.tags, ["produce"]);
+  assert.equal(row?.slug, "river-fruit");
+  assert.equal(row?.status, "published");
+  assert.equal(row?.claimed_by, OWNER);
+  assert.equal(row?.selling_approved, false);
+
+  await saveProfile(db, { name: "River Fruit Co", tags: Array.from({ length: 24 }, (_, index) => `tag${index}`) });
+  assert.equal((await ownedProfile(db))?.tags.length, 24);
 });
 
 test("a signed-out caller cannot open the stall editor", async () => {

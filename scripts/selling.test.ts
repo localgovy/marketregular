@@ -10,6 +10,7 @@ import {
   stallExpireBinds,
   earliestUncoveredEarnedOn,
   feeAfterRefund,
+  feeCreditAfterReturn,
   feeBalanceCents,
   feeDueLabel,
   feeDueOn,
@@ -92,6 +93,13 @@ test("a reversal the size of the charge voids the fee and a smaller one keeps th
   });
   assert.equal(returnedCents(1000, 400, 200), 400);
   assert.equal(returnedCents(1000, 200, 1500), 1000);
+});
+
+test("a smaller fee refund does not restore credit", () => {
+  assert.deepEqual(feeCreditAfterReturn(1000, 1000, 100), { action: "lower", amountCents: 900 });
+  assert.deepEqual(feeCreditAfterReturn(500, 1000, 100), { action: "keep" });
+  assert.deepEqual(feeCreditAfterReturn(1000, 1000, 1000), { action: "drop" });
+  assert.deepEqual(feeCreditAfterReturn(40, 1000, 960), { action: "keep" });
 });
 
 test("a full refund voids the fee and a partial refund keeps the 25 cents", () => {
@@ -205,6 +213,18 @@ test("checkout stays on this host and does not require the shopper profile", () 
   );
   assert.equal(
     originFromHost("evil-marketregular.com", "https", "https://www.marketregular.com"),
+    "https://www.marketregular.com",
+  );
+  assert.equal(
+    originFromHost("www.marketregular.com:443@evil.example", "https", "https://www.marketregular.com"),
+    "https://www.marketregular.com",
+  );
+  assert.equal(
+    originFromHost("www.marketregular.com", "https://evil.example", "https://www.marketregular.com"),
+    "https://www.marketregular.com",
+  );
+  assert.equal(
+    originFromHost("www.marketregular.com", "http", "https://www.marketregular.com"),
     "https://www.marketregular.com",
   );
   assert.equal(onboardingExemptPath("/vendors/river-fruit/buy/11111111-1111-4111-8111-111111111111"), true);

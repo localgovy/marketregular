@@ -130,6 +130,14 @@ export function returnedCents(chargeCents: number, alreadyCents: number, incomin
   return Math.min(chargeCents, Math.max(alreadyCents, incomingCents));
 }
 
+/** A later refund event must not restore credit a larger refund already removed. */
+export function feeCreditAfterReturn(storedCents: number, chargeCents: number, returned: number) {
+  const remaining = chargeCents - Math.min(chargeCents, Math.max(0, returned));
+  if (remaining >= storedCents) return { action: "keep" as const };
+  if (remaining >= MIN_FEE_PAYMENT_CENTS) return { action: "lower" as const, amountCents: remaining };
+  return { action: "drop" as const };
+}
+
 export function feeAfterRefund(chargeCents: number, refundedCents: number): FeeParts {
   wholeCents(chargeCents, "Charge");
   wholeCents(refundedCents, "Refund");

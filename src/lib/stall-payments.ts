@@ -9,6 +9,7 @@ import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import {
   checkoutAmountMatches,
   feeAfterRefund,
+  feeCreditAfterReturn,
   MIN_FEE_PAYMENT_CENTS,
   platformFeeBinds,
   returnedCents,
@@ -139,14 +140,6 @@ export async function refreshStallCapabilities(vendorId: string) {
   return flags;
 }
 
-async function findCreatedStallAccount(stripe: Stripe, vendorId: string) {
-  const listed = await stripe.v2.core.accounts.list({
-    limit: 100,
-    applied_configurations: ["merchant"],
-  });
-  return listed.data.find((account) => account.metadata?.vendor_id === vendorId) ?? null;
-}
-
 async function saveStallAccount(
   vendorId: string,
   accountId: string,
@@ -188,13 +181,8 @@ export async function createStallAccount(input: {
     return { error: null, accountId: existing.stripe_account_id };
   }
 
-  const reused = await findCreatedStallAccount(stripe, input.vendorId);
-  if (reused) {
-    const saved = await saveStallAccount(input.vendorId, reused.id, capabilityFlags(reused));
-    if (saved.error) return { error: saved.error, accountId: null };
-    return { error: null, accountId: reused.id };
-  }
-
+  // A full-dashboard account can edit its own metadata, so vendor_id there is not
+  // proof of ownership. The idempotency key retries the account this call created.
   const account = await stripe.v2.core.accounts.create({
     display_name: input.displayName.slice(0, 200),
     contact_email: input.email,
@@ -217,6 +205,8 @@ export async function createStallAccount(input: {
     },
     metadata: { vendor_id: input.vendorId },
     include: ["configuration.merchant"],
+  }, {
+    idempotencyKey: `stall-account-${input.vendorId}`,
   });
   const flags = capabilityFlags(account);
   const saved = await saveStallAccount(input.vendorId, account.id, flags);
@@ -481,18 +471,23 @@ async function applyPlatformFeeReturn(charge: Stripe.Charge, returned: number) {
   const listed = await stripe.checkout.sessions.list({ payment_intent: paymentIntent, limit: 1 });
   const session = listed.data[0];
   if (session?.metadata?.kind !== "platform_fee") return;
+  if (charge.currency?.toLowerCase() !== "cad") return;
   const { data: payment } = await db
     .from("platform_fee_payments")
-    .select("id")
+    .select("amount_cents")
     .eq("stripe_checkout_session_id", session.id)
     .maybeSingle();
-  if (!payment) throw new Error("stall fee payment is not recorded yet");
-  const remaining = charge.amount - Math.min(charge.amount, returned);
-  if (remaining >= MIN_FEE_PAYMENT_CENTS) {
+  if (typeof payment?.amount_cents !== "number") {
+    throw new Error("stall fee payment is not recorded yet");
+  }
+  const next = feeCreditAfterReturn(payment.amount_cents, charge.amount, returned);
+  if (next.action === "keep") return;
+  if (next.action === "lower") {
     await db
       .from("platform_fee_payments")
-      .update({ amount_cents: remaining })
-      .eq("stripe_checkout_session_id", session.id);
+      .update({ amount_cents: next.amountCents })
+      .eq("stripe_checkout_session_id", session.id)
+      .gt("amount_cents", next.amountCents);
   } else {
     await db.from("platform_fee_payments").delete().eq("stripe_checkout_session_id", session.id);
   }
@@ -502,6 +497,7 @@ async function applyPlatformFeeReturn(charge: Stripe.Charge, returned: number) {
 
 async function applyChargeReturn(charge: Stripe.Charge, returned: number, stripeAccount: string | null) {
   if (returned <= 0) return;
+  if (charge.currency?.toLowerCase() !== "cad") return;
   const order = await findOrderForCharge(charge, stripeAccount);
   if (order) {
     await applyReturnedAmount(order, returned, paymentIntentId(charge.payment_intent));

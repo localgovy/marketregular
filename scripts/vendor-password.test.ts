@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { test } from "node:test";
-import { canChangePassword, mustSetPassword, passwordChangeAllowed } from "../src/lib/password-gate.ts";
+import {
+  canChangePassword,
+  mustSetPassword,
+  passwordChangeAllowed,
+  recoveryMatchesUser,
+} from "../src/lib/password-gate.ts";
 import {
   alignIssuedPassword,
   CHOSEN_PASSWORD_MARKER,
@@ -90,6 +95,15 @@ test("a recovery link can replace the password and a chosen secret is not readab
     canChangePassword({ recovery: false, hasPassword: false, currentOk: false, recentSignIn: true }),
     true,
   );
+  assert.equal(
+    recoveryMatchesUser("11111111-1111-4111-8111-111111111111", "11111111-1111-4111-8111-111111111111"),
+    true,
+  );
+  assert.equal(
+    recoveryMatchesUser("11111111-1111-4111-8111-111111111111", "22222222-2222-4222-8222-222222222222"),
+    false,
+  );
+  assert.equal(recoveryMatchesUser("1", "11111111-1111-4111-8111-111111111111"), false);
   assert.equal(readVendorPassword(CHOSEN_PASSWORD_MARKER, true), null);
   assert.equal(readVendorPassword("v1.still-sealed", true), null);
   assert.equal(CHOSEN_PASSWORD_MARKER.length >= 20, true);

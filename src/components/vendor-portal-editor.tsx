@@ -26,6 +26,7 @@ import {
   dayHoursLabel,
   dollarsFromCents,
   normalizePortalTag,
+  PORTAL_TAG_CAP,
   type PortalHours,
   type PortalListing,
   type PortalMarketHit,
@@ -122,6 +123,11 @@ function TagPicker({ id, tags }: { id: string; tags: string[] }) {
       setTagError("That tag is not allowed.");
       return;
     }
+    const already = PRODUCT_TAG_SET.has(cleaned) ? selected.has(cleaned) : extras.includes(cleaned);
+    if (!already && selected.size + extras.length >= PORTAL_TAG_CAP) {
+      setTagError("Too many tags.");
+      return;
+    }
     setTagError(null);
     setDraft("");
     if (PRODUCT_TAG_SET.has(cleaned)) {
@@ -129,6 +135,24 @@ function TagPicker({ id, tags }: { id: string; tags: string[] }) {
       return;
     }
     setExtras((current) => (current.includes(cleaned) ? current : [...current, cleaned]));
+  }
+
+  function toggleProduct(tag: string) {
+    if (selected.has(tag)) {
+      setTagError(null);
+      setSelected((current) => {
+        const next = new Set(current);
+        next.delete(tag);
+        return next;
+      });
+      return;
+    }
+    if (selected.size + extras.length >= PORTAL_TAG_CAP) {
+      setTagError("Too many tags.");
+      return;
+    }
+    setTagError(null);
+    setSelected((current) => new Set(current).add(tag));
   }
 
   return (
@@ -144,14 +168,7 @@ function TagPicker({ id, tags }: { id: string; tags: string[] }) {
               key={tag}
               type="button"
               aria-pressed={on}
-              onClick={() =>
-                setSelected((current) => {
-                  const next = new Set(current);
-                  if (next.has(tag)) next.delete(tag);
-                  else next.add(tag);
-                  return next;
-                })
-              }
+              onClick={() => toggleProduct(tag)}
               className={cn(
                 "stall-chip-sm inline-flex h-9 items-center px-3 text-sm font-medium",
                 on
@@ -205,6 +222,7 @@ function TagPicker({ id, tags }: { id: string; tags: string[] }) {
 
 function ListingForm({ listing }: { listing: PortalListing }) {
   const [state, action, pending] = useActionState(saveListing, undefined);
+  usePortalRefresh(state);
   const id = listing.id;
 
   return (
@@ -799,7 +817,17 @@ export function VendorPortalEditor({
         <h2>Profile</h2>
         <div className="mt-4">
           <ListingForm
-            key={`${listing.name}\n${listing.about ?? ""}\n${listing.phone ?? ""}\n${listing.email ?? ""}\n${listing.tags.join(",")}`}
+            key={[
+              listing.name,
+              listing.about ?? "",
+              listing.phone ?? "",
+              listing.email ?? "",
+              listing.website ?? "",
+              listing.instagram ?? "",
+              listing.tiktok ?? "",
+              listing.facebook ?? "",
+              listing.tags.join(","),
+            ].join("\n")}
             listing={listing}
           />
         </div>

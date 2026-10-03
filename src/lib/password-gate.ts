@@ -7,6 +7,14 @@ export function mustSetPassword(appMetadata: unknown) {
   );
 }
 
+const USER_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The reset cookie names the account that opened the link. Another sign-in does not inherit it. */
+export function recoveryMatchesUser(cookie: string | undefined, userId: string) {
+  if (!cookie || !USER_ID.test(cookie) || !USER_ID.test(userId)) return false;
+  return cookie.toLowerCase() === userId.toLowerCase();
+}
+
 /** A recovery link proves the inbox. A normal sign-in still needs the current password. */
 export function canChangePassword(input: {
   recovery: boolean;

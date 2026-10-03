@@ -1,9 +1,15 @@
+import { externalHref } from "@/lib/format";
 import { formatHours } from "@/lib/schedule";
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const PORTAL_TAG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+/** Same cap as portal_tags(..., 24) in save_owned_vendor. */
+export const PORTAL_TAG_CAP = 24;
+
+const PORTAL_LINK_LENGTH = 2048;
 
 export type PortalHours = {
   weekday: number;
@@ -99,6 +105,22 @@ export function normalizePortalTag(raw: string) {
   return cleaned;
 }
 
+/** Public http(s) link, null when the field is empty, or "bad" when it would not show. */
+export function portalListingHref(raw: string): string | null | "bad" {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const href = externalHref(trimmed);
+  if (!href || href.length > PORTAL_LINK_LENGTH) return "bad";
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return "bad";
+  }
+  if (!url.hostname.includes(".")) return "bad";
+  return href;
+}
+
 export function priceCents(raw: string): number | null | "bad" {
   const trimmed = raw.trim();
   if (!trimmed) return null;
@@ -113,6 +135,26 @@ export function dollarsFromCents(cents: number | null) {
   const dollars = Math.floor(cents / 100);
   const remainder = cents % 100;
   return remainder === 0 ? String(dollars) : `${dollars}.${String(remainder).padStart(2, "0")}`;
+}
+
+/** File bytes, not the browser's content type. */
+export function imageKind(bytes: Uint8Array): "jpg" | "png" | "webp" | null {
+  if (bytes.length < 12) return null;
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpg";
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return "png";
+  if (
+    bytes[0] === 0x52 &&
+    bytes[1] === 0x49 &&
+    bytes[2] === 0x46 &&
+    bytes[3] === 0x46 &&
+    bytes[8] === 0x57 &&
+    bytes[9] === 0x45 &&
+    bytes[10] === 0x42 &&
+    bytes[11] === 0x50
+  ) {
+    return "webp";
+  }
+  return null;
 }
 
 /** Object name inside listing-marks, or null when the URL is not this stall's upload. */

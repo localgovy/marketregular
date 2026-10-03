@@ -2,9 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   dollarsFromCents,
+  imageKind,
   normalizePortalTag,
   ownedLogoObjectName,
   parseVendorPortal,
+  portalListingHref,
   priceCents,
 } from "../src/lib/vendor-portal.ts";
 
@@ -17,6 +19,17 @@ test("portal tags keep letters, numbers, and single hyphens", () => {
   assert.equal(normalizePortalTag("a--b"), null);
 });
 
+test("listing links become a public http address or stay empty", () => {
+  assert.equal(portalListingHref("instagram.com/river"), "https://instagram.com/river");
+  assert.equal(portalListingHref("  https://example.com/stall  "), "https://example.com/stall");
+  assert.equal(portalListingHref(""), null);
+  assert.equal(portalListingHref("   "), null);
+  assert.equal(portalListingHref("javascript:alert(1)"), "bad");
+  assert.equal(portalListingHref("https://user:pass@example.com"), "bad");
+  assert.equal(portalListingHref("https://river"), "bad");
+  assert.equal(portalListingHref("@river"), "bad");
+});
+
 test("prices stay in cents", () => {
   assert.equal(priceCents(""), null);
   assert.equal(priceCents("8.50"), 850);
@@ -27,6 +40,20 @@ test("prices stay in cents", () => {
   assert.equal(dollarsFromCents(850), "8.50");
   assert.equal(dollarsFromCents(800), "8");
   assert.equal(dollarsFromCents(null), "");
+});
+
+test("a logo is recognized from its bytes", () => {
+  assert.equal(imageKind(Uint8Array.of(0xff, 0xd8, 0xff, 0x00, 0, 0, 0, 0, 0, 0, 0, 0)), "jpg");
+  assert.equal(
+    imageKind(Uint8Array.of(0x89, 0x50, 0x4e, 0x47, 0, 0, 0, 0, 0, 0, 0, 0)),
+    "png",
+  );
+  const webp = new Uint8Array(12);
+  webp.set([0x52, 0x49, 0x46, 0x46], 0);
+  webp.set([0x57, 0x45, 0x42, 0x50], 8);
+  assert.equal(imageKind(webp), "webp");
+  assert.equal(imageKind(Uint8Array.of(0x3c, 0x73, 0x76, 0x67, 0, 0, 0, 0, 0, 0, 0, 0)), null);
+  assert.equal(imageKind(Uint8Array.of(0xff, 0xd8)), null);
 });
 
 test("logo urls stay inside this stall's folder", () => {
