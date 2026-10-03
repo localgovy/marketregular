@@ -63,6 +63,22 @@ Public crawl files after deploy:
 - `https://www.marketregular.com/robots.txt`
 - `https://www.marketregular.com/sitemap.xml`
 
+## Auth host
+
+Google’s consent screen names whoever receives the login. That host is `auth.marketregular.com`, the Supabase custom domain for project `pxsndrlptceafhsxfays`. Do not delete these records. Proxy stays off.
+
+| Host | Type | Value |
+| --- | --- | --- |
+| `auth` | CNAME | `pxsndrlptceafhsxfays.supabase.co` |
+| `_acme-challenge.auth` | TXT | *(the value from `supabase domains create`; leave the record in place)* |
+
+```bash
+dig CNAME auth.marketregular.com +short
+dig TXT _acme-challenge.auth.marketregular.com +short
+```
+
+The CNAME must keep resolving to the project host. The app will not open Google sign-in if the Auth callback is `*.supabase.co`.
+
 ## Email later
 
 When you add email (NamesLink Business Email or Google Workspace), add MX/TXT at NamesLink. Do not put a CNAME on `@` — it cannot coexist with MX. The existing A record on `@` is fine next to MX.
