@@ -62,7 +62,7 @@ export function GoogleSignIn({
       const guarded = await guardGoogleAuthorize(data.url);
       if ("error" in guarded) {
         setPending(false);
-        setError(guarded.error);
+        setError(guarded.error ?? "Google sign-in failed.");
         return;
       }
       window.location.assign(guarded.url);

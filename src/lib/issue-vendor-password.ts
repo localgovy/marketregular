@@ -23,7 +23,7 @@ export type PreparedVendorPassword =
   | { error: string }
   | { error: null; email: string; password: string | null };
 
-/** Sets the one-time password before the claim is marked approved. Mail is sent by the caller after that succeeds. */
+/** Sets the one-time password. The caller does this only after the claim is approved, then sends the mail. */
 export async function prepareVendorClaimPassword(
   admin: SupabaseClient,
   userId: string,
