@@ -422,6 +422,7 @@ test("only the approved owner can see and edit the stall", async () => {
 test("a signed-out caller cannot open the stall editor", async () => {
   const db = await database();
   await seedDirectory(db);
+  await setAuth(db, "service_role", null);
   await db.query("update public.vendors set claimed_by = $1 where id = $2", [OWNER, VENDOR]);
   await setAuth(db, "authenticated", null);
   const raised = await expectRaise(() => db.query("select public.my_vendor_portal()"));
@@ -431,6 +432,7 @@ test("a signed-out caller cannot open the stall editor", async () => {
 test("the privilege trigger blocks claimed_by and selling_approved for a non-service role", async () => {
   const db = await database();
   await seedDirectory(db);
+  await setAuth(db, "service_role", null);
   await db.query("update public.vendors set claimed_by = $1 where id = $2", [OWNER, VENDOR]);
   await setAuth(db, "authenticated", OWNER);
   const claimChange = await expectRaise(() =>
