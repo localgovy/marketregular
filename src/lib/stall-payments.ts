@@ -12,6 +12,7 @@ import {
   MIN_FEE_PAYMENT_CENTS,
   returnedCents,
   torontoDate,
+  VENDOR_SALES_OPEN,
   type CheckoutDetails,
 } from "@/lib/selling";
 import { capabilityFlags, getStripe, integrationIdentifier } from "@/lib/stripe";
@@ -478,6 +479,7 @@ type Sellable = {
 };
 
 export async function loadSellable(slug: string, itemId: string): Promise<Sellable | null> {
+  if (!VENDOR_SALES_OPEN) return null;
   const db = service();
   if (!db) return null;
   const { data: vendor } = await db

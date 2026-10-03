@@ -1,5 +1,14 @@
 /** LOCALGOVY stall fee: 3.5% of the amount still charged, plus $0.25 once per checkout. */
 
+/**
+ * Vendors can edit a stall profile while this is false. Listing an item for sale,
+ * payment setup, and public Buy stay closed. Restore with
+ * supabase/migrations/20261003161240_pause_vendor_item_sales.sql: that function must
+ * write sale fields again, and published_menus.can_buy must use the sale expression
+ * instead of false.
+ */
+export const VENDOR_SALES_OPEN = false;
+
 export const PLATFORM_FLAT_CENTS = 25;
 export const MIN_CHARGE_CENTS = 50;
 export const MIN_FEE_PAYMENT_CENTS = 50;

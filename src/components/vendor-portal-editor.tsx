@@ -34,7 +34,7 @@ import {
   type PortalStall,
 } from "@/lib/vendor-portal";
 import { SITE_NAME } from "@/lib/constants";
-import { feeDueLabel, fulfillmentLabel, orderStatusLabel } from "@/lib/selling";
+import { feeDueLabel, fulfillmentLabel, orderStatusLabel, VENDOR_SALES_OPEN } from "@/lib/selling";
 import { formatPrice } from "@/lib/format";
 
 const PRODUCT_TAG_SET = new Set<string>(PRODUCT_TAGS);
@@ -424,14 +424,16 @@ function MenuItemForm({ vendorId, item }: { vendorId: string; item: PortalMenuIt
             defaultValue={item.dietary.join(", ")}
           />
         </div>
-        <SaleFields
-          id={field}
-          forSale={item.for_sale}
-          delivery={item.offer_delivery}
-          pickup={item.offer_pickup}
-          preorder={item.offer_preorder}
-          terms={item.offer_terms ?? ""}
-        />
+        {VENDOR_SALES_OPEN ? (
+          <SaleFields
+            id={field}
+            forSale={item.for_sale}
+            delivery={item.offer_delivery}
+            pickup={item.offer_pickup}
+            preorder={item.offer_preorder}
+            terms={item.offer_terms ?? ""}
+          />
+        ) : null}
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
           <Button type="submit" disabled={pending}>
             {pending ? "Saving…" : "Save item"}
@@ -484,7 +486,9 @@ function AddMenuItem({ vendorId }: { vendorId: string }) {
           <Label htmlFor={`${vendorId}-new-dietary`}>Dietary tags</Label>
           <Input id={`${vendorId}-new-dietary`} name="dietary" placeholder="vegan, gluten-free" />
         </div>
-        <SaleFields id={`${vendorId}-new`} forSale={false} delivery={false} pickup={false} preorder={false} terms="" />
+        {VENDOR_SALES_OPEN ? (
+          <SaleFields id={`${vendorId}-new`} forSale={false} delivery={false} pickup={false} preorder={false} terms="" />
+        ) : null}
         <div className="sm:col-span-2">
           <Button type="submit" disabled={pending}>
             {pending ? "Adding…" : "Add item"}
@@ -691,6 +695,7 @@ export function VendorPortalEditor({
 
   return (
     <div className="grid gap-10">
+      {VENDOR_SALES_OPEN ? (
       <section>
         <h2>Selling</h2>
         {feeNote ? <p className="mt-2 text-sm text-muted-foreground">{feeNote}</p> : null}
@@ -787,6 +792,9 @@ export function VendorPortalEditor({
           </p>
         )}
       </section>
+      ) : (
+        <p className="text-sm text-muted-foreground">Listing for sale is closed for now.</p>
+      )}
       <section>
         <h2>Profile</h2>
         <div className="mt-4">

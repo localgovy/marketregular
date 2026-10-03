@@ -12,7 +12,7 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
-  title: "Your stall",
+  title: "Vendor Portal",
   path: "/vendor",
   description: `Sign in to update the ${SITE_NAME} stall you run.`,
   index: false,
@@ -34,7 +34,7 @@ export default async function VendorPortalPage({
   if (!portal.signedIn) {
     return (
       <div className="mx-auto w-full max-w-md px-4 py-10">
-        <h1>Your stall</h1>
+        <h1>Vendor Portal</h1>
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
           Sign in to update the listing you run. Same account as the rest of {SITE_NAME}.
         </p>
@@ -46,7 +46,7 @@ export default async function VendorPortalPage({
   if (portal.error) {
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-10">
-        <h1>Your stall</h1>
+        <h1>Vendor Portal</h1>
         <p className="type-lede mt-2 text-muted-foreground">
           The stall editor is not available yet. Try again in a minute.
         </p>
@@ -72,7 +72,7 @@ export default async function VendorPortalPage({
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
-      <h1>Your stall</h1>
+      <h1>Vendor Portal</h1>
       {portal.listings.length ? (
         <>
           <p className="type-lede mt-2 mb-8 text-muted-foreground">

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAccountSession } from "@/lib/stall-payments";
+import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeConnectConfigured } from "@/lib/stripe";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { isUuid, parseVendorPortal } from "@/lib/vendor-portal";
@@ -7,6 +8,9 @@ import { isUuid, parseVendorPortal } from "@/lib/vendor-portal";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  if (!VENDOR_SALES_OPEN) {
+    return NextResponse.json({ error: "Listing for sale is closed for now." }, { status: 403 });
+  }
   if (!stripeConnectConfigured()) {
     return NextResponse.json({ error: "Payments are not available yet." }, { status: 503 });
   }

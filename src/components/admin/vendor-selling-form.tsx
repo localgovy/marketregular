@@ -30,7 +30,7 @@ export function VendorSellingForm({
         <span>This stall can sell to signed-in buyers</span>
       </label>
       <p className="text-sm text-muted-foreground">
-        Buy stays off until they finish Stripe and a menu item is marked for sale.
+        Buy stays off while listing for sale is paused. This switch is saved, and it does not reopen checkout.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending}>

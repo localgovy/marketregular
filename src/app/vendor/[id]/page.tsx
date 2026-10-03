@@ -6,6 +6,7 @@ import { settleStallFeeReturn } from "@/app/actions/selling";
 import { loadVendorPortal } from "@/app/actions/vendor-portal";
 import { SITE_NAME } from "@/lib/constants";
 import { refreshStallCapabilities } from "@/lib/stall-payments";
+import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeChargesConfigured, stripeConnectConfigured } from "@/lib/stripe";
 import { pageMeta } from "@/lib/seo";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
@@ -52,7 +53,12 @@ export default async function VendorEditorPage({
 
   let listing = portal.listings.find((row) => row.id === id);
   if (!listing) notFound();
-  if (listing.selling_approved && listing.payments_started && stripeChargesConfigured()) {
+  if (
+    VENDOR_SALES_OPEN &&
+    listing.selling_approved &&
+    listing.payments_started &&
+    stripeChargesConfigured()
+  ) {
     try {
       await refreshStallCapabilities(id);
     } catch (err) {

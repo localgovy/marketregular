@@ -14,7 +14,12 @@ import {
   percentFeeCents,
   returnedCents,
   saleReady,
+  VENDOR_SALES_OPEN,
 } from "../src/lib/selling.ts";
+
+test("listing an item for sale stays closed", () => {
+  assert.equal(VENDOR_SALES_OPEN, false);
+});
 
 test("a checkout fee is 3.5 percent plus 25 cents", () => {
   assert.equal(percentFeeCents(1000), 35);

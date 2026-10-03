@@ -23,6 +23,7 @@ import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
 import { hallDayHours, sessionOnWeekday } from "@/lib/schedule";
 import { rankVendorMarkets } from "@/lib/vendor-markets";
+import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeChargesConfigured } from "@/lib/stripe";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 
@@ -146,7 +147,7 @@ export default async function VendorPage({
               <h2>Menu</h2>
               <StallMenu
                 items={
-                  stripeChargesConfigured()
+                  VENDOR_SALES_OPEN && stripeChargesConfigured()
                     ? vendor.menus
                     : vendor.menus.map((item) => ({ ...item, can_buy: false }))
                 }

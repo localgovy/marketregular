@@ -1,7 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/admin";
-import { parseCheckoutDetails, saleReady } from "@/lib/selling";
+import { parseCheckoutDetails, saleReady, VENDOR_SALES_OPEN } from "@/lib/selling";
 import {
   confirmFeeCheckout,
   createStallAccount,
@@ -47,7 +47,10 @@ export async function setVendorSelling(formData: FormData) {
   return { error: null, message: approved ? "Selling is on." : "Selling is off." };
 }
 
+const SALES_CLOSED = "Listing for sale is closed for now.";
+
 export async function beginStallPayments(formData: FormData) {
+  if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
   const vendorId = String(formData.get("vendor_id") ?? "");
   const gate = await ownedListing(vendorId);
   if (!gate.listing || !gate.user) return { error: gate.error ?? "That stall is not yours." };
@@ -70,6 +73,7 @@ export async function beginStallPayments(formData: FormData) {
 }
 
 export async function payStallFee(formData: FormData) {
+  if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
   const vendorId = String(formData.get("vendor_id") ?? "");
   const gate = await ownedListing(vendorId);
   if (!gate.listing || !gate.user) return { error: gate.error ?? "That stall is not yours." };
@@ -95,6 +99,7 @@ export async function settleStallFeeReturn(vendorId: string, sessionId: string) 
 }
 
 export async function placeStallOrder(formData: FormData): Promise<{ error: string | null }> {
+  if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
   const { user } = await createAuthedServerClient();
   if (!user) return { error: "Sign in first." };
   if (!stripeChargesConfigured()) return { error: "Payments are not available yet." };

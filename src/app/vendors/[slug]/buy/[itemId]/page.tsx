@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { BuyForm } from "@/components/buy-form";
 import { formatPrice } from "@/lib/format";
+import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { loadSellable } from "@/lib/stall-payments";
 import { stripeChargesConfigured } from "@/lib/stripe";
 import { pageMeta } from "@/lib/seo";
@@ -28,7 +29,7 @@ export default async function BuyItemPage({
 }) {
   const { slug, itemId } = await params;
   const query = await searchParams;
-  if (!isUuid(itemId)) notFound();
+  if (!isUuid(itemId) || !VENDOR_SALES_OPEN) notFound();
   const { user } = await createAuthedServerClient();
   if (!user) redirect(`/login?next=${encodeURIComponent(`/vendors/${slug}/buy/${itemId}`)}`);
   if (!stripeChargesConfigured()) notFound();

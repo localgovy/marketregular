@@ -13,7 +13,7 @@ import {
   type PortalMarketHit,
   type PortalResult,
 } from "@/lib/vendor-portal";
-import { saleReady } from "@/lib/selling";
+import { saleReady, VENDOR_SALES_OPEN } from "@/lib/selling";
 const LOGO_BYTES = 5 * 1024 * 1024;
 const LOGO_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -103,36 +103,51 @@ export async function saveOwnedMenuItem(formData: FormData): Promise<PortalResul
   const itemId = text(formData, "item_id").trim();
   const cents = priceCents(text(formData, "price"));
   if (cents === "bad") return { error: "That price is not allowed." };
-  const forSale = formData.get("for_sale") === "on";
-  const offerDelivery = formData.get("offer_delivery") === "on";
-  const offerPickup = formData.get("offer_pickup") === "on";
-  const offerPreorder = formData.get("offer_preorder") === "on";
-  const terms = text(formData, "offer_terms");
-  if (terms.trim().length > 4000) return { error: "Keep the terms shorter." };
-  const saleError = saleReady({
-    forSale,
-    priceCents: cents,
-    offers: { delivery: offerDelivery, pickup: offerPickup, preorder: offerPreorder },
-  });
-  if (saleError) return { error: saleError };
+  const forSale = VENDOR_SALES_OPEN && formData.get("for_sale") === "on";
+  const offerDelivery = VENDOR_SALES_OPEN && formData.get("offer_delivery") === "on";
+  const offerPickup = VENDOR_SALES_OPEN && formData.get("offer_pickup") === "on";
+  const offerPreorder = VENDOR_SALES_OPEN && formData.get("offer_preorder") === "on";
+  const terms = VENDOR_SALES_OPEN ? text(formData, "offer_terms") : "";
+  if (VENDOR_SALES_OPEN && terms.trim().length > 4000) return { error: "Keep the terms shorter." };
+  if (VENDOR_SALES_OPEN) {
+    const saleError = saleReady({
+      forSale,
+      priceCents: cents,
+      offers: { delivery: offerDelivery, pickup: offerPickup, preorder: offerPreorder },
+    });
+    if (saleError) return { error: saleError };
+  }
   const dietary = text(formData, "dietary")
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean);
-  const { error } = await gate.supabase.rpc("save_owned_menu_item", {
-    p_vendor_id: vendorId,
-    p_item_id: itemId && isUuid(itemId) ? itemId : null,
-    p_name: text(formData, "name"),
-    p_description: text(formData, "description"),
-    p_price_cents: cents,
-    p_season: text(formData, "season"),
-    p_dietary: dietary,
-    p_for_sale: forSale,
-    p_offer_delivery: offerDelivery,
-    p_offer_pickup: offerPickup,
-    p_offer_preorder: offerPreorder,
-    p_offer_terms: terms,
-  });
+  const { error } = await gate.supabase.rpc(
+    "save_owned_menu_item",
+    VENDOR_SALES_OPEN
+      ? {
+          p_vendor_id: vendorId,
+          p_item_id: itemId && isUuid(itemId) ? itemId : null,
+          p_name: text(formData, "name"),
+          p_description: text(formData, "description"),
+          p_price_cents: cents,
+          p_season: text(formData, "season"),
+          p_dietary: dietary,
+          p_for_sale: forSale,
+          p_offer_delivery: offerDelivery,
+          p_offer_pickup: offerPickup,
+          p_offer_preorder: offerPreorder,
+          p_offer_terms: terms,
+        }
+      : {
+          p_vendor_id: vendorId,
+          p_item_id: itemId && isUuid(itemId) ? itemId : null,
+          p_name: text(formData, "name"),
+          p_description: text(formData, "description"),
+          p_price_cents: cents,
+          p_season: text(formData, "season"),
+          p_dietary: dietary,
+        },
+  );
   if (error) return portalError(error, "Could not save that item.");
   const loaded = await loadOwned(gate.supabase, vendorId);
   if (loaded.listing) revalidateListing(loaded.listing);
