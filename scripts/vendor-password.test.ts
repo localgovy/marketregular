@@ -3,10 +3,12 @@ import { randomBytes } from "node:crypto";
 import { test } from "node:test";
 import { mustSetPassword, passwordChangeAllowed } from "../src/lib/password-gate.ts";
 import {
+  alignIssuedPassword,
   claimPasswordAction,
   decryptVendorPassword,
   encryptVendorPassword,
   generateVendorPassword,
+  secretAfterFailedAuth,
   vendorPasswordKey,
 } from "../src/lib/vendor-password.ts";
 
@@ -39,6 +41,25 @@ test("the stall password key is 32 bytes of base64", () => {
   assert.equal(vendorPasswordKey(), null);
   delete process.env.VENDOR_PASSWORD_KEY;
   assert.equal(vendorPasswordKey(), null);
+});
+
+test("a failed sign-in update restores the previous password copy", () => {
+  assert.deepEqual(secretAfterFailedAuth(null), { action: "delete" });
+  assert.deepEqual(secretAfterFailedAuth({ ciphertext: "v1.old", chosen: true }), {
+    action: "restore",
+    row: { ciphertext: "v1.old", chosen: true },
+  });
+});
+
+test("the email uses the password that is actually stored", () => {
+  assert.deepEqual(alignIssuedPassword("attempted", "attempted"), {
+    password: "attempted",
+    realign: false,
+  });
+  assert.deepEqual(alignIssuedPassword("attempted", "stored"), {
+    password: "stored",
+    realign: true,
+  });
 });
 
 test("a later approval does not rotate a chosen or still-pending password", () => {

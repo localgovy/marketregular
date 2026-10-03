@@ -45,7 +45,7 @@ async function confirmCurrentPassword(user: User, current: string) {
     password: current,
   });
   if (error) return false;
-  await probe.auth.signOut();
+  await probe.auth.signOut({ scope: "local" });
   return true;
 }
 

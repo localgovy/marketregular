@@ -7,8 +7,10 @@ import { SITE_URL } from "@/lib/constants";
 import { originFromHost } from "@/lib/site-host";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import {
+  checkoutAmountMatches,
   feeAfterRefund,
   MIN_FEE_PAYMENT_CENTS,
+  returnedCents,
   torontoDate,
   type CheckoutDetails,
 } from "@/lib/selling";
@@ -81,6 +83,24 @@ async function vendorSlug(vendorId: string) {
   return typeof data?.slug === "string" ? data.slug : null;
 }
 
+function refreshDirectoryLater(paths: string[]) {
+  const extra = paths.filter((path) => path.length > 0);
+  after(() => {
+    revalidatePublishedDirectory(extra);
+  });
+}
+
+function checkoutEmail(session: Stripe.Checkout.Session) {
+  const email = session.customer_details?.email?.trim();
+  if (!email || email.length > 320) return null;
+  return email;
+}
+
+function paymentIntentId(value: string | Stripe.PaymentIntent | null | undefined) {
+  if (!value) return null;
+  return typeof value === "string" ? value : value.id;
+}
+
 export async function refreshStallCapabilities(vendorId: string) {
   const stripe = getStripe();
   const db = service();
@@ -109,11 +129,8 @@ export async function refreshStallCapabilities(vendorId: string) {
       })
       .eq("vendor_id", vendorId);
     const slug = await vendorSlug(vendorId);
-    const paths = [`/vendor/${vendorId}`, slug ? `/vendors/${slug}` : ""];
     // updateTag cannot run during render. The stall editor calls this while rendering.
-    after(() => {
-      revalidatePublishedDirectory(paths);
-    });
+    refreshDirectoryLater([`/vendor/${vendorId}`, slug ? `/vendors/${slug}` : ""]);
   }
   return flags;
 }
@@ -269,7 +286,14 @@ export async function recordStallCheckout(session: Stripe.Checkout.Session) {
   if (!orderId) return;
   const order = await loadOrder(orderId);
   if (!order) return;
-  if (session.amount_total !== order.charge_cents) {
+  if (
+    !checkoutAmountMatches(
+      session.currency,
+      session.amount_subtotal,
+      session.amount_total,
+      order.charge_cents,
+    )
+  ) {
     console.error("stall checkout amount mismatch", session.id);
     return;
   }
@@ -279,15 +303,17 @@ export async function recordStallCheckout(session: Stripe.Checkout.Session) {
   }
   const db = service();
   if (!db) return;
+  const buyerEmail = order.buyer_email ?? checkoutEmail(session);
   const next = paidStatus(order.charge_cents, order.refunded_cents);
   if (order.status === "pending" || order.status === "expired" || order.status === "paid") {
     await db
       .from("orders")
       .update({
-        status: order.status === "paid" ? paidStatus(order.charge_cents, order.refunded_cents) : next,
+        status: next,
         paid_at: order.paid_at ?? new Date().toISOString(),
         stripe_checkout_session_id: session.id,
         stripe_payment_intent_id: intentId(session.payment_intent) ?? order.stripe_payment_intent_id,
+        ...(buyerEmail && !order.buyer_email ? { buyer_email: buyerEmail } : {}),
       })
       .eq("id", order.id)
       .in("status", ["pending", "expired", "paid"]);
@@ -295,7 +321,7 @@ export async function recordStallCheckout(session: Stripe.Checkout.Session) {
   const fresh = await loadOrder(order.id);
   if (fresh) await syncFee(fresh);
   const slug = await vendorSlug(order.vendor_id);
-  revalidatePublishedDirectory([slug ? `/vendors/${slug}` : ""]);
+  refreshDirectoryLater([slug ? `/vendors/${slug}` : ""]);
 }
 
 export async function recordPlatformFee(session: Stripe.Checkout.Session) {
@@ -312,7 +338,7 @@ export async function recordPlatformFee(session: Stripe.Checkout.Session) {
     stripe_checkout_session_id: session.id,
   });
   if (error && error.code !== "23505") console.error("stall fee payment", error.code);
-  revalidatePublishedDirectory([`/vendor/${vendorId}`]);
+  refreshDirectoryLater([`/vendor/${vendorId}`]);
 }
 
 export async function expireStallCheckout(session: Stripe.Checkout.Session) {
@@ -328,30 +354,32 @@ export async function expireStallCheckout(session: Stripe.Checkout.Session) {
     .eq("status", "pending");
 }
 
-export async function applyStallRefund(charge: Stripe.Charge, stripeAccount: string | null) {
-  const paymentIntent = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
-  if (!paymentIntent) return;
+async function findOrderForCharge(charge: Stripe.Charge, stripeAccount: string | null) {
+  const paymentIntent = paymentIntentId(charge.payment_intent);
+  if (!paymentIntent) return null;
   const db = service();
   const stripe = getStripe();
-  if (!db || !stripe) return;
-  let order: OrderRow | null = null;
+  if (!db || !stripe) return null;
   const { data } = await db
     .from("orders")
     .select("*")
     .eq("stripe_payment_intent_id", paymentIntent)
     .maybeSingle();
-  order = (data as OrderRow | null) ?? null;
-  if (!order && stripeAccount) {
-    const listed = await stripe.checkout.sessions.list(
-      { payment_intent: paymentIntent, limit: 1 },
-      { stripeAccount },
-    );
-    const session = listed.data[0];
-    const orderId = session?.metadata?.order_id;
-    if (orderId) order = await loadOrder(orderId);
-  }
-  if (!order) return;
-  const refunded = Math.min(order.charge_cents, Math.max(order.refunded_cents, charge.amount_refunded));
+  if (data) return data as OrderRow;
+  if (!stripeAccount) return null;
+  const listed = await stripe.checkout.sessions.list(
+    { payment_intent: paymentIntent, limit: 1 },
+    { stripeAccount },
+  );
+  const orderId = listed.data[0]?.metadata?.order_id;
+  if (!orderId) return null;
+  return loadOrder(orderId);
+}
+
+async function applyReturnedAmount(order: OrderRow, returned: number, paymentIntent: string | null) {
+  const db = service();
+  if (!db) return;
+  const refunded = returnedCents(order.charge_cents, order.refunded_cents, returned);
   const status =
     order.status === "pending" || order.status === "expired"
       ? order.status
@@ -361,11 +389,66 @@ export async function applyStallRefund(charge: Stripe.Charge, stripeAccount: str
     .update({
       refunded_cents: refunded,
       status,
-      stripe_payment_intent_id: paymentIntent,
+      ...(paymentIntent ? { stripe_payment_intent_id: paymentIntent } : {}),
     })
     .eq("id", order.id);
   const fresh = await loadOrder(order.id);
   if (fresh) await syncFee(fresh);
+}
+
+async function applyPlatformFeeReturn(charge: Stripe.Charge, returned: number) {
+  const paymentIntent = paymentIntentId(charge.payment_intent);
+  if (!paymentIntent || charge.amount <= 0) return;
+  const stripe = getStripe();
+  const db = service();
+  if (!stripe || !db) return;
+  const listed = await stripe.checkout.sessions.list({ payment_intent: paymentIntent, limit: 1 });
+  const session = listed.data[0];
+  if (session?.metadata?.kind !== "platform_fee") return;
+  const { data: payment } = await db
+    .from("platform_fee_payments")
+    .select("id")
+    .eq("stripe_checkout_session_id", session.id)
+    .maybeSingle();
+  if (!payment) throw new Error("stall fee payment is not recorded yet");
+  const remaining = charge.amount - Math.min(charge.amount, returned);
+  if (remaining >= MIN_FEE_PAYMENT_CENTS) {
+    await db
+      .from("platform_fee_payments")
+      .update({ amount_cents: remaining })
+      .eq("stripe_checkout_session_id", session.id);
+  } else {
+    await db.from("platform_fee_payments").delete().eq("stripe_checkout_session_id", session.id);
+  }
+  const vendorId = session.metadata.vendor_id;
+  if (typeof vendorId === "string") refreshDirectoryLater([`/vendor/${vendorId}`]);
+}
+
+async function applyChargeReturn(charge: Stripe.Charge, returned: number, stripeAccount: string | null) {
+  if (returned <= 0) return;
+  const order = await findOrderForCharge(charge, stripeAccount);
+  if (order) {
+    await applyReturnedAmount(order, returned, paymentIntentId(charge.payment_intent));
+    return;
+  }
+  if (!stripeAccount) await applyPlatformFeeReturn(charge, returned);
+}
+
+export async function applyStallRefund(charge: Stripe.Charge, stripeAccount: string | null) {
+  await applyChargeReturn(charge, charge.amount_refunded, stripeAccount);
+}
+
+export async function applyLostDispute(dispute: Stripe.Dispute, stripeAccount: string | null) {
+  if (dispute.status !== "lost") return;
+  const stripe = getStripe();
+  if (!stripe) return;
+  const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+  if (!chargeId) return;
+  const charge = stripeAccount
+    ? await stripe.charges.retrieve(chargeId, {}, { stripeAccount })
+    : await stripe.charges.retrieve(chargeId);
+  const returned = returnedCents(charge.amount, charge.amount_refunded, dispute.amount);
+  await applyChargeReturn(charge, returned, stripeAccount);
 }
 
 export async function syncAccountEvent(accountId: string) {
@@ -482,6 +565,7 @@ export async function startStallCheckout(input: {
         integration_identifier: integrationIdentifier("stall_checkout"),
         customer_email: input.email ?? undefined,
         client_reference_id: orderId,
+        automatic_tax: { enabled: false },
         metadata: {
           kind: "stall_order",
           order_id: orderId,
@@ -549,9 +633,8 @@ export async function confirmStallCheckout(input: {
     await recordStallCheckout(session);
   } catch (err) {
     console.error("stall checkout confirm", err instanceof Error ? err.message : "stripe");
-    return order;
   }
-  return loadOrder(order.id);
+  return (await loadOrder(order.id)) ?? order;
 }
 
 export async function startFeeCheckout(vendorId: string, balanceCents: number, email: string | null) {
@@ -562,24 +645,34 @@ export async function startFeeCheckout(vendorId: string, balanceCents: number, e
   }
   const origin = await checkoutOrigin();
   try {
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      integration_identifier: integrationIdentifier("stall_fee"),
-      customer_email: email ?? undefined,
-      metadata: { kind: "platform_fee", vendor_id: vendorId },
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "cad",
-            unit_amount: balanceCents,
-            product_data: { name: "MarketRegular stall fee" },
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        integration_identifier: "marketregular_stall_fee",
+        automatic_tax: { enabled: false },
+        customer_email: email ?? undefined,
+        metadata: { kind: "platform_fee", vendor_id: vendorId },
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "cad",
+              unit_amount: balanceCents,
+              product_data: { name: "MarketRegular stall fee" },
+            },
           },
-        },
-      ],
-      success_url: `${origin}/vendor/${vendorId}?fee=paid&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/vendor/${vendorId}?fee=cancelled`,
-    });
+        ],
+        success_url: `${origin}/vendor/${vendorId}?fee=paid&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/vendor/${vendorId}?fee=cancelled`,
+      },
+      { idempotencyKey: `stall-fee-${vendorId}-${balanceCents}-${origin}`.slice(0, 255) },
+    );
+    if (session.payment_status === "paid") {
+      return {
+        error: null,
+        url: `${origin}/vendor/${vendorId}?fee=paid&session_id=${session.id}`,
+      };
+    }
     if (!session.url) return { error: "Could not start that payment." as const, url: null };
     return { error: null, url: session.url };
   } catch (err) {

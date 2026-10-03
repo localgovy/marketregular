@@ -37,6 +37,22 @@ export function decryptVendorPassword(payload: string, key: Buffer) {
   ]).toString("utf8");
 }
 
+export type StoredSecret = { ciphertext: string; chosen: boolean };
+
+/** A failed Auth update must not leave Desk showing a password that does not sign in. */
+export function secretAfterFailedAuth(previous: StoredSecret | null):
+  | { action: "delete" }
+  | { action: "restore"; row: StoredSecret } {
+  if (!previous) return { action: "delete" };
+  return { action: "restore", row: previous };
+}
+
+/** Email the password that is actually stored. Another approval may have replaced ours. */
+export function alignIssuedPassword(attempted: string, stored: string) {
+  if (stored === attempted) return { password: attempted, realign: false };
+  return { password: stored, realign: true };
+}
+
 /** Skip once they have chosen. Resend the same one-time password while they still owe the change. */
 export function claimPasswordAction(
   existing: { chosen: boolean } | null,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import {
+  applyLostDispute,
   applyStallRefund,
   expireStallCheckout,
   recordPlatformFee,
@@ -43,6 +44,9 @@ export async function POST(request: Request) {
         break;
       case "charge.refunded":
         await applyStallRefund(event.data.object as Stripe.Charge, event.account ?? null);
+        break;
+      case "charge.dispute.closed":
+        await applyLostDispute(event.data.object as Stripe.Dispute, event.account ?? null);
         break;
       case "account.updated": {
         const account = event.data.object as Stripe.Account;

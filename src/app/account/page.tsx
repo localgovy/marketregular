@@ -1,5 +1,6 @@
 import { AccountDesk } from "@/components/account-desk";
 import { loadBuyerOrders } from "@/app/actions/selling";
+import { loadVendorPortal } from "@/app/actions/vendor-portal";
 import {
   getCurrentProfile,
   listMarkets,
@@ -36,13 +37,14 @@ export default async function AccountPage() {
   const skip = session.supabase ? await skipsShopperOnboarding(session.supabase, profile) : false;
   if (!skip) redirect(onboardingHref("/account"));
 
-  const [desk, markets, vendors, stalls, schedules, orders] = await Promise.all([
+  const [desk, markets, vendors, stalls, schedules, orders, portal] = await Promise.all([
     loadAccountDesk(profile.id),
     listMarkets(),
     listVendors(),
     listStalls(),
     listSchedules(),
     loadBuyerOrders(profile.id),
+    loadVendorPortal(),
   ]);
 
   const scheduleMap = new Map<string, MarketSchedule[]>();
@@ -124,6 +126,15 @@ export default async function AccountPage() {
       reviewCount={desk.reviewCount}
       visitPlanEmailedAt={desk.visitPlanEmailedAt}
       orders={orders}
+      ownedStalls={
+        portal.signedIn && !portal.error
+          ? portal.listings.map((listing) => ({
+              id: listing.id,
+              name: listing.name,
+              slug: listing.slug,
+            }))
+          : []
+      }
     />
   );
 }

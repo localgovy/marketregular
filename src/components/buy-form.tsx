@@ -41,6 +41,7 @@ export function BuyForm({
     <form action={action} className="mt-8 grid gap-4">
       <input type="hidden" name="vendor_slug" value={vendorSlug} />
       <input type="hidden" name="item_id" value={itemId} />
+      <input type="hidden" name="unit_price_cents" value={priceCents} />
       {cancelled ? <p className="text-sm text-muted-foreground">Payment was not finished.</p> : null}
       <div className="grid gap-1.5 max-w-32">
         <Label htmlFor="quantity">Quantity</Label>

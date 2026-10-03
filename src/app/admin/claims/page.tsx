@@ -1,14 +1,20 @@
 import Link from "next/link";
-import { decideClaim } from "@/app/actions/admin";
-import { Button } from "@/components/ui/button";
+import { ClaimDecision } from "@/components/admin/claim-decision";
 import { fetchAllRows, requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/constants";
 import type { ClaimRequest } from "@/types/database";
 
-export default async function ClaimsPage() {
+export default async function ClaimsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sent?: string; password?: string; vendor?: string }>;
+}) {
   if (!isSupabaseConfigured()) return null;
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
+  const params = await searchParams;
+  const vendorId = /^[0-9a-f-]{36}$/i.test(params.vendor ?? "") ? params.vendor : null;
+  const mailFailed = params.sent === "0";
   const claims = await fetchAllRows<ClaimRequest & { profiles?: { display_name: string | null } }>(
     (from, to) =>
       supabase
@@ -36,7 +42,27 @@ export default async function ClaimsPage() {
   }
 
   return (
-    <ul className="grid gap-4">
+    <div className="grid gap-4">
+      {mailFailed ? (
+        <p className="text-base text-destructive">
+          The claim is approved. The email did not send.
+          {params.password === "1" ? (
+            <>
+              {" "}
+              The one-time password is on that vendor&apos;s{" "}
+              {vendorId ? (
+                <Link href={`/admin/vendors/${vendorId}`} className="font-medium underline">
+                  desk page
+                </Link>
+              ) : (
+                "desk page"
+              )}
+              .
+            </>
+          ) : null}
+        </p>
+      ) : null}
+      <ul className="grid gap-4">
       {claims.map((claim) => {
         const listing = listingName.get(`${claim.target_type}:${claim.target_id}`);
         return (
@@ -53,34 +79,14 @@ export default async function ClaimsPage() {
               </p>
             ) : null}
             <p className="mt-2 text-sm whitespace-pre-wrap">{claim.evidence}</p>
-            {claim.status === "pending" ? (
-              <div className="mt-3 flex gap-2">
-                <form
-                  action={async () => {
-                    "use server";
-                    await decideClaim(claim.id, "approved");
-                  }}
-                >
-                  <Button type="submit">Approve</Button>
-                </form>
-                <form
-                  action={async () => {
-                    "use server";
-                    await decideClaim(claim.id, "rejected", "Not enough evidence");
-                  }}
-                >
-                  <Button type="submit" variant="outline">
-                    Reject
-                  </Button>
-                </form>
-              </div>
-            ) : null}
+            {claim.status === "pending" ? <ClaimDecision id={claim.id} /> : null}
           </li>
         );
       })}
       {!claims.length ? (
         <p className="text-muted-foreground">No claim requests yet.</p>
       ) : null}
-    </ul>
+      </ul>
+    </div>
   );
 }

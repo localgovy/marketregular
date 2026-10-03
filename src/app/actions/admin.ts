@@ -296,42 +296,47 @@ export async function assignVendorOwner(
     }
   }
 
-  try {
-    await sendVendorPortalMail(email);
-  } catch (mailError) {
-    console.error("vendor portal mail", mailError instanceof Error ? mailError.message : "send");
-  }
+  const mailed = await sendVendorPortalMail(email);
   revalidatePublishedDirectory([`/vendors/${vendor.slug}`, "/vendor"]);
   revalidatePath(`/admin/vendors/${vendorId}`);
   revalidatePath("/admin/claims");
+  if (!mailed.sent) {
+    return { error: "They can edit this stall. The email did not send." };
+  }
   return { error: null, message: "They can edit this stall. We emailed the portal link." };
 }
 
-export async function decideClaim(id: string, status: "approved" | "rejected", note?: string) {
+export async function decideClaim(
+  id: string,
+  status: "approved" | "rejected",
+  note?: string,
+): Promise<{ error: string | null }> {
   const { supabase } = await requireAdmin();
-  if (!supabase) fail("Supabase is not configured yet.");
-  if (status !== "approved" && status !== "rejected") fail("Could not update that claim.");
+  if (!supabase) return { error: "Supabase is not configured yet." };
+  if (status !== "approved" && status !== "rejected") return { error: "Could not update that claim." };
   const { data: claim, error: lookupError } = await supabase
     .from("claim_requests")
     .select("target_type, target_id, user_id")
     .eq("id", id)
     .maybeSingle();
-  if (lookupError) failDb(lookupError, "Could not update that claim.");
-  if (!claim) fail("Claim not found");
+  if (lookupError) return { error: dbPublicError(lookupError, "Could not update that claim.") };
+  if (!claim) return { error: "Claim not found" };
   const vendorApproval = status === "approved" && claim.target_type === "vendor" && claim.user_id;
   let pendingMail: { email: string; password: string | null } | null = null;
   if (vendorApproval) {
-    if (!vendorPasswordKey()) fail("Stall passwords are not configured yet.");
+    if (!vendorPasswordKey()) return { error: "Stall passwords are not configured yet." };
     const { data: stall, error: stallError } = await supabase
       .from("vendors")
       .select("claimed_by")
       .eq("id", claim.target_id)
       .maybeSingle();
-    if (stallError) failDb(stallError, "Could not update that claim.");
-    if (!stall) fail("That listing is missing.");
-    if (stall.claimed_by && stall.claimed_by !== claim.user_id) fail("That listing is already claimed.");
+    if (stallError) return { error: dbPublicError(stallError, "Could not update that claim.") };
+    if (!stall) return { error: "That listing is missing." };
+    if (stall.claimed_by && stall.claimed_by !== claim.user_id) {
+      return { error: "That listing is already claimed." };
+    }
     const prepared = await prepareVendorClaimPassword(supabase, claim.user_id);
-    if (prepared.error !== null) fail(prepared.error);
+    if (prepared.error !== null) return { error: prepared.error };
     pendingMail = { email: prepared.email, password: prepared.password };
   }
   const clipped = (note ?? "").trim().slice(0, 500);
@@ -340,17 +345,19 @@ export async function decideClaim(id: string, status: "approved" | "rejected", n
     p_status: status,
     p_note: clipped || null,
   });
-  if (error) failDb(error, "Could not update that claim.");
-  if (pendingMail) {
-    try {
-      await sendVendorPortalMail(pendingMail.email, pendingMail.password ?? undefined);
-    } catch (mailError) {
-      console.error("vendor portal mail", mailError instanceof Error ? mailError.message : "send");
-    }
-    revalidatePath(`/admin/vendors/${claim.target_id}`);
-  }
+  if (error) return { error: dbPublicError(error, "Could not update that claim.") };
   const table = claim.target_type === "market" ? "markets" : "vendors";
   const path = await listingPath(supabase, table, claim.target_id);
   revalidatePublishedDirectory(path ? [path] : []);
+  if (pendingMail) {
+    revalidatePath(`/admin/vendors/${claim.target_id}`);
+    const mailed = await sendVendorPortalMail(pendingMail.email, pendingMail.password ?? undefined);
+    if (!mailed.sent) {
+      revalidatePath("/admin/claims");
+      const password = pendingMail.password ? "1" : "0";
+      redirect(`/admin/claims?sent=0&password=${password}&vendor=${claim.target_id}`);
+    }
+  }
   revalidatePath("/admin/claims");
+  return { error: null };
 }

@@ -12,10 +12,13 @@ function escapeHtml(value: string) {
     .replaceAll('"', "&quot;");
 }
 
-export async function sendVendorPortalMail(email: string, password?: string) {
+export async function sendVendorPortalMail(
+  email: string,
+  password?: string,
+): Promise<{ sent: boolean }> {
   const key = process.env.RESEND_API_KEY?.trim();
   const from = process.env.RESEND_FROM?.trim();
-  if (!key || !from) return;
+  if (!key || !from) return { sent: false };
   const url = password
     ? `${SITE_URL}/login?next=${encodeURIComponent("/account/password")}`
     : `${SITE_URL}/vendor`;
@@ -42,13 +45,22 @@ export async function sendVendorPortalMail(email: string, password?: string) {
 <p style="margin:0"><a href="${url}" style="color:#141414">${url}</a></p>
 </div>
 </body></html>`;
-  const resend = new Resend(key);
-  const { error } = await resend.emails.send({
-    from,
-    to: email,
-    subject: sanitizeMailHeader(`Your stall on ${SITE_NAME}`),
-    text,
-    html,
-  });
-  if (error) console.error("vendor portal mail", error.name ?? "send");
+  try {
+    const resend = new Resend(key);
+    const { error } = await resend.emails.send({
+      from,
+      to: email,
+      subject: sanitizeMailHeader(`Your stall on ${SITE_NAME}`),
+      text,
+      html,
+    });
+    if (error) {
+      console.error("vendor portal mail", error.name ?? "send");
+      return { sent: false };
+    }
+    return { sent: true };
+  } catch (error) {
+    console.error("vendor portal mail", error instanceof Error ? error.message : "send");
+    return { sent: false };
+  }
 }

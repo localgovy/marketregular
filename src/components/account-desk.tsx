@@ -86,6 +86,7 @@ export function AccountDesk({
   reviewCount,
   visitPlanEmailedAt,
   orders,
+  ownedStalls = [],
 }: {
   profile: Profile;
   email: string | null;
@@ -115,6 +116,7 @@ export function AccountDesk({
     vendorName: string;
     vendorSlug: string;
   }>;
+  ownedStalls?: Array<{ id: string; name: string; slug: string }>;
 }) {
   const name = profile.display_name?.trim() || "Regular";
   const handle = profile.username ? `@${profile.username}` : null;
@@ -123,7 +125,7 @@ export function AccountDesk({
       ? saves.markets.slice(0, 3)
       : (profile.favorite_market_slugs ?? []).slice(0, 3);
   const vendorBySlug = new Map(vendors.map((vendor) => [vendor.slug, vendor]));
-  const listingName = new Map<string, { name: string; href: string }>();
+  const listingName = new Map<string, { name: string; href: string | null }>();
   for (const market of markets) {
     listingName.set(`market:${market.id}`, {
       name: market.name,
@@ -134,6 +136,13 @@ export function AccountDesk({
     listingName.set(`vendor:${vendor.id}`, {
       name: vendor.name,
       href: `/vendors/${vendor.slug}`,
+    });
+  }
+  for (const owned of ownedStalls) {
+    const published = listingName.get(`vendor:${owned.id}`);
+    listingName.set(`vendor:${owned.id}`, {
+      name: owned.name,
+      href: published?.href ?? null,
     });
   }
 
@@ -459,12 +468,12 @@ export function AccountDesk({
                       key={claim.id}
                       className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-border px-3 py-2.5 last:border-b-0"
                     >
-                      {listing ? (
+                      {listing?.href ? (
                         <Link href={listing.href} className="min-w-0 font-medium hover:underline">
                           {listing.name}
                         </Link>
                       ) : (
-                        <span className="min-w-0 font-medium">Listing</span>
+                        <span className="min-w-0 font-medium">{listing?.name ?? "Listing"}</span>
                       )}
                       <span className="flex shrink-0 flex-col items-end gap-1 text-sm text-muted-foreground">
                         <span>{claimStatus(claim.status)}</span>

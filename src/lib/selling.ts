@@ -60,6 +60,26 @@ export function checkoutFeeCents(chargeCents: number) {
   return percentFeeCents(chargeCents) + PLATFORM_FLAT_CENTS;
 }
 
+/** The menu price in CAD, ignoring tax Stripe may add on top. */
+export function checkoutAmountMatches(
+  currency: string | null | undefined,
+  amountSubtotal: number | null | undefined,
+  amountTotal: number | null | undefined,
+  chargeCents: number,
+) {
+  if (currency !== "cad") return false;
+  const amount = amountSubtotal ?? amountTotal;
+  return typeof amount === "number" && amount === chargeCents;
+}
+
+/** Money already back with the buyer. A later reversal does not shrink an earlier one. */
+export function returnedCents(chargeCents: number, alreadyCents: number, incomingCents: number) {
+  wholeCents(chargeCents, "Charge");
+  wholeCents(alreadyCents, "Refund");
+  wholeCents(incomingCents, "Reversal");
+  return Math.min(chargeCents, Math.max(alreadyCents, incomingCents));
+}
+
 export function feeAfterRefund(chargeCents: number, refundedCents: number): FeeParts {
   wholeCents(chargeCents, "Charge");
   wholeCents(refundedCents, "Refund");

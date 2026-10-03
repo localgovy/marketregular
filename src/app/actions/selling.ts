@@ -103,6 +103,10 @@ export async function placeStallOrder(formData: FormData): Promise<{ error: stri
   if (!isUuid(itemId) || !/^[a-z0-9-]+$/.test(slug)) return { error: "That item is missing." };
   const sellable = await loadSellable(slug, itemId);
   if (!sellable) return { error: "That item is not for sale." };
+  const shownPrice = String(formData.get("unit_price_cents") ?? "");
+  if (!/^\d+$/.test(shownPrice) || Number(shownPrice) !== sellable.price_cents) {
+    return { error: "The price changed. Refresh and try again." };
+  }
   const parsed = parseCheckoutDetails({
     fulfillment: String(formData.get("fulfillment") ?? ""),
     quantity: String(formData.get("quantity") ?? ""),

@@ -1,12 +1,15 @@
 import "server-only";
 
 import {
+  alignIssuedPassword,
   claimPasswordAction,
   decryptVendorPassword,
   encryptVendorPassword,
   generateVendorPassword,
+  secretAfterFailedAuth,
   vendorPasswordKey,
   withMustSetPassword,
+  type StoredSecret,
 } from "@/lib/vendor-password";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
@@ -59,6 +62,7 @@ export async function prepareVendorClaimPassword(
     }
   }
 
+  const previous: StoredSecret | null = row;
   const password = generateVendorPassword();
   const { error: storeError } = await admin.from("vendor_sign_in_secrets").upsert({
     user_id: userId,
@@ -67,13 +71,48 @@ export async function prepareVendorClaimPassword(
   });
   if (storeError) return { error: "Could not store that password." };
 
+  const appMetadata = withMustSetPassword(metadata(owner.user), true);
   const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
     password,
-    app_metadata: withMustSetPassword(metadata(owner.user), true),
+    app_metadata: appMetadata,
   });
-  if (updateError) return { error: "Could not set a sign-in password." };
+  if (updateError) {
+    const rollback = secretAfterFailedAuth(previous);
+    if (rollback.action === "delete") {
+      await admin.from("vendor_sign_in_secrets").delete().eq("user_id", userId);
+    } else {
+      await admin.from("vendor_sign_in_secrets").upsert({
+        user_id: userId,
+        ciphertext: rollback.row.ciphertext,
+        chosen: rollback.row.chosen,
+      });
+    }
+    return { error: "Could not set a sign-in password." };
+  }
 
-  return { error: null, email, password };
+  const { data: current, error: rereadError } = await admin
+    .from("vendor_sign_in_secrets")
+    .select("ciphertext")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (rereadError || !current || typeof current.ciphertext !== "string") {
+    return { error: "Could not open that password." };
+  }
+  let stored: string;
+  try {
+    stored = decryptVendorPassword(current.ciphertext, key);
+  } catch {
+    return { error: "Could not read that password." };
+  }
+  const aligned = alignIssuedPassword(password, stored);
+  if (aligned.realign) {
+    const { error: realignError } = await admin.auth.admin.updateUserById(userId, {
+      password: aligned.password,
+      app_metadata: appMetadata,
+    });
+    if (realignError) return { error: "Could not set a sign-in password." };
+  }
+  return { error: null, email, password: aligned.password };
 }
 
 export async function syncChosenVendorPassword(admin: SupabaseClient, user: User, password: string) {
@@ -97,7 +136,8 @@ export async function saveChosenVendorPassword(admin: SupabaseClient, user: User
     chosen: true,
   });
   if (storeError) return { error: "Could not save that password.", stored: false, wrote: false };
-  const nextMeta = withMustSetPassword(metadata(user), false);
+  const { data: fresh } = await admin.auth.admin.getUserById(user.id);
+  const nextMeta = withMustSetPassword(metadata(fresh.user ?? user), false);
   let { error: metaError } = await admin.auth.admin.updateUserById(user.id, { app_metadata: nextMeta });
   if (metaError) {
     metaError = (await admin.auth.admin.updateUserById(user.id, { app_metadata: nextMeta })).error;

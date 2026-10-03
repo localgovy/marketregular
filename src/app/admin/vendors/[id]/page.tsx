@@ -33,13 +33,15 @@ export default async function EditVendorPage({
           .select("ciphertext, chosen")
           .eq("user_id", vendor.claimed_by)
           .maybeSingle()
-      : Promise.resolve({ data: null }),
+      : Promise.resolve({ data: null, error: null }),
   ]);
   const ownerEmail = owner.data?.user?.email ?? null;
   const passwordLine =
-    secret.data && typeof secret.data.ciphertext === "string"
-      ? readVendorPassword(secret.data.ciphertext, secret.data.chosen === true)
-      : null;
+    secret.error
+      ? null
+      : secret.data && typeof secret.data.ciphertext === "string"
+        ? readVendorPassword(secret.data.ciphertext, secret.data.chosen === true)
+        : null;
 
   async function remove() {
     "use server";
@@ -55,7 +57,9 @@ export default async function EditVendorPage({
           They sign in at /vendor with this account. The stall has to be unclaimed, or already theirs.
         </p>
         <VendorOwnerForm vendorId={id} ownerEmail={ownerEmail} />
-        {passwordLine ? (
+        {secret.error ? (
+          <p className="mt-3 text-sm text-destructive">Could not open that password.</p>
+        ) : passwordLine ? (
           <p className="mt-3 text-sm">
             <span className="text-muted-foreground">{passwordLine.label}. </span>
             <span className="font-medium">{passwordLine.value}</span>

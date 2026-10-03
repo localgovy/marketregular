@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { isStallCheckoutPath, onboardingExemptPath } from "../src/lib/onboarding.ts";
 import { originFromHost } from "../src/lib/site-host.ts";
 import {
+  checkoutAmountMatches,
   checkoutFeeCents,
   earliestUncoveredEarnedOn,
   feeAfterRefund,
@@ -11,6 +12,7 @@ import {
   feeDueOn,
   parseCheckoutDetails,
   percentFeeCents,
+  returnedCents,
   saleReady,
 } from "../src/lib/selling.ts";
 
@@ -20,6 +22,32 @@ test("a checkout fee is 3.5 percent plus 25 cents", () => {
   assert.equal(checkoutFeeCents(50), 27);
   assert.equal(percentFeeCents(1), 0);
   assert.equal(checkoutFeeCents(333), 12 + 25);
+});
+
+test("a checkout counts when the cad subtotal matches the menu price", () => {
+  assert.equal(checkoutAmountMatches("cad", 1000, 1000, 1000), true);
+  assert.equal(checkoutAmountMatches("cad", 1000, 1130, 1000), true);
+  assert.equal(checkoutAmountMatches("cad", null, 1000, 1000), true);
+  assert.equal(checkoutAmountMatches("usd", 1000, 1000, 1000), false);
+  assert.equal(checkoutAmountMatches("cad", 900, 900, 1000), false);
+  assert.equal(checkoutAmountMatches("cad", null, null, 1000), false);
+});
+
+test("a reversal the size of the charge voids the fee and a smaller one keeps the 25 cents", () => {
+  assert.equal(returnedCents(1000, 0, 1000), 1000);
+  assert.deepEqual(feeAfterRefund(1000, returnedCents(1000, 0, 1000)), {
+    percentCents: 0,
+    flatCents: 0,
+    voided: true,
+  });
+  assert.equal(returnedCents(1000, 0, 400), 400);
+  assert.deepEqual(feeAfterRefund(1000, returnedCents(1000, 0, 400)), {
+    percentCents: 21,
+    flatCents: 25,
+    voided: false,
+  });
+  assert.equal(returnedCents(1000, 400, 200), 400);
+  assert.equal(returnedCents(1000, 200, 1500), 1000);
 });
 
 test("a full refund voids the fee and a partial refund keeps the 25 cents", () => {

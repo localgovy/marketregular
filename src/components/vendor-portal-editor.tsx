@@ -707,7 +707,8 @@ export function VendorPortalEditor({
                 </>
               ) : listing.fee_balance_cents < 0 ? (
                 <>
-                  Credit <span className="type-nums">{formatPrice(Math.abs(listing.fee_balance_cents))}</span>
+                  Credit <span className="type-nums">{formatPrice(Math.abs(listing.fee_balance_cents))}</span>. It
+                  comes off the next stall fee.
                 </>
               ) : (
                 "No stall fee is waiting."
@@ -806,7 +807,19 @@ export function VendorPortalEditor({
         {listing.menus.length ? (
           <ul className="mt-2">
             {listing.menus.map((item) => (
-              <MenuItemForm key={item.id} vendorId={listing.id} item={item} />
+              <MenuItemForm
+                key={[
+                  item.id,
+                  item.price_cents ?? "",
+                  item.for_sale ? "1" : "0",
+                  item.offer_delivery ? "1" : "0",
+                  item.offer_pickup ? "1" : "0",
+                  item.offer_preorder ? "1" : "0",
+                  item.offer_terms ?? "",
+                ].join("\n")}
+                vendorId={listing.id}
+                item={item}
+              />
             ))}
           </ul>
         ) : (
