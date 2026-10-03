@@ -47,17 +47,25 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>No checkout yet</h2>
+        <h2>Orders</h2>
         <p className={body}>
-          {SITE_NAME} does not sell groceries or take payment on this site. Pickup, if it ships,
-          will have its own terms. These ones do not cover refunds, orders, or card charges.
+          A stall sells its own items. {SITE_NAME} hosts the button. The card payment runs on the
+          stall&apos;s account, in the stall&apos;s name. You need an account to buy. The price on
+          the item is the amount charged. The stall sets delivery, pickup, or preorder, and any
+          terms shown before you pay. Refunds and handing the item over are the stall&apos;s.
+        </p>
+        <p className={body}>
+          LOCALGOVY, an Ontario sole proprietorship, bills the stall 3.5% of each paid checkout
+          plus $0.25 CAD. The stall can pay that balance any time. What is still unpaid from a
+          calendar year is due on 31 December. That fee is not added to the buyer&apos;s payment.
         </p>
       </section>
 
       <section className="mt-10">
         <h2>Accounts</h2>
         <p className={body}>
-          One person per account. Keep the password to yourself. You are responsible for what
+          One person per account. Keep the password to yourself. A stall password chosen after we
+          approve a vendor claim is also visible on the desk. You are responsible for what
           happens on the account. We can close it if these terms are broken, if the feed is
           abused, or if we have to for the law.
         </p>
@@ -76,6 +84,9 @@ export default function TermsPage() {
         <h2>Claims</h2>
         <p className={body}>
           Sending a claim is a request. It does not hand you the listing. We look at it and decide.
+          When we approve a vendor claim, that account can edit the stall. Keep the name, hours,
+          menu, and contact details accurate. We can change the listing or take the account off it.
+          The web address, published or draft status, and the public score stay with us.
         </p>
       </section>
 

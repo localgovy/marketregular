@@ -88,7 +88,8 @@ const SCHEDULE_PUBLIC =
   "id, market_id, weekday, opens_at, closes_at, season_start, season_end, notes";
 const POST_PUBLIC = "id, user_id, market_id, body, photos, flagged, created_at";
 const REVIEW_PUBLIC = "id, user_id, market_id, vendor_id, rating, body, flagged, created_at";
-const MENU_PUBLIC = "id, vendor_id, name, description, price_cents, season, dietary";
+const MENU_PUBLIC =
+  "id, vendor_id, name, description, price_cents, season, dietary, for_sale, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
 const STALL_PUBLIC = "market_id, vendor_id, stall, days";
 
 /** Score, then the tag guesses that keep name-only roster shops inside the filters. */

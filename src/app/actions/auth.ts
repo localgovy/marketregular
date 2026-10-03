@@ -10,6 +10,8 @@ import {
   signInPublicError,
   signUpPublicError,
 } from "@/lib/public-error";
+import { saveChosenVendorPassword, syncChosenVendorPassword } from "@/lib/issue-vendor-password";
+import { mustSetPassword } from "@/lib/password-gate";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -169,6 +171,7 @@ export async function updatePassword(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
   const current = String(formData.get("current_password") ?? "");
+  const forced = mustSetPassword(user.app_metadata);
   if (password.length < 8) return { error: "Use at least 8 characters." };
   if (password !== confirm) return { error: "Those passwords do not match." };
   const steppedUp = hasPasswordIdentity(user)
@@ -179,8 +182,27 @@ export async function updatePassword(formData: FormData) {
       ? { error: "Enter your current password." }
       : { error: "Sign in again, then set a password." };
   }
+  const admin = createServiceClient();
+  if (forced && !admin) return { error: "Could not save that password." };
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: passwordUpdatePublicError(error) };
+  if (admin) {
+    const saved = forced
+      ? await saveChosenVendorPassword(admin, user, password)
+      : await syncChosenVendorPassword(admin, user, password);
+    if (saved.error) {
+      if (!saved.stored && current) {
+        await admin.auth.admin.updateUserById(user.id, { password: current });
+      }
+      return { error: saved.error };
+    }
+    if (forced || saved.wrote) revalidatePath("/admin/vendors", "layout");
+  }
+  if (forced) {
+    await supabase.auth.refreshSession();
+    await supabase.auth.signOut({ scope: "others" });
+    redirect("/vendor");
+  }
   await supabase.auth.signOut({ scope: "others" });
   redirect("/account");
 }

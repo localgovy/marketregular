@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { VendorForm } from "@/components/admin/vendor-form";
+import { VendorOwnerForm } from "@/components/admin/vendor-owner-form";
+import { VendorSellingForm } from "@/components/admin/vendor-selling-form";
 import { requireAdmin } from "@/lib/admin";
+import { readVendorPassword } from "@/lib/vendor-password";
 import { isSupabaseConfigured } from "@/lib/constants";
 import { withListingStats } from "@/lib/listing-score";
 import { deleteVendor, saveMenuItem } from "@/app/actions/admin";
@@ -19,7 +22,24 @@ export default async function EditVendorPage({
   if (!supabase) return null;
   const { data: vendor } = await supabase.from("vendors").select("*").eq("id", id).maybeSingle();
   if (!vendor) notFound();
-  const { data: menus } = await supabase.from("vendor_menus").select("*").eq("vendor_id", id);
+  const [{ data: menus }, owner, secret] = await Promise.all([
+    supabase.from("vendor_menus").select("*").eq("vendor_id", id),
+    vendor.claimed_by
+      ? supabase.auth.admin.getUserById(vendor.claimed_by)
+      : Promise.resolve({ data: { user: null } }),
+    vendor.claimed_by
+      ? supabase
+          .from("vendor_sign_in_secrets")
+          .select("ciphertext, chosen")
+          .eq("user_id", vendor.claimed_by)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const ownerEmail = owner.data?.user?.email ?? null;
+  const passwordLine =
+    secret.data && typeof secret.data.ciphertext === "string"
+      ? readVendorPassword(secret.data.ciphertext, secret.data.chosen === true)
+      : null;
 
   async function remove() {
     "use server";
@@ -29,6 +49,28 @@ export default async function EditVendorPage({
   return (
     <div className="grid gap-10">
       <VendorForm vendor={withListingStats(vendor as Vendor)} />
+      <section>
+        <h2>Owner</h2>
+        <p className="mt-2 mb-4 text-sm text-muted-foreground">
+          They sign in at /vendor with this account. The stall has to be unclaimed, or already theirs.
+        </p>
+        <VendorOwnerForm vendorId={id} ownerEmail={ownerEmail} />
+        {passwordLine ? (
+          <p className="mt-3 text-sm">
+            <span className="text-muted-foreground">{passwordLine.label}. </span>
+            <span className="font-medium">{passwordLine.value}</span>
+          </p>
+        ) : null}
+      </section>
+      <section>
+        <h2>Selling</h2>
+        <div className="mt-4">
+          <VendorSellingForm
+            vendorId={id}
+            approved={vendor.selling_approved === true}
+          />
+        </div>
+      </section>
       <section>
         <h2>Menu items</h2>
         <ul className="mt-3 divide-y divide-border">

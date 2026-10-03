@@ -1,7 +1,8 @@
 import { OnboardingDesk } from "@/components/onboarding-desk";
 import { loadAccountDesk } from "@/lib/data/account";
 import { getCurrentProfile, listMarkets, listSchedules } from "@/lib/data/catalog";
-import { needsOnboarding } from "@/lib/onboarding";
+import { needsOnboarding, skipsShopperOnboarding } from "@/lib/onboarding";
+import { createAuthedServerClient } from "@/lib/supabase/server";
 import { safePath } from "@/lib/auth-redirect";
 import { nextOpenLabel } from "@/lib/schedule";
 import { pageMeta } from "@/lib/seo";
@@ -22,10 +23,17 @@ export default async function OnboardingPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const [{ next: raw }, profile] = await Promise.all([searchParams, getCurrentProfile()]);
+  const [{ next: raw }, profile, session] = await Promise.all([
+    searchParams,
+    getCurrentProfile(),
+    createAuthedServerClient(),
+  ]);
   const next = safePath(raw);
   if (!profile) redirect("/login?next=/onboarding");
   if (!needsOnboarding(profile)) redirect(next === "/onboarding" ? "/account" : next);
+  if (session.supabase && (await skipsShopperOnboarding(session.supabase, profile))) {
+    redirect(next === "/account" || next === "/onboarding" ? "/vendor" : next);
+  }
 
   const desk = await loadAccountDesk(profile.id);
   const [markets, schedules] = await Promise.all([listMarkets(), listSchedules()]);

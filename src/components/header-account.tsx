@@ -37,6 +37,7 @@ export function HeaderAccount() {
   const [profile, setProfile] = useState<{
     display_name: string | null;
     role: UserRole;
+    ownsVendor: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -55,14 +56,16 @@ export function HeaderAccount() {
         if (!cancelled) setProfile(null);
         return;
       }
-      const [{ data }, { data: isAdmin }] = await Promise.all([
+      const [{ data }, { data: isAdmin }, { data: ownsVendor }] = await Promise.all([
         supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
         supabase.rpc("is_admin"),
+        supabase.rpc("has_owned_vendor"),
       ]);
       if (cancelled) return;
       setProfile({
         display_name: data?.display_name ?? user.email?.split("@")[0] ?? "You",
         role: isAdmin === true ? "admin" : "user",
+        ownsVendor: ownsVendor === true,
       });
     })();
 
@@ -76,6 +79,11 @@ export function HeaderAccount() {
   if (shown) {
     return (
       <>
+        {shown.ownsVendor ? (
+          <Link href="/vendor" className={SIGN_IN_CLASS}>
+            Your stall
+          </Link>
+        ) : null}
         {shown.role === "admin" ? (
           <Link href="/admin" className={SIGN_IN_CLASS}>
             Desk

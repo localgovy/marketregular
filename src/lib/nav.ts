@@ -19,6 +19,7 @@ export const SITE_CLAIM_NAV = {
 export const SITE_META_NAV = [
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
+  { href: "/vendor", label: "Vendor sign in" },
 ] as const;
 
 export const SITE_FOOTER_NAV = [

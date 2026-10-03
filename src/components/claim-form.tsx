@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { CLAIM_ROLES } from "@/lib/claim";
 import { submitClaim } from "@/app/actions/claims";
 import { CLAIM_INBOX } from "@/lib/constants";
@@ -13,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 const CLAIM_COPY = {
   vendor: {
     title: "Is this your listing?",
-    lede: "Claim it to update hours, the menu, and how people find you.",
+    lede: "Sign in, then claim it to update hours, the menu, and how people find you.",
   },
   market: {
     title: "Do you run this market?",
@@ -32,8 +34,12 @@ export function ClaimForm({
   listingName?: string;
   layout?: "fold" | "open";
 }) {
+  const pathname = usePathname();
   const [state, action, pending] = useActionState(
-    async (_prev: { error: string | null; message?: string } | null, formData: FormData) => {
+    async (
+      _prev: { error: string | null; message?: string; signIn?: boolean } | null,
+      formData: FormData,
+    ) => {
       return submitClaim(formData);
     },
     null,
@@ -147,6 +153,16 @@ export function ClaimForm({
         {pending ? "Sending…" : "Request to claim this listing"}
       </Button>
       {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+      {state?.signIn ? (
+        <p className="text-sm">
+          <Link
+            href={`/login?next=${encodeURIComponent(pathname || "/contact")}`}
+            className="font-medium hover:underline"
+          >
+            Sign in
+          </Link>
+        </p>
+      ) : null}
       <p className="text-sm text-muted-foreground">
         Goes to {CLAIM_INBOX}. We reply to the email you give.
       </p>

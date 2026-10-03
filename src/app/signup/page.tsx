@@ -2,7 +2,8 @@ import { BackButton } from "@/components/back-button";
 import { SignupForm } from "@/components/signup-form";
 import { safePath } from "@/lib/auth-redirect";
 import { getCurrentProfile } from "@/lib/data/catalog";
-import { needsOnboarding, onboardingHref } from "@/lib/onboarding";
+import { isStallCheckoutPath, isVendorPortalPath, onboardingHref, skipsShopperOnboarding } from "@/lib/onboarding";
+import { createAuthedServerClient } from "@/lib/supabase/server";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -19,9 +20,19 @@ export default async function SignupPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const [{ next: raw }, profile] = await Promise.all([searchParams, getCurrentProfile()]);
+  const [{ next: raw }, profile, session] = await Promise.all([
+    searchParams,
+    getCurrentProfile(),
+    createAuthedServerClient(),
+  ]);
   const next = safePath(raw);
-  if (profile) redirect(needsOnboarding(profile) ? onboardingHref(next) : next);
+  if (profile) {
+    const skip =
+      isVendorPortalPath(next) ||
+      isStallCheckoutPath(next) ||
+      (session.supabase ? await skipsShopperOnboarding(session.supabase, profile) : false);
+    redirect(skip ? next : onboardingHref(next));
+  }
 
   const loginHref =
     next && next !== "/account" ? `/login?next=${encodeURIComponent(next)}` : "/login";

@@ -23,6 +23,7 @@ import { vendorPageDescription, vendorPageTitle } from "@/lib/listing-copy";
 import { vendorHasSubstance } from "@/lib/listing-substance";
 import { hallDayHours, sessionOnWeekday } from "@/lib/schedule";
 import { rankVendorMarkets } from "@/lib/vendor-markets";
+import { stripeChargesConfigured } from "@/lib/stripe";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -143,7 +144,14 @@ export default async function VendorPage({
           {vendor.menus.length ? (
             <section id="menu">
               <h2>Menu</h2>
-              <StallMenu items={vendor.menus} />
+              <StallMenu
+                items={
+                  stripeChargesConfigured()
+                    ? vendor.menus
+                    : vendor.menus.map((item) => ({ ...item, can_buy: false }))
+                }
+                vendorSlug={vendor.slug}
+              />
             </section>
           ) : null}
           <section>

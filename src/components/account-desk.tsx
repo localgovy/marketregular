@@ -36,6 +36,8 @@ import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { ClaimRequest, Market, Profile, StallRef, Vendor } from "@/types/database";
 import type { AccountPost } from "@/lib/data/account";
 import type { Saves } from "@/lib/saves";
+import { fulfillmentLabel, orderStatusLabel } from "@/lib/selling";
+import { formatPrice } from "@/lib/format";
 
 function marketFromPost(markets: AccountPost["markets"]) {
   if (
@@ -83,6 +85,7 @@ export function AccountDesk({
   saves,
   reviewCount,
   visitPlanEmailedAt,
+  orders,
 }: {
   profile: Profile;
   email: string | null;
@@ -102,6 +105,16 @@ export function AccountDesk({
   saves: Saves;
   reviewCount: number;
   visitPlanEmailedAt?: string | null;
+  orders: Array<{
+    id: string;
+    itemName: string;
+    quantity: number;
+    chargeCents: number;
+    fulfillment: string;
+    status: string;
+    vendorName: string;
+    vendorSlug: string;
+  }>;
 }) {
   const name = profile.display_name?.trim() || "Regular";
   const handle = profile.username ? `@${profile.username}` : null;
@@ -138,6 +151,42 @@ export function AccountDesk({
               in one profile.
             </p>
           </header>
+
+          <section>
+            <h2>Orders</h2>
+            {orders.length ? (
+              <ul className="mt-3 divide-y divide-border">
+                {orders.map((order) => (
+                  <li key={order.id} className="grid gap-1 py-3">
+                    <p className="text-base font-medium">
+                      {order.vendorSlug ? (
+                        <Link href={`/vendors/${order.vendorSlug}/orders/${order.id}`} className="hover:underline">
+                          {order.itemName}
+                        </Link>
+                      ) : (
+                        order.itemName
+                      )}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {order.vendorSlug ? (
+                        <Link href={`/vendors/${order.vendorSlug}`} className="font-medium text-foreground hover:underline">
+                          {order.vendorName}
+                        </Link>
+                      ) : (
+                        order.vendorName
+                      )}
+                    </p>
+                    <p className="type-nums text-sm text-muted-foreground">
+                      {order.quantity} · {formatPrice(order.chargeCents)} · {fulfillmentLabel(order.fulfillment)} ·{" "}
+                      {orderStatusLabel(order.status)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">No orders yet.</p>
+            )}
+          </section>
 
           <TorontoWeek
             id="week"
@@ -417,8 +466,16 @@ export function AccountDesk({
                       ) : (
                         <span className="min-w-0 font-medium">Listing</span>
                       )}
-                      <span className="shrink-0 text-sm text-muted-foreground">
-                        {claimStatus(claim.status)}
+                      <span className="flex shrink-0 flex-col items-end gap-1 text-sm text-muted-foreground">
+                        <span>{claimStatus(claim.status)}</span>
+                        {claim.status === "approved" && claim.target_type === "vendor" ? (
+                          <Link
+                            href={`/vendor/${claim.target_id}`}
+                            className="font-medium text-foreground hover:underline"
+                          >
+                            Edit listing
+                          </Link>
+                        ) : null}
                       </span>
                     </li>
                   );

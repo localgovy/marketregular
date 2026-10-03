@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 
 type Result = { error: string | null } | void;
 
-export function PasswordForm() {
+export function PasswordForm({ forced = false }: { forced?: boolean }) {
   const [state, action, pending] = useActionState(
     async (_prev: Result, formData: FormData) => updatePassword(formData),
     undefined,
@@ -25,7 +25,7 @@ export function PasswordForm() {
           autoComplete="current-password"
         />
         <p className="text-sm text-muted-foreground">
-          Skip this if you just opened a reset link.
+          {forced ? "Use the password from the email." : "Skip this if you just opened a reset link."}
         </p>
       </div>
       <div className="grid gap-1.5">

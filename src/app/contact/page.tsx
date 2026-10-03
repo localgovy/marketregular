@@ -68,7 +68,8 @@ export default async function ContactPage() {
         <h2>Claim a listing</h2>
         <p className="mt-2 mb-6 text-base text-muted-foreground">
           If you run or work for a market or vendor, send a claim so the hours, the stall list,
-          and the contact details stay accurate.
+          and the contact details stay accurate. A vendor claim needs the account you will use
+          to edit the stall.
         </p>
         <ContactClaim markets={listings.markets} vendors={listings.vendors} />
       </section>

@@ -4,6 +4,9 @@ import { requireAdmin } from "@/lib/admin";
 import { slugify } from "@/lib/format";
 import { dbPublicError } from "@/lib/public-error";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
+import { prepareVendorClaimPassword } from "@/lib/issue-vendor-password";
+import { sendVendorPortalMail } from "@/lib/vendor-portal-mail";
+import { vendorPasswordKey } from "@/lib/vendor-password";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -244,17 +247,93 @@ export async function saveMenuItem(formData: FormData) {
   revalidatePath(`/admin/vendors/${vendor_id}`);
 }
 
+const OWNER_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function assignVendorOwner(
+  _prev: { error: string | null; message?: string } | undefined,
+  formData: FormData,
+): Promise<{ error: string | null; message?: string }> {
+  const { supabase } = await requireAdmin();
+  if (!supabase) return { error: "Supabase is not configured yet." };
+  const vendorId = String(formData.get("vendor_id") ?? "");
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!vendorId) return { error: "That stall is missing." };
+  if (!OWNER_EMAIL.test(email) || email.length > 120) {
+    return { error: "Add the email on their account." };
+  }
+  const { data: vendor, error: vendorError } = await supabase
+    .from("vendors")
+    .select("id, slug, claimed_by")
+    .eq("id", vendorId)
+    .maybeSingle();
+  if (vendorError) return { error: dbPublicError(vendorError, "Could not open that stall.") };
+  if (!vendor) return { error: "That stall is missing." };
+
+  const { data: userId, error: lookupError } = await supabase.rpc("auth_user_id_for_email", {
+    p_email: email,
+  });
+  if (lookupError) return { error: "Could not look up that account." };
+  if (!userId) {
+    return { error: "No account uses that email. They need to sign up at /vendor first." };
+  }
+  if (vendor.claimed_by && vendor.claimed_by !== userId) {
+    return { error: "Someone else already runs this stall." };
+  }
+
+  if (vendor.claimed_by !== userId) {
+    const { data: updated, error: claimError } = await supabase
+      .from("vendors")
+      .update({ claimed_by: userId })
+      .eq("id", vendorId)
+      .is("claimed_by", null)
+      .select("id");
+    if (claimError) return { error: dbPublicError(claimError, "Could not give them this stall.") };
+    if (!updated?.length) return { error: "Someone else already runs this stall." };
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+    if (profile?.role !== "admin") {
+      const { error: roleError } = await supabase.from("profiles").update({ role: "vendor" }).eq("id", userId);
+      if (roleError) return { error: dbPublicError(roleError, "Could not open the stall editor.") };
+    }
+  }
+
+  try {
+    await sendVendorPortalMail(email);
+  } catch (mailError) {
+    console.error("vendor portal mail", mailError instanceof Error ? mailError.message : "send");
+  }
+  revalidatePublishedDirectory([`/vendors/${vendor.slug}`, "/vendor"]);
+  revalidatePath(`/admin/vendors/${vendorId}`);
+  revalidatePath("/admin/claims");
+  return { error: null, message: "They can edit this stall. We emailed the portal link." };
+}
+
 export async function decideClaim(id: string, status: "approved" | "rejected", note?: string) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
   if (status !== "approved" && status !== "rejected") fail("Could not update that claim.");
   const { data: claim, error: lookupError } = await supabase
     .from("claim_requests")
-    .select("target_type, target_id")
+    .select("target_type, target_id, user_id")
     .eq("id", id)
     .maybeSingle();
   if (lookupError) failDb(lookupError, "Could not update that claim.");
   if (!claim) fail("Claim not found");
+  const vendorApproval = status === "approved" && claim.target_type === "vendor" && claim.user_id;
+  let pendingMail: { email: string; password: string | null } | null = null;
+  if (vendorApproval) {
+    if (!vendorPasswordKey()) fail("Stall passwords are not configured yet.");
+    const { data: stall, error: stallError } = await supabase
+      .from("vendors")
+      .select("claimed_by")
+      .eq("id", claim.target_id)
+      .maybeSingle();
+    if (stallError) failDb(stallError, "Could not update that claim.");
+    if (!stall) fail("That listing is missing.");
+    if (stall.claimed_by && stall.claimed_by !== claim.user_id) fail("That listing is already claimed.");
+    const prepared = await prepareVendorClaimPassword(supabase, claim.user_id);
+    if (prepared.error !== null) fail(prepared.error);
+    pendingMail = { email: prepared.email, password: prepared.password };
+  }
   const clipped = (note ?? "").trim().slice(0, 500);
   const { error } = await supabase.rpc("decide_claim", {
     p_id: id,
@@ -262,6 +341,14 @@ export async function decideClaim(id: string, status: "approved" | "rejected", n
     p_note: clipped || null,
   });
   if (error) failDb(error, "Could not update that claim.");
+  if (pendingMail) {
+    try {
+      await sendVendorPortalMail(pendingMail.email, pendingMail.password ?? undefined);
+    } catch (mailError) {
+      console.error("vendor portal mail", mailError instanceof Error ? mailError.message : "send");
+    }
+    revalidatePath(`/admin/vendors/${claim.target_id}`);
+  }
   const table = claim.target_type === "market" ? "markets" : "vendors";
   const path = await listingPath(supabase, table, claim.target_id);
   revalidatePublishedDirectory(path ? [path] : []);

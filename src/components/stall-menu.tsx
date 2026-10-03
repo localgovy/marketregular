@@ -1,11 +1,18 @@
 import { formatPrice } from "@/lib/format";
 import type { MenuItem } from "@/types/database";
+import Link from "next/link";
 
 function tagWords(tags: string[]) {
   return tags.map((tag) => tag.replaceAll("-", " "));
 }
 
-export function StallMenu({ items }: { items: MenuItem[] }) {
+export function StallMenu({
+  items,
+  vendorSlug,
+}: {
+  items: MenuItem[];
+  vendorSlug?: string;
+}) {
   if (!items.length) return null;
 
   return (
@@ -25,6 +32,14 @@ export function StallMenu({ items }: { items: MenuItem[] }) {
               ) : null}
               {meta.length ? (
                 <p className="type-kicker mt-0.5 text-muted-foreground">{meta.join(" · ")}</p>
+              ) : null}
+              {item.can_buy && vendorSlug ? (
+                <Link
+                  href={`/vendors/${vendorSlug}/buy/${item.id}`}
+                  className="mt-1 inline-flex text-sm font-medium hover:underline"
+                >
+                  Buy
+                </Link>
               ) : null}
             </div>
             {price ? (

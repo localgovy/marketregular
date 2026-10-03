@@ -94,6 +94,12 @@ export type MenuItem = {
   price_cents: number | null;
   season: string | null;
   dietary: string[];
+  for_sale?: boolean;
+  offer_delivery?: boolean;
+  offer_pickup?: boolean;
+  offer_preorder?: boolean;
+  offer_terms?: string | null;
+  can_buy?: boolean;
 };
 
 export type Post = {

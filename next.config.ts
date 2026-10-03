@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
     // Tailwind + next/font CSS is ~21 KiB gzipped. Inlining it removes the
     // render-blocking stylesheet round-trips PageSpeed flags on mobile.
     inlineCss: true,
+    serverActions: {
+      bodySizeLimit: "6mb",
+    },
   },
   turbopack: {
     root: path.dirname(fileURLToPath(import.meta.url)),
@@ -91,11 +94,12 @@ const nextConfig: NextConfig = {
       // drop force-static / ISR on every market and vendor page. Next's own
       // bootstrap is inline, so a hash list cannot replace this either.
       // React reconstructs call stacks with eval() in development only.
-      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://va.vercel-scripts.com https://*.googletagmanager.com${dev ? " 'unsafe-eval'" : ""}`,
+      `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://va.vercel-scripts.com https://*.googletagmanager.com https://js.stripe.com https://*.js.stripe.com https://connect-js.stripe.com${dev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.supabase.co https://*.openfreemap.org https://*.googleusercontent.com https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.com https://*.google.ca",
+      "img-src 'self' data: blob: https://*.supabase.co https://*.openfreemap.org https://*.googleusercontent.com https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.com https://*.google.ca https://*.stripe.com",
       "font-src 'self' data: https://*.openfreemap.org",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.openfreemap.org https://va.vercel-scripts.com https://*.google-analytics.com https://*.analytics.google.com https://analytics.google.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.com https://*.google.ca",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.openfreemap.org https://va.vercel-scripts.com https://*.google-analytics.com https://*.analytics.google.com https://analytics.google.com https://*.googletagmanager.com https://*.g.doubleclick.net https://*.google.com https://*.google.ca https://api.stripe.com https://*.stripe.com https://connect-js.stripe.com",
+      "frame-src 'self' https://js.stripe.com https://*.js.stripe.com https://hooks.stripe.com https://connect-js.stripe.com https://*.stripe.com",
       "worker-src 'self' blob:",
       "child-src 'self' blob:",
       "frame-ancestors 'self'",
@@ -125,6 +129,8 @@ const nextConfig: NextConfig = {
       { source: "/admin/:path*", headers: noindex },
       { source: "/account", headers: noindex },
       { source: "/account/:path*", headers: noindex },
+      { source: "/vendor", headers: noindex },
+      { source: "/vendor/:path*", headers: noindex },
       { source: "/login", headers: noindex },
       { source: "/signup", headers: noindex },
       { source: "/onboarding", headers: noindex },

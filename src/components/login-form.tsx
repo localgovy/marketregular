@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { requestPasswordReset, signInWithPassword } from "@/app/actions/auth";
 import { GoogleSignIn } from "@/components/google-sign-in";
 import { AuthLegalNote } from "@/components/auth-legal-note";
@@ -26,6 +26,7 @@ export function LoginForm({
 }) {
   const configured = isSupabaseConfigured();
   const router = useRouter();
+  const pathname = usePathname();
   const [forgot, setForgot] = useState(false);
   const [queryError, setQueryError] = useState(oauthError ?? null);
 
@@ -35,8 +36,8 @@ export function LoginForm({
     if (!params.has("error")) return;
     params.delete("error");
     const qs = params.toString();
-    router.replace(qs ? `/login?${qs}` : "/login", { scroll: false });
-  }, [oauthError, router]);
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [oauthError, pathname, router]);
 
   async function passwordAction(_prev: AuthResult, formData: FormData) {
     setQueryError(null);

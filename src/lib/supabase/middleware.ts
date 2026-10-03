@@ -1,7 +1,8 @@
 import { loadMyProfile } from "@/lib/my-profile";
 import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
 import { supabaseAnonKey, supabaseCookieOptions, supabaseUrl } from "@/lib/supabase/env";
-import { onboardingExemptPath, onboardingHref } from "@/lib/onboarding";
+import { needsOnboarding, onboardingExemptPath, onboardingHref, skipsShopperOnboarding } from "@/lib/onboarding";
+import { mustSetPassword, passwordChangeAllowed } from "@/lib/password-gate";
 import { safePath } from "@/lib/auth-redirect";
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
@@ -68,6 +69,13 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  if (user && mustSetPassword(user.app_metadata) && !passwordChangeAllowed(path)) {
+    const dest = request.nextUrl.clone();
+    dest.pathname = "/account/password";
+    dest.search = "";
+    return copyCookies(supabaseResponse, NextResponse.redirect(dest, 303));
+  }
+
   if (!navigation) return supabaseResponse;
 
   if (needsAuth && !user) {
@@ -76,7 +84,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && !onboardingExemptPath(path)) {
     const { profile, error } = await loadMyProfile(supabase);
-    if (!error && !profile?.onboarded_at) {
+    if (!error && needsOnboarding(profile) && !(await skipsShopperOnboarding(supabase, profile))) {
       const dest = new URL(onboardingHref(`${path}${request.nextUrl.search}`), request.nextUrl.origin);
       return copyCookies(supabaseResponse, NextResponse.redirect(dest));
     }

@@ -135,6 +135,13 @@ export async function submitClaim(formData: FormData) {
     data: { user },
   } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
 
+  if (target_type === "vendor" && !user) {
+    return {
+      error: "Sign in first so we can open your stall after we approve this.",
+      signIn: true,
+    };
+  }
+
   const service = createServiceClient();
   if (!service) {
     return { error: `Mail is not set up yet. Write ${CLAIM_INBOX} directly.` };

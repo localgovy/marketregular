@@ -114,6 +114,31 @@ export function dbPublicError(error: DbLike | null | undefined, fallback: string
     if (message.includes("Listing URL")) {
       return "That link could not be saved.";
     }
+    const portalCopy: [string, string][] = [
+      ["Add a name", "Add a name."],
+      ["Keep the about shorter", "Keep the about shorter."],
+      ["That phone number is not allowed", "That phone number is not allowed."],
+      ["That email is not allowed", "That email is not allowed."],
+      ["That tag is not allowed", "That tag is not allowed."],
+      ["Too many tags", "Too many tags."],
+      ["Add an item name", "Add an item name."],
+      ["Keep the description shorter", "Keep the description shorter."],
+      ["That price is not allowed", "That price is not allowed."],
+      ["Keep the season shorter", "Keep the season shorter."],
+      ["Menu is full", "The menu is full."],
+      ["That item is missing", "That item is missing."],
+      ["Keep the stall label shorter", "Keep the stall label shorter."],
+      ["Pick at least one day the market is open", "Pick at least one day the market is open."],
+      ["Pick days the market is open", "Pick days the market is open."],
+      ["That market has no hours yet", "That market has no hours yet."],
+      ["That market is missing", "That market is missing."],
+      ["Stall list is full", "The stall list is full."],
+      ["Keep the terms shorter", "Keep the terms shorter."],
+      ["A sale needs a price and a handoff", "A sale needs a price of at least $0.50 and delivery, pickup, or preorder."],
+    ];
+    for (const [needle, copy] of portalCopy) {
+      if (message.includes(needle)) return copy;
+    }
   }
   return fallback;
 }

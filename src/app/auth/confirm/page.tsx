@@ -2,8 +2,9 @@ import { BackButton } from "@/components/back-button";
 import { Button } from "@/components/ui/button";
 import { verifyEmailOtp } from "@/app/actions/auth";
 import { emailOtpType } from "@/lib/auth-callback";
-import { safePath } from "@/lib/auth-redirect";
+import { AUTH_NEXT_COOKIE, safePath } from "@/lib/auth-redirect";
 import { pageMeta } from "@/lib/seo";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -19,10 +20,19 @@ export default async function ConfirmEmailPage({
 }: {
   searchParams: Promise<{ token_hash?: string; type?: string; next?: string }>;
 }) {
-  const params = await searchParams;
+  const [params, jar] = await Promise.all([searchParams, cookies()]);
   const tokenHash = params.token_hash?.trim() ?? "";
   const type = emailOtpType(params.type ?? null);
-  const next = safePath(params.next);
+  const cookieNext = jar.get(AUTH_NEXT_COOKIE)?.value;
+  let fromCookie: string | undefined;
+  if (cookieNext) {
+    try {
+      fromCookie = decodeURIComponent(cookieNext);
+    } catch {
+      fromCookie = cookieNext;
+    }
+  }
+  const next = safePath(params.next || fromCookie);
 
   if (!tokenHash || !type) {
     redirect("/login?error=session");

@@ -1,4 +1,5 @@
 import { AccountDesk } from "@/components/account-desk";
+import { loadBuyerOrders } from "@/app/actions/selling";
 import {
   getCurrentProfile,
   listMarkets,
@@ -13,7 +14,8 @@ import { nextOpenLabel } from "@/lib/schedule";
 import { upcomingByDay } from "@/lib/upcoming";
 import { savedVendorsSellingToday, savedVendorsThisWeek } from "@/lib/vendor-week";
 import { SITE_NAME } from "@/lib/constants";
-import { needsOnboarding, onboardingHref } from "@/lib/onboarding";
+import { onboardingHref, skipsShopperOnboarding } from "@/lib/onboarding";
+import { createAuthedServerClient } from "@/lib/supabase/server";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -29,16 +31,18 @@ export const metadata: Metadata = pageMeta({
 });
 
 export default async function AccountPage() {
-  const profile = await getCurrentProfile();
+  const [profile, session] = await Promise.all([getCurrentProfile(), createAuthedServerClient()]);
   if (!profile) redirect("/login?next=/account");
-  if (needsOnboarding(profile)) redirect(onboardingHref("/account"));
+  const skip = session.supabase ? await skipsShopperOnboarding(session.supabase, profile) : false;
+  if (!skip) redirect(onboardingHref("/account"));
 
-  const [desk, markets, vendors, stalls, schedules] = await Promise.all([
+  const [desk, markets, vendors, stalls, schedules, orders] = await Promise.all([
     loadAccountDesk(profile.id),
     listMarkets(),
     listVendors(),
     listStalls(),
     listSchedules(),
+    loadBuyerOrders(profile.id),
   ]);
 
   const scheduleMap = new Map<string, MarketSchedule[]>();
@@ -119,6 +123,7 @@ export default async function AccountPage() {
       saves={saves}
       reviewCount={desk.reviewCount}
       visitPlanEmailedAt={desk.visitPlanEmailedAt}
+      orders={orders}
     />
   );
 }
