@@ -30,6 +30,7 @@ type DeskState = {
   rpcError: { message: string; code?: string } | null;
   lastRpc: { p_id: string; p_status: string; p_note: string | null } | null;
   secretReadError: boolean;
+  failReread: boolean;
   failFirstUpsert: boolean;
   upserts: number;
   secretReads: number;
@@ -55,6 +56,7 @@ function createDesk() {
     rpcError: null,
     lastRpc: null,
     secretReadError: false,
+    failReread: false,
     failFirstUpsert: false,
     upserts: 0,
     secretReads: 0,
@@ -75,6 +77,9 @@ function createDesk() {
     state.secretReads += 1;
     if (state.secretReadError && state.secretReads === 1) {
       return { data: null, error: { message: "read" } };
+    }
+    if (state.failReread && state.secretReads >= 2) {
+      return { data: null, error: { message: "reread" } };
     }
     return { data: state.secrets.find(matches) ?? null, error: null };
   }
@@ -359,6 +364,38 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.match(desk.state.users.get(USER)?.password ?? "", ALPHABET);
     assert.equal(mail.length, 1);
     assert.equal(desk.state.ops.filter((op) => op === "rpc").length, 1);
+  });
+
+  test("a reread failure after the password is set still mails it", async () => {
+    const desk = createDesk();
+    desk.state.failReread = true;
+    const { result, mail } = await decide(desk, { status: "approved" });
+    assert.equal(result.error, null);
+    assert.equal(result.mailFailed, null);
+    assert.equal(mail.length, 1);
+    assert.equal(mail[0]?.password, desk.state.users.get(USER)?.password);
+    assert.match(mail[0]?.password ?? "", ALPHABET);
+    assert.notEqual(mail[0]?.password, "original");
+
+    const unsent = createDesk();
+    unsent.state.failReread = true;
+    const failed = await decide(unsent, { status: "approved" }, false);
+    assert.equal(failed.result.error, null);
+    assert.deepEqual(failed.result.mailFailed, { password: "1", vendorId: VENDOR });
+    assert.equal(failed.mail[0]?.password, unsent.state.users.get(USER)?.password);
+  });
+
+  test("a failed realign keeps the password that can sign in and still mails it", async () => {
+    const desk = createDesk();
+    desk.state.swapCiphertext = encryptVendorPassword("swapped-pass", key);
+    desk.state.failAuthOnCall = 2;
+    const { result, mail } = await decide(desk, { status: "approved" });
+    const signedIn = desk.state.users.get(USER)?.password;
+    assert.equal(result.error, null);
+    assert.equal(result.mailFailed, null);
+    assert.equal(mail[0]?.password, signedIn);
+    assert.notEqual(signedIn, "swapped-pass");
+    assert.equal(decryptVendorPassword(desk.state.secrets[0]!.ciphertext, key), signedIn);
   });
 
   test("a chosen password that cannot be emailed still counts as no one-time password", async () => {

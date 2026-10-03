@@ -38,7 +38,7 @@ function extractFunction(relativePath: string, name: string) {
 }
 
 const decideClaimSql = extractFunction(
-  "supabase/migrations/20260923205740_directory_read_and_advisors.sql",
+  "supabase/migrations/20261003193000_vendor_claim_role_phone_and_fee.sql",
   "decide_claim",
 );
 const schema = `
@@ -343,6 +343,7 @@ test("market approval claims the market and leaves the stall alone", async () =>
   );
   assert.equal(market.rows[0]?.claimed_by, OWNER);
   assert.equal(await vendorOwner(db), null);
+  assert.equal(await roleOf(db, OWNER), "user");
 });
 
 test("only the approved owner can see and edit the stall", async () => {

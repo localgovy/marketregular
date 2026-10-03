@@ -91,29 +91,32 @@ export async function prepareVendorClaimPassword(
     return { error: "Could not set a sign-in password." };
   }
 
+  const issued = { error: null as null, email, password };
   const { data: current, error: rereadError } = await admin
     .from("vendor_sign_in_secrets")
     .select("ciphertext")
     .eq("user_id", userId)
     .maybeSingle();
-  if (rereadError || !current || typeof current.ciphertext !== "string") {
-    return { error: "Could not open that password." };
-  }
+  if (rereadError || !current || typeof current.ciphertext !== "string") return issued;
   let stored: string;
   try {
     stored = decryptVendorPassword(current.ciphertext, key);
   } catch {
-    return { error: "Could not read that password." };
+    return issued;
   }
   const aligned = alignIssuedPassword(password, stored);
-  if (aligned.realign) {
-    const { error: realignError } = await admin.auth.admin.updateUserById(userId, {
-      password: aligned.password,
-      app_metadata: appMetadata,
-    });
-    if (realignError) return { error: "Could not set a sign-in password." };
-  }
-  return { error: null, email, password: aligned.password };
+  if (!aligned.realign) return { error: null, email, password: aligned.password };
+  const { error: realignError } = await admin.auth.admin.updateUserById(userId, {
+    password: aligned.password,
+    app_metadata: appMetadata,
+  });
+  if (!realignError) return { error: null, email, password: aligned.password };
+  await admin.from("vendor_sign_in_secrets").upsert({
+    user_id: userId,
+    ciphertext: encryptVendorPassword(password, key),
+    chosen: false,
+  });
+  return issued;
 }
 
 export async function syncChosenVendorPassword(admin: SupabaseClient, user: User, password: string) {

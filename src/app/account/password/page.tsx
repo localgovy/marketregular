@@ -27,7 +27,7 @@ export default async function AccountPasswordPage() {
       <h1>{forced ? "Choose your password" : "New password"}</h1>
       <p className="type-lede mt-2 text-muted-foreground">
         {forced
-          ? "Enter the password from the email, then choose the one you will use from now on. At least 8 characters."
+          ? "Enter the password from the email, then choose the one you will use from now on. At least 8 characters. If that email did not arrive, sign out and use Forgot password on the sign-in page."
           : "Choose a password you have not used here before. At least 8 characters."}
       </p>
       <PasswordForm forced={forced} />
