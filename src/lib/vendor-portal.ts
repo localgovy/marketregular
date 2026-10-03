@@ -1,4 +1,4 @@
-import { externalHref } from "@/lib/format";
+import { externalHref, socialProfileHref } from "@/lib/format";
 import { formatHours } from "@/lib/schedule";
 
 const UUID =
@@ -106,6 +106,19 @@ export function normalizePortalTag(raw: string) {
 }
 
 /** Public http(s) link, null when the field is empty, or "bad" when it would not show. */
+export function portalSocialHref(
+  kind: "instagram" | "tiktok" | "facebook",
+  raw: string,
+): string | null | "bad" {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const href = socialProfileHref(kind, trimmed);
+  if (!href) return "bad";
+  const checked = portalListingHref(href);
+  if (checked === "bad" || !checked) return "bad";
+  return checked;
+}
+
 export function portalListingHref(raw: string): string | null | "bad" {
   const trimmed = raw.trim();
   if (!trimmed) return null;

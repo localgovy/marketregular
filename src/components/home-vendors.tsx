@@ -5,7 +5,7 @@ import { CrateMark, TallyMark } from "@/components/marks";
 import { NowLabel } from "@/components/now-label";
 import { TODAY_STALL_CAP, type VendorTodayRow, type VendorWeekPick } from "@/lib/vendor-week";
 
-export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
+export function VendorsTodayPanel({ rows, nowIso }: { rows: VendorTodayRow[]; nowIso: string }) {
   const first = rows.slice(0, TODAY_STALL_CAP);
   const capped = rows.length > first.length;
 
@@ -33,7 +33,9 @@ export function VendorsTodayPanel({ rows }: { rows: VendorTodayRow[] }) {
           {first.map((row) => (
             <VendorTodayItem key={`${row.vendorSlug}-${row.marketSlug}`} row={row} />
           ))}
-          {capped ? <VendorsTodayMore remaining={rows.length - first.length} /> : null}
+          {capped ? (
+            <VendorsTodayMore remaining={rows.length - first.length} nowIso={nowIso} />
+          ) : null}
         </ul>
       ) : (
         <p className="text-sm leading-relaxed text-muted-foreground">

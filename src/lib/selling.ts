@@ -134,7 +134,7 @@ export function returnedCents(chargeCents: number, alreadyCents: number, incomin
 export function feeCreditAfterReturn(storedCents: number, chargeCents: number, returned: number) {
   const remaining = chargeCents - Math.min(chargeCents, Math.max(0, returned));
   if (remaining >= storedCents) return { action: "keep" as const };
-  if (remaining >= MIN_FEE_PAYMENT_CENTS) return { action: "lower" as const, amountCents: remaining };
+  if (remaining >= 1) return { action: "lower" as const, amountCents: remaining };
   return { action: "drop" as const };
 }
 

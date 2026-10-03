@@ -78,7 +78,7 @@ export async function getDirectorySlice(input: {
     return { markets: [], vendors: [], schedulesByMarket: {} };
   }
   if (!(await takeCatalogSlot())) {
-    return { markets: [], vendors: [], schedulesByMarket: {} };
+    throw new Error("Couldn't load more.");
   }
   const kind = parsed.data.kind === "vendors" ? "vendors" : "markets";
   const offset = clampOffset(parsed.data.offset ?? 0);

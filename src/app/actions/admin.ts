@@ -1,7 +1,7 @@
 "use server";
 
 import { requireAdmin } from "@/lib/admin";
-import { slugify } from "@/lib/format";
+import { slugify, socialProfileHref } from "@/lib/format";
 import { dbPublicError } from "@/lib/public-error";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { applyClaimDecision } from "@/lib/claim-approval";
@@ -25,6 +25,14 @@ function listingSlug(raw: FormDataEntryValue | null, name: string) {
 
 function listingStatus(value: FormDataEntryValue | null): "draft" | "published" {
   return value === "published" ? "published" : "draft";
+}
+
+function socialField(kind: "instagram" | "tiktok" | "facebook", value: FormDataEntryValue | null) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const href = socialProfileHref(kind, raw);
+  if (!href) fail("That link could not be saved.");
+  return href;
 }
 
 function geofenceMetres(value: FormDataEntryValue | null) {
@@ -135,9 +143,9 @@ export async function saveVendor(formData: FormData) {
     slug,
     about: String(formData.get("about") ?? "") || null,
     website: String(formData.get("website") ?? "") || null,
-    instagram: String(formData.get("instagram") ?? "") || null,
-    tiktok: String(formData.get("tiktok") ?? "") || null,
-    facebook: String(formData.get("facebook") ?? "") || null,
+    instagram: socialField("instagram", formData.get("instagram")),
+    tiktok: socialField("tiktok", formData.get("tiktok")),
+    facebook: socialField("facebook", formData.get("facebook")),
     phone: String(formData.get("phone") ?? "") || null,
     email: String(formData.get("email") ?? "").trim() || null,
     logo_url: String(formData.get("logo_url") ?? "").trim() || null,

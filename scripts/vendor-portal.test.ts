@@ -7,6 +7,7 @@ import {
   ownedLogoObjectName,
   parseVendorPortal,
   portalListingHref,
+  portalSocialHref,
   priceCents,
 } from "../src/lib/vendor-portal.ts";
 
@@ -28,6 +29,16 @@ test("listing links become a public http address or stay empty", () => {
   assert.equal(portalListingHref("https://user:pass@example.com"), "bad");
   assert.equal(portalListingHref("https://river"), "bad");
   assert.equal(portalListingHref("@river"), "bad");
+});
+
+test("a social handle becomes that network's profile", () => {
+  assert.equal(portalSocialHref("instagram", "@river"), "https://www.instagram.com/river");
+  assert.equal(portalSocialHref("instagram", "river.fruit"), "https://www.instagram.com/river.fruit");
+  assert.equal(portalSocialHref("tiktok", "river"), "https://www.tiktok.com/@river");
+  assert.equal(portalSocialHref("facebook", "River Fruit"), "bad");
+  assert.equal(portalSocialHref("instagram", "https://instagram.com/river"), "https://instagram.com/river");
+  assert.equal(portalSocialHref("instagram", ""), null);
+  assert.equal(portalSocialHref("instagram", "javascript:alert(1)"), "bad");
 });
 
 test("prices stay in cents", () => {

@@ -1,7 +1,7 @@
 import type { ComponentType } from "react";
 import { FacebookMark, InstagramMark, SignMark, TikTokMark, type MarkProps } from "@/components/marks";
 import { buttonVariants } from "@/components/ui/button";
-import { externalHref, formatPhone, listingEmail } from "@/lib/format";
+import { externalHref, formatPhone, listingEmail, socialProfileHref } from "@/lib/format";
 
 export function ListingPhone({ phone }: { phone: string | null }) {
   if (!phone) return null;
@@ -84,13 +84,13 @@ export function ListingWebsite({ href }: { href: string | null }) {
 }
 
 export function ListingInstagram({ href }: { href: string | null }) {
-  return <ListingOutbound href={href} label="Instagram" icon={InstagramMark} />;
+  return <ListingOutbound href={socialProfileHref("instagram", href)} label="Instagram" icon={InstagramMark} />;
 }
 
 export function ListingTiktok({ href }: { href: string | null }) {
-  return <ListingOutbound href={href} label="TikTok" icon={TikTokMark} />;
+  return <ListingOutbound href={socialProfileHref("tiktok", href)} label="TikTok" icon={TikTokMark} />;
 }
 
 export function ListingFacebook({ href }: { href: string | null }) {
-  return <ListingOutbound href={href} label="Facebook" icon={FacebookMark} />;
+  return <ListingOutbound href={socialProfileHref("facebook", href)} label="Facebook" icon={FacebookMark} />;
 }

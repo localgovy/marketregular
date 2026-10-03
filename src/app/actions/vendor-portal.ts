@@ -10,6 +10,7 @@ import {
   ownedLogoObjectName,
   parseVendorPortal,
   portalListingHref,
+  portalSocialHref,
   priceCents,
   type PortalListing,
   type PortalMarketHit,
@@ -84,18 +85,20 @@ export async function saveOwnedVendor(formData: FormData): Promise<PortalResult>
     .getAll("tags")
     .map((value) => String(value))
     .filter(Boolean);
-  const links = ["website", "instagram", "tiktok", "facebook"] as const;
-  const hrefs: Record<(typeof links)[number], string> = {
-    website: "",
-    instagram: "",
-    tiktok: "",
-    facebook: "",
-  };
-  for (const name of links) {
-    const href = portalListingHref(text(formData, name));
-    if (href === "bad") return { error: "That link could not be saved." };
-    hrefs[name] = href ?? "";
+  const website = portalListingHref(text(formData, "website"));
+  if (website === "bad") return { error: "That link could not be saved." };
+  const instagram = portalSocialHref("instagram", text(formData, "instagram"));
+  const tiktok = portalSocialHref("tiktok", text(formData, "tiktok"));
+  const facebook = portalSocialHref("facebook", text(formData, "facebook"));
+  if (instagram === "bad" || tiktok === "bad" || facebook === "bad") {
+    return { error: "That link could not be saved." };
   }
+  const hrefs = {
+    website: website ?? "",
+    instagram: instagram ?? "",
+    tiktok: tiktok ?? "",
+    facebook: facebook ?? "",
+  };
   const { error } = await gate.supabase.rpc("save_owned_vendor", {
     p_id: id,
     p_name: text(formData, "name"),

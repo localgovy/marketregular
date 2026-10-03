@@ -322,7 +322,7 @@ export async function recordStallCheckout(
   const buyerEmail = order.buyer_email ?? checkoutEmail(session);
   const next = paidStatus(order.charge_cents, order.refunded_cents);
   if (order.status === "pending" || order.status === "expired" || order.status === "paid") {
-    await db
+    const { error } = await db
       .from("orders")
       .update({
         status: next,
@@ -333,6 +333,7 @@ export async function recordStallCheckout(
       })
       .eq("id", order.id)
       .in("status", ["pending", "expired", "paid"]);
+    if (error) throw new Error("stall checkout was not recorded");
   }
   const fresh = await loadOrder(order.id);
   if (fresh) await syncFee(fresh);
@@ -443,21 +444,28 @@ async function applyReturnedAmount(order: OrderRow, returned: number, paymentInt
   ) {
     return;
   }
-  const status =
-    order.status === "pending" || order.status === "expired"
-      ? order.status
-      : paidStatus(order.charge_cents, refunded);
-  await db
-    .from("orders")
-    .update({
-      refunded_cents: refunded,
-      status,
-      ...(paymentIntent && !order.stripe_payment_intent_id
-        ? { stripe_payment_intent_id: paymentIntent }
-        : {}),
-    })
-    .eq("id", order.id)
-    .lte("refunded_cents", refunded);
+  const open = order.status === "pending" || order.status === "expired";
+  const status = open ? order.status : paidStatus(order.charge_cents, refunded);
+  const patch = {
+    refunded_cents: refunded,
+    status,
+    ...(paymentIntent && !order.stripe_payment_intent_id
+      ? { stripe_payment_intent_id: paymentIntent }
+      : {}),
+  };
+  const write = db.from("orders").update(patch).eq("id", order.id).lte("refunded_cents", refunded);
+  const { data, error } = await (open
+    ? write.in("status", ["pending", "expired"])
+    : write.in("status", ["paid", "partially_refunded", "refunded"])
+  ).select("id");
+  if (error) throw new Error("stall refund was not recorded");
+  if (!data?.length && open) {
+    const current = await loadOrder(order.id);
+    if (current && current.status !== "pending" && current.status !== "expired") {
+      await applyReturnedAmount(current, returned, paymentIntent);
+      return;
+    }
+  }
   const fresh = await loadOrder(order.id);
   if (fresh) await syncFee(fresh);
 }
@@ -483,13 +491,18 @@ async function applyPlatformFeeReturn(charge: Stripe.Charge, returned: number) {
   const next = feeCreditAfterReturn(payment.amount_cents, charge.amount, returned);
   if (next.action === "keep") return;
   if (next.action === "lower") {
-    await db
+    const { error } = await db
       .from("platform_fee_payments")
       .update({ amount_cents: next.amountCents })
       .eq("stripe_checkout_session_id", session.id)
       .gt("amount_cents", next.amountCents);
+    if (error) throw new Error("stall fee credit was not recorded");
   } else {
-    await db.from("platform_fee_payments").delete().eq("stripe_checkout_session_id", session.id);
+    const { error } = await db
+      .from("platform_fee_payments")
+      .delete()
+      .eq("stripe_checkout_session_id", session.id);
+    if (error) throw new Error("stall fee credit was not recorded");
   }
   const vendorId = session.metadata.vendor_id;
   if (typeof vendorId === "string") refreshDirectoryLater([`/vendor/${vendorId}`]);
@@ -519,7 +532,7 @@ export async function applyLostDispute(dispute: Stripe.Dispute, stripeAccount: s
   const charge = stripeAccount
     ? await stripe.charges.retrieve(chargeId, {}, { stripeAccount })
     : await stripe.charges.retrieve(chargeId);
-  const returned = returnedCents(charge.amount, charge.amount_refunded, dispute.amount);
+  const returned = Math.min(charge.amount, charge.amount_refunded + dispute.amount);
   await applyChargeReturn(charge, returned, stripeAccount);
 }
 
@@ -745,28 +758,36 @@ export async function startFeeCheckout(vendorId: string, balanceCents: number, e
   }
   const origin = await checkoutOrigin();
   try {
-    const session = await stripe.checkout.sessions.create(
-      {
-        mode: "payment",
-        integration_identifier: "marketregular_stall_fee",
-        automatic_tax: { enabled: false },
-        customer_email: email ?? undefined,
-        metadata: { kind: "platform_fee", vendor_id: vendorId },
-        line_items: [
-          {
-            quantity: 1,
-            price_data: {
-              currency: "cad",
-              unit_amount: balanceCents,
-              product_data: { name: "MarketRegular stall fee" },
-            },
+    const params: Stripe.Checkout.SessionCreateParams = {
+      mode: "payment",
+      integration_identifier: "marketregular_stall_fee",
+      automatic_tax: { enabled: false },
+      customer_email: email ?? undefined,
+      metadata: { kind: "platform_fee", vendor_id: vendorId },
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "cad",
+            unit_amount: balanceCents,
+            product_data: { name: "MarketRegular stall fee" },
           },
-        ],
-        success_url: `${origin}/vendor/${vendorId}?fee=paid&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/vendor/${vendorId}?fee=cancelled`,
-      },
-      { idempotencyKey: `stall-fee-${vendorId}-${balanceCents}-${origin}`.slice(0, 255) },
-    );
+        },
+      ],
+      success_url: `${origin}/vendor/${vendorId}?fee=paid&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/vendor/${vendorId}?fee=cancelled`,
+    };
+    const baseKey = `stall-fee-${vendorId}-${balanceCents}-${origin}`;
+    let session = await stripe.checkout.sessions.create(params, {
+      idempotencyKey: baseKey.slice(0, 255),
+    });
+    const payable =
+      session.payment_status === "paid" || (session.status === "open" && Boolean(session.url));
+    if (!payable) {
+      session = await stripe.checkout.sessions.create(params, {
+        idempotencyKey: `${baseKey}-${session.id}`.slice(0, 255),
+      });
+    }
     const remembered = await rememberFeeSession(vendorId, session.id, balanceCents);
     if (!remembered) return { error: "Could not start that payment." as const, url: null };
     if (session.payment_status === "paid") {

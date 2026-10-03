@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { CLAIM_INBOX, SITE_NAME, SITE_TITLE, SITE_URL, SITE_LOGO, SITE_OG, WEEKDAYS } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_REGION_NAME, LAUNCH_TZ } from "@/lib/launch";
 import { listingScore } from "@/lib/listing-score";
-import { externalHref, listingEmail } from "@/lib/format";
+import { externalHref, listingEmail, socialProfileHref } from "@/lib/format";
 import type { Market, MarketSchedule, MenuItem, Vendor } from "@/types/database";
 
 export const SITE_DESCRIPTION =
@@ -131,8 +131,18 @@ function aggregateRatingJsonLd(row: {
   };
 }
 
-function sameAsLinks(...urls: Array<string | null | undefined>) {
-  const list = urls.map((url) => externalHref(url)).filter((url): url is string => Boolean(url));
+function sameAsLinks(
+  website: string | null | undefined,
+  instagram: string | null | undefined,
+  tiktok: string | null | undefined,
+  facebook: string | null | undefined,
+) {
+  const list = [
+    externalHref(website),
+    socialProfileHref("instagram", instagram),
+    socialProfileHref("tiktok", tiktok),
+    socialProfileHref("facebook", facebook),
+  ].filter((url): url is string => Boolean(url));
   if (!list.length) return undefined;
   return list.length === 1 ? list[0] : list;
 }

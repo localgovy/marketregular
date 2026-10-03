@@ -7,6 +7,7 @@ import {
   STUDIO_URL,
 } from "@/lib/constants";
 import { listMarkets, listStalls, listVendors } from "@/lib/data/catalog";
+import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { pageMeta } from "@/lib/seo";
 import type { Market, StallRef, Vendor } from "@/types/database";
 
@@ -38,7 +39,10 @@ function contactListings(markets: Market[], vendors: Vendor[], stalls: StallRef[
     markets: markets.map((market) => ({ id: market.id, name: market.name })),
     vendors: vendors.flatMap((vendor) => {
       const at = where.get(vendor.id);
-      if (!at?.length) return [];
+      if (!at?.length) {
+        if (!UNAFFILIATED_VENDOR_SLUGS.has(vendor.slug)) return [];
+        return [{ id: vendor.id, name: vendor.name }];
+      }
       const extra = at.length - WHERE_CAP;
       const label =
         extra > 0

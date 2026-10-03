@@ -2,6 +2,7 @@ import { WEEKDAYS } from "@/lib/constants";
 import { torontoYmd } from "@/lib/events-month";
 import { LAUNCH_TZ } from "@/lib/launch";
 import { civilDateAtOffset, formatHours, inSeason, parseHm, zonedParts } from "@/lib/schedule";
+import { stallHall } from "@/lib/season-fold";
 import { vendorProductTags } from "@/lib/vendor-tags";
 import type { FloorItem, Market, MarketSchedule, StallRef, Vendor } from "@/types/database";
 
@@ -86,9 +87,10 @@ export function vendorsSellingToday(
 
   for (const stall of stalls) {
     if (!stall.days.includes(weekday)) continue;
-    const market = markets.find((m) => m.id === stall.market_id);
-    if (!market) continue;
-    const row = scheduleForDay(scheduleMap.get(market.id) ?? [], weekday, today, tz);
+    const hall = stallHall(markets, scheduleMap, stall.market_id);
+    if (!hall) continue;
+    const market = hall.market;
+    const row = scheduleForDay(hall.rows, weekday, today, tz);
     if (!row) continue;
     const vendor = byId.get(stall.id);
     const opens = parseHm(row.opens_at);
@@ -161,9 +163,10 @@ export function topVendorsThisWeek(
     const on = civilDateAtOffset(now, offset, tz);
     for (const stall of stalls) {
       if (!stall.days.includes(day)) continue;
-      const market = markets.find((m) => m.id === stall.market_id);
-      if (!market) continue;
-      const schedule = scheduleForDay(scheduleMap.get(market.id) ?? [], day, on, tz);
+      const hall = stallHall(markets, scheduleMap, stall.market_id);
+      if (!hall) continue;
+      const market = hall.market;
+      const schedule = scheduleForDay(hall.rows, day, on, tz);
       if (!schedule) continue;
       if (offset === 0 && minutes > parseHm(schedule.closes_at)) continue;
       const vendor = byId.get(stall.id);
@@ -251,9 +254,10 @@ export function savedVendorsThisWeek(
       const slug = vendor?.slug ?? stall.slug;
       if (!saved.has(slug)) continue;
       if (!stall.days.includes(day)) continue;
-      const market = markets.find((row) => row.id === stall.market_id);
-      if (!market) continue;
-      const schedule = scheduleForDay(scheduleMap.get(market.id) ?? [], day, on, tz);
+      const hall = stallHall(markets, scheduleMap, stall.market_id);
+      if (!hall) continue;
+      const market = hall.market;
+      const schedule = scheduleForDay(hall.rows, day, on, tz);
       if (!schedule) continue;
       if (offset === 0 && minutes > parseHm(schedule.closes_at)) continue;
       const current = acc.get(slug) ?? {

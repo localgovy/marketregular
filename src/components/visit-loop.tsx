@@ -24,6 +24,7 @@ export function HomeMosaic({
   weekVendors,
   census,
   today,
+  nowIso,
   weeklyNote,
 }: {
   week: UpcomingGroup[];
@@ -33,6 +34,7 @@ export function HomeMosaic({
   weekVendors: VendorWeekPick[];
   census: DirectoryCensus;
   today: number;
+  nowIso: string;
   weeklyNote?: {
     slug: string;
     title: string;
@@ -141,7 +143,7 @@ export function HomeMosaic({
 
         <div className="flex min-w-0 flex-col gap-5">
           <SavedRail />
-          <VendorsTodayPanel rows={sellingToday} />
+          <VendorsTodayPanel rows={sellingToday} nowIso={nowIso} />
           <VendorsWeekPanel picks={weekVendors} />
         </div>
       </div>

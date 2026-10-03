@@ -43,6 +43,7 @@ import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
 import { isSeasonAlias, seasonAliasTarget } from "@/lib/listing-siblings";
+import { scheduleOrigin, type FoldedSchedule } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import type {
@@ -310,19 +311,22 @@ const getPublishedDirectory = cache(async function getPublishedDirectory() {
 });
 
 /** One search card. The alias's Sunday hours still count on the host market. */
-function foldSeasonAliases<T extends { id: string; slug: string }, S extends { market_id: string }>(
+function foldSeasonAliases<T extends { id: string; slug: string }, S extends MarketSchedule>(
   markets: T[],
   schedules: S[],
 ) {
   let nextMarkets = markets;
-  let nextSchedules = schedules;
+  let nextSchedules: FoldedSchedule[] = schedules.map((row) => ({
+    ...row,
+    origin_market_id: scheduleOrigin(row),
+  }));
   for (const market of markets) {
     const hostSlug = seasonAliasTarget(market.slug);
     if (!hostSlug) continue;
     const host = markets.find((item) => item.slug === hostSlug);
     if (!host) continue;
     nextSchedules = nextSchedules.map((row) =>
-      row.market_id === market.id ? { ...row, market_id: host.id } : row,
+      scheduleOrigin(row) === market.id ? { ...row, market_id: host.id } : row,
     );
     nextMarkets = nextMarkets.filter((item) => item.slug !== market.slug);
   }

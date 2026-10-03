@@ -58,6 +58,29 @@ export function listingHasContact(
   return Boolean(phone?.trim() || listingEmail(email));
 }
 
+const SOCIAL_HOST = {
+  instagram: "https://www.instagram.com/",
+  tiktok: "https://www.tiktok.com/@",
+  facebook: "https://www.facebook.com/",
+} as const;
+
+const SOCIAL_HANDLE = /^[A-Za-z0-9._]{1,30}$/;
+
+/** A full profile URL stays. A handle or @handle becomes that network's profile. */
+export function socialProfileHref(
+  kind: keyof typeof SOCIAL_HOST,
+  value: string | null | undefined,
+) {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return null;
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed) || trimmed.includes("/")) {
+    return externalHref(trimmed);
+  }
+  const handle = trimmed.replace(/^@+/, "");
+  if (!SOCIAL_HANDLE.test(handle)) return null;
+  return `${SOCIAL_HOST[kind]}${handle}`;
+}
+
 export function externalHref(href: string | null | undefined) {
   const value = href?.trim();
   if (!value) return null;

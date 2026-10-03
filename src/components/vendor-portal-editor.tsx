@@ -204,6 +204,11 @@ function TagPicker({ id, tags }: { id: string; tags: string[] }) {
             id={`${id}-extra-tag`}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter") return;
+              event.preventDefault();
+              addExtra();
+            }}
             placeholder="Jamaican"
             maxLength={40}
           />

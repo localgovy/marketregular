@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/login-form";
 import { SITE_NAME } from "@/lib/constants";
-import { listVendors } from "@/lib/data/catalog";
 import { loginQueryError } from "@/lib/public-error";
 import { pageMeta } from "@/lib/seo";
 import { createAuthedServerClient } from "@/lib/supabase/server";
@@ -67,8 +66,14 @@ export default async function VendorPortalPage({
             .limit(20)
         ).data ?? []
       : [];
-  const vendors = claimRows.length ? await listVendors() : [];
-  const vendorName = new Map(vendors.map((vendor) => [vendor.id, vendor]));
+  const claimIds = [...new Set(claimRows.map((claim) => claim.target_id))];
+  const named =
+    supabase && claimIds.length
+      ? await supabase.from("vendors").select("id, name, slug").in("id", claimIds)
+      : { data: [] as { id: string; name: string; slug: string }[], error: null };
+  const vendorName = new Map(
+    (named.error ? [] : (named.data ?? [])).map((vendor) => [vendor.id, vendor]),
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">

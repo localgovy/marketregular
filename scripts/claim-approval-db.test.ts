@@ -170,7 +170,7 @@ create table public.claim_requests (
 
 ${extractFunction("supabase/migrations/20261002183516_vendor_portal.sql", "portal_tags")}
 ${extractFunction("supabase/migrations/20260825022654_public_release_security.sql", "owns_vendor")}
-${extractFunction("supabase/migrations/20261002183516_vendor_portal.sql", "save_owned_vendor")}
+${extractFunction("supabase/migrations/20261003193000_vendor_claim_role_phone_and_fee.sql", "save_owned_vendor")}
 ${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "listing_href_ok")}
 ${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "guard_listing_hrefs")}
 ${decideClaimSql}
@@ -407,6 +407,27 @@ test("only the approved owner can see and edit the stall", async () => {
   assert.equal(row?.status, "published");
   assert.equal(row?.claimed_by, OWNER);
   assert.equal(row?.selling_approved, false);
+
+  await db.query(
+    `select public.save_owned_vendor($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::text[])`,
+    [
+      VENDOR,
+      "River Fruit Co",
+      "Peaches",
+      "https://example.com",
+      "https://instagram.com/river",
+      null,
+      null,
+      "416.555.0100",
+      "stall@example.com",
+      ["produce"],
+    ],
+  );
+  const dotted = await db.query<{ phone: string | null }>(
+    "select phone from public.vendors where id = $1",
+    [VENDOR],
+  );
+  assert.equal(dotted.rows[0]?.phone, "416.555.0100");
 
   await setAuth(db, "authenticated", OTHER);
   const stranger = await db.query<{ owns: boolean }>("select public.owns_vendor($1) as owns", [VENDOR]);

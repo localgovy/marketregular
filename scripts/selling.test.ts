@@ -99,6 +99,7 @@ test("a smaller fee refund does not restore credit", () => {
   assert.deepEqual(feeCreditAfterReturn(1000, 1000, 100), { action: "lower", amountCents: 900 });
   assert.deepEqual(feeCreditAfterReturn(500, 1000, 100), { action: "keep" });
   assert.deepEqual(feeCreditAfterReturn(1000, 1000, 1000), { action: "drop" });
+  assert.deepEqual(feeCreditAfterReturn(1000, 1000, 960), { action: "lower", amountCents: 40 });
   assert.deepEqual(feeCreditAfterReturn(40, 1000, 960), { action: "keep" });
 });
 

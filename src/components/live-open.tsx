@@ -4,9 +4,9 @@ import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { NowLabel } from "@/components/now-label";
 import { WEEKDAYS } from "@/lib/constants";
-import { stallNextDate } from "@/lib/day-plan";
 import { sessionIsOpen } from "@/lib/open-state";
 import { formatHours, nextOpenLabel, nextOpenSlot, type ScheduleRow } from "@/lib/schedule";
+import { rankVendorMarkets, vendorMarketWait } from "@/lib/vendor-markets";
 import { useNow } from "@/lib/use-now";
 import type { MarketSchedule } from "@/types/database";
 
@@ -40,22 +40,15 @@ type Hall = {
 export function VendorNextLine({ halls, nowMs }: { halls: Hall[]; nowMs: number }) {
   const now = useNow(nowMs);
   const clock = new Date(now);
-  const ranked = [...halls].sort((a, b) =>
-    stallNextDate(a, a.schedules, a.days, clock).localeCompare(
-      stallNextDate(b, b.schedules, b.days, clock),
-    ),
+  const nextMarket = rankVendorMarkets(halls, clock).find((hall) =>
+    Number.isFinite(vendorMarketWait(hall, clock)),
   );
-  const nextMarket = ranked[0];
   if (!nextMarket) return null;
-  const nextRows = nextMarket.days.length
-    ? nextMarket.schedules.filter((row) => nextMarket.days.includes(Number(row.weekday)))
-    : nextMarket.schedules;
-  const source = nextRows.length ? nextRows : nextMarket.schedules;
-  const nextSlot = nextOpenSlot(source, nextMarket.province, clock);
+  const nextRows = nextMarket.schedules.filter((row) => nextMarket.days.includes(Number(row.weekday)));
+  if (!nextRows.length) return null;
+  const nextSlot = nextOpenSlot(nextRows, nextMarket.province, clock);
   if (!nextSlot) return null;
-  const nextRow =
-    nextRows.find((row) => Number(row.weekday) === nextSlot.weekday) ??
-    nextMarket.schedules.find((row) => Number(row.weekday) === nextSlot.weekday);
+  const nextRow = nextRows.find((row) => Number(row.weekday) === nextSlot.weekday);
   const nextHours = nextRow ? formatHours(nextRow.opens_at, nextRow.closes_at) : "";
 
   return (

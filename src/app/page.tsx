@@ -81,6 +81,7 @@ export default async function HomePage() {
               weekVendors={weekVendors}
               census={census}
               today={weekdayInToronto(now)}
+              nowIso={nowIso}
               weeklyNote={
                 weeklyNote
                   ? {

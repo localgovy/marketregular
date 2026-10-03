@@ -83,17 +83,19 @@ export async function getSavedRailMarkets(slugs: string[]): Promise<SavedRailMar
     }));
 }
 
-export async function getVendorsTodaySlice(offset: number, limit: number) {
+export async function getVendorsTodaySlice(offset: number, limit: number, nowIso: string) {
   const start = Math.max(0, Math.floor(offset));
   const take = Math.min(20, Math.max(0, Math.floor(limit)));
   if (!take) return [];
+  const clock = new Date(nowIso);
+  const now = Number.isNaN(clock.getTime()) ? new Date() : clock;
   const [markets, vendors, stalls, schedules] = await Promise.all([
     listMarkets(),
     listVendors(),
     listStalls(),
     listSchedules(),
   ]);
-  return vendorsSellingToday(stalls, markets, vendors, schedulesByMarket(schedules))
+  return vendorsSellingToday(stalls, markets, vendors, schedulesByMarket(schedules), now)
     .slice(start, start + take)
     .map((row) => ({ ...row, tags: row.tags.slice(0, 2) }));
 }

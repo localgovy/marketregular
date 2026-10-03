@@ -13,6 +13,8 @@ import {
 } from "@/lib/product-hits";
 import { visitBadge, soonestWait, type VisitHall } from "@/lib/product-visit";
 import { hallDayHours } from "@/lib/schedule";
+import { stallHall } from "@/lib/season-fold";
+import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { createServiceClient } from "@/lib/supabase/admin";
 import type { MarketSchedule } from "@/types/database";
 
@@ -127,7 +129,6 @@ export const listFindVendors = cache(async function listFindVendors(
     listSchedules(),
   ]);
   const vendorById = new Map(vendors.map((vendor) => [vendor.id, vendor]));
-  const marketById = new Map(markets.map((market) => [market.id, market]));
   const schedulesByMarket = new Map<string, MarketSchedule[]>();
   for (const row of schedules) {
     const list = schedulesByMarket.get(row.market_id) ?? [];
@@ -136,7 +137,7 @@ export const listFindVendors = cache(async function listFindVendors(
   }
   const stallsByVendor = new Map<string, typeof stalls>();
   for (const stall of stalls) {
-    if (!marketById.has(stall.market_id)) continue;
+    if (!stallHall(markets, schedulesByMarket, stall.market_id)) continue;
     const list = stallsByVendor.get(stall.id) ?? [];
     list.push(stall);
     stallsByVendor.set(stall.id, list);
@@ -152,9 +153,10 @@ export const listFindVendors = cache(async function listFindVendors(
       const halls: VisitHall[] = [];
       const marketRows: FindMarket[] = [];
       for (const stall of vendorStalls) {
-        const market = marketById.get(stall.market_id);
-        if (!market) continue;
-        const marketSchedules = schedulesByMarket.get(market.id) ?? [];
+        const hall = stallHall(markets, schedulesByMarket, stall.market_id);
+        if (!hall) continue;
+        const market = hall.market;
+        const marketSchedules = hall.rows;
         halls.push({
           days: stall.days,
           province: market.province,
@@ -298,6 +300,30 @@ export async function searchProducts(args: {
   return hits.filter((hit) => hit.openToday);
 }
 
+type NamedVendor = {
+  id: string;
+  slug: string;
+  name: string;
+  rating_avg: number | null;
+  review_count: number | null;
+};
+
+function namedVendorHit(vendor: NamedVendor): VendorHit {
+  return {
+    name: vendor.name,
+    slug: vendor.slug,
+    href: `/vendors/${vendor.slug}`,
+    ...reviewFields({
+      rating_avg: vendor.rating_avg,
+      review_count: vendor.review_count ?? 0,
+    }),
+  };
+}
+
+function vendorStaysInSearch(vendor: { id: string; slug: string }, linked: Set<string>) {
+  return linked.has(vendor.id) || UNAFFILIATED_VENDOR_SLUGS.has(vendor.slug);
+}
+
 export async function searchVendorsByName(q: string, limit = 20): Promise<VendorHit[]> {
   const needle = normalizeSearchQuery(q).toLowerCase();
   if (needle.length < 2) return [];
@@ -306,55 +332,45 @@ export async function searchVendorsByName(q: string, limit = 20): Promise<Vendor
     const [vendors, stalls] = await Promise.all([listVendors(), listStalls()]);
     const linked = new Set(stalls.map((stall) => stall.id));
     return vendors
-      .filter((vendor) => linked.has(vendor.id) && vendor.name.toLowerCase().includes(needle))
+      .filter(
+        (vendor) => vendorStaysInSearch(vendor, linked) && vendor.name.toLowerCase().includes(needle),
+      )
       .sort((a, b) => a.name.localeCompare(b.name))
       .slice(0, limit)
-      .map((vendor) => ({
-        name: vendor.name,
-        slug: vendor.slug,
-        href: `/vendors/${vendor.slug}`,
-        ...reviewFields(vendor),
-      }));
+      .map((vendor) => namedVendorHit(vendor));
   }
   const pattern = `%${needle.replace(/[%_\\]/g, "\\$&")}%`;
-  const { data, error } = await supabase
-    .from("published_vendors")
-    .select("id, slug, name, rating_avg, review_count")
-    .eq("status", "published")
-    .ilike("name", pattern)
-    .order("name")
-    .limit(Math.max(limit * 4, limit));
-  if (error) throw new Error("Could not search vendors");
-  assertPublicSearchPayload(data);
-  const rows = (data ?? []) as Array<{
-    id: string;
-    slug: string;
-    name: string;
-    rating_avg: number | null;
-    review_count: number | null;
-  }>;
-  if (!rows.length) return [];
-  const { data: links, error: linkError } = await supabase
-    .from("published_stalls")
-    .select("vendor_id")
-    .in(
-      "vendor_id",
-      rows.map((row) => row.id),
-    );
-  if (linkError) throw new Error("Could not search vendors");
-  const linked = new Set((links ?? []).map((link) => link.vendor_id as string));
-  return rows
-    .filter((vendor) => linked.has(vendor.id))
-    .slice(0, limit)
-    .map((vendor) => ({
-      name: vendor.name,
-      slug: vendor.slug,
-      href: `/vendors/${vendor.slug}`,
-      ...reviewFields({
-        rating_avg: vendor.rating_avg,
-        review_count: vendor.review_count ?? 0,
-      }),
-    }));
+  const page = Math.max(limit * 4, limit);
+  const matches: VendorHit[] = [];
+  for (let from = 0; matches.length < limit && from < 4000; from += page) {
+    const { data, error } = await supabase
+      .from("published_vendors")
+      .select("id, slug, name, rating_avg, review_count")
+      .eq("status", "published")
+      .ilike("name", pattern)
+      .order("name")
+      .range(from, from + page - 1);
+    if (error) throw new Error("Could not search vendors");
+    assertPublicSearchPayload(data);
+    const rows = (data ?? []) as NamedVendor[];
+    if (!rows.length) break;
+    const { data: links, error: linkError } = await supabase
+      .from("published_stalls")
+      .select("vendor_id")
+      .in(
+        "vendor_id",
+        rows.map((row) => row.id),
+      );
+    if (linkError) throw new Error("Could not search vendors");
+    const linked = new Set((links ?? []).map((link) => link.vendor_id as string));
+    for (const vendor of rows) {
+      if (!vendorStaysInSearch(vendor, linked)) continue;
+      matches.push(namedVendorHit(vendor));
+      if (matches.length >= limit) break;
+    }
+    if (rows.length < page) break;
+  }
+  return matches;
 }
 
 export function findTitle(term: string, city: string) {
