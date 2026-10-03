@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { guardGoogleAuthorize } from "@/app/actions/google-oauth";
 import { authNextCookie } from "@/lib/auth-redirect";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
@@ -58,7 +59,13 @@ export function GoogleSignIn({
         setError("Google sign-in failed.");
         return;
       }
-      window.location.assign(data.url);
+      const guarded = await guardGoogleAuthorize(data.url);
+      if ("error" in guarded) {
+        setPending(false);
+        setError(guarded.error);
+        return;
+      }
+      window.location.assign(guarded.url);
     } catch {
       setPending(false);
       setError("Google sign-in failed.");
