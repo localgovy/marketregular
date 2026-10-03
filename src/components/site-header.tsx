@@ -9,9 +9,9 @@ import { NavLink } from "@/components/nav-link";
 import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { HeaderSearch } from "@/components/header-search";
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
-import { isAuthChromePath, SITE_CLAIM_NAV, SITE_NAV } from "@/lib/nav";
+import { SITE_CLAIM_NAV, SITE_NAV } from "@/lib/nav";
 
-function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
+function HeaderFrame({ q }: { q: string }) {
   return (
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md lg:border-b-2 lg:border-board">
       <div className="flex h-12 w-full items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:grid lg:h-header-bar-lg lg:site-rail lg:gap-0 lg:px-0">
@@ -37,83 +37,68 @@ function HeaderFrame({ auth, q }: { auth: boolean; q: string }) {
           </div>
         </div>
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:h-header-bar-lg lg:px-6">
-          {auth ? null : (
-            <nav
-              aria-label="Primary"
-              className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary xl:mr-auto xl:flex"
-            >
-              {SITE_NAV.map((item) => (
-                <NavLink
-                  key={item.href}
-                  href={item.href}
-                  variant="tab"
-                  prefetch={item.href === "/markets"}
-                >
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
-          )}
-          {auth ? null : (
-            <HeaderSearch
-              key={q}
-              initialQuery={q}
-              className="min-w-0 flex-1 xl:max-w-lg xl:flex-[0_1_32rem]"
-            />
-          )}
-          {auth ? null : (
-            <Link
-              href={SITE_CLAIM_NAV.href}
-              prefetch={false}
-              className="hidden shrink-0 text-sm font-medium whitespace-nowrap hover:underline min-[100rem]:inline"
-            >
-              {SITE_CLAIM_NAV.label}
-            </Link>
-          )}
+          <nav
+            aria-label="Primary"
+            className="hidden h-12 shrink-0 items-stretch divide-x divide-border overflow-visible border border-border bg-secondary xl:mr-auto xl:flex"
+          >
+            {SITE_NAV.map((item) => (
+              <NavLink
+                key={item.href}
+                href={item.href}
+                variant="tab"
+                prefetch={item.href === "/markets"}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+          <HeaderSearch
+            key={q}
+            initialQuery={q}
+            className="min-w-0 flex-1 xl:max-w-lg xl:flex-[0_1_32rem]"
+          />
+          <Link
+            href={SITE_CLAIM_NAV.href}
+            prefetch={false}
+            className="hidden shrink-0 text-sm font-medium whitespace-nowrap hover:underline min-[100rem]:inline"
+          >
+            {SITE_CLAIM_NAV.label}
+          </Link>
           <SavesHydrator />
           <HeaderAccount />
         </div>
       </div>
-      {auth ? null : (
-        <nav
-          aria-label="Primary"
-          className="header-stripe-paper flex h-10 divide-x divide-border border-t border-border bg-secondary xl:hidden"
-        >
-          {SITE_NAV.map((item) => (
-            <NavLink
-              key={item.href}
-              href={item.href}
-              variant="tab"
-              prefetch={item.href === "/markets"}
-              className="h-10 min-w-0 flex-1 justify-center px-1 text-center"
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-      )}
+      <nav
+        aria-label="Primary"
+        className="header-stripe-paper flex h-10 divide-x divide-border border-t border-border bg-secondary xl:hidden"
+      >
+        {SITE_NAV.map((item) => (
+          <NavLink
+            key={item.href}
+            href={item.href}
+            variant="tab"
+            prefetch={item.href === "/markets"}
+            className="h-10 min-w-0 flex-1 justify-center px-1 text-center"
+          >
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
     </header>
   );
 }
 
-function HeaderQuery({
-  pathname,
-  auth,
-}: {
-  pathname: string;
-  auth: boolean;
-}) {
+function HeaderQuery({ pathname }: { pathname: string }) {
   const params = useSearchParams();
   const q = pathname === "/markets" ? (params.get("q") ?? "") : "";
-  return <HeaderFrame auth={auth} q={q} />;
+  return <HeaderFrame q={q} />;
 }
 
 export function SiteHeader() {
   const pathname = usePathname() || "/";
-  const auth = isAuthChromePath(pathname);
   return (
-    <Suspense fallback={<HeaderFrame auth={auth} q="" />}>
-      <HeaderQuery pathname={pathname} auth={auth} />
+    <Suspense fallback={<HeaderFrame q="" />}>
+      <HeaderQuery pathname={pathname} />
     </Suspense>
   );
 }

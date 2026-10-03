@@ -67,17 +67,21 @@ Public crawl files after deploy:
 
 Google’s consent screen names whoever receives the login. That host is `auth.marketregular.com`, the Supabase custom domain for project `pxsndrlptceafhsxfays`. Do not delete these records. Proxy stays off.
 
+Add the CNAME first. `supabase domains create` refuses to run until it resolves, and only then prints the TXT.
+
 | Host | Type | Value |
 | --- | --- | --- |
 | `auth` | CNAME | `pxsndrlptceafhsxfays.supabase.co` |
-| `_acme-challenge.auth` | TXT | *(the value from `supabase domains create`; leave the record in place)* |
+| `_cf-custom-hostname.auth` | TXT | `e6b2c7be-5b86-483a-b0f2-f434476f2cb0` |
+| `_acme-challenge.auth` | CNAME | `auth.marketregular.com.67f42b6d6fdb3a64.dcv.cloudflare.com` |
 
 ```bash
 dig CNAME auth.marketregular.com +short
-dig TXT _acme-challenge.auth.marketregular.com +short
+dig TXT _cf-custom-hostname.auth.marketregular.com +short
+dig CNAME _acme-challenge.auth.marketregular.com +short
 ```
 
-The CNAME must keep resolving to the project host. The app will not open Google sign-in if the Auth callback is `*.supabase.co`.
+The CNAME must keep resolving to the project host. After `supabase domains activate`, the app will not open Google sign-in if the Auth callback is `*.supabase.co`.
 
 ## Email later
 

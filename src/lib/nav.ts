@@ -33,12 +33,3 @@ export const SITE_LEGAL_NAV = [
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ] as const;
-
-export function isAuthChromePath(path: string) {
-  return (
-    path === "/login" ||
-    path === "/signup" ||
-    path === "/onboarding" ||
-    path.startsWith("/auth/")
-  );
-}
