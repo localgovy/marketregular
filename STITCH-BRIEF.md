@@ -103,7 +103,7 @@ Plain does **not** mean empty. Every screen should feel like there is too much m
 | Users | Regulars |
 | Verified | ON SITE (rubber stamp) |
 | Featured | On the way / open now |
-| Dashboard | Desk (admin only) |
+| Dashboard | Admin |
 
 ON SITE is a **red rectangular rubber stamp**, slightly crooked 2°, not a green checkmark.
 
@@ -115,8 +115,8 @@ ON SITE is a **red rectangular rubber stamp**, slightly crooked 2°, not a green
 
 1. A person planning Saturday: search by province, city, day, tag, open-now, map.
 2. A person physically at a market: GPS must match the geofence or they cannot post/review. We store a yes/no, never their pin.
-3. You (admin) later: edit markets/vendors, moderate tape, approve stall claims.
-4. A vendor later: claim a stall, edit menu/hours.
+3. You (admin) later: edit markets/vendors, moderate tape, assign stalls and markets to portal accounts.
+4. A vendor later: create a vendor account, wait for the stall to be assigned, edit menu/hours.
 
 **Real data to use in mockups** (do not invent Californian farms)
 
@@ -143,7 +143,7 @@ Tags as small mono plates, not pastel chips: `PRODUCE` `INDOOR` `YEAR-ROUND`
 - Open a vendor: about, menu, which markets, reviews
 - Stamp in when GPS matches; write a floor post (optional photos) or a review (1–5)
 - Sign in (email/password, magic link, Google)
-- Claim a listing (short evidence form)
+- Create a vendor or market account, then wait for the listing to be assigned
 
 Do not design onboarding carousels, points, streaks, stories, DMs, or a shoppable checkout.
 
@@ -203,7 +203,7 @@ This is the “you might actually go” page. Lots to see.
 - Phone as a link
 - `Website` as a zinc text link, not a fat button
 - Stamp-in panel (same as home, already geofenced to this market)
-- Claim: `Do you run this hall?` + short evidence field
+- `Run this market?` with a link to create a market account
 
 Quebec variant note (don’t design a whole extra page): Jean-Talon title can show `Marché Jean-Talon` with `Montréal, QC`.
 
@@ -218,7 +218,7 @@ A stall card that grew into a page.
 - Phone / website
 - Reviews
 - Stamp-in if the regular is at one of this vendor’s markets
-- `Is this your stall?` claim
+- `Run this stall?` with a link to create a vendor account
 
 ### 05 — Stamp-in composer (state sheet)
 
@@ -248,21 +248,21 @@ Quiet, like a coat-check.
 A locker, not a profile social graph.
 
 - Display name field
-- Role line in mono: `REGULAR` / `VENDOR` / `DESK`
+- Role line in mono: `REGULAR` / `VENDOR` / `ADMIN`
 - Sign out
 - `Your tape` — their posts as the same sentence list
 - No follower counts
 
-### 08 — Admin desk (`/admin`)
+### 08 — Admin (`/admin`)
 
 Allowed to look like a back office. Still the same type and paper. No generic Tailwind dashboard.
 
-- Label: `DESK`
-- Index stats as a timetable, not colourful KPI cards: markets, vendors, live posts, open claims
-- Subnav as underlined text: Overview · Markets · Vendors · Moderation · Claims
+- Label: `Admin`
+- Index stats as a timetable, not colourful KPI cards: markets, vendors, live posts, open applications
+- Subnav as underlined text: Overview · Markets · Vendors · Moderation · Applications
 - Tables with hairline rows, `EDIT` in mono
 - Moderation: post text + `FLAG` / `RESTORE`
-- Claims: evidence paragraph + `APPROVE` / `REJECT`
+- Applications: the account, the organization or requested listing, then assign or turn down
 
 ### 09 — Not found
 
@@ -283,7 +283,7 @@ Allowed to look like a back office. Still the same type and paper. No generic Ta
 4. Then: `Now the 390px mobile of this exact layout. Do not invent a different information architecture.`
 5. Only then move to the next screen. Carry a sentence: `Match header, type, colour tokens, and the ON SITE stamp from the home screen.`
 
-Generate in this order: **01 Home → 02 Find → 03 Market → 04 Vendor → 05 Stamp-in states → 06 Login → 07 Account → 10 Mobile nav → 08 Desk → 09 Not found.**
+Generate in this order: **01 Home → 02 Find → 03 Market → 04 Vendor → 05 Stamp-in states → 06 Login → 07 Account → 10 Mobile nav → 08 Admin → 09 Not found.**
 
 Home and Market are the ones that define the brand. If those two are right, the rest can follow.
 

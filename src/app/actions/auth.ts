@@ -17,6 +17,15 @@ import {
   signUpPublicError,
 } from "@/lib/public-error";
 import { saveChosenVendorPassword, syncChosenVendorPassword } from "@/lib/issue-vendor-password";
+import {
+  PORTAL_ORG_COOKIE,
+  clipOrganizationName,
+  encodePortalOrgCookie,
+  portalHomePath,
+  portalKind,
+  portalOrgCookieOptions,
+  portalRequestId,
+} from "@/lib/portal-application";
 import { canChangePassword, mustSetPassword, recoveryMatchesUser } from "@/lib/password-gate";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
@@ -135,6 +144,49 @@ export async function signUpWithPassword(formData: FormData) {
   return { error: null, message: "Check your email to confirm your account." };
 }
 
+export async function signUpForPortal(formData: FormData) {
+  if (!(await isHumanRequest())) return { error: "Could not create that account." };
+  if (String(formData.get("_gotcha") ?? "").trim()) {
+    return { error: null, message: "Check your email to confirm your account." };
+  }
+  const kind = portalKind(formData.get("kind"));
+  if (!kind) return { error: "That portal is missing." };
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return { error: "Supabase is not configured yet." };
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("confirm") ?? "");
+  const displayName = String(formData.get("display_name") ?? "").trim().slice(0, 60);
+  const requestId = portalRequestId(formData.get("request_id"));
+  const organization = requestId ? null : clipOrganizationName(formData.get("organization_name"));
+  const next = portalHomePath(kind, requestId);
+  if (displayName.length < 2) return { error: "Add your name." };
+  if (!requestId && !organization) return { error: "Add the organization name." };
+  if (password.length < 8) return { error: "Use at least 8 characters." };
+  if (password !== confirm) return { error: "Those passwords do not match." };
+  await rememberAuthNext(next);
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: callbackUrl(),
+      data: { display_name: displayName },
+    },
+  });
+  if (error) return signUpPublicError(error);
+  if (organization) {
+    const jar = await cookies();
+    jar.set(PORTAL_ORG_COOKIE, encodePortalOrgCookie(organization), portalOrgCookieOptions());
+  }
+  if (data.session) {
+    const jar = await cookies();
+    jar.set(PASSWORD_RECOVERY_COOKIE, "", passwordRecoveryCookie(0));
+    revalidatePath("/", "layout");
+    redirect(next);
+  }
+  return { error: null, message: "Check your email to confirm your account." };
+}
+
 export async function requestPasswordReset(formData: FormData) {
   if (!(await isHumanRequest())) return { error: "Wait a bit, then try again." };
   const supabase = await createServerSupabaseClient();
@@ -226,7 +278,11 @@ export async function updatePassword(formData: FormData) {
   if (forced) {
     await supabase.auth.refreshSession();
     await supabase.auth.signOut({ scope: "others" });
-    redirect("/vendor");
+    const [{ data: ownsMarket }, { data: ownsVendor }] = await Promise.all([
+      supabase.rpc("has_owned_market"),
+      supabase.rpc("has_owned_vendor"),
+    ]);
+    redirect(ownsMarket === true && ownsVendor !== true ? "/market" : "/vendor");
   }
   await supabase.auth.signOut({ scope: "others" });
   redirect("/account");

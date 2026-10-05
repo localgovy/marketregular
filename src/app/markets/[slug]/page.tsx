@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddressLink } from "@/components/address-link";
 import { BackButton } from "@/components/back-button";
-import { ClaimForm } from "@/components/claim-form";
+import { ListingPortalCta } from "@/components/listing-portal-cta";
 import { JsonLd } from "@/components/json-ld";
 import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
@@ -294,7 +294,7 @@ export default async function MarketPage({
             <ListingTiktok href={market.tiktok} />
             <ListingFacebook href={market.facebook} />
           </div>
-          <ClaimForm targetType="market" targetId={market.id} />
+          <ListingPortalCta kind="market" listingId={market.id} />
         </aside>
         {publishesVendorRoster(market.slug) ? (
           <div className="lg:col-span-2">

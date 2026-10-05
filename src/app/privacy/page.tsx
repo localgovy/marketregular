@@ -47,24 +47,27 @@ export default function PrivacyPage() {
           display name. Onboarding can store markets you care about.
         </p>
         <p className={body}>
-          Posts, reviews, your display name, and avatar are public on the site. Saves, listing
-          claims tied to an account, and the last time we emailed you a week plan stay private.
+          Posts, reviews, your display name, and avatar are public on the site. Saves, vendor and
+          market account requests, and the last time we emailed you a week plan stay private.
         </p>
         <p className={body}>
-          You can claim a market without signing in. A vendor claim has to come from an account,
-          so we can open the stall editor after we approve it. That form sends us your name, email,
-          optional phone, role, business, website or Instagram, and notes. We use a hashed
-          address of the request only to slow repeat sends. After a vendor claim is approved, that
-          account can edit the stall&apos;s name, description, logo, tags, phone, email, links, menu,
-          and which markets it attends. Phone, email, and the logo are shown on the public page.
+          A vendor or market account uses the email you give, including a Gmail address, and the
+          password you choose. The request can name the organization, or point at a published stall
+          or market. We use a hashed address of the request only to slow repeat sends. After we
+          assign a stall, that account can edit its name, description, logo, tags, phone, email,
+          links, menu, and which markets it attends. After we assign a market, that account can edit
+          the market&apos;s name, description, address, hours, logo, tags, phone, email, and links, and
+          the stalls at that market. A stall the market adds stays without an owner until we assign
+          a vendor account. Phone, email, and the logo are shown on the public page.
           The logo file is stored with the directory. If a stall you run is approved to sell, we
           also store that selling is on, which menu items are for sale, and the delivery, pickup,
           or preorder terms the stall writes.
         </p>
         <p className={body}>
-          When we approve a vendor claim, we email a one-time password for that account. After you
-          replace it, we keep a copy of the password you chose so the desk can show it. Shopper
-          passwords stay a hash only. That stall copy is removed when the account is deleted.
+          When we assign a stall or market, we email a link to that portal. We do not replace the
+          password you chose. A password issued for an older approval can still be shown in admin
+          until you replace it. Shopper passwords, and passwords chosen on the vendor or market
+          portal, stay a hash only. An issued-password copy is removed when the account is deleted.
         </p>
         <p className={body}>
           Nearby markets can use your location if you allow it in the browser. Near me sends those
@@ -97,10 +100,10 @@ export default function PrivacyPage() {
       <section className="mt-10">
         <h2>Mail</h2>
         <p className={body}>
-          Claim notices go to us through Resend. If you ask for this week&apos;s markets from a
-          signed-in account, Resend sends that mail to the address on the account. When a vendor
-          claim is approved, Resend sends the one-time password to the account email. Confirm and
-          password-reset mail goes through Supabase.
+          Account requests go to us through Resend. If you ask for this week&apos;s markets from a
+          signed-in account, Resend sends that mail to the address on the account. When a stall
+          or market is assigned, or when we cannot assign one, Resend sends that note to the
+          account email. Confirm and password-reset mail goes through Supabase.
         </p>
       </section>
 
@@ -124,9 +127,9 @@ export default function PrivacyPage() {
         <p className={body}>
           We keep account data while the account exists. On Account you can edit your display name
           and type delete to close the account. That removes the login, profile, posts, reviews,
-          saves, and claims on our side. Order records stay so the stall can still fulfill them and
+          saves, and portal requests on our side. Order records stay so the stall can still fulfill them and
           so the stall fee ledger stays accurate. The account link on those orders is cleared. If
-          you had claimed a listing, the listing stays and the claim holder is cleared. Copies can
+          a listing was assigned to you, the listing stays and the account is taken off it. Copies can
           linger for a while in email, backups, hashed rate-limit rows, and analytics. You can also
           write{" "}
           <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-foreground hover:underline">

@@ -170,15 +170,20 @@ export function imageKind(bytes: Uint8Array): "jpg" | "png" | "webp" | null {
   return null;
 }
 
-/** Object name inside listing-marks, or null when the URL is not this stall's upload. */
-export function ownedLogoObjectName(vendorId: string, url: string) {
+/** Object name inside listing-marks, or null when the URL is not this listing's upload. */
+export function listingLogoObjectName(folder: "vendors" | "markets", id: string, url: string) {
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
-  if (!base || !isUuid(vendorId)) return null;
-  const prefix = `${base}/storage/v1/object/public/listing-marks/vendors/${vendorId}/`;
+  if (!base || !isUuid(id)) return null;
+  const prefix = `${base}/storage/v1/object/public/listing-marks/${folder}/${id}/`;
   if (!url.startsWith(prefix)) return null;
   const file = url.slice(prefix.length).split("?")[0] ?? "";
   if (!file || !/^[A-Za-z0-9._-]+$/.test(file) || file.includes("..")) return null;
-  return `vendors/${vendorId}/${file}`;
+  return `${folder}/${id}/${file}`;
+}
+
+/** Object name inside listing-marks, or null when the URL is not this stall's upload. */
+export function ownedLogoObjectName(vendorId: string, url: string) {
+  return listingLogoObjectName("vendors", vendorId, url);
 }
 
 export function dayHoursLabel(hours: PortalHours[], weekday: number) {

@@ -3,7 +3,13 @@ import { LoginForm } from "@/components/login-form";
 import { safePath } from "@/lib/auth-redirect";
 import { getCurrentProfile } from "@/lib/data/catalog";
 import { loginQueryError } from "@/lib/public-error";
-import { isStallCheckoutPath, isVendorPortalPath, onboardingHref, skipsShopperOnboarding } from "@/lib/onboarding";
+import {
+  isMarketPortalPath,
+  isStallCheckoutPath,
+  isVendorPortalPath,
+  onboardingHref,
+  skipsShopperOnboarding,
+} from "@/lib/onboarding";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
@@ -30,6 +36,7 @@ export default async function LoginPage({
   if (profile) {
     const skip =
       isVendorPortalPath(next) ||
+      isMarketPortalPath(next) ||
       isStallCheckoutPath(next) ||
       (session.supabase ? await skipsShopperOnboarding(session.supabase, profile) : false);
     redirect(skip ? next : onboardingHref(next));

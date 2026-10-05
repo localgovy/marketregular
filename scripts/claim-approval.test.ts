@@ -5,6 +5,7 @@ import { applyClaimDecision } from "../src/lib/claim-approval.ts";
 import { prepareVendorClaimPassword, saveChosenVendorPassword } from "../src/lib/issue-vendor-password.ts";
 import { needsOnboarding, onboardingExemptPath, skipsShopperOnboarding } from "../src/lib/onboarding.ts";
 import { CHOSEN_PASSWORD_MARKER, decryptVendorPassword, encryptVendorPassword } from "../src/lib/vendor-password.ts";
+import { marketPortalLetter, sendMarketPortalMail } from "../src/lib/market-portal-mail.ts";
 import { sendVendorPortalMail, vendorPortalLetter } from "../src/lib/vendor-portal-mail.ts";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
@@ -214,11 +215,16 @@ async function decide(
   input: { status: string; note?: string },
   sent = true,
 ) {
-  const mail: { email: string; password?: string; url: string }[] = [];
-  const result = await applyClaimDecision(desk.client, { id: CLAIM, ...input }, async (email, password) => {
-    mail.push({ email, password, url: vendorPortalLetter(password).url });
-    return { sent };
-  });
+  const mail: { email: string; password?: string; url: string; kind: string }[] = [];
+  const result = await applyClaimDecision(
+    desk.client,
+    { id: CLAIM, ...input },
+    async (email, password, kind) => {
+      const letter = kind === "market" ? marketPortalLetter(password) : vendorPortalLetter(password);
+      mail.push({ email, password, url: letter.url, kind });
+      return { sent };
+    },
+  );
   return { result, mail };
 }
 
@@ -359,7 +365,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
     const { result, mail } = await decide(desk, { status: "approved" }, false);
     assert.equal(result.error, null);
     assert.equal(result.committed, true);
-    assert.deepEqual(result.mailFailed, { password: "1", vendorId: VENDOR });
+    assert.deepEqual(result.mailFailed, { password: "1", vendorId: VENDOR, marketId: null });
     assert.equal(desk.state.stall?.claimed_by, USER);
     assert.match(desk.state.users.get(USER)?.password ?? "", ALPHABET);
     assert.equal(mail.length, 1);
@@ -381,7 +387,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
     unsent.state.failReread = true;
     const failed = await decide(unsent, { status: "approved" }, false);
     assert.equal(failed.result.error, null);
-    assert.deepEqual(failed.result.mailFailed, { password: "1", vendorId: VENDOR });
+    assert.deepEqual(failed.result.mailFailed, { password: "1", vendorId: VENDOR, marketId: null });
     assert.equal(failed.mail[0]?.password, unsent.state.users.get(USER)?.password);
   });
 
@@ -407,35 +413,84 @@ describe("vendor claim approval", { concurrency: false }, () => {
     });
     const { result } = await decide(desk, { status: "approved" }, false);
     assert.equal(result.error, null);
-    assert.deepEqual(result.mailFailed, { password: "0", vendorId: VENDOR });
+    assert.deepEqual(result.mailFailed, { password: "0", vendorId: VENDOR, marketId: null });
     assert.equal(desk.state.users.get(USER)?.password, "original");
     assert.equal(desk.state.stall?.claimed_by, USER);
   });
 
-  test("reject and market approval do not touch a stall password", async () => {
+  test("reject does not touch a stall password", async () => {
     const rejected = createDesk();
     const rejection = await decide(rejected, { status: "rejected", note: "Not enough evidence" });
     assert.equal(rejection.result.error, null);
     assert.equal(rejection.result.committed, true);
     assert.equal(rejection.result.vendorId, null);
+    assert.equal(rejection.result.marketId, null);
     assert.deepEqual(rejection.result.paths, ["/vendors/river-fruit"]);
     assert.equal(rejection.mail.length, 0);
     assert.equal(rejected.state.lastRpc?.p_status, "rejected");
     assert.equal(rejected.state.lastRpc?.p_note, "Not enough evidence");
     assert.equal(rejected.state.stall?.claimed_by, null);
     assert.equal(rejected.state.ops.includes("getUser"), false);
+  });
 
+  test("market approval issues an account password and leaves the stall alone", async () => {
     const market = createDesk();
     market.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER };
     const approved = await decide(market, { status: "approved" });
     assert.equal(approved.result.error, null);
+    assert.equal(approved.result.committed, true);
     assert.equal(approved.result.vendorId, null);
+    assert.equal(approved.result.marketId, MARKET);
     assert.deepEqual(approved.result.paths, ["/markets/withrow"]);
-    assert.equal(approved.mail.length, 0);
     assert.equal(market.state.market?.claimed_by, USER);
     assert.equal(market.state.stall?.claimed_by, null);
-    assert.equal(market.state.ops.includes("getUser"), false);
-    assert.equal(market.state.users.get(USER)?.password, "original");
+    const user = market.state.users.get(USER);
+    const secret = market.state.secrets[0];
+    assert.ok(secret);
+    assert.equal(secret.chosen, false);
+    assert.match(user?.password ?? "", ALPHABET);
+    assert.notEqual(user?.password, "original");
+    assert.equal(approved.mail.length, 1);
+    assert.equal(approved.mail[0]?.kind, "market");
+    assert.equal(approved.mail[0]?.password, user?.password);
+    assert.equal(new URL(approved.mail[0]!.url).searchParams.get("next"), "/account/password");
+
+    const chosen = createDesk();
+    chosen.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER };
+    const ciphertext = encryptVendorPassword("already-chosen", key);
+    chosen.state.secrets.push({
+      user_id: USER,
+      ciphertext,
+      chosen: true,
+    });
+    const kept = await decide(chosen, { status: "approved" });
+    assert.equal(kept.result.error, null);
+    assert.equal(chosen.state.users.get(USER)?.password, "original");
+    assert.equal(chosen.state.secrets[0]?.chosen, true);
+    assert.equal(chosen.state.secrets[0]?.ciphertext, ciphertext);
+    assert.equal(chosen.state.stall?.claimed_by, null);
+    assert.equal(kept.mail[0]?.password, undefined);
+    assert.equal(new URL(kept.mail[0]!.url).pathname, "/market");
+
+    const taken = createDesk();
+    taken.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER };
+    taken.state.market!.claimed_by = OTHER;
+    const blocked = await decide(taken, { status: "approved" });
+    assert.equal(blocked.result.error, "That listing is already claimed.");
+    assert.equal(blocked.result.committed, false);
+    assert.equal(blocked.mail.length, 0);
+    assert.equal(taken.state.ops.includes("rpc"), false);
+    assert.equal(taken.state.market?.claimed_by, OTHER);
+    assert.equal(taken.state.users.get(USER)?.password, "original");
+
+    const unsent = createDesk();
+    unsent.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER };
+    const failed = await decide(unsent, { status: "approved" }, false);
+    assert.equal(failed.result.error, null);
+    assert.equal(failed.result.committed, true);
+    assert.deepEqual(failed.result.mailFailed, { password: "1", vendorId: null, marketId: MARKET });
+    assert.equal(unsent.state.market?.claimed_by, USER);
+    assert.equal(unsent.state.stall?.claimed_by, null);
   });
 
   test("the claim note is trimmed and clipped to 500 characters", async () => {
@@ -621,6 +676,8 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.equal(new URL(open.url).pathname, "/vendor");
     assert.equal(open.text.includes("Password:"), false);
     assert.equal(open.html.includes("Password:"), false);
+    assert.equal(open.text.toLowerCase().includes("claim"), false);
+    assert.equal(open.text.includes("Your stall is assigned"), true);
 
     const previousKey = process.env.RESEND_API_KEY;
     const previousFrom = process.env.RESEND_FROM;
@@ -653,5 +710,52 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.equal(onboardingExemptPath("/vendor"), true);
     assert.equal(onboardingExemptPath(`/vendor/${VENDOR}`), true);
     assert.equal(onboardingExemptPath("/account/password"), true);
+    assert.equal(onboardingExemptPath("/market"), true);
+    assert.equal(onboardingExemptPath(`/market/${MARKET}`), true);
+    assert.equal(onboardingExemptPath("/markets/withrow"), false);
+  });
+
+  test("a pending market claim skips shopper onboarding", async () => {
+    const calls: string[] = [];
+    const skipped = await skipsShopperOnboarding(
+      {
+        rpc: async (fn: string) => {
+          calls.push(fn);
+          return { data: fn === "awaiting_market_portal", error: null };
+        },
+      },
+      { onboarded_at: null, role: "user" },
+    );
+    assert.equal(skipped, true);
+    assert.deepEqual(calls, ["awaiting_vendor_portal", "awaiting_market_portal"]);
+  });
+
+  test("the market letter points at the market portal and escapes the password", async () => {
+    const password = `a<b>&"c`;
+    const once = marketPortalLetter(password);
+    assert.equal(once.subject.includes("Your market on"), true);
+    assert.equal(new URL(once.url).searchParams.get("next"), "/account/password");
+    assert.equal(once.text.includes("hours, contact details, and the stalls"), false);
+    assert.equal(once.html.includes("a&lt;b&gt;&amp;&quot;c"), true);
+    assert.equal(once.html.includes(password), false);
+    const open = marketPortalLetter();
+    assert.equal(new URL(open.url).pathname, "/market");
+    assert.equal(open.text.includes("hours, contact details, and the stalls"), true);
+    assert.equal(open.html.includes("Password:"), false);
+    assert.equal(open.text.toLowerCase().includes("claim"), false);
+    assert.equal(open.text.includes("Your market is assigned"), true);
+
+    const previousKey = process.env.RESEND_API_KEY;
+    const previousFrom = process.env.RESEND_FROM;
+    delete process.env.RESEND_API_KEY;
+    delete process.env.RESEND_FROM;
+    try {
+      assert.deepEqual(await sendMarketPortalMail("market@example.com", password), { sent: false });
+    } finally {
+      if (previousKey === undefined) delete process.env.RESEND_API_KEY;
+      else process.env.RESEND_API_KEY = previousKey;
+      if (previousFrom === undefined) delete process.env.RESEND_FROM;
+      else process.env.RESEND_FROM = previousFrom;
+    }
   });
 });

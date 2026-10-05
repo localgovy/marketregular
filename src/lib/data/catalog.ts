@@ -84,7 +84,7 @@ const MARKET_PUBLIC =
   "id, slug, name, about, address, city, province, postal_code, lat, lng, geofence_radius_m, website, tags, status, featured, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
 const VENDOR_PUBLIC =
   "id, slug, name, about, website, tags, status, created_at, updated_at, logo_url, review_count, rating_avg, instagram, tiktok, facebook";
-/** `research_notes` is sourcing detail for the desk, not visitor copy — never selected here. */
+/** `research_notes` is sourcing detail for admin, not visitor copy — never selected here. */
 const SCHEDULE_PUBLIC =
   "id, market_id, weekday, opens_at, closes_at, season_start, season_end, notes";
 const POST_PUBLIC = "id, user_id, market_id, body, photos, flagged, created_at";

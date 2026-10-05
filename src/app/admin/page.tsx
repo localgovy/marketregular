@@ -5,17 +5,17 @@ export default async function AdminHomePage() {
   if (!isSupabaseConfigured()) return null;
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
-  const [markets, vendors, posts, claims] = await Promise.all([
+  const [markets, vendors, posts, applications] = await Promise.all([
     supabase.from("markets").select("id", { count: "exact", head: true }).eq("status", "published"),
     supabase.from("vendors").select("id", { count: "exact", head: true }).eq("status", "published"),
     supabase.from("posts").select("id", { count: "exact", head: true }).eq("flagged", false),
-    supabase.from("claim_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    supabase.from("portal_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
   ]);
   const stats = [
     { label: "Published markets", value: markets.count ?? 0 },
     { label: "Published vendors", value: vendors.count ?? 0 },
     { label: "Live posts", value: posts.count ?? 0 },
-    { label: "Open claims", value: claims.count ?? 0 },
+    { label: "Open applications", value: applications.count ?? 0 },
   ];
   return (
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

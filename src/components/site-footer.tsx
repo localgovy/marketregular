@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { LEGAL_ENTITY, SITE_NAME, SITE_TAGLINE, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
-import { SITE_CLAIM_NAV, SITE_FOOTER_NAV, SITE_LEGAL_NAV } from "@/lib/nav";
+import { SITE_FOOTER_NAV, SITE_LEGAL_NAV } from "@/lib/nav";
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
@@ -29,13 +29,6 @@ export function SiteFooter() {
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
           <nav aria-label="Footer" className="flex flex-wrap gap-4 sm:justify-end">
-            <Link
-              href={SITE_CLAIM_NAV.href}
-              prefetch={false}
-              className="font-medium text-foreground hover:underline lg:hidden"
-            >
-              {SITE_CLAIM_NAV.label}
-            </Link>
             {SITE_FOOTER_NAV.map((item) => (
               <Link key={item.href} href={item.href} prefetch={false} className="hover:text-foreground">
                 {item.label}

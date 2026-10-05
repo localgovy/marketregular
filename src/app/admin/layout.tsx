@@ -22,7 +22,7 @@ export default async function AdminLayout({
         <h1>Admin needs Supabase</h1>
         <p className="type-lede mt-3 text-muted-foreground">
           Create a Supabase project, run the migrations in <code>supabase/</code>, and set
-          the env vars in <code>.env.local</code> / Vercel. Grant desk access by setting{" "}
+          the env vars in <code>.env.local</code> / Vercel. Grant admin access by setting{" "}
           <code>profiles.role</code> to <code>admin</code> in the database.
         </p>
       </div>
@@ -34,12 +34,11 @@ export default async function AdminLayout({
     ["/admin/markets", "Markets"],
     ["/admin/vendors", "Vendors"],
     ["/admin/moderation", "Moderation"],
-    ["/admin/claims", "Claims"],
+    ["/admin/applications", "Applications"],
     ["/admin/saves", "Saves"],
   ] as const;
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8">
-      <p className="type-kicker text-primary">Directory desk</p>
       <h1>Admin</h1>
       <nav className="mt-4 mb-8 flex flex-wrap gap-2">
         {links.map(([href, label]) => (

@@ -75,6 +75,7 @@ export type Vendor = {
   review_count: number;
   rating_avg: number | null;
   claimed_by?: string | null;
+  created_by_market_id?: string | null;
   created_at?: string;
   updated_at?: string;
 };
@@ -147,6 +148,17 @@ export type ClaimRequest = {
   created_at: string;
   requester_name?: string | null;
   target_name?: string | null;
+};
+
+export type PortalApplication = {
+  id: string;
+  user_id: string;
+  kind: ClaimTarget;
+  organization_name: string | null;
+  requested_target_id: string | null;
+  assigned_target_id: string | null;
+  status: ClaimStatus;
+  created_at: string;
 };
 
 export type VendorHall = {

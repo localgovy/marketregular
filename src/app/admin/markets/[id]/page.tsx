@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
 import { MarketForm } from "@/components/admin/market-form";
+import { MarketOwnerForm } from "@/components/admin/market-owner-form";
 import { fetchAllRows, requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured, WEEKDAYS } from "@/lib/constants";
 import { withListingStats } from "@/lib/listing-score";
 import { formatHours } from "@/lib/schedule";
+import { readVendorPassword } from "@/lib/vendor-password";
 import { deleteMarket, deleteSchedule, linkVendorToMarket, saveSchedule } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,12 +22,29 @@ export default async function EditMarketPage({
   if (!supabase) return null;
   const { data: market } = await supabase.from("markets").select("*").eq("id", id).maybeSingle();
   if (!market) notFound();
-  const [{ data: schedules }, vendors] = await Promise.all([
+  const [{ data: schedules }, vendors, owner, secret] = await Promise.all([
     supabase.from("market_schedules").select("*").eq("market_id", id),
     fetchAllRows<Pick<Vendor, "id" | "name">>((from, to) =>
       supabase.from("vendors").select("id, name").order("name").range(from, to),
     ),
+    market.claimed_by
+      ? supabase.auth.admin.getUserById(market.claimed_by)
+      : Promise.resolve({ data: { user: null } }),
+    market.claimed_by
+      ? supabase
+          .from("vendor_sign_in_secrets")
+          .select("ciphertext, chosen")
+          .eq("user_id", market.claimed_by)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
   ]);
+  const ownerEmail = owner.data?.user?.email ?? null;
+  const passwordLine =
+    secret.error
+      ? null
+      : secret.data && typeof secret.data.ciphertext === "string"
+        ? readVendorPassword(secret.data.ciphertext, secret.data.chosen === true)
+        : null;
 
   async function remove() {
     "use server";
@@ -35,6 +54,21 @@ export default async function EditMarketPage({
   return (
     <div className="grid gap-10">
       <MarketForm market={withListingStats(market as Market)} />
+      <section>
+        <h2>Owner</h2>
+        <p className="mt-2 mb-4 text-sm text-muted-foreground">
+          They sign in at /market with this account. The market has no account yet, or this one already runs it.
+        </p>
+        <MarketOwnerForm marketId={id} ownerEmail={ownerEmail} />
+        {secret.error ? (
+          <p className="mt-3 text-sm text-destructive">Could not open that password.</p>
+        ) : passwordLine ? (
+          <p className="mt-3 text-sm">
+            <span className="text-muted-foreground">{passwordLine.label}. </span>
+            <span className="font-medium">{passwordLine.value}</span>
+          </p>
+        ) : null}
+      </section>
       <section>
         <h2>Hours</h2>
         <ul className="mt-3 divide-y divide-border">

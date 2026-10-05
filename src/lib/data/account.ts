@@ -1,7 +1,7 @@
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { fetchMyProfile } from "@/lib/my-profile";
 import { EMPTY_SAVES, savesFromRows, type Saves } from "@/lib/saves";
-import type { ClaimRequest } from "@/types/database";
+import type { PortalApplication } from "@/types/database";
 
 export async function readMySaves(): Promise<{ saves: Saves; failed: boolean }> {
   const { supabase, user } = await createAuthedServerClient();
@@ -35,12 +35,12 @@ export async function loadAccountDesk(userId: string) {
       visitPlanEmailedAt: null,
       saves: EMPTY_SAVES,
       posts: [] as AccountPost[],
-      claims: [] as ClaimRequest[],
+      applications: [] as PortalApplication[],
       reviewCount: 0,
     };
   }
 
-  const [savesRes, postsRes, claimsRes, postCountRes, me] = await Promise.all([
+  const [savesRes, postsRes, applicationsRes, postCountRes, me] = await Promise.all([
     supabase.from("saves").select("kind, slug, detail").eq("user_id", user.id),
     supabase
       .from("posts")
@@ -49,8 +49,8 @@ export async function loadAccountDesk(userId: string) {
       .order("created_at", { ascending: false })
       .limit(30),
     supabase
-      .from("claim_requests")
-      .select("id, user_id, target_type, target_id, evidence, status, admin_note, created_at")
+      .from("portal_applications")
+      .select("id, user_id, kind, organization_name, requested_target_id, assigned_target_id, status, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20),
@@ -58,7 +58,7 @@ export async function loadAccountDesk(userId: string) {
     fetchMyProfile(supabase),
   ]);
 
-  if (savesRes.error || postsRes.error || claimsRes.error || postCountRes.error) {
+  if (savesRes.error || postsRes.error || applicationsRes.error || postCountRes.error) {
     return {
       email: user.email ?? null,
       visitPlanEmailedAt: me?.visit_plan_emailed_at ?? null,
@@ -70,7 +70,7 @@ export async function loadAccountDesk(userId: string) {
         market_id: row.market_id,
         markets: null,
       })),
-      claims: (claimsRes.data ?? []) as ClaimRequest[],
+      applications: (applicationsRes.data ?? []) as PortalApplication[],
       reviewCount: postCountRes.count ?? 0,
     };
   }
@@ -93,7 +93,7 @@ export async function loadAccountDesk(userId: string) {
             : null,
       };
     }),
-    claims: (claimsRes.data ?? []) as ClaimRequest[],
+    applications: (applicationsRes.data ?? []) as PortalApplication[],
     reviewCount: postCountRes.count ?? 0,
   };
 }

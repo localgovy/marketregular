@@ -47,10 +47,6 @@ export default function AboutPage() {
           <Link href="/events" className="font-medium hover:underline">
             This month&apos;s days
           </Link>
-          {" · "}
-          <Link href="/contact" className="font-medium hover:underline">
-            Write us
-          </Link>
         </p>
       </section>
 

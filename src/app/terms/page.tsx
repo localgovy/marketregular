@@ -64,8 +64,8 @@ export default function TermsPage() {
       <section className="mt-10">
         <h2>Accounts</h2>
         <p className={body}>
-          One person per account. Keep the password to yourself. A stall password chosen after we
-          approve a vendor claim is also visible on the desk. You are responsible for what
+          One person per account. Keep the password to yourself. A password issued for an older
+          stall approval is visible in admin. A password you choose on the portal stays a hash. You are responsible for what
           happens on the account. We can close it if these terms are broken, if the feed is
           abused, or if we have to for the law.
         </p>
@@ -81,12 +81,13 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Claims</h2>
+        <h2>Vendor and market accounts</h2>
         <p className={body}>
-          Sending a claim is a request. It does not hand you the listing. We look at it and decide.
-          When we approve a vendor claim, that account can edit the stall. Keep the name, hours,
-          menu, and contact details accurate. We can change the listing or take the account off it.
-          The web address, published or draft status, and the public score stay with us.
+          Creating a vendor or market account is a request. It does not hand you the listing. We
+          look at it and assign the stall or market. When we assign a stall, that account can edit
+          it. Keep the name, hours, menu, and contact details accurate. We can change the listing
+          or take the account off it. The web address, published or draft status, and the public
+          score stay with us.
         </p>
       </section>
 

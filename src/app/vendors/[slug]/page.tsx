@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { BackButton } from "@/components/back-button";
-import { ClaimForm } from "@/components/claim-form";
+import { ListingPortalCta } from "@/components/listing-portal-cta";
 import { JsonLd } from "@/components/json-ld";
 import { ListingAlsoLinks } from "@/components/listing-also-links";
 import { ListingMark } from "@/components/listing-mark";
@@ -204,8 +204,8 @@ export default async function VendorPage({
             <ListingTiktok href={vendor.tiktok} />
             <ListingFacebook href={vendor.facebook} />
           </div>
-          <div id="claim" className="scroll-mt-28">
-            <ClaimForm targetType="vendor" targetId={vendor.id} />
+          <div id="account" className="scroll-mt-28">
+            <ListingPortalCta kind="vendor" listingId={vendor.id} />
           </div>
         </aside>
         <div className="lg:col-span-2">

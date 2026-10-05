@@ -13,19 +13,27 @@ type PortalWaitClient = {
   ) => PromiseLike<{ data: unknown; error: { message?: string } | null }>;
 };
 
-/** A stall owner, or someone waiting on a vendor claim, skips the shopper desk. */
+/** A stall or market owner, or someone waiting on a portal account, skips the shopper desk. */
 export async function skipsShopperOnboarding(
   supabase: PortalWaitClient,
   profile: Pick<Profile, "onboarded_at" | "role"> | null,
 ) {
   if (!needsOnboarding(profile)) return true;
-  const { data, error } = await supabase.rpc("awaiting_vendor_portal");
-  return !error && data === true;
+  const [vendor, market] = await Promise.all([
+    supabase.rpc("awaiting_vendor_portal"),
+    supabase.rpc("awaiting_market_portal"),
+  ]);
+  return (!vendor.error && vendor.data === true) || (!market.error && market.data === true);
 }
 
 export function isVendorPortalPath(path: string) {
   const bare = path.split("?")[0]?.split("#")[0] ?? path;
   return bare === "/vendor" || bare.startsWith("/vendor/");
+}
+
+export function isMarketPortalPath(path: string) {
+  const bare = path.split("?")[0]?.split("#")[0] ?? path;
+  return bare === "/market" || bare.startsWith("/market/");
 }
 
 /** Buying and the receipt stay open before the shopper profile is finished. */
@@ -43,8 +51,8 @@ export function onboardingExemptPath(path: string) {
     path === "/account/password" ||
     path === "/privacy" ||
     path === "/terms" ||
-    path === "/contact" ||
     isVendorPortalPath(path) ||
+    isMarketPortalPath(path) ||
     isStallCheckoutPath(path)
   );
 }

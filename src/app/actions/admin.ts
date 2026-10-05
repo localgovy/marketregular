@@ -5,7 +5,10 @@ import { slugify, socialProfileHref } from "@/lib/format";
 import { dbPublicError } from "@/lib/public-error";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { applyClaimDecision } from "@/lib/claim-approval";
+import { sendMarketPortalMail } from "@/lib/market-portal-mail";
+import { sendPortalDeclineMail } from "@/lib/portal-application-mail";
 import { sendVendorPortalMail } from "@/lib/vendor-portal-mail";
+import type { ClaimTarget } from "@/types/database";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -306,11 +309,65 @@ export async function assignVendorOwner(
   const mailed = await sendVendorPortalMail(email);
   revalidatePublishedDirectory([`/vendors/${vendor.slug}`, "/vendor"]);
   revalidatePath(`/admin/vendors/${vendorId}`);
-  revalidatePath("/admin/claims");
+  await closePendingApplication(supabase, userId, "vendor", vendorId);
+  revalidatePath("/admin/applications");
   if (!mailed.sent) {
     return { error: "They can edit this stall. The email did not send." };
   }
   return { error: null, message: "They can edit this stall. We emailed the portal link." };
+}
+
+export async function assignMarketOwner(
+  _prev: { error: string | null; message?: string } | undefined,
+  formData: FormData,
+): Promise<{ error: string | null; message?: string }> {
+  const { supabase } = await requireAdmin();
+  if (!supabase) return { error: "Supabase is not configured yet." };
+  const marketId = String(formData.get("market_id") ?? "");
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!marketId) return { error: "That market is missing." };
+  if (!OWNER_EMAIL.test(email) || email.length > 120) {
+    return { error: "Add the email on their account." };
+  }
+  const { data: market, error: marketError } = await supabase
+    .from("markets")
+    .select("id, slug, claimed_by")
+    .eq("id", marketId)
+    .maybeSingle();
+  if (marketError) return { error: dbPublicError(marketError, "Could not open that market.") };
+  if (!market) return { error: "That market is missing." };
+
+  const { data: userId, error: lookupError } = await supabase.rpc("auth_user_id_for_email", {
+    p_email: email,
+  });
+  if (lookupError) return { error: "Could not look up that account." };
+  if (!userId) {
+    return { error: "No account uses that email. They need to sign up at /market first." };
+  }
+  if (market.claimed_by && market.claimed_by !== userId) {
+    return { error: "Someone else already runs this market." };
+  }
+
+  if (market.claimed_by !== userId) {
+    const { data: updated, error: claimError } = await supabase
+      .from("markets")
+      .update({ claimed_by: userId })
+      .eq("id", marketId)
+      .is("claimed_by", null)
+      .select("id");
+    if (claimError) return { error: dbPublicError(claimError, "Could not give them this market.") };
+    if (!updated?.length) return { error: "Someone else already runs this market." };
+  }
+
+  const mailed = await sendMarketPortalMail(email);
+  revalidatePublishedDirectory([`/markets/${market.slug}`, "/market"]);
+  revalidatePath(`/admin/markets/${marketId}`);
+  await closePendingApplication(supabase, userId, "market", marketId);
+  revalidatePath("/admin/applications");
+  if (!mailed.sent) {
+    return { error: "They can edit this market. The email did not send." };
+  }
+  return { error: null, message: "They can edit this market. We emailed the portal link." };
 }
 
 export async function decideClaim(
@@ -320,16 +377,149 @@ export async function decideClaim(
 ): Promise<{ error: string | null }> {
   const { supabase } = await requireAdmin();
   if (!supabase) return { error: "Supabase is not configured yet." };
-  const result = await applyClaimDecision(supabase, { id, status, note }, sendVendorPortalMail);
+  const result = await applyClaimDecision(supabase, { id, status, note }, (email, password, kind) =>
+    kind === "market" ? sendMarketPortalMail(email, password) : sendVendorPortalMail(email, password),
+  );
   if (result.committed) {
     revalidatePublishedDirectory(result.paths);
     if (result.vendorId) revalidatePath(`/admin/vendors/${result.vendorId}`);
-    revalidatePath("/admin/claims");
+    if (result.marketId) revalidatePath(`/admin/markets/${result.marketId}`);
+    revalidatePath("/market");
+    revalidatePath("/vendor");
+    revalidatePath("/admin/applications");
   }
   if (result.mailFailed) {
-    redirect(
-      `/admin/claims?sent=0&password=${result.mailFailed.password}&vendor=${result.mailFailed.vendorId}`,
-    );
+    const params = new URLSearchParams({
+      sent: "0",
+      password: result.mailFailed.password,
+    });
+    if (result.mailFailed.vendorId) params.set("vendor", result.mailFailed.vendorId);
+    if (result.mailFailed.marketId) params.set("market", result.mailFailed.marketId);
+    redirect(`/admin/claims?${params}`);
   }
   return { error: result.error };
+}
+
+const APPLICATION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function closePendingApplication(
+  supabase: SupabaseClient,
+  userId: string,
+  kind: ClaimTarget,
+  targetId: string,
+) {
+  const { error } = await supabase
+    .from("portal_applications")
+    .update({ status: "approved", assigned_target_id: targetId })
+    .eq("user_id", userId)
+    .eq("kind", kind)
+    .eq("status", "pending");
+  if (error) console.error("admin.closeApplication", error.message);
+}
+
+export type ApplicationDecision = {
+  error: string | null;
+  message?: string;
+  matches?: { id: string; name: string; slug: string; status: string }[];
+};
+
+export async function decideApplication(
+  _prev: ApplicationDecision | undefined,
+  formData: FormData,
+): Promise<ApplicationDecision> {
+  const { supabase } = await requireAdmin();
+  if (!supabase) return { error: "Supabase is not configured yet." };
+  const id = String(formData.get("application_id") ?? "");
+  if (!APPLICATION_ID.test(id)) return { error: "That request is missing." };
+  const intent = String(formData.get("intent") ?? "");
+  const { data: app, error: appError } = await supabase
+    .from("portal_applications")
+    .select("id, user_id, kind, status")
+    .eq("id", id)
+    .maybeSingle();
+  if (appError) return { error: dbPublicError(appError, "Could not open that request.") };
+  if (!app || (app.kind !== "vendor" && app.kind !== "market")) {
+    return { error: "That request is missing." };
+  }
+  const kind = app.kind as ClaimTarget;
+
+  if (intent === "find") {
+    const q = String(formData.get("q") ?? "")
+      .trim()
+      .replace(/[%_\\,]/g, "")
+      .slice(0, 80);
+    if (q.length < 2) return { error: "Type more of the name." };
+    const table = kind === "vendor" ? "vendors" : "markets";
+    const { data, error } = await supabase
+      .from(table)
+      .select("id, name, slug, status")
+      .ilike("name", `%${q}%`)
+      .order("name")
+      .limit(15);
+    if (error) return { error: dbPublicError(error, "Could not search listings.") };
+    const matches = (data ?? []).flatMap((row) => {
+      if (!row.id || !row.name || !row.slug) return [];
+      return [{ id: row.id, name: row.name, slug: row.slug, status: row.status ?? "draft" }];
+    });
+    if (!matches.length) return { error: "No listings match that name.", matches: [] };
+    return { error: null, matches };
+  }
+
+  if (intent === "reject") {
+    if (app.status !== "pending") return { error: "That request is already decided." };
+    const { error } = await supabase.rpc("reject_portal_application", { p_id: id });
+    if (error) return { error: dbPublicError(error, "Could not turn down that request.") };
+    const { data: account } = await supabase.auth.admin.getUserById(app.user_id);
+    const mailed = account.user?.email
+      ? await sendPortalDeclineMail(account.user.email, kind)
+      : { sent: false };
+    revalidatePath("/admin/applications");
+    revalidatePath(kind === "vendor" ? "/vendor" : "/market");
+    revalidatePath("/account");
+    if (!mailed.sent) return { error: "The request is turned down. The email did not send." };
+    return { error: null, message: "Turned down. We emailed them." };
+  }
+
+  const targetId = String(formData.get("target_id") ?? "");
+  if (!APPLICATION_ID.test(targetId)) return { error: "Choose a listing." };
+  if (app.status !== "pending") return { error: "That request is already decided." };
+  const { error } = await supabase.rpc("assign_portal_application", {
+    p_id: id,
+    p_target_id: targetId,
+  });
+  if (error) return { error: dbPublicError(error, "Could not assign that listing.") };
+
+  const table = kind === "vendor" ? "vendors" : "markets";
+  const { data: listing } = await supabase.from(table).select("slug").eq("id", targetId).maybeSingle();
+  const { data: account } = await supabase.auth.admin.getUserById(app.user_id);
+  const mailed = account.user?.email
+    ? kind === "vendor"
+      ? await sendVendorPortalMail(account.user.email)
+      : await sendMarketPortalMail(account.user.email)
+    : { sent: false };
+  const publicPath = listing?.slug
+    ? kind === "vendor"
+      ? `/vendors/${listing.slug}`
+      : `/markets/${listing.slug}`
+    : null;
+  revalidatePublishedDirectory(publicPath ? [publicPath, kind === "vendor" ? "/vendor" : "/market"] : [kind === "vendor" ? "/vendor" : "/market"]);
+  revalidatePath(kind === "vendor" ? `/admin/vendors/${targetId}` : `/admin/markets/${targetId}`);
+  revalidatePath(kind === "vendor" ? `/vendor/${targetId}` : `/market/${targetId}`);
+  revalidatePath("/admin/applications");
+  revalidatePath("/account");
+  if (!mailed.sent) {
+    return {
+      error:
+        kind === "vendor"
+          ? "They can edit this stall. The email did not send."
+          : "They can edit this market. The email did not send.",
+    };
+  }
+  return {
+    error: null,
+    message:
+      kind === "vendor"
+        ? "They can edit this stall. We emailed the portal link."
+        : "They can edit this market. We emailed the portal link.",
+  };
 }

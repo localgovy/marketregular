@@ -55,7 +55,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       }),
     ),
-    loc("/contact", { changeFrequency: "yearly", priority: 0.3 }),
     loc("/privacy", { changeFrequency: "yearly", priority: 0.3 }),
     loc("/terms", { changeFrequency: "yearly", priority: 0.3 }),
     ...markets.map((market) =>

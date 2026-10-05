@@ -1,4 +1,4 @@
-/** First sign-in after a vendor claim must land on the new-password page. */
+/** First sign-in after an issued password must land on the new-password page. */
 export function mustSetPassword(appMetadata: unknown) {
   return (
     typeof appMetadata === "object" &&

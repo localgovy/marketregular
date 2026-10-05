@@ -1,0 +1,76 @@
+import "server-only";
+
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
+import { sanitizeMailHeader } from "@/lib/mail-header";
+import { Resend } from "resend";
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+export function marketPortalLetter(password?: string) {
+  const url = password
+    ? `${SITE_URL}/login?next=${encodeURIComponent("/account/password")}`
+    : `${SITE_URL}/market`;
+  const text = password
+    ? `Your market is assigned. Sign in with this one-time password, then choose your own.\n\nPassword: ${password}\n\n${url}`
+    : `Your market is assigned. Sign in to update the hours, contact details, and the stalls.\n\n${url}`;
+  const html = password
+    ? `<!doctype html>
+<html><body style="margin:0;background:#F1EDE3;color:#141414;font-family:ui-sans-serif,system-ui,sans-serif">
+<div style="max-width:32rem;margin:0 auto;padding:24px">
+<p style="margin:0 0 8px;font-size:14px;color:#5e5a53">${SITE_NAME}</p>
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:600">Your market is ready to edit</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Your market is assigned. Sign in with this one-time password, then choose your own.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Password: ${escapeHtml(password)}</p>
+<p style="margin:0"><a href="${escapeHtml(url)}" style="color:#141414">${escapeHtml(url)}</a></p>
+</div>
+</body></html>`
+    : `<!doctype html>
+<html><body style="margin:0;background:#F1EDE3;color:#141414;font-family:ui-sans-serif,system-ui,sans-serif">
+<div style="max-width:32rem;margin:0 auto;padding:24px">
+<p style="margin:0 0 8px;font-size:14px;color:#5e5a53">${SITE_NAME}</p>
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:600">Your market is ready to edit</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Your market is assigned. Sign in to update the hours, contact details, and the stalls.</p>
+<p style="margin:0"><a href="${url}" style="color:#141414">${url}</a></p>
+</div>
+</body></html>`;
+  return {
+    url,
+    text,
+    html,
+    subject: sanitizeMailHeader(`Your market on ${SITE_NAME}`),
+  };
+}
+
+export async function sendMarketPortalMail(
+  email: string,
+  password?: string,
+): Promise<{ sent: boolean }> {
+  const key = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.RESEND_FROM?.trim();
+  if (!key || !from) return { sent: false };
+  const letter = marketPortalLetter(password);
+  try {
+    const resend = new Resend(key);
+    const { error } = await resend.emails.send({
+      from,
+      to: email,
+      subject: letter.subject,
+      text: letter.text,
+      html: letter.html,
+    });
+    if (error) {
+      console.error("market portal mail", error.name ?? "send");
+      return { sent: false };
+    }
+    return { sent: true };
+  } catch (error) {
+    console.error("market portal mail", error instanceof Error ? error.message : "send");
+    return { sent: false };
+  }
+}

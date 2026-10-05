@@ -101,6 +101,7 @@ export function dbPublicError(error: DbLike | null | undefined, fallback: string
     if (message.includes("Photo URL") || message.includes("Too many photos")) {
       return "Those photos could not be attached.";
     }
+    if (message.includes("another request")) return "Wait a bit before sending another request.";
     if (message.includes("Wait a bit")) return "Wait a bit before sending another claim.";
     if (message.includes("listing is missing")) return "That listing is missing.";
     if (message.includes("Evidence is too long")) return "Keep the notes a bit shorter.";
@@ -115,6 +116,12 @@ export function dbPublicError(error: DbLike | null | undefined, fallback: string
       return "That link could not be saved.";
     }
     const portalCopy: [string, string][] = [
+      ["Add the organization name", "Add the organization name."],
+      ["Keep the organization name shorter", "Keep the organization name shorter."],
+      ["That request is already decided", "That request is already decided."],
+      ["That request is missing", "That request is missing."],
+      ["Someone else already runs this stall", "Someone else already runs this stall."],
+      ["Someone else already runs this market", "Someone else already runs this market."],
       ["Add a name", "Add a name."],
       ["Keep the about shorter", "Keep the about shorter."],
       ["That phone number is not allowed", "That phone number is not allowed."],
@@ -135,6 +142,24 @@ export function dbPublicError(error: DbLike | null | undefined, fallback: string
       ["Stall list is full", "The stall list is full."],
       ["Keep the terms shorter", "Keep the terms shorter."],
       ["A sale needs a price and a handoff", "A sale needs a price of at least $0.50 and delivery, pickup, or preorder."],
+      ["Add an address", "Add an address."],
+      ["Add a city", "Add a city."],
+      ["That province is not allowed", "That province is not allowed."],
+      ["That postal code is not allowed", "That postal code is not allowed."],
+      ["Keep the address shorter", "Keep the address shorter."],
+      ["Keep the city shorter", "Keep the city shorter."],
+      ["Keep the notes shorter", "Keep the notes shorter."],
+      ["Those hours are not allowed", "Those hours are not allowed."],
+      ["Open has to be before close", "Open has to be before close."],
+      ["That season is not allowed", "That season is not allowed."],
+      ["Hours list is full", "The hours list is full."],
+      ["Those hours are missing", "Those hours are missing."],
+      ["A stall is still set for that day", "Change the stalls on that day before removing these hours."],
+      ["That stall is already listed", "That stall is already listed. Add it from search."],
+      ["This market cannot add more stalls", "This market cannot add more stalls."],
+      ["That stall is not yours to edit", "That stall is not yours to edit."],
+      ["That stall is missing", "That stall is missing."],
+      ["That name needs letters or numbers", "That name needs letters or numbers."],
     ];
     for (const [needle, copy] of portalCopy) {
       if (message.includes(needle)) return copy;

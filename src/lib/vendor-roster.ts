@@ -1,6 +1,6 @@
 /**
  * Leslieville asked us not to publish a stall list on their hall pages.
- * `market_vendors` rows stay so the desk can put the roster back, and every
+ * `market_vendors` rows stay so admin can put the roster back, and every
  * stall still has its own searchable vendor page.
  */
 export const HIDDEN_VENDOR_ROSTER_SLUGS = new Set([

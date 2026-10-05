@@ -53,7 +53,7 @@ export const STUDIO_LOGO = "/brand/localgovy-mark.png";
 export const STUDIO_WORDMARK = "/brand/localgovy-wordmark.png";
 export const STUDIO_WORDMARK_UI = "/brand/localgovy-wordmark-ui.png";
 
-/** Inbox for vendor and market claim requests. */
+/** Inbox for vendor and market account requests. */
 export const CLAIM_INBOX = "noah@localgovy.com";
 
 export const CONTACT_NAME = "Noah Khan";

@@ -7,7 +7,6 @@ export function revalidatePublishedDirectory(extra: string[] = []) {
   revalidatePath("/");
   revalidatePath("/markets", "layout");
   revalidatePath("/vendors", "layout");
-  revalidatePath("/contact");
   revalidatePath("/events");
   revalidatePath("/feed");
   revalidatePath("/sitemap.xml");

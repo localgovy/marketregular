@@ -20,9 +20,11 @@ function signupHref(next: string) {
 export function LoginForm({
   next = "/account",
   oauthError,
+  showCreate = true,
 }: {
   next?: string;
   oauthError?: string;
+  showCreate?: boolean;
 }) {
   const configured = isSupabaseConfigured();
   const router = useRouter();
@@ -130,16 +132,18 @@ export function LoginForm({
         ) : null}
       </form>
 
-      <p className="text-sm text-muted-foreground">
-        No account?{" "}
-        <Link
-          href={signupHref(next)}
-          rel="nofollow"
-          className="font-medium text-foreground hover:underline"
-        >
-          Create one
-        </Link>
-      </p>
+      {showCreate ? (
+        <p className="text-sm text-muted-foreground">
+          No account?{" "}
+          <Link
+            href={signupHref(next)}
+            rel="nofollow"
+            className="font-medium text-foreground hover:underline"
+          >
+            Create one
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

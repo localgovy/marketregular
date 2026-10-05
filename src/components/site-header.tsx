@@ -9,7 +9,7 @@ import { NavLink } from "@/components/nav-link";
 import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { HeaderSearch } from "@/components/header-search";
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
-import { SITE_CLAIM_NAV, SITE_NAV } from "@/lib/nav";
+import { SITE_NAV } from "@/lib/nav";
 
 function HeaderFrame({ q }: { q: string }) {
   return (
@@ -57,13 +57,6 @@ function HeaderFrame({ q }: { q: string }) {
             initialQuery={q}
             className="min-w-0 flex-1 xl:max-w-lg xl:flex-[0_1_32rem]"
           />
-          <Link
-            href={SITE_CLAIM_NAV.href}
-            prefetch={false}
-            className="hidden shrink-0 text-sm font-medium whitespace-nowrap hover:underline min-[100rem]:inline"
-          >
-            {SITE_CLAIM_NAV.label}
-          </Link>
           <SavesHydrator />
           <HeaderAccount />
         </div>

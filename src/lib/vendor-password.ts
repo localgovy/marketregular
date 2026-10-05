@@ -42,7 +42,7 @@ export function decryptVendorPassword(payload: string, key: Buffer) {
 
 export type StoredSecret = { ciphertext: string; chosen: boolean };
 
-/** A failed Auth update must not leave Desk showing a password that does not sign in. */
+/** A failed Auth update must not leave admin showing a password that does not sign in. */
 export function secretAfterFailedAuth(previous: StoredSecret | null):
   | { action: "delete" }
   | { action: "restore"; row: StoredSecret } {

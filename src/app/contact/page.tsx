@@ -1,81 +1,44 @@
 import type { Metadata } from "next";
-import { ContactClaim } from "@/components/contact-claim";
+import Link from "next/link";
 import {
   CONTACT_EMAIL,
   CONTACT_NAME,
   SITE_NAME,
   STUDIO_URL,
 } from "@/lib/constants";
-import { listMarkets, listStalls, listVendors } from "@/lib/data/catalog";
-import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { pageMeta } from "@/lib/seo";
-import type { Market, StallRef, Vendor } from "@/types/database";
 
 export const metadata: Metadata = pageMeta({
   title: "Contact",
   path: "/contact",
-  description: `Write ${SITE_NAME}, or claim a Toronto market or vendor you run.`,
+  description: `Write ${SITE_NAME}, or open a market or vendor account.`,
 });
 
-export const revalidate = 3600;
-
-/** Shops sit at up to a dozen halls; the picker only needs enough to tell them apart. */
-const WHERE_CAP = 3;
-
-function contactListings(markets: Market[], vendors: Vendor[], stalls: StallRef[]) {
-  const marketName = new Map(markets.map((market) => [market.id, market.name]));
-  const where = new Map<string, string[]>();
-  for (const stall of stalls) {
-    const name = marketName.get(stall.market_id);
-    if (!name) continue;
-    const list = where.get(stall.id);
-    if (list) {
-      if (!list.includes(name)) list.push(name);
-    } else {
-      where.set(stall.id, [name]);
-    }
-  }
-  return {
-    markets: markets.map((market) => ({ id: market.id, name: market.name })),
-    vendors: vendors.flatMap((vendor) => {
-      const at = where.get(vendor.id);
-      if (!at?.length) {
-        if (!UNAFFILIATED_VENDOR_SLUGS.has(vendor.slug)) return [];
-        return [{ id: vendor.id, name: vendor.name }];
-      }
-      const extra = at.length - WHERE_CAP;
-      const label =
-        extra > 0
-          ? `${at.slice(0, WHERE_CAP).join(", ")} and ${extra} more`
-          : at.join(", ");
-      return [{ id: vendor.id, name: vendor.name, where: label }];
-    }),
-  };
-}
-
-export default async function ContactPage() {
-  const [markets, vendors, stalls] = await Promise.all([
-    listMarkets(),
-    listVendors(),
-    listStalls(),
-  ]);
-  const listings = contactListings(markets, vendors, stalls);
-
+export default function ContactPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <h1>Contact</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        Claim a market or vendor, or write to us.
+        Open a market or vendor account, or write to us.
       </p>
 
       <section>
-        <h2>Claim a listing</h2>
-        <p className="mt-2 mb-6 text-base text-muted-foreground">
-          If you run or work for a market or vendor, send a claim so the hours, the stall list,
-          and the contact details stay accurate. A vendor claim needs the account you will use
-          to edit the stall.
+        <h2>Run a listing</h2>
+        <p className="mt-2 mb-4 text-base text-muted-foreground">
+          Create the account in the portal. After we assign the listing, you can edit it there.
         </p>
-        <ContactClaim markets={listings.markets} vendors={listings.vendors} />
+        <ul className="grid gap-2 text-base">
+          <li>
+            <Link href="/market" className="font-medium hover:underline">
+              Market account
+            </Link>
+          </li>
+          <li>
+            <Link href="/vendor" className="font-medium hover:underline">
+              Vendor account
+            </Link>
+          </li>
+        </ul>
       </section>
 
       <section className="mt-10">
@@ -83,7 +46,10 @@ export default async function ContactPage() {
         <p className="mt-2 text-base font-medium">{CONTACT_NAME}</p>
         <p className="mt-1 text-base text-muted-foreground">
           Founder, CEO of{" "}
-          <a href={STUDIO_URL} rel="noreferrer" className="text-foreground hover:underline">LocalGovy</a>, the team behind {SITE_NAME}
+          <a href={STUDIO_URL} rel="noreferrer" className="text-foreground hover:underline">
+            LocalGovy
+          </a>
+          , the team behind {SITE_NAME}
         </p>
         <p className="mt-3 text-base">
           <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium hover:underline">

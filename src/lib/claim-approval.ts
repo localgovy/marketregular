@@ -5,7 +5,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ClaimMailFailure = {
   password: "0" | "1";
-  vendorId: string;
+  vendorId: string | null;
+  marketId: string | null;
 };
 
 export type ClaimDecisionResult = {
@@ -13,11 +14,12 @@ export type ClaimDecisionResult = {
   committed: boolean;
   paths: string[];
   vendorId: string | null;
+  marketId: string | null;
   mailFailed: ClaimMailFailure | null;
 };
 
 function stopped(error: string): ClaimDecisionResult {
-  return { error, committed: false, paths: [], vendorId: null, mailFailed: null };
+  return { error, committed: false, paths: [], vendorId: null, marketId: null, mailFailed: null };
 }
 
 function clipNote(note: string | undefined) {
@@ -37,14 +39,19 @@ async function listingPath(
 }
 
 /**
- * Approves or rejects a claim. A stall password is written only after
+ * Approves or rejects a claim. An account password is written only after
  * `decide_claim` succeeds, so a failed approval cannot replace the
- * password they already use to sign in.
+ * password they already use to sign in. A market approval uses that same
+ * account password and does not change the stall role.
  */
 export async function applyClaimDecision(
   admin: SupabaseClient,
   input: { id: string; status: string; note?: string },
-  sendMail: (email: string, password?: string) => Promise<{ sent: boolean }>,
+  sendMail: (
+    email: string,
+    password: string | undefined,
+    kind: "market" | "vendor",
+  ) => Promise<{ sent: boolean }>,
 ): Promise<ClaimDecisionResult> {
   if (input.status !== "approved" && input.status !== "rejected") {
     return stopped("Could not update that claim.");
@@ -56,18 +63,20 @@ export async function applyClaimDecision(
     .maybeSingle();
   if (lookupError) return stopped(dbPublicError(lookupError, "Could not update that claim."));
   if (!claim?.target_type || !claim.target_id) return stopped("Claim not found");
+  const kind = claim.target_type === "market" ? "market" : claim.target_type === "vendor" ? "vendor" : null;
 
-  const vendorApproval = input.status === "approved" && claim.target_type === "vendor" && Boolean(claim.user_id);
-  if (vendorApproval) {
+  const listingApproval = input.status === "approved" && kind !== null && Boolean(claim.user_id);
+  if (listingApproval && kind) {
     if (!vendorPasswordKey()) return stopped("Stall passwords are not configured yet.");
-    const { data: stall, error: stallError } = await admin
-      .from("vendors")
+    const table = kind === "market" ? "markets" : "vendors";
+    const { data: listing, error: listingError } = await admin
+      .from(table)
       .select("claimed_by")
       .eq("id", claim.target_id)
       .maybeSingle();
-    if (stallError) return stopped(dbPublicError(stallError, "Could not update that claim."));
-    if (!stall) return stopped("That listing is missing.");
-    if (stall.claimed_by && stall.claimed_by !== claim.user_id) {
+    if (listingError) return stopped(dbPublicError(listingError, "Could not update that claim."));
+    if (!listing) return stopped("That listing is missing.");
+    if (listing.claimed_by && listing.claimed_by !== claim.user_id) {
       return stopped("That listing is already claimed.");
     }
   }
@@ -79,29 +88,33 @@ export async function applyClaimDecision(
   });
   if (error) return stopped(dbPublicError(error, "Could not update that claim."));
 
-  const table = claim.target_type === "market" ? "markets" : "vendors";
-  const path = await listingPath(admin, table, claim.target_id);
+  const table = kind === "market" ? "markets" : "vendors";
+  const path = kind ? await listingPath(admin, table, claim.target_id) : null;
   const paths = path ? [path] : [];
-  if (!vendorApproval || !claim.user_id) {
-    return { error: null, committed: true, paths, vendorId: null, mailFailed: null };
+  const vendorId = kind === "vendor" ? claim.target_id : null;
+  const marketId = kind === "market" ? claim.target_id : null;
+  if (!listingApproval || !claim.user_id || !kind) {
+    return { error: null, committed: true, paths, vendorId: null, marketId: null, mailFailed: null };
   }
 
   const prepared = await prepareVendorClaimPassword(admin, claim.user_id);
   if (prepared.error !== null) {
-    return { error: prepared.error, committed: true, paths, vendorId: claim.target_id, mailFailed: null };
+    return { error: prepared.error, committed: true, paths, vendorId, marketId, mailFailed: null };
   }
-  const mailed = await sendMail(prepared.email, prepared.password ?? undefined);
+  const mailed = await sendMail(prepared.email, prepared.password ?? undefined, kind);
   if (!mailed.sent) {
     return {
       error: null,
       committed: true,
       paths,
-      vendorId: claim.target_id,
+      vendorId,
+      marketId,
       mailFailed: {
         password: prepared.password ? "1" : "0",
-        vendorId: claim.target_id,
+        vendorId,
+        marketId,
       },
     };
   }
-  return { error: null, committed: true, paths, vendorId: claim.target_id, mailFailed: null };
+  return { error: null, committed: true, paths, vendorId, marketId, mailFailed: null };
 }

@@ -11,7 +11,7 @@ Web first at [www.marketregular.com](https://www.marketregular.com). Source: [gi
 - Supabase (Postgres, Auth, Realtime, Storage, PostGIS)
 - MapLibre via OpenFreeMap
 
-The public directory works from the bundled Toronto seed data until a Supabase project is connected. Auth, live posts, reviews, photos, admin, and vendor claims require Supabase.
+The public directory works from the bundled Toronto seed data until a Supabase project is connected. Auth, live posts, reviews, photos, admin, and vendor or market accounts require Supabase.
 
 Launch covers Toronto and nearby halls currently published in the directory.
 The homepage census counts every published market, stall, and menu item — not a
@@ -69,7 +69,7 @@ Do not add `https://<project-ref>.supabase.co/auth/v1/callback`. Google would sh
 
 Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars.
 
-Grant the desk in SQL (once), not via an env allow-list:
+Grant admin in SQL (once), not via an env allow-list:
 
 ```sql
 update public.profiles
@@ -102,7 +102,7 @@ node --experimental-strip-types scripts/generate-seed-sql.ts
 
 ## Admin
 
-`/admin` edits markets and vendors, moderates the feed, and approves listing claims. Shoppers sign in at `/login`. The desk only shows if `profiles.role` is `admin`.
+`/admin` edits markets and vendors, moderates the feed, and assigns stalls and markets to portal accounts. Shoppers sign in at `/login`. Vendors and markets create accounts at `/vendor` and `/market`. Admin only shows if `profiles.role` is `admin`.
 
 ## What is seeded
 

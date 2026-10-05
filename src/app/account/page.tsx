@@ -121,7 +121,7 @@ export default async function AccountPage() {
         date,
         kicker,
       }))}
-      claims={desk.claims}
+      applications={desk.applications}
       saves={saves}
       reviewCount={desk.reviewCount}
       visitPlanEmailedAt={desk.visitPlanEmailedAt}

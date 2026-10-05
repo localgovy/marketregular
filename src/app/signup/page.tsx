@@ -2,7 +2,13 @@ import { BackButton } from "@/components/back-button";
 import { SignupForm } from "@/components/signup-form";
 import { safePath } from "@/lib/auth-redirect";
 import { getCurrentProfile } from "@/lib/data/catalog";
-import { isStallCheckoutPath, isVendorPortalPath, onboardingHref, skipsShopperOnboarding } from "@/lib/onboarding";
+import {
+  isMarketPortalPath,
+  isStallCheckoutPath,
+  isVendorPortalPath,
+  onboardingHref,
+  skipsShopperOnboarding,
+} from "@/lib/onboarding";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
@@ -29,6 +35,7 @@ export default async function SignupPage({
   if (profile) {
     const skip =
       isVendorPortalPath(next) ||
+      isMarketPortalPath(next) ||
       isStallCheckoutPath(next) ||
       (session.supabase ? await skipsShopperOnboarding(session.supabase, profile) : false);
     redirect(skip ? next : onboardingHref(next));

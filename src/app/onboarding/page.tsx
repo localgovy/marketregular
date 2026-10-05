@@ -32,7 +32,15 @@ export default async function OnboardingPage({
   if (!profile) redirect("/login?next=/onboarding");
   if (!needsOnboarding(profile)) redirect(next === "/onboarding" ? "/account" : next);
   if (session.supabase && (await skipsShopperOnboarding(session.supabase, profile))) {
-    redirect(next === "/account" || next === "/onboarding" ? "/vendor" : next);
+    if (next !== "/account" && next !== "/onboarding") redirect(next);
+    const [{ data: ownsMarket }, { data: ownsVendor }, { data: waitingOnStall }] = await Promise.all([
+      session.supabase.rpc("has_owned_market"),
+      session.supabase.rpc("has_owned_vendor"),
+      session.supabase.rpc("awaiting_vendor_portal"),
+    ]);
+    const marketHome =
+      (ownsMarket === true && ownsVendor !== true) || (waitingOnStall === false && ownsVendor !== true);
+    redirect(marketHome ? "/market" : "/vendor");
   }
 
   const desk = await loadAccountDesk(profile.id);

@@ -31,6 +31,8 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      { source: "/contact", destination: "/", permanent: true },
+      { source: "/admin/claims", destination: "/admin/applications", permanent: false },
       {
         source: "/vendors/the-agrarian-kitchen-the-strong-earth-company",
         destination: "/vendors/agrarian-kitchen",

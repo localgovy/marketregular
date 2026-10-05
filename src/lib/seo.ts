@@ -87,7 +87,7 @@ export function websiteJsonLd() {
           "@type": "ContactPoint",
           email: CLAIM_INBOX,
           contactType: "customer support",
-          url: `${SITE_URL}/contact`,
+          url: `${SITE_URL}/about`,
         },
       },
       {

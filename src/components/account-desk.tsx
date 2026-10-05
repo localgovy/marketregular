@@ -33,7 +33,7 @@ import { tagLabel } from "@/lib/find-paths";
 import type { GeoMarket } from "@/lib/geo";
 import { slimUpcomingGroups, type UpcomingGroup } from "@/lib/upcoming";
 import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
-import type { ClaimRequest, Market, Profile, StallRef, Vendor } from "@/types/database";
+import type { Market, PortalApplication, Profile, StallRef, Vendor } from "@/types/database";
 import type { AccountPost } from "@/lib/data/account";
 import type { Saves } from "@/lib/saves";
 import { fulfillmentLabel, orderStatusLabel } from "@/lib/selling";
@@ -53,7 +53,7 @@ function marketFromPost(markets: AccountPost["markets"]) {
   return null;
 }
 
-function claimStatus(status: ClaimRequest["status"]) {
+function applicationStatus(status: PortalApplication["status"]) {
   if (status === "approved") return "Approved";
   if (status === "rejected") return "Turned down";
   return "Waiting";
@@ -81,7 +81,7 @@ export function AccountDesk({
   initialMarketId,
   posts,
   notes,
-  claims,
+  applications,
   saves,
   reviewCount,
   visitPlanEmailedAt,
@@ -102,7 +102,7 @@ export function AccountDesk({
   initialMarketId?: string;
   posts: AccountPost[];
   notes: SavedNote[];
-  claims: ClaimRequest[];
+  applications: PortalApplication[];
   saves: Saves;
   reviewCount: number;
   visitPlanEmailedAt?: string | null;
@@ -418,7 +418,7 @@ export function AccountDesk({
                   href="/admin"
                   className="text-sm font-medium text-primary-foreground underline underline-offset-4"
                 >
-                  Desk
+                  Admin
                 </Link>
               ) : null}
             </div>
@@ -451,35 +451,44 @@ export function AccountDesk({
             </HomePanel>
           ) : null}
 
-          {claims.length ? (
+          {applications.length ? (
             <HomePanel
-              id="claims"
+              id="portals"
               tone="back"
               icon={SignMark}
               kicker="Listings"
-              title="Claims"
-              how="Requests to run a market or vendor page."
+              title="Portals"
+              how="Vendor and market accounts, and the listing we assign."
             >
               <ul className="ring-1 ring-border">
-                {claims.map((claim) => {
-                  const listing = listingName.get(`${claim.target_type}:${claim.target_id}`);
+                {applications.map((application) => {
+                  const targetId = application.assigned_target_id || application.requested_target_id;
+                  const listing = targetId ? listingName.get(`${application.kind}:${targetId}`) : null;
+                  const name =
+                    listing?.name ||
+                    application.organization_name ||
+                    (application.kind === "market" ? "Market account" : "Vendor account");
                   return (
                     <li
-                      key={claim.id}
+                      key={application.id}
                       className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-border px-3 py-2.5 last:border-b-0"
                     >
                       {listing?.href ? (
                         <Link href={listing.href} className="min-w-0 font-medium hover:underline">
-                          {listing.name}
+                          {name}
                         </Link>
                       ) : (
-                        <span className="min-w-0 font-medium">{listing?.name ?? "Listing"}</span>
+                        <span className="min-w-0 font-medium">{name}</span>
                       )}
                       <span className="flex shrink-0 flex-col items-end gap-1 text-sm text-muted-foreground">
-                        <span>{claimStatus(claim.status)}</span>
-                        {claim.status === "approved" && claim.target_type === "vendor" ? (
+                        <span>{applicationStatus(application.status)}</span>
+                        {application.status === "approved" && application.assigned_target_id ? (
                           <Link
-                            href={`/vendor/${claim.target_id}`}
+                            href={
+                              application.kind === "market"
+                                ? `/market/${application.assigned_target_id}`
+                                : `/vendor/${application.assigned_target_id}`
+                            }
                             className="font-medium text-foreground hover:underline"
                           >
                             Edit listing
@@ -499,7 +508,7 @@ export function AccountDesk({
             icon={BangMark}
             kicker="Leave"
             title="Delete account"
-            how="Removes your sign-in, saved list, reviews, and claim requests. It cannot be undone."
+            how="Removes your sign-in, saved list, reviews, and portal requests. It cannot be undone."
           >
             <DeleteAccountForm />
           </HomePanel>

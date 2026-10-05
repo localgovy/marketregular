@@ -54,7 +54,7 @@ export default async function EditVendorPage({
       <section>
         <h2>Owner</h2>
         <p className="mt-2 mb-4 text-sm text-muted-foreground">
-          They sign in at /vendor with this account. The stall has to be unclaimed, or already theirs.
+          They sign in at /vendor with this account. The stall has no account yet, or this one already runs it.
         </p>
         <VendorOwnerForm vendorId={id} ownerEmail={ownerEmail} />
         {secret.error ? (

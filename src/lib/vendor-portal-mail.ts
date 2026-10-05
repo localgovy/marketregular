@@ -17,15 +17,15 @@ export function vendorPortalLetter(password?: string) {
     ? `${SITE_URL}/login?next=${encodeURIComponent("/account/password")}`
     : `${SITE_URL}/vendor`;
   const text = password
-    ? `We approved your claim. Sign in with this one-time password, then choose your own.\n\nPassword: ${password}\n\n${url}`
-    : `We approved your claim. Sign in to update the name, menu, and the markets you sell at.\n\n${url}`;
+    ? `Your stall is assigned. Sign in with this one-time password, then choose your own.\n\nPassword: ${password}\n\n${url}`
+    : `Your stall is assigned. Sign in to update the name, menu, and the markets you sell at.\n\n${url}`;
   const html = password
     ? `<!doctype html>
 <html><body style="margin:0;background:#F1EDE3;color:#141414;font-family:ui-sans-serif,system-ui,sans-serif">
 <div style="max-width:32rem;margin:0 auto;padding:24px">
 <p style="margin:0 0 8px;font-size:14px;color:#5e5a53">${SITE_NAME}</p>
 <h1 style="margin:0 0 16px;font-size:22px;font-weight:600">Your stall is ready to edit</h1>
-<p style="margin:0 0 16px;font-size:16px;line-height:1.5">We approved your claim. Sign in with this one-time password, then choose your own.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Your stall is assigned. Sign in with this one-time password, then choose your own.</p>
 <p style="margin:0 0 16px;font-size:16px;line-height:1.5">Password: ${escapeHtml(password)}</p>
 <p style="margin:0"><a href="${escapeHtml(url)}" style="color:#141414">${escapeHtml(url)}</a></p>
 </div>
@@ -35,7 +35,7 @@ export function vendorPortalLetter(password?: string) {
 <div style="max-width:32rem;margin:0 auto;padding:24px">
 <p style="margin:0 0 8px;font-size:14px;color:#5e5a53">${SITE_NAME}</p>
 <h1 style="margin:0 0 16px;font-size:22px;font-weight:600">Your stall is ready to edit</h1>
-<p style="margin:0 0 16px;font-size:16px;line-height:1.5">We approved your claim. Sign in to update the name, menu, and the markets you sell at.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Your stall is assigned. Sign in to update the name, menu, and the markets you sell at.</p>
 <p style="margin:0"><a href="${url}" style="color:#141414">${url}</a></p>
 </div>
 </body></html>`;
