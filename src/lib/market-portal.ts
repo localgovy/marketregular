@@ -1,3 +1,4 @@
+import { readOptOuts } from "@/lib/maintenance-sections";
 import { listingLogoObjectName } from "@/lib/vendor-portal";
 
 export const MARKET_ROSTER_CAP = 200;
@@ -54,6 +55,7 @@ export type MarketPortalListing = {
   email: string | null;
   logo_url: string | null;
   tags: string[];
+  maintenance_opt_outs: string[];
   status: "draft" | "published";
   created_count: number;
   schedules: MarketPortalSchedule[];
@@ -188,6 +190,7 @@ function parseListing(value: unknown): MarketPortalListing | null {
     email: textOrNull(row.email),
     logo_url: textOrNull(row.logo_url),
     tags: textList(row.tags),
+    maintenance_opt_outs: readOptOuts("market", row.maintenance_opt_outs),
     status: row.status === "draft" ? "draft" : "published",
     created_count: typeof created === "number" && Number.isInteger(created) && created > 0 ? created : 0,
     schedules: Array.isArray(row.schedules)

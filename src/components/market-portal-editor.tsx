@@ -17,6 +17,7 @@ import {
   uploadOwnedMarketLogo,
 } from "@/app/actions/market-portal";
 import { ListingMark } from "@/components/listing-mark";
+import { MaintenanceOptOutForm } from "@/components/maintenance-opt-outs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -813,6 +814,12 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
 
   return (
     <div className="grid gap-10">
+      <MaintenanceOptOutForm
+        key={listing.maintenance_opt_outs.join("\n")}
+        kind="market"
+        listingId={listing.id}
+        selected={listing.maintenance_opt_outs}
+      />
       <section>
         <h2>Profile</h2>
         <div className="mt-4">

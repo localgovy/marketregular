@@ -1,4 +1,6 @@
+import { MaintenanceOptOutFields } from "@/components/maintenance-opt-out-fields";
 import { AMENITY_TAGS, PRODUCT_TAGS, PROVINCES, RECORD_TAGS } from "@/lib/constants";
+import { readOptOuts } from "@/lib/maintenance-sections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -149,6 +151,13 @@ export function MarketForm({ market }: { market?: Market }) {
         <input type="checkbox" name="featured" defaultChecked={market?.featured} />
         Featured on the homepage
       </label>
+      {market ? (
+        <MaintenanceOptOutFields
+          kind="market"
+          noun="market"
+          selected={readOptOuts("market", market.maintenance_opt_outs)}
+        />
+      ) : null}
       <Button type="submit" className="w-fit">
         Save market
       </Button>

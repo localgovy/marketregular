@@ -1,4 +1,6 @@
+import { MaintenanceOptOutFields } from "@/components/maintenance-opt-out-fields";
 import { PRODUCT_TAGS } from "@/lib/constants";
+import { readOptOuts } from "@/lib/maintenance-sections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -105,6 +107,13 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
           ].join(", ")}
         />
       </div>
+      {vendor ? (
+        <MaintenanceOptOutFields
+          kind="vendor"
+          noun="stall"
+          selected={readOptOuts("vendor", vendor.maintenance_opt_outs)}
+        />
+      ) : null}
       <Button type="submit" className="w-fit">
         Save vendor
       </Button>

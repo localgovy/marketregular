@@ -33,6 +33,8 @@ export type Market = {
   email?: string | null;
   logo_url: string | null;
   tags: string[];
+  /** Sections this market keeps itself. Directory upkeep leaves them alone. */
+  maintenance_opt_outs?: string[];
   status: ListingStatus;
   featured: boolean;
   review_count: number;
@@ -66,6 +68,8 @@ export type Vendor = {
   email?: string | null;
   logo_url: string | null;
   tags: string[];
+  /** Sections this stall keeps itself. Directory upkeep leaves them alone. */
+  maintenance_opt_outs?: string[];
   /**
    * Tags inferred from the name so name-only stalls stay reachable through the filters.
    * Never rendered — a guess is not something the shop told us.

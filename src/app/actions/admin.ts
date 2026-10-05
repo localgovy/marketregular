@@ -2,6 +2,17 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { slugify, socialProfileHref } from "@/lib/format";
+import {
+  labelsFor,
+  maintenanceBlockMessage,
+  optOutsFromForm,
+  readOptOuts,
+  touchedMarketSections,
+  touchedVendorSections,
+  type MaintenanceKind,
+  type MarketMaintenanceFields,
+  type VendorMaintenanceFields,
+} from "@/lib/maintenance-sections";
 import { dbPublicError } from "@/lib/public-error";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { applyClaimDecision } from "@/lib/claim-approval";
@@ -61,6 +72,115 @@ async function listingPath(
   return table === "markets" ? `/markets/${slug}` : `/vendors/${slug}`;
 }
 
+function blank(value: unknown) {
+  return typeof value === "string" && value !== "" ? value : null;
+}
+
+function tagList(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function coord(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function maintenanceOverride(formData: FormData | undefined) {
+  return formData?.get("maintenance_override") === "on";
+}
+
+function optOutsFromAdminForm(kind: MaintenanceKind, formData: FormData) {
+  if (formData.get("maintenance_opt_outs_form") !== "1") return undefined;
+  const parsed = optOutsFromForm(
+    kind,
+    formData.getAll("maintenance_opt_outs").map((value) => String(value)),
+  );
+  if (parsed === "bad") fail("That section is not on this page.");
+  return parsed;
+}
+
+function vendorFields(row: {
+  about?: unknown;
+  logo_url?: unknown;
+  phone?: unknown;
+  email?: unknown;
+  website?: unknown;
+  instagram?: unknown;
+  tiktok?: unknown;
+  facebook?: unknown;
+  tags?: unknown;
+}): VendorMaintenanceFields {
+  return {
+    about: blank(row.about),
+    logo_url: blank(row.logo_url),
+    phone: blank(row.phone),
+    email: blank(row.email),
+    website: blank(row.website),
+    instagram: blank(row.instagram),
+    tiktok: blank(row.tiktok),
+    facebook: blank(row.facebook),
+    tags: tagList(row.tags),
+  };
+}
+
+function marketFields(row: {
+  about?: unknown;
+  logo_url?: unknown;
+  phone?: unknown;
+  email?: unknown;
+  website?: unknown;
+  instagram?: unknown;
+  tiktok?: unknown;
+  facebook?: unknown;
+  tags?: unknown;
+  address?: unknown;
+  city?: unknown;
+  province?: unknown;
+  postal_code?: unknown;
+  lat?: unknown;
+  lng?: unknown;
+}): MarketMaintenanceFields {
+  return {
+    ...vendorFields(row),
+    address: blank(row.address),
+    city: blank(row.city),
+    province: blank(row.province),
+    postal_code: blank(row.postal_code),
+    lat: coord(row.lat),
+    lng: coord(row.lng),
+  };
+}
+
+async function optOutsFor(
+  supabase: SupabaseClient,
+  table: "markets" | "vendors",
+  id: string,
+) {
+  const kind: MaintenanceKind = table === "markets" ? "market" : "vendor";
+  const { data, error } = await supabase
+    .from(table)
+    .select("maintenance_opt_outs")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) failDb(error, "Could not open that listing.");
+  if (!data) fail(kind === "vendor" ? "That stall is missing." : "That market is missing.");
+  return readOptOuts(kind, data.maintenance_opt_outs);
+}
+
+function refuseSections(
+  groups: { labels: readonly string[]; noun: "stall" | "market" }[],
+  formData: FormData | undefined,
+) {
+  if (maintenanceOverride(formData)) return;
+  const message = maintenanceBlockMessage(groups);
+  if (message) fail(message);
+}
+
 function parseReviewStats(formData: FormData) {
   const countRaw = String(formData.get("review_count") ?? "").trim();
   const avgRaw = String(formData.get("rating_avg") ?? "").trim();
@@ -109,8 +229,26 @@ export async function saveMarket(formData: FormData) {
 
   const nextPath = `/markets/${payload.slug}`;
   if (id) {
-    const previous = await listingPath(supabase, "markets", id);
-    const { error } = await supabase.from("markets").update(payload).eq("id", id);
+    const { data: current, error: readError } = await supabase
+      .from("markets")
+      .select(
+        "slug, about, logo_url, phone, email, website, instagram, tiktok, facebook, tags, address, city, province, postal_code, lat, lng, maintenance_opt_outs",
+      )
+      .eq("id", id)
+      .maybeSingle();
+    if (readError) failDb(readError, "Could not save that market.");
+    if (!current) fail("That market is missing.");
+    const blocked = labelsFor(
+      "market",
+      touchedMarketSections(marketFields(current), marketFields(payload)).filter((key) =>
+        readOptOuts("market", current.maintenance_opt_outs).includes(key),
+      ),
+    );
+    refuseSections([{ labels: blocked, noun: "market" }], formData);
+    const nextOptOuts = optOutsFromAdminForm("market", formData);
+    const update = nextOptOuts === undefined ? payload : { ...payload, maintenance_opt_outs: nextOptOuts };
+    const previous = current.slug ? `/markets/${current.slug}` : null;
+    const { error } = await supabase.from("markets").update(update).eq("id", id);
     if (error) failDb(error, "Could not save that market.");
     revalidatePublishedDirectory(previous && previous !== nextPath ? [nextPath, previous] : [nextPath]);
   } else {
@@ -120,6 +258,7 @@ export async function saveMarket(formData: FormData) {
   }
   revalidatePath("/admin");
   revalidatePath("/admin/markets");
+  revalidatePath("/admin/updates");
   redirect("/admin/markets");
 }
 
@@ -161,8 +300,26 @@ export async function saveVendor(formData: FormData) {
   };
   const nextPath = `/vendors/${payload.slug}`;
   if (id) {
-    const previous = await listingPath(supabase, "vendors", id);
-    const { error } = await supabase.from("vendors").update(payload).eq("id", id);
+    const { data: current, error: readError } = await supabase
+      .from("vendors")
+      .select(
+        "slug, about, logo_url, phone, email, website, instagram, tiktok, facebook, tags, maintenance_opt_outs",
+      )
+      .eq("id", id)
+      .maybeSingle();
+    if (readError) failDb(readError, "Could not save that vendor.");
+    if (!current) fail("That stall is missing.");
+    const blocked = labelsFor(
+      "vendor",
+      touchedVendorSections(vendorFields(current), vendorFields(payload)).filter((key) =>
+        readOptOuts("vendor", current.maintenance_opt_outs).includes(key),
+      ),
+    );
+    refuseSections([{ labels: blocked, noun: "stall" }], formData);
+    const nextOptOuts = optOutsFromAdminForm("vendor", formData);
+    const update = nextOptOuts === undefined ? payload : { ...payload, maintenance_opt_outs: nextOptOuts };
+    const previous = current.slug ? `/vendors/${current.slug}` : null;
+    const { error } = await supabase.from("vendors").update(update).eq("id", id);
     if (error) failDb(error, "Could not save that vendor.");
     revalidatePublishedDirectory(previous && previous !== nextPath ? [nextPath, previous] : [nextPath]);
   } else {
@@ -171,6 +328,7 @@ export async function saveVendor(formData: FormData) {
     revalidatePublishedDirectory([nextPath]);
   }
   revalidatePath("/admin/vendors");
+  revalidatePath("/admin/updates");
   redirect("/admin/vendors");
 }
 
@@ -189,6 +347,10 @@ export async function saveSchedule(formData: FormData) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
   const market_id = String(formData.get("market_id"));
+  const opted = await optOutsFor(supabase, "markets", market_id);
+  if (opted.includes("hours")) {
+    refuseSections([{ labels: labelsFor("market", ["hours"]), noun: "market" }], formData);
+  }
   const { error } = await supabase.from("market_schedules").insert({
     market_id,
     weekday: Number(formData.get("weekday")),
@@ -204,9 +366,13 @@ export async function saveSchedule(formData: FormData) {
   revalidatePath(`/admin/markets/${market_id}`);
 }
 
-export async function deleteSchedule(id: string, marketId: string) {
+export async function deleteSchedule(id: string, marketId: string, formData?: FormData) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
+  const opted = await optOutsFor(supabase, "markets", marketId);
+  if (opted.includes("hours")) {
+    refuseSections([{ labels: labelsFor("market", ["hours"]), noun: "market" }], formData);
+  }
   const { error } = await supabase.from("market_schedules").delete().eq("id", id);
   if (error) failDb(error, "Could not delete that schedule.");
   const path = await listingPath(supabase, "markets", marketId);
@@ -218,9 +384,25 @@ export async function linkVendorToMarket(formData: FormData) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
   const market_id = String(formData.get("market_id"));
+  const vendor_id = String(formData.get("vendor_id"));
+  const [marketOpt, vendorOpt] = await Promise.all([
+    optOutsFor(supabase, "markets", market_id),
+    optOutsFor(supabase, "vendors", vendor_id),
+  ]);
+  refuseSections(
+    [
+      ...(vendorOpt.includes("halls")
+        ? [{ labels: labelsFor("vendor", ["halls"]), noun: "stall" as const }]
+        : []),
+      ...(marketOpt.includes("roster")
+        ? [{ labels: labelsFor("market", ["roster"]), noun: "market" as const }]
+        : []),
+    ],
+    formData,
+  );
   const { error } = await supabase.from("market_vendors").insert({
     market_id,
-    vendor_id: String(formData.get("vendor_id")),
+    vendor_id,
     stall: String(formData.get("stall") ?? "") || null,
     days: String(formData.get("days") ?? "")
       .split(",")
@@ -239,6 +421,10 @@ export async function saveMenuItem(formData: FormData) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
   const vendor_id = String(formData.get("vendor_id"));
+  const opted = await optOutsFor(supabase, "vendors", vendor_id);
+  if (opted.includes("menu")) {
+    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "stall" }], formData);
+  }
   const price = String(formData.get("price_cents") ?? "");
   const { error } = await supabase.from("vendor_menus").insert({
     vendor_id,

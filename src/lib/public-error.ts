@@ -160,6 +160,7 @@ export function dbPublicError(error: DbLike | null | undefined, fallback: string
       ["That stall is not yours to edit", "That stall is not yours to edit."],
       ["That stall is missing", "That stall is missing."],
       ["That name needs letters or numbers", "That name needs letters or numbers."],
+      ["That section is not allowed", "That section is not on this page."],
     ];
     for (const [needle, copy] of portalCopy) {
       if (message.includes(needle)) return copy;

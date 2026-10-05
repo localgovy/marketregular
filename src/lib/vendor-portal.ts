@@ -1,4 +1,5 @@
 import { externalHref, socialProfileHref } from "@/lib/format";
+import { readOptOuts } from "@/lib/maintenance-sections";
 import { formatHours } from "@/lib/schedule";
 
 const UUID =
@@ -72,6 +73,7 @@ export type PortalListing = {
   email: string | null;
   logo_url: string | null;
   tags: string[];
+  maintenance_opt_outs: string[];
   status: "draft" | "published";
   selling_approved: boolean;
   card_payments_active: boolean;
@@ -325,6 +327,7 @@ function parseListing(value: unknown): PortalListing | null {
     email: textOrNull(row.email),
     logo_url: textOrNull(row.logo_url),
     tags: textList(row.tags),
+    maintenance_opt_outs: readOptOuts("vendor", row.maintenance_opt_outs),
     status,
     selling_approved: flag(row.selling_approved),
     card_payments_active: flag(row.card_payments_active),

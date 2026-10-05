@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { VendorForm } from "@/components/admin/vendor-form";
+import { MaintenanceOverride } from "@/components/maintenance-opt-out-fields";
+import { readOptOuts } from "@/lib/maintenance-sections";
 import { VendorOwnerForm } from "@/components/admin/vendor-owner-form";
 import { VendorSellingForm } from "@/components/admin/vendor-selling-form";
 import { requireAdmin } from "@/lib/admin";
@@ -36,6 +38,7 @@ export default async function EditVendorPage({
       : Promise.resolve({ data: null, error: null }),
   ]);
   const ownerEmail = owner.data?.user?.email ?? null;
+  const menuLeftAlone = readOptOuts("vendor", vendor.maintenance_opt_outs).includes("menu");
   const passwordLine =
     secret.error
       ? null
@@ -77,6 +80,9 @@ export default async function EditVendorPage({
       </section>
       <section>
         <h2>Menu items</h2>
+        {menuLeftAlone ? (
+          <p className="mt-2 text-base text-muted-foreground">Menu stays with this stall.</p>
+        ) : null}
         <ul className="mt-3 divide-y divide-border">
           {((menus ?? []) as MenuItem[]).map((item) => (
             <li key={item.id} className="py-2 text-sm">
@@ -92,6 +98,7 @@ export default async function EditVendorPage({
           <Input name="description" placeholder="Description" aria-label="Description" className="sm:col-span-2" />
           <Input name="season" placeholder="Season" aria-label="Season" />
           <Input name="dietary" placeholder="Dietary tags, comma sep" aria-label="Dietary tags" />
+          <MaintenanceOverride show={menuLeftAlone} className="sm:col-span-2" />
           <Button type="submit" className="w-fit">
             Add item
           </Button>

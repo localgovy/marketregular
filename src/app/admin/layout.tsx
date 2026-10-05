@@ -33,6 +33,7 @@ export default async function AdminLayout({
     ["/admin", "Overview"],
     ["/admin/markets", "Markets"],
     ["/admin/vendors", "Vendors"],
+    ["/admin/updates", "Updates"],
     ["/admin/moderation", "Moderation"],
     ["/admin/applications", "Applications"],
     ["/admin/saves", "Saves"],

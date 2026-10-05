@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
 import { MarketForm } from "@/components/admin/market-form";
+import { MaintenanceOverride } from "@/components/maintenance-opt-out-fields";
+import { readOptOuts } from "@/lib/maintenance-sections";
 import { MarketOwnerForm } from "@/components/admin/market-owner-form";
 import { fetchAllRows, requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured, WEEKDAYS } from "@/lib/constants";
@@ -39,6 +41,9 @@ export default async function EditMarketPage({
       : Promise.resolve({ data: null, error: null }),
   ]);
   const ownerEmail = owner.data?.user?.email ?? null;
+  const marketOptOuts = readOptOuts("market", market.maintenance_opt_outs);
+  const hoursLeftAlone = marketOptOuts.includes("hours");
+  const stallsLeftAlone = marketOptOuts.includes("roster");
   const passwordLine =
     secret.error
       ? null
@@ -71,6 +76,9 @@ export default async function EditMarketPage({
       </section>
       <section>
         <h2>Hours</h2>
+        {hoursLeftAlone ? (
+          <p className="mt-2 text-base text-muted-foreground">Hours stay with this market.</p>
+        ) : null}
         <ul className="mt-3 divide-y divide-border">
           {((schedules ?? []) as MarketSchedule[]).map((row) => (
             <li key={row.id} className="flex items-center justify-between py-2 text-sm">
@@ -78,11 +86,13 @@ export default async function EditMarketPage({
                 {WEEKDAYS[row.weekday]} {formatHours(String(row.opens_at), String(row.closes_at))}
               </span>
               <form
-                action={async () => {
+                action={async (formData) => {
                   "use server";
-                  await deleteSchedule(row.id, id);
+                  await deleteSchedule(row.id, id, formData);
                 }}
+                className="flex items-center gap-3"
               >
+                <MaintenanceOverride show={hoursLeftAlone} />
                 <Button type="submit" variant="ghost" size="sm">
                   Remove
                 </Button>
@@ -103,6 +113,7 @@ export default async function EditMarketPage({
           <Input name="closes_at" type="time" required aria-label="Closes" />
           <Input name="season_start" placeholder="MM-DD" aria-label="Season start" />
           <Input name="season_end" placeholder="MM-DD" aria-label="Season end" />
+          <MaintenanceOverride show={hoursLeftAlone} className="sm:col-span-5" />
           <Button type="submit" className="sm:col-span-5 w-fit">
             Add hours
           </Button>
@@ -110,6 +121,9 @@ export default async function EditMarketPage({
       </section>
       <section>
         <h2>Attach a vendor</h2>
+        {stallsLeftAlone ? (
+          <p className="mt-2 text-base text-muted-foreground">Stalls stay with this market.</p>
+        ) : null}
         <form action={linkVendorToMarket} className="mt-3 grid gap-2 sm:grid-cols-3">
           <input type="hidden" name="market_id" value={id} />
           <select name="vendor_id" aria-label="Vendor" className="h-8 rounded-lg border border-input px-2 text-sm">
@@ -121,6 +135,7 @@ export default async function EditMarketPage({
           </select>
           <Input name="stall" placeholder="Stall" aria-label="Stall" />
           <Input name="days" placeholder="Days 0-6 comma sep" aria-label="Days" />
+          <MaintenanceOverride show className="sm:col-span-3" />
           <Button type="submit" className="w-fit">
             Link
           </Button>
