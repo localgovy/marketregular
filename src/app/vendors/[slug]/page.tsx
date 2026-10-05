@@ -12,7 +12,7 @@ import { ReviewCard } from "@/components/review-card";
 import { StallMenu } from "@/components/stall-menu";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
-import { getListingContact, getVendorBySlug } from "@/lib/data/catalog";
+import { getListingContact, getVendorBySlug, listVendors } from "@/lib/data/catalog";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
 import { VendorMarketList } from "@/components/vendor-market-list";
@@ -30,6 +30,14 @@ import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/s
 export const revalidate = 3600;
 // A dynamic segment stays uncached until this is set. The hour window is revalidate.
 export const dynamic = "force-static";
+// Unknown slugs 404 in the layout, the same way a missing post does. On-demand
+// rendering of a missing slug is what cached the error document that reloaded.
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+  const vendors = await listVendors();
+  return vendors.map((vendor) => ({ slug: vendor.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -41,7 +49,11 @@ export async function generateMetadata({
     getVendorBySlug(slug),
     getListingContact("vendor", slug),
   ]);
-  if (!vendor) return { title: "Vendor" };
+  if (!vendor) {
+    const retired = await retiredVendorTarget(slug);
+    if (retired) permanentRedirect(retired);
+    notFound();
+  }
   const now = new Date();
   const marketNames = vendor.markets.map((market) => market.name);
   return pageMeta({

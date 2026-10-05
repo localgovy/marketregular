@@ -21,6 +21,7 @@ import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
 export const revalidate = 900;
+export const dynamicParams = false;
 
 export function generateStaticParams() {
   return DAY_SLUGS.map((day) => ({ day }));
@@ -46,7 +47,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { day } = await params;
   const weekday = weekdayFromSlug(day);
-  if (weekday == null) return { title: "Day" };
+  if (weekday == null) notFound();
   const [markets, schedules, stalls] = await Promise.all([
     listMarkets(),
     listSchedules(),

@@ -18,7 +18,7 @@ import { ScheduleList } from "@/components/schedule-list";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { VerifiedName } from "@/components/verified-stamp";
-import { getListingContact, getMarketBySlug } from "@/lib/data/catalog";
+import { getListingContact, getMarketBySlug, listMarkets } from "@/lib/data/catalog";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
 import { listingScore } from "@/lib/listing-score";
 import { listingNote, listingQualifier, seasonAliasTarget, seasonPlace, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
@@ -34,6 +34,14 @@ import { countLabel } from "@/lib/format";
 export const revalidate = 3600;
 // A dynamic segment stays uncached until this is set. The hour window is revalidate.
 export const dynamic = "force-static";
+// Unknown slugs 404 in the layout. On-demand rendering of a missing hall cached
+// the directory skeleton with a 404 digest, and the client kept filling that hole.
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+  const markets = await listMarkets();
+  return markets.map((market) => ({ slug: market.slug }));
+}
 
 export async function generateMetadata({
   params,
@@ -41,8 +49,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const alias = seasonAliasTarget(slug);
+  if (alias) permanentRedirect(`/markets/${alias}`);
   const market = await getMarketBySlug(slug);
-  if (!market) return { title: "Market" };
+  if (!market) {
+    const retired = await retiredMarketTarget(slug);
+    if (retired) permanentRedirect(retired);
+    notFound();
+  }
   return pageMeta({
     title: marketPageTitle(market.name, market.city, listingQualifier(market.slug)),
     description: marketPageDescription({

@@ -21,6 +21,10 @@ export function SavesHydrator() {
 
   useEffect(() => {
     if (pathname.startsWith("/auth/")) return;
+    // A 404 document reloads when this effect posts or refreshes. The error
+    // shell and the not-found page both count; a real listing does not.
+    if (document.documentElement.id === "__next_error__") return;
+    if (document.querySelector("[data-not-found]")) return;
 
     let cancelled = false;
     const supabase = createBrowserSupabaseClient();

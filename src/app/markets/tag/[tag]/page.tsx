@@ -23,6 +23,7 @@ import { publicStallCount } from "@/lib/vendor-roster";
 import type { Market, MarketSchedule, Vendor } from "@/types/database";
 
 export const revalidate = 3600;
+export const dynamicParams = false;
 
 /** Only stalls a shopper can actually visit get a card here. */
 const STALL_CAP = 48;
@@ -38,7 +39,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { tag } = await params;
   const category = categoryBySlug(tag);
-  if (!category) return { title: "Markets" };
+  if (!category) notFound();
   const [markets, vendors, stalls] = await Promise.all([
     listMarkets(),
     listVendors(),
