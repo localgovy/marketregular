@@ -8,6 +8,7 @@ import {
   safePath,
 } from "@/lib/auth-redirect";
 import { isBlockedBot, isHumanRequest } from "@/lib/bot-check";
+import { takeSignInSlot } from "@/lib/mail-limit";
 import { emailOtpType } from "@/lib/auth-callback";
 import {
   dbPublicError,
@@ -146,6 +147,7 @@ export async function signInWithPassword(formData: FormData) {
   if (!supabase) return { error: "Supabase is not configured yet." };
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  if (!(await takeSignInSlot(email))) return { error: "Wait a bit, then try again." };
   const next = safePath(formData.get("next"));
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: signInPublicError(error) };

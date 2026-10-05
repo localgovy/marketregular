@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { VISIT_PLAN_DAY_LIMIT, VISIT_PLAN_HOUR_LIMIT } from "@/lib/visit-plan-limit";
 
-export type MailKind = "claim" | "claim_ip" | "visit" | "catalog";
+export type MailKind = "claim" | "claim_ip" | "visit" | "catalog" | "signin" | "signin_ip";
 
 export const MAIL_LIMITS: Record<MailKind, { hour: number; day: number }> = {
   claim: { hour: 3, day: 10 },
@@ -13,6 +13,10 @@ export const MAIL_LIMITS: Record<MailKind, { hour: number; day: number }> = {
   visit: { hour: VISIT_PLAN_HOUR_LIMIT, day: VISIT_PLAN_DAY_LIMIT },
   /** Paging the directory or product search. A person browsing stays under this. */
   catalog: { hour: 60, day: 400 },
+  /** One email, right or wrong password. */
+  signin: { hour: 15, day: 40 },
+  /** One address, whatever email they type. */
+  signin_ip: { hour: 60, day: 300 },
 };
 
 export function hashMailKey(value: string) {
@@ -75,4 +79,15 @@ export async function takeCatalogSlot() {
   if (!service) return false;
   const ip = await clientIp();
   return takeMailSlot(service, "catalog", [hashMailKey(`catalog:${ip}`)]);
+}
+
+/** Count one password sign-in. Closed when the counter is missing or full. */
+export async function takeSignInSlot(email: string) {
+  const service = createServiceClient();
+  if (!service) return false;
+  const ip = await clientIp();
+  const normalized = email.trim().toLowerCase();
+  const emailOk = await takeMailSlot(service, "signin", [hashMailKey(`signin:${normalized}`)]);
+  if (!emailOk) return false;
+  return takeMailSlot(service, "signin_ip", [hashMailKey(`signin-ip:${ip}`)]);
 }

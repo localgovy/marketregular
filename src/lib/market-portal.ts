@@ -104,6 +104,9 @@ export function rosterRemovalMessage(code: string | null) {
   if (code === "kept:request") {
     return "Removed from this market. The listing stays because someone has asked to run it.";
   }
+  if (code === "kept:review") {
+    return "Removed from this market. The listing stays because it has a review.";
+  }
   return "Removed. Their listing stays.";
 }
 

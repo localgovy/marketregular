@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { isStallCheckoutPath, onboardingExemptPath } from "../src/lib/onboarding.ts";
-import { originFromHost } from "../src/lib/site-host.ts";
+import { checkoutSiteOrigin, originFromHost } from "../src/lib/site-host.ts";
 import {
   checkoutAmountMatches,
   checkoutFeeCents,
@@ -232,4 +232,13 @@ test("checkout stays on this host and does not require the shopper profile", () 
   assert.equal(onboardingExemptPath("/vendors/river-fruit/orders/11111111-1111-4111-8111-111111111111"), true);
   assert.equal(isStallCheckoutPath("/account"), false);
   assert.equal(onboardingExemptPath("/account"), false);
+});
+
+test("checkout returns use the public site, not the request host", () => {
+  const site = "https://www.marketregular.com";
+  assert.equal(checkoutSiteOrigin(site), site);
+  assert.notEqual(
+    checkoutSiteOrigin(site),
+    originFromHost("preview.marketregular.com", "https", site),
+  );
 });

@@ -64,9 +64,22 @@ const SOCIAL_HOST = {
   facebook: "https://www.facebook.com/",
 } as const;
 
+const SOCIAL_ROOT = {
+  instagram: "instagram.com",
+  tiktok: "tiktok.com",
+  facebook: "facebook.com",
+} as const;
+
 const SOCIAL_HANDLE = /^[A-Za-z0-9._]{1,30}$/;
 
-/** A full profile URL stays. A handle or @handle becomes that network's profile. */
+/** Exact host, or a subdomain of that network. `instagram.com.evil.example` does not match. */
+export function socialHostOk(kind: keyof typeof SOCIAL_ROOT, hostname: string) {
+  const host = hostname.toLowerCase().replace(/\.+$/, "");
+  const root = SOCIAL_ROOT[kind];
+  return host === root || host.endsWith(`.${root}`);
+}
+
+/** A profile on that network. A handle or @handle becomes that network's profile. */
 export function socialProfileHref(
   kind: keyof typeof SOCIAL_HOST,
   value: string | null | undefined,
@@ -74,7 +87,18 @@ export function socialProfileHref(
   const trimmed = value?.trim() ?? "";
   if (!trimmed) return null;
   if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed) || trimmed.includes("/")) {
-    return externalHref(trimmed);
+    const href = externalHref(trimmed);
+    if (!href) return null;
+    let url: URL;
+    try {
+      url = new URL(href);
+    } catch {
+      return null;
+    }
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    if (!socialHostOk(kind, url.hostname)) return null;
+    url.protocol = "https:";
+    return url.href;
   }
   const handle = trimmed.replace(/^@+/, "");
   if (!SOCIAL_HANDLE.test(handle)) return null;

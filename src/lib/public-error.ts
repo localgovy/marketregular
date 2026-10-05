@@ -57,7 +57,7 @@ export function signUpPublicError(error: AuthLike): { error: string | null; mess
     code === "user_already_exists" ||
     message.includes("already registered")
   ) {
-    return { error: null, message: "If you already have an account, sign in." };
+    return { error: null, message: "Check your email to confirm your account." };
   }
   if (code === "weak_password") return { error: "Use at least 8 characters." };
   if (code === "validation_failed" && message.includes("email")) {
@@ -160,6 +160,7 @@ export function dbPublicError(error: DbLike | null | undefined, fallback: string
       ["That stall is already listed", "That stall is already listed. Add it from search."],
       ["This market cannot add more stalls", "This market cannot add more stalls."],
       ["That stall is not yours to edit", "That stall is not yours to edit."],
+      ["Someone has asked to run this stall", "Someone has asked to run this stall."],
       ["That stall is missing", "That stall is missing."],
       ["That name needs letters or numbers", "That name needs letters or numbers."],
       ["That section is not allowed", "That section is not on this page."],

@@ -39,6 +39,12 @@ test("a social handle becomes that network's profile", () => {
   assert.equal(portalSocialHref("tiktok", "river"), "https://www.tiktok.com/@river");
   assert.equal(portalSocialHref("facebook", "River Fruit"), "bad");
   assert.equal(portalSocialHref("instagram", "https://instagram.com/river"), "https://instagram.com/river");
+  assert.equal(portalSocialHref("facebook", "https://m.facebook.com/river"), "https://m.facebook.com/river");
+  assert.equal(portalSocialHref("instagram", "https://evil.example/river"), "bad");
+  assert.equal(portalSocialHref("instagram", "https://instagram.com.evil.example/river"), "bad");
+  assert.equal(portalSocialHref("tiktok", "https://www.tiktok.com/@river"), "https://www.tiktok.com/@river");
+  assert.equal(portalSocialHref("instagram", "http://instagram.com/river"), "https://instagram.com/river");
+  assert.equal(portalSocialHref("facebook", "http://www.facebook.com/roroart"), "https://www.facebook.com/roroart");
   assert.equal(portalSocialHref("instagram", ""), null);
   assert.equal(portalSocialHref("instagram", "javascript:alert(1)"), "bad");
 });

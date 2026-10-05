@@ -135,10 +135,10 @@ export async function saveOwnedMarket(formData: FormData): Promise<PortalResult>
     p_id: id,
     p_name: text(formData, "name"),
     p_about: text(formData, "about"),
-    p_address: text(formData, "address"),
-    p_city: text(formData, "city"),
-    p_province: text(formData, "province"),
-    p_postal_code: text(formData, "postal_code"),
+    p_address: "",
+    p_city: "",
+    p_province: "",
+    p_postal_code: "",
     p_website: links.website,
     p_instagram: links.instagram,
     p_tiktok: links.tiktok,
@@ -415,14 +415,12 @@ export async function uploadMarketVendorLogo(formData: FormData): Promise<Portal
     return { error: "That stall is not yours to edit." };
   }
 
-  const { data: updated, error } = await stored.service
-    .from("vendors")
-    .update({ logo_url: stored.url })
-    .eq("id", vendorId)
-    .eq("created_by_market_id", marketId)
-    .is("claimed_by", null)
-    .select("id");
-  if (error || !updated?.length) {
+  const { data: updated, error } = await stored.service.rpc("set_market_vendor_logo", {
+    p_market_id: marketId,
+    p_vendor_id: vendorId,
+    p_logo_url: stored.url,
+  });
+  if (error || updated !== true) {
     await stored.service.storage.from("listing-marks").remove([objectName]);
     return { error: "Could not save that image." };
   }
@@ -451,14 +449,12 @@ export async function clearMarketVendorLogo(formData: FormData): Promise<PortalR
   if (!(await stallStillOnRoster(service, marketId, vendorId))) {
     return { error: "That stall is not yours to edit." };
   }
-  const { data: updated, error } = await service
-    .from("vendors")
-    .update({ logo_url: null })
-    .eq("id", vendorId)
-    .eq("created_by_market_id", marketId)
-    .is("claimed_by", null)
-    .select("id");
-  if (error || !updated?.length) return { error: "Could not remove that image." };
+  const { data: updated, error } = await service.rpc("set_market_vendor_logo", {
+    p_market_id: marketId,
+    p_vendor_id: vendorId,
+    p_logo_url: null,
+  });
+  if (error || updated !== true) return { error: "Could not remove that image." };
   if (stall.logo_url) {
     const previousName = createdStallLogoObjectName(vendorId, stall.logo_url);
     if (previousName) await service.storage.from("listing-marks").remove([previousName]);

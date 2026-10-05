@@ -56,6 +56,16 @@ test("a non-Google location is rejected", () => {
   assert.equal(googleConsentUrl(hosted, "/auth/v1/callback"), null);
 });
 
+test("production does not fetch a loopback authorize URL", () => {
+  const blocked = { allowLoopback: false };
+  assert.equal(googleConsentUrl(local, google("http://127.0.0.1:54321/auth/v1/callback"), blocked), null);
+  assert.equal(
+    googleConsentUrl("http://localhost:54321/auth/v1/authorize", google("http://localhost:54321/auth/v1/callback"), blocked),
+    null,
+  );
+  assert.ok(googleConsentUrl(hosted, google(callback), blocked));
+});
+
 test("local Supabase may use its own callback and nothing else", () => {
   const localCallback = google("http://127.0.0.1:54321/auth/v1/callback");
   assert.ok(googleConsentUrl(local, localCallback));

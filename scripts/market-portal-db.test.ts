@@ -34,6 +34,7 @@ function extractFunction(relativePath: string, name: string) {
 
 const portal = "supabase/migrations/20261005180000_market_portal.sql";
 const fixes = "supabase/migrations/20261005211604_portal_account_editor_fixes.sql";
+const security = "supabase/migrations/20261005215839_account_security_fixes.sql";
 
 const schema = `
 create schema if not exists auth;
@@ -129,6 +130,10 @@ create table public.orders (
   id uuid primary key default gen_random_uuid(),
   vendor_id uuid not null references public.vendors (id) on delete restrict
 );
+create table public.reviews (
+  id uuid primary key default gen_random_uuid(),
+  vendor_id uuid references public.vendors (id) on delete restrict
+);
 create type public.claim_status as enum ('pending', 'approved', 'rejected');
 create type public.claim_target as enum ('market', 'vendor');
 create table public.portal_applications (
@@ -150,7 +155,10 @@ ${extractFunction(fixes, "password_change_pending")}
 ${extractFunction(fixes, "portal_season_day_ok")}
 ${extractFunction("supabase/migrations/20261002183516_vendor_portal.sql", "portal_tags")}
 ${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "listing_href_ok")}
-${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "guard_listing_hrefs")}
+${extractFunction(security, "social_href_ok")}
+${extractFunction(security, "stall_request_pending")}
+${extractFunction(security, "guard_listing_hrefs")}
+${extractFunction(security, "guard_unclaimed_stall_request")}
 ${extractFunction("supabase/migrations/20260825022654_public_release_security.sql", "protect_market_privilege_columns")}
 ${extractFunction(portal, "protect_vendor_privilege_columns")}
 ${extractFunction(portal, "owns_market")}
@@ -159,13 +167,14 @@ ${extractFunction(portal, "portal_email")}
 ${extractFunction(portal, "portal_open_days")}
 ${extractFunction(fixes, "portal_vendor_slug")}
 ${extractFunction(portal, "my_market_portal")}
-${extractFunction(portal, "save_owned_market")}
+${extractFunction(security, "save_owned_market")}
 ${extractFunction(fixes, "save_owned_schedule")}
 ${extractFunction(portal, "delete_owned_schedule")}
-${extractFunction(portal, "save_market_roster")}
-${extractFunction(fixes, "delete_market_roster")}
+${extractFunction(security, "save_market_roster")}
+${extractFunction(security, "delete_market_roster")}
 ${extractFunction(fixes, "create_market_vendor")}
-${extractFunction(fixes, "save_market_vendor_profile")}
+${extractFunction(security, "save_market_vendor_profile")}
+${extractFunction(security, "set_market_vendor_logo")}
 ${extractFunction("supabase/migrations/20261003180410_security_checkout_and_password_lockdown.sql", "owns_vendor")}
 ${extractFunction(fixes, "save_owned_stall")}
 
@@ -181,6 +190,9 @@ create trigger protect_market_privilege_columns
 create trigger protect_vendor_privilege_columns
   before update on public.vendors
   for each row execute function public.protect_vendor_privilege_columns();
+create trigger guard_unclaimed_stall_request
+  before update on public.vendors
+  for each row execute function public.guard_unclaimed_stall_request();
 `;
 
 async function database() {
@@ -565,6 +577,101 @@ test("a draft hall can be updated, and a pending request keeps the listing", asy
     [MARKET, id],
   );
   assert.equal(removed.rows[0]?.result, "kept:request");
+  const still = await db.query("select id from public.vendors where id = $1", [id]);
+  assert.equal(still.rows.length, 1);
+});
+
+test("a pending request freezes the stall profile and logo", async () => {
+  const db = await database();
+  await seed(db);
+  await setAuth(db, "authenticated", OWNER);
+  const created = await db.query<{ id: string }>(
+    `select public.create_market_vendor($1, 'Jam Jar', '', '', '', '', '', '', '', '{}'::text[], '', '{6}'::smallint[]) as id`,
+    [MARKET],
+  );
+  const id = created.rows[0]!.id;
+  await setAuth(db, "service_role", null);
+  await db.query(
+    "insert into public.portal_applications (user_id, kind, requested_target_id) values ($1, 'vendor', $2)",
+    [OTHER, id],
+  );
+  await setAuth(db, "authenticated", OWNER);
+  const frozen = await expectRaise(() =>
+    db.query(
+      `select public.save_market_vendor_profile($1,$2,'Stolen Jam','','','','','','','','{}'::text[])`,
+      [MARKET, id],
+    ),
+  );
+  assert.match(frozen.message, /asked to run this stall/);
+  const name = await db.query<{ name: string }>("select name from public.vendors where id = $1", [id]);
+  assert.equal(name.rows[0]?.name, "Jam Jar");
+
+  await setAuth(db, "service_role", null);
+  const direct = await expectRaise(() =>
+    db.query("update public.vendors set name = 'Stolen Jam' where id = $1", [id]),
+  );
+  assert.match(direct.message, /asked to run this stall/);
+  const logo = await db.query<{ ok: boolean }>(
+    "select public.set_market_vendor_logo($1, $2, 'https://example.com/logo.jpg') as ok",
+    [MARKET, id],
+  );
+  assert.equal(logo.rows[0]?.ok, false);
+  const stored = await db.query<{ logo_url: string | null }>(
+    "select logo_url from public.vendors where id = $1",
+    [id],
+  );
+  assert.equal(stored.rows[0]?.logo_url, null);
+});
+
+test("the written address stays on the pin, and a social button stays on that network", async () => {
+  const db = await database();
+  await seed(db);
+  await setAuth(db, "authenticated", OWNER);
+  await db.query(
+    `select public.save_owned_market($1,'Withrow Park',null,'1 Fake Street','Ottawa','BC','K1A 0A6','https://example.com','https://instagram.com/withrow',null,null,null,null,'{}'::text[])`,
+    [MARKET],
+  );
+  const kept = await db.query<{
+    name: string;
+    address: string;
+    city: string;
+    instagram: string | null;
+    website: string | null;
+  }>(
+    "select name, address, city, instagram, website from public.markets where id = $1",
+    [MARKET],
+  );
+  assert.equal(kept.rows[0]?.name, "Withrow Park");
+  assert.equal(kept.rows[0]?.address, "725 Logan Ave");
+  assert.equal(kept.rows[0]?.city, "Toronto");
+  const social = kept;
+  assert.equal(social.rows[0]?.instagram, "https://instagram.com/withrow");
+  assert.equal(social.rows[0]?.website, "https://example.com");
+
+  const evil = await expectRaise(() =>
+    db.query(
+      `select public.save_owned_market($1,'Withrow Park',null,'','','','','https://example.com','https://evil.example/withrow',null,null,null,null,'{}'::text[])`,
+      [MARKET],
+    ),
+  );
+  assert.match(evil.message, /Listing URL is not allowed/);
+});
+
+test("a review keeps a market-made stall", async () => {
+  const db = await database();
+  await seed(db);
+  await setAuth(db, "authenticated", OWNER);
+  const created = await db.query<{ id: string }>(
+    `select public.create_market_vendor($1, 'Reviewed Jam', '', '', '', '', '', '', '', '{}'::text[], '', '{6}'::smallint[]) as id`,
+    [MARKET],
+  );
+  const id = created.rows[0]!.id;
+  await db.query("insert into public.reviews (vendor_id) values ($1)", [id]);
+  const removed = await db.query<{ result: string }>(
+    "select public.delete_market_roster($1, $2) as result",
+    [MARKET, id],
+  );
+  assert.equal(removed.rows[0]?.result, "kept:review");
   const still = await db.query("select id from public.vendors where id = $1", [id]);
   assert.equal(still.rows.length, 1);
 });

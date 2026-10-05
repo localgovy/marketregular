@@ -64,6 +64,7 @@ export async function beginStallPayments(formData: FormData) {
   try {
     const created = await createStallAccount({
       vendorId,
+      userId: gate.user.id,
       displayName: gate.listing.name,
       email: gate.user.email,
     });
@@ -86,6 +87,7 @@ export async function payStallFee(formData: FormData) {
     vendorId,
     gate.listing.fee_balance_cents,
     gate.user.email ?? null,
+    gate.user.id,
   );
   if (opened.error || !opened.url) return { error: opened.error ?? "Could not start that payment." };
   redirect(opened.url);

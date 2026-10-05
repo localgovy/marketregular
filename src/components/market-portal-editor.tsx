@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { AMENITY_TAGS, PRODUCT_TAGS, PROVINCES, RECORD_TAGS, WEEKDAYS } from "@/lib/constants";
+import { AMENITY_TAGS, PRODUCT_TAGS, RECORD_TAGS, WEEKDAYS } from "@/lib/constants";
 import {
   MARKET_CREATED_CAP,
   MARKET_ROSTER_CAP,
@@ -303,38 +303,13 @@ function ListingForm({ listing }: { listing: MarketPortalListing }) {
         <Textarea id={`${id}-about`} name="about" rows={5} maxLength={4000} defaultValue={listing.about ?? ""} />
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
-        <Label htmlFor={`${id}-address`}>Address</Label>
-        <Input id={`${id}-address`} name="address" required maxLength={200} defaultValue={listing.address} />
-        <p className="text-sm text-muted-foreground">The map pin is set in admin.</p>
-      </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-city`}>City</Label>
-        <Input id={`${id}-city`} name="city" required maxLength={80} defaultValue={listing.city} />
-      </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-province`}>Province</Label>
-        <select
-          id={`${id}-province`}
-          name="province"
-          defaultValue={listing.province}
-          className="h-8 rounded-lg border border-input bg-card px-2.5 text-sm"
-        >
-          {PROVINCES.map((province) => (
-            <option key={province.code} value={province.code}>
-              {province.code}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-postal`}>Postal code</Label>
-        <Input
-          id={`${id}-postal`}
-          name="postal_code"
-          maxLength={10}
-          autoComplete="postal-code"
-          defaultValue={listing.postal_code ?? ""}
-        />
+        <p className="text-sm text-muted-foreground">Address</p>
+        <p className="text-base">
+          {[listing.address, listing.city, listing.province, listing.postal_code]
+            .filter(Boolean)
+            .join(", ")}
+        </p>
+        <p className="text-sm text-muted-foreground">A move is set in admin, with the map pin.</p>
       </div>
       <TagPicker id={id} tags={listing.tags} choices={MARKET_TAGS} />
       <ContactFields

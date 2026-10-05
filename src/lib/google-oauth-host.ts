@@ -22,10 +22,15 @@ function parseUrl(raw: string) {
 }
 
 /** Authorize URL the browser got from Supabase. Rejects anything we would not fetch. */
-export function isAllowedAuthorizeUrl(raw: string) {
+export function isAllowedAuthorizeUrl(
+  raw: string,
+  options?: { allowLoopback?: boolean },
+) {
   const url = parseUrl(raw);
   if (!url || url.username || url.password || url.pathname !== AUTHORIZE_PATH) return false;
   if (isLocalSupabaseHost(url.hostname)) {
+    const allowLoopback = options?.allowLoopback ?? process.env.NODE_ENV !== "production";
+    if (!allowLoopback) return false;
     return url.protocol === "http:" || url.protocol === "https:";
   }
   return (
@@ -35,12 +40,13 @@ export function isAllowedAuthorizeUrl(raw: string) {
   );
 }
 
-function callbackAllowed(authorizeHost: string, redirectUri: string) {
+function callbackAllowed(authorizeHost: string, redirectUri: string, allowLoopback = true) {
   const redirect = parseUrl(redirectUri);
   if (!redirect || redirect.username || redirect.password || redirect.pathname !== CALLBACK_PATH) {
     return false;
   }
   if (isLocalSupabaseHost(authorizeHost)) {
+    if (!allowLoopback) return false;
     return (
       (redirect.protocol === "http:" || redirect.protocol === "https:") &&
       isLocalSupabaseHost(redirect.hostname)
@@ -53,8 +59,12 @@ function callbackAllowed(authorizeHost: string, redirectUri: string) {
  * Google URL to open, or null when the consent screen would name another host.
  * `locationHeader` is the authorize response's Location, absolute or relative.
  */
-export function googleConsentUrl(authorizeUrl: string, locationHeader: string | null) {
-  if (!locationHeader || !isAllowedAuthorizeUrl(authorizeUrl)) return null;
+export function googleConsentUrl(
+  authorizeUrl: string,
+  locationHeader: string | null,
+  options?: { allowLoopback?: boolean },
+) {
+  if (!locationHeader || !isAllowedAuthorizeUrl(authorizeUrl, options)) return null;
   const authorize = parseUrl(authorizeUrl);
   if (!authorize) return null;
   let location: URL;
@@ -72,6 +82,6 @@ export function googleConsentUrl(authorizeUrl: string, locationHeader: string | 
     return null;
   }
   const redirectUri = location.searchParams.get("redirect_uri");
-  if (!redirectUri || !callbackAllowed(authorize.hostname, redirectUri)) return null;
+  if (!redirectUri || !callbackAllowed(authorize.hostname, redirectUri, options?.allowLoopback)) return null;
   return location.toString();
 }

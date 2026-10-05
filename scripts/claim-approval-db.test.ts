@@ -58,6 +58,10 @@ returns uuid
 language sql
 stable
 as $$ select uid from auth.session $$;
+create table auth.users (
+  id uuid primary key,
+  raw_app_meta_data jsonb not null default '{}'::jsonb
+);
 
 create type public.user_role as enum ('user', 'vendor', 'admin');
 create type public.listing_status as enum ('draft', 'published');
@@ -73,6 +77,7 @@ create table public.markets (
   slug text not null,
   name text not null,
   city text not null default '',
+  status public.listing_status not null default 'published',
   claimed_by uuid references public.profiles (id)
 );
 create table public.market_schedules (
@@ -80,7 +85,10 @@ create table public.market_schedules (
   market_id uuid not null references public.markets (id),
   weekday smallint not null,
   opens_at time not null,
-  closes_at time not null
+  closes_at time not null,
+  season_start text,
+  season_end text,
+  notes text
 );
 create table public.vendors (
   id uuid primary key,
@@ -99,7 +107,8 @@ create table public.vendors (
   claimed_by uuid references public.profiles (id),
   review_count integer not null default 0,
   rating_avg numeric(3, 2),
-  selling_approved boolean not null default false
+  selling_approved boolean not null default false,
+  maintenance_opt_outs text[] not null default '{}'
 );
 create table public.market_vendors (
   market_id uuid not null references public.markets (id),
@@ -142,7 +151,8 @@ create table public.orders (
   delivery_region text,
   delivery_postal text,
   buyer_email text,
-  paid_at timestamptz
+  paid_at timestamptz,
+  seller_user_id uuid
 );
 create table public.platform_fees (
   id uuid primary key,
@@ -151,12 +161,14 @@ create table public.platform_fees (
   flat_cents integer not null,
   voided boolean not null default false,
   earned_on date not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  order_id uuid
 );
 create table public.platform_fee_payments (
   id uuid primary key,
   vendor_id uuid not null references public.vendors (id),
-  amount_cents integer not null
+  amount_cents integer not null,
+  seller_user_id uuid
 );
 create table public.claim_requests (
   id uuid primary key,
@@ -165,17 +177,21 @@ create table public.claim_requests (
   target_id uuid not null,
   evidence text not null,
   status public.claim_status not null default 'pending',
-  admin_note text
+  admin_note text,
+  created_at timestamptz not null default now()
 );
 
 ${extractFunction("supabase/migrations/20261002183516_vendor_portal.sql", "portal_tags")}
 ${extractFunction("supabase/migrations/20260825022654_public_release_security.sql", "owns_vendor")}
-${extractFunction("supabase/migrations/20261003193000_vendor_claim_role_phone_and_fee.sql", "save_owned_vendor")}
+${extractFunction("supabase/migrations/20261005215839_account_security_fixes.sql", "save_owned_vendor")}
+${extractFunction("supabase/migrations/20261005211604_portal_account_editor_fixes.sql", "password_change_pending")}
+${extractFunction("supabase/migrations/20261005215839_account_security_fixes.sql", "release_stall_commercial_state")}
+${extractFunction("supabase/migrations/20261005215839_account_security_fixes.sql", "guard_claim_insert")}
 ${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "listing_href_ok")}
 ${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "guard_listing_hrefs")}
 ${decideClaimSql}
 ${extractFunction("supabase/migrations/20261002195358_stall_checkout.sql", "protect_vendor_privilege_columns")}
-${extractFunction("supabase/migrations/20261002232211_buyer_order_email.sql", "my_vendor_portal")}
+${extractFunction("supabase/migrations/20261005215839_account_security_fixes.sql", "my_vendor_portal")}
 
 create trigger guard_listing_hrefs
   before insert or update on public.vendors
@@ -186,6 +202,11 @@ create trigger protect_vendor_privilege_columns
   before update on public.vendors
   for each row
   execute function public.protect_vendor_privilege_columns();
+
+create trigger release_stall_commercial_state
+  before update of claimed_by on public.vendors
+  for each row
+  execute function public.release_stall_commercial_state();
 `;
 
 async function database() {
@@ -667,4 +688,129 @@ test("a decided claim cannot be approved or rejected again", async () => {
     [CLAIM],
   );
   assert.equal(claim.rows[0]?.status, "approved");
+});
+
+test("a stall cannot take another stall's name", async () => {
+  const db = await database();
+  await seedDirectory(db);
+  const peach = "99999999-9999-4999-8999-999999999999";
+  await setAuth(db, "service_role", null);
+  await db.query("update public.vendors set claimed_by = $1 where id = $2", [OWNER, VENDOR]);
+  await db.query(
+    "insert into public.vendors (id, slug, name, status) values ($1, 'peach-stand', 'Peach Stand', 'published')",
+    [peach],
+  );
+  await setAuth(db, "authenticated", OWNER);
+  const taken = await expectRaise(() =>
+    db.query(
+      `select public.save_owned_vendor($1, 'peach stand', null, null, null, null, null, null, null, '{}'::text[])`,
+      [VENDOR],
+    ),
+  );
+  assert.match(taken.message, /already listed/);
+  const name = await db.query<{ name: string }>("select name from public.vendors where id = $1", [VENDOR]);
+  assert.equal(name.rows[0]?.name, "River Fruit");
+});
+
+test("changing owners drops the Stripe account and hides the previous buyers", async () => {
+  const db = await database();
+  await seedDirectory(db);
+  const orderId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  const otherOrder = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+  await setAuth(db, "service_role", null);
+  await db.query("update public.vendors set claimed_by = $1 where id = $2", [OWNER, VENDOR]);
+  await db.query(
+    "insert into public.vendor_stripe_accounts (vendor_id, card_payments_active, payouts_active) values ($1, true, true)",
+    [VENDOR],
+  );
+  await db.query("update public.vendors set selling_approved = true where id = $1", [VENDOR]);
+  await db.query(
+    `insert into public.orders (
+      id, vendor_id, seller_user_id, item_name, quantity, charge_cents, fulfillment, status, buyer_email
+    ) values
+      ($1, $3, $4, 'Peaches', 1, 800, 'pickup', 'paid', 'buyer@example.com'),
+      ($2, $3, $5, 'Honey', 1, 900, 'pickup', 'paid', 'secret@example.com')`,
+    [orderId, otherOrder, VENDOR, OWNER, OTHER],
+  );
+  await db.query(
+    `insert into public.platform_fees (id, vendor_id, order_id, percent_cents, flat_cents, earned_on)
+     values ($1, $2, $3, 80, 0, '2026-10-01'), ($4, $2, $5, 500, 0, '2026-10-01')`,
+    [
+      "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      VENDOR,
+      orderId,
+      "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+      otherOrder,
+    ],
+  );
+  await db.query(
+    `insert into public.platform_fee_payments (id, vendor_id, amount_cents, seller_user_id)
+     values ($1, $2, 80, $3)`,
+    ["eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", VENDOR, OTHER],
+  );
+
+  await setAuth(db, "authenticated", OWNER);
+  const portal = await db.query<{ portal: unknown }>("select public.my_vendor_portal() as portal");
+  const parsed = typeof portal.rows[0]?.portal === "string" ? JSON.parse(portal.rows[0].portal) : portal.rows[0]?.portal;
+  const listing = (parsed as {
+    orders: { buyer_email: string }[];
+    fee_balance_cents: number;
+  }[])[0];
+  assert.deepEqual(listing?.orders.map((order) => order.buyer_email), ["buyer@example.com"]);
+  assert.equal(listing?.fee_balance_cents, 80);
+
+  await setAuth(db, "service_role", null);
+  await db.query("update public.vendors set claimed_by = $1 where id = $2", [OTHER, VENDOR]);
+  const stripe = await db.query("select vendor_id from public.vendor_stripe_accounts where vendor_id = $1", [
+    VENDOR,
+  ]);
+  assert.equal(stripe.rows.length, 0);
+  const selling = await db.query<{ selling_approved: boolean }>(
+    "select selling_approved from public.vendors where id = $1",
+    [VENDOR],
+  );
+  assert.equal(selling.rows[0]?.selling_approved, false);
+
+  await setAuth(db, "authenticated", OTHER);
+  const next = await db.query<{ portal: unknown }>("select public.my_vendor_portal() as portal");
+  const nextParsed = typeof next.rows[0]?.portal === "string" ? JSON.parse(next.rows[0].portal) : next.rows[0]?.portal;
+  const inherited = (nextParsed as { orders: { buyer_email: string }[]; fee_balance_cents: number }[])[0];
+  assert.deepEqual(inherited?.orders.map((order) => order.buyer_email), ["secret@example.com"]);
+  assert.equal(inherited?.fee_balance_cents, 420);
+});
+
+test("an old claim cannot target a stall someone else runs", async () => {
+  const db = await database();
+  await seedDirectory(db);
+  await setAuth(db, "service_role", null);
+  await db.query("update public.vendors set claimed_by = $1 where id = $2", [OWNER, VENDOR]);
+  await db.exec(`
+    create trigger guard_claim_insert
+      before insert on public.claim_requests
+      for each row
+      execute function public.guard_claim_insert();
+  `);
+  await setAuth(db, "authenticated", OTHER);
+  const raised = await expectRaise(() =>
+    db.query(
+      `insert into public.claim_requests (id, user_id, target_type, target_id, evidence)
+       values ($1, $2, 'vendor', $3, 'I run this stall')`,
+      [CLAIM, OTHER, VENDOR],
+    ),
+  );
+  assert.match(raised.message, /already runs this stall/);
+
+  await setAuth(db, "service_role", null);
+  await db.query("update public.vendors set claimed_by = null where id = $1", [VENDOR]);
+  await setAuth(db, "authenticated", OTHER);
+  await db.query(
+    `insert into public.claim_requests (id, user_id, target_type, target_id, evidence)
+     values ($1, $2, 'vendor', $3, 'I run this stall')`,
+    [CLAIM2, OTHER, VENDOR],
+  );
+  const filed = await db.query<{ user_id: string }>(
+    "select user_id::text as user_id from public.claim_requests where id = $1",
+    [CLAIM2],
+  );
+  assert.equal(filed.rows[0]?.user_id, OTHER);
 });

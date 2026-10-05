@@ -1,10 +1,9 @@
 import "server-only";
 
-import { headers } from "next/headers";
 import { after } from "next/server";
 import type Stripe from "stripe";
 import { SITE_URL } from "@/lib/constants";
-import { originFromHost } from "@/lib/site-host";
+import { checkoutSiteOrigin } from "@/lib/site-host";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import {
   checkoutAmountMatches,
@@ -46,13 +45,8 @@ type OrderRow = {
   paid_at: string | null;
 };
 
-async function checkoutOrigin() {
-  const headerList = await headers();
-  return originFromHost(
-    headerList.get("x-forwarded-host") ?? headerList.get("host"),
-    headerList.get("x-forwarded-proto"),
-    SITE_URL,
-  );
+function checkoutOrigin() {
+  return checkoutSiteOrigin(SITE_URL);
 }
 
 function feeCheckoutError(err: unknown) {
@@ -143,6 +137,7 @@ export async function refreshStallCapabilities(vendorId: string) {
 async function saveStallAccount(
   vendorId: string,
   accountId: string,
+  ownerUserId: string,
   flags: { cardPaymentsActive: boolean; payoutsActive: boolean },
 ) {
   const db = service();
@@ -150,39 +145,57 @@ async function saveStallAccount(
   const { error } = await db.from("vendor_stripe_accounts").insert({
     vendor_id: vendorId,
     stripe_account_id: accountId,
+    owner_user_id: ownerUserId,
     card_payments_active: flags.cardPaymentsActive,
     payouts_active: flags.payoutsActive,
   });
   if (!error) return { error: null };
   const { data: raced } = await db
     .from("vendor_stripe_accounts")
-    .select("stripe_account_id")
+    .select("stripe_account_id, owner_user_id")
     .eq("vendor_id", vendorId)
     .maybeSingle();
-  if (typeof raced?.stripe_account_id === "string") return { error: null };
+  if (raced?.owner_user_id === ownerUserId && typeof raced.stripe_account_id === "string") {
+    return { error: null };
+  }
   console.error("stall account save", error.code);
   return { error: "Could not save the payment account." as const };
 }
 
 export async function createStallAccount(input: {
   vendorId: string;
+  userId: string;
   displayName: string;
   email: string;
 }) {
   const stripe = getStripe();
   const db = service();
   if (!stripe || !db) return { error: "Payments are not available yet." as const, accountId: null };
+  const { data: vendor } = await db
+    .from("vendors")
+    .select("claimed_by")
+    .eq("id", input.vendorId)
+    .maybeSingle();
+  if (vendor?.claimed_by !== input.userId) {
+    return { error: "That stall is not yours." as const, accountId: null };
+  }
   const { data: existing } = await db
     .from("vendor_stripe_accounts")
-    .select("stripe_account_id")
+    .select("stripe_account_id, owner_user_id")
     .eq("vendor_id", input.vendorId)
     .maybeSingle();
-  if (typeof existing?.stripe_account_id === "string") {
+  if (
+    typeof existing?.stripe_account_id === "string" &&
+    existing.owner_user_id === input.userId
+  ) {
     return { error: null, accountId: existing.stripe_account_id };
+  }
+  if (existing) {
+    await db.from("vendor_stripe_accounts").delete().eq("vendor_id", input.vendorId);
   }
 
   // A full-dashboard account can edit its own metadata, so vendor_id there is not
-  // proof of ownership. The idempotency key retries the account this call created.
+  // proof of ownership. The idempotency key retries the account this owner created.
   const account = await stripe.v2.core.accounts.create({
     display_name: input.displayName.slice(0, 200),
     contact_email: input.email,
@@ -203,13 +216,13 @@ export async function createStallAccount(input: {
         losses_collector: "stripe",
       },
     },
-    metadata: { vendor_id: input.vendorId },
+    metadata: { vendor_id: input.vendorId, owner_user_id: input.userId },
     include: ["configuration.merchant"],
   }, {
-    idempotencyKey: `stall-account-${input.vendorId}`,
+    idempotencyKey: `stall-account-${input.vendorId}-${input.userId}`,
   });
   const flags = capabilityFlags(account);
-  const saved = await saveStallAccount(input.vendorId, account.id, flags);
+  const saved = await saveStallAccount(input.vendorId, account.id, input.userId, flags);
   if (saved.error) return { error: saved.error, accountId: null };
   return { error: null, accountId: account.id };
 }
@@ -351,7 +364,7 @@ export async function recordPlatformFee(
   if (!db) return;
   const { data: expected } = await db
     .from("platform_fee_sessions")
-    .select("vendor_id, amount_cents")
+    .select("vendor_id, amount_cents, seller_user_id")
     .eq("stripe_checkout_session_id", session.id)
     .maybeSingle();
   const vendorId = session.metadata.vendor_id ?? null;
@@ -373,10 +386,14 @@ export async function recordPlatformFee(
   ) {
     return;
   }
+  const sellerUserId =
+    typeof expected?.seller_user_id === "string" ? expected.seller_user_id : null;
+  if (!sellerUserId) return;
   const { error } = await db.from("platform_fee_payments").insert({
     vendor_id: expectedVendorId,
     amount_cents: expectedAmountCents,
     stripe_checkout_session_id: session.id,
+    seller_user_id: sellerUserId,
   });
   if (error && error.code !== "23505") console.error("stall fee payment", error.code);
   refreshDirectoryLater([`/vendor/${expectedVendorId}`]);
@@ -617,11 +634,21 @@ export async function startStallCheckout(input: {
 
   const { details, sellable, buyerId } = input;
   const chargeCents = sellable.price_cents * details.quantity;
+  const { data: owner } = await db
+    .from("vendors")
+    .select("claimed_by")
+    .eq("id", sellable.vendor_id)
+    .maybeSingle();
+  if (typeof owner?.claimed_by !== "string") {
+    return { error: "This stall cannot take a card yet." as const };
+  }
+
   const { data: inserted, error } = await db
     .from("orders")
     .insert({
       buyer_id: buyerId,
       vendor_id: sellable.vendor_id,
+      seller_user_id: owner.claimed_by,
       menu_item_id: sellable.id,
       item_name: sellable.name,
       unit_price_cents: sellable.price_cents,
@@ -729,13 +756,19 @@ export async function confirmStallCheckout(input: {
   return (await loadOrder(order.id)) ?? order;
 }
 
-async function rememberFeeSession(vendorId: string, sessionId: string, amountCents: number) {
+async function rememberFeeSession(
+  vendorId: string,
+  sessionId: string,
+  amountCents: number,
+  sellerUserId: string,
+) {
   const db = service();
   if (!db) return false;
   const { error } = await db.from("platform_fee_sessions").insert({
     stripe_checkout_session_id: sessionId,
     vendor_id: vendorId,
     amount_cents: amountCents,
+    seller_user_id: sellerUserId,
   });
   if (!error) return true;
   if (error.code !== "23505") {
@@ -744,13 +777,22 @@ async function rememberFeeSession(vendorId: string, sessionId: string, amountCen
   }
   const { data } = await db
     .from("platform_fee_sessions")
-    .select("vendor_id, amount_cents")
+    .select("vendor_id, amount_cents, seller_user_id")
     .eq("stripe_checkout_session_id", sessionId)
     .maybeSingle();
-  return data?.vendor_id === vendorId && data?.amount_cents === amountCents;
+  return (
+    data?.vendor_id === vendorId &&
+    data?.amount_cents === amountCents &&
+    data?.seller_user_id === sellerUserId
+  );
 }
 
-export async function startFeeCheckout(vendorId: string, balanceCents: number, email: string | null) {
+export async function startFeeCheckout(
+  vendorId: string,
+  balanceCents: number,
+  email: string | null,
+  sellerUserId: string,
+) {
   const stripe = getStripe();
   if (!stripe) return { error: "Payments are not available yet." as const, url: null };
   if (balanceCents < MIN_FEE_PAYMENT_CENTS) {
@@ -788,7 +830,7 @@ export async function startFeeCheckout(vendorId: string, balanceCents: number, e
         idempotencyKey: `${baseKey}-${session.id}`.slice(0, 255),
       });
     }
-    const remembered = await rememberFeeSession(vendorId, session.id, balanceCents);
+    const remembered = await rememberFeeSession(vendorId, session.id, balanceCents, sellerUserId);
     if (!remembered) return { error: "Could not start that payment." as const, url: null };
     if (session.payment_status === "paid") {
       await recordPlatformFee(session, null);

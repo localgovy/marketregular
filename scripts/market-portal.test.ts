@@ -108,6 +108,7 @@ test("removing a stall says whether the listing stayed", () => {
   assert.match(rosterRemovalMessage("kept:order"), /order/);
   assert.match(rosterRemovalMessage("kept:market"), /another market/);
   assert.match(rosterRemovalMessage("kept:request"), /asked to run/);
+  assert.match(rosterRemovalMessage("kept:review"), /review/);
   assert.match(rosterRemovalMessage("kept"), /listing stays/);
   assert.match(rosterRemovalMessage(null), /listing stays/);
 });
