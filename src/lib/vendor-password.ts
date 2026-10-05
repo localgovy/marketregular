@@ -56,13 +56,15 @@ export function alignIssuedPassword(attempted: string, stored: string) {
   return { password: stored, realign: true };
 }
 
-/** Skip once they have chosen. Resend the same one-time password while they still owe the change. */
+/** Skip once they have chosen, or already have a password. Resend the same one-time password while they still owe the change. */
 export function claimPasswordAction(
   existing: { chosen: boolean } | null,
   mustSet: boolean,
+  hasPassword = false,
 ): "skip" | "resend" | "issue" {
   if (existing?.chosen) return "skip";
   if (mustSet && existing && !existing.chosen) return "resend";
+  if (hasPassword && !mustSet) return "skip";
   return "issue";
 }
 

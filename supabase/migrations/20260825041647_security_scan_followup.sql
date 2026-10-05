@@ -288,7 +288,7 @@ create trigger guard_save_insert
 revoke all on function public.guard_save_insert() from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- Desk uses service_role. JWT admin must not write via the Data API.
+-- Admin uses service_role. JWT admin must not write via the Data API.
 -- ---------------------------------------------------------------------------
 drop policy if exists "admin write markets" on public.markets;
 drop policy if exists "admin write vendors" on public.vendors;

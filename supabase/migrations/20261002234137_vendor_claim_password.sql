@@ -1,4 +1,4 @@
--- Readable stall passwords for the desk. Sign-in still stores a hash.
+-- Readable stall passwords for admin. Sign-in still stores a hash.
 -- This table holds the encrypted copy. No API role can select it.
 
 create table public.vendor_sign_in_secrets (

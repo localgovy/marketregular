@@ -7,6 +7,7 @@ export const MARKET_SCHEDULE_CAP = 24;
 
 const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/;
 const SEASON = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+const MONTH_LENGTHS = [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 export type MarketPortalSchedule = {
   id: string;
@@ -76,13 +77,34 @@ export function createdStallLogoObjectName(vendorId: string, url: string) {
   return listingLogoObjectName("vendors", vendorId, url);
 }
 
-/** Empty pair, both month-days, or "bad" when only one side is set or a day is not MM-DD. */
+/** A real month-day. February 29 is allowed because the season repeats every year. */
+export function seasonMonthDay(value: string) {
+  if (!SEASON.test(value)) return false;
+  const [month, day] = value.split("-").map(Number);
+  const limit = MONTH_LENGTHS[month];
+  return Boolean(limit) && day >= 1 && day <= limit;
+}
+
+/** Empty pair, both real month-days, or "bad" when only one side is set or a day cannot exist. */
 export function portalSeason(start: string, end: string): { start: string; end: string } | "bad" {
   const seasonStart = start.trim();
   const seasonEnd = end.trim();
   if (!seasonStart && !seasonEnd) return { start: "", end: "" };
-  if (!SEASON.test(seasonStart) || !SEASON.test(seasonEnd)) return "bad";
+  if (!seasonMonthDay(seasonStart) || !seasonMonthDay(seasonEnd)) return "bad";
   return { start: seasonStart, end: seasonEnd };
+}
+
+/** What removing a stall did. `kept` means the public listing stays. */
+export function rosterRemovalMessage(code: string | null) {
+  if (code === "deleted") return "Removed. The listing is gone.";
+  if (code === "kept:order") return "Removed from this market. The listing stays because it has an order.";
+  if (code === "kept:market") {
+    return "Removed from this market. The listing stays because it is still at another market.";
+  }
+  if (code === "kept:request") {
+    return "Removed from this market. The listing stays because someone has asked to run it.";
+  }
+  return "Removed. Their listing stays.";
 }
 
 /** HH:MM with open before close, or "bad". */

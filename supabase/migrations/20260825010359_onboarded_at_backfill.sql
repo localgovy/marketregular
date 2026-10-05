@@ -1,4 +1,4 @@
--- Stamp onboarded_at for people who already finished the desk or who
+-- Stamp onboarded_at for people who already finished onboarding or who
 -- signed up before the wizard existed, so the proxy does not send them
 -- to /onboarding from every page. Brand-new empty profiles stay null.
 

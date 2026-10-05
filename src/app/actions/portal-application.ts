@@ -17,24 +17,34 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 export type PortalApplicationResult = { error: string | null; message?: string };
 
-async function publishedListing(kind: "vendor" | "market", id: string) {
+async function openListing(kind: "vendor" | "market", id: string, userId: string) {
   const service = createServiceClient();
-  if (!service) return null;
+  if (!service) return { error: "Could not save that request." as const };
   const table = kind === "vendor" ? "vendors" : "markets";
   const { data } = await service
     .from(table)
-    .select("id, name, slug, status")
+    .select("id, name, slug, status, claimed_by")
     .eq("id", id)
     .eq("status", "published")
     .maybeSingle();
-  if (!data?.slug || !data.name) return null;
+  if (!data?.slug || !data.name) return { error: "That listing is missing." as const };
+  if (data.claimed_by && data.claimed_by !== userId) {
+    return {
+      error: (kind === "vendor"
+        ? "Someone else already runs this stall."
+        : "Someone else already runs this market.") as const,
+    };
+  }
   return {
-    id: data.id as string,
-    name: data.name as string,
-    path: kind === "vendor" ? `/vendors/${data.slug}` : `/markets/${data.slug}`,
+    listing: {
+      id: data.id as string,
+      name: data.name as string,
+      path: kind === "vendor" ? `/vendors/${data.slug}` : `/markets/${data.slug}`,
+    },
   };
 }
 
@@ -49,33 +59,26 @@ export async function listingPortalOwned(kind: "vendor" | "market", listingId: s
   return !error && data === true;
 }
 
-export async function submitPortalApplication(formData: FormData): Promise<PortalApplicationResult> {
-  if (!(await isHumanRequest())) {
-    return { error: "Could not save that request." };
-  }
-  if (String(formData.get("_gotcha") ?? "").trim()) {
-    return { error: null, message: "Thanks. We'll email you when the listing is assigned." };
-  }
-
-  const kind = portalKind(formData.get("kind"));
-  if (!kind) return { error: "That portal is missing." };
-
-  const { supabase, user } = await createAuthedServerClient();
-  if (!supabase || !user) {
-    return { error: "Sign in first so we can assign the listing to this account." };
-  }
-
-  const requestId = portalRequestId(formData.get("request_id"));
-  const organizationName = clipOrganizationName(formData.get("organization_name"));
-  if (requestId && organizationName) {
+export async function filePortalApplication(input: {
+  supabase: SupabaseClient;
+  user: Pick<User, "id" | "email">;
+  kind: "vendor" | "market";
+  requestId: string | null;
+  organizationName: string | null;
+}): Promise<PortalApplicationResult> {
+  const { supabase, user, kind } = input;
+  const requestId = input.requestId;
+  const organizationName = requestId ? null : input.organizationName;
+  if (requestId && input.organizationName) {
     return { error: "Send the listing or the organization name, not both." };
   }
   if (!requestId && !organizationName) {
     return { error: kind === "vendor" ? "Add the stall or the organization name." : "Add the market or the organization name." };
   }
 
-  const listing = requestId ? await publishedListing(kind, requestId) : null;
-  if (requestId && !listing) return { error: "That listing is missing." };
+  const opened = requestId ? await openListing(kind, requestId, user.id) : null;
+  if (opened && "error" in opened) return { error: opened.error };
+  const listing = opened && "listing" in opened ? opened.listing : null;
 
   if (listing && (await listingPortalOwned(kind, listing.id))) {
     return {
@@ -167,6 +170,31 @@ export async function submitPortalApplication(formData: FormData): Promise<Porta
   revalidatePath("/account");
   revalidatePath("/admin/applications");
   return { error: null, message: "Thanks. We'll email you when the listing is assigned." };
+}
+
+export async function submitPortalApplication(formData: FormData): Promise<PortalApplicationResult> {
+  if (!(await isHumanRequest())) {
+    return { error: "Could not save that request." };
+  }
+  if (String(formData.get("_gotcha") ?? "").trim()) {
+    return { error: null, message: "Thanks. We'll email you when the listing is assigned." };
+  }
+
+  const kind = portalKind(formData.get("kind"));
+  if (!kind) return { error: "That portal is missing." };
+
+  const { supabase, user } = await createAuthedServerClient();
+  if (!supabase || !user) {
+    return { error: "Sign in first so we can assign the listing to this account." };
+  }
+
+  return filePortalApplication({
+    supabase,
+    user,
+    kind,
+    requestId: portalRequestId(formData.get("request_id")),
+    organizationName: clipOrganizationName(formData.get("organization_name")),
+  });
 }
 
 export async function readPortalOrgDefault() {

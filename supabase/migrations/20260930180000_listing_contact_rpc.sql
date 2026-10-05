@@ -1,4 +1,4 @@
--- Phone and email stay on the row for the desk, but anon and authenticated
+-- Phone and email stay on the row for admin, but anon and authenticated
 -- can no longer select them in bulk. One published listing at a time goes
 -- through get_listing_contact.
 

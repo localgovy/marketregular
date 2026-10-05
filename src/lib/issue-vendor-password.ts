@@ -20,6 +20,10 @@ function metadata(user: User) {
   return { ...raw } as Record<string, unknown>;
 }
 
+function hasEmailPassword(user: User) {
+  return (user.identities ?? []).some((identity) => identity.provider === "email");
+}
+
 export type PreparedVendorPassword =
   | { error: string }
   | { error: null; email: string; password: string | null };
@@ -51,6 +55,7 @@ export async function prepareVendorClaimPassword(
   const action = claimPasswordAction(
     row ? { chosen: row.chosen } : null,
     metadata(owner.user).must_set_password === true,
+    hasEmailPassword(owner.user),
   );
 
   if (action === "skip") return { error: null, email, password: null };
@@ -129,6 +134,21 @@ export async function syncChosenVendorPassword(admin: SupabaseClient, user: User
   if (!data) return { error: null, stored: true, wrote: false };
   const saved = await saveChosenVendorPassword(admin, user, password);
   return { ...saved, wrote: !saved.error };
+}
+
+/** Remember that this person chose their own password, so a later claim does not replace it. */
+export async function markChosenVendorPassword(admin: SupabaseClient, user: User) {
+  const { error: storeError } = await admin.from("vendor_sign_in_secrets").upsert({
+    user_id: user.id,
+    ciphertext: CHOSEN_PASSWORD_MARKER,
+    chosen: true,
+  });
+  if (storeError) return { error: "Could not save that password." as const };
+  const { data: fresh } = await admin.auth.admin.getUserById(user.id);
+  const nextMeta = withMustSetPassword(metadata(fresh.user ?? user), false);
+  const { error: metaError } = await admin.auth.admin.updateUserById(user.id, { app_metadata: nextMeta });
+  if (metaError) return { error: "Could not finish that password." as const };
+  return { error: null };
 }
 
 export async function saveChosenVendorPassword(admin: SupabaseClient, user: User, password: string) {

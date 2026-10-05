@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SavedDesk } from "@/components/saved-rail";
+import { SavedList } from "@/components/saved-rail";
 import { listBlogPosts } from "@/lib/blog";
 import { readMySaves } from "@/lib/data/account";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
@@ -69,7 +69,7 @@ export default async function SavedPage() {
         </p>
       ) : null}
       {profile && !loaded.failed ? (
-        <SavedDesk
+        <SavedList
           markets={markets}
           vendors={vendors}
           notes={notes.map(({ slug, title, date, kicker }) => ({ slug, title, date, kicker }))}

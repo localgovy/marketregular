@@ -1,5 +1,5 @@
-import { OnboardingDesk } from "@/components/onboarding-desk";
-import { loadAccountDesk } from "@/lib/data/account";
+import { OnboardingSteps } from "@/components/onboarding-steps";
+import { loadAccount } from "@/lib/data/account";
 import { getCurrentProfile, listMarkets, listSchedules } from "@/lib/data/catalog";
 import { needsOnboarding, skipsShopperOnboarding } from "@/lib/onboarding";
 import { createAuthedServerClient } from "@/lib/supabase/server";
@@ -43,7 +43,7 @@ export default async function OnboardingPage({
     redirect(marketHome ? "/market" : "/vendor");
   }
 
-  const desk = await loadAccountDesk(profile.id);
+  const account = await loadAccount(profile.id);
   const [markets, schedules] = await Promise.all([listMarkets(), listSchedules()]);
   const scheduleMap = new Map<string, MarketSchedule[]>();
   for (const row of schedules) {
@@ -53,11 +53,11 @@ export default async function OnboardingPage({
   }
 
   return (
-    <OnboardingDesk
+    <OnboardingSteps
       displayName={profile.display_name?.trim() || ""}
-      email={desk.email}
+      email={account.email}
       next={next === "/onboarding" ? "/account" : next}
-      visitPlanEmailedAt={desk.visitPlanEmailedAt}
+      visitPlanEmailedAt={account.visitPlanEmailedAt}
       markets={markets.map((market) => ({
         slug: market.slug,
         name: market.name,

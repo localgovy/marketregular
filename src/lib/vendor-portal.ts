@@ -1,6 +1,6 @@
 import { externalHref, socialProfileHref } from "@/lib/format";
 import { readOptOuts } from "@/lib/maintenance-sections";
-import { formatHours } from "@/lib/schedule";
+import { formatHours, formatSeasonRange } from "@/lib/schedule";
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -16,6 +16,9 @@ export type PortalHours = {
   weekday: number;
   opens_at: string;
   closes_at: string;
+  season_start?: string | null;
+  season_end?: string | null;
+  notes?: string | null;
 };
 
 export type PortalMenuItem = {
@@ -188,15 +191,24 @@ export function ownedLogoObjectName(vendorId: string, url: string) {
   return listingLogoObjectName("vendors", vendorId, url);
 }
 
+function sessionLabel(row: PortalHours) {
+  const clock = formatHours(row.opens_at, row.closes_at);
+  const season =
+    row.season_start && row.season_end ? formatSeasonRange(row.season_start, row.season_end) : null;
+  const notes = row.notes?.trim() ? row.notes.trim() : null;
+  return [clock, season, notes].filter(Boolean).join(", ");
+}
+
 export function dayHoursLabel(hours: PortalHours[], weekday: number) {
   const labels = [
-    ...new Set(
-      hours
-        .filter((row) => row.weekday === weekday)
-        .map((row) => formatHours(row.opens_at, row.closes_at)),
-    ),
+    ...new Set(hours.filter((row) => row.weekday === weekday).map((row) => sessionLabel(row))),
   ];
-  return labels.join(", ");
+  return labels.join("; ");
+}
+
+/** The public stall page exists when it is published and has a hall, or it is on the unaffiliated list. */
+export function vendorPublicPageExists(status: string, stallCount: number, unaffiliated: boolean) {
+  return status === "published" && (stallCount > 0 || unaffiliated);
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -240,7 +252,14 @@ function hoursList(value: unknown): PortalHours[] {
     ) {
       continue;
     }
-    rows.push({ weekday, opens_at: opens, closes_at: closes });
+    rows.push({
+      weekday,
+      opens_at: opens,
+      closes_at: closes,
+      season_start: textOrNull(row.season_start),
+      season_end: textOrNull(row.season_end),
+      notes: textOrNull(row.notes),
+    });
   }
   return rows;
 }

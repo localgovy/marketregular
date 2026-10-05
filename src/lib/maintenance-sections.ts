@@ -6,7 +6,7 @@ export type MaintenanceSection = {
   kinds: readonly MaintenanceKind[];
 };
 
-/** Stable keys. Labels are the words an owner and the desk both see. */
+/** Stable keys. Labels are the words an owner and admin both see. */
 export const MAINTENANCE_SECTIONS: readonly MaintenanceSection[] = [
   { key: "about", label: "About", kinds: ["vendor", "market"] },
   { key: "logo", label: "Logo", kinds: ["vendor", "market"] },
@@ -63,6 +63,33 @@ export function readOptOuts(kind: MaintenanceKind, value: unknown) {
     out.push(item);
   }
   return out;
+}
+
+function sameOptOuts(left: readonly string[], right: readonly string[]) {
+  if (left.length !== right.length) return false;
+  const keys = new Set(right);
+  return left.every((key) => keys.has(key));
+}
+
+/**
+ * Write the submitted opt-outs when the form still matches the row.
+ * A stale form keeps the row, unless the desk checked the override.
+ * Changing checkboxes on a stale form asks for a reload.
+ * `loaded` null means the form did not remember what it showed.
+ */
+export function nextMaintenanceOptOuts(input: {
+  current: readonly string[];
+  loaded: readonly string[] | null;
+  submitted: readonly string[];
+  override: boolean;
+}): { write: readonly string[] } | { keep: true } | { reload: true } {
+  if (input.loaded == null) {
+    return input.override ? { write: input.submitted } : { keep: true };
+  }
+  if (sameOptOuts(input.current, input.loaded)) return { write: input.submitted };
+  if (input.override) return { write: input.submitted };
+  if (!sameOptOuts(input.submitted, input.loaded)) return { reload: true };
+  return { keep: true };
 }
 
 /** Reject a key this listing cannot opt out of, and a repeated key. Empty is allowed. */

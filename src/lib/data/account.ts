@@ -27,7 +27,7 @@ export type AccountPost = {
   markets: { name: string; slug: string } | null;
 };
 
-export async function loadAccountDesk(userId: string) {
+export async function loadAccount(userId: string) {
   const { supabase, user } = await createAuthedServerClient();
   if (!supabase || !user || user.id !== userId) {
     return {

@@ -34,7 +34,7 @@ function fold(value: string) {
     .trim();
 }
 
-export function OnboardingDesk({
+export function OnboardingSteps({
   displayName,
   email,
   next,
@@ -121,7 +121,7 @@ export function OnboardingDesk({
   }
 
   const title =
-    step === 1 ? "Your handle" : step === 2 ? "Three markets" : "How this desk works";
+    step === 1 ? "Your handle" : step === 2 ? "Three markets" : "How this works";
 
   return (
     <div className="mx-auto w-full max-w-lg px-4 py-10">

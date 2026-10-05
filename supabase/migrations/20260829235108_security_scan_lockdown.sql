@@ -2,12 +2,12 @@
 --
 -- Root cause of the research_notes leak: table-level GRANT SELECT/INSERT/UPDATE
 -- on market_schedules (and the other public write tables). ADD COLUMN inherits
--- those grants, so a desk-only column became readable to anon the moment it
+-- those grants, so an admin-only column became readable to anon the moment it
 -- existed. Pin every public table to the columns that are meant to be there.
 -- New columns stay private until a later migration names them.
 
 -- ---------------------------------------------------------------------------
--- Schedules: research_notes is desk-only
+-- Schedules: research_notes is admin-only
 -- ---------------------------------------------------------------------------
 revoke all on table public.market_schedules from public, anon, authenticated;
 grant select (

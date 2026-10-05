@@ -58,11 +58,12 @@ export async function applyClaimDecision(
   }
   const { data: claim, error: lookupError } = await admin
     .from("claim_requests")
-    .select("target_type, target_id, user_id")
+    .select("target_type, target_id, user_id, status")
     .eq("id", input.id)
     .maybeSingle();
   if (lookupError) return stopped(dbPublicError(lookupError, "Could not update that claim."));
   if (!claim?.target_type || !claim.target_id) return stopped("Claim not found");
+  if (claim.status !== "pending") return stopped("That claim is already decided.");
   const kind = claim.target_type === "market" ? "market" : claim.target_type === "vendor" ? "vendor" : null;
 
   const listingApproval = input.status === "approved" && kind !== null && Boolean(claim.user_id);
@@ -87,6 +88,16 @@ export async function applyClaimDecision(
     p_note: clipNote(input.note),
   });
   if (error) return stopped(dbPublicError(error, "Could not update that claim."));
+
+  if (input.status === "approved" && claim.user_id && kind) {
+    const { error: closeError } = await admin
+      .from("portal_applications")
+      .update({ status: "approved", assigned_target_id: claim.target_id })
+      .eq("user_id", claim.user_id)
+      .eq("kind", kind)
+      .eq("status", "pending");
+    if (closeError) console.error("claim.closeApplication", closeError.message);
+  }
 
   const table = kind === "market" ? "markets" : "vendors";
   const path = kind ? await listingPath(admin, table, claim.target_id) : null;

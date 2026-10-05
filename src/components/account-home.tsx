@@ -66,7 +66,7 @@ function initials(name: string) {
   return `${parts[0].slice(0, 1)}${parts[parts.length - 1].slice(0, 1)}`.toUpperCase();
 }
 
-export function AccountDesk({
+export function AccountHome({
   profile,
   email,
   markets,

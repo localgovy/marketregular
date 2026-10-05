@@ -13,7 +13,7 @@ type PortalWaitClient = {
   ) => PromiseLike<{ data: unknown; error: { message?: string } | null }>;
 };
 
-/** A stall or market owner, or someone waiting on a portal account, skips the shopper desk. */
+/** A stall or market owner, or someone waiting on a portal account, skips shopper onboarding. */
 export async function skipsShopperOnboarding(
   supabase: PortalWaitClient,
   profile: Pick<Profile, "onboarded_at" | "role"> | null,

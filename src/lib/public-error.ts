@@ -152,6 +152,8 @@ export function dbPublicError(error: DbLike | null | undefined, fallback: string
       ["Those hours are not allowed", "Those hours are not allowed."],
       ["Open has to be before close", "Open has to be before close."],
       ["That season is not allowed", "That season is not allowed."],
+      ["Those hours are already listed", "Those hours are already listed."],
+      ["That claim is already decided", "That claim is already decided."],
       ["Hours list is full", "The hours list is full."],
       ["Those hours are missing", "Those hours are missing."],
       ["A stall is still set for that day", "Change the stalls on that day before removing these hours."],

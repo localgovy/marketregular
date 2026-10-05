@@ -27,7 +27,7 @@ revoke all on table public.market_schedules from public, anon, authenticated;
 revoke all on table public.product_synonyms from public, anon, authenticated;
 revoke all on table public.directory_census from public, anon, authenticated;
 
--- Claimants had DELETE without INSERT or UPDATE. The desk writes these with the service role.
+-- Claimants had DELETE without INSERT or UPDATE. Admin writes these with the service role.
 revoke delete on table public.vendor_menus from authenticated;
 revoke delete on table public.market_schedules from authenticated;
 

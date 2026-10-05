@@ -241,7 +241,7 @@ Quiet, like a coat-check.
 - Create account (name on posts, email, password)
 - Magic link
 - Continue with Google as a outline control, last
-- If backend missing (current production): a single typeset notice `The desk is still connecting accounts. The directory is open.` — design this as a typeset poster, not an error toast.
+- If backend missing (current production): a single typeset notice `Accounts are still connecting. The directory is open.` — design this as a typeset poster, not an error toast.
 
 ### 07 — Account (`/account`)
 

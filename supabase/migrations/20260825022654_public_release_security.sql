@@ -102,7 +102,7 @@ revoke all on function public.is_admin() from public, anon;
 grant execute on function public.is_admin() to authenticated;
 
 -- ---------------------------------------------------------------------------
--- Pin privilege columns (JWT admin included; desk writes use service_role)
+-- Pin privilege columns (JWT admin included; admin writes use service_role)
 -- ---------------------------------------------------------------------------
 create or replace function public.protect_market_privilege_columns()
 returns trigger

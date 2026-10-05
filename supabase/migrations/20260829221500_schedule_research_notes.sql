@@ -3,7 +3,7 @@
 -- "that URL returned 404/500 at research time"), which reads as machine output in a
 -- SERP snippet and on the page.
 --
--- The sourcing is not deleted: it moves to `research_notes`, which is desk-only and
+-- The sourcing is not deleted: it moves to `research_notes`, which is admin-only and
 -- deliberately NOT granted to anon/authenticated. `notes` keeps only facts a shopper
 -- can act on — parking, rain policy, special dates — and is NULL where the weekday,
 -- hours and season columns already say everything.

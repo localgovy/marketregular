@@ -5,7 +5,7 @@
 --      (a tutoring centre, a pharmacy, a gutter installer, a golf-leisurewear brand, a
 --      retirement village, car detailing, window installation, cleaning). They are not
 --      stalls selling food or goods you can buy at a market, so they move to draft
---      rather than being deleted — the row and its links stay for the desk.
+--      rather than being deleted — the row and its links stay for admin.
 --   2. "Now Looking" is a vacant-stall placeholder from a roster import.
 --   3. Three duplicate pairs still split links between two URLs.
 --

@@ -69,7 +69,7 @@ test("a patch names only the sections whose fields changed", () => {
   );
 });
 
-test("blocked sections are named for the desk, and listings group under each section", () => {
+test("blocked sections are named for admin, and listings group under each section", () => {
   assert.equal(
     maintenanceBlockMessage([{ labels: ["About"], noun: "stall" }]),
     "About stays with this stall. Check Save these sections anyway to change it.",

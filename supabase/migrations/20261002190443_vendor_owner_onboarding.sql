@@ -1,5 +1,5 @@
 -- Pending stall claims and owned stalls skip shopper onboarding.
--- The desk looks up an account email with the service role only.
+-- Admin looks up an account email with the service role only.
 
 create or replace function public.awaiting_vendor_portal()
 returns boolean

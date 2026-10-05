@@ -183,7 +183,7 @@ async function seed(db: PGlite) {
   );
   await db.query(
     `insert into public.market_schedules (id, market_id, weekday, opens_at, closes_at, research_notes)
-     values ($1, $2, 6, '08:00', '14:00', 'desk only')`,
+     values ($1, $2, 6, '08:00', '14:00', 'admin only')`,
     [HOURS, MARKET],
   );
   await db.query(
@@ -319,7 +319,7 @@ test("hours reject a close before open, and a roster day the market is closed", 
     "select research_notes from public.market_schedules where id = $1",
     [HOURS],
   );
-  assert.equal(notes.rows[0]?.research_notes, "desk only");
+  assert.equal(notes.rows[0]?.research_notes, "admin only");
 });
 
 test("a market-made stall stays without an owner until a vendor account is assigned", async () => {

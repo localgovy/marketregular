@@ -56,7 +56,7 @@ export function LoginForm({
   if (!configured) {
     return (
       <div className="rounded-xl bg-card p-6 ring-1 ring-foreground/10">
-        <p className="type-column">The desk is still connecting accounts</p>
+        <p className="type-column">Accounts are still connecting</p>
         <p className="mt-2 text-sm text-muted-foreground">The directory is open.</p>
       </div>
     );

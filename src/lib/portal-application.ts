@@ -52,3 +52,37 @@ export function decodePortalOrgCookie(value: string | undefined) {
     return null;
   }
 }
+
+/** Stored on app_metadata until email confirmation files the request. Not used for access. */
+export const PORTAL_SIGNUP_META = "portal_signup";
+
+export type PortalSignupIntent = {
+  kind: ClaimTarget;
+  requestId: string | null;
+  organizationName: string | null;
+};
+
+export function portalSignupRecord(
+  kind: ClaimTarget,
+  requestId: string | null,
+  organizationName: string | null,
+) {
+  return {
+    kind,
+    request_id: requestId,
+    organization_name: organizationName,
+  };
+}
+
+export function readPortalSignupIntent(appMetadata: unknown): PortalSignupIntent | null {
+  if (!appMetadata || typeof appMetadata !== "object") return null;
+  const raw = (appMetadata as Record<string, unknown>)[PORTAL_SIGNUP_META];
+  if (!raw || typeof raw !== "object") return null;
+  const record = raw as Record<string, unknown>;
+  const kind = portalKind(record.kind);
+  if (!kind) return null;
+  const requestId = portalRequestId(record.request_id);
+  const organizationName = requestId ? null : clipOrganizationName(record.organization_name);
+  if (!requestId && !organizationName) return null;
+  return { kind, requestId, organizationName };
+}

@@ -1,4 +1,4 @@
-import { AccountDesk } from "@/components/account-desk";
+import { AccountHome } from "@/components/account-home";
 import { loadBuyerOrders } from "@/app/actions/selling";
 import { loadVendorPortal } from "@/app/actions/vendor-portal";
 import {
@@ -8,7 +8,7 @@ import {
   listStalls,
   listVendors,
 } from "@/lib/data/catalog";
-import { loadAccountDesk } from "@/lib/data/account";
+import { loadAccount } from "@/lib/data/account";
 import { listBlogPosts } from "@/lib/blog";
 import { toGeoMarket } from "@/lib/geo";
 import { nextOpenLabel } from "@/lib/schedule";
@@ -37,8 +37,8 @@ export default async function AccountPage() {
   const skip = session.supabase ? await skipsShopperOnboarding(session.supabase, profile) : false;
   if (!skip) redirect(onboardingHref("/account"));
 
-  const [desk, markets, vendors, stalls, schedules, orders, portal] = await Promise.all([
-    loadAccountDesk(profile.id),
+  const [account, markets, vendors, stalls, schedules, orders, portal] = await Promise.all([
+    loadAccount(profile.id),
     listMarkets(),
     listVendors(),
     listStalls(),
@@ -60,7 +60,7 @@ export default async function AccountPage() {
     if (hours) nextHours[market.slug] = hours;
   }
 
-  const saves = desk.saves;
+  const saves = account.saves;
 
   const stallWeek = savedVendorsThisWeek(
     saves.vendors,
@@ -91,7 +91,7 @@ export default async function AccountPage() {
   }
 
   const marketById = new Map(markets.map((market) => [market.id, market]));
-  const posts = desk.posts.map((post) => {
+  const posts = account.posts.map((post) => {
     const market = marketById.get(post.market_id);
     return {
       ...post,
@@ -101,9 +101,9 @@ export default async function AccountPage() {
   const savedMarket = markets.find((market) => saves.markets.includes(market.slug));
 
   return (
-    <AccountDesk
+    <AccountHome
       profile={profile}
-      email={desk.email}
+      email={account.email}
       markets={markets}
       vendors={vendors}
       nextHours={nextHours}
@@ -121,10 +121,10 @@ export default async function AccountPage() {
         date,
         kicker,
       }))}
-      applications={desk.applications}
+      applications={account.applications}
       saves={saves}
-      reviewCount={desk.reviewCount}
-      visitPlanEmailedAt={desk.visitPlanEmailedAt}
+      reviewCount={account.reviewCount}
+      visitPlanEmailedAt={account.visitPlanEmailedAt}
       orders={orders}
       ownedStalls={
         portal.signedIn && !portal.error
