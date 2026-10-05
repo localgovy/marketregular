@@ -88,6 +88,8 @@ export default async function VendorEditorPage({
             </Link>
             .
           </>
+        ) : listing.status === "published" ? (
+          "Published. The public page is hidden until you add a hall."
         ) : (
           "Draft. This listing is not on the public site yet."
         )}

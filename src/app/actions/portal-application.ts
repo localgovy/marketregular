@@ -21,9 +21,13 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 export type PortalApplicationResult = { error: string | null; message?: string };
 
-async function openListing(kind: "vendor" | "market", id: string, userId: string) {
+async function openListing(
+  kind: "vendor" | "market",
+  id: string,
+  userId: string,
+): Promise<{ error: string } | { listing: { id: string; name: string; path: string } }> {
   const service = createServiceClient();
-  if (!service) return { error: "Could not save that request." as const };
+  if (!service) return { error: "Could not save that request." };
   const table = kind === "vendor" ? "vendors" : "markets";
   const { data } = await service
     .from(table)
@@ -31,12 +35,13 @@ async function openListing(kind: "vendor" | "market", id: string, userId: string
     .eq("id", id)
     .eq("status", "published")
     .maybeSingle();
-  if (!data?.slug || !data.name) return { error: "That listing is missing." as const };
+  if (!data?.slug || !data.name) return { error: "That listing is missing." };
   if (data.claimed_by && data.claimed_by !== userId) {
     return {
-      error: (kind === "vendor"
-        ? "Someone else already runs this stall."
-        : "Someone else already runs this market.") as const,
+      error:
+        kind === "vendor"
+          ? "Someone else already runs this stall."
+          : "Someone else already runs this market.",
     };
   }
   return {

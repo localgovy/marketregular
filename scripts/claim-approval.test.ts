@@ -672,6 +672,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
 
   test("a secret replaced before the reread is the password that is returned", async () => {
     const db = createDb();
+    db.state.users.get(USER)!.identities = [];
     db.state.swapCiphertext = encryptVendorPassword("swapped-pass", key);
     const result = await prepareVendorClaimPassword(db.client, USER);
     assert.deepEqual(result, { error: null, email: "stall@example.com", password: "swapped-pass" });

@@ -509,14 +509,14 @@ test("duplicate hours, impossible seasons, and a cut slug are refused", async ()
   await setAuth(db, "authenticated", OWNER);
   const duplicate = await expectRaise(() =>
     db.query(
-      "select public.save_owned_schedule($1, null, 6, '08:00', '14:00', '', '', '')",
+      "select public.save_owned_schedule($1, null::uuid, 6::smallint, '08:00', '14:00', '', '', '')",
       [MARKET],
     ),
   );
   assert.match(duplicate.message, /already listed/);
   const season = await expectRaise(() =>
     db.query(
-      "select public.save_owned_schedule($1, null, 0, '09:00', '12:00', '02-31', '03-01', '')",
+      "select public.save_owned_schedule($1, null::uuid, 0::smallint, '09:00', '12:00', '02-31', '03-01', '')",
       [MARKET],
     ),
   );
@@ -531,6 +531,7 @@ test("duplicate hours, impossible seasons, and a cut slug are refused", async ()
 test("a draft hall can be updated, and a pending request keeps the listing", async () => {
   const db = await database();
   await seed(db);
+  await setAuth(db, "service_role", null);
   await db.query("update public.markets set status = 'draft' where id = $1", [MARKET]);
   await db.query("update public.vendors set claimed_by = $1 where id = $2", [OWNER, VENDOR]);
   await db.query(
@@ -545,16 +546,20 @@ test("a draft hall can be updated, and a pending request keeps the listing", asy
   );
   assert.equal(stall.rows[0]?.stall, "Row A");
 
+  await setAuth(db, "service_role", null);
   await db.query("update public.markets set status = 'published' where id = $1", [MARKET]);
+  await setAuth(db, "authenticated", OWNER);
   const created = await db.query<{ id: string }>(
     `select public.create_market_vendor($1, 'Jam Jar', '', '', '', '', '', '', '', '{}'::text[], '', '{6}'::smallint[]) as id`,
     [MARKET],
   );
   const id = created.rows[0]!.id;
+  await setAuth(db, "service_role", null);
   await db.query(
     "insert into public.portal_applications (user_id, kind, requested_target_id) values ($1, 'vendor', $2)",
     [OTHER, id],
   );
+  await setAuth(db, "authenticated", OWNER);
   const removed = await db.query<{ result: string }>(
     "select public.delete_market_roster($1, $2) as result",
     [MARKET, id],
