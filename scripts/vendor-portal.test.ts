@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   dollarsFromCents,
+  dayHoursLabel,
   imageKind,
   normalizePortalTag,
   ownedLogoObjectName,
   parseVendorPortal,
+  vendorPublicPageExists,
   portalListingHref,
   portalSocialHref,
   priceCents,
@@ -126,4 +128,22 @@ test("portal payload keeps menus and stall days", () => {
   assert.equal(listings[0]?.menus[0]?.price_cents, 500);
   assert.deepEqual(listings[0]?.stalls[0]?.days, [6]);
   assert.equal(listings[0]?.phone, "4165550100");
+  assert.equal(listings[0]?.stalls[0]?.hours[0]?.season_start, null);
+});
+
+test("stall days show each season, and the public page needs a hall", () => {
+  const label = dayHoursLabel(
+    [
+      { weekday: 6, opens_at: "08:00", closes_at: "14:00", season_start: "05-01", season_end: "10-31" },
+      { weekday: 6, opens_at: "09:00", closes_at: "13:00", season_start: "11-01", season_end: "04-30", notes: "Indoor" },
+    ],
+    6,
+  );
+  assert.match(label, /May 1 to Oct 31/);
+  assert.match(label, /Nov 1 to Apr 30/);
+  assert.match(label, /Indoor/);
+  assert.equal(vendorPublicPageExists("published", 0, false), false);
+  assert.equal(vendorPublicPageExists("published", 0, true), true);
+  assert.equal(vendorPublicPageExists("published", 1, false), true);
+  assert.equal(vendorPublicPageExists("draft", 2, false), false);
 });

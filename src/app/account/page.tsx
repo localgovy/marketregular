@@ -1,5 +1,6 @@
 import { AccountHome } from "@/components/account-home";
 import { loadBuyerOrders } from "@/app/actions/selling";
+import { loadMarketPortal } from "@/app/actions/market-portal";
 import { loadVendorPortal } from "@/app/actions/vendor-portal";
 import {
   getCurrentProfile,
@@ -37,7 +38,7 @@ export default async function AccountPage() {
   const skip = session.supabase ? await skipsShopperOnboarding(session.supabase, profile) : false;
   if (!skip) redirect(onboardingHref("/account"));
 
-  const [account, markets, vendors, stalls, schedules, orders, portal] = await Promise.all([
+  const [account, markets, vendors, stalls, schedules, orders, portal, marketPortal] = await Promise.all([
     loadAccount(profile.id),
     listMarkets(),
     listVendors(),
@@ -45,6 +46,7 @@ export default async function AccountPage() {
     listSchedules(),
     loadBuyerOrders(profile.id),
     loadVendorPortal(),
+    loadMarketPortal(),
   ]);
 
   const scheduleMap = new Map<string, MarketSchedule[]>();
@@ -134,6 +136,22 @@ export default async function AccountPage() {
               slug: listing.slug,
             }))
           : []
+      }
+      ownedMarkets={
+        marketPortal.signedIn && !marketPortal.error
+          ? marketPortal.listings.map((listing) => ({
+              id: listing.id,
+              name: listing.name,
+            }))
+          : []
+      }
+      portalUnavailable={
+        [
+          portal.error ? "The stall editor is not available yet. Try again in a minute." : null,
+          marketPortal.error ? "The market editor is not available yet. Try again in a minute." : null,
+        ]
+          .filter(Boolean)
+          .join(" ") || null
       }
     />
   );

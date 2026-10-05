@@ -16,15 +16,23 @@ import {
   signInPublicError,
   signUpPublicError,
 } from "@/lib/public-error";
-import { saveChosenVendorPassword, syncChosenVendorPassword } from "@/lib/issue-vendor-password";
+import { filePortalApplication } from "@/app/actions/portal-application";
+import {
+  markChosenVendorPassword,
+  saveChosenVendorPassword,
+  syncChosenVendorPassword,
+} from "@/lib/issue-vendor-password";
 import {
   PORTAL_ORG_COOKIE,
+  PORTAL_SIGNUP_META,
   clipOrganizationName,
   encodePortalOrgCookie,
   portalHomePath,
   portalKind,
   portalOrgCookieOptions,
   portalRequestId,
+  portalSignupRecord,
+  readPortalSignupIntent,
 } from "@/lib/portal-application";
 import { canChangePassword, mustSetPassword, recoveryMatchesUser } from "@/lib/password-gate";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -35,6 +43,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
+import type { ClaimTarget } from "@/types/database";
 
 const STEP_UP_MS = 10 * 60 * 1000;
 
@@ -85,6 +94,38 @@ async function purgePostPhotos(
 
 function callbackUrl() {
   return `${authOrigin()}/auth/callback`;
+}
+
+async function rememberPortalIntent(
+  user: User,
+  kind: ClaimTarget,
+  requestId: string | null,
+  organization: string | null,
+) {
+  const admin = createServiceClient();
+  if (!admin) return;
+  const marked = await markChosenVendorPassword(admin, user);
+  if (marked.error) console.error("auth.portalPassword", marked.error);
+  const { data: fresh } = await admin.auth.admin.getUserById(user.id);
+  const base = (fresh.user?.app_metadata ?? user.app_metadata ?? {}) as Record<string, unknown>;
+  const { error } = await admin.auth.admin.updateUserById(user.id, {
+    app_metadata: {
+      ...base,
+      [PORTAL_SIGNUP_META]: portalSignupRecord(kind, requestId, organization),
+    },
+  });
+  if (error) console.error("auth.portalSignup", error.message);
+}
+
+async function clearPortalIntent(userId: string) {
+  const admin = createServiceClient();
+  if (!admin) return;
+  const { data: fresh } = await admin.auth.admin.getUserById(userId);
+  if (!fresh.user) return;
+  const meta = { ...(fresh.user.app_metadata ?? {}) } as Record<string, unknown>;
+  delete meta[PORTAL_SIGNUP_META];
+  const { error } = await admin.auth.admin.updateUserById(userId, { app_metadata: meta });
+  if (error) console.error("auth.portalSignup", error.message);
 }
 
 async function rememberAuthNext(next: unknown) {
@@ -178,12 +219,26 @@ export async function signUpForPortal(formData: FormData) {
     const jar = await cookies();
     jar.set(PORTAL_ORG_COOKIE, encodePortalOrgCookie(organization), portalOrgCookieOptions());
   }
-  if (data.session) {
+  if (data.session && data.user) {
+    const admin = createServiceClient();
+    if (admin) {
+      const marked = await markChosenVendorPassword(admin, data.user);
+      if (marked.error) console.error("auth.portalPassword", marked.error);
+    }
+    const filed = await filePortalApplication({
+      supabase,
+      user: data.user,
+      kind,
+      requestId,
+      organizationName: organization,
+    });
+    if (filed.error) return { error: filed.error };
     const jar = await cookies();
     jar.set(PASSWORD_RECOVERY_COOKIE, "", passwordRecoveryCookie(0));
     revalidatePath("/", "layout");
     redirect(next);
   }
+  if (data.user) await rememberPortalIntent(data.user, kind, requestId, organization);
   return { error: null, message: "Check your email to confirm your account." };
 }
 
@@ -227,6 +282,28 @@ export async function verifyEmailOtp(formData: FormData) {
       jar.set(PASSWORD_RECOVERY_COOKIE, userId, passwordRecoveryCookie(600));
     }
     redirect("/account/password");
+  }
+  const intent = readPortalSignupIntent(data.user?.app_metadata);
+  if (intent && data.user) {
+    const admin = createServiceClient();
+    if (admin) {
+      const marked = await markChosenVendorPassword(admin, data.user);
+      if (marked.error) console.error("auth.portalPassword", marked.error);
+    }
+    const filed = await filePortalApplication({
+      supabase,
+      user: data.user,
+      kind: intent.kind,
+      requestId: intent.requestId,
+      organizationName: intent.organizationName,
+    });
+    if (!filed.error) {
+      await clearPortalIntent(data.user.id);
+    } else if (intent.organizationName) {
+      const jar = await cookies();
+      jar.set(PORTAL_ORG_COOKIE, encodePortalOrgCookie(intent.organizationName), portalOrgCookieOptions());
+    }
+    redirect(portalHomePath(intent.kind, intent.requestId));
   }
   redirect(next);
 }
@@ -282,7 +359,9 @@ export async function updatePassword(formData: FormData) {
       supabase.rpc("has_owned_market"),
       supabase.rpc("has_owned_vendor"),
     ]);
-    redirect(ownsMarket === true && ownsVendor !== true ? "/market" : "/vendor");
+    if (ownsMarket === true && ownsVendor === true) redirect("/account");
+    if (ownsMarket === true) redirect("/market");
+    redirect("/vendor");
   }
   await supabase.auth.signOut({ scope: "others" });
   redirect("/account");

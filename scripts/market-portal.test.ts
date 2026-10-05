@@ -7,6 +7,7 @@ import {
   parseMarketPortal,
   portalHours,
   portalSeason,
+  rosterRemovalMessage,
 } from "../src/lib/market-portal.ts";
 
 const marketId = "55555555-5555-4555-8555-555555555555";
@@ -18,6 +19,9 @@ test("season is a pair of month-days or empty", () => {
   assert.equal(portalSeason("05-10", ""), "bad");
   assert.equal(portalSeason("13-01", "10-31"), "bad");
   assert.equal(portalSeason("02-32", "03-01"), "bad");
+  assert.equal(portalSeason("02-31", "03-01"), "bad");
+  assert.equal(portalSeason("04-31", "05-01"), "bad");
+  assert.deepEqual(portalSeason("02-29", "03-01"), { start: "02-29", end: "03-01" });
 });
 
 test("hours have to open before they close", () => {
@@ -97,4 +101,13 @@ test("the market portal keeps contact off stalls the market cannot edit", () => 
   assert.deepEqual(market.stalls[1]?.tags, []);
   assert.equal(parseMarketPortal("{").length, 0);
   assert.equal(parseMarketPortal("[]").length, 0);
+});
+
+test("removing a stall says whether the listing stayed", () => {
+  assert.equal(rosterRemovalMessage("deleted"), "Removed. The listing is gone.");
+  assert.match(rosterRemovalMessage("kept:order"), /order/);
+  assert.match(rosterRemovalMessage("kept:market"), /another market/);
+  assert.match(rosterRemovalMessage("kept:request"), /asked to run/);
+  assert.match(rosterRemovalMessage("kept"), /listing stays/);
+  assert.match(rosterRemovalMessage(null), /listing stays/);
 });

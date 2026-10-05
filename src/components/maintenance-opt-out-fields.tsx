@@ -16,6 +16,7 @@ export function MaintenanceOptOutFields({
         Checked sections stay with the {noun}. Leave the last box off to keep them as they are.
       </p>
       <input type="hidden" name="maintenance_opt_outs_form" value="1" />
+      <input type="hidden" name="maintenance_opt_outs_loaded" value={selected.join(",")} />
       {sectionsFor(kind).map((section) => (
         <label key={section.key} className="flex items-baseline gap-2 text-base">
           <input

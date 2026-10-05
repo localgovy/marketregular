@@ -21,13 +21,21 @@ type AuthUpdate = { password?: string; app_metadata?: Record<string, unknown> };
 
 type DbState = {
   ops: string[];
-  claim: { id: string; target_type: string; target_id: string; user_id: string } | null;
+  claim: { id: string; target_type: string; target_id: string; user_id: string; status: string } | null;
   claimError: { message: string } | null;
   stall: { id: string; claimed_by: string | null; slug: string } | null;
   stallError: { message: string } | null;
   market: { id: string; claimed_by: string | null; slug: string } | null;
   secrets: SecretRow[];
-  users: Map<string, { email: string | null; app_metadata: Record<string, unknown>; password: string | null }>;
+  users: Map<
+    string,
+    {
+      email: string | null;
+      app_metadata: Record<string, unknown>;
+      password: string | null;
+      identities: { provider: string }[];
+    }
+  >;
   rpcError: { message: string; code?: string } | null;
   lastRpc: { p_id: string; p_status: string; p_note: string | null } | null;
   secretReadError: boolean;
@@ -45,14 +53,22 @@ type DbState = {
 function createDb() {
   const state: DbState = {
     ops: [],
-    claim: { id: CLAIM, target_type: "vendor", target_id: VENDOR, user_id: USER },
+    claim: { id: CLAIM, target_type: "vendor", target_id: VENDOR, user_id: USER, status: "pending" },
     claimError: null,
     stall: { id: VENDOR, claimed_by: null, slug: "river-fruit" },
     stallError: null,
     market: { id: MARKET, claimed_by: null, slug: "withrow" },
     secrets: [],
     users: new Map([
-      [USER, { email: "stall@example.com", app_metadata: {}, password: "original" }],
+      [
+        USER,
+        {
+          email: "stall@example.com",
+          app_metadata: {},
+          password: "original",
+          identities: [{ provider: "email" }],
+        },
+      ],
     ]),
     rpcError: null,
     lastRpc: null,
@@ -87,7 +103,7 @@ function createDb() {
 
   function from(table: string) {
     const filters: Array<[string, unknown]> = [];
-    let mode: "select" | "delete" = "select";
+    let mode: "select" | "delete" | "update" = "select";
     const finish = () => {
       if (table === "vendor_sign_in_secrets") return finishSecrets(mode, filters);
       if (table === "claim_requests") {
@@ -99,9 +115,14 @@ function createDb() {
             target_type: state.claim.target_type,
             target_id: state.claim.target_id,
             user_id: state.claim.user_id,
+            status: state.claim.status,
           },
           error: null,
         };
+      }
+      if (table === "portal_applications") {
+        state.ops.push("close-application");
+        return { data: null, error: null };
       }
       if (table === "vendors") {
         if (state.stallError) return { data: null, error: state.stallError };
@@ -126,6 +147,10 @@ function createDb() {
       },
       delete() {
         mode = "delete";
+        return api;
+      },
+      update() {
+        mode = "update";
         return api;
       },
       upsert(row: SecretRow) {
@@ -172,7 +197,14 @@ function createDb() {
           const user = state.users.get(id);
           if (!user) return { data: { user: null }, error: { message: "missing" } };
           return {
-            data: { user: { id, email: user.email, app_metadata: { ...user.app_metadata } } },
+            data: {
+              user: {
+                id,
+                email: user.email,
+                app_metadata: { ...user.app_metadata },
+                identities: user.identities,
+              },
+            },
             error: null,
           };
         },
@@ -279,32 +311,34 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.equal(db.state.secrets.length, 0);
   });
 
-  test("approval writes the claim before the one-time password, then mails the password page", async () => {
+  test("approval keeps a password they already chose and closes the portal request", async () => {
     const db = createDb();
     const { result, mail } = await decide(db, { status: "approved" });
-    const rpcAt = db.state.ops.indexOf("rpc");
-    const passwordAt = db.state.ops.indexOf("updateUser");
     assert.equal(result.error, null);
     assert.equal(result.committed, true);
     assert.deepEqual(result.paths, ["/vendors/river-fruit"]);
     assert.equal(result.vendorId, VENDOR);
     assert.equal(result.mailFailed, null);
-    assert.ok(rpcAt >= 0 && passwordAt > rpcAt);
+    assert.equal(db.state.ops.includes("updateUser"), false);
+    assert.equal(db.state.ops.includes("close-application"), true);
     assert.equal(db.state.stall?.claimed_by, USER);
     assert.equal(db.state.lastRpc?.p_status, "approved");
-    assert.equal(db.state.lastRpc?.p_note, null);
-    const user = db.state.users.get(USER);
-    const secret = db.state.secrets[0];
-    assert.ok(secret);
-    assert.equal(secret.chosen, false);
-    assert.match(user?.password ?? "", ALPHABET);
-    assert.notEqual(user?.password, "original");
-    assert.equal(decryptVendorPassword(secret.ciphertext, key), user?.password);
-    assert.equal(user?.app_metadata.must_set_password, true);
+    assert.equal(db.state.users.get(USER)?.password, "original");
+    assert.equal(db.state.secrets.length, 0);
     assert.equal(mail.length, 1);
     assert.equal(mail[0]?.email, "stall@example.com");
-    assert.equal(mail[0]?.password, user?.password);
-    assert.equal(new URL(mail[0]!.url).searchParams.get("next"), "/account/password");
+    assert.equal(mail[0]?.password, undefined);
+    assert.equal(new URL(mail[0]!.url).pathname, "/vendor");
+  });
+
+  test("a decided claim cannot be approved again", async () => {
+    const db = createDb();
+    db.state.claim!.status = "approved";
+    const again = await decide(db, { status: "approved" });
+    assert.equal(again.result.error, "That claim is already decided.");
+    assert.equal(again.result.committed, false);
+    assert.equal(db.state.ops.includes("rpc"), false);
+    assert.equal(db.state.stall?.claimed_by, null);
   });
 
   test("a chosen password is not rotated and the mail opens the stall", async () => {
@@ -347,6 +381,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
 
   test("a password failure after approval keeps the claim and the old password", async () => {
     const db = createDb();
+    db.state.users.get(USER)!.identities = [];
     db.state.failAuthOnCall = 1;
     const { result, mail } = await decide(db, { status: "approved" });
     assert.equal(result.error, "Could not set a sign-in password.");
@@ -362,6 +397,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
 
   test("a mail failure leaves the approval and the owner in place", async () => {
     const db = createDb();
+    db.state.users.get(USER)!.identities = [];
     const { result, mail } = await decide(db, { status: "approved" }, false);
     assert.equal(result.error, null);
     assert.equal(result.committed, true);
@@ -374,6 +410,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
 
   test("a reread failure after the password is set still mails it", async () => {
     const db = createDb();
+    db.state.users.get(USER)!.identities = [];
     db.state.failReread = true;
     const { result, mail } = await decide(db, { status: "approved" });
     assert.equal(result.error, null);
@@ -384,6 +421,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.notEqual(mail[0]?.password, "original");
 
     const unsent = createDb();
+    unsent.state.users.get(USER)!.identities = [];
     unsent.state.failReread = true;
     const failed = await decide(unsent, { status: "approved" }, false);
     assert.equal(failed.result.error, null);
@@ -393,6 +431,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
 
   test("a failed realign keeps the password that can sign in and still mails it", async () => {
     const db = createDb();
+    db.state.users.get(USER)!.identities = [];
     db.state.swapCiphertext = encryptVendorPassword("swapped-pass", key);
     db.state.failAuthOnCall = 2;
     const { result, mail } = await decide(db, { status: "approved" });
@@ -433,9 +472,9 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.equal(rejected.state.ops.includes("getUser"), false);
   });
 
-  test("market approval issues an account password and leaves the stall alone", async () => {
+  test("market approval keeps a chosen password and issues one only when the account has none", async () => {
     const market = createDb();
-    market.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER };
+    market.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER, status: "pending" };
     const approved = await decide(market, { status: "approved" });
     assert.equal(approved.result.error, null);
     assert.equal(approved.result.committed, true);
@@ -444,19 +483,27 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.deepEqual(approved.result.paths, ["/markets/withrow"]);
     assert.equal(market.state.market?.claimed_by, USER);
     assert.equal(market.state.stall?.claimed_by, null);
-    const user = market.state.users.get(USER);
-    const secret = market.state.secrets[0];
-    assert.ok(secret);
-    assert.equal(secret.chosen, false);
-    assert.match(user?.password ?? "", ALPHABET);
-    assert.notEqual(user?.password, "original");
+    assert.equal(market.state.users.get(USER)?.password, "original");
+    assert.equal(market.state.secrets.length, 0);
+    assert.equal(market.state.ops.includes("close-application"), true);
     assert.equal(approved.mail.length, 1);
     assert.equal(approved.mail[0]?.kind, "market");
-    assert.equal(approved.mail[0]?.password, user?.password);
-    assert.equal(new URL(approved.mail[0]!.url).searchParams.get("next"), "/account/password");
+    assert.equal(approved.mail[0]?.password, undefined);
+    assert.equal(new URL(approved.mail[0]!.url).pathname, "/market");
+
+    const fresh = createDb();
+    fresh.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER, status: "pending" };
+    fresh.state.users.get(USER)!.identities = [];
+    const issued = await decide(fresh, { status: "approved" });
+    const issuedUser = fresh.state.users.get(USER);
+    assert.equal(issued.result.error, null);
+    assert.match(issuedUser?.password ?? "", ALPHABET);
+    assert.notEqual(issuedUser?.password, "original");
+    assert.equal(issued.mail[0]?.password, issuedUser?.password);
+    assert.equal(new URL(issued.mail[0]!.url).searchParams.get("next"), "/account/password");
 
     const chosen = createDb();
-    chosen.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER };
+    chosen.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER, status: "pending" };
     const ciphertext = encryptVendorPassword("already-chosen", key);
     chosen.state.secrets.push({
       user_id: USER,
@@ -473,7 +520,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.equal(new URL(kept.mail[0]!.url).pathname, "/market");
 
     const taken = createDb();
-    taken.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER };
+    taken.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER, status: "pending" };
     taken.state.market!.claimed_by = OTHER;
     const blocked = await decide(taken, { status: "approved" });
     assert.equal(blocked.result.error, "That listing is already claimed.");
@@ -484,7 +531,8 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.equal(taken.state.users.get(USER)?.password, "original");
 
     const unsent = createDb();
-    unsent.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER };
+    unsent.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER, status: "pending" };
+    unsent.state.users.get(USER)!.identities = [];
     const failed = await decide(unsent, { status: "approved" }, false);
     assert.equal(failed.result.error, null);
     assert.equal(failed.result.committed, true);
@@ -505,7 +553,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.equal(db.state.lastRpc?.p_note, "n".repeat(500));
 
     const blank = createDb();
-    blank.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER };
+    blank.state.claim = { id: CLAIM, target_type: "market", target_id: MARKET, user_id: USER, status: "pending" };
     await decide(blank, { status: "rejected", note: "   \n  " });
     assert.equal(blank.state.lastRpc?.p_note, null);
   });
@@ -545,6 +593,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
 
   test("a new password is stored unchosen and matches the auth password", async () => {
     const db = createDb();
+    db.state.users.get(USER)!.identities = [];
     const result = await prepareVendorClaimPassword(db.client, USER);
     assert.equal(result.error, null);
     if (result.error !== null) return;
@@ -560,6 +609,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
 
   test("a failed auth update deletes a new secret and restores a previous one", async () => {
     const fresh = createDb();
+    fresh.state.users.get(USER)!.identities = [];
     fresh.state.failAuthOnCall = 1;
     const created = await prepareVendorClaimPassword(fresh.client, USER);
     assert.deepEqual(created, { error: "Could not set a sign-in password." });
@@ -569,6 +619,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
 
     const previous = encryptVendorPassword("previous-secret", key);
     const existing = createDb();
+    existing.state.users.get(USER)!.identities = [];
     existing.state.failAuthOnCall = 1;
     existing.state.secrets.push({ user_id: USER, ciphertext: previous, chosen: false });
     const restored = await prepareVendorClaimPassword(existing.client, USER);
@@ -579,6 +630,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
 
   test("a store failure never reaches auth", async () => {
     const db = createDb();
+    db.state.users.get(USER)!.identities = [];
     db.state.failFirstUpsert = true;
     const result = await prepareVendorClaimPassword(db.client, USER);
     assert.deepEqual(result, { error: "Could not store that password." });

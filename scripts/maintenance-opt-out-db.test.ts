@@ -11,6 +11,7 @@ const OTHER = "22222222-2222-4222-8222-222222222222";
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
 const migration = "supabase/migrations/20261005202516_maintenance_opt_outs.sql";
+const fixes = "supabase/migrations/20261005211604_portal_account_editor_fixes.sql";
 
 function extractFunction(relativePath: string, name: string) {
   const sql = readFileSync(join(root, relativePath), "utf8");
@@ -46,8 +47,12 @@ create function auth.uid()
 returns uuid language sql stable as $$ select uid from auth.session $$;
 create function auth.jwt()
 returns jsonb language sql stable as $$ select claims from auth.session $$;
+create table auth.users (
+  id uuid primary key,
+  raw_app_meta_data jsonb not null default '{}'::jsonb
+);
 
-${extractFunction("supabase/migrations/20261003180410_security_checkout_and_password_lockdown.sql", "password_change_pending")}
+${extractFunction(fixes, "password_change_pending")}
 ${extractFunction(migration, "maintenance_opt_outs_ok")}
 
 create table public.markets (
@@ -92,6 +97,14 @@ async function setAuth(db: PGlite, role: string, uid: string | null, claims: Rec
     uid,
     JSON.stringify(claims),
   ]);
+  if (!uid) return;
+  const meta =
+    claims.app_metadata && typeof claims.app_metadata === "object" ? claims.app_metadata : {};
+  await db.query(
+    `insert into auth.users (id, raw_app_meta_data) values ($1, $2::jsonb)
+     on conflict (id) do update set raw_app_meta_data = excluded.raw_app_meta_data`,
+    [uid, JSON.stringify(meta)],
+  );
 }
 
 async function expectRaise(run: () => Promise<unknown>) {

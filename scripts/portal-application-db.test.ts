@@ -7,6 +7,7 @@ import { PGlite } from "@electric-sql/pglite";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const migration = "supabase/migrations/20261005192933_portal_applications.sql";
+const fixes = "supabase/migrations/20261005211604_portal_account_editor_fixes.sql";
 const OWNER = "11111111-1111-4111-8111-111111111111";
 const OTHER = "22222222-2222-4222-8222-222222222222";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -15,8 +16,8 @@ const MARKET = "55555555-5555-4555-8555-555555555555";
 const APP = "66666666-6666-4666-8666-666666666666";
 const APP2 = "77777777-7777-4777-8777-777777777777";
 
-function extractFunction(name: string) {
-  const sql = readFileSync(join(root, migration), "utf8");
+function extractFunction(name: string, relativePath = migration) {
+  const sql = readFileSync(join(root, relativePath), "utf8");
   const lowered = sql.toLowerCase();
   const signature = `function public.${name.toLowerCase()}`;
   const at = lowered.indexOf(signature);
@@ -104,7 +105,7 @@ create unique index portal_applications_one_pending_idx
   on public.portal_applications (user_id, kind)
   where status = 'pending';
 
-${extractFunction("guard_portal_application")}
+${extractFunction("guard_portal_application", fixes)}
 ${assignSql}
 ${extractFunction("reject_portal_application")}
 ${extractFunction("awaiting_vendor_portal")}
@@ -367,4 +368,21 @@ test("a fourth request in an hour is refused", async () => {
   );
   assert.equal(raised.code, "P0001");
   assert.match(raised.message, /another request/);
+});
+
+test("a listing someone else already runs cannot be requested", async () => {
+  const db = await database();
+  await seed(db);
+  await db.query("update public.vendors set claimed_by = $1 where id = $2", [OWNER, VENDOR]);
+  await setAuth(db, "authenticated", OTHER);
+  const raised = await expectRaise(() =>
+    db.query(
+      "insert into public.portal_applications (kind, requested_target_id) values ('vendor', $1)",
+      [VENDOR],
+    ),
+  );
+  assert.equal(raised.code, "P0001");
+  assert.match(raised.message, /Someone else already runs this stall/);
+  const rows = await db.query("select id from public.portal_applications");
+  assert.equal(rows.rows.length, 0);
 });

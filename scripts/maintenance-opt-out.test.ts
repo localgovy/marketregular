@@ -4,6 +4,7 @@ import { parseMarketPortal } from "../src/lib/market-portal.ts";
 import {
   groupMaintenanceOptOuts,
   maintenanceBlockMessage,
+  nextMaintenanceOptOuts,
   optOutsFromForm,
   readOptOuts,
   touchedMarketSections,
@@ -131,4 +132,27 @@ test("portal payloads keep known opt-outs and drop the rest", () => {
     },
   ]);
   assert.deepEqual(markets[0]?.maintenance_opt_outs, ["hours"]);
+});
+
+test("a stale desk form does not wipe opt-outs the owner just saved", () => {
+  assert.deepEqual(
+    nextMaintenanceOptOuts({ current: ["menu"], loaded: ["menu"], submitted: ["menu", "about"], override: false }),
+    { write: ["menu", "about"] },
+  );
+  assert.deepEqual(
+    nextMaintenanceOptOuts({ current: ["menu"], loaded: [], submitted: [], override: false }),
+    { keep: true },
+  );
+  assert.deepEqual(
+    nextMaintenanceOptOuts({ current: ["menu"], loaded: [], submitted: ["logo"], override: false }),
+    { reload: true },
+  );
+  assert.deepEqual(
+    nextMaintenanceOptOuts({ current: ["menu"], loaded: [], submitted: ["logo"], override: true }),
+    { write: ["logo"] },
+  );
+  assert.deepEqual(
+    nextMaintenanceOptOuts({ current: ["menu"], loaded: null, submitted: [], override: false }),
+    { keep: true },
+  );
 });

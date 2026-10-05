@@ -13,6 +13,7 @@ import { StallMenu } from "@/components/stall-menu";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { getListingContact, getVendorBySlug, listVendors } from "@/lib/data/catalog";
+import { listingIsClaimed } from "@/lib/listing-claimed";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { toGeoMarket } from "@/lib/geo";
 import { VendorMarketList } from "@/components/vendor-market-list";
@@ -91,6 +92,7 @@ export default async function VendorPage({
     if (retired) permanentRedirect(retired);
     notFound();
   }
+  const taken = await listingIsClaimed("vendor", vendor.id);
 
   const nowMs = serverNowMs();
   const now = new Date(nowMs);
@@ -205,7 +207,7 @@ export default async function VendorPage({
             <ListingFacebook href={vendor.facebook} />
           </div>
           <div id="account" className="scroll-mt-28">
-            <ListingPortalCta kind="vendor" listingId={vendor.id} />
+            <ListingPortalCta kind="vendor" listingId={vendor.id} taken={taken} />
           </div>
         </aside>
         <div className="lg:col-span-2">

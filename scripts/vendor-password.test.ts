@@ -69,13 +69,15 @@ test("the email uses the password that is actually stored", () => {
   });
 });
 
-test("a later approval does not rotate a chosen or still-pending password", () => {
+test("a later approval does not rotate a chosen password or one they already set", () => {
   assert.equal(claimPasswordAction(null, false), "issue");
-  assert.equal(claimPasswordAction(null, true), "issue");
+  assert.equal(claimPasswordAction(null, false, true), "skip");
+  assert.equal(claimPasswordAction(null, true, true), "issue");
   assert.equal(claimPasswordAction({ chosen: false }, false), "issue");
+  assert.equal(claimPasswordAction({ chosen: false }, false, true), "skip");
   assert.equal(claimPasswordAction({ chosen: false }, true), "resend");
   assert.equal(claimPasswordAction({ chosen: true }, false), "skip");
-  assert.equal(claimPasswordAction({ chosen: true }, true), "skip");
+  assert.equal(claimPasswordAction({ chosen: true }, true, true), "skip");
 });
 
 test("a recovery link can replace the password and a chosen secret is not readable", () => {

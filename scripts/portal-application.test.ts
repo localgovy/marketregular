@@ -6,6 +6,8 @@ import {
   decodePortalOrgCookie,
   portalHomePath,
   portalRequestId,
+  portalSignupRecord,
+  readPortalSignupIntent,
 } from "../src/lib/portal-application.ts";
 import { portalApplicationNotice, portalDeclineLetter } from "../src/lib/portal-application-mail.ts";
 import { vendorPortalLetter } from "../src/lib/vendor-portal-mail.ts";
@@ -28,6 +30,22 @@ test("organization names are trimmed and a cookie round-trips", () => {
   const encoded = encodeURIComponent("Peach Stand");
   assert.equal(decodePortalOrgCookie(encoded), "Peach Stand");
   assert.equal(decodePortalOrgCookie("%"), null);
+});
+
+test("email confirmation can rebuild the portal request without granting access", () => {
+  const record = portalSignupRecord("vendor", "44444444-4444-4444-8444-444444444444", null);
+  assert.deepEqual(readPortalSignupIntent({ portal_signup: record, role: "user" }), {
+    kind: "vendor",
+    requestId: "44444444-4444-4444-8444-444444444444",
+    organizationName: null,
+  });
+  assert.deepEqual(readPortalSignupIntent({ portal_signup: portalSignupRecord("market", null, "Withrow") }), {
+    kind: "market",
+    requestId: null,
+    organizationName: "Withrow",
+  });
+  assert.equal(readPortalSignupIntent({ portal_signup: { kind: "vendor" } }), null);
+  assert.equal(readPortalSignupIntent(null), null);
 });
 
 test("assignment mail does not talk about a claim or replace the password", () => {

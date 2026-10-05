@@ -10,6 +10,7 @@ import {
   parseMarketPortal,
   portalHours,
   portalSeason,
+  rosterRemovalMessage,
   type MarketPortalListing,
   type PortalVendorHit,
 } from "@/lib/market-portal";
@@ -229,7 +230,7 @@ export async function deleteMarketRoster(formData: FormData): Promise<PortalResu
   if (!isUuid(vendorId)) return { error: "That stall is missing." };
   const before = await loadOwned(gate.supabase, marketId);
   const previous = before.listing?.stalls.find((stall) => stall.vendor_id === vendorId);
-  const { error } = await gate.supabase.rpc("delete_market_roster", {
+  const { data: removed, error } = await gate.supabase.rpc("delete_market_roster", {
     p_market_id: marketId,
     p_vendor_id: vendorId,
   });
@@ -246,7 +247,7 @@ export async function deleteMarketRoster(formData: FormData): Promise<PortalResu
       if (!still && objectName) await service.storage.from("listing-marks").remove([objectName]);
     }
   }
-  return { error: null, message: "Removed." };
+  return { error: null, message: rosterRemovalMessage(typeof removed === "string" ? removed : null) };
 }
 
 export async function createMarketVendor(formData: FormData): Promise<PortalResult> {
@@ -409,6 +410,10 @@ export async function uploadMarketVendorLogo(formData: FormData): Promise<Portal
     await stored.service.storage.from("listing-marks").remove([objectName]);
     return { error: "Could not save that image." };
   }
+  if (!(await stallStillOnRoster(stored.service, marketId, vendorId))) {
+    await stored.service.storage.from("listing-marks").remove([objectName]);
+    return { error: "That stall is not yours to edit." };
+  }
 
   const { data: updated, error } = await stored.service
     .from("vendors")
@@ -443,6 +448,9 @@ export async function clearMarketVendorLogo(formData: FormData): Promise<PortalR
   if (!stall?.editable) return { error: "That stall is not yours to edit." };
   const service = createServiceClient();
   if (!service) return { error: "Could not remove that image." };
+  if (!(await stallStillOnRoster(service, marketId, vendorId))) {
+    return { error: "That stall is not yours to edit." };
+  }
   const { data: updated, error } = await service
     .from("vendors")
     .update({ logo_url: null })
@@ -457,6 +465,20 @@ export async function clearMarketVendorLogo(formData: FormData): Promise<PortalR
   }
   if (before.listing) revalidateListing(before.listing, [`/vendors/${stall.vendor_slug}`]);
   return { error: null, message: "Removed." };
+}
+
+async function stallStillOnRoster(
+  service: NonNullable<ReturnType<typeof createServiceClient>>,
+  marketId: string,
+  vendorId: string,
+) {
+  const { data } = await service
+    .from("market_vendors")
+    .select("vendor_id")
+    .eq("market_id", marketId)
+    .eq("vendor_id", vendorId)
+    .maybeSingle();
+  return Boolean(data?.vendor_id);
 }
 
 export async function searchPortalVendors(

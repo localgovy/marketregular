@@ -67,6 +67,7 @@ export async function filePortalApplication(input: {
   organizationName: string | null;
 }): Promise<PortalApplicationResult> {
   const { supabase, user, kind } = input;
+  await supabase.auth.getUser();
   const requestId = input.requestId;
   const organizationName = requestId ? null : input.organizationName;
   if (requestId && input.organizationName) {

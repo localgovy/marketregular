@@ -33,6 +33,7 @@ function extractFunction(relativePath: string, name: string) {
 }
 
 const portal = "supabase/migrations/20261005180000_market_portal.sql";
+const fixes = "supabase/migrations/20261005211604_portal_account_editor_fixes.sql";
 
 const schema = `
 create schema if not exists auth;
@@ -48,6 +49,10 @@ create function auth.uid()
 returns uuid language sql stable as $$ select uid from auth.session $$;
 create function auth.jwt()
 returns jsonb language sql stable as $$ select claims from auth.session $$;
+create table auth.users (
+  id uuid primary key,
+  raw_app_meta_data jsonb not null default '{}'::jsonb
+);
 
 create type public.listing_status as enum ('draft', 'published');
 create type public.user_role as enum ('user', 'vendor', 'admin');
@@ -124,8 +129,25 @@ create table public.orders (
   id uuid primary key default gen_random_uuid(),
   vendor_id uuid not null references public.vendors (id) on delete restrict
 );
+create type public.claim_status as enum ('pending', 'approved', 'rejected');
+create type public.claim_target as enum ('market', 'vendor');
+create table public.portal_applications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  kind public.claim_target not null,
+  requested_target_id uuid,
+  status public.claim_status not null default 'pending'
+);
+create table public.claim_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  target_type public.claim_target not null,
+  target_id uuid not null,
+  status public.claim_status not null default 'pending'
+);
 
-${extractFunction("supabase/migrations/20261003180410_security_checkout_and_password_lockdown.sql", "password_change_pending")}
+${extractFunction(fixes, "password_change_pending")}
+${extractFunction(fixes, "portal_season_day_ok")}
 ${extractFunction("supabase/migrations/20261002183516_vendor_portal.sql", "portal_tags")}
 ${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "listing_href_ok")}
 ${extractFunction("supabase/migrations/20260829235108_security_scan_lockdown.sql", "guard_listing_hrefs")}
@@ -135,15 +157,17 @@ ${extractFunction(portal, "owns_market")}
 ${extractFunction(portal, "portal_phone")}
 ${extractFunction(portal, "portal_email")}
 ${extractFunction(portal, "portal_open_days")}
-${extractFunction(portal, "portal_vendor_slug")}
+${extractFunction(fixes, "portal_vendor_slug")}
 ${extractFunction(portal, "my_market_portal")}
 ${extractFunction(portal, "save_owned_market")}
-${extractFunction(portal, "save_owned_schedule")}
+${extractFunction(fixes, "save_owned_schedule")}
 ${extractFunction(portal, "delete_owned_schedule")}
 ${extractFunction(portal, "save_market_roster")}
-${extractFunction(portal, "delete_market_roster")}
-${extractFunction(portal, "create_market_vendor")}
-${extractFunction(portal, "save_market_vendor_profile")}
+${extractFunction(fixes, "delete_market_roster")}
+${extractFunction(fixes, "create_market_vendor")}
+${extractFunction(fixes, "save_market_vendor_profile")}
+${extractFunction("supabase/migrations/20261003180410_security_checkout_and_password_lockdown.sql", "owns_vendor")}
+${extractFunction(fixes, "save_owned_stall")}
 
 create trigger guard_listing_hrefs
   before insert or update on public.markets
@@ -171,6 +195,14 @@ async function setAuth(db: PGlite, role: string, uid: string | null, claims: Rec
     uid,
     JSON.stringify(claims),
   ]);
+  if (!uid) return;
+  const meta =
+    claims.app_metadata && typeof claims.app_metadata === "object" ? claims.app_metadata : {};
+  await db.query(
+    `insert into auth.users (id, raw_app_meta_data) values ($1, $2::jsonb)
+     on conflict (id) do update set raw_app_meta_data = excluded.raw_app_meta_data`,
+    [uid, JSON.stringify(meta)],
+  );
 }
 
 async function seed(db: PGlite) {
@@ -469,4 +501,65 @@ test("the create cap and a pending password block the editor", async () => {
   );
   assert.equal(pending.code, "42501");
   assert.equal((await marketRow(db))?.name, "Withrow");
+});
+
+test("duplicate hours, impossible seasons, and a cut slug are refused", async () => {
+  const db = await database();
+  await seed(db);
+  await setAuth(db, "authenticated", OWNER);
+  const duplicate = await expectRaise(() =>
+    db.query(
+      "select public.save_owned_schedule($1, null, 6, '08:00', '14:00', '', '', '')",
+      [MARKET],
+    ),
+  );
+  assert.match(duplicate.message, /already listed/);
+  const season = await expectRaise(() =>
+    db.query(
+      "select public.save_owned_schedule($1, null, 0, '09:00', '12:00', '02-31', '03-01', '')",
+      [MARKET],
+    ),
+  );
+  assert.match(season.message, /season is not allowed/);
+  const slug = await db.query<{ slug: string }>(
+    "select public.portal_vendor_slug($1) as slug",
+    ["a".repeat(71) + " extra"],
+  );
+  assert.match(slug.rows[0]?.slug ?? "", /^a+$/);
+});
+
+test("a draft hall can be updated, and a pending request keeps the listing", async () => {
+  const db = await database();
+  await seed(db);
+  await db.query("update public.markets set status = 'draft' where id = $1", [MARKET]);
+  await db.query("update public.vendors set claimed_by = $1 where id = $2", [OWNER, VENDOR]);
+  await db.query(
+    "insert into public.market_vendors (market_id, vendor_id, days) values ($1, $2, '{6}'::smallint[])",
+    [MARKET, VENDOR],
+  );
+  await setAuth(db, "authenticated", OWNER);
+  await db.query("select public.save_owned_stall($1, $2, 'Row A', '{6}'::smallint[])", [VENDOR, MARKET]);
+  const stall = await db.query<{ stall: string }>(
+    "select stall from public.market_vendors where vendor_id = $1",
+    [VENDOR],
+  );
+  assert.equal(stall.rows[0]?.stall, "Row A");
+
+  await db.query("update public.markets set status = 'published' where id = $1", [MARKET]);
+  const created = await db.query<{ id: string }>(
+    `select public.create_market_vendor($1, 'Jam Jar', '', '', '', '', '', '', '', '{}'::text[], '', '{6}'::smallint[]) as id`,
+    [MARKET],
+  );
+  const id = created.rows[0]!.id;
+  await db.query(
+    "insert into public.portal_applications (user_id, kind, requested_target_id) values ($1, 'vendor', $2)",
+    [OTHER, id],
+  );
+  const removed = await db.query<{ result: string }>(
+    "select public.delete_market_roster($1, $2) as result",
+    [MARKET, id],
+  );
+  assert.equal(removed.rows[0]?.result, "kept:request");
+  const still = await db.query("select id from public.vendors where id = $1", [id]);
+  assert.equal(still.rows.length, 1);
 });

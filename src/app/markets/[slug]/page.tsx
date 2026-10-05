@@ -19,6 +19,7 @@ import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, Listin
 import { TagList } from "@/components/tag-list";
 import { VerifiedName } from "@/components/verified-stamp";
 import { getListingContact, getMarketBySlug, listMarkets } from "@/lib/data/catalog";
+import { listingIsClaimed } from "@/lib/listing-claimed";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
 import { listingScore } from "@/lib/listing-score";
 import { listingNote, listingQualifier, seasonAliasTarget, seasonPlace, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
@@ -92,7 +93,10 @@ export default async function MarketPage({
   const now = new Date(nowMs);
   const todaySession = sessionToday(market.schedules, market.province, now);
   const todayStill = todaySession === "open" || todaySession === "later";
-  const contact = await getListingContact("market", market.slug);
+  const [contact, taken] = await Promise.all([
+    getListingContact("market", market.slug),
+    listingIsClaimed("market", market.id),
+  ]);
   const directions = directionsHref(market.lat, market.lng);
   const avgRated = market.feed.filter((item) => item.rating != null);
   const avg =
@@ -294,7 +298,7 @@ export default async function MarketPage({
             <ListingTiktok href={market.tiktok} />
             <ListingFacebook href={market.facebook} />
           </div>
-          <ListingPortalCta kind="market" listingId={market.id} />
+          <ListingPortalCta kind="market" listingId={market.id} taken={taken} />
         </aside>
         {publishesVendorRoster(market.slug) ? (
           <div className="lg:col-span-2">

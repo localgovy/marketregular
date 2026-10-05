@@ -9,9 +9,11 @@ import type { ClaimTarget } from "@/types/database";
 export function ListingPortalCta({
   kind,
   listingId,
+  taken = false,
 }: {
   kind: ClaimTarget;
   listingId: string;
+  taken?: boolean;
 }) {
   const [owned, setOwned] = useState(false);
   const stall = kind === "vendor";
@@ -43,6 +45,17 @@ export function ListingPortalCta({
           >
             {stall ? "Edit this stall" : "Edit this market"}
           </Link>
+        </p>
+      </div>
+    );
+  }
+
+  if (taken) {
+    return (
+      <div className="rounded-xl bg-secondary/50 p-5">
+        <p className="font-medium">{stall ? "This stall has an account" : "This market has an account"}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {stall ? "The person who runs it edits the listing." : "The organization that runs it edits the listing."}
         </p>
       </div>
     );

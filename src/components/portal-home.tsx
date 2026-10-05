@@ -5,6 +5,7 @@ import { loadVendorPortal } from "@/app/actions/vendor-portal";
 import { LoginForm } from "@/components/login-form";
 import { PortalRequestForm } from "@/components/portal-request-form";
 import { PortalSignupForm } from "@/components/portal-signup-form";
+import { SITE_NAME } from "@/lib/constants";
 import { loginQueryError } from "@/lib/public-error";
 import { portalHomePath, portalRequestId } from "@/lib/portal-application";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -30,6 +31,31 @@ async function namedListings(kind: ClaimTarget, ids: string[]) {
 
 function published(listing: NamedListing | undefined) {
   return listing?.status === "published" ? listing : null;
+}
+
+function PortalHowItWorks({ kind }: { kind: ClaimTarget }) {
+  const stall = kind === "vendor";
+  const steps = [
+    stall
+      ? "Create an account using the email you use for the business."
+      : "Create an account using your organization email.",
+    `Wait for ${SITE_NAME}'s approval email.`,
+    stall ? "Start managing your digital storefront." : "Start managing your market profile.",
+  ];
+
+  return (
+    <section className="mt-10 border-t border-border pt-8">
+      <h2>How this works</h2>
+      <ol className="mt-4 grid gap-3">
+        {steps.map((step, index) => (
+          <li key={step} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 text-base">
+            <span className="type-nums text-muted-foreground">{index + 1}</span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
 }
 
 export async function PortalHome({
@@ -67,6 +93,7 @@ export async function PortalHome({
             showCreate={false}
           />
         </div>
+        <PortalHowItWorks kind={kind} />
       </div>
     );
   }
@@ -208,6 +235,8 @@ export async function PortalHome({
           />
         </div>
       ) : null}
+
+      <PortalHowItWorks kind={kind} />
     </div>
   );
 }

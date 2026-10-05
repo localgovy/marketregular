@@ -10,7 +10,7 @@ import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeChargesConfigured, stripeConnectConfigured } from "@/lib/stripe";
 import { pageMeta } from "@/lib/seo";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
-import { isUuid } from "@/lib/vendor-portal";
+import { isUuid, vendorPublicPageExists } from "@/lib/vendor-portal";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -80,7 +80,7 @@ export default async function VendorEditorPage({
       <BackButton href="/vendor" />
       <h1>{listing.name}</h1>
       <p className="type-lede mt-2 text-muted-foreground">
-        {listing.status === "published" ? (
+        {vendorPublicPageExists(listing.status, listing.stalls.length, UNAFFILIATED_VENDOR_SLUGS.has(listing.slug)) ? (
           <>
             Published.{" "}
             <Link href={`/vendors/${listing.slug}`} className="font-medium text-foreground hover:underline">

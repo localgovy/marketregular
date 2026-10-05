@@ -7,6 +7,7 @@ type VendorRow = {
   name: string;
   about: string | null;
   tags: string[] | null;
+  maintenance_opt_outs?: string[] | null;
 };
 
 type QueryEnvelope = { rows?: VendorRow[] };
@@ -46,7 +47,7 @@ const input = args.find((arg) => !arg.startsWith("--")) ?? "/tmp/vendors-raw.jso
 const vendors = parseVendors(readFileSync(input, "utf8"));
 const changes = vendors
   .map((row) => ({ row, ...mergedTags(row) }))
-  .filter((item) => item.added.length);
+  .filter((item) => item.added.length && !(item.row.maintenance_opt_outs ?? []).includes("tags"));
 
 const counts = new Map<string, number>();
 for (const item of changes) {
@@ -94,7 +95,7 @@ if (sqlOut) {
     "-- Cuisine / origin tags guessed from vendor name + about. Additive; product tags stay.",
     ...changes.map(
       (item) =>
-        `update public.vendors set tags = ${sqlTextArray(item.next)} where id = ${sqlStr(item.row.id)};`,
+        `update public.vendors set tags = ${sqlTextArray(item.next)} where id = ${sqlStr(item.row.id)} and not ('tags' = any (coalesce(maintenance_opt_outs, '{}'::text[])));`,
     ),
     "",
   ].join("\n");

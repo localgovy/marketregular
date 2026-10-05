@@ -5,6 +5,7 @@ import { slugify, socialProfileHref } from "@/lib/format";
 import {
   labelsFor,
   maintenanceBlockMessage,
+  nextMaintenanceOptOuts,
   optOutsFromForm,
   readOptOuts,
   touchedMarketSections,
@@ -13,6 +14,7 @@ import {
   type MarketMaintenanceFields,
   type VendorMaintenanceFields,
 } from "@/lib/maintenance-sections";
+import { portalSeason } from "@/lib/market-portal";
 import { dbPublicError } from "@/lib/public-error";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { applyClaimDecision } from "@/lib/claim-approval";
@@ -94,14 +96,34 @@ function maintenanceOverride(formData: FormData | undefined) {
   return formData?.get("maintenance_override") === "on";
 }
 
-function optOutsFromAdminForm(kind: MaintenanceKind, formData: FormData) {
+function optOutsFromAdminForm(kind: MaintenanceKind, formData: FormData, current: unknown) {
   if (formData.get("maintenance_opt_outs_form") !== "1") return undefined;
-  const parsed = optOutsFromForm(
+  const submitted = optOutsFromForm(
     kind,
     formData.getAll("maintenance_opt_outs").map((value) => String(value)),
   );
-  if (parsed === "bad") fail("That section is not on this page.");
-  return parsed;
+  if (submitted === "bad") fail("That section is not on this page.");
+  const loadedField = formData.get("maintenance_opt_outs_loaded");
+  const loaded =
+    loadedField == null
+      ? null
+      : optOutsFromForm(
+          kind,
+          String(loadedField)
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
+        );
+  if (loaded === "bad") fail("That section is not on this page.");
+  const decision = nextMaintenanceOptOuts({
+    current: readOptOuts(kind, current),
+    loaded,
+    submitted,
+    override: maintenanceOverride(formData),
+  });
+  if ("reload" in decision) fail("Those opt-outs changed. Reload this page.");
+  if ("keep" in decision) return undefined;
+  return [...decision.write];
 }
 
 function vendorFields(row: {
@@ -245,7 +267,7 @@ export async function saveMarket(formData: FormData) {
       ),
     );
     refuseSections([{ labels: blocked, noun: "market" }], formData);
-    const nextOptOuts = optOutsFromAdminForm("market", formData);
+    const nextOptOuts = optOutsFromAdminForm("market", formData, current.maintenance_opt_outs);
     const update = nextOptOuts === undefined ? payload : { ...payload, maintenance_opt_outs: nextOptOuts };
     const previous = current.slug ? `/markets/${current.slug}` : null;
     const { error } = await supabase.from("markets").update(update).eq("id", id);
@@ -316,7 +338,7 @@ export async function saveVendor(formData: FormData) {
       ),
     );
     refuseSections([{ labels: blocked, noun: "stall" }], formData);
-    const nextOptOuts = optOutsFromAdminForm("vendor", formData);
+    const nextOptOuts = optOutsFromAdminForm("vendor", formData, current.maintenance_opt_outs);
     const update = nextOptOuts === undefined ? payload : { ...payload, maintenance_opt_outs: nextOptOuts };
     const previous = current.slug ? `/vendors/${current.slug}` : null;
     const { error } = await supabase.from("vendors").update(update).eq("id", id);
@@ -351,13 +373,18 @@ export async function saveSchedule(formData: FormData) {
   if (opted.includes("hours")) {
     refuseSections([{ labels: labelsFor("market", ["hours"]), noun: "market" }], formData);
   }
+  const season = portalSeason(
+    String(formData.get("season_start") ?? ""),
+    String(formData.get("season_end") ?? ""),
+  );
+  if (season === "bad") fail("That season is not allowed.");
   const { error } = await supabase.from("market_schedules").insert({
     market_id,
     weekday: Number(formData.get("weekday")),
     opens_at: String(formData.get("opens_at")),
     closes_at: String(formData.get("closes_at")),
-    season_start: String(formData.get("season_start") ?? "") || null,
-    season_end: String(formData.get("season_end") ?? "") || null,
+    season_start: season.start || null,
+    season_end: season.end || null,
     notes: String(formData.get("notes") ?? "") || null,
   });
   if (error) failDb(error, "Could not save that schedule.");

@@ -38,7 +38,7 @@ function extractFunction(relativePath: string, name: string) {
 }
 
 const decideClaimSql = extractFunction(
-  "supabase/migrations/20261003193000_vendor_claim_role_phone_and_fee.sql",
+  "supabase/migrations/20261005211604_portal_account_editor_fixes.sql",
   "decide_claim",
 );
 const schema = `
@@ -650,4 +650,21 @@ test("the privilege trigger blocks claimed_by and selling_approved for a non-ser
     [VENDOR],
   );
   assert.equal(opened.rows[0]?.selling_approved, true);
+});
+
+test("a decided claim cannot be approved or rejected again", async () => {
+  const db = await database();
+  await seedDirectory(db);
+  await seedVendorClaim(db, CLAIM, OWNER);
+  await setAuth(db, "service_role", null);
+  await db.query("select public.decide_claim($1, 'approved', null)", [CLAIM]);
+  const again = await expectRaise(() => db.query("select public.decide_claim($1, 'rejected', null)", [CLAIM]));
+  assert.equal(again.code, "P0001");
+  assert.match(again.message, /already decided/);
+  assert.equal(await vendorOwner(db), OWNER);
+  const claim = await db.query<{ status: string }>(
+    "select status::text as status from public.claim_requests where id = $1",
+    [CLAIM],
+  );
+  assert.equal(claim.rows[0]?.status, "approved");
 });

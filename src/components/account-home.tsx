@@ -87,6 +87,8 @@ export function AccountHome({
   visitPlanEmailedAt,
   orders,
   ownedStalls = [],
+  ownedMarkets = [],
+  portalUnavailable = null,
 }: {
   profile: Profile;
   email: string | null;
@@ -117,6 +119,8 @@ export function AccountHome({
     vendorSlug: string;
   }>;
   ownedStalls?: Array<{ id: string; name: string; slug: string }>;
+  ownedMarkets?: Array<{ id: string; name: string }>;
+  portalUnavailable?: string | null;
 }) {
   const name = profile.display_name?.trim() || "Regular";
   const handle = profile.username ? `@${profile.username}` : null;
@@ -451,7 +455,7 @@ export function AccountHome({
             </HomePanel>
           ) : null}
 
-          {applications.length ? (
+          {applications.length || ownedStalls.length || ownedMarkets.length || portalUnavailable ? (
             <HomePanel
               id="portals"
               tone="back"
@@ -460,6 +464,34 @@ export function AccountHome({
               title="Portals"
               how="Vendor and market accounts, and the listing we assign."
             >
+              {portalUnavailable ? <p className="mb-3 text-base text-muted-foreground">{portalUnavailable}</p> : null}
+              {ownedMarkets.length || ownedStalls.length ? (
+                <ul className="mb-3 ring-1 ring-border">
+                  {ownedMarkets.map((market) => (
+                    <li
+                      key={market.id}
+                      className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-border px-3 py-2.5 last:border-b-0"
+                    >
+                      <span className="min-w-0 font-medium">{market.name}</span>
+                      <Link href={`/market/${market.id}`} className="shrink-0 text-sm font-medium hover:underline">
+                        Edit market
+                      </Link>
+                    </li>
+                  ))}
+                  {ownedStalls.map((stall) => (
+                    <li
+                      key={stall.id}
+                      className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-border px-3 py-2.5 last:border-b-0"
+                    >
+                      <span className="min-w-0 font-medium">{stall.name}</span>
+                      <Link href={`/vendor/${stall.id}`} className="shrink-0 text-sm font-medium hover:underline">
+                        Edit stall
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {applications.length ? (
               <ul className="ring-1 ring-border">
                 {applications.map((application) => {
                   const targetId = application.assigned_target_id || application.requested_target_id;
@@ -499,6 +531,7 @@ export function AccountHome({
                   );
                 })}
               </ul>
+              ) : null}
             </HomePanel>
           ) : null}
 

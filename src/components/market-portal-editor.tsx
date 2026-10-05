@@ -403,14 +403,18 @@ function HoursForm({
 }) {
   const [state, action, pending] = useActionState(saveHours, undefined);
   const [removeState, remove, removePending] = useActionState(removeHours, undefined);
+  const [formKey, setFormKey] = useState(0);
   usePortalRefresh(state);
   usePortalRefresh(removeState);
+  useEffect(() => {
+    if (!schedule && state?.message) setFormKey((key) => key + 1);
+  }, [schedule, state]);
   const field = schedule?.id ?? `${marketId}-new-hours`;
 
   return (
     <div className="grid gap-3 border-b border-border py-4 last:border-b-0">
       {heading ? <h3>{heading}</h3> : null}
-      <form action={action} className="grid gap-3 sm:grid-cols-2">
+      <form key={schedule ? schedule.id : formKey} action={action} className="grid gap-3 sm:grid-cols-2">
         <input type="hidden" name="market_id" value={marketId} />
         {schedule ? <input type="hidden" name="schedule_id" value={schedule.id} /> : null}
         <div className="grid gap-1.5">
@@ -546,7 +550,7 @@ function StallRosterForm({
         <input type="hidden" name="vendor_id" value={stall.vendor_id} />
         <p className="text-sm text-muted-foreground">
           {stall.editable
-            ? "Removing this stall deletes the listing, because no vendor account is assigned."
+            ? "If nobody has asked to run it and it has no orders, this also removes the public listing. Otherwise it leaves this market and the page stays."
             : "They leave this market. Their listing stays."}
         </p>
         <div className="flex flex-wrap items-center gap-3">
@@ -762,7 +766,11 @@ function NewStall({
   openDays: number[];
 }) {
   const [state, action, pending] = useActionState(addStall, undefined);
+  const [formKey, setFormKey] = useState(0);
   usePortalRefresh(state);
+  useEffect(() => {
+    if (state?.message) setFormKey((key) => key + 1);
+  }, [state]);
 
   return (
     <div className="mt-8 grid gap-3">
@@ -771,7 +779,7 @@ function NewStall({
         It shows on this market with no owner. The person who runs it can create a vendor account, and then only they
         edit the listing after we assign it.
       </p>
-      <form action={action} className="grid gap-4 sm:grid-cols-2">
+      <form key={formKey} action={action} className="grid gap-4 sm:grid-cols-2">
         <input type="hidden" name="market_id" value={marketId} />
         <div className="grid gap-1.5 sm:col-span-2">
           <Label htmlFor={`${marketId}-new-name`}>Name</Label>
@@ -806,6 +814,9 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
     weekday: row.weekday,
     opens_at: row.opens_at,
     closes_at: row.closes_at,
+    season_start: row.season_start,
+    season_end: row.season_end,
+    notes: row.notes,
   }));
   const openDays = openDaysFromSchedules(listing.schedules);
   const rosterFull = listing.stalls.length >= MARKET_ROSTER_CAP;
