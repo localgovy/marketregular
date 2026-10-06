@@ -1,5 +1,6 @@
 import { MaintenanceOptOutFields } from "@/components/maintenance-opt-out-fields";
 import { AMENITY_TAGS, PRODUCT_TAGS, PROVINCES, RECORD_TAGS } from "@/lib/constants";
+import { storedListingStats } from "@/lib/listing-score";
 import { readOptOuts } from "@/lib/maintenance-sections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,7 +100,7 @@ export function MarketForm({ market }: { market?: Market }) {
           min="1"
           max="5"
           step="0.01"
-          defaultValue={market?.rating_avg ?? ""}
+          defaultValue={storedListingStats(market?.rating_avg, market?.review_count).rating}
           placeholder="4.55"
         />
       </div>
@@ -111,7 +112,7 @@ export function MarketForm({ market }: { market?: Market }) {
           type="number"
           min="0"
           step="1"
-          defaultValue={market?.review_count ?? 0}
+          defaultValue={storedListingStats(market?.rating_avg, market?.review_count).reviews}
         />
       </div>
       <div className="grid gap-1.5">
@@ -147,10 +148,19 @@ export function MarketForm({ market }: { market?: Market }) {
           placeholder={tags.slice(0, 6).join(", ")}
         />
       </div>
-      <label className="flex items-center gap-2 text-sm sm:col-span-2">
-        <input type="checkbox" name="featured" defaultChecked={market?.featured} />
-        Featured on the homepage
-      </label>
+      {market ? (
+        <>
+          <input type="hidden" name="rating_avg_loaded" value={storedListingStats(market.rating_avg, market.review_count).rating} />
+          <input type="hidden" name="review_count_loaded" value={storedListingStats(market.rating_avg, market.review_count).reviews} />
+        </>
+      ) : null}
+      <div className="grid gap-1 sm:col-span-2">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" name="featured" defaultChecked={market?.featured} />
+          Featured
+        </label>
+        <p className="text-sm text-muted-foreground">The homepage does not use this.</p>
+      </div>
       {market ? (
         <MaintenanceOptOutFields
           kind="market"

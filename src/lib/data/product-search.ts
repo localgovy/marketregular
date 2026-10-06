@@ -97,6 +97,20 @@ const FOOD_CATEGORIES = [
   "beverages",
 ] as const;
 
+const FOOD_CATEGORY_SET = new Set<string>(FOOD_CATEGORIES);
+
+/** Sentence case for a stored category slug: bread-and-bakery → Bread and bakery. */
+export function menuCategoryLabel(category: string) {
+  const [head, ...rest] = category.split("-");
+  if (!head) return category;
+  return [head.slice(0, 1).toUpperCase() + head.slice(1), ...rest].join(" ");
+}
+
+/** Product search keeps a menu row only when its category is on the food list. */
+export function menuInProductSearch(category: string | null | undefined) {
+  return typeof category === "string" && FOOD_CATEGORY_SET.has(category);
+}
+
 async function menuRows(slugs: string[]): Promise<MenuRow[]> {
   const supabase = createServiceClient();
   if (!supabase || slugs.length === 0) return [];

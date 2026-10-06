@@ -48,7 +48,12 @@ export async function setVendorSelling(formData: FormData) {
     .maybeSingle();
   if (error || !data) return { error: "Could not update selling." };
   revalidatePublishedDirectory([`/vendors/${data.slug}`, `/admin/vendors/${id}`, `/vendor/${id}`]);
-  return { error: null, message: approved ? "Selling is on." : "Selling is off." };
+  return {
+    error: null,
+    message: approved
+      ? "Saved. Checkout stays closed."
+      : "Saved. Selling stays off. Checkout stays closed.",
+  };
 }
 
 const SALES_CLOSED = "Listing for sale is closed for now.";

@@ -44,6 +44,14 @@ export function listingScoreParens(score: ListingScoreValue) {
   return `${formatRatingAvg(score.avg)} (${formatReviewCountShort(score.count)})`;
 }
 
+/** The numbers stored on the row, including a score the public site would hide. */
+export function storedListingStats(ratingAvg: unknown, reviewCount: unknown) {
+  return {
+    rating: ratingAvg == null || ratingAvg === "" ? "" : String(ratingAvg),
+    reviews: reviewCount == null || reviewCount === "" ? "0" : String(reviewCount),
+  };
+}
+
 export function withListingStats<T extends { review_count?: unknown; rating_avg?: unknown }>(
   row: T,
 ): T & { review_count: number; rating_avg: number | null } {

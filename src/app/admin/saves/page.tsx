@@ -52,10 +52,9 @@ function saveLabel(
   if (row.kind === "product") {
     const product = parseProductDetail(row.slug, row.detail);
     if (!product) return { key, kind: "Product", name: row.slug };
-    const items = product.items
-      .slice(0, 3)
-      .map((item) => item.name)
-      .join(", ");
+    const names = product.items.slice(0, 3).map((item) => item.name);
+    const extra = product.items.length - names.length;
+    const items = extra > 0 ? `${names.join(", ")} and ${extra} more` : names.join(", ");
     return { key, kind: "Product", name: items ? `${product.vendorName} · ${items}` : product.vendorName };
   }
   const listing = parseListingDetail(row.slug, row.detail);
@@ -73,6 +72,7 @@ export default async function AdminSavesPage() {
   if (!supabase) return null;
 
   const rows: SaveRow[] = [];
+  let savesFailed = false;
   const pageSize = 1000;
   for (let from = 0; ; from += pageSize) {
     const { data, error } = await supabase
@@ -82,6 +82,7 @@ export default async function AdminSavesPage() {
       .range(from, from + pageSize - 1);
     if (error) {
       console.error("admin saves", error);
+      savesFailed = true;
       break;
     }
     rows.push(...((data ?? []) as SaveRow[]));
@@ -123,11 +124,19 @@ export default async function AdminSavesPage() {
     group.saves.push(saveLabel(row, markets, vendors, blogs));
   }
 
+  if (savesFailed && !groups.length) {
+    return <p className="text-base text-muted-foreground">Could not load saves.</p>;
+  }
+
   if (!groups.length) {
     return <p className="text-base text-muted-foreground">No saves yet.</p>;
   }
 
   return (
+    <div className="grid gap-4">
+      {savesFailed ? (
+        <p className="text-base text-muted-foreground">Could not load every save.</p>
+      ) : null}
     <ul className="grid gap-4">
       {groups.map((group) => {
         const identity = [
@@ -153,6 +162,7 @@ export default async function AdminSavesPage() {
         );
       })}
     </ul>
+    </div>
   );
 }
 

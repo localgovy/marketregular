@@ -1,7 +1,7 @@
 "use server";
 
 import { isHumanRequest } from "@/lib/bot-check";
-import { encodeFloorBody } from "@/lib/floor-note";
+import { decodeFloorBody, encodeFloorBody } from "@/lib/floor-note";
 import { allowedPostPhotos } from "@/lib/post-photos";
 import { dbPublicError } from "@/lib/public-error";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -184,6 +184,42 @@ export async function deleteOwnPost(formData: FormData) {
   return { error: null };
 }
 
+function slugOf(value: { slug?: string } | { slug?: string }[] | null | undefined) {
+  const row = Array.isArray(value) ? value[0] : value;
+  return typeof row?.slug === "string" && row.slug ? row.slug : null;
+}
+
+async function refreshFlagged(
+  service: NonNullable<ReturnType<typeof createServiceClient>>,
+  table: "posts" | "reviews",
+  id: string,
+) {
+  revalidatePath("/admin");
+  revalidatePath("/admin/moderation");
+  revalidatePath("/");
+  revalidatePath("/markets");
+  revalidatePath("/feed");
+
+  if (table === "posts") {
+    const { data } = await service.from("posts").select("body, markets(slug)").eq("id", id).maybeSingle();
+    const marketSlug = slugOf(data?.markets as { slug?: string } | { slug?: string }[] | null);
+    if (marketSlug) revalidatePath(`/markets/${marketSlug}`);
+    const vendorSlug = decodeFloorBody(String(data?.body ?? "")).vendorSlug;
+    if (vendorSlug) revalidatePath(`/vendors/${vendorSlug}`);
+    return;
+  }
+
+  const { data } = await service
+    .from("reviews")
+    .select("markets(slug), vendors(slug)")
+    .eq("id", id)
+    .maybeSingle();
+  const marketSlug = slugOf(data?.markets as { slug?: string } | { slug?: string }[] | null);
+  const vendorSlug = slugOf(data?.vendors as { slug?: string } | { slug?: string }[] | null);
+  if (marketSlug) revalidatePath(`/markets/${marketSlug}`);
+  if (vendorSlug) revalidatePath(`/vendors/${vendorSlug}`);
+}
+
 export async function flagItem(table: "posts" | "reviews", id: string) {
   if (!isFlagTable(table) || !UUID.test(id)) return { error: "Admins only." };
   const { supabase, user, demo } = await requireUser();
@@ -194,9 +230,7 @@ export async function flagItem(table: "posts" | "reviews", id: string) {
   if (!service) return { error: "Admins only." };
   const { error } = await service.from(table).update({ flagged: true }).eq("id", id);
   if (error) return { error: "Could not update that." };
-  revalidatePath("/admin");
-  revalidatePath("/");
-  revalidatePath("/feed");
+  await refreshFlagged(service, table, id);
   return { error: null };
 }
 
@@ -210,8 +244,6 @@ export async function unflagItem(table: "posts" | "reviews", id: string) {
   if (!service) return { error: "Admins only." };
   const { error } = await service.from(table).update({ flagged: false }).eq("id", id);
   if (error) return { error: "Could not update that." };
-  revalidatePath("/admin");
-  revalidatePath("/");
-  revalidatePath("/feed");
+  await refreshFlagged(service, table, id);
   return { error: null };
 }

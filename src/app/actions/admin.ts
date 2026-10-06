@@ -14,7 +14,7 @@ import {
   type MarketMaintenanceFields,
   type VendorMaintenanceFields,
 } from "@/lib/maintenance-sections";
-import { portalSeason } from "@/lib/market-portal";
+import { portalHours, portalSeason } from "@/lib/market-portal";
 import { dbPublicError } from "@/lib/public-error";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { applyClaimDecision } from "@/lib/claim-approval";
@@ -215,6 +215,41 @@ function parseReviewStats(formData: FormData) {
   };
 }
 
+/** Leave a stored score alone unless the admin changed the fields. */
+function reviewStatsForSave(formData: FormData) {
+  if (formData.has("rating_avg_loaded")) {
+    const sameAvg =
+      String(formData.get("rating_avg") ?? "").trim() ===
+      String(formData.get("rating_avg_loaded") ?? "").trim();
+    const sameCount =
+      String(formData.get("review_count") ?? "").trim() ===
+      String(formData.get("review_count_loaded") ?? "").trim();
+    if (sameAvg && sameCount) return {};
+  }
+  return parseReviewStats(formData);
+}
+
+function clockField(value: FormDataEntryValue | null) {
+  const raw = String(value ?? "").trim();
+  const match = /^(\d{2}:\d{2})(?::\d{2})?$/.exec(raw);
+  return match?.[1] ?? raw;
+}
+
+function stallDays(value: FormDataEntryValue | null) {
+  const days = [
+    ...new Set(
+      String(value ?? "")
+        .split(",")
+        .map((day) => day.trim())
+        .filter((day) => day !== "")
+        .map((day) => Number(day))
+        .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6),
+    ),
+  ];
+  if (!days.length) fail("Add at least one day from 0 to 6.");
+  return days;
+}
+
 export async function saveMarket(formData: FormData) {
   const { supabase, error: adminError } = await requireAdmin();
   if (!supabase) fail(adminError === "supabase" ? "Supabase is not configured yet." : "Admins only.");
@@ -234,9 +269,9 @@ export async function saveMarket(formData: FormData) {
     lng: coordOrNull(formData.get("lng")),
     geofence_radius_m: geofenceMetres(formData.get("geofence_radius_m")),
     website: String(formData.get("website") ?? "") || null,
-    instagram: String(formData.get("instagram") ?? "") || null,
-    tiktok: String(formData.get("tiktok") ?? "") || null,
-    facebook: String(formData.get("facebook") ?? "") || null,
+    instagram: socialField("instagram", formData.get("instagram")),
+    tiktok: socialField("tiktok", formData.get("tiktok")),
+    facebook: socialField("facebook", formData.get("facebook")),
     phone: String(formData.get("phone") ?? "") || null,
     email: String(formData.get("email") ?? "") || null,
     logo_url: String(formData.get("logo_url") ?? "").trim() || null,
@@ -246,7 +281,7 @@ export async function saveMarket(formData: FormData) {
       .filter(Boolean),
     status: listingStatus(formData.get("status")),
     featured: formData.get("featured") === "on",
-    ...parseReviewStats(formData),
+    ...reviewStatsForSave(formData),
   };
 
   const nextPath = `/markets/${payload.slug}`;
@@ -291,6 +326,7 @@ export async function deleteMarket(id: string) {
   const { error } = await supabase.from("markets").delete().eq("id", id);
   if (error) failDb(error, "Could not delete that market.");
   revalidatePublishedDirectory(path ? [path] : []);
+  revalidatePath("/admin");
   revalidatePath("/admin/markets");
   redirect("/admin/markets");
 }
@@ -318,7 +354,7 @@ export async function saveVendor(formData: FormData) {
       .map((t) => t.trim())
       .filter(Boolean),
     status: listingStatus(formData.get("status")),
-    ...parseReviewStats(formData),
+    ...reviewStatsForSave(formData),
   };
   const nextPath = `/vendors/${payload.slug}`;
   if (id) {
@@ -361,6 +397,7 @@ export async function deleteVendor(id: string) {
   const { error } = await supabase.from("vendors").delete().eq("id", id);
   if (error) failDb(error, "Could not delete that vendor.");
   revalidatePublishedDirectory(path ? [path] : []);
+  revalidatePath("/admin");
   revalidatePath("/admin/vendors");
   redirect("/admin/vendors");
 }
@@ -378,11 +415,13 @@ export async function saveSchedule(formData: FormData) {
     String(formData.get("season_end") ?? ""),
   );
   if (season === "bad") fail("That season is not allowed.");
+  const hours = portalHours(clockField(formData.get("opens_at")), clockField(formData.get("closes_at")));
+  if (hours === "bad") fail("Those hours are not allowed.");
   const { error } = await supabase.from("market_schedules").insert({
     market_id,
     weekday: Number(formData.get("weekday")),
-    opens_at: String(formData.get("opens_at")),
-    closes_at: String(formData.get("closes_at")),
+    opens_at: hours.opens,
+    closes_at: hours.closes,
     season_start: season.start || null,
     season_end: season.end || null,
     notes: String(formData.get("notes") ?? "") || null,
@@ -431,14 +470,42 @@ export async function linkVendorToMarket(formData: FormData) {
     market_id,
     vendor_id,
     stall: String(formData.get("stall") ?? "") || null,
-    days: String(formData.get("days") ?? "")
-      .split(",")
-      .map((d) => d.trim())
-      .filter((d) => d !== "")
-      .map((d) => Number(d))
-      .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6),
+    days: stallDays(formData.get("days")),
   });
   if (error) failDb(error, "Could not link that vendor.");
+  const path = await listingPath(supabase, "markets", market_id);
+  revalidatePublishedDirectory(path ? [path] : []);
+  revalidatePath(`/admin/markets/${market_id}`);
+}
+
+export async function unlinkVendorFromMarket(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  if (!supabase) fail("Supabase is not configured yet.");
+  const market_id = String(formData.get("market_id"));
+  const vendor_id = String(formData.get("vendor_id"));
+  const [marketOpt, vendorOpt] = await Promise.all([
+    optOutsFor(supabase, "markets", market_id),
+    optOutsFor(supabase, "vendors", vendor_id),
+  ]);
+  refuseSections(
+    [
+      ...(vendorOpt.includes("halls")
+        ? [{ labels: labelsFor("vendor", ["halls"]), noun: "stall" as const }]
+        : []),
+      ...(marketOpt.includes("roster")
+        ? [{ labels: labelsFor("market", ["roster"]), noun: "market" as const }]
+        : []),
+    ],
+    formData,
+  );
+  const { data, error } = await supabase
+    .from("market_vendors")
+    .delete()
+    .eq("market_id", market_id)
+    .eq("vendor_id", vendor_id)
+    .select("vendor_id");
+  if (error) failDb(error, "Could not unlink that vendor.");
+  if (!data?.length) fail("That stall is not on this market.");
   const path = await listingPath(supabase, "markets", market_id);
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/markets/${market_id}`);
@@ -468,6 +535,20 @@ export async function saveMenuItem(formData: FormData) {
   const path = await listingPath(supabase, "vendors", vendor_id);
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/vendors/${vendor_id}`);
+}
+
+export async function deleteMenuItem(id: string, vendorId: string, formData?: FormData) {
+  const { supabase } = await requireAdmin();
+  if (!supabase) fail("Supabase is not configured yet.");
+  const opted = await optOutsFor(supabase, "vendors", vendorId);
+  if (opted.includes("menu")) {
+    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "stall" }], formData);
+  }
+  const { error } = await supabase.from("vendor_menus").delete().eq("id", id).eq("vendor_id", vendorId);
+  if (error) failDb(error, "Could not delete that menu item.");
+  const path = await listingPath(supabase, "vendors", vendorId);
+  revalidatePublishedDirectory(path ? [path] : []);
+  revalidatePath(`/admin/vendors/${vendorId}`);
 }
 
 const OWNER_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

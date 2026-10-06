@@ -1,5 +1,6 @@
 import { MaintenanceOptOutFields } from "@/components/maintenance-opt-out-fields";
 import { PRODUCT_TAGS } from "@/lib/constants";
+import { storedListingStats } from "@/lib/listing-score";
 import { readOptOuts } from "@/lib/maintenance-sections";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,7 +55,7 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
           min="1"
           max="5"
           step="0.01"
-          defaultValue={vendor?.rating_avg ?? ""}
+          defaultValue={storedListingStats(vendor?.rating_avg, vendor?.review_count).rating}
           placeholder="4.55"
         />
       </div>
@@ -66,7 +67,7 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
           type="number"
           min="0"
           step="1"
-          defaultValue={vendor?.review_count ?? 0}
+          defaultValue={storedListingStats(vendor?.rating_avg, vendor?.review_count).reviews}
         />
       </div>
       <div className="grid gap-1.5">
@@ -107,6 +108,20 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
           ].join(", ")}
         />
       </div>
+      {vendor ? (
+        <>
+          <input
+            type="hidden"
+            name="rating_avg_loaded"
+            value={storedListingStats(vendor.rating_avg, vendor.review_count).rating}
+          />
+          <input
+            type="hidden"
+            name="review_count_loaded"
+            value={storedListingStats(vendor.rating_avg, vendor.review_count).reviews}
+          />
+        </>
+      ) : null}
       {vendor ? (
         <MaintenanceOptOutFields
           kind="vendor"
