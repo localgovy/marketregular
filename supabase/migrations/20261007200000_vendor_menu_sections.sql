@@ -83,8 +83,6 @@ select
   vm.price_cents,
   vm.season,
   vm.dietary,
-  vm.menu_section,
-  vm.menu_section_order,
   vm.product_category,
   vm.product_slug,
   vm.for_sale,
@@ -92,7 +90,9 @@ select
   vm.offer_pickup,
   vm.offer_preorder,
   vm.offer_terms,
-  false as can_buy
+  false as can_buy,
+  vm.menu_section,
+  vm.menu_section_order
 from public.vendor_menus vm
 join public.vendors v
   on v.id = vm.vendor_id
