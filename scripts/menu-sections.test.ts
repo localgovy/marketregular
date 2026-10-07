@@ -7,6 +7,7 @@ import {
   moveMenuSectionList,
   NEW_MENU_SECTION,
   parseMenuSectionForm,
+  publishedMenuSelectMissingSections,
   renameMenuSectionList,
 } from "../src/lib/menu-sections.ts";
 import type { MenuItem } from "../src/types/database.ts";
@@ -29,6 +30,30 @@ function item(
     menu_section_order: order,
   };
 }
+
+test("a missing section column is recognized so reads can stay flat", () => {
+  assert.equal(
+    publishedMenuSelectMissingSections({
+      code: "42703",
+      message: "column published_menus.menu_section does not exist",
+    }),
+    true,
+  );
+  assert.equal(
+    publishedMenuSelectMissingSections({
+      code: "PGRST204",
+      message: "Could not find the 'menu_section' column of 'published_menus' in the schema cache",
+    }),
+    true,
+  );
+  assert.equal(
+    publishedMenuSelectMissingSections({
+      code: "42703",
+      message: "column published_menus.product_category does not exist",
+    }),
+    false,
+  );
+});
 
 test("a menu with no section stays ungrouped", () => {
   assert.equal(groupMenuItems([item("Rye"), item("Honey")]), null);

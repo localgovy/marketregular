@@ -25,6 +25,23 @@ export function normalizeMenuSectionName(raw: string) {
   return raw.trim();
 }
 
+/** PostgREST/Postgres errors when published_menus does not yet have section columns. */
+export function publishedMenuSelectMissingSections(
+  error: { message?: string; code?: string } | null | undefined,
+) {
+  if (!error) return false;
+  const message = (error.message ?? "").toLowerCase();
+  if (!message.includes("menu_section")) return false;
+  const code = (error.code ?? "").toUpperCase();
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    message.includes("does not exist") ||
+    message.includes("schema cache") ||
+    message.includes("could not find")
+  );
+}
+
 export function menuSectionsFromItems(
   items: Array<{ menu_section?: string | null; menu_section_order?: number | null }>,
 ): MenuSectionRef[] {

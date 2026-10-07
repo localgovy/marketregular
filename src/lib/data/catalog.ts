@@ -46,6 +46,7 @@ import { isSeasonAlias, seasonAliasTarget } from "@/lib/listing-siblings";
 import { scheduleOrigin, type FoldedSchedule } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
+import { publishedMenuSelectMissingSections } from "@/lib/menu-sections";
 import type {
   FloorItem,
   Market,
@@ -91,7 +92,66 @@ const POST_PUBLIC = "id, user_id, market_id, body, photos, flagged, created_at";
 const REVIEW_PUBLIC = "id, user_id, market_id, vendor_id, rating, body, flagged, created_at";
 const MENU_PUBLIC =
   "id, vendor_id, name, description, price_cents, season, dietary, menu_section, menu_section_order, for_sale, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
+const MENU_PUBLIC_FLAT =
+  "id, vendor_id, name, description, price_cents, season, dietary, for_sale, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
 const STALL_PUBLIC = "market_id, vendor_id, stall, days";
+
+type DirectoryClient = NonNullable<ReturnType<typeof createServiceClient>>;
+type PublishedMenuSelect = typeof MENU_PUBLIC | typeof MENU_PUBLIC_FLAT;
+
+let publishedMenuSelect: PublishedMenuSelect | null = null;
+let publishedMenuSelectProbe: Promise<PublishedMenuSelect> | null = null;
+
+async function probePublishedMenuSelect(supabase: DirectoryClient): Promise<PublishedMenuSelect> {
+  try {
+    const result = await supabase.from("published_menus").select("menu_section").limit(1);
+    const next: PublishedMenuSelect = publishedMenuSelectMissingSections(result.error)
+      ? MENU_PUBLIC_FLAT
+      : MENU_PUBLIC;
+    publishedMenuSelect = next;
+    return next;
+  } catch {
+    publishedMenuSelect = MENU_PUBLIC;
+    return MENU_PUBLIC;
+  }
+}
+
+function resolvePublishedMenuSelect(supabase: DirectoryClient) {
+  if (publishedMenuSelect) return Promise.resolve(publishedMenuSelect);
+  if (!publishedMenuSelectProbe) {
+    publishedMenuSelectProbe = probePublishedMenuSelect(supabase);
+  }
+  return publishedMenuSelectProbe;
+}
+
+async function selectPublishedMenusForVendor(supabase: DirectoryClient, vendorId: string) {
+  const columns = await resolvePublishedMenuSelect(supabase);
+  const result = await supabase.from("published_menus").select(columns).eq("vendor_id", vendorId);
+  if (
+    result.error &&
+    columns === MENU_PUBLIC &&
+    publishedMenuSelectMissingSections(result.error)
+  ) {
+    publishedMenuSelect = MENU_PUBLIC_FLAT;
+    return supabase.from("published_menus").select(MENU_PUBLIC_FLAT).eq("vendor_id", vendorId);
+  }
+  return result;
+}
+
+function asPublishedMenus(rows: unknown): MenuItem[] {
+  if (!Array.isArray(rows)) return [];
+  return rows.map((row) => {
+    const item = row as MenuItem;
+    return {
+      ...item,
+      menu_section: item.menu_section ?? null,
+      menu_section_order:
+        typeof item.menu_section_order === "number" && Number.isInteger(item.menu_section_order)
+          ? item.menu_section_order
+          : null,
+    };
+  });
+}
 
 /** Score, then the tag guesses that keep name-only roster shops inside the filters. */
 function hydrateVendor(vendor: Vendor) {
@@ -990,7 +1050,7 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
 
   const visitor = visitorDb();
   const [menusRes, linksRes, reviewsRes] = await Promise.all([
-    supabase.from("published_menus").select(MENU_PUBLIC).eq("vendor_id", vendor.id),
+    selectPublishedMenusForVendor(supabase, vendor.id),
     supabase.from("published_stalls").select(STALL_PUBLIC).eq("vendor_id", vendor.id),
     visitor
       ? visitor
@@ -1004,7 +1064,7 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
   if (menusRes.error) directoryFailed(menusRes.error);
   if (linksRes.error) directoryFailed(linksRes.error);
   if (reviewsRes.error) directoryFailed(reviewsRes.error);
-  const menus = menusRes.data;
+  const menus = asPublishedMenus(menusRes.data);
   const links = linksRes.data;
   const reviews = reviewsRes.data;
 
@@ -1111,7 +1171,7 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
 
   return {
     ...hydrateVendor(vendor as Vendor),
-    menus: (menus ?? []) as MenuItem[],
+    menus,
     markets: vendorMarkets,
     reviews: mappedReviews,
     feed: mergeReviews([
