@@ -1,5 +1,7 @@
 # MarketRegular
 
+Site structure for models: [docs/site-structure.md](docs/site-structure.md).
+
 Greater Toronto Area farmers’ market hub: search markets and vendors (schedules, menus, contact, tags), leave on-site reviews and posts, and follow a live floor feed.
 
 Web first at [www.marketregular.com](https://www.marketregular.com). Source: [github.com/localgovy/marketregular](https://github.com/localgovy/marketregular). The same Supabase backend is meant to serve an iOS app later.
