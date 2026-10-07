@@ -2,74 +2,49 @@ import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
 import { listPublicBlogPosts } from "@/lib/blog";
 import { listMarkets, listSitemapVendors } from "@/lib/data/catalog";
-import { FIND_PAGES } from "@/data/find-pages";
-import { CATEGORIES, DAY_SLUGS } from "@/lib/landing";
+import { publicSitemapEntries, type SitemapEntry } from "@/lib/sitemap-entries";
 
 export const revalidate = 3600;
+/** Directory reads can miss on a cold cache after revalidatePath; give them time. */
+export const maxDuration = 60;
 
-function loc(
-  path: string,
-  options?: { lastModified?: string; changeFrequency?: MetadataRoute.Sitemap[number]["changeFrequency"]; priority?: number },
-): MetadataRoute.Sitemap[number] {
+function loc(entry: SitemapEntry): MetadataRoute.Sitemap[number] {
   return {
-    url: path === "/" ? SITE_URL : `${SITE_URL}${path}`,
-    ...(options?.lastModified ? { lastModified: options.lastModified } : {}),
-    ...(options?.changeFrequency ? { changeFrequency: options.changeFrequency } : {}),
-    ...(options?.priority != null ? { priority: options.priority } : {}),
+    url: entry.path === "/" ? SITE_URL : `${SITE_URL}${entry.path}`,
+    ...(entry.lastModified ? { lastModified: entry.lastModified } : {}),
+    ...(entry.changeFrequency ? { changeFrequency: entry.changeFrequency } : {}),
+    ...(entry.priority != null ? { priority: entry.priority } : {}),
   };
 }
 
+async function directoryListings() {
+  const [markets, vendors] = await Promise.allSettled([listMarkets(), listSitemapVendors()]);
+  if (markets.status === "rejected") {
+    console.error("sitemap markets", markets.reason instanceof Error ? markets.reason.message : "failed");
+  }
+  if (vendors.status === "rejected") {
+    console.error("sitemap vendors", vendors.reason instanceof Error ? vendors.reason.message : "failed");
+  }
+  return {
+    markets: markets.status === "fulfilled" ? markets.value : [],
+    vendors: vendors.status === "fulfilled" ? vendors.value : [],
+  };
+}
+
+function publicPosts() {
+  try {
+    return listPublicBlogPosts();
+  } catch (error) {
+    console.error("sitemap blog", error instanceof Error ? error.message : "failed");
+    return [];
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [markets, vendors] = await Promise.all([listMarkets(), listSitemapVendors()]);
-
-  // Hours move, so the directory and the day pages are the ones worth recrawling often.
-  const newestMarket = markets
-    .map((market) => market.updated_at ?? market.created_at)
-    .filter((stamp): stamp is string => Boolean(stamp))
-    .sort()
-    .at(-1);
-
-  return [
-    loc("/", { changeFrequency: "daily", priority: 1 }),
-    loc("/markets", { lastModified: newestMarket, changeFrequency: "daily", priority: 0.9 }),
-    loc("/products", { changeFrequency: "weekly", priority: 0.8 }),
-    loc("/markets/day", { changeFrequency: "weekly", priority: 0.8 }),
-    loc("/markets/open-today", { changeFrequency: "daily", priority: 0.8 }),
-    ...DAY_SLUGS.map((day) =>
-      loc(`/markets/day/${day}`, { changeFrequency: "weekly", priority: 0.8 }),
-    ),
-    ...CATEGORIES.map((category) =>
-      loc(`/markets/tag/${category.tag}`, { changeFrequency: "weekly", priority: 0.7 }),
-    ),
-    ...FIND_PAGES.map((page) =>
-      loc(`/find/${page.slug}`, { changeFrequency: "weekly", priority: 0.6 }),
-    ),
-    loc("/events", { changeFrequency: "daily", priority: 0.6 }),
-    loc("/feed", { changeFrequency: "daily", priority: 0.5 }),
-    loc("/about", { changeFrequency: "yearly", priority: 0.3 }),
-    loc("/blog", { changeFrequency: "weekly", priority: 0.6 }),
-    ...listPublicBlogPosts().map((post) =>
-      loc(`/blog/${post.slug}`, {
-        lastModified: post.date,
-        changeFrequency: "monthly",
-        priority: 0.6,
-      }),
-    ),
-    loc("/privacy", { changeFrequency: "yearly", priority: 0.3 }),
-    loc("/terms", { changeFrequency: "yearly", priority: 0.3 }),
-    ...markets.map((market) =>
-      loc(`/markets/${market.slug}`, {
-        lastModified: market.updated_at ?? market.created_at,
-        changeFrequency: "weekly",
-        priority: 0.8,
-      }),
-    ),
-    ...vendors.map((vendor) =>
-      loc(`/vendors/${vendor.slug}`, {
-        lastModified: vendor.updated_at ?? vendor.created_at,
-        changeFrequency: "monthly",
-        priority: 0.5,
-      }),
-    ),
-  ];
+  const { markets, vendors } = await directoryListings();
+  return publicSitemapEntries({
+    markets,
+    vendors,
+    posts: publicPosts(),
+  }).map(loc);
 }

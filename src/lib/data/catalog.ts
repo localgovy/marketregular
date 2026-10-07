@@ -290,8 +290,7 @@ const loadCachedMenuVendorIds = unstable_cache(
   DIRECTORY_CACHE,
 );
 
-const getPublishedDirectory = cache(async function getPublishedDirectory() {
-  if (!publicDb()) directoryFailed(null);
+async function loadPublishedDirectory(): Promise<PublishedDirectory> {
   const [markets, vendors, stallRows, schedules, menuVendorIds] = await Promise.all([
     loadCachedMarkets(),
     loadCachedVendors(),
@@ -307,7 +306,26 @@ const getPublishedDirectory = cache(async function getPublishedDirectory() {
     rosterVendorIds: rosterVendorIdsFromRows(stallRows),
     schedules: folded.schedules,
     menuVendorIds,
-  } satisfies PublishedDirectory;
+  };
+}
+
+function directoryErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Directory read failed";
+}
+
+async function loadPublishedDirectoryWithRetry(): Promise<PublishedDirectory> {
+  try {
+    return await loadPublishedDirectory();
+  } catch (first) {
+    console.error("published directory", directoryErrorMessage(first));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    return loadPublishedDirectory();
+  }
+}
+
+const getPublishedDirectory = cache(async function getPublishedDirectory() {
+  if (!publicDb()) directoryFailed(null);
+  return loadPublishedDirectoryWithRetry();
 });
 
 /** One search card. The alias's Sunday hours still count on the host market. */
