@@ -824,6 +824,8 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
 }
 
 export type BareMarketsDirectory = {
+  /** Instant the cached first page was ordered. Later pages must reuse it. */
+  sortedAt: string;
   directory: ReturnType<typeof directoryInitialProps>;
   places: ReturnType<typeof placeAreasForMarkets>;
   items: Array<{ name: string; path: string }>;
@@ -831,8 +833,10 @@ export type BareMarketsDirectory = {
 
 /** First page of unfiltered /markets. Small enough to store; the full vendor table is not. */
 async function buildBareMarketsDirectory(): Promise<BareMarketsDirectory> {
-  const { markets, vendors, schedulesByMarket, halls } = await searchDirectory({});
+  const now = new Date();
+  const { markets, vendors, schedulesByMarket, halls } = await searchDirectory({}, now);
   return {
+    sortedAt: now.toISOString(),
     directory: directoryInitialProps(markets, vendors, schedulesByMarket, halls),
     places: placeAreasForMarkets(markets),
     items: markets.map((market) => ({
@@ -844,7 +848,7 @@ async function buildBareMarketsDirectory(): Promise<BareMarketsDirectory> {
 
 const loadCachedBareMarketsDirectory = unstable_cache(
   buildBareMarketsDirectory,
-  ["markets-page-bare-v2"],
+  ["markets-page-bare-v3"],
   DIRECTORY_CACHE,
 );
 

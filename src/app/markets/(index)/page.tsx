@@ -199,6 +199,7 @@ export default async function MarketsPage({
       <DirectoryResults
         key={formKey}
         now={nowIso}
+        sortedAt={loaded.kind === "bare" ? loaded.page.sortedAt : nowIso}
         search={search}
         markets={directory.markets}
         vendors={directory.vendors}

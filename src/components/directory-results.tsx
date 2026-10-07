@@ -23,6 +23,7 @@ export function DirectoryResults({
   search,
   weekdays,
   now,
+  sortedAt,
 }: {
   markets: DirectoryMarketCard[];
   vendors: DirectoryVendorCard[];
@@ -31,57 +32,73 @@ export function DirectoryResults({
   vendorTotal: number;
   search: MarketsSearch;
   weekdays?: number[];
+  /** Fresh clock for open badges on each card. */
   now: string;
+  /** Clock the list was ordered with. Later pages keep this order. */
+  sortedAt: string;
 }) {
   const [markets, setMarkets] = useState(initialMarkets);
   const [vendors, setVendors] = useState(initialVendors);
   const [schedulesByMarket, setSchedulesByMarket] = useState(initialSchedules ?? {});
-  const marketsBusy = useRef(false);
-  const vendorsBusy = useRef(false);
-  const [moreError, setMoreError] = useState<string | null>(null);
+  const [marketsDone, setMarketsDone] = useState(initialMarkets.length >= marketTotal);
+  const [vendorsDone, setVendorsDone] = useState(initialVendors.length >= vendorTotal);
+  const [marketsBusy, setMarketsBusy] = useState(false);
+  const [vendorsBusy, setVendorsBusy] = useState(false);
+  const marketsLock = useRef(false);
+  const vendorsLock = useRef(false);
+  const [marketError, setMarketError] = useState<string | null>(null);
+  const [vendorError, setVendorError] = useState<string | null>(null);
 
   async function moreMarkets() {
-    if (marketsBusy.current || markets.length >= marketTotal) return;
-    marketsBusy.current = true;
+    if (marketsLock.current || marketsDone) return;
+    marketsLock.current = true;
+    setMarketsBusy(true);
     try {
       const next = await getDirectorySlice({
         search,
         kind: "markets",
-        offset: markets.length,
-        now,
+        seen: markets.map((market) => market.id),
+        now: sortedAt,
       });
       setMarkets((prev) => {
         const seen = new Set(prev.map((market) => market.id));
-        return [...prev, ...next.markets.filter((market) => !seen.has(market.id))];
+        const extra = next.markets.filter((market) => !seen.has(market.id));
+        return extra.length ? [...prev, ...extra] : prev;
       });
       setSchedulesByMarket((prev) => ({ ...prev, ...next.schedulesByMarket }));
-      setMoreError(null);
+      if (next.done || next.markets.length === 0) setMarketsDone(true);
+      setMarketError(null);
     } catch {
-      setMoreError("Couldn't load more markets. Try again.");
+      setMarketError("Couldn't load more markets. Try again.");
     } finally {
-      marketsBusy.current = false;
+      marketsLock.current = false;
+      setMarketsBusy(false);
     }
   }
 
   async function moreVendors() {
-    if (vendorsBusy.current || vendors.length >= vendorTotal) return;
-    vendorsBusy.current = true;
+    if (vendorsLock.current || vendorsDone) return;
+    vendorsLock.current = true;
+    setVendorsBusy(true);
     try {
       const next = await getDirectorySlice({
         search,
         kind: "vendors",
-        offset: vendors.length,
-        now,
+        seen: vendors.map((vendor) => vendor.id),
+        now: sortedAt,
       });
       setVendors((prev) => {
         const seen = new Set(prev.map((vendor) => vendor.id));
-        return [...prev, ...next.vendors.filter((vendor) => !seen.has(vendor.id))];
+        const extra = next.vendors.filter((vendor) => !seen.has(vendor.id));
+        return extra.length ? [...prev, ...extra] : prev;
       });
-      setMoreError(null);
+      if (next.done || next.vendors.length === 0) setVendorsDone(true);
+      setVendorError(null);
     } catch {
-      setMoreError("Couldn't load more vendors. Try again.");
+      setVendorError("Couldn't load more vendors. Try again.");
     } finally {
-      vendorsBusy.current = false;
+      vendorsLock.current = false;
+      setVendorsBusy(false);
     }
   }
 
@@ -107,13 +124,15 @@ export function DirectoryResults({
           )}
           <ShowMore
             shown={markets.length}
-            total={marketTotal}
+            total={marketsDone ? markets.length : marketTotal}
             noun="markets"
             nounOne="market"
+            busy={marketsBusy}
             onMore={() => {
               void moreMarkets();
             }}
           />
+          {marketError ? <p className="mt-2 text-sm text-muted-foreground">{marketError}</p> : null}
         </section>
         <div aria-hidden data-directory-rule className="hidden w-0.5 self-stretch bg-board lg:block" />
         <section id="directory-vendors" className="scroll-mt-header">
@@ -129,16 +148,17 @@ export function DirectoryResults({
           )}
           <ShowMore
             shown={vendors.length}
-            total={vendorTotal}
+            total={vendorsDone ? vendors.length : vendorTotal}
             noun="vendors"
             nounOne="vendor"
+            busy={vendorsBusy}
             onMore={() => {
               void moreVendors();
             }}
           />
+          {vendorError ? <p className="mt-2 text-sm text-muted-foreground">{vendorError}</p> : null}
         </section>
       </div>
-      {moreError ? <p className="mt-4 text-base text-muted-foreground">{moreError}</p> : null}
       <BackToTop />
     </>
   );

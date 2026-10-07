@@ -7,6 +7,7 @@ import {
   DIRECTORY_VENDOR_PAGE,
   directoryVendorCards,
   filtersFromSearch,
+  nextDirectoryPage,
   schedulesForMarketIds,
   toDirectoryMarketCard,
   type DirectoryMarketCard,
@@ -16,10 +17,7 @@ import {
 import { parseDirectorySort, type MarketsSearch } from "@/lib/find-paths";
 import { z } from "zod";
 
-function clampOffset(offset: number) {
-  if (!Number.isFinite(offset)) return 0;
-  return Math.max(0, Math.min(4_000, Math.floor(offset)));
-}
+const seenSchema = z.array(z.string().trim().min(1).max(80)).max(4_000);
 
 const searchSchema = z.object({
   q: z.string().max(200).optional(),
@@ -59,29 +57,30 @@ function sanitizeSearch(raw: unknown): MarketsSearch {
 export async function getDirectorySlice(input: {
   search: MarketsSearch;
   kind: "markets" | "vendors";
-  offset: number;
+  seen: string[];
   now?: string;
 }): Promise<{
   markets: DirectoryMarketCard[];
   vendors: DirectoryVendorCard[];
   schedulesByMarket: Record<string, DirectorySchedule[]>;
+  done: boolean;
 }> {
   const parsed = z
     .object({
       search: z.unknown().optional(),
       kind: z.enum(["markets", "vendors"]).optional(),
-      offset: z.number().optional(),
+      seen: seenSchema.optional(),
       now: z.string().max(40).optional(),
     })
     .safeParse(input);
   if (!parsed.success) {
-    return { markets: [], vendors: [], schedulesByMarket: {} };
+    throw new Error("Couldn't load more.");
   }
   if (!(await takeCatalogSlot())) {
     throw new Error("Couldn't load more.");
   }
   const kind = parsed.data.kind === "vendors" ? "vendors" : "markets";
-  const offset = clampOffset(parsed.data.offset ?? 0);
+  const seen = new Set(parsed.data.seen ?? []);
   const take = kind === "markets" ? DIRECTORY_MARKET_PAGE : DIRECTORY_VENDOR_PAGE;
   const clock = parsed.data.now ? new Date(parsed.data.now) : new Date();
   const now = Number.isNaN(clock.getTime()) ? new Date() : clock;
@@ -90,7 +89,8 @@ export async function getDirectorySlice(input: {
     now,
   );
   if (kind === "markets") {
-    const slice = markets.slice(offset, offset + take).map(toDirectoryMarketCard);
+    const { page, done } = nextDirectoryPage(markets, seen, take);
+    const slice = page.map(toDirectoryMarketCard);
     return {
       markets: slice,
       vendors: [],
@@ -98,12 +98,15 @@ export async function getDirectorySlice(input: {
         schedulesByMarket,
         slice.map((market) => market.id),
       ),
+      done,
     };
   }
+  const { page, done } = nextDirectoryPage(vendors, seen, take);
   return {
     markets: [],
-    vendors: directoryVendorCards(vendors, halls, offset, take),
+    vendors: directoryVendorCards(page, halls, 0, page.length),
     schedulesByMarket: {},
+    done,
   };
 }
 

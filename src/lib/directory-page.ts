@@ -53,6 +53,29 @@ export function filtersFromSearch(search: MarketsSearch): SearchFilters {
   };
 }
 
+/**
+ * Next page of a directory list.
+ *
+ * Callers must not slice by how many rows are already on screen. The bare
+ * /markets page is ordered once and cached; a later read sorts again. Those
+ * two orders diverge as markets open and close, so an offset page can be
+ * entirely rows the visitor already has, and the button never advances.
+ */
+export function nextDirectoryPage<T extends { id: string }>(
+  rows: readonly T[],
+  seen: ReadonlySet<string>,
+  take: number,
+): { page: T[]; done: boolean } {
+  const page: T[] = [];
+  if (take <= 0) return { page, done: true };
+  for (const row of rows) {
+    if (seen.has(row.id)) continue;
+    if (page.length === take) return { page, done: false };
+    page.push(row);
+  }
+  return { page, done: true };
+}
+
 export function directoryVendorCards(
   vendors: Vendor[],
   halls: Map<string, VendorHall[]>,
