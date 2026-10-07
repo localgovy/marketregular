@@ -33,7 +33,7 @@ function SavedProductCard({
     <li className="rounded-xl bg-card ring-1 ring-foreground/10">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
         <div className="flex min-w-[min(100%,12rem)] max-w-full flex-1 items-center gap-2">
-          <ListingMark src={vendor?.logo_url} className="h-8 w-12 bg-primary-foreground" />
+          <ListingMark src={vendor?.logo_url} plate />
           <p className="min-w-0">
             <Link href={`/vendors/${product.vendorSlug}`} className="text-base font-medium hover:underline">
               {vendorName}

@@ -79,6 +79,9 @@ function visitorDb() {
 }
 
 const PAGE = 1000;
+/** Notes on a listing page. The live list renders this many; the header score is rating_avg. */
+const LISTING_NOTE_CAP = 40;
+const REVIEW_ID_CHUNK = 100;
 
 /** Private columns stay off these views. Contact is get_listing_contact, service role only. */
 const MARKET_PUBLIC =
@@ -160,6 +163,46 @@ function hydrateVendor(vendor: Vendor) {
 
 function directoryFailed(error: { message?: string } | null): never {
   throw new Error(error?.message || "Directory read failed");
+}
+
+/**
+ * Newest notes for a hall and the stalls that work it.
+ * One `.or(vendor_id.in.(…))` over the full history pages thousands of rows and
+ * holds static generation past the 60s limit, which fails the export.
+ */
+async function newestListingReviews(
+  visitor: NonNullable<ReturnType<typeof visitorDb>>,
+  marketId: string,
+  vendorIds: string[],
+): Promise<Review[]> {
+  const filters: Array<{ column: "market_id" | "vendor_id"; ids: string[] }> = [
+    { column: "market_id", ids: [marketId] },
+  ];
+  if (vendorIds.length) filters.push({ column: "vendor_id", ids: vendorIds });
+
+  const rows: Review[] = [];
+  const seen = new Set<string>();
+  for (const filter of filters) {
+    for (let index = 0; index < filter.ids.length; index += REVIEW_ID_CHUNK) {
+      const ids = filter.ids.slice(index, index + REVIEW_ID_CHUNK);
+      const { data, error } = await visitor
+        .from("reviews")
+        .select(`${REVIEW_PUBLIC}, profiles(display_name)`)
+        .eq("flagged", false)
+        .in(filter.column, ids)
+        .order("created_at", { ascending: false })
+        .limit(LISTING_NOTE_CAP);
+      if (error) directoryFailed(error);
+      for (const row of (data ?? []) as Review[]) {
+        if (seen.has(row.id)) continue;
+        seen.add(row.id);
+        rows.push(row);
+      }
+    }
+  }
+  return rows
+    .sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at))
+    .slice(0, LISTING_NOTE_CAP);
 }
 
 async function fetchAllRows<T>(
@@ -925,24 +968,13 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
 
   const vendorIdList = (links ?? []).map((l: { vendor_id: string }) => l.vendor_id);
   const showRoster = publishesVendorRoster(market.slug);
-  // Scoped to this hall and its stalls. Reading the whole table would cap at 1000 rows.
-  const reviewScope = [`market_id.eq.${market.id}`];
-  if (vendorIdList.length) reviewScope.push(`vendor_id.in.(${vendorIdList.join(",")})`);
   const [vendorRes, hallsMap, reviews] = await Promise.all([
     showRoster && vendorIdList.length > 0
       ? supabase.from("published_vendors").select(VENDOR_PUBLIC).in("id", vendorIdList)
       : Promise.resolve({ data: [] as Vendor[], error: null }),
     showRoster ? hallsByVendorIds(vendorIdList) : Promise.resolve(new Map<string, VendorHall[]>()),
     visitor
-      ? fetchAllRows<Review>((from, to) =>
-          visitor
-            .from("reviews")
-            .select(`${REVIEW_PUBLIC}, profiles(display_name)`)
-            .eq("flagged", false)
-            .or(reviewScope.join(","))
-            .order("created_at", { ascending: false })
-            .range(from, to),
-        )
+      ? newestListingReviews(visitor, market.id, vendorIdList)
       : Promise.resolve([] as Review[]),
   ]);
   if (vendorRes.error) directoryFailed(vendorRes.error);
@@ -1063,6 +1095,7 @@ export const getVendorBySlug = cache(async function getVendorBySlug(
           .eq("vendor_id", vendor.id)
           .eq("flagged", false)
           .order("created_at", { ascending: false })
+          .limit(LISTING_NOTE_CAP)
       : Promise.resolve({ data: [] as Review[], error: null }),
   ]);
   if (menusRes.error) directoryFailed(menusRes.error);

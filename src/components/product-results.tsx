@@ -69,7 +69,7 @@ function ProductListing({
     <li className="rounded-xl bg-card ring-1 ring-foreground/10">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
         <div className="flex min-w-[min(100%,12rem)] max-w-full flex-1 items-center gap-2">
-          <ListingMark src={logoUrl} className="h-8 w-12 bg-primary-foreground" />
+          <ListingMark src={logoUrl} plate />
           <p className="min-w-0">
             <Link href={`/vendors/${vendorSlug}`} className="text-base font-medium hover:underline">
               {vendorName}
@@ -208,7 +208,7 @@ export function VendorHitList({ vendors }: { vendors: VendorHit[] }) {
         <li key={vendor.slug} className="rounded-xl bg-card ring-1 ring-foreground/10">
           <div className="border-b border-border px-4 py-3">
             <div className="flex min-w-0 items-center gap-2">
-              <ListingMark src={vendor.logoUrl} className="h-8 w-12 bg-primary-foreground" />
+              <ListingMark src={vendor.logoUrl} plate className="bg-transparent" />
               <p className="min-w-0">
                 <Link href={vendor.href} className="text-base font-medium hover:underline">
                   {vendor.name}
