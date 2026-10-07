@@ -103,6 +103,8 @@ export function websiteJsonLd() {
           "@type": "SearchAction",
           target: {
             "@type": "EntryPoint",
+            // Products search, not `/markets?q=`. Google still fetches this
+            // template literally; proxy.ts strips brace params so that URL 308s.
             urlTemplate: `${SITE_URL}/products?q={search_term_string}`,
           },
           "query-input": "required name=search_term_string",

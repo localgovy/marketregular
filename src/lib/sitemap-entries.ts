@@ -1,4 +1,5 @@
 import { FIND_PAGES } from "@/data/find-pages";
+import { isListingRedirectSource } from "@/data/listing-redirects";
 import { CATEGORIES, DAY_SLUGS } from "@/lib/landing";
 import { isRobotsDisallowed } from "@/lib/robots-policy";
 
@@ -87,7 +88,7 @@ export function publicSitemapEntries({
     { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
     { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
     ...markets
-      .filter((market) => market.slug)
+      .filter((market) => market.slug && !isListingRedirectSource(`/markets/${market.slug}`))
       .map((market) => ({
         path: `/markets/${market.slug}`,
         lastModified: listingStamp(market),
@@ -95,7 +96,7 @@ export function publicSitemapEntries({
         priority: 0.8,
       })),
     ...vendors
-      .filter((vendor) => vendor.slug)
+      .filter((vendor) => vendor.slug && !isListingRedirectSource(`/vendors/${vendor.slug}`))
       .map((vendor) => ({
         path: `/vendors/${vendor.slug}`,
         lastModified: listingStamp(vendor),

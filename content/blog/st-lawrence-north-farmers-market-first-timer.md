@@ -55,7 +55,7 @@ On the roster (lineup can shift Saturday to Saturday):
 - [Monforte Cheese](https://www.marketregular.com/vendors/monforte-dairy) · 5 AM–3 PM
 - [Sheldon Creek Dairy](https://www.marketregular.com/vendors/sheldon-creek-dairy) · 5 AM–3 PM
 - [Sunrise Egg Farm](https://www.marketregular.com/vendors/sunrise-egg-farm) · 5 AM–3 PM
-- [Clement’s Poultry](https://www.marketregular.com/vendors/clement-s-poultry) · 5 AM–3 PM
+- [Clement’s Poultry](https://www.marketregular.com/vendors/clement-poultry) · 5 AM–3 PM
 - [Tanjo Farms](https://www.marketregular.com/vendors/tanjo-farms) · 5 AM–3 PM
 - [El Gaucho Chorizo](https://www.marketregular.com/vendors/el-gaucho-chorizo) · 5 AM–3 PM
 

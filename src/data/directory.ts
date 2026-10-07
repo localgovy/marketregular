@@ -4715,8 +4715,8 @@ export const seedVendors: SeedVendor[] = [
   },
   {
     id: "00000000-0000-0000-0000-000000000478",
-    slug: "clement-s-poultry",
-    name: "Clement's Poultry",
+    slug: "clement-poultry",
+    name: "Clement Poultry and Orchards",
     about: null,
     website: null,
     phone: null,

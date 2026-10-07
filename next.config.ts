@@ -2,6 +2,51 @@ import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  flattenListingRedirects,
+  LISTING_REDIRECTS,
+} from "./src/data/listing-redirects";
+
+type LiveAlias = { kind?: string; from_slug?: string; to_slug?: string };
+
+async function liveListingRedirects() {
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(
+    /\/$/,
+    "",
+  );
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_ANON_KEY ||
+    "";
+  if (!url || !key) return [];
+  try {
+    const res = await fetch(`${url}/rest/v1/listing_slug_aliases?select=kind,from_slug,to_slug`, {
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return [];
+    const data: unknown = await res.json();
+    if (!Array.isArray(data)) return [];
+    const rows: { source: string; destination: string }[] = [];
+    for (const row of data as LiveAlias[]) {
+      if (row.kind !== "vendor" && row.kind !== "market") continue;
+      if (!row.from_slug || !row.to_slug || row.from_slug === row.to_slug) continue;
+      const prefix = row.kind === "vendor" ? "/vendors" : "/markets";
+      rows.push({
+        source: `${prefix}/${row.from_slug}`,
+        destination: `${prefix}/${row.to_slug}`,
+      });
+    }
+    return rows;
+  } catch {
+    return [];
+  }
+}
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -30,68 +75,13 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
+    const listing = flattenListingRedirects([...LISTING_REDIRECTS, ...(await liveListingRedirects())]).map(
+      (row) => ({ ...row, permanent: true as const }),
+    );
     return [
       { source: "/contact", destination: "/", permanent: true },
       { source: "/admin/claims", destination: "/admin/applications", permanent: false },
-      {
-        source: "/vendors/the-agrarian-kitchen-the-strong-earth-company",
-        destination: "/vendors/agrarian-kitchen",
-        permanent: true,
-      },
-      {
-        source: "/vendors/thames-river-farms",
-        destination: "/vendors/thames-river-melons",
-        permanent: true,
-      },
-      {
-        source: "/vendors/bitter-better-canda",
-        destination: "/vendors/bitter-better",
-        permanent: true,
-      },
-      {
-        source: "/vendors/molly-b-s-gluten-free",
-        destination: "/vendors/molly-b-s-gluten-free-kitchen",
-        permanent: true,
-      },
-      {
-        source: "/vendors/nemophillist-creations",
-        destination: "/vendors/nemophilist-creations",
-        permanent: true,
-      },
-      // Dropped by the vendor merges. The keeper page is the one that stayed published.
-      { source: "/vendors/bitter-better-canada", destination: "/vendors/bitter-better", permanent: true },
-      { source: "/vendors/cosmos-baking", destination: "/vendors/cosmos-baking-studio", permanent: true },
-      { source: "/vendors/don-grilled-tacos-brunch", destination: "/vendors/don-grilled-steak-tacos-and-brunch", permanent: true },
-      { source: "/vendors/first-fish-distribution", destination: "/vendors/first-fish", permanent: true },
-      { source: "/vendors/fish-tree-farms", destination: "/vendors/fish-tree-farm", permanent: true },
-      { source: "/vendors/gebeta-ethiopian-bbq", destination: "/vendors/gebeta", permanent: true },
-      { source: "/vendors/gebeta-toronto", destination: "/vendors/gebeta", permanent: true },
-      { source: "/vendors/goodlot-farm-brewing", destination: "/vendors/goodlot-farmstead-brewing-company", permanent: true },
-      { source: "/vendors/kindred-folk", destination: "/vendors/kindred-folk-flowers", permanent: true },
-      { source: "/vendors/kinsip", destination: "/vendors/kinsip-house-of-fine-spirits", permanent: true },
-      { source: "/vendors/link-haus-fine-sausage", destination: "/vendors/link-haus", permanent: true },
-      { source: "/vendors/many-roads-purveyors-of-eggs-meat-cheese", destination: "/vendors/many-roads-purveyors", permanent: true },
-      { source: "/vendors/meui-kimchi", destination: "/vendors/meui", permanent: true },
-      { source: "/vendors/nepali-momos", destination: "/vendors/nepali-momo", permanent: true },
-      { source: "/vendors/ostrich-land-the-power-of-ostrich", destination: "/vendors/ostrich-land", permanent: true },
-      { source: "/vendors/potager-dukanada", destination: "/vendors/potager-du-kanada", permanent: true },
-      { source: "/vendors/red-tape", destination: "/vendors/red-tape-brewery", permanent: true },
-      { source: "/vendors/sarah-nicole-artistry", destination: "/vendors/sarah-nicole-s-artistry", permanent: true },
-      { source: "/vendors/sun-ray-farms", destination: "/vendors/sun-ray-orchards", permanent: true },
-      { source: "/vendors/hooked-stouffville", destination: "/vendors/hooked", permanent: true },
-      { source: "/vendors/pv-s-fresh-fruits-veg", destination: "/vendors/pv-s-fresh-fruits-vegetables", permanent: true },
-      { source: "/vendors/bruem-design-media", destination: "/vendors/bruem-designs", permanent: true },
-      { source: "/vendors/the-east-olive-supply-co-choose-to-infuse", destination: "/vendors/the-east-olive-supply-company", permanent: true },
-      { source: "/vendors/thorganic-farm", destination: "/vendors/thorganic-farms", permanent: true },
-      {
-        source: "/markets/sickkids-market-indoor-winter",
-        destination: "/markets/sickkids-market",
-        permanent: true,
-      },
-      // Retired hall with no successor listing. Answered at the edge so the
-      // crawler never sees the 404 Search Console picked up.
-      { source: "/markets/gould-street-tmu", destination: "/markets", permanent: true },
-      { source: "/markets/trinity-bellwoods-farmers-market", destination: "/markets", permanent: true },
+      ...listing,
       { source: "/find/lemon-toronto", destination: "/find/citrus-toronto", permanent: true },
       { source: "/find/lemons-toronto", destination: "/find/citrus-toronto", permanent: true },
       { source: "/find/oranges-toronto", destination: "/find/citrus-toronto", permanent: true },
@@ -105,7 +95,6 @@ const nextConfig: NextConfig = {
       { source: "/find/corn-toronto", destination: "/find/sweet-corn-toronto", permanent: true },
       { source: "/find/turnips-toronto", destination: "/find/turnip-toronto", permanent: true },
       { source: "/find/celery-toronto", destination: "/find/vegetables-toronto", permanent: true },
-      { source: "/markets/leslieville-farmers-market-east-end-food-hub", destination: "/markets/the-leslieville-farmers-market", permanent: true },
       { source: "/search", destination: "/products", permanent: true },
       // Stall pages stay at /vendors/[slug]. The A–Z index cannibalized market
       // queries (title was too close to /markets). Query strings pass through.
