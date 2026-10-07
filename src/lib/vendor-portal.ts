@@ -28,6 +28,8 @@ export type PortalMenuItem = {
   price_cents: number | null;
   season: string | null;
   dietary: string[];
+  menu_section: string | null;
+  menu_section_order: number | null;
   for_sale: boolean;
   offer_delivery: boolean;
   offer_pickup: boolean;
@@ -272,6 +274,7 @@ function parseMenu(value: unknown): PortalMenuItem | null {
   const row = asRecord(value);
   if (!row || typeof row.id !== "string" || typeof row.name !== "string") return null;
   const price = row.price_cents;
+  const order = row.menu_section_order;
   return {
     id: row.id,
     name: row.name,
@@ -279,6 +282,9 @@ function parseMenu(value: unknown): PortalMenuItem | null {
     price_cents: typeof price === "number" && Number.isInteger(price) ? price : null,
     season: textOrNull(row.season),
     dietary: textList(row.dietary),
+    menu_section: textOrNull(row.menu_section),
+    menu_section_order:
+      typeof order === "number" && Number.isInteger(order) ? order : null,
     for_sale: flag(row.for_sale),
     offer_delivery: flag(row.offer_delivery),
     offer_pickup: flag(row.offer_pickup),

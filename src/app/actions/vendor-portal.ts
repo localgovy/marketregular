@@ -5,6 +5,13 @@ import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import {
+  menuSectionsFromItems,
+  moveMenuSectionList,
+  parseMenuSectionForm,
+  renameMenuSectionList,
+  type MenuSectionPayload,
+} from "@/lib/menu-sections";
+import {
   imageKind,
   isUuid,
   ownedLogoObjectName,
@@ -142,6 +149,15 @@ export async function saveOwnedMenuItem(formData: FormData): Promise<PortalResul
     .split(",")
     .map((tag) => tag.trim())
     .filter(Boolean);
+  const loaded = await loadOwned(gate.supabase, vendorId);
+  const menus = loaded.listing?.menus ?? [];
+  const current = menus.find((item) => item.id === itemId);
+  const section = parseMenuSectionForm(
+    formData,
+    menuSectionsFromItems(menus.filter((item) => item.id !== itemId)),
+    current ? { name: current.menu_section, order: current.menu_section_order } : null,
+  );
+  if (!section.ok) return { error: section.error };
   const { error } = await gate.supabase.rpc(
     "save_owned_menu_item",
     VENDOR_SALES_OPEN
@@ -158,6 +174,8 @@ export async function saveOwnedMenuItem(formData: FormData): Promise<PortalResul
           p_offer_pickup: offerPickup,
           p_offer_preorder: offerPreorder,
           p_offer_terms: terms,
+          p_menu_section: section.section,
+          p_menu_section_order: section.order,
         }
       : {
           p_vendor_id: vendorId,
@@ -167,12 +185,64 @@ export async function saveOwnedMenuItem(formData: FormData): Promise<PortalResul
           p_price_cents: cents,
           p_season: text(formData, "season"),
           p_dietary: dietary,
+          p_menu_section: section.section,
+          p_menu_section_order: section.order,
         },
   );
   if (error) return portalError(error, "Could not save that item.");
+  const saved = await loadOwned(gate.supabase, vendorId);
+  if (saved.listing) revalidateListing(saved.listing);
+  return { error: null, message: itemId ? "Saved." : "Added." };
+}
+
+async function applyOwnedMenuSections(
+  vendorId: string,
+  payload: MenuSectionPayload[],
+): Promise<PortalResult> {
+  const gate = await requireOwned(vendorId);
+  if (!gate.supabase) return { error: gate.error };
+  const { error } = await gate.supabase.rpc("set_owned_menu_sections", {
+    p_vendor_id: vendorId,
+    p_sections: payload,
+  });
+  if (error) return portalError(error, "Could not save those sections.");
   const loaded = await loadOwned(gate.supabase, vendorId);
   if (loaded.listing) revalidateListing(loaded.listing);
-  return { error: null, message: itemId ? "Saved." : "Added." };
+  return { error: null, message: "Saved." };
+}
+
+export async function renameOwnedMenuSection(formData: FormData): Promise<PortalResult> {
+  const vendorId = text(formData, "vendor_id");
+  const gate = await requireOwned(vendorId);
+  if (!gate.supabase) return { error: gate.error };
+  const loaded = await loadOwned(gate.supabase, vendorId);
+  if (!loaded.listing) return { error: "That stall is missing." };
+  const next = renameMenuSectionList(
+    menuSectionsFromItems(loaded.listing.menus),
+    text(formData, "from"),
+    text(formData, "name"),
+  );
+  if (!next.ok) return { error: next.error };
+  return applyOwnedMenuSections(vendorId, next.sections);
+}
+
+export async function moveOwnedMenuSection(formData: FormData): Promise<PortalResult> {
+  const vendorId = text(formData, "vendor_id");
+  const gate = await requireOwned(vendorId);
+  if (!gate.supabase) return { error: gate.error };
+  const loaded = await loadOwned(gate.supabase, vendorId);
+  if (!loaded.listing) return { error: "That stall is missing." };
+  const direction = text(formData, "direction");
+  if (direction !== "up" && direction !== "down") {
+    return { error: "Those sections are not allowed." };
+  }
+  const next = moveMenuSectionList(
+    menuSectionsFromItems(loaded.listing.menus),
+    text(formData, "section"),
+    direction,
+  );
+  if (!next.ok) return { error: next.error };
+  return applyOwnedMenuSections(vendorId, next.sections);
 }
 
 export async function deleteOwnedMenuItem(formData: FormData): Promise<PortalResult> {

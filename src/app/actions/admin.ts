@@ -15,6 +15,12 @@ import {
   type VendorMaintenanceFields,
 } from "@/lib/maintenance-sections";
 import { portalHours, portalSeason } from "@/lib/market-portal";
+import {
+  menuSectionsFromItems,
+  moveMenuSectionList,
+  parseMenuSectionForm,
+  renameMenuSectionList,
+} from "@/lib/menu-sections";
 import { dbPublicError } from "@/lib/public-error";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { applyClaimDecision } from "@/lib/claim-approval";
@@ -511,6 +517,25 @@ export async function unlinkVendorFromMarket(formData: FormData) {
   revalidatePath(`/admin/markets/${market_id}`);
 }
 
+async function vendorMenuSectionRows(supabase: SupabaseClient, vendorId: string) {
+  const { data, error } = await supabase
+    .from("vendor_menus")
+    .select("id, menu_section, menu_section_order")
+    .eq("vendor_id", vendorId);
+  if (error) failDb(error, "Could not open that menu.");
+  return (data ?? []) as Array<{
+    id: string;
+    menu_section: string | null;
+    menu_section_order: number | null;
+  }>;
+}
+
+async function refreshVendorMenu(supabase: SupabaseClient, vendorId: string) {
+  const path = await listingPath(supabase, "vendors", vendorId);
+  revalidatePublishedDirectory(path ? [path] : []);
+  revalidatePath(`/admin/vendors/${vendorId}`);
+}
+
 export async function saveMenuItem(formData: FormData) {
   const { supabase } = await requireAdmin();
   if (!supabase) fail("Supabase is not configured yet.");
@@ -519,6 +544,9 @@ export async function saveMenuItem(formData: FormData) {
   if (opted.includes("menu")) {
     refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "stall" }], formData);
   }
+  const rows = await vendorMenuSectionRows(supabase, vendor_id);
+  const section = parseMenuSectionForm(formData, menuSectionsFromItems(rows));
+  if (!section.ok) fail(section.error);
   const price = String(formData.get("price_cents") ?? "");
   const { error } = await supabase.from("vendor_menus").insert({
     vendor_id,
@@ -530,11 +558,90 @@ export async function saveMenuItem(formData: FormData) {
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean),
+    menu_section: section.section,
+    menu_section_order: section.order,
   });
   if (error) failDb(error, "Could not save that menu item.");
-  const path = await listingPath(supabase, "vendors", vendor_id);
-  revalidatePublishedDirectory(path ? [path] : []);
-  revalidatePath(`/admin/vendors/${vendor_id}`);
+  await refreshVendorMenu(supabase, vendor_id);
+}
+
+export async function assignMenuItemSection(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  if (!supabase) fail("Supabase is not configured yet.");
+  const vendor_id = String(formData.get("vendor_id"));
+  const item_id = String(formData.get("item_id"));
+  const opted = await optOutsFor(supabase, "vendors", vendor_id);
+  if (opted.includes("menu")) {
+    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "stall" }], formData);
+  }
+  const rows = await vendorMenuSectionRows(supabase, vendor_id);
+  const current = rows.find((row) => row.id === item_id);
+  const section = parseMenuSectionForm(
+    formData,
+    menuSectionsFromItems(rows.filter((row) => row.id !== item_id)),
+    current ? { name: current.menu_section, order: current.menu_section_order } : null,
+  );
+  if (!section.ok) fail(section.error);
+  const { data, error } = await supabase
+    .from("vendor_menus")
+    .update({
+      menu_section: section.section,
+      menu_section_order: section.order,
+    })
+    .eq("id", item_id)
+    .eq("vendor_id", vendor_id)
+    .select("id");
+  if (error) failDb(error, "Could not save that menu item.");
+  if (!data?.length) fail("That item is missing.");
+  await refreshVendorMenu(supabase, vendor_id);
+}
+
+async function applyAdminMenuSections(formData: FormData, vendorId: string) {
+  const { supabase } = await requireAdmin();
+  if (!supabase) fail("Supabase is not configured yet.");
+  const opted = await optOutsFor(supabase, "vendors", vendorId);
+  if (opted.includes("menu")) {
+    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "stall" }], formData);
+  }
+  return supabase;
+}
+
+export async function renameMenuSection(formData: FormData) {
+  const vendorId = String(formData.get("vendor_id"));
+  const supabase = await applyAdminMenuSections(formData, vendorId);
+  const rows = await vendorMenuSectionRows(supabase, vendorId);
+  const next = renameMenuSectionList(
+    menuSectionsFromItems(rows),
+    String(formData.get("from") ?? ""),
+    String(formData.get("name") ?? ""),
+  );
+  if (!next.ok) fail(next.error);
+  const { error } = await supabase.rpc("set_menu_sections", {
+    p_vendor_id: vendorId,
+    p_sections: next.sections,
+  });
+  if (error) failDb(error, "Could not save those sections.");
+  await refreshVendorMenu(supabase, vendorId);
+}
+
+export async function moveMenuSection(formData: FormData) {
+  const vendorId = String(formData.get("vendor_id"));
+  const supabase = await applyAdminMenuSections(formData, vendorId);
+  const direction = String(formData.get("direction") ?? "");
+  if (direction !== "up" && direction !== "down") fail("Those sections are not allowed.");
+  const rows = await vendorMenuSectionRows(supabase, vendorId);
+  const next = moveMenuSectionList(
+    menuSectionsFromItems(rows),
+    String(formData.get("section") ?? ""),
+    direction,
+  );
+  if (!next.ok) fail(next.error);
+  const { error } = await supabase.rpc("set_menu_sections", {
+    p_vendor_id: vendorId,
+    p_sections: next.sections,
+  });
+  if (error) failDb(error, "Could not save those sections.");
+  await refreshVendorMenu(supabase, vendorId);
 }
 
 export async function deleteMenuItem(id: string, vendorId: string, formData?: FormData) {
