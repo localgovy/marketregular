@@ -24,6 +24,10 @@ test("GSC 404 slugs that were renamed or retired redirect", () => {
   assert.equal(listingRedirectDestination("/vendors/clement-s-poultry"), "/vendors/clement-poultry");
   assert.equal(listingRedirectDestination("/markets/yzd-farmers-market"), "/markets");
   assert.equal(listingRedirectDestination("/vendors/gebeta-toronto"), "/vendors/gebeta");
+  assert.equal(
+    listingRedirectDestination("/vendors/pilliteri-estate-winery"),
+    "/vendors/pillitteri-estates-winery",
+  );
 });
 
 test("flattenListingRedirects collapses a chain", () => {

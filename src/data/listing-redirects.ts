@@ -43,6 +43,7 @@ const RAW_LISTING_REDIRECTS: ListingRedirect[] = [
   { source: "/vendors/the-east-olive-supply-co-choose-to-infuse", destination: "/vendors/the-east-olive-supply-company" },
   { source: "/vendors/thorganic-farm", destination: "/vendors/thorganic-farms" },
   { source: "/vendors/clement-s-poultry", destination: "/vendors/clement-poultry" },
+  { source: "/vendors/pilliteri-estate-winery", destination: "/vendors/pillitteri-estates-winery" },
   { source: "/markets/sickkids-market-indoor-winter", destination: "/markets/sickkids-market" },
   { source: "/markets/gould-street-tmu", destination: "/markets" },
   { source: "/markets/trinity-bellwoods-farmers-market", destination: "/markets" },
