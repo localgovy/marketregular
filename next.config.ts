@@ -6,47 +6,7 @@ import {
   flattenListingRedirects,
   LISTING_REDIRECTS,
 } from "./src/data/listing-redirects";
-
-type LiveAlias = { kind?: string; from_slug?: string; to_slug?: string };
-
-async function liveListingRedirects() {
-  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(
-    /\/$/,
-    "",
-  );
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.SUPABASE_ANON_KEY ||
-    "";
-  if (!url || !key) return [];
-  try {
-    const res = await fetch(`${url}/rest/v1/listing_slug_aliases?select=kind,from_slug,to_slug`, {
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        Accept: "application/json",
-      },
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) return [];
-    const data: unknown = await res.json();
-    if (!Array.isArray(data)) return [];
-    const rows: { source: string; destination: string }[] = [];
-    for (const row of data as LiveAlias[]) {
-      if (row.kind !== "vendor" && row.kind !== "market") continue;
-      if (!row.from_slug || !row.to_slug || row.from_slug === row.to_slug) continue;
-      const prefix = row.kind === "vendor" ? "/vendors" : "/markets";
-      rows.push({
-        source: `${prefix}/${row.from_slug}`,
-        destination: `${prefix}/${row.to_slug}`,
-      });
-    }
-    return rows;
-  } catch {
-    return [];
-  }
-}
+import { fetchLiveListingRedirects } from "./src/lib/live-listing-redirects";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -75,7 +35,10 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
-    const listing = flattenListingRedirects([...LISTING_REDIRECTS, ...(await liveListingRedirects())]).map(
+    const listing = flattenListingRedirects([
+      ...LISTING_REDIRECTS,
+      ...(await fetchLiveListingRedirects()),
+    ]).map(
       (row) => ({ ...row, permanent: true as const }),
     );
     return [

@@ -1,0 +1,10 @@
+---
+description: Keep docs/site-structure.md aligned with the product
+alwaysApply: true
+---
+
+# Site structure doc
+
+`docs/site-structure.md` is the map other models read. When a change adds or alters a route, actor, table, column, redirect, portal or admin flow, or other public behavior, update that file in the same change.
+
+Describe the product as built. When the doc and the code disagree, fix the doc to match the code. Do not leave a new route, status, or data rule only in a pull request body.

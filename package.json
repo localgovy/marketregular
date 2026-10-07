@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node --experimental-strip-types scripts/write-listing-aliases.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

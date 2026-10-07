@@ -4,9 +4,12 @@
  * `dynamicParams = false` and must not probe live drafts).
  *
  * In-place slug edits after `listing_slug_aliases` is applied are captured by
- * a database trigger and merged into next.config at build time. Merges that
- * delete a row still need a line here.
+ * a database trigger. `scripts/write-listing-aliases.ts` copies those rows into
+ * `listing-aliases.generated.json` before `next build`, and this list flattens
+ * them with the historical redirects so the proxy and the edge config stay
+ * one hop. Merges that delete a row still need a line here.
  */
+import liveListingAliases from "./listing-aliases.generated.json" with { type: "json" };
 export type ListingRedirect = {
   source: string;
   destination: string;
@@ -73,7 +76,10 @@ export function flattenListingRedirects(rows: readonly ListingRedirect[]): Listi
   return [...map.entries()].map(([source, destination]) => ({ source, destination }));
 }
 
-export const LISTING_REDIRECTS = flattenListingRedirects(RAW_LISTING_REDIRECTS);
+export const LISTING_REDIRECTS = flattenListingRedirects([
+  ...RAW_LISTING_REDIRECTS,
+  ...liveListingAliases,
+]);
 
 const BY_SOURCE = new Map(LISTING_REDIRECTS.map((row) => [row.source, row.destination]));
 

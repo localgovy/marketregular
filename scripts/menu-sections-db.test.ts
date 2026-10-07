@@ -75,6 +75,7 @@ create table public.vendor_menus (
 ${extractFunction("supabase/migrations/20260825022654_public_release_security.sql", "owns_vendor")}
 ${extractFunction("supabase/migrations/20261002183516_vendor_portal.sql", "portal_tags")}
 ${extractFunction(migration, "vendor_menus_section_cap")}
+${extractFunction(migration, "vendor_menus_section_cap_stmt")}
 ${extractFunction(migration, "save_owned_menu_item")}
 ${extractFunction(migration, "set_menu_sections")}
 ${extractFunction(migration, "set_owned_menu_sections")}
@@ -84,6 +85,12 @@ create trigger vendor_menus_section_cap
   on public.vendor_menus
   for each row
   execute function public.vendor_menus_section_cap();
+
+create trigger vendor_menus_section_cap_stmt
+  after insert or update of menu_section, menu_section_order, vendor_id
+  on public.vendor_menus
+  for each statement
+  execute function public.vendor_menus_section_cap_stmt();
 `;
 
 async function database() {
@@ -179,6 +186,41 @@ test("a single statement can fill up to five sections from null", async () => {
     [VENDOR],
   );
   assert.equal(count.rows[0]?.n, 5);
+});
+
+test("a single statement cannot fill a sixth section", async () => {
+  const db = await database();
+  await seed(db);
+  const ids: string[] = [];
+  for (let i = 0; i < 6; i += 1) {
+    const inserted = await db.query<{ id: string }>(
+      "insert into public.vendor_menus (vendor_id, name) values ($1, $2) returning id::text as id",
+      [VENDOR, `Item ${i}`],
+    );
+    ids.push(inserted.rows[0]!.id);
+  }
+  const raised = await expectRaise(() =>
+    db.query(
+      `update public.vendor_menus m
+       set menu_section = v.section, menu_section_order = v.ord
+       from (values
+         ($1::uuid, 'One', 1::smallint),
+         ($2::uuid, 'Two', 2::smallint),
+         ($3::uuid, 'Three', 3::smallint),
+         ($4::uuid, 'Four', 4::smallint),
+         ($5::uuid, 'Five', 5::smallint),
+         ($6::uuid, 'Six', 5::smallint)
+       ) as v(id, section, ord)
+       where m.id = v.id`,
+      ids,
+    ),
+  );
+  assert.match(raised.message, /at most 5 sections/);
+  const count = await db.query<{ n: number }>(
+    "select count(distinct menu_section)::int as n from public.vendor_menus where vendor_id = $1 and menu_section is not null",
+    [VENDOR],
+  );
+  assert.equal(count.rows[0]?.n, 0);
 });
 
 test("owners can save a section and rename the set", async () => {

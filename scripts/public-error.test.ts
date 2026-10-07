@@ -7,6 +7,10 @@ test("section cap errors keep their copy", () => {
     dbPublicError({ code: "P0001", message: "A menu can have at most 5 sections" }, "fallback"),
     "A menu can have at most 5 sections.",
   );
+  assert.equal(
+    dbPublicError({ code: "P0001", message: "That name is already a section" }, "fallback"),
+    "That name is already a section.",
+  );
 });
 
 test("an existing email gets the same reply as a new signup", () => {

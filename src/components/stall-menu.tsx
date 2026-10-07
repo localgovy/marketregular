@@ -80,9 +80,7 @@ export function StallMenu({
     <div className="mt-3 grid gap-6">
       {groups.map((group) => (
         <div key={group.heading ?? "unsectioned"}>
-          {group.heading ? (
-            <h3 className="type-kicker font-sans font-medium">{group.heading}</h3>
-          ) : null}
+          {group.heading ? <h3>{group.heading}</h3> : null}
           <MenuReceipt
             items={group.items}
             vendorSlug={vendorSlug}

@@ -121,6 +121,30 @@ test("the only item in a section can keep that name", () => {
   assert.deepEqual(parsed, { ok: true, section: "Breads", order: 1 });
 });
 
+test("a new section takes the first open order", () => {
+  const form = new FormData();
+  form.set("menu_section_choice", NEW_MENU_SECTION);
+  form.set("menu_section_new", "Drinks");
+  const parsed = parseMenuSectionForm(form, [
+    { name: "Breads", order: 1 },
+    { name: "Sweets", order: 3 },
+  ]);
+  assert.deepEqual(parsed, { ok: true, section: "Drinks", order: 2 });
+});
+
+test("renaming onto another section is rejected", () => {
+  const renamed = renameMenuSectionList(
+    [
+      { name: "Breads", order: 1 },
+      { name: "Sweets", order: 2 },
+    ],
+    "Breads",
+    "sweets",
+  );
+  assert.equal(renamed.ok, false);
+  if (!renamed.ok) assert.equal(renamed.error, "That name is already a section.");
+});
+
 test("new section names reuse an existing spelling", () => {
   const form = new FormData();
   form.set("menu_section_choice", NEW_MENU_SECTION);

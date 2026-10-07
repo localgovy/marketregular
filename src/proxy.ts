@@ -30,8 +30,8 @@ export function proxy(request: NextRequest) {
       for (const key of templated) url.searchParams.delete(key);
       return NextResponse.redirect(url, 308);
     }
-    // Middleware can run before next.config redirects. Keep renamed slugs
-    // single-hop even in that order. Live alias rows are merged at build time.
+    // Middleware can run before next.config redirects. Both use the same
+    // flattened list, including alias rows copied in before this build.
     if (parseListingPath(pathname)) {
       const dest = listingRedirectDestination(pathname);
       if (dest && dest !== pathname) {

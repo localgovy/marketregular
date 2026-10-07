@@ -1,8 +1,10 @@
 -- Storefront menu groups live on vendor_menus, not product_category.
--- A stall can have at most 5 named sections. The cap trigger allows a
--- single-transaction bulk UPDATE that fills NULL menu_section with up to
--- five names (the post-merge load). Rename/reorder goes through
--- set_menu_sections, which skips the per-row count while it rewrites names.
+-- A stall can have at most 5 named sections. The row trigger trims names and
+-- blocks a sixth section on a single-row write. It cannot see sibling rows in
+-- the same statement, so an after-statement trigger counts the finished set.
+-- A bulk UPDATE may fill NULL menu_section with up to five names. Rename and
+-- reorder go through set_menu_sections, which skips both checks while it
+-- rewrites names and then counts again.
 
 alter table public.vendor_menus
   add column if not exists menu_section text null,
@@ -72,6 +74,37 @@ create trigger vendor_menus_section_cap
   on public.vendor_menus
   for each row
   execute function public.vendor_menus_section_cap();
+
+create or replace function public.vendor_menus_section_cap_stmt()
+returns trigger
+language plpgsql
+set search_path = public
+as $fn$
+begin
+  if current_setting('marketregular.skip_menu_section_cap', true) = '1' then
+    return null;
+  end if;
+
+  if exists (
+    select 1
+    from public.vendor_menus
+    where menu_section is not null
+    group by vendor_id
+    having count(distinct menu_section) > 5
+  ) then
+    raise exception 'A menu can have at most 5 sections' using errcode = 'P0001';
+  end if;
+
+  return null;
+end;
+$fn$;
+
+drop trigger if exists vendor_menus_section_cap_stmt on public.vendor_menus;
+create trigger vendor_menus_section_cap_stmt
+  after insert or update of menu_section, menu_section_order, vendor_id
+  on public.vendor_menus
+  for each statement
+  execute function public.vendor_menus_section_cap_stmt();
 
 create or replace view public.published_menus
 with (security_invoker = true) as

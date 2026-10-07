@@ -131,8 +131,15 @@ export function groupMenuItems(items: MenuItem[]): MenuSectionGroup[] | null {
 }
 
 export function nextMenuSectionOrder(sections: MenuSectionRef[]) {
-  const max = sections.reduce((n, section) => Math.max(n, section.order ?? 0), 0);
-  return Math.min(max + 1, MENU_SECTION_CAP);
+  const used = new Set(
+    sections
+      .map((section) => section.order)
+      .filter((order): order is number => typeof order === "number" && order >= 1 && order <= MENU_SECTION_CAP),
+  );
+  for (let order = 1; order <= MENU_SECTION_CAP; order += 1) {
+    if (!used.has(order)) return order;
+  }
+  return MENU_SECTION_CAP;
 }
 
 export function parseMenuSectionForm(
@@ -195,7 +202,7 @@ export function renameMenuSectionList(
   const clash = sections.some(
     (section, i) => i !== index && section.name.toLowerCase() === name.toLowerCase(),
   );
-  if (clash) return { ok: false, error: "Those sections are not allowed." };
+  if (clash) return { ok: false, error: "That name is already a section." };
   const next = sections.map((section, i) =>
     i === index ? { ...section, name } : section,
   );

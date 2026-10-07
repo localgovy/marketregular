@@ -10,7 +10,8 @@ import {
   type MenuSectionRef,
 } from "@/lib/menu-sections";
 
-const selectClass = "h-8 rounded-lg border border-input bg-card px-2.5 text-sm";
+const selectClass =
+  "h-8 w-full min-w-0 rounded-lg border border-input bg-card px-2.5 text-sm";
 
 export function MenuSectionFields({
   id,
@@ -27,7 +28,7 @@ export function MenuSectionFields({
 
   return (
     <>
-      <div className="grid gap-1.5">
+      <div className="grid gap-1.5 sm:col-span-2">
         <Label htmlFor={`${id}-section`}>Section</Label>
         <select
           id={`${id}-section`}
@@ -48,7 +49,7 @@ export function MenuSectionFields({
         </select>
       </div>
       {showNew ? (
-        <div className="grid gap-1.5">
+        <div className="grid gap-1.5 sm:col-span-2">
           <Label htmlFor={`${id}-section-new`}>New section name</Label>
           <Input
             id={`${id}-section-new`}

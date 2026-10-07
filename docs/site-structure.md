@@ -1,6 +1,6 @@
 # MarketRegular site structure
 
-Snapshot date: 7 October 2026. This file is a map for other models. When it disagrees with the code, the code wins. It describes the product as built. It is not a redesign brief.
+Snapshot date: 7 October 2026. This file is a map for other models. When it disagrees with the code, the code wins. It describes the product as built. It is not a redesign brief. When a change adds or alters a route, actor, table, redirect, or public behavior, update this file in the same change.
 
 Brand string is `SITE_NAME` in `src/lib/constants.ts`: **MarketRegular** (one word). Operator is LocalGovy Inc., Ontario. Public site is `https://www.marketregular.com`. Inbox for account requests is `CLAIM_INBOX` (`noah@localgovy.com`).
 
@@ -68,7 +68,7 @@ flowchart LR
 Entry is `proxy` in `src/proxy.ts` (Next.js middleware matcher, skipping static assets).
 
 1. GET/HEAD with `{` or `}` in a query value drops those params with a 308. Search engines fetch the sitelinks template literally. Real searches such as `/markets?q=bread` stay.
-2. Renamed market and vendor slugs 308 to the current path. Sources are `src/data/listing-redirects.ts` plus `listing_slug_aliases` merged at build time. Season aliases and retired slugs also 308.
+2. Renamed market and vendor slugs 308 to the current path. Sources are the historical list in `src/data/listing-redirects.ts` plus `listing_slug_aliases`, copied into `src/data/listing-aliases.generated.json` by `scripts/write-listing-aliases.ts` before `next build` and flattened with that list. The proxy and `next.config.ts` redirects use the same flattened paths, so a chain stays one hop even when middleware runs first. `next dev` still reads the table inside `redirects()` for the edge config. Season aliases and retired slugs also 308.
 3. `/auth/callback?token_hash=…` rewrites to `/auth/confirm`. `/auth/callback` with `code` or an OAuth error rewrites to `/auth/pkce`.
 4. `updateSession` refreshes the Supabase cookie, then applies the password gate and the onboarding gate.
 
@@ -171,7 +171,7 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 - `listing_slug_aliases.kind`: `market`, `vendor`
 - Weekday is `smallint` 0–6, Sunday through Saturday
 - `vendor_menus.for_sale` requires `price_cents` from 50 to 1,000,000 and at least one of delivery, pickup, or preorder
-- `vendor_menus.menu_section` is null or trimmed 1–40 characters. `menu_section_order` is null or 1–5. A stall may have at most 5 distinct non-null section names (`vendor_menus_section_cap`)
+- `vendor_menus.menu_section` is null or trimmed 1–40 characters. `menu_section_order` is null or 1–5. A stall may have at most 5 distinct non-null section names. The row trigger enforces that on a single-row write. `vendor_menus_section_cap_stmt` counts again after the statement, so a bulk `UPDATE` cannot sneak in a sixth name. `set_menu_sections` skips both while it renames, then counts.
 - Maintenance opt-out keys: vendor `about`, `logo`, `contact`, `links`, `tags`, `menu`, `halls`; market `about`, `logo`, `contact`, `links`, `tags`, `place`, `hours`, `roster`
 
 ### Tables
@@ -212,7 +212,7 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 
 **`mail_sends`** — hashed rate-limit keys. Not an outbox. Rows older than 48 hours are deleted by `take_mail_slot`.
 
-**`listing_slug_aliases`** — `(kind, from_slug)` → `to_slug`. Slug updates collapse chains so old URLs 308 in one hop.
+**`listing_slug_aliases`** — `(kind, from_slug)` → `to_slug`. Slug updates collapse chains so old URLs 308 in one hop. The prebuild script copies the table into the redirect list the proxy ships with.
 
 **`vendor_sign_in_secrets`** — ciphertext of an issued password, or the sentinel `chosen.v1.password-not-stored` after the person sets their own. Admin decrypts with `VENDOR_PASSWORD_KEY`.
 
@@ -220,7 +220,7 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 
 ### Views and storage
 
-Service-role selects: `published_markets`, `published_vendors`, `published_schedules`, `published_stalls`, `published_menus`. Phone and email are not on these views. Contact goes through `get_listing_contact`. `published_menus` includes `menu_section` and `menu_section_order`. `can_buy` is currently `false`. Public stall reads use `MENU_PUBLIC` in `catalog.ts` (no `product_category`). If those section columns are not on the view yet, catalog probes once and falls back to the flat select so a deploy before the migration still builds. `StallMenu` keeps a flat receipt list when no item has a section; otherwise it groups under `h3` kickers, with unsectioned items last.
+Service-role selects: `published_markets`, `published_vendors`, `published_schedules`, `published_stalls`, `published_menus`. Phone and email are not on these views. Contact goes through `get_listing_contact`. `published_menus` includes `menu_section` and `menu_section_order` at the end of the view (a `CREATE OR REPLACE` can only append columns). `can_buy` is currently `false`. Public stall reads use `MENU_PUBLIC` in `catalog.ts` (no `product_category`). If those section columns are not on the view yet, catalog probes once per process and falls back to the flat select so a deploy before the migration still builds. Apply `20261007200000_vendor_menu_sections.sql` before the deploy that should render sections; portal menu saves send `p_menu_section` and fail until that function exists. `StallMenu` keeps a flat receipt list when no item has a section; otherwise it groups under `h3` headings, with unsectioned items last.
 
 Storage: `post-photos` (public read, authenticated upload under `{userId}/`, JPEG/PNG/WebP, 5 MB) and `listing-marks` (public read, service-role writes). Logos live at `vendors/{id}/{uuid}.{ext}` or `markets/{id}/`.
 
@@ -301,7 +301,7 @@ Tag pages (`/markets/tag/…`): produce, organic, vegan, bakery, prepared-food, 
 
 Open now / later today / selling this weekend follow the rules in “How a public listing is computed”. Nobody toggles them. Listing pages also link out through `ListingAlsoLinks`: the weekdays this hall or stall works, and up to six tags that have a category page. Blog posts pull a three-stall peek and the external score for markets they mention (`src/lib/blog-market-peeks.ts`).
 
-Market detail joins schedules, stalls, vendors, posts, and reviews. Contact phone and email come from `get_listing_contact`, not the public row. Sibling halls cross-link. The Leslieville indoor slug redirects onto the outdoor host. Vendor detail joins menus, halls, schedules, reviews, and posts that mention the stall. Halls are ranked by `rankVendorMarkets`. The stall menu groups by `menu_section` when any item has one. Buy links render only when `VENDOR_SALES_OPEN && stripeChargesConfigured()`. Today they do not.
+Market detail joins schedules, stalls, vendors, posts, and reviews. Contact phone and email come from `get_listing_contact`, not the public row. Sibling halls cross-link. The Leslieville indoor slug redirects onto the outdoor host. Vendor detail joins menus, halls, schedules, reviews, and posts that mention the stall. Halls are ranked by `rankVendorMarkets`. The stall menu groups by `menu_section` when any item has one, under an `h3` for each name. Buy links render only when `VENDOR_SALES_OPEN && stripeChargesConfigured()`. Today they do not.
 
 ### Products and find pages
 
@@ -572,7 +572,7 @@ Directory data path: live reads go through `published_*`. `scripts/import-toront
 | Pipeline | Files |
 | --- | --- |
 | Request and session | `src/proxy.ts`, `src/lib/supabase/middleware.ts`, `next.config.ts` |
-| Directory reads | `src/lib/data/catalog.ts`, `src/lib/data/local.ts`, `src/lib/directory-page.ts`, `src/lib/directory-cache.ts`, `src/lib/revalidate-directory.ts`, `src/lib/find-paths.ts`, `src/lib/landing.ts`, `src/lib/schedule.ts`, `src/lib/open-state.ts`, `src/lib/product-visit.ts`, `src/lib/vendor-week.ts`, `src/lib/vendor-tags.ts`, `src/lib/listing-siblings.ts`, `src/lib/season-fold.ts` |
+| Directory reads | `src/lib/data/catalog.ts`, `src/lib/data/local.ts`, `src/lib/directory-page.ts`, `src/lib/directory-cache.ts`, `src/lib/revalidate-directory.ts`, `src/lib/find-paths.ts`, `src/lib/landing.ts`, `src/lib/schedule.ts`, `src/lib/open-state.ts`, `src/lib/product-visit.ts`, `src/lib/vendor-week.ts`, `src/lib/vendor-tags.ts`, `src/lib/listing-siblings.ts`, `src/lib/season-fold.ts`, `src/components/stall-menu.tsx` |
 | Product search | `src/lib/data/product-search.ts`, `src/data/find-pages.ts`, `src/app/api/search/route.ts` |
 | Saves | `src/app/actions/saves.ts`, `src/lib/saves.ts`, `src/components/save-button.tsx` |
 | Posts | `src/app/actions/presence.ts`, `src/lib/floor-note.ts`, `src/lib/feed-filter.ts` |
@@ -583,9 +583,9 @@ Directory data path: live reads go through `published_*`. `scripts/import-toront
 | Admin | `src/app/actions/admin.ts`, `src/app/admin/`, `src/components/admin/vendor-menu.tsx`, `src/lib/admin.ts`, `src/lib/maintenance-sections.ts` |
 | Money | `src/lib/selling.ts`, `src/lib/stall-payments.ts`, `src/lib/stripe.ts`, `src/app/actions/selling.ts`, `src/app/api/stripe/` |
 | Week email | `src/app/actions/visit-plan.ts`, `src/lib/visit-plan.ts`, `src/lib/visit-plan-limit.ts` |
-| SEO | `src/lib/seo.ts`, `src/lib/sitemap-entries.ts`, `src/lib/robots-policy.ts`, `src/app/sitemap.ts`, `src/app/robots.ts` |
+| SEO | `src/lib/seo.ts`, `src/lib/sitemap-entries.ts`, `src/lib/robots-policy.ts`, `src/lib/live-listing-redirects.ts`, `scripts/write-listing-aliases.ts`, `src/app/sitemap.ts`, `src/app/robots.ts` |
 | Blog | `content/blog/`, `src/lib/blog.ts` |
 | Rate limits | `src/lib/mail-limit.ts` |
 | Constants | `src/lib/constants.ts`, `src/lib/launch.ts` |
 | Public errors and hosts | `src/lib/public-error.ts`, `src/lib/site-host.ts`, `src/lib/google-oauth-host.ts`, `src/lib/analytics.ts` |
-| Behavior locks | `npm test` runs the `scripts/*.test.ts` files (schedules, saves, portals, selling, passwords, OAuth host, robots, redirects, claims, opt-outs). `npm run check:google-oauth` checks the consent host |
+| Behavior locks | `npm test` runs the files named in the `test` script (schedules, saves, portals, selling, passwords, OAuth host, robots, redirects, claims, opt-outs, menu sections). `npm run check:google-oauth` checks the consent host |

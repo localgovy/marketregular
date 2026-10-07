@@ -138,6 +138,7 @@ export function dbPublicError(error: DbLike | null | undefined, fallback: string
       ["Add a section name", "Add a section name."],
       ["Those sections are not allowed", "Those sections are not allowed."],
       ["That section is missing", "That section is missing."],
+      ["That name is already a section", "That name is already a section."],
       ["That item is missing", "That item is missing."],
       ["Keep the stall label shorter", "Keep the stall label shorter."],
       ["Pick at least one day the market is open", "Pick at least one day the market is open."],
