@@ -1,3 +1,5 @@
+import { listingRedirectDestination } from "@/data/listing-redirects";
+import { parseListingPath } from "@/lib/listing-alias-lookup";
 import { updateSession } from "@/lib/supabase/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -6,6 +8,9 @@ import { NextResponse, type NextRequest } from "next/server";
  * `/markets?q={search_term_string}` shows up in Search Console as a real URL.
  * Braces are never part of a genuine filter, so drop those params instead of
  * rendering a second copy of the page behind a canonical.
+ *
+ * `/markets?q=bread` is a real directory search (canonical still `/markets`).
+ * Sitelinks SearchAction itself points at `/products?q={search_term_string}`.
  */
 function templatedParams(searchParams: URLSearchParams) {
   const named: string[] = [];
@@ -18,12 +23,22 @@ function templatedParams(searchParams: URLSearchParams) {
 export function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
-  if (request.method === "GET") {
+  if (request.method === "GET" || request.method === "HEAD") {
     const templated = templatedParams(searchParams);
     if (templated.length) {
       const url = request.nextUrl.clone();
       for (const key of templated) url.searchParams.delete(key);
       return NextResponse.redirect(url, 308);
+    }
+    // Middleware can run before next.config redirects. Keep renamed slugs
+    // single-hop even in that order. Live alias rows are merged at build time.
+    if (parseListingPath(pathname)) {
+      const dest = listingRedirectDestination(pathname);
+      if (dest && dest !== pathname) {
+        const url = request.nextUrl.clone();
+        url.pathname = dest;
+        return NextResponse.redirect(url, 308);
+      }
     }
   }
 

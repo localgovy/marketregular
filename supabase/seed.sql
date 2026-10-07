@@ -455,7 +455,7 @@ insert into public.vendors (id, slug, name, about, website, phone, tags, status)
   ('00000000-0000-0000-0000-000000000475', 'breedon-s-maple-syrup', 'Breedon''s Maple Syrup', null, null, null, '{}', 'published'),
   ('00000000-0000-0000-0000-000000000476', 'british-baked-goods', 'British Baked Goods', null, null, null, '{}', 'published'),
   ('00000000-0000-0000-0000-000000000477', 'cherry-avenue-farms', 'Cherry Avenue Farms', null, null, null, '{}', 'published'),
-  ('00000000-0000-0000-0000-000000000478', 'clement-s-poultry', 'Clement''s Poultry', null, null, null, '{}', 'published'),
+  ('00000000-0000-0000-0000-000000000478', 'clement-poultry', 'Clement Poultry and Orchards', null, null, null, '{}', 'published'),
   ('00000000-0000-0000-0000-000000000479', 'colwell-farms', 'Colwell Farms', null, null, null, '{}', 'published'),
   ('00000000-0000-0000-0000-000000000480', 'el-gaucho-chorizo', 'El Gaucho Chorizo', null, null, null, '{}', 'published'),
   ('00000000-0000-0000-0000-000000000481', 'frank-eborall-sons', 'Frank Eborall & Sons', null, null, null, '{}', 'published'),
