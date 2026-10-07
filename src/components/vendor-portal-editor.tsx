@@ -337,7 +337,7 @@ function LogoForm({ listing }: { listing: PortalListing }) {
             required
           />
         </div>
-        <p className="text-sm text-muted-foreground">JPEG, PNG, or WebP, under 5 MB.</p>
+        <p className="text-sm text-muted-foreground">JPEG, PNG, or WebP, under 5 MB. Use a logo you have the right to show.</p>
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={uploadPending}>
             {uploadPending ? "Saving…" : "Upload logo"}
@@ -397,6 +397,9 @@ function SaleFields({
       <div className="grid gap-1.5">
         <Label htmlFor={`${id}-terms`}>Terms</Label>
         <Textarea id={`${id}-terms`} name="offer_terms" rows={4} maxLength={4000} defaultValue={terms} />
+        <p className="text-sm text-muted-foreground">
+          Buyers see this before they pay. Refunds and handing the item over stay with this stall.
+        </p>
       </div>
       <p className="text-sm text-muted-foreground">
         A sale needs a price of at least $0.50 and one way to hand it over. Buyers pay you. The stall fee is separate.
@@ -460,6 +463,7 @@ function MenuItemForm({
             placeholder="vegan, gluten-free"
             defaultValue={item.dietary.join(", ")}
           />
+          <p className="text-sm text-muted-foreground">Shown on the stall page. Use tags that match the food.</p>
         </div>
         <MenuSectionFields id={field} sections={sections} defaultSection={item.menu_section} />
         {VENDOR_SALES_OPEN ? (
@@ -523,6 +527,7 @@ function AddMenuItem({ vendorId, sections }: { vendorId: string; sections: MenuS
         <div className="grid gap-1.5 sm:col-span-2">
           <Label htmlFor={`${vendorId}-new-dietary`}>Dietary tags</Label>
           <Input id={`${vendorId}-new-dietary`} name="dietary" placeholder="vegan, gluten-free" />
+          <p className="text-sm text-muted-foreground">Shown on the stall page. Use tags that match the food.</p>
         </div>
         <MenuSectionFields id={`${vendorId}-new`} sections={sections} />
         {VENDOR_SALES_OPEN ? (
@@ -749,6 +754,7 @@ export function VendorPortalEditor({
           <div className="mt-4 grid gap-4">
             <p className="text-sm text-muted-foreground">
               Buyers pay this stall. LOCALGOVY keeps a separate fee of 3.5% plus $0.25 on each paid checkout.
+              It is not added to the buyer&apos;s payment.
               {due && listing.fee_balance_cents > 0 ? ` Unpaid fees are due ${due}.` : ""}
             </p>
             <p className="text-base">
@@ -906,6 +912,9 @@ export function VendorPortalEditor({
       </section>
       <section>
         <h2>Markets</h2>
+        <p className="mt-2 text-base text-muted-foreground">
+          Add a market on the days this stall is there. Those days show on the public page.
+        </p>
         {listing.stalls.length ? (
           <ul className="mt-2">
             {listing.stalls.map((stall) => (

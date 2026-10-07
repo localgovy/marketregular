@@ -40,7 +40,9 @@ function PortalHowItWorks({ kind }: { kind: ClaimTarget }) {
       ? "Create an account using the email you use for the business."
       : "Create an account using your organization email.",
     `Wait for ${SITE_NAME}'s approval email.`,
-    stall ? "Start managing your digital storefront." : "Start managing your market profile.",
+    stall
+      ? "Edit the stall page. Keep the days, menu, and contact details current."
+      : "Edit the market page. Keep the hours and the stall list current.",
   ];
 
   return (
@@ -81,8 +83,8 @@ export async function PortalHome({
         <h1>{title}</h1>
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
           {stall
-            ? "Create an account with the email you use for the business, or sign in if you already have one. A Gmail address is fine. After we assign your stall, you can edit it here."
-            : "Create an account with the email you use for the organization, or sign in if you already have one. A Gmail address is fine. After we assign your market, you can edit it here."}
+            ? "Create an account with the email you use for the business, or sign in if you already have one. A Gmail address is fine. Ask only if you run the stall, or the person who does has asked you to. After we assign it, you can edit it here."
+            : "Create an account with the email you use for the organization, or sign in if you already have one. A Gmail address is fine. Ask only if you run the market, or the organization has asked you to. After we assign it, you can edit it here."}
         </p>
         <div className="grid items-start gap-10 md:grid-cols-2">
           <section>
@@ -188,8 +190,8 @@ export async function PortalHome({
         <>
           <p className="type-lede mt-2 mb-8 text-muted-foreground">
             {stall
-              ? "Update the name, menu, and the markets you sell at. Changes show on the public page."
-              : "Update the hours, contact details, and the stalls. Changes show on the public page."}
+              ? "Update the name, menu, and the markets you sell at. Changes show on the public page. Keep the days and the menu current."
+              : "Update the hours, contact details, and the stalls. Changes show on the public page. Keep the hours and the stall list current."}
           </p>
           <ul className="divide-y divide-border ring-1 ring-border">
             {portal.listings.map((listing) => (
@@ -217,10 +219,10 @@ export async function PortalHome({
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
           {fresh
             ? stall
-              ? "Request this stall. After we assign it, you can edit it here."
-              : "Request this market. After we assign it, you can edit it here."
+              ? "Request this stall if you run it, or the person who does has asked you to. After we assign it, you can edit it here."
+              : "Request this market if you run it, or the organization has asked you to. After we assign it, you can edit it here."
             : stall
-              ? "Tell us the organization you run. After we assign the stall, you can edit it here."
+              ? "Tell us the business you run. After we assign the stall, you can edit it here."
               : "Tell us the organization you run. After we assign the market, you can edit it here."}
         </p>
       )}
@@ -245,7 +247,7 @@ export async function PortalHome({
         </div>
       ) : null}
 
-      <PortalHowItWorks kind={kind} />
+      {portal.listings.length ? null : <PortalHowItWorks kind={kind} />}
     </div>
   );
 }

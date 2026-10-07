@@ -20,8 +20,8 @@ export const SITE_FEED_NAV = { href: "/feed", label: "Feed" } as const;
 
 export const SITE_META_NAV = [
   { href: "/about", label: "About" },
-  { href: "/vendor", label: "Vendor sign in" },
-  { href: "/market", label: "Market sign in" },
+  { href: "/vendor", label: "Vendor portal" },
+  { href: "/market", label: "Market portal" },
 ] as const;
 
 export const SITE_FOOTER_NAV = [

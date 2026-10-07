@@ -98,7 +98,7 @@ Status words used below: **live**, **paused** (built, switched off), **redirect*
 | `/feed` | live | Read: everyone. Write: signed-in | Posts and older reviews. Query `q`, `market`, `vendor`, `tag`, `sort`. Footer only, not header | `getFloorTape` |
 | `/blog`, `/blog/[slug]` | live | Everyone | Nine markdown files in `content/blog/`. Stale weekend guides stay generated and are noindex | `src/lib/blog.ts` |
 | `/about` | live | Everyone | Static | Constants |
-| `/privacy`, `/terms` | live | Everyone | Legal. Effective 2 October 2026 | Constants |
+| `/privacy`, `/terms` | live | Everyone | Legal. Effective 7 October 2026 | Constants |
 | `/saved` | live | Guests see a sign-in prompt. Signed-in see their list | noindex, robots-disallowed | `readMySaves` |
 
 ### Auth and account

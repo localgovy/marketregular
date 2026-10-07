@@ -36,7 +36,7 @@ function PortalNav({ className }: { className?: string }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "inline-flex h-full shrink-0 cursor-pointer items-center gap-1 border-0 bg-transparent px-5 font-inherit text-sm font-medium whitespace-nowrap text-foreground outline-none hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+          "inline-flex h-full shrink-0 cursor-pointer items-center gap-1 border-0 bg-transparent px-3 font-inherit text-sm font-medium whitespace-nowrap text-foreground outline-none hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
           on && "bg-card shadow-[inset_0_-3px_0_0_var(--primary)]",
           className,
         )}
@@ -103,6 +103,7 @@ function HeaderFrame({ q }: { q: string }) {
                 href={item.href}
                 variant="tab"
                 prefetch={item.href === "/markets"}
+                className="px-3"
               >
                 {item.label}
               </NavLink>

@@ -346,7 +346,7 @@ function LogoForm({ listing }: { listing: MarketPortalListing }) {
           <Label htmlFor={`${listing.id}-logo`}>Logo</Label>
           <Input id={`${listing.id}-logo`} name="logo" type="file" accept="image/jpeg,image/png,image/webp" required />
         </div>
-        <p className="text-sm text-muted-foreground">JPEG, PNG, or WebP, under 5 MB.</p>
+        <p className="text-sm text-muted-foreground">JPEG, PNG, or WebP, under 5 MB. Use a logo you have the right to show.</p>
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" disabled={uploadPending}>
             {uploadPending ? "Saving…" : "Upload logo"}
@@ -672,6 +672,7 @@ function AddExistingStall({
   return (
     <div className="mt-4 grid gap-3">
       <h3>Add a stall already listed</h3>
+      <p className="text-sm text-muted-foreground">Add a stall that sells here.</p>
       <div className="grid gap-1.5">
         <Label htmlFor={`${marketId}-vendor-q`}>Find a stall</Label>
         <Input
@@ -751,8 +752,8 @@ function NewStall({
     <div className="mt-8 grid gap-3">
       <h3>Add a stall that is not listed yet</h3>
       <p className="text-sm text-muted-foreground">
-        It shows on this market with no owner. The person who runs it can create a vendor account, and then only they
-        edit the listing after we assign it.
+        It shows on this market with no owner. Add one that sells here. The person who runs it can create a vendor
+        account, and then only they edit the listing after we assign it.
       </p>
       <form key={formKey} action={action} className="grid gap-4 sm:grid-cols-2">
         <input type="hidden" name="market_id" value={marketId} />
@@ -837,6 +838,9 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
       </section>
       <section>
         <h2>Hours</h2>
+        <p className="mt-2 text-base text-muted-foreground">
+          The public page uses these hours. Leave a day off if the market is not open.
+        </p>
         {listing.schedules.length ? (
           <ul className="mt-2">
             {listing.schedules.map((schedule) => (
@@ -856,6 +860,7 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
       </section>
       <section>
         <h2>Stalls</h2>
+        <p className="mt-2 text-base text-muted-foreground">List stalls that sell at this market.</p>
         {listing.stalls.length ? (
           <ul className="mt-2">
             {listing.stalls.map((stall) => (
