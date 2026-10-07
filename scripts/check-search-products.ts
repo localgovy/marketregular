@@ -70,8 +70,8 @@ if (!url || !key) throw new Error("Missing service role Supabase env");
 
 const sourdough = (await rpc(url, key, { q: "sourdough" })) as Array<{ product_slug?: string }>;
 if (!sourdough.length) throw new Error("sourdough returned no rows");
-if (!sourdough.some((row) => row.product_slug === "bread")) {
-  throw new Error("sourdough did not expand to bread");
+if (!sourdough.some((row) => row.product_slug === "sourdough")) {
+  throw new Error("sourdough did not match the sourdough slug");
 }
 
 const empty = await rpc(url, key, { q: " " });

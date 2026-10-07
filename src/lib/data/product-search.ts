@@ -30,6 +30,7 @@ export type FindMarket = {
 export type FindVendor = {
   name: string;
   slug: string;
+  logoUrl: string | null;
   ratingAvg: number | null;
   reviewCount: number;
   items: Array<{ name: string; priceCents: number | null }>;
@@ -188,6 +189,7 @@ export const listFindVendors = cache(async function listFindVendors(
       group = {
         name: vendor.name,
         slug: vendor.slug,
+        logoUrl: vendor.logo_url,
         ...reviewFields(vendor),
         items: [],
         markets: marketRows,
@@ -296,6 +298,7 @@ export async function searchProducts(args: {
     });
     const badge = visitBadge(halls, now);
     const openToday = badge === "Open now" || badge === "Later today";
+    const vendor = vendorBySlug.get(row.vendor_slug);
     return {
       itemName: row.item_name,
       category: row.product_category,
@@ -303,7 +306,8 @@ export async function searchProducts(args: {
       priceCents: visiblePriceCents(row.product_category, row.price_cents),
       vendorName: row.vendor_name,
       vendorSlug: row.vendor_slug,
-      ...reviewFields(vendorBySlug.get(row.vendor_slug)),
+      logoUrl: vendor?.logo_url ?? null,
+      ...reviewFields(vendor),
       markets,
       openToday,
       badge,
@@ -318,6 +322,7 @@ type NamedVendor = {
   id: string;
   slug: string;
   name: string;
+  logo_url: string | null;
   rating_avg: number | null;
   review_count: number | null;
 };
@@ -327,6 +332,7 @@ function namedVendorHit(vendor: NamedVendor): VendorHit {
     name: vendor.name,
     slug: vendor.slug,
     href: `/vendors/${vendor.slug}`,
+    logoUrl: vendor.logo_url,
     ...reviewFields({
       rating_avg: vendor.rating_avg,
       review_count: vendor.review_count ?? 0,
@@ -359,7 +365,7 @@ export async function searchVendorsByName(q: string, limit = 20): Promise<Vendor
   for (let from = 0; matches.length < limit && from < 4000; from += page) {
     const { data, error } = await supabase
       .from("published_vendors")
-      .select("id, slug, name, rating_avg, review_count")
+      .select("id, slug, name, logo_url, rating_avg, review_count")
       .eq("status", "published")
       .ilike("name", pattern)
       .order("name")

@@ -18,6 +18,7 @@ export type ProductHit = {
   priceCents: number | null;
   vendorName: string;
   vendorSlug: string;
+  logoUrl: string | null;
   ratingAvg: number | null;
   reviewCount: number;
   markets: ProductMarketHit[];
@@ -31,6 +32,7 @@ export type VendorHit = {
   name: string;
   slug: string;
   href: string;
+  logoUrl: string | null;
   ratingAvg: number | null;
   reviewCount: number;
 };

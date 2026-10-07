@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Hours } from "@/components/hours";
+import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
 import { ProductSaveButton } from "@/components/save-button";
 import { WEEKDAYS } from "@/lib/constants";
@@ -30,13 +31,16 @@ function SavedProductCard({
 
   return (
     <li className="rounded-xl bg-card ring-1 ring-foreground/10">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
-        <p className="min-w-0">
-          <Link href={`/vendors/${product.vendorSlug}`} className="text-base font-medium hover:underline">
-            {vendorName}
-          </Link>
-          <ListingScore parens ratingAvg={ratingAvg} reviewCount={reviewCount} className="ml-2" />
-        </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
+        <div className="flex min-w-[min(100%,12rem)] max-w-full flex-1 items-center gap-2">
+          <ListingMark src={vendor?.logo_url} className="h-8 w-12 bg-primary-foreground" />
+          <p className="min-w-0">
+            <Link href={`/vendors/${product.vendorSlug}`} className="text-base font-medium hover:underline">
+              {vendorName}
+            </Link>
+            <ListingScore parens ratingAvg={ratingAvg} reviewCount={reviewCount} className="ml-2" />
+          </p>
+        </div>
         <ProductSaveButton product={product} />
       </div>
       <ul>

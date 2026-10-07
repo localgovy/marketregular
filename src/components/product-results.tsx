@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Hours } from "@/components/hours";
+import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
 import { ProductSaveButton } from "@/components/save-button";
 import { formatPrice } from "@/lib/format";
@@ -39,6 +40,7 @@ type ListingMarket = {
 function ProductListing({
   vendorName,
   vendorSlug,
+  logoUrl,
   ratingAvg,
   reviewCount,
   badge,
@@ -47,6 +49,7 @@ function ProductListing({
 }: {
   vendorName: string;
   vendorSlug: string;
+  logoUrl: string | null;
   ratingAvg: number | null;
   reviewCount: number;
   badge: string | null;
@@ -64,18 +67,21 @@ function ProductListing({
 
   return (
     <li className="rounded-xl bg-card ring-1 ring-foreground/10">
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
-        <p className="min-w-0">
-          <Link href={`/vendors/${vendorSlug}`} className="text-base font-medium hover:underline">
-            {vendorName}
-          </Link>
-          <ListingScore
-            parens
-            ratingAvg={ratingAvg}
-            reviewCount={reviewCount}
-            className="ml-2"
-          />
-        </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-t-xl border-b border-black/10 bg-primary px-4 py-3 text-primary-foreground">
+        <div className="flex min-w-[min(100%,12rem)] max-w-full flex-1 items-center gap-2">
+          <ListingMark src={logoUrl} className="h-8 w-12 bg-primary-foreground" />
+          <p className="min-w-0">
+            <Link href={`/vendors/${vendorSlug}`} className="text-base font-medium hover:underline">
+              {vendorName}
+            </Link>
+            <ListingScore
+              parens
+              ratingAvg={ratingAvg}
+              reviewCount={reviewCount}
+              className="ml-2"
+            />
+          </p>
+        </div>
         <span className="flex shrink-0 items-center gap-2">
           {badge ? <Badge>{badge}</Badge> : null}
           {product ? <ProductSaveButton product={product} /> : null}
@@ -161,6 +167,7 @@ export function FindVendorList({ vendors }: { vendors: FindVendor[] }) {
           key={vendor.slug}
           vendorName={vendor.name}
           vendorSlug={vendor.slug}
+          logoUrl={vendor.logoUrl}
           ratingAvg={vendor.ratingAvg}
           reviewCount={vendor.reviewCount}
           badge={vendor.badge}
@@ -181,6 +188,7 @@ export function ProductHitList({ hits }: { hits: ProductHit[] }) {
           key={`${hit.vendorSlug}-${index}`}
           vendorName={hit.vendorName}
           vendorSlug={hit.vendorSlug}
+          logoUrl={hit.logoUrl}
           ratingAvg={hit.ratingAvg}
           reviewCount={hit.reviewCount}
           badge={hit.badge}
@@ -199,17 +207,20 @@ export function VendorHitList({ vendors }: { vendors: VendorHit[] }) {
       {vendors.map((vendor) => (
         <li key={vendor.slug} className="rounded-xl bg-card ring-1 ring-foreground/10">
           <div className="border-b border-border px-4 py-3">
-            <p className="min-w-0">
-              <Link href={vendor.href} className="text-base font-medium hover:underline">
-                {vendor.name}
-              </Link>
-              <ListingScore
-                parens
-                ratingAvg={vendor.ratingAvg}
-                reviewCount={vendor.reviewCount}
-                className="ml-2 text-stamp"
-              />
-            </p>
+            <div className="flex min-w-0 items-center gap-2">
+              <ListingMark src={vendor.logoUrl} className="h-8 w-12 bg-primary-foreground" />
+              <p className="min-w-0">
+                <Link href={vendor.href} className="text-base font-medium hover:underline">
+                  {vendor.name}
+                </Link>
+                <ListingScore
+                  parens
+                  ratingAvg={vendor.ratingAvg}
+                  reviewCount={vendor.reviewCount}
+                  className="ml-2 text-stamp"
+                />
+              </p>
+            </div>
           </div>
         </li>
       ))}
