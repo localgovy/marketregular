@@ -35,7 +35,12 @@ type SeedVendor = Omit<
   tiktok?: string | null;
   facebook?: string | null;
   email?: string | null;
-  menus: Omit<MenuItem, "id" | "vendor_id">[];
+  menus: Array<
+    Omit<MenuItem, "id" | "vendor_id" | "menu_section" | "menu_section_order"> & {
+      menu_section?: string | null;
+      menu_section_order?: number | null;
+    }
+  >;
 };
 
 export const seedMarkets: SeedMarket[] = [
@@ -14788,8 +14793,10 @@ export function menusFor(vendorId: string): MenuItem[] {
   const v = seedVendors.find((x) => x.id === vendorId);
   if (!v) return [];
   return v.menus.map((item, i) => ({
+    menu_section: null,
+    menu_section_order: null,
+    ...item,
     id: `${vendorId}-menu-${i}`,
     vendor_id: vendorId,
-    ...item,
   }));
 }

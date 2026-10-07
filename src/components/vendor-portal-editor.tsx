@@ -8,12 +8,16 @@ import {
   clearOwnedLogo,
   deleteOwnedMenuItem,
   deleteOwnedStall,
+  moveOwnedMenuSection,
+  renameOwnedMenuSection,
   saveOwnedMenuItem,
   saveOwnedStall,
   saveOwnedVendor,
   searchPortalMarkets,
   uploadOwnedLogo,
 } from "@/app/actions/vendor-portal";
+import { MenuSectionFields } from "@/components/menu-section-fields";
+import { MenuSectionsBoard } from "@/components/menu-sections-board";
 import { ListingMark } from "@/components/listing-mark";
 import { MaintenanceOptOutForm } from "@/components/maintenance-opt-outs";
 import { Button } from "@/components/ui/button";
@@ -23,6 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import { tagLabel } from "@/lib/tag-label";
 import { cn } from "@/lib/utils";
+import { menuSectionsFromItems, type MenuSectionRef } from "@/lib/menu-sections";
 import {
   dayHoursLabel,
   dollarsFromCents,
@@ -400,7 +405,15 @@ function SaleFields({
   );
 }
 
-function MenuItemForm({ vendorId, item }: { vendorId: string; item: PortalMenuItem }) {
+function MenuItemForm({
+  vendorId,
+  item,
+  sections,
+}: {
+  vendorId: string;
+  item: PortalMenuItem;
+  sections: MenuSectionRef[];
+}) {
   const [state, action, pending] = useActionState(saveItem, undefined);
   const [removeState, remove, removePending] = useActionState(removeItem, undefined);
   usePortalRefresh(state);
@@ -448,6 +461,7 @@ function MenuItemForm({ vendorId, item }: { vendorId: string; item: PortalMenuIt
             defaultValue={item.dietary.join(", ")}
           />
         </div>
+        <MenuSectionFields id={field} sections={sections} defaultSection={item.menu_section} />
         {VENDOR_SALES_OPEN ? (
           <SaleFields
             id={field}
@@ -477,7 +491,7 @@ function MenuItemForm({ vendorId, item }: { vendorId: string; item: PortalMenuIt
   );
 }
 
-function AddMenuItem({ vendorId }: { vendorId: string }) {
+function AddMenuItem({ vendorId, sections }: { vendorId: string; sections: MenuSectionRef[] }) {
   const [state, action, pending] = useActionState(saveItem, undefined);
   const [formKey, setFormKey] = useState(0);
   usePortalRefresh(state);
@@ -510,6 +524,7 @@ function AddMenuItem({ vendorId }: { vendorId: string }) {
           <Label htmlFor={`${vendorId}-new-dietary`}>Dietary tags</Label>
           <Input id={`${vendorId}-new-dietary`} name="dietary" placeholder="vegan, gluten-free" />
         </div>
+        <MenuSectionFields id={`${vendorId}-new`} sections={sections} />
         {VENDOR_SALES_OPEN ? (
           <SaleFields id={`${vendorId}-new`} forSale={false} delivery={false} pickup={false} preorder={false} terms="" />
         ) : null}
@@ -707,6 +722,7 @@ export function VendorPortalEditor({
   paymentsConfigured: boolean;
   feeNote: string | null;
 }) {
+  const menuSections = menuSectionsFromItems(listing.menus);
   const full = listing.stalls.length >= 40;
   const balance = formatPrice(listing.fee_balance_cents);
   const due = feeDueLabel(listing.fee_due_on);
@@ -852,6 +868,12 @@ export function VendorPortalEditor({
       </section>
       <section>
         <h2>Menu</h2>
+        <MenuSectionsBoard
+          vendorId={listing.id}
+          sections={menuSections}
+          rename={renameOwnedMenuSection}
+          move={moveOwnedMenuSection}
+        />
         {listing.menus.length ? (
           <ul className="mt-2">
             {listing.menus.map((item) => (
@@ -859,6 +881,8 @@ export function VendorPortalEditor({
                 key={[
                   item.id,
                   item.price_cents ?? "",
+                  item.menu_section ?? "",
+                  item.menu_section_order ?? "",
                   item.for_sale ? "1" : "0",
                   item.offer_delivery ? "1" : "0",
                   item.offer_pickup ? "1" : "0",
@@ -867,13 +891,16 @@ export function VendorPortalEditor({
                 ].join("\n")}
                 vendorId={listing.id}
                 item={item}
+                sections={menuSections}
               />
             ))}
           </ul>
         ) : (
           <p className="mt-3 text-sm text-muted-foreground">No items yet.</p>
         )}
-        {listing.menus.length < 80 ? <AddMenuItem vendorId={listing.id} /> : (
+        {listing.menus.length < 80 ? (
+          <AddMenuItem vendorId={listing.id} sections={menuSections} />
+        ) : (
           <p className="mt-4 text-sm text-muted-foreground">The menu is full.</p>
         )}
       </section>

@@ -171,6 +171,7 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 - `listing_slug_aliases.kind`: `market`, `vendor`
 - Weekday is `smallint` 0–6, Sunday through Saturday
 - `vendor_menus.for_sale` requires `price_cents` from 50 to 1,000,000 and at least one of delivery, pickup, or preorder
+- `vendor_menus.menu_section` is null or trimmed 1–40 characters. `menu_section_order` is null or 1–5. A stall may have at most 5 distinct non-null section names (`vendor_menus_section_cap`)
 - Maintenance opt-out keys: vendor `about`, `logo`, `contact`, `links`, `tags`, `menu`, `halls`; market `about`, `logo`, `contact`, `links`, `tags`, `place`, `hours`, `roster`
 
 ### Tables
@@ -185,7 +186,7 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 
 **`market_vendors`** — PK `(market_id, vendor_id)`. Stall label and `days smallint[]`. Days must be a subset of that market’s scheduled weekdays.
 
-**`vendor_menus`** — name, description, `price_cents`, season, dietary, sale fields (`for_sale`, delivery / pickup / preorder, `offer_terms` ≤ 4000), `search_document`. `product_category`, `product_slug`, and `product_category_source` are used by search and find pages. They are live in the database and are not created by a file in `supabase/migrations/`.
+**`vendor_menus`** — name, description, `price_cents`, season, dietary, sale fields (`for_sale`, delivery / pickup / preorder, `offer_terms` ≤ 4000), `search_document`. `menu_section` and `menu_section_order` group the stall page (`/vendors/[slug]`) into up to 5 named headings. They are independent of `product_category`. `product_category`, `product_slug`, and `product_category_source` are used by search and find pages. They are live in the database and are not created by a file in `supabase/migrations/`. Rename and reorder go through `set_menu_sections` / `set_owned_menu_sections`. A single-transaction bulk `UPDATE` that fills NULL `menu_section` with up to five names per vendor is allowed.
 
 **`posts`** — user, market, body 1–2000, photos (max 8), `verified_on_site` forced false on insert, `flagged`. On the `supabase_realtime` publication. This is what the composer writes.
 
@@ -219,7 +220,7 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 
 ### Views and storage
 
-Service-role selects: `published_markets`, `published_vendors`, `published_schedules`, `published_stalls`, `published_menus`. Phone and email are not on these views. Contact goes through `get_listing_contact`.
+Service-role selects: `published_markets`, `published_vendors`, `published_schedules`, `published_stalls`, `published_menus`. Phone and email are not on these views. Contact goes through `get_listing_contact`. `published_menus` includes `menu_section` and `menu_section_order`. `can_buy` is currently `false`. Public stall reads use `MENU_PUBLIC` in `catalog.ts` (no `product_category`). If those section columns are not on the view yet, catalog probes once and falls back to the flat select so a deploy before the migration still builds. `StallMenu` keeps a flat receipt list when no item has a section; otherwise it groups under `h3` kickers, with unsectioned items last.
 
 Storage: `post-photos` (public read, authenticated upload under `{userId}/`, JPEG/PNG/WebP, 5 MB) and `listing-marks` (public read, service-role writes). Logos live at `vendors/{id}/{uuid}.{ext}` or `markets/{id}/`.
 
@@ -300,7 +301,7 @@ Tag pages (`/markets/tag/…`): produce, organic, vegan, bakery, prepared-food, 
 
 Open now / later today / selling this weekend follow the rules in “How a public listing is computed”. Nobody toggles them. Listing pages also link out through `ListingAlsoLinks`: the weekdays this hall or stall works, and up to six tags that have a category page. Blog posts pull a three-stall peek and the external score for markets they mention (`src/lib/blog-market-peeks.ts`).
 
-Market detail joins schedules, stalls, vendors, posts, and reviews. Contact phone and email come from `get_listing_contact`, not the public row. Sibling halls cross-link. The Leslieville indoor slug redirects onto the outdoor host. Vendor detail joins menus, halls, schedules, reviews, and posts that mention the stall. Halls are ranked by `rankVendorMarkets`. Buy links render only when `VENDOR_SALES_OPEN && stripeChargesConfigured()`. Today they do not.
+Market detail joins schedules, stalls, vendors, posts, and reviews. Contact phone and email come from `get_listing_contact`, not the public row. Sibling halls cross-link. The Leslieville indoor slug redirects onto the outdoor host. Vendor detail joins menus, halls, schedules, reviews, and posts that mention the stall. Halls are ranked by `rankVendorMarkets`. The stall menu groups by `menu_section` when any item has one. Buy links render only when `VENDOR_SALES_OPEN && stripeChargesConfigured()`. Today they do not.
 
 ### Products and find pages
 
@@ -392,7 +393,7 @@ Shown only when `my_vendor_portal()` includes that id. Otherwise 404.
 | Updates | `saveOwnedMaintenanceOptOuts` | Opt-out keys. Checked means directory upkeep leaves that section alone | Vendor keys listed above |
 | Profile | `saveOwnedVendor` | Name (1–200, unique case-insensitive), about ≤ 4000, phone, public email, website, Instagram, TikTok, Facebook, tags | Tags cap 24, pattern `[a-z0-9]+(-[a-z0-9]+)*`, each ≤ 40. Slug stays |
 | Logo | `uploadOwnedLogo` / `clearOwnedLogo` | `listing-marks` | JPEG/PNG/WebP, ≤ 5 MB, magic-byte check |
-| Menu | `saveOwnedMenuItem` / `deleteOwnedMenuItem` | Name ≤ 160, description ≤ 2000, price 0–$10,000 or empty, season ≤ 120, dietary cap 12 | Cap 80 items. While sales are paused, sale columns are not written and new rows are `for_sale` false |
+| Menu | `saveOwnedMenuItem` / `deleteOwnedMenuItem` / `renameOwnedMenuSection` / `moveOwnedMenuSection` | Name ≤ 160, description ≤ 2000, price 0–$10,000 or empty, season ≤ 120, dietary cap 12, section (existing name, new name ≤ 40, or none). Rename and reorder call `set_owned_menu_sections` | Cap 80 items. At most 5 named sections. While sales are paused, sale columns are not written and new rows are `for_sale` false |
 | Markets | `saveOwnedStall` / `deleteOwnedStall` / `searchPortalMarkets` | Stall label ≤ 80 and days the market is actually open | Cap 40 halls. Removing the last hall hides the public page unless the slug is in `UNAFFILIATED_VENDOR_SLUGS` |
 
 The owner cannot publish, unpublish, change the slug, or set `selling_approved`.
@@ -438,7 +439,7 @@ Nav: Overview, Markets, Vendors, Updates, Moderation, Applications, Saves.
 | --- | --- | --- |
 | `/admin` | Read | Counts published markets (season aliases excluded), published vendors, unflagged posts, pending applications plus pending claims |
 | Markets | `saveMarket`, `deleteMarket`, `saveSchedule`, `deleteSchedule`, `linkVendorToMarket`, `unlinkVendorFromMarket`, `assignMarketOwner` | Full listing including address, pin, geofence, featured, status, slug, external rating. Slug edits record aliases |
-| Vendors | `saveVendor`, `deleteVendor`, `saveMenuItem`, `deleteMenuItem`, `assignVendorOwner`, `setVendorSelling` | Same without place and featured. Selling checkbox writes `selling_approved` and does not reopen checkout while sales are paused |
+| Vendors | `saveVendor`, `deleteVendor`, `saveMenuItem`, `assignMenuItemSection`, `renameMenuSection`, `moveMenuSection`, `deleteMenuItem`, `assignVendorOwner`, `setVendorSelling` | Same without place and featured. Menu items can be grouped into at most 5 named sections (`set_menu_sections`, service role). Selling checkbox writes `selling_approved` and does not reopen checkout while sales are paused |
 | Updates | Read, grouped by `src/lib/maintenance-sections.ts` | “Left this section alone” means directory upkeep must not overwrite it. Admin saves refuse an opted-out section unless the form checks a maintenance override |
 | Moderation | `flagItem` / `unflagItem` | Latest 50 posts and reviews plus every flagged row |
 | Applications | `decideApplication`, `decideClaim` | Assign or reject. Failed claim mail used to redirect to `/admin/claims`, which now redirects to this page |
@@ -576,10 +577,10 @@ Directory data path: live reads go through `published_*`. `scripts/import-toront
 | Saves | `src/app/actions/saves.ts`, `src/lib/saves.ts`, `src/components/save-button.tsx` |
 | Posts | `src/app/actions/presence.ts`, `src/lib/floor-note.ts`, `src/lib/feed-filter.ts` |
 | Auth and onboarding | `src/app/actions/auth.ts`, `src/app/actions/onboarding.ts`, `src/lib/onboarding.ts`, `src/lib/password-gate.ts`, `src/lib/username.ts` |
-| Vendor portal | `src/app/actions/vendor-portal.ts`, `src/components/vendor-portal-editor.tsx`, `src/lib/vendor-portal.ts` |
+| Vendor portal | `src/app/actions/vendor-portal.ts`, `src/components/vendor-portal-editor.tsx`, `src/lib/vendor-portal.ts`, `src/lib/menu-sections.ts`, `src/components/menu-section-fields.tsx`, `src/components/menu-sections-board.tsx` |
 | Market portal | `src/app/actions/market-portal.ts`, `src/components/market-portal-editor.tsx`, `src/lib/market-portal.ts` |
 | Applications | `src/app/actions/portal-application.ts`, `src/lib/portal-application-mail.ts`, `src/lib/vendor-portal-mail.ts`, `src/lib/market-portal-mail.ts` |
-| Admin | `src/app/actions/admin.ts`, `src/app/admin/`, `src/lib/admin.ts`, `src/lib/maintenance-sections.ts` |
+| Admin | `src/app/actions/admin.ts`, `src/app/admin/`, `src/components/admin/vendor-menu.tsx`, `src/lib/admin.ts`, `src/lib/maintenance-sections.ts` |
 | Money | `src/lib/selling.ts`, `src/lib/stall-payments.ts`, `src/lib/stripe.ts`, `src/app/actions/selling.ts`, `src/app/api/stripe/` |
 | Week email | `src/app/actions/visit-plan.ts`, `src/lib/visit-plan.ts`, `src/lib/visit-plan-limit.ts` |
 | SEO | `src/lib/seo.ts`, `src/lib/sitemap-entries.ts`, `src/lib/robots-policy.ts`, `src/app/sitemap.ts`, `src/app/robots.ts` |

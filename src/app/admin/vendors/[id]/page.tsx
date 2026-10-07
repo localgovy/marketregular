@@ -1,17 +1,14 @@
 import { notFound } from "next/navigation";
 import { ConfirmDelete } from "@/components/admin/confirm-delete";
 import { VendorForm } from "@/components/admin/vendor-form";
-import { MaintenanceOverride } from "@/components/maintenance-opt-out-fields";
+import { AdminVendorMenu } from "@/components/admin/vendor-menu";
 import { readOptOuts } from "@/lib/maintenance-sections";
 import { VendorOwnerForm } from "@/components/admin/vendor-owner-form";
 import { VendorSellingForm } from "@/components/admin/vendor-selling-form";
 import { requireAdmin } from "@/lib/admin";
 import { readVendorPassword } from "@/lib/vendor-password";
 import { isSupabaseConfigured } from "@/lib/constants";
-import { menuCategoryLabel, menuInProductSearch } from "@/lib/data/product-search";
-import { deleteMenuItem, deleteVendor, saveMenuItem } from "@/app/actions/admin";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { deleteVendor } from "@/app/actions/admin";
 import type { MenuItem, Vendor } from "@/types/database";
 
 type AdminMenu = MenuItem & { product_category: string | null };
@@ -81,57 +78,15 @@ export default async function EditVendorPage({
           />
         </div>
       </section>
-      <section>
-        <h2>Menu items</h2>
-        {menuLeftAlone ? (
-          <p className="mt-2 text-base text-muted-foreground">Menu stays with this stall.</p>
-        ) : null}
-        <ul className="mt-3 divide-y divide-border">
-          {((menus ?? []) as AdminMenu[]).map((item) => {
-            const inSearch = menuInProductSearch(item.product_category);
-            return (
-              <li key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-2 text-sm">
-                <div>
-                  <p>
-                    {item.name}
-                    {item.price_cents != null ? ` · $${(item.price_cents / 100).toFixed(2)}` : ""}
-                  </p>
-                  {item.product_category ? (
-                    <p className="text-sm text-muted-foreground">{menuCategoryLabel(item.product_category)}</p>
-                  ) : null}
-                  {inSearch ? null : (
-                    <p className="text-sm text-muted-foreground">On the stall page. Not in product search.</p>
-                  )}
-                </div>
-                <form
-                  action={async (formData) => {
-                    "use server";
-                    await deleteMenuItem(item.id, id, formData);
-                  }}
-                  className="flex items-center gap-3"
-                >
-                  <MaintenanceOverride show={menuLeftAlone} />
-                  <Button type="submit" variant="ghost" size="sm">
-                    Remove
-                  </Button>
-                </form>
-              </li>
-            );
-          })}
-        </ul>
-        <form action={saveMenuItem} className="mt-4 grid gap-2 sm:grid-cols-2">
-          <input type="hidden" name="vendor_id" value={id} />
-          <Input name="name" placeholder="Item name" required aria-label="Item name" />
-          <Input name="price_cents" placeholder="Price CAD (e.g. 8.50)" aria-label="Price" />
-          <Input name="description" placeholder="Description" aria-label="Description" className="sm:col-span-2" />
-          <Input name="season" placeholder="Season" aria-label="Season" />
-          <Input name="dietary" placeholder="Dietary tags, comma sep" aria-label="Dietary tags" />
-          <MaintenanceOverride show={menuLeftAlone} className="sm:col-span-2" />
-          <Button type="submit" className="w-fit">
-            Add item
-          </Button>
-        </form>
-      </section>
+      <AdminVendorMenu
+        vendorId={id}
+        menus={((menus ?? []) as AdminMenu[]).map((item) => ({
+          ...item,
+          menu_section: item.menu_section ?? null,
+          menu_section_order: item.menu_section_order ?? null,
+        }))}
+        menuLeftAlone={menuLeftAlone}
+      />
       <ConfirmDelete action={remove} label="Delete vendor" confirm="Delete this stall? This cannot be undone." />
     </div>
   );

@@ -132,6 +132,8 @@ test("portal payload keeps menus and stall days", () => {
   ]);
   assert.equal(listings.length, 1);
   assert.equal(listings[0]?.menus[0]?.price_cents, 500);
+  assert.equal(listings[0]?.menus[0]?.menu_section, null);
+  assert.equal(listings[0]?.menus[0]?.menu_section_order, null);
   assert.deepEqual(listings[0]?.stalls[0]?.days, [6]);
   assert.equal(listings[0]?.phone, "4165550100");
   assert.equal(listings[0]?.stalls[0]?.hours[0]?.season_start, null);

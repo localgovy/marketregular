@@ -99,6 +99,8 @@ export type MenuItem = {
   price_cents: number | null;
   season: string | null;
   dietary: string[];
+  menu_section: string | null;
+  menu_section_order: number | null;
   for_sale?: boolean;
   offer_delivery?: boolean;
   offer_pickup?: boolean;
