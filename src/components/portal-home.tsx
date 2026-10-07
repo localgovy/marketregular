@@ -77,21 +77,30 @@ export async function PortalHome({
 
   if (!portal.signedIn) {
     return (
-      <div className="mx-auto w-full max-w-md px-4 py-10">
+      <div className="mx-auto w-full max-w-5xl px-4 py-10">
         <h1>{title}</h1>
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
           {stall
-            ? "Create an account with the email you use for the business. A Gmail address is fine. After we assign your stall, you can edit it here."
-            : "Create an account with the email you use for the organization. A Gmail address is fine. After we assign your market, you can edit it here."}
+            ? "Create an account with the email you use for the business, or sign in if you already have one. A Gmail address is fine. After we assign your stall, you can edit it here."
+            : "Create an account with the email you use for the organization, or sign in if you already have one. A Gmail address is fine. After we assign your market, you can edit it here."}
         </p>
-        <PortalSignupForm kind={kind} requestId={asked?.id ?? null} listingName={asked?.name ?? null} />
-        <h2 className="mt-10">Sign in</h2>
-        <div className="mt-4">
-          <LoginForm
-            next={portalHomePath(kind, asked?.id ?? null)}
-            oauthError={loginQueryError(params.error)}
-            showCreate={false}
-          />
+        <div className="grid items-start gap-10 md:grid-cols-2">
+          <section>
+            <h2>Create an account</h2>
+            <div className="mt-4">
+              <PortalSignupForm kind={kind} requestId={asked?.id ?? null} listingName={asked?.name ?? null} />
+            </div>
+          </section>
+          <section>
+            <h2>Sign in</h2>
+            <div className="mt-4">
+              <LoginForm
+                next={portalHomePath(kind, asked?.id ?? null)}
+                oauthError={loginQueryError(params.error)}
+                showCreate={false}
+              />
+            </div>
+          </section>
         </div>
         <PortalHowItWorks kind={kind} />
       </div>

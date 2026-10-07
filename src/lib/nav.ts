@@ -7,6 +7,14 @@ export const SITE_NAV = [
   { href: "/saved", label: "Saved" },
 ] as const;
 
+/** Desktop header only. The mobile tab strip stays on SITE_NAV. */
+export const PORTAL_NAV_LABEL = "Market/Vendor Portal";
+
+export const SITE_PORTAL_NAV = [
+  { href: "/market", label: "Market Portal" },
+  { href: "/vendor", label: "Vendor Portal" },
+] as const;
+
 /** Footer only until the live list has posts. */
 export const SITE_FEED_NAV = { href: "/feed", label: "Feed" } as const;
 

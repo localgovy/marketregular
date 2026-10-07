@@ -5,11 +5,67 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { HeaderAccount } from "@/components/header-account";
 import { SavesHydrator } from "@/components/saves-hydrator";
+import { CaretDownMark } from "@/components/marks";
 import { NavLink } from "@/components/nav-link";
 import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
 import { HeaderSearch } from "@/components/header-search";
+import { Menu } from "@base-ui/react/menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
-import { SITE_NAV } from "@/lib/nav";
+import { PORTAL_NAV_LABEL, SITE_NAV, SITE_PORTAL_NAV } from "@/lib/nav";
+import { cn } from "@/lib/utils";
+
+function onPortalPath(path: string) {
+  return (
+    path === "/market" ||
+    path.startsWith("/market/") ||
+    path === "/vendor" ||
+    path.startsWith("/vendor/")
+  );
+}
+
+function PortalNav({ className }: { className?: string }) {
+  const path = usePathname() || "/";
+  const on = onPortalPath(path);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          "inline-flex h-full shrink-0 cursor-pointer items-center gap-1 border-0 bg-transparent px-5 font-inherit text-sm font-medium whitespace-nowrap text-foreground outline-none hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+          on && "bg-card shadow-[inset_0_-3px_0_0_var(--primary)]",
+          className,
+        )}
+      >
+        {PORTAL_NAV_LABEL}
+        <CaretDownMark className="size-3.5" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-44 rounded-sm bg-card p-0 ring-border">
+        {SITE_PORTAL_NAV.map((item) => {
+          const current = path === item.href || path.startsWith(`${item.href}/`);
+          return (
+            <Menu.LinkItem
+              key={item.href}
+              href={item.href}
+              closeOnClick
+              className={cn(
+                "flex cursor-pointer items-center px-3 py-2 text-sm font-medium text-foreground outline-none hover:bg-secondary focus:bg-secondary data-highlighted:bg-secondary",
+                current && "shadow-[inset_3px_0_0_0_var(--primary)]",
+              )}
+              aria-current={current ? "page" : undefined}
+            >
+              {item.label}
+            </Menu.LinkItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 function HeaderFrame({ q }: { q: string }) {
   return (
@@ -51,6 +107,7 @@ function HeaderFrame({ q }: { q: string }) {
                 {item.label}
               </NavLink>
             ))}
+            <PortalNav />
           </nav>
           <HeaderSearch
             key={q}
@@ -76,6 +133,7 @@ function HeaderFrame({ q }: { q: string }) {
             {item.label}
           </NavLink>
         ))}
+        <PortalNav className="hidden h-10 px-3 md:inline-flex" />
       </nav>
     </header>
   );
