@@ -7,7 +7,7 @@ export const SITE_NAV = [
   { href: "/saved", label: "Saved" },
 ] as const;
 
-/** Desktop header only. The mobile tab strip stays on SITE_NAV. */
+/** Beside Sign in in the header. The tab rows stay on SITE_NAV. */
 export const PORTAL_NAV_LABEL = "Market/Vendor Portal";
 
 export const SITE_PORTAL_NAV = [

@@ -28,7 +28,7 @@ function onPortalPath(path: string) {
   );
 }
 
-function PortalNav({ className }: { className?: string }) {
+function PortalNav() {
   const path = usePathname() || "/";
   const on = onPortalPath(path);
 
@@ -36,9 +36,8 @@ function PortalNav({ className }: { className?: string }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "inline-flex h-full shrink-0 cursor-pointer items-center gap-1 border-0 bg-transparent px-3 font-inherit text-sm font-medium whitespace-nowrap text-foreground outline-none hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground",
+          "hidden h-10 shrink-0 cursor-pointer items-center gap-1 border border-border bg-secondary px-3 font-inherit text-sm font-medium whitespace-nowrap text-foreground outline-none hover:bg-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground md:inline-flex lg:h-11",
           on && "bg-card shadow-[inset_0_-3px_0_0_var(--primary)]",
-          className,
         )}
       >
         {PORTAL_NAV_LABEL}
@@ -108,7 +107,6 @@ function HeaderFrame({ q }: { q: string }) {
                 {item.label}
               </NavLink>
             ))}
-            <PortalNav />
           </nav>
           <HeaderSearch
             key={q}
@@ -116,6 +114,7 @@ function HeaderFrame({ q }: { q: string }) {
             className="min-w-0 flex-1 xl:max-w-lg xl:flex-[0_1_32rem]"
           />
           <SavesHydrator />
+          <PortalNav />
           <HeaderAccount />
         </div>
       </div>
@@ -134,7 +133,6 @@ function HeaderFrame({ q }: { q: string }) {
             {item.label}
           </NavLink>
         ))}
-        <PortalNav className="hidden h-10 px-3 md:inline-flex" />
       </nav>
     </header>
   );
