@@ -81,6 +81,8 @@ export function SearchForm({
   resultCount,
   todayWeekday,
   variant = "full",
+  onTagSearch,
+  onTagIntent,
 }: {
   defaults?: SearchFormDefaults;
   places: PlaceAreas;
@@ -88,6 +90,10 @@ export function SearchForm({
   /** Toronto weekday from the server so Today/Tomorrow options match first paint. */
   todayWeekday: number;
   variant?: "full" | "mini";
+  /** Tag chips update in place. Other controls still navigate. */
+  onTagSearch?: (search: MarketsSearch) => void;
+  /** Warm the result for the tags a chip would apply. */
+  onTagIntent?: (search: MarketsSearch) => void;
 }) {
   const router = useRouter();
   const { coords, requestAsync, error: geoError } = useGeo();
@@ -126,6 +132,23 @@ export function SearchForm({
   function compact(patch: Partial<BrowseState>, geo?: { lat?: string; lng?: string; sort?: DirectorySort }) {
     setPanelOpen(false);
     go({ ...applied, q: typedQ(), ...patch }, geo);
+  }
+
+  function tagSearch(tags: string[]): MarketsSearch {
+    return toSearch({ ...applied, q: typedQ(), tags }, defaults);
+  }
+
+  function publishTags(tags: string[]) {
+    if (!onTagSearch) {
+      compact({ tags });
+      return;
+    }
+    setPanelOpen(false);
+    onTagSearch(tagSearch(tags));
+  }
+
+  function intendTags(tags: string[]) {
+    onTagIntent?.(tagSearch(tags));
   }
 
   function openPanel() {
@@ -396,7 +419,8 @@ export function SearchForm({
             key={tag}
             pressed={applied.tags.includes(tag)}
             size={chipSize}
-            onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
+            onClick={() => publishTags(toggleIn(applied.tags, tag))}
+            onIntent={() => intendTags(toggleIn(applied.tags, tag))}
           >
             {tagLabel(tag)}
           </FilterChip>
@@ -407,7 +431,8 @@ export function SearchForm({
                 key={tag}
                 pressed
                 size={chipSize}
-                onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
+                onClick={() => publishTags(toggleIn(applied.tags, tag))}
+                onIntent={() => intendTags(toggleIn(applied.tags, tag))}
               >
                 {tagLabel(tag)}
               </FilterChip>
@@ -416,7 +441,8 @@ export function SearchForm({
               <FilterChip
                 key={tag}
                 pressed={applied.tags.includes(tag)}
-                onClick={() => compact({ tags: toggleIn(applied.tags, tag) })}
+                onClick={() => publishTags(toggleIn(applied.tags, tag))}
+                onIntent={() => intendTags(toggleIn(applied.tags, tag))}
               >
                 {tagLabel(tag)}
               </FilterChip>
@@ -425,7 +451,7 @@ export function SearchForm({
           <div className="ml-auto flex items-center gap-3">
             <FilterClearButton
               disabled={!tagsOn}
-              onClick={() => compact({ tags: [] })}
+              onClick={() => publishTags([])}
             />
             <button
               type="button"
@@ -469,11 +495,13 @@ export function SearchForm({
 function FilterChip({
   pressed,
   onClick,
+  onIntent,
   size = "md",
   children,
 }: {
   pressed: boolean;
   onClick: () => void;
+  onIntent?: () => void;
   size?: "sm" | "md";
   children: ReactNode;
 }) {
@@ -482,6 +510,9 @@ function FilterChip({
       type="button"
       aria-pressed={pressed}
       onClick={onClick}
+      onPointerEnter={onIntent}
+      onFocus={onIntent}
+      onPointerDown={onIntent}
       className={cn(
         "stall-chip-sm inline-flex items-center px-3 text-sm font-medium",
         size === "sm" ? "h-8" : "h-9",

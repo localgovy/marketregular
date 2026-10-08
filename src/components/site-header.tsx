@@ -1,5 +1,7 @@
 "use client";
 
+import "@/lib/native-history";
+
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";

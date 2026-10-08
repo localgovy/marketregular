@@ -1,24 +1,21 @@
 import type { Metadata } from "next";
+import { after } from "next/server";
 import Link from "next/link";
 import { BrowseLinks } from "@/components/browse-links";
-import { DirectoryResults } from "@/components/directory-results";
-import { DirectorySort } from "@/components/directory-sort";
 import { JsonLd } from "@/components/json-ld";
-import { MarketMapLazy } from "@/components/market-map-lazy";
-import { SearchForm } from "@/components/search-form";
+import { MarketsBrowser } from "@/components/markets-browser";
 import { getBareMarketsDirectory, getDirectoryCensus, listMarkets, searchDirectory } from "@/lib/data/catalog";
-import { directoryInitialProps, filtersFromSearch } from "@/lib/directory-page";
+import { directoryInitialProps, filtersFromSearch, type DirectoryView } from "@/lib/directory-page";
+import { getDirectoryView, warmChipDirectoryViews } from "@/lib/directory-view";
 import {
-  marketsCrumbs,
-  parseDirectorySort,
+  boundedDirectoryKey,
+  marketsSearchFromQuery,
   placeAreasForMarkets,
   queryList,
   weekdayInToronto,
-  type MarketsSearch,
 } from "@/lib/find-paths";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
-import { countLabel } from "@/lib/format";
 
 function isBareMarketsVisit(params: {
   q?: string;
@@ -78,82 +75,41 @@ export default async function MarketsPage({
   const now = new Date();
   const nowIso = now.toISOString();
   const todayWeekday = weekdayInToronto(now);
-  const weekdays = queryList(params.weekday)
-    .map(Number)
-    .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6);
-  const lat = params.lat === undefined || params.lat === "" ? Number.NaN : Number(params.lat);
-  const lng = params.lng === undefined || params.lng === "" ? Number.NaN : Number(params.lng);
-  const near = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : undefined;
-  const tags = queryList(params.tag);
-  const areas = queryList(params.area);
-  const sort = parseDirectorySort(params.sort, Boolean(near));
-  const search: MarketsSearch = {
-    q: params.q,
-    weekdays,
-    tags,
-    areas,
-    setup: params.setup,
-    openNow: params.openNow === "1",
-    lat: params.lat,
-    lng: params.lng,
-    sort,
-  };
-  const loaded = isBareMarketsVisit(params)
-    ? { kind: "bare" as const, page: await getBareMarketsDirectory() }
-    : { kind: "live" as const, page: await searchDirectory(filtersFromSearch(search), now) };
-  const directory =
-    loaded.kind === "bare"
-      ? loaded.page.directory
-      : directoryInitialProps(
-          loaded.page.markets,
-          loaded.page.vendors,
-          loaded.page.schedulesByMarket,
-          loaded.page.halls,
-        );
-  // Filter options come from the whole directory, not the narrowed result set.
-  const places =
-    loaded.kind === "bare"
-      ? loaded.page.places
-      : placeAreasForMarkets(await listMarkets());
-  const listItems =
-    loaded.kind === "bare"
-      ? loaded.page.items
-      : loaded.page.markets.map((market) => ({
-          name: market.name,
-          path: `/markets/${market.slug}`,
-        }));
-  const marketCount =
-    loaded.kind === "bare" ? loaded.page.directory.marketTotal : loaded.page.markets.length;
-  const vendorCount =
-    loaded.kind === "bare" ? loaded.page.directory.vendorTotal : loaded.page.vendors.length;
-  const crumbs = marketsCrumbs({
-    weekdays,
-    setup: params.setup,
-    areas,
-    tags,
-    openNow: params.openNow === "1",
-    near: Boolean(near),
-    sort,
-  });
-  const queried = Boolean(params.q?.trim());
-  const status = [LAUNCH_CITY, ...crumbs, countLabel(marketCount, "market", "markets")].join(" · ");
-  const summary = [
-    countLabel(marketCount, "market", "markets"),
-    countLabel(vendorCount, "vendor", "vendors"),
-    crumbs.join(", "),
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const search = marketsSearchFromQuery(params);
+  const bare = isBareMarketsVisit(params);
+  let view: DirectoryView;
+  let places;
+  if (bare) {
+    const page = await getBareMarketsDirectory();
+    after(() => warmChipDirectoryViews());
+    view = { sortedAt: page.sortedAt, ...page.directory };
+    places = page.places;
+  } else if (boundedDirectoryKey(search)) {
+    view = await getDirectoryView(search, now);
+    // Filter options come from the whole directory, not the narrowed result set.
+    places = placeAreasForMarkets(await listMarkets());
+  } else {
+    const page = await searchDirectory(filtersFromSearch(search), now);
+    view = {
+      sortedAt: nowIso,
+      ...directoryInitialProps(page.markets, page.vendors, page.schedulesByMarket, page.halls),
+    };
+    places = placeAreasForMarkets(await listMarkets());
+  }
+  const listItems = view.mapMarkets.map((market) => ({
+    name: market.name,
+    path: `/markets/${market.slug}`,
+  }));
   const formKey = [
-    params.q,
-    weekdays.join(","),
-    tags.join(","),
-    areas.join(","),
-    params.setup,
-    params.openNow,
-    params.lat,
-    params.lng,
-    sort,
+    search.q,
+    (search.weekdays ?? []).join(","),
+    (search.tags ?? []).join(","),
+    (search.areas ?? []).join(","),
+    search.setup,
+    search.openNow ? "1" : "",
+    search.lat,
+    search.lng,
+    search.sort,
   ].join("|");
 
   return (
@@ -167,52 +123,14 @@ export default async function MarketsPage({
         })}
       />
       <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
-      <p className="type-kicker mt-2 mb-6 text-muted-foreground">{status}</p>
-      <SearchForm
-        resultCount={marketCount}
+      <MarketsBrowser
+        key={formKey}
+        initialSearch={search}
+        initialNow={nowIso}
+        initialView={view}
         places={places}
         todayWeekday={todayWeekday}
-        defaults={{
-          q: params.q,
-          weekdays,
-          tags,
-          areas,
-          setup: params.setup,
-          openNow: params.openNow === "1",
-          lat: params.lat,
-          lng: params.lng,
-          sort,
-        }}
       />
-      <div className="mt-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-border pb-2">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <a
-            href="#directory-markets"
-            className="text-base font-medium underline decoration-primary decoration-2 underline-offset-8"
-          >
-            Search Results
-          </a>
-          <DirectorySort search={search} />
-        </div>
-        <p className="text-sm text-muted-foreground">{summary}</p>
-      </div>
-      <DirectoryResults
-        key={formKey}
-        now={nowIso}
-        sortedAt={loaded.kind === "bare" ? loaded.page.sortedAt : nowIso}
-        search={search}
-        markets={directory.markets}
-        vendors={directory.vendors}
-        schedulesByMarket={directory.schedulesByMarket}
-        marketTotal={directory.marketTotal}
-        vendorTotal={directory.vendorTotal}
-        weekdays={weekdays}
-      />
-      {queried ? null : (
-        <div className="mt-8">
-          <MarketMapLazy key={formKey} markets={directory.mapMarkets} load="visible" className="h-56 w-full overflow-hidden rounded-xl ring-1 ring-foreground/10" />
-        </div>
-      )}
       <BrowseLinks className="mt-12" />
       <p className="mt-6 text-base">
         <Link href="/products" className="font-medium hover:underline">

@@ -36,6 +36,26 @@ test("next page is done when every remaining row is already shown", () => {
   assert.equal(done, true);
 });
 
+test("bounded directory keys ignore tag order and skip free text", async () => {
+  const { boundedDirectoryKey, directoryViewHref, marketsHref, marketsSearchFromSearchParams } =
+    await import("../src/lib/find-paths.ts");
+  const produce = boundedDirectoryKey({ tags: ["produce"] });
+  const reversed = boundedDirectoryKey({ tags: ["bakery", "produce"] });
+  const same = boundedDirectoryKey({ tags: ["produce", "bakery"] });
+  assert.equal(produce !== null, true);
+  assert.equal(reversed, same);
+  assert.equal(boundedDirectoryKey({ q: "honey", tags: ["produce"] }), null);
+  assert.equal(boundedDirectoryKey({ lat: "43.7", lng: "-79.4", tags: ["produce"] }), null);
+  assert.equal(boundedDirectoryKey({ tags: ["not-a-real-tag"] }), null);
+  assert.equal(boundedDirectoryKey({ tags: ["produce"], sort: "next" }), produce);
+  const search = marketsSearchFromSearchParams(new URLSearchParams("tag=bakery&tag=produce"));
+  const page = marketsHref(search);
+  const view = directoryViewHref(search);
+  assert.equal(page, "/markets?tag=bakery&tag=produce");
+  assert.equal(view, "/api/directory?tag=bakery&tag=produce");
+  assert.equal(boundedDirectoryKey(search), same);
+});
+
 test("next page reports more when unseen rows remain past the page", () => {
   const rows = ["new-1", "new-2", "new-3", "shown-1"].map((id) => ({ id }));
   const { page, done } = nextDirectoryPage(rows, new Set(["shown-1"]), 2);

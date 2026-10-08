@@ -14,6 +14,14 @@ const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
 const COUNTRY_SET = new Set<string>(COUNTRY_TAGS);
 const VENDOR_FILTER_SET = new Set<string>([...PRODUCT_TAGS, ...COUNTRY_TAGS]);
 const SETUP_SET = new Set(["indoor", "outdoor", "year-round", "seasonal"]);
+const DIRECTORY_CACHE_TAGS = new Set<string>([
+  ...PRODUCT_TAGS,
+  ...COUNTRY_TAGS,
+  ...AMENITY_TAGS,
+  ...RECORD_TAGS,
+]);
+const DIRECTORY_VIEW_TAG_CAP = 24;
+const DIRECTORY_VIEW_AREA_CAP = 24;
 
 /** Product tags people actually shop by, in the order they tend to ask. */
 export const FIND_PRODUCTS = [
@@ -296,6 +304,94 @@ function hrefWithQuery(path: string, query: URLSearchParams) {
 
 export function marketsHref(search: MarketsSearch) {
   return hrefWithQuery("/markets", directoryQuery(search));
+}
+
+/** Same query string as {@link marketsHref}, for the cached first-page JSON. */
+export function directoryViewHref(search: MarketsSearch) {
+  return hrefWithQuery("/api/directory", directoryQuery(search));
+}
+
+function firstQueryValue(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
+/** The markets page search object, from a page `searchParams` record or a query string. */
+export function marketsSearchFromQuery(params: {
+  q?: string | string[];
+  weekday?: string | string[];
+  tag?: string | string[];
+  area?: string | string[];
+  setup?: string | string[];
+  openNow?: string | string[];
+  lat?: string | string[];
+  lng?: string | string[];
+  sort?: string | string[];
+}): MarketsSearch {
+  const lat = firstQueryValue(params.lat)?.trim() || undefined;
+  const lng = firstQueryValue(params.lng)?.trim() || undefined;
+  const near =
+    lat !== undefined &&
+    lng !== undefined &&
+    Number.isFinite(Number(lat)) &&
+    Number.isFinite(Number(lng));
+  const setup = firstQueryValue(params.setup)?.trim() || undefined;
+  return {
+    q: firstQueryValue(params.q),
+    weekdays: queryList(params.weekday)
+      .map(Number)
+      .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6),
+    tags: queryList(params.tag),
+    areas: queryList(params.area),
+    setup,
+    openNow: firstQueryValue(params.openNow) === "1",
+    lat,
+    lng,
+    sort: parseDirectorySort(firstQueryValue(params.sort), near),
+  };
+}
+
+export function marketsSearchFromSearchParams(params: URLSearchParams) {
+  return marketsSearchFromQuery({
+    q: params.get("q") ?? undefined,
+    weekday: params.getAll("weekday"),
+    tag: params.getAll("tag"),
+    area: params.getAll("area"),
+    setup: params.get("setup") ?? undefined,
+    openNow: params.get("openNow") ?? undefined,
+    lat: params.get("lat") ?? undefined,
+    lng: params.get("lng") ?? undefined,
+    sort: params.get("sort") ?? undefined,
+  });
+}
+
+/**
+ * Stable cache key for a directory first page.
+ * Free-text and coordinates stay out so unique searches cannot fill the cache.
+ * Unknown tags do the same. Returns null when this search must be computed live.
+ */
+export function boundedDirectoryKey(search: MarketsSearch): string | null {
+  if (search.q?.trim()) return null;
+  if (search.lat || search.lng) return null;
+  const tags = [...new Set((search.tags ?? []).map((tag) => tag.trim()).filter(Boolean))];
+  if (tags.length > DIRECTORY_VIEW_TAG_CAP || tags.some((tag) => !DIRECTORY_CACHE_TAGS.has(tag))) {
+    return null;
+  }
+  const weekdays = [...new Set(search.weekdays ?? [])];
+  if (weekdays.some((day) => !Number.isInteger(day) || day < 0 || day > 6)) return null;
+  const areas = [...new Set((search.areas ?? []).map((area) => area.trim()).filter(Boolean))];
+  if (areas.length > DIRECTORY_VIEW_AREA_CAP || areas.some((area) => area.length > 80)) return null;
+  const setup = search.setup?.trim() ?? "";
+  if (setup && !SETUP_SET.has(setup)) return null;
+  const sort = parseDirectorySort(search.sort, false);
+  return JSON.stringify({
+    tags: [...tags].sort(),
+    weekdays: [...weekdays].sort((a, b) => a - b),
+    areas: [...areas].sort(),
+    setup,
+    openNow: Boolean(search.openNow),
+    sort,
+  });
 }
 
 export function filterMarketsByAreas(markets: Market[], areaKeys: string[]) {

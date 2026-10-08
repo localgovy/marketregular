@@ -85,6 +85,16 @@ export function directoryVendorCards(
   return withVendorHalls(vendors.slice(offset, offset + take), halls).map(toDirectoryVendorCard);
 }
 
+export type DirectoryView = {
+  sortedAt: string;
+  markets: DirectoryMarketCard[];
+  vendors: DirectoryVendorCard[];
+  schedulesByMarket: Record<string, DirectorySchedule[]>;
+  marketTotal: number;
+  vendorTotal: number;
+  mapMarkets: MapMarket[];
+};
+
 export function directoryInitialProps(
   markets: Market[],
   vendors: Vendor[],

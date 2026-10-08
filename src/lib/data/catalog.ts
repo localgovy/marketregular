@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { isSupabaseConfigured, provinceTz } from "@/lib/constants";
-import { DIRECTORY_TAG } from "@/lib/directory-cache";
+import { DIRECTORY_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
 import { DIRECTORY_CENSUS_ID } from "@/lib/launch";
 import {
   localFeatured,
@@ -33,7 +33,7 @@ import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { productTagsFromQuery, isProductNounQuery, withVendorProductTags } from "@/lib/vendor-tags";
 import { preferQueryNameHits, hallsHostingNameHits } from "@/lib/search-rank";
-import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
+import { isMarketOpen, isOpenOnWeekday, nextOpenSlot } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { withListingStats } from "@/lib/listing-score";
 import { vendorHasSubstance, type ListingContactFields } from "@/lib/listing-substance";
@@ -290,7 +290,7 @@ function marketFromStall(row: StallRow) {
  * past that, so one `unstable_cache` never stored and every page refetched it.
  * Each table is its own entry, still under the cap, and still tagged `directory`.
  */
-const DIRECTORY_CACHE = { revalidate: 120, tags: [DIRECTORY_TAG] };
+const DIRECTORY_CACHE = { revalidate: DIRECTORY_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] };
 
 function requirePublicDb() {
   const supabase = publicDb();
@@ -687,6 +687,89 @@ function includesFold(value: string | null | undefined, needle: string) {
   return value.toLowerCase().includes(needle.toLowerCase());
 }
 
+type DirectorySnapshot = {
+  expires: number;
+  markets: Market[];
+  vendors: Vendor[];
+  stalls: StallRef[];
+  schedulesByMarket: Map<string, MarketSchedule[]>;
+  schedulesRecord: Record<string, MarketSchedule[]>;
+  halls: Map<string, VendorHall[]>;
+  marketsBySlug: Map<string, Market>;
+  stallLinks: Array<{ market_id: string; vendor_id: string; days: number[] }>;
+  /** Next-open rank at `sortedAt`. Reused so every tag click does not recompute it. */
+  waitMinutes: Map<string, number>;
+  sortedAt: string;
+};
+
+let directorySnapshotMemory: DirectorySnapshot | null = null;
+let directorySnapshotTask: Promise<DirectorySnapshot> | null = null;
+let directorySnapshotGeneration = 0;
+
+/** Drop the in-process directory copy after a publish. The data cache tag still expires on its own. */
+export function clearDirectoryMemory() {
+  directorySnapshotGeneration += 1;
+  directorySnapshotMemory = null;
+  directorySnapshotTask = null;
+}
+
+async function buildDirectorySnapshot(generation: number): Promise<DirectorySnapshot> {
+  const [markets, vendors, stalls, scheduleRows] = await Promise.all([
+    listMarkets(),
+    listVendors(),
+    listStalls(),
+    listSchedules(),
+  ]);
+  const schedulesByMarket = new Map<string, MarketSchedule[]>();
+  for (const row of scheduleRows) {
+    const list = schedulesByMarket.get(row.market_id) ?? [];
+    list.push(row);
+    schedulesByMarket.set(row.market_id, list);
+  }
+  const builtAt = new Date();
+  const waitMinutes = new Map<string, number>();
+  for (const market of markets) {
+    waitMinutes.set(
+      market.id,
+      nextOpenSlot(schedulesByMarket.get(market.id) ?? [], market.province, builtAt)?.waitMinutes ??
+        Number.POSITIVE_INFINITY,
+    );
+  }
+  const snapshot: DirectorySnapshot = {
+    expires: Date.now() + DIRECTORY_REVALIDATE_SECONDS * 1000,
+    markets,
+    vendors,
+    stalls,
+    schedulesByMarket,
+    schedulesRecord: Object.fromEntries(schedulesByMarket),
+    halls: groupVendorHalls(stalls, markets),
+    marketsBySlug: new Map(markets.map((market) => [market.slug, market])),
+    stallLinks: stalls.map((stall) => ({
+      market_id: stall.market_id,
+      vendor_id: stall.id,
+      days: stall.days,
+    })),
+    waitMinutes,
+    sortedAt: builtAt.toISOString(),
+  };
+  if (generation === directorySnapshotGeneration) directorySnapshotMemory = snapshot;
+  return snapshot;
+}
+
+/** One hydrated directory per cache window, so a tag click does not reload every table. */
+async function loadDirectorySnapshot(): Promise<DirectorySnapshot> {
+  if (directorySnapshotMemory && directorySnapshotMemory.expires > Date.now()) {
+    return directorySnapshotMemory;
+  }
+  if (!directorySnapshotTask) {
+    const generation = directorySnapshotGeneration;
+    directorySnapshotTask = buildDirectorySnapshot(generation).finally(() => {
+      directorySnapshotTask = null;
+    });
+  }
+  return directorySnapshotTask;
+}
+
 export async function searchDirectory(filters: SearchFilters, now = new Date()) {
   if (!publicDb()) return localSearch(filters, now);
 
@@ -698,19 +781,12 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
   const needle = searchNeedle(raw);
   const tagNeedles = queryTags.slice(0, 8);
 
-  const [allMarkets, allVendors, stalls, scheduleRows] = await Promise.all([
-    listMarkets(),
-    listVendors(),
-    listStalls(),
-    listSchedules(),
-  ]);
-
-  const schedulesByMarket = new Map<string, MarketSchedule[]>();
-  for (const row of scheduleRows) {
-    const list = schedulesByMarket.get(row.market_id) ?? [];
-    list.push(row);
-    schedulesByMarket.set(row.market_id, list);
-  }
+  const snap = await loadDirectorySnapshot();
+  const allMarkets = snap.markets;
+  const allVendors = snap.vendors;
+  const stalls = snap.stalls;
+  const schedulesByMarket = snap.schedulesByMarket;
+  const stallLinks = snap.stallLinks;
 
   let markets = allMarkets.filter((market) => {
     if (filters.province && market.province !== filters.province) return false;
@@ -820,25 +896,17 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
     const tagged = applyDirectoryTags(
       markets,
       vendors,
-      stalls
-        .filter((stall) => !days.length || stall.days.some((day) => days.includes(day)))
-        .map((stall) => ({ market_id: stall.market_id, vendor_id: stall.id })),
+      stallLinks.filter((stall) => !days.length || stall.days.some((day) => days.includes(day))),
       filters.tags,
     );
     markets = tagged.markets;
     vendors = tagged.vendors;
   }
   markets = filterMarketsByAreas(markets, filters.areas ?? []);
-  vendors = scopeVendorsToMarkets(
-    markets,
-    vendors,
-    stalls.map((stall) => ({ market_id: stall.market_id, vendor_id: stall.id, days: stall.days })),
-    filters,
-    days,
-  );
+  vendors = scopeVendorsToMarkets(markets, vendors, stallLinks, filters, days);
   const sort = parseDirectorySort(filters.sort, Boolean(filters.near));
-  const halls = groupVendorHalls(stalls, allMarkets);
-  const marketsBySlug = new Map(allMarkets.map((market) => [market.slug, market]));
+  const halls = snap.halls;
+  const marketsBySlug = snap.marketsBySlug;
   // Near-sort needs every hall to order the list. Other sorts attach halls
   // only to the page that is about to render.
   const rankedVendors =
@@ -851,19 +919,25 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
           near: filters.near,
           marketsBySlug,
         });
-
-  return {
-    markets: preferQueryNameHits(
-      sortDirectoryMarkets(markets, sort, {
-        near: filters.near,
-        schedulesFor: (id) => schedulesByMarket.get(id) ?? [],
-      }),
-      raw,
-    ),
+  const orderedMarkets =
+    sort === "next"
+      ? [...markets].sort(
+          (a, b) =>
+            (snap.waitMinutes.get(a.id) ?? Number.POSITIVE_INFINITY) -
+              (snap.waitMinutes.get(b.id) ?? Number.POSITIVE_INFINITY) ||
+            a.name.localeCompare(b.name),
+        )
+      : sortDirectoryMarkets(markets, sort, {
+          near: filters.near,
+          schedulesFor: (id) => schedulesByMarket.get(id) ?? [],
+        });
+  const result = {
+    markets: preferQueryNameHits(orderedMarkets, raw),
     vendors: preferQueryNameHits(rankedVendors, raw),
-    schedulesByMarket: Object.fromEntries(schedulesByMarket),
+    schedulesByMarket: snap.schedulesRecord,
     halls,
   };
+  return result;
 }
 
 export type BareMarketsDirectory = {
