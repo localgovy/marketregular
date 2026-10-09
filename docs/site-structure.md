@@ -216,7 +216,15 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 
 **`vendor_sign_in_secrets`** — ciphertext of an issued password, or the sentinel `chosen.v1.password-not-stored` after the person sets their own. Admin decrypts with `VENDOR_PASSWORD_KEY`.
 
-**`product_synonyms`** — read by `search_products` (`term`, `canonical`, `category`). No `CREATE TABLE` in this repo.
+**`product_synonyms`** — read by `search_products` (`term`, `canonical`, `category`). No `CREATE TABLE` in this repo. A specific word can point at a broader canonical (`sourdough` → `bread`). That path is separate from the general-term graph.
+
+**`menu_classifiers`** — allowed values. `slug` is `facet.value`. Facets are `kind`, `use`, `occasion`, `meal`, `ingredient`, `diet`. Bots insert values. They do not add facets.
+
+**`vendor_menu_classifier_assignments`** — `(menu_id, classifier_slug, source)`. Many rows per menu item. Cascade on menu delete.
+
+**`vendor_menu_classifier_reviews`** — one row after a bot has judged an item, including a judgment that nothing applies. `basis` is `lower(btrim(name)) || '|' || left(coalesce(btrim(description), ''), 160)`. A name or description change puts the item back on the queue. Service role only. Not returned by `search_products`.
+
+**`search_terms`** — general phrases (`dessert`, `sweet corn`, `gluten free`). No stemmer. `search_term_classifiers` links each term to classifiers with weight 3 (the thing asked for), 2 (a defining member), or 1 (related). Bots add terms and links. The bot manual is `docs/menu-classifiers.md`.
 
 ### Views and storage
 
@@ -306,6 +314,8 @@ Market detail joins schedules, stalls, vendors, posts, and reviews. Contact phon
 ### Products and find pages
 
 Empty `/products` is chips to `/find/{slug}`, grouped by `FIND_CATEGORIES` (bread, sweets, prepared food, vegetables, fruit, meat, seafood, eggs, dairy, honey, maple, preserves, nuts, coffee and tea, drinks, alcohol). A query calls Postgres `search_products`, cached 60s, page size 40. Filters: selling today, market slug, weekday. Sorts: best match, next open, price, name. Name matches that are not already product hits show as vendors. Alcohol prices are hidden. A pickup filter is a comment only. It is not in the UI.
+
+When the query is a `search_terms` row, that term is used whole (`sweet corn` stays corn). Otherwise the query is split left to right into the longest known phrases. Each term must match (AND). Classifiers on one term are alternatives (OR). Words that are not a term must appear in the item name. A query that matches no term stays on the name, synonym slug, category-only-when-the-query-is-the-category, and trigram path. A classifier hit may include a null `product_category`. Non-food categories do not expand. Name matches lead, then an exact `product_slug`, then classifier weight. Find pages still match exact slugs and do not read this graph.
 
 Each find page matches exact `vendor_menus.product_slug` values on `published_menus`.
 

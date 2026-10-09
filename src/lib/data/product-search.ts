@@ -234,7 +234,7 @@ const loadCachedSearchRows = unstable_cache(
     assertPublicSearchPayload(data);
     return (data ?? []) as RpcRow[];
   },
-  ["search-products-v1"],
+  ["search-products-v2"],
   { revalidate: 60 },
 );
 

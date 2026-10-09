@@ -44,6 +44,8 @@ async function expectDenied(label: string, path: string, init?: RequestInit) {
 }
 
 await expectDenied("vendor_menus", "/rest/v1/vendor_menus?select=id&limit=1");
+await expectDenied("menu_classifiers", "/rest/v1/menu_classifiers?select=slug&limit=1");
+await expectDenied("search_terms", "/rest/v1/search_terms?select=term&limit=1");
 await expectDenied("published_markets", "/rest/v1/published_markets?select=id&limit=1");
 await expectDenied(
   "product_synonyms insert",

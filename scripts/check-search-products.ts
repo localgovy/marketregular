@@ -68,19 +68,58 @@ const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) throw new Error("Missing service role Supabase env");
 
-const sourdough = (await rpc(url, key, { q: "sourdough" })) as Array<{ product_slug?: string }>;
+type SearchRow = {
+  item_name?: string;
+  product_category?: string;
+  product_slug?: string;
+  price_cents?: number | null;
+};
+
+async function allRows(url: string, key: string, q: string) {
+  const rows: SearchRow[] = [];
+  for (let off = 0; off < 4000; off += 40) {
+    const page = (await rpc(url, key, { q, off })) as SearchRow[];
+    rows.push(...page);
+    if (page.length < 40) return rows;
+  }
+  return rows;
+}
+
+function requiresSlug(rows: SearchRow[], slug: string, label: string) {
+  if (!rows.some((row) => row.product_slug === slug)) {
+    throw new Error(`${label} did not include ${slug}`);
+  }
+}
+
+const sourdough = await allRows(url, key, "sourdough");
 if (!sourdough.length) throw new Error("sourdough returned no rows");
-if (!sourdough.some((row) => row.product_slug === "sourdough")) {
-  throw new Error("sourdough did not match the sourdough slug");
+requiresSlug(sourdough, "sourdough", "sourdough");
+
+const dessert = await allRows(url, key, "dessert");
+if (dessert.length <= 15) throw new Error("dessert stayed on the name hits");
+requiresSlug(dessert, "cookies", "dessert");
+
+const pastries = await allRows(url, key, "pastries");
+requiresSlug(pastries, "croissants", "pastries");
+
+const thanksgiving = await allRows(url, key, "thanksgiving");
+requiresSlug(thanksgiving, "turkey", "thanksgiving");
+
+const thanksgivingDessert = await allRows(url, key, "thanksgiving dessert");
+requiresSlug(thanksgivingDessert, "pumpkin-pie", "thanksgiving dessert");
+if (thanksgivingDessert.some((row) => row.product_slug === "turkey")) {
+  throw new Error("thanksgiving dessert included turkey");
+}
+
+const sweetCorn = await allRows(url, key, "sweet corn");
+if (sweetCorn.some((row) => row.product_slug === "cookies" || row.product_slug === "cakes")) {
+  throw new Error("sweet corn became the dessert set");
 }
 
 const empty = await rpc(url, key, { q: " " });
 if (!Array.isArray(empty) || empty.length !== 0) throw new Error("blank query returned rows");
 
-const riesling = (await rpc(url, key, { q: "riesling" })) as Array<{
-  product_category?: string;
-  price_cents?: number | null;
-}>;
+const riesling = (await rpc(url, key, { q: "riesling" })) as SearchRow[];
 if (!riesling.length) throw new Error("riesling returned no rows");
 if (riesling.some((row) => row.product_category === "alcohol" && row.price_cents != null)) {
   throw new Error("alcohol row included a price");
