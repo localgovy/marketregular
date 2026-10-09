@@ -55,7 +55,7 @@ function feeCheckoutError(err: unknown) {
     message.includes("charges") &&
     (message.includes("disabled") || message.includes("cannot") || message.includes("enabled"))
   ) {
-    return "The stall fee can be paid once the LOCALGOVY bank account is on Stripe.";
+    return "The stall fee can be paid once the bank account is on Stripe.";
   }
   return "Could not start that payment.";
 }

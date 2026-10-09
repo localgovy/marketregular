@@ -216,21 +216,6 @@
   object-fit: contain;
 }
 
-/* localgovy lockup: glyph mask, color from currentColor. */
-@utility studio-wordmark {
-  display: block;
-  height: 1em;
-  width: calc(1em * 836 / 186);
-  flex-shrink: 0;
-  background-color: currentColor;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
 /* City, “Live notes”, panel kicker. */
 @utility type-kicker {
   @apply text-sm;

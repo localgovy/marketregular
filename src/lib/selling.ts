@@ -1,4 +1,4 @@
-/** LOCALGOVY stall fee: 3.5% of the amount still charged, plus $0.25 once per checkout. */
+/** Stall fee: 3.5% of the amount still charged, plus $0.25 once per checkout. */
 
 /**
  * Vendors can edit a stall profile while this is false. Listing an item for sale,

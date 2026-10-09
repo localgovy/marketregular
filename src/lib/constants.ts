@@ -46,13 +46,6 @@ export const SITE_WORDMARK_GREEN_UI = "/brand/marketregular-wordmark-ui.png";
 export const SITE_LOGO = "/brand/marketregular-mr.png";
 export const SITE_OG = "/brand/marketregular-og.png";
 
-/** Studio that builds MarketRegular. Wordmark is lowercase. */
-export const STUDIO_NAME = "localgovy";
-export const STUDIO_URL = "https://localgovy.com";
-export const STUDIO_LOGO = "/brand/localgovy-mark.png";
-export const STUDIO_WORDMARK = "/brand/localgovy-wordmark.png";
-export const STUDIO_WORDMARK_UI = "/brand/localgovy-wordmark-ui.png";
-
 /** Inbox for vendor and market account requests. */
 export const CLAIM_INBOX = "noah@localgovy.com";
 

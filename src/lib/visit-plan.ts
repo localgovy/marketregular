@@ -1,11 +1,4 @@
-import {
-  SITE_NAME,
-  SITE_URL,
-  SITE_WORDMARK,
-  STUDIO_NAME,
-  STUDIO_URL,
-  STUDIO_WORDMARK,
-} from "@/lib/constants";
+import { SITE_NAME, SITE_URL, SITE_WORDMARK } from "@/lib/constants";
 import { isTrustedSiteHost } from "@/lib/site-host";
 import { upcomingByDay, type UpcomingGroup } from "@/lib/upcoming";
 import type { Market, MarketSchedule } from "@/types/database";
@@ -35,7 +28,7 @@ export function weekPlanForSlugs(
 }
 
 export function visitPlanText(groups: UpcomingGroup[]) {
-  const lines = [`${SITE_NAME} by ${STUDIO_NAME}`, "", `This week at ${SITE_NAME}`, ""];
+  const lines = [SITE_NAME, "", `This week at ${SITE_NAME}`, ""];
   if (!groups.length) {
     lines.push("None of those markets are on the calendar this week. Check the live list:");
     lines.push(`${SITE_URL}/markets`);
@@ -60,8 +53,6 @@ function visitEmail(kicker: string, body: string) {
   const origin = emailOrigin();
   const home = escapeHtml(origin);
   const mark = escapeHtml(`${origin}${SITE_WORDMARK}`);
-  const wordmark = escapeHtml(`${origin}${STUDIO_WORDMARK}`);
-  const studio = escapeHtml(STUDIO_URL);
 
   return `<!doctype html>
 <html>
@@ -76,20 +67,9 @@ function visitEmail(kicker: string, body: string) {
 <table role="presentation" width="512" cellpadding="0" cellspacing="0" border="0" style="max-width:32rem;width:100%">
 <tr>
 <td bgcolor="#2c4a40" style="background:#2c4a40;padding:16px 24px">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0">
-<tr>
-<td valign="middle" style="padding:0 12px 0 0">
 <a href="${home}" style="text-decoration:none">
 <img src="${mark}" width="162" height="24" alt="${escapeHtml(SITE_NAME)}" style="display:block;border:0;outline:none"/>
 </a>
-</td>
-<td valign="middle" style="font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.15">
-<a href="${studio}" style="font-size:14px;font-weight:400;color:#c5ddd4;text-decoration:none">
-by <img src="${wordmark}" width="67" height="15" alt="${escapeHtml(STUDIO_NAME)}" style="display:inline;border:0;vertical-align:middle;margin:0 0 2px 4px;outline:none"/>
-</a>
-</td>
-</tr>
-</table>
 </td>
 </tr>
 <tr>

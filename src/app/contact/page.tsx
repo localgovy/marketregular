@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  CONTACT_EMAIL,
-  CONTACT_NAME,
-  SITE_NAME,
-  STUDIO_URL,
-} from "@/lib/constants";
+import { CONTACT_EMAIL, CONTACT_NAME, SITE_NAME } from "@/lib/constants";
 import { pageMeta } from "@/lib/seo";
 
 export const metadata: Metadata = pageMeta({
@@ -44,13 +39,7 @@ export default function ContactPage() {
       <section className="mt-10">
         <h2>Write us</h2>
         <p className="mt-2 text-base font-medium">{CONTACT_NAME}</p>
-        <p className="mt-1 text-base text-muted-foreground">
-          Founder, CEO of{" "}
-          <a href={STUDIO_URL} rel="noreferrer" className="text-foreground hover:underline">
-            LocalGovy
-          </a>
-          , the team behind {SITE_NAME}
-        </p>
+        <p className="mt-1 text-base text-muted-foreground">Founder of {SITE_NAME}</p>
         <p className="mt-3 text-base">
           <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium hover:underline">
             {CONTACT_EMAIL}

@@ -1,8 +1,4 @@
-import {
-  SITE_WORDMARK_GREEN_UI,
-  SITE_WORDMARK_UI,
-  STUDIO_WORDMARK_UI,
-} from "@/lib/constants";
+import { SITE_WORDMARK_GREEN_UI, SITE_WORDMARK_UI } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export function SiteWordmark({
@@ -36,22 +32,6 @@ export function SiteWordmark({
       style={{
         WebkitMaskImage: `url(${SITE_WORDMARK_UI})`,
         maskImage: `url(${SITE_WORDMARK_UI})`,
-      }}
-    />
-  );
-}
-
-export function StudioWordmark({ className }: { className?: string }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "studio-wordmark text-primary lg:text-[#8fc9b4]",
-        className,
-      )}
-      style={{
-        WebkitMaskImage: `url(${STUDIO_WORDMARK_UI})`,
-        maskImage: `url(${STUDIO_WORDMARK_UI})`,
       }}
     />
   );

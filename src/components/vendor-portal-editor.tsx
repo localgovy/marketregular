@@ -753,7 +753,7 @@ export function VendorPortalEditor({
         {listing.selling_approved ? (
           <div className="mt-4 grid gap-4">
             <p className="text-sm text-muted-foreground">
-              Buyers pay this stall. LOCALGOVY keeps a separate fee of 3.5% plus $0.25 on each paid checkout.
+              Buyers pay this stall. A separate fee of 3.5% plus $0.25 is kept on each paid checkout.
               It is not added to the buyer&apos;s payment.
               {due && listing.fee_balance_cents > 0 ? ` Unpaid fees are due ${due}.` : ""}
             </p>

@@ -9,7 +9,7 @@ import { HeaderAccount } from "@/components/header-account";
 import { SavesHydrator } from "@/components/saves-hydrator";
 import { CaretDownMark } from "@/components/marks";
 import { NavLink } from "@/components/nav-link";
-import { SiteWordmark, StudioWordmark } from "@/components/site-mark";
+import { SiteWordmark } from "@/components/site-mark";
 import { HeaderSearch } from "@/components/header-search";
 import { Menu } from "@base-ui/react/menu";
 import {
@@ -17,7 +17,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SITE_NAME, STUDIO_NAME, STUDIO_URL } from "@/lib/constants";
+import { SITE_NAME } from "@/lib/constants";
 import { PORTAL_NAV_LABEL, SITE_NAV, SITE_PORTAL_NAV } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
@@ -73,25 +73,14 @@ function HeaderFrame({ q }: { q: string }) {
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md lg:border-b-2 lg:border-board">
       <div className="flex h-12 w-full items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:grid lg:h-header-bar-lg lg:site-rail lg:gap-0 lg:px-0">
         <div className="flex shrink-0 items-center lg:h-header-bar-lg lg:items-center lg:border-r lg:border-board lg:bg-board lg:px-5 xl:px-6">
-          <div className="flex min-w-0 items-center gap-2 lg:h-full">
-            <Link
-              href="/"
-              prefetch={false}
-              aria-label={`${SITE_NAME} home`}
-              className="inline-flex shrink-0 items-center text-board outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk"
-            >
-              <SiteWordmark />
-            </Link>
-            <a
-              href={STUDIO_URL}
-              rel="noreferrer"
-              aria-label={`by ${STUDIO_NAME}`}
-              className="type-kicker hidden shrink-0 items-center gap-1 leading-none text-muted-foreground outline-none translate-y-0.5 hover:underline hover:underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:inline-flex lg:text-chalk/70"
-            >
-              <span>by</span>
-              <StudioWordmark />
-            </a>
-          </div>
+          <Link
+            href="/"
+            prefetch={false}
+            aria-label={`${SITE_NAME} home`}
+            className="inline-flex shrink-0 items-center text-board outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground lg:text-chalk"
+          >
+            <SiteWordmark />
+          </Link>
         </div>
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:h-header-bar-lg lg:px-6">
           <nav
