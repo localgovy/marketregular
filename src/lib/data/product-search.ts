@@ -15,6 +15,7 @@ import { visitBadge, soonestWait, type VisitHall } from "@/lib/product-visit";
 import { hallDayHours } from "@/lib/schedule";
 import { stallHall } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
+import { FIND_PAGES } from "@/data/find-pages";
 import { createServiceClient } from "@/lib/supabase/admin";
 import {
   categoriesForFindScope,
@@ -100,102 +101,112 @@ export function normalizeSearchQuery(q: string) {
 
 const MENU_FIND_SELECT = "id, name, product_category, product_slug, price_cents, vendor_id";
 
-function keepFindRow(row: MenuRow) {
-  return row.product_category !== PET_FOOD_CATEGORY;
+type FindMenuIndex = {
+  bySlug: Map<string, MenuRow[]>;
+  byClassifier: Map<string, MenuRow[]>;
+};
+
+function inFindScope(
+  row: MenuRow,
+  scope: { categories: readonly string[]; includeNull: boolean },
+) {
+  if (row.product_category === PET_FOOD_CATEGORY) return false;
+  if (row.product_category == null) return scope.includeNull;
+  return scope.categories.includes(row.product_category);
 }
 
-async function readRows<T>(load: () => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
-  let detail = "Could not load this product";
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    const { data, error } = await load();
-    if (!error) return data ?? [];
-    detail = error.message;
-    await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+/** One sequential read per worker. A query per find page timed out PostgREST during prerender. */
+let findMenuIndex: Promise<FindMenuIndex> | null = null;
+
+function loadFindMenuIndex() {
+  if (!findMenuIndex) {
+    findMenuIndex = readFindMenuIndex().catch((error: unknown) => {
+      findMenuIndex = null;
+      throw error;
+    });
   }
-  throw new Error(detail);
+  return findMenuIndex;
 }
 
-async function menuRows(
-  slugs: readonly string[],
-  categories: readonly string[],
-  includeNull: boolean,
-): Promise<MenuRow[]> {
+async function readFindMenuIndex(): Promise<FindMenuIndex> {
+  const bySlug = new Map<string, MenuRow[]>();
+  const byClassifier = new Map<string, MenuRow[]>();
   const supabase = createServiceClient();
-  if (!supabase || slugs.length === 0) return [];
-  const rows: MenuRow[] = [];
-  for (let from = 0; ; from += 1000) {
-    const data = await readRows<MenuRow>(() =>
-      supabase
+  if (!supabase) return { bySlug, byClassifier };
+
+  const slugs = [...new Set(FIND_PAGES.flatMap((page) => page.matchSlugs))];
+  for (let index = 0; index < slugs.length; index += 40) {
+    const slice = slugs.slice(index, index + 40);
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
         .from("published_menus")
         .select(MENU_FIND_SELECT)
-        .in("product_slug", [...slugs])
-        .in("product_category", [...categories])
+        .in("product_slug", slice)
         .order("id")
-        .range(from, from + 999),
-    );
-    assertPublicSearchPayload(data);
-    rows.push(...data.filter(keepFindRow));
-    if (data.length < 1000) break;
+        .range(from, from + 999);
+      if (error) throw new Error("Could not load this product");
+      assertPublicSearchPayload(data);
+      const chunk = (data ?? []) as MenuRow[];
+      for (const row of chunk) {
+        if (!row.product_slug) continue;
+        const list = bySlug.get(row.product_slug) ?? [];
+        list.push(row);
+        bySlug.set(row.product_slug, list);
+      }
+      if (chunk.length < 1000) break;
+    }
   }
-  if (!includeNull) return rows;
-  for (let from = 0; ; from += 1000) {
-    const data = await readRows<MenuRow>(() =>
-      supabase
-        .from("published_menus")
-        .select(MENU_FIND_SELECT)
-        .in("product_slug", [...slugs])
-        .is("product_category", null)
-        .order("id")
-        .range(from, from + 999),
-    );
-    assertPublicSearchPayload(data);
-    rows.push(...data.filter(keepFindRow));
-    if (data.length < 1000) break;
-  }
-  return rows;
-}
 
-async function menusForClassifiers(
-  classifiers: readonly string[],
-  categories: readonly string[],
-  includeNull: boolean,
-): Promise<MenuRow[]> {
-  const supabase = createServiceClient();
-  if (!supabase || classifiers.length === 0) return [];
-  const ids: string[] = [];
-  for (let from = 0; ; from += 1000) {
-    const chunk = await readRows<{ menu_id: string }>(() =>
-      supabase
+  const classifiers = [...new Set(FIND_PAGES.flatMap((page) => page.matchClassifiers ?? []))];
+  const idsByClassifier = new Map<string, string[]>();
+  if (classifiers.length > 0) {
+    const seen = new Set<string>();
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
         .from("vendor_menu_classifier_assignments")
-        .select("menu_id")
-        .in("classifier_slug", [...classifiers])
+        .select("menu_id, classifier_slug")
+        .in("classifier_slug", classifiers)
         .order("menu_id")
-        .range(from, from + 999),
-    );
-    for (const row of chunk) ids.push(row.menu_id);
-    if (chunk.length < 1000) break;
-  }
-  const unique = [...new Set(ids)];
-  const rows: MenuRow[] = [];
-  for (let index = 0; index < unique.length; index += 80) {
-    const slice = unique.slice(index, index + 80);
-    const data = await readRows<MenuRow>(() =>
-      supabase
+        .order("classifier_slug")
+        .range(from, from + 999);
+      if (error) throw new Error("Could not load this product");
+      const chunk = data ?? [];
+      for (const row of chunk) {
+        const menuId = row.menu_id as string;
+        const classifier = row.classifier_slug as string;
+        const list = idsByClassifier.get(classifier) ?? [];
+        list.push(menuId);
+        idsByClassifier.set(classifier, list);
+        seen.add(menuId);
+      }
+      if (chunk.length < 1000) break;
+    }
+    const ids = [...seen];
+    const byId = new Map<string, MenuRow>();
+    for (let index = 0; index < ids.length; index += 80) {
+      const slice = ids.slice(index, index + 80);
+      const { data, error } = await supabase
         .from("published_menus")
         .select(MENU_FIND_SELECT)
-        .in("id", slice)
-        .in("product_category", [...categories]),
-    );
-    assertPublicSearchPayload(data);
-    rows.push(...data.filter(keepFindRow));
-    if (!includeNull) continue;
-    const nulls = await readRows<MenuRow>(() =>
-      supabase.from("published_menus").select(MENU_FIND_SELECT).in("id", slice).is("product_category", null),
-    );
-    assertPublicSearchPayload(nulls);
-    rows.push(...nulls.filter(keepFindRow));
+        .in("id", slice);
+      if (error) throw new Error("Could not load this product");
+      assertPublicSearchPayload(data);
+      for (const row of (data ?? []) as MenuRow[]) {
+        if (row.id) byId.set(row.id, row);
+      }
+    }
+    for (const [classifier, menuIds] of idsByClassifier) {
+      byClassifier.set(
+        classifier,
+        menuIds.flatMap((id) => {
+          const row = byId.get(id);
+          return row ? [row] : [];
+        }),
+      );
+    }
   }
-  return rows;
+
+  return { bySlug, byClassifier };
 }
 
 function dedupeMenus(rows: MenuRow[]) {
@@ -213,15 +224,17 @@ export const listFindVendors = cache(async function listFindVendors(
   now = new Date(),
 ): Promise<FindVendor[]> {
   const scope = categoriesForFindScope(page.classifierScope);
-  const [slugRows, classifierRows, vendors, stalls, markets, schedules] = await Promise.all([
-    menuRows(page.matchSlugs, scope.categories, scope.includeNull),
-    menusForClassifiers(page.matchClassifiers ?? [], scope.categories, scope.includeNull),
+  const index = await loadFindMenuIndex();
+  const [vendors, stalls, markets, schedules] = await Promise.all([
     listVendors(),
     listStalls(),
     listMarkets(),
     listSchedules(),
   ]);
-  const menus = dedupeMenus([...slugRows, ...classifierRows]);
+  const menus = dedupeMenus([
+    ...page.matchSlugs.flatMap((slug) => index.bySlug.get(slug) ?? []),
+    ...(page.matchClassifiers ?? []).flatMap((classifier) => index.byClassifier.get(classifier) ?? []),
+  ]).filter((row) => inFindScope(row, scope));
   const vendorById = new Map(vendors.map((vendor) => [vendor.id, vendor]));
   const schedulesByMarket = new Map<string, MarketSchedule[]>();
   for (const row of schedules) {
