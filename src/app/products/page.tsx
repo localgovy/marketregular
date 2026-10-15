@@ -4,7 +4,6 @@ import { permanentRedirect } from "next/navigation";
 import { ProductAisles } from "@/components/product-aisles";
 import { ProductCatalogue, type CatalogueCard } from "@/components/product-catalogue";
 import { ProductDirectory } from "@/components/product-directory";
-import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { ProductSearchForm } from "@/components/product-search-form";
 import { SortableProductHits } from "@/components/product-sort-list";
 import { VendorHitList } from "@/components/product-results";
@@ -143,22 +142,11 @@ export default async function ProductsPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 lg:px-6">
-      <div className={photos.hero && !q && !aisle ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)] lg:items-end lg:gap-8" : undefined}>
-        <div>
-          <h1>{q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Products"}</h1>
-          <p className="type-lede mt-3 max-w-2xl">
-            Search what the stalls sell, or start from an aisle. Each product opens the vendors who
-            list it and the markets where they set up.
-          </p>
-        </div>
-        {photos.hero && !q && !aisle ? (
-          <ProductPhotoFrame
-            name="Products"
-            photo={photos.hero}
-            className="mt-6 hidden lg:mt-0 lg:flex"
-          />
-        ) : null}
-      </div>
+      <h1>{q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Products"}</h1>
+      <p className="type-lede mt-3 max-w-2xl">
+        Search what the stalls sell, or start from an aisle. Each product opens the vendors who
+        list it and the markets where they set up.
+      </p>
       <ProductSearchForm
         q={q}
         openToday={openToday}
