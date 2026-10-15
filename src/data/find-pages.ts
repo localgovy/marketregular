@@ -27,6 +27,7 @@ export const FIND_CATEGORIES = [
   { id: "coffee-and-tea", label: "Coffee and tea" },
   { id: "beverages", label: "Drinks" },
   { id: "alcohol", label: "Alcohol" },
+  { id: "pet-food", label: "Pet Food" },
 ] as const;
 
 export const FIND_PAGES: FindPage[] = [
