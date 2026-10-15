@@ -16,7 +16,15 @@ import { hallDayHours } from "@/lib/schedule";
 import { stallHall } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { FOOD_CATEGORIES, PET_FOOD_CATEGORY } from "@/lib/product-categories";
 import type { MarketSchedule } from "@/types/database";
+
+export {
+  FOOD_CATEGORIES,
+  PET_FOOD_CATEGORY,
+  menuCategoryLabel,
+  menuInProductSearch,
+} from "@/lib/product-categories";
 
 export type FindMarket = {
   name: string;
@@ -78,40 +86,6 @@ export function normalizeSearchQuery(q: string) {
   return q.trim().replace(/\s+/g, " ").slice(0, SEARCH_QUERY_MAX);
 }
 
-const FOOD_CATEGORIES = [
-  "bread-and-bakery",
-  "eggs",
-  "honey",
-  "cheese-and-dairy",
-  "maple",
-  "apples-and-fruit",
-  "vegetables",
-  "meat-and-turkey",
-  "pies-and-sweets",
-  "prepared-foods",
-  "preserves-and-sauces",
-  "coffee-and-tea",
-  "alcohol",
-  "seafood",
-  "flour-and-grains",
-  "nuts-and-snacks",
-  "beverages",
-] as const;
-
-const FOOD_CATEGORY_SET = new Set<string>(FOOD_CATEGORIES);
-
-/** Sentence case for a stored category slug: bread-and-bakery → Bread and bakery. */
-export function menuCategoryLabel(category: string) {
-  const [head, ...rest] = category.split("-");
-  if (!head) return category;
-  return [head.slice(0, 1).toUpperCase() + head.slice(1), ...rest].join(" ");
-}
-
-/** Product search keeps a menu row only when its category is on the food list. */
-export function menuInProductSearch(category: string | null | undefined) {
-  return typeof category === "string" && FOOD_CATEGORY_SET.has(category);
-}
-
 async function menuRows(slugs: string[]): Promise<MenuRow[]> {
   const supabase = createServiceClient();
   if (!supabase || slugs.length === 0) return [];
@@ -160,6 +134,7 @@ export const listFindVendors = cache(async function listFindVendors(
 
   const grouped = new Map<string, FindVendor>();
   for (const menu of menus) {
+    if (menu.product_category === PET_FOOD_CATEGORY) continue;
     const vendor = vendorById.get(menu.vendor_id);
     const vendorStalls = stallsByVendor.get(menu.vendor_id);
     if (!vendor || !vendorStalls?.length) continue;
