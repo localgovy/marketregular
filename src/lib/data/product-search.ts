@@ -21,6 +21,7 @@ import type { MarketSchedule } from "@/types/database";
 
 export {
   FOOD_CATEGORIES,
+  GOODS_CATEGORIES,
   PET_FOOD_CATEGORY,
   menuCategoryLabel,
   menuInProductSearch,
@@ -209,7 +210,7 @@ const loadCachedSearchRows = unstable_cache(
     assertPublicSearchPayload(data);
     return (data ?? []) as RpcRow[];
   },
-  ["search-products-v2"],
+  ["search-products-v3"],
   { revalidate: 60 },
 );
 

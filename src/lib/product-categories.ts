@@ -1,9 +1,10 @@
 import {
+  PRODUCT_CATEGORIES,
   PRODUCT_CATEGORY_LABELS,
   type ProductCategory,
 } from "@/types/database";
 
-/** People-food categories listed on find pages. Pet food is searchable, not here. */
+/** People-food categories listed on find pages. Pet food and goods are searchable, not here. */
 export const FOOD_CATEGORIES = [
   "bread-and-bakery",
   "eggs",
@@ -22,11 +23,23 @@ export const FOOD_CATEGORIES = [
   "flour-and-grains",
   "nuts-and-snacks",
   "beverages",
+  "spices-and-seasonings",
+  "oils-and-vinegars",
+] as const;
+
+export const GOODS_CATEGORIES = [
+  "clothing-and-accessories",
+  "home-and-kitchen",
+  "art-and-stationery",
+  "toys-and-kids",
+  "health-and-wellness",
+  "services",
+  "garden-and-outdoor",
 ] as const;
 
 export const PET_FOOD_CATEGORY = "pet-food" satisfies ProductCategory;
 
-const PRODUCT_SEARCH_CATEGORY_SET = new Set<string>([...FOOD_CATEGORIES, PET_FOOD_CATEGORY]);
+const PRODUCT_SEARCH_CATEGORY_SET = new Set<string>(PRODUCT_CATEGORIES);
 
 /** Label for a stored category slug. */
 export function menuCategoryLabel(category: string) {
@@ -38,7 +51,12 @@ export function menuCategoryLabel(category: string) {
   return [head.slice(0, 1).toUpperCase() + head.slice(1), ...rest].join(" ");
 }
 
-/** Product search keeps a menu row when its category is people food or pet food. */
+/**
+ * Product search keeps food, pet food, goods, and the older craft buckets.
+ * Classified items of any of those categories (and null) can match.
+ * Pet-food rows still need a pet word in search_products.
+ */
 export function menuInProductSearch(category: string | null | undefined) {
-  return typeof category === "string" && PRODUCT_SEARCH_CATEGORY_SET.has(category);
+  if (category == null) return true;
+  return PRODUCT_SEARCH_CATEGORY_SET.has(category);
 }
