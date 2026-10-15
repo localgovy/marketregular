@@ -104,6 +104,17 @@ function keepFindRow(row: MenuRow) {
   return row.product_category !== PET_FOOD_CATEGORY;
 }
 
+async function readRows<T>(load: () => PromiseLike<{ data: T[] | null; error: { message: string } | null }>) {
+  let detail = "Could not load this product";
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const { data, error } = await load();
+    if (!error) return data ?? [];
+    detail = error.message;
+    await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+  }
+  throw new Error(detail);
+}
+
 async function menuRows(
   slugs: readonly string[],
   categories: readonly string[],
@@ -113,31 +124,33 @@ async function menuRows(
   if (!supabase || slugs.length === 0) return [];
   const rows: MenuRow[] = [];
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("published_menus")
-      .select(MENU_FIND_SELECT)
-      .in("product_slug", [...slugs])
-      .in("product_category", [...categories])
-      .order("id")
-      .range(from, from + 999);
-    if (error) throw new Error("Could not load this product");
+    const data = await readRows<MenuRow>(() =>
+      supabase
+        .from("published_menus")
+        .select(MENU_FIND_SELECT)
+        .in("product_slug", [...slugs])
+        .in("product_category", [...categories])
+        .order("id")
+        .range(from, from + 999),
+    );
     assertPublicSearchPayload(data);
-    rows.push(...((data ?? []) as MenuRow[]).filter(keepFindRow));
-    if ((data ?? []).length < 1000) break;
+    rows.push(...data.filter(keepFindRow));
+    if (data.length < 1000) break;
   }
   if (!includeNull) return rows;
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("published_menus")
-      .select(MENU_FIND_SELECT)
-      .in("product_slug", [...slugs])
-      .is("product_category", null)
-      .order("id")
-      .range(from, from + 999);
-    if (error) throw new Error("Could not load this product");
+    const data = await readRows<MenuRow>(() =>
+      supabase
+        .from("published_menus")
+        .select(MENU_FIND_SELECT)
+        .in("product_slug", [...slugs])
+        .is("product_category", null)
+        .order("id")
+        .range(from, from + 999),
+    );
     assertPublicSearchPayload(data);
-    rows.push(...((data ?? []) as MenuRow[]).filter(keepFindRow));
-    if ((data ?? []).length < 1000) break;
+    rows.push(...data.filter(keepFindRow));
+    if (data.length < 1000) break;
   }
   return rows;
 }
@@ -151,39 +164,36 @@ async function menusForClassifiers(
   if (!supabase || classifiers.length === 0) return [];
   const ids: string[] = [];
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("vendor_menu_classifier_assignments")
-      .select("menu_id, classifier_slug")
-      .in("classifier_slug", [...classifiers])
-      .order("menu_id")
-      .order("classifier_slug")
-      .range(from, from + 999);
-    if (error) throw new Error("Could not load this product");
-    const chunk = data ?? [];
-    for (const row of chunk) ids.push(row.menu_id as string);
+    const chunk = await readRows<{ menu_id: string }>(() =>
+      supabase
+        .from("vendor_menu_classifier_assignments")
+        .select("menu_id")
+        .in("classifier_slug", [...classifiers])
+        .order("menu_id")
+        .range(from, from + 999),
+    );
+    for (const row of chunk) ids.push(row.menu_id);
     if (chunk.length < 1000) break;
   }
   const unique = [...new Set(ids)];
   const rows: MenuRow[] = [];
-  for (let index = 0; index < unique.length; index += 150) {
-    const slice = unique.slice(index, index + 150);
-    const { data, error } = await supabase
-      .from("published_menus")
-      .select(MENU_FIND_SELECT)
-      .in("id", slice)
-      .in("product_category", [...categories]);
-    if (error) throw new Error("Could not load this product");
+  for (let index = 0; index < unique.length; index += 80) {
+    const slice = unique.slice(index, index + 80);
+    const data = await readRows<MenuRow>(() =>
+      supabase
+        .from("published_menus")
+        .select(MENU_FIND_SELECT)
+        .in("id", slice)
+        .in("product_category", [...categories]),
+    );
     assertPublicSearchPayload(data);
-    rows.push(...((data ?? []) as MenuRow[]).filter(keepFindRow));
+    rows.push(...data.filter(keepFindRow));
     if (!includeNull) continue;
-    const nulls = await supabase
-      .from("published_menus")
-      .select(MENU_FIND_SELECT)
-      .in("id", slice)
-      .is("product_category", null);
-    if (nulls.error) throw new Error("Could not load this product");
-    assertPublicSearchPayload(nulls.data);
-    rows.push(...((nulls.data ?? []) as MenuRow[]).filter(keepFindRow));
+    const nulls = await readRows<MenuRow>(() =>
+      supabase.from("published_menus").select(MENU_FIND_SELECT).in("id", slice).is("product_category", null),
+    );
+    assertPublicSearchPayload(nulls);
+    rows.push(...nulls.filter(keepFindRow));
   }
   return rows;
 }

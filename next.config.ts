@@ -54,6 +54,10 @@ const nextConfig: NextConfig = {
     // Tailwind + next/font CSS is ~21 KiB gzipped. Inlining it removes the
     // render-blocking stylesheet round-trips PageSpeed flags on mobile.
     inlineCss: true,
+    // Find pages read Supabase while they prerender. A wide fan-out times out
+    // PostgREST and fails the deploy.
+    staticGenerationMaxConcurrency: 2,
+    staticGenerationRetryCount: 2,
     serverActions: {
       bodySizeLimit: "6mb",
     },
