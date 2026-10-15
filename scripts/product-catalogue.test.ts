@@ -41,6 +41,9 @@ test("an unknown aisle is ignored and every live aisle has a page", () => {
   assert.equal(parseAisle("  vegetables  "), "vegetables");
   assert.equal(parseAisle("breakfast"), "breakfast");
   const aisles = catalogueAisles(live);
-  assert.equal(aisles.length, 16);
+  assert.ok(aisles.length > 16);
+  assert.ok(aisles.some((aisle) => aisle.id === "spices-and-seasonings"));
+  assert.ok(aisles.some((aisle) => aisle.id === "oils-and-vinegars"));
+  assert.ok(aisles.some((aisle) => aisle.id === "clothing-and-accessories"));
   assert.ok(aisles.every((aisle) => aisle.pages.length > 0));
 });

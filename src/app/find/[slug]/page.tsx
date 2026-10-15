@@ -4,7 +4,8 @@ import { BackButton } from "@/components/back-button";
 import { JsonLd } from "@/components/json-ld";
 import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { SortableFindVendors } from "@/components/product-sort-list";
-import { FIND_PAGES, findPageBySlug } from "@/data/find-pages";
+import { findPageBySlug, listedFindPages } from "@/data/find-pages";
+import { findSlugRedirectsToProducts } from "@/data/find-redirects";
 import { listProductPhotos, productPhoto } from "@/lib/data/product-photos";
 import { findTitle, listFindVendors, pageIsAlcohol } from "@/lib/data/product-search";
 import { LAUNCH_CITY } from "@/lib/launch";
@@ -16,7 +17,9 @@ export const dynamic = "force-static";
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return FIND_PAGES.map((page) => ({ slug: page.slug }));
+  return listedFindPages()
+    .filter((page) => !findSlugRedirectsToProducts(page.slug))
+    .map((page) => ({ slug: page.slug }));
 }
 
 export async function generateMetadata({
@@ -28,7 +31,7 @@ export async function generateMetadata({
   const page = findPageBySlug(slug);
   if (!page) return { title: "Product" };
   const title = findTitle(page.term, LAUNCH_CITY);
-  const vendors = await listFindVendors(page.matchSlugs);
+  const vendors = await listFindVendors(page);
   return pageMeta({
     title,
     description: `${title}. Stalls that list it, the markets they sell at, and the days they are there.`,
@@ -49,7 +52,7 @@ export default async function FindProductPage({
   const now = new Date();
   const today = torontoWeekday(now);
   const [vendors, photos] = await Promise.all([
-    listFindVendors(page.matchSlugs),
+    listFindVendors(page),
     listProductPhotos(),
   ]);
   const ordered = sortFindVendors(vendors, "next", today);

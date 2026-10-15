@@ -15,8 +15,13 @@ import { visitBadge, soonestWait, type VisitHall } from "@/lib/product-visit";
 import { hallDayHours } from "@/lib/schedule";
 import { stallHall } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
+import { FIND_PAGES } from "@/data/find-pages";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { FOOD_CATEGORIES, PET_FOOD_CATEGORY } from "@/lib/product-categories";
+import {
+  categoriesForFindScope,
+  PET_FOOD_CATEGORY,
+  type FindClassifierScope,
+} from "@/lib/product-categories";
 import type { MarketSchedule } from "@/types/database";
 
 export {
@@ -57,11 +62,18 @@ function reviewFields(row: { rating_avg?: number | null; review_count?: number }
 }
 
 type MenuRow = {
+  id?: string;
   name: string;
   product_category: string | null;
   product_slug: string | null;
   price_cents: number | null;
   vendor_id: string;
+};
+
+export type FindPageQuery = {
+  matchSlugs: readonly string[];
+  matchClassifiers?: readonly string[];
+  classifierScope?: FindClassifierScope;
 };
 
 type RpcRow = {
@@ -87,37 +99,142 @@ export function normalizeSearchQuery(q: string) {
   return q.trim().replace(/\s+/g, " ").slice(0, SEARCH_QUERY_MAX);
 }
 
-async function menuRows(slugs: string[]): Promise<MenuRow[]> {
-  const supabase = createServiceClient();
-  if (!supabase || slugs.length === 0) return [];
-  const rows: MenuRow[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("published_menus")
-      .select("name, product_category, product_slug, price_cents, vendor_id")
-      .in("product_slug", slugs)
-      .in("product_category", [...FOOD_CATEGORIES])
-      .order("id")
-      .range(from, from + 999);
-    if (error) throw new Error("Could not load this product");
-    assertPublicSearchPayload(data);
-    const chunk = (data ?? []) as MenuRow[];
-    rows.push(...chunk);
-    if (chunk.length < 1000) return rows;
+const MENU_FIND_SELECT = "id, name, product_category, product_slug, price_cents, vendor_id";
+
+type FindMenuIndex = {
+  bySlug: Map<string, MenuRow[]>;
+  byClassifier: Map<string, MenuRow[]>;
+};
+
+function inFindScope(
+  row: MenuRow,
+  scope: { categories: readonly string[]; includeNull: boolean },
+) {
+  if (row.product_category === PET_FOOD_CATEGORY) return false;
+  if (row.product_category == null) return scope.includeNull;
+  return scope.categories.includes(row.product_category);
+}
+
+/** One sequential read per worker. A query per find page timed out PostgREST during prerender. */
+let findMenuIndex: Promise<FindMenuIndex> | null = null;
+
+function loadFindMenuIndex() {
+  if (!findMenuIndex) {
+    findMenuIndex = readFindMenuIndex().catch((error: unknown) => {
+      findMenuIndex = null;
+      throw error;
+    });
   }
+  return findMenuIndex;
+}
+
+async function readFindMenuIndex(): Promise<FindMenuIndex> {
+  const bySlug = new Map<string, MenuRow[]>();
+  const byClassifier = new Map<string, MenuRow[]>();
+  const supabase = createServiceClient();
+  if (!supabase) return { bySlug, byClassifier };
+
+  const slugs = [...new Set(FIND_PAGES.flatMap((page) => page.matchSlugs))];
+  for (let index = 0; index < slugs.length; index += 40) {
+    const slice = slugs.slice(index, index + 40);
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from("published_menus")
+        .select(MENU_FIND_SELECT)
+        .in("product_slug", slice)
+        .order("id")
+        .range(from, from + 999);
+      if (error) throw new Error("Could not load this product");
+      assertPublicSearchPayload(data);
+      const chunk = (data ?? []) as MenuRow[];
+      for (const row of chunk) {
+        if (!row.product_slug) continue;
+        const list = bySlug.get(row.product_slug) ?? [];
+        list.push(row);
+        bySlug.set(row.product_slug, list);
+      }
+      if (chunk.length < 1000) break;
+    }
+  }
+
+  const classifiers = [...new Set(FIND_PAGES.flatMap((page) => page.matchClassifiers ?? []))];
+  const idsByClassifier = new Map<string, string[]>();
+  if (classifiers.length > 0) {
+    const seen = new Set<string>();
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from("vendor_menu_classifier_assignments")
+        .select("menu_id, classifier_slug")
+        .in("classifier_slug", classifiers)
+        .order("menu_id")
+        .order("classifier_slug")
+        .range(from, from + 999);
+      if (error) throw new Error("Could not load this product");
+      const chunk = data ?? [];
+      for (const row of chunk) {
+        const menuId = row.menu_id as string;
+        const classifier = row.classifier_slug as string;
+        const list = idsByClassifier.get(classifier) ?? [];
+        list.push(menuId);
+        idsByClassifier.set(classifier, list);
+        seen.add(menuId);
+      }
+      if (chunk.length < 1000) break;
+    }
+    const ids = [...seen];
+    const byId = new Map<string, MenuRow>();
+    for (let index = 0; index < ids.length; index += 80) {
+      const slice = ids.slice(index, index + 80);
+      const { data, error } = await supabase
+        .from("published_menus")
+        .select(MENU_FIND_SELECT)
+        .in("id", slice);
+      if (error) throw new Error("Could not load this product");
+      assertPublicSearchPayload(data);
+      for (const row of (data ?? []) as MenuRow[]) {
+        if (row.id) byId.set(row.id, row);
+      }
+    }
+    for (const [classifier, menuIds] of idsByClassifier) {
+      byClassifier.set(
+        classifier,
+        menuIds.flatMap((id) => {
+          const row = byId.get(id);
+          return row ? [row] : [];
+        }),
+      );
+    }
+  }
+
+  return { bySlug, byClassifier };
+}
+
+function dedupeMenus(rows: MenuRow[]) {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key = row.id ?? `${row.vendor_id}\0${row.name}\0${row.product_slug ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export const listFindVendors = cache(async function listFindVendors(
-  matchSlugs: string[],
+  page: FindPageQuery,
   now = new Date(),
 ): Promise<FindVendor[]> {
-  const [menus, vendors, stalls, markets, schedules] = await Promise.all([
-    menuRows(matchSlugs),
+  const scope = categoriesForFindScope(page.classifierScope);
+  const index = await loadFindMenuIndex();
+  const [vendors, stalls, markets, schedules] = await Promise.all([
     listVendors(),
     listStalls(),
     listMarkets(),
     listSchedules(),
   ]);
+  const menus = dedupeMenus([
+    ...page.matchSlugs.flatMap((slug) => index.bySlug.get(slug) ?? []),
+    ...(page.matchClassifiers ?? []).flatMap((classifier) => index.byClassifier.get(classifier) ?? []),
+  ]).filter((row) => inFindScope(row, scope));
   const vendorById = new Map(vendors.map((vendor) => [vendor.id, vendor]));
   const schedulesByMarket = new Map<string, MarketSchedule[]>();
   for (const row of schedules) {
@@ -210,7 +327,7 @@ const loadCachedSearchRows = unstable_cache(
     assertPublicSearchPayload(data);
     return (data ?? []) as RpcRow[];
   },
-  ["search-products-v3"],
+  ["search-products-v4"],
   { revalidate: 60 },
 );
 

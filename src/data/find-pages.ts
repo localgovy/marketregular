@@ -7,6 +7,14 @@ export type FindPage = {
   category: string;
   /** Exact vendor_menus.product_slug values this page lists. */
   matchSlugs: string[];
+  /** Classifier slugs that also list on this page. */
+  matchClassifiers?: string[];
+  /**
+   * food: people-food categories.
+   * goods: non-food categories, including a null category.
+   * any: both, still never pet food.
+   */
+  classifierScope?: "food" | "goods" | "any";
   vendors: number;
 };
 
@@ -29,6 +37,9 @@ export const FIND_CATEGORIES = [
   { id: "coffee-and-tea", label: "Coffee and tea" },
   { id: "beverages", label: "Drinks" },
   { id: "alcohol", label: "Alcohol" },
+  { id: "cuisine", label: "Cuisine" },
+  { id: "production", label: "Organic and raised" },
+  { id: "format", label: "Packs" },
   { id: "clothing-and-accessories", label: "Clothing and accessories" },
   { id: "home-and-kitchen", label: "Home and kitchen" },
   { id: "art-and-stationery", label: "Art and stationery" },
@@ -140,7 +151,7 @@ export const FIND_PAGES: FindPage[] = [
   { term: "Apple butter", slug: "apple-butter-toronto", category: "preserves-and-sauces", matchSlugs: ["apple-butter"], vendors: 8 },
   { term: "Hot sauce", slug: "hot-sauce-toronto", category: "preserves-and-sauces", matchSlugs: ["hot-sauce"], vendors: 24 },
   { term: "Chutneys", slug: "chutneys-toronto", category: "preserves-and-sauces", matchSlugs: ["chutneys"], vendors: 14 },
-  { term: "Olive oil", slug: "olive-oil-toronto", category: "preserves-and-sauces", matchSlugs: ["olive-oil"], vendors: 15 },
+  { term: "Olive oil", slug: "olive-oil-toronto", category: "oils-and-vinegars", matchSlugs: ["olive-oil"], matchClassifiers: ["kind.olive-oil"], classifierScope: "food", vendors: 22 },
   { term: "Dried fruits", slug: "dried-fruits-toronto", category: "nuts-and-snacks", matchSlugs: ["dried-fruits"], vendors: 8 },
   { term: "Coffee", slug: "coffee-toronto", category: "coffee-and-tea", matchSlugs: ["coffee"], vendors: 37 },
   { term: "Tea", slug: "tea-toronto", category: "coffee-and-tea", matchSlugs: ["tea", "matcha"], vendors: 45 },
@@ -148,6 +159,61 @@ export const FIND_PAGES: FindPage[] = [
   { term: "Lemonade", slug: "lemonade-toronto", category: "beverages", matchSlugs: ["lemonade"], vendors: 16 },
   { term: "Smoothies", slug: "smoothies-toronto", category: "beverages", matchSlugs: ["smoothies"], vendors: 14 },
   { term: "Wine", slug: "wine-toronto", category: "alcohol", matchSlugs: ["wine"], vendors: 37 },
+  { term: "Dumplings", slug: "dumplings-toronto", category: "prepared-foods", matchSlugs: ["dumplings"], matchClassifiers: ["kind.dumplings"], classifierScope: "food", vendors: 11 },
+  { term: "Samosas", slug: "samosas-toronto", category: "prepared-foods", matchSlugs: ["samosas"], matchClassifiers: ["kind.samosas"], classifierScope: "food", vendors: 15 },
+  { term: "Empanadas", slug: "empanadas-toronto", category: "prepared-foods", matchSlugs: ["empanadas"], matchClassifiers: ["kind.empanadas"], classifierScope: "food", vendors: 8 },
+  { term: "Curry", slug: "curry-toronto", category: "prepared-foods", matchSlugs: ["curry"], matchClassifiers: ["kind.curry"], classifierScope: "food", vendors: 31 },
+  { term: "Pasta", slug: "pasta-toronto", category: "prepared-foods", matchSlugs: ["pasta"], matchClassifiers: ["kind.pasta"], classifierScope: "food", vendors: 27 },
+  { term: "Noodles", slug: "noodles-toronto", category: "prepared-foods", matchSlugs: ["noodles"], matchClassifiers: ["kind.noodles"], classifierScope: "food", vendors: 22 },
+  { term: "Sushi", slug: "sushi-toronto", category: "prepared-foods", matchSlugs: ["sushi"], matchClassifiers: ["kind.sushi"], classifierScope: "food", vendors: 6 },
+  { term: "Shawarma", slug: "shawarma-toronto", category: "prepared-foods", matchSlugs: ["shawarma"], matchClassifiers: ["kind.shawarma"], classifierScope: "food", vendors: 17 },
+  { term: "Poutine", slug: "poutine-toronto", category: "prepared-foods", matchSlugs: ["poutine"], matchClassifiers: ["kind.poutine"], classifierScope: "food", vendors: 19 },
+  { term: "Falafel", slug: "falafel-toronto", category: "prepared-foods", matchSlugs: ["falafel"], matchClassifiers: ["kind.falafel"], classifierScope: "food", vendors: 6 },
+  { term: "Jerky", slug: "jerky-toronto", category: "meat-and-turkey", matchSlugs: ["jerky"], matchClassifiers: ["kind.jerky"], classifierScope: "food", vendors: 15 },
+  { term: "Smoked fish", slug: "smoked-fish-toronto", category: "seafood", matchSlugs: ["smoked-fish"], matchClassifiers: ["kind.smoked-fish"], classifierScope: "food", vendors: 14 },
+  { term: "Spices", slug: "spices-toronto", category: "spices-and-seasonings", matchSlugs: ["spices"], matchClassifiers: ["kind.spices"], classifierScope: "food", vendors: 37 },
+  { term: "Vinegars", slug: "vinegars-toronto", category: "oils-and-vinegars", matchSlugs: ["vinegar", "vinegars"], matchClassifiers: ["kind.vinegars"], classifierScope: "food", vendors: 13 },
+  { term: "Indian food", slug: "indian-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.indian"], classifierScope: "food", vendors: 35 },
+  { term: "Italian food", slug: "italian-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.italian"], classifierScope: "food", vendors: 70 },
+  { term: "Mexican food", slug: "mexican-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.mexican"], classifierScope: "food", vendors: 36 },
+  { term: "Jamaican food", slug: "jamaican-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.jamaican"], classifierScope: "food", vendors: 35 },
+  { term: "Japanese food", slug: "japanese-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.japanese"], classifierScope: "food", vendors: 41 },
+  { term: "Middle Eastern food", slug: "middle-eastern-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.middle-eastern"], classifierScope: "food", vendors: 32 },
+  { term: "Korean food", slug: "korean-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.korean"], classifierScope: "food", vendors: 16 },
+  { term: "Thai food", slug: "thai-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.thai"], classifierScope: "food", vendors: 14 },
+  { term: "Ukrainian food", slug: "ukrainian-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.ukrainian"], classifierScope: "food", vendors: 13 },
+  { term: "Greek food", slug: "greek-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.greek"], classifierScope: "food", vendors: 12 },
+  { term: "Caribbean food", slug: "caribbean-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.caribbean"], classifierScope: "food", vendors: 10 },
+  { term: "Chinese food", slug: "chinese-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.chinese"], classifierScope: "food", vendors: 7 },
+  { term: "Filipino food", slug: "filipino-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.filipino"], classifierScope: "food", vendors: 5 },
+  { term: "Vietnamese food", slug: "vietnamese-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.vietnamese"], classifierScope: "food", vendors: 6 },
+  { term: "Polish food", slug: "polish-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.polish"], classifierScope: "food", vendors: 7 },
+  { term: "Ethiopian food", slug: "ethiopian-food-toronto", category: "cuisine", matchSlugs: [], matchClassifiers: ["origin.ethiopian"], classifierScope: "food", vendors: 2 },
+  { term: "Organic", slug: "organic-toronto", category: "production", matchSlugs: [], matchClassifiers: ["production.organic"], classifierScope: "food", vendors: 144 },
+  { term: "Grass-fed", slug: "grass-fed-toronto", category: "production", matchSlugs: [], matchClassifiers: ["production.grass-fed"], classifierScope: "food", vendors: 23 },
+  { term: "Pasture-raised", slug: "pasture-raised-toronto", category: "production", matchSlugs: [], matchClassifiers: ["production.pasture-raised"], classifierScope: "food", vendors: 21 },
+  { term: "Free-range", slug: "free-range-toronto", category: "production", matchSlugs: [], matchClassifiers: ["production.free-range"], classifierScope: "food", vendors: 19 },
+  { term: "Frozen", slug: "frozen-toronto", category: "format", matchSlugs: [], matchClassifiers: ["format.frozen"], classifierScope: "food", vendors: 30 },
+  { term: "Gift sets", slug: "gift-sets-toronto", category: "format", matchSlugs: [], matchClassifiers: ["format.gift-set"], classifierScope: "any", vendors: 13 },
+  { term: "Sweaters", slug: "sweaters-toronto", category: "clothing-and-accessories", matchSlugs: ["sweaters"], matchClassifiers: ["kind.sweaters"], classifierScope: "goods", vendors: 24 },
+  { term: "Tops", slug: "tops-toronto", category: "clothing-and-accessories", matchSlugs: ["tops"], matchClassifiers: ["kind.tops"], classifierScope: "goods", vendors: 24 },
+  { term: "Hats and scarves", slug: "hats-and-scarves-toronto", category: "clothing-and-accessories", matchSlugs: ["hats-scarves"], matchClassifiers: ["kind.hats-scarves"], classifierScope: "goods", vendors: 26 },
+  { term: "Bags", slug: "bags-toronto", category: "clothing-and-accessories", matchSlugs: ["bags"], matchClassifiers: ["kind.bags"], classifierScope: "goods", vendors: 49 },
+  { term: "Pottery", slug: "pottery-toronto", category: "home-and-kitchen", matchSlugs: ["pottery"], matchClassifiers: ["kind.pottery"], classifierScope: "goods", vendors: 50 },
+  { term: "Glassware", slug: "glassware-toronto", category: "home-and-kitchen", matchSlugs: ["glassware"], matchClassifiers: ["kind.glassware"], classifierScope: "goods", vendors: 24 },
+  { term: "Woodwork", slug: "woodwork-toronto", category: "home-and-kitchen", matchSlugs: ["woodwork"], matchClassifiers: ["kind.woodwork"], classifierScope: "goods", vendors: 37 },
+  { term: "Home decor", slug: "home-decor-toronto", category: "home-and-kitchen", matchSlugs: ["home-decor"], matchClassifiers: ["kind.home-decor"], classifierScope: "goods", vendors: 57 },
+  { term: "Art", slug: "art-toronto", category: "art-and-stationery", matchSlugs: ["art"], matchClassifiers: ["kind.art"], classifierScope: "goods", vendors: 54 },
+  { term: "Greeting cards", slug: "greeting-cards-toronto", category: "art-and-stationery", matchSlugs: ["cards-stationery"], matchClassifiers: ["kind.cards-stationery"], classifierScope: "goods", vendors: 43 },
+  { term: "Books", slug: "books-toronto", category: "art-and-stationery", matchSlugs: ["books"], matchClassifiers: ["kind.books"], classifierScope: "goods", vendors: 9 },
+  { term: "Toys", slug: "toys-toronto", category: "toys-and-kids", matchSlugs: ["toys"], matchClassifiers: ["kind.toys"], classifierScope: "goods", vendors: 31 },
+  { term: "Baby goods", slug: "baby-goods-toronto", category: "toys-and-kids", matchSlugs: ["baby-goods"], matchClassifiers: ["kind.baby-goods"], classifierScope: "goods", vendors: 30 },
+  { term: "Wellness", slug: "wellness-toronto", category: "health-and-wellness", matchSlugs: ["wellness"], matchClassifiers: ["kind.wellness"], classifierScope: "goods", vendors: 13 },
+  { term: "Gift cards", slug: "gift-cards-toronto", category: "services", matchSlugs: ["gift-cards"], matchClassifiers: ["kind.gift-cards"], classifierScope: "goods", vendors: 5 },
+  { term: "Repairs", slug: "repairs-toronto", category: "services", matchSlugs: ["repairs"], matchClassifiers: ["kind.repairs"], classifierScope: "goods", vendors: 15 },
+  { term: "Houseplants", slug: "houseplants-toronto", category: "garden-and-outdoor", matchSlugs: ["houseplants"], matchClassifiers: ["kind.houseplants"], classifierScope: "goods", vendors: 14 },
+  { term: "Seedlings", slug: "seedlings-toronto", category: "garden-and-outdoor", matchSlugs: ["seedlings"], matchClassifiers: ["kind.seedlings"], classifierScope: "goods", vendors: 44 },
+  { term: "Garden supplies", slug: "garden-supplies-toronto", category: "garden-and-outdoor", matchSlugs: ["garden-supplies"], matchClassifiers: ["kind.garden-supplies"], classifierScope: "goods", vendors: 8 },
 ];
 
 const bySlug = new Map(FIND_PAGES.map((page) => [page.slug, page]));
@@ -161,9 +227,15 @@ export function findPageForProductSlug(productSlug: string | null | undefined) {
   return FIND_PAGES.find((page) => page.matchSlugs.includes(productSlug)) ?? null;
 }
 
-export function findPagesByCategory() {
+/** Pages with nothing to list stay off the browse, the sitemap, and the build. */
+export function listedFindPages(pages: readonly FindPage[] = FIND_PAGES) {
+  return pages.filter((page) => page.vendors > 0);
+}
+
+export function findPagesByCategory(pages: readonly FindPage[] = FIND_PAGES) {
+  const listed = listedFindPages(pages);
   return FIND_CATEGORIES.map((category) => ({
     ...category,
-    pages: FIND_PAGES.filter((page) => page.category === category.id),
+    pages: listed.filter((page) => page.category === category.id),
   })).filter((category) => category.pages.length > 0);
 }

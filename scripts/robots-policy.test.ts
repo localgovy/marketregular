@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { FIND_PAGES } from "../src/data/find-pages.ts";
+import { findSlugRedirectsToProducts } from "../src/data/find-redirects.ts";
 import { CATEGORIES, DAY_SLUGS } from "../src/lib/landing.ts";
 import {
   isRobotsDisallowed,
@@ -104,7 +105,8 @@ test("sitemap listings are public paths robots allows", () => {
     assert.equal(isRobotsDisallowed(path), false, path);
   }
   for (const page of FIND_PAGES) {
-    assert.ok(paths.includes(`/find/${page.slug}`), page.slug);
+    const listed = !findSlugRedirectsToProducts(page.slug);
+    assert.equal(paths.includes(`/find/${page.slug}`), listed, page.slug);
   }
   for (const day of DAY_SLUGS) {
     assert.ok(paths.includes(`/markets/day/${day}`), day);
