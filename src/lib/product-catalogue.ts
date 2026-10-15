@@ -58,7 +58,7 @@ const AISLE_LINES: Record<string, string> = {
   "meat-and-turkey": "Beef, pork, chicken, and sausages",
   seafood: "Fish and seafood",
   eggs: "Eggs",
-  "cheese-and-dairy": "Cheese and dairy",
+  "cheese-and-dairy": "Finest cheeses from Toronto and beyond",
   honey: "Honey",
   maple: "Maple syrup and maple butter",
   "preserves-and-sauces": "Jams, pickles, and preserves",
