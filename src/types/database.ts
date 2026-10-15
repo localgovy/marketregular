@@ -116,6 +116,15 @@ export const PRODUCT_CATEGORIES = [
   "jewellery-and-accessories",
   "other",
   "pet-food",
+  "clothing-and-accessories",
+  "home-and-kitchen",
+  "art-and-stationery",
+  "toys-and-kids",
+  "health-and-wellness",
+  "services",
+  "garden-and-outdoor",
+  "spices-and-seasonings",
+  "oils-and-vinegars",
 ] as const;
 
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
@@ -145,6 +154,15 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   "jewellery-and-accessories": "Jewellery and accessories",
   other: "Other",
   "pet-food": "Pet Food",
+  "clothing-and-accessories": "Clothing and accessories",
+  "home-and-kitchen": "Home and kitchen",
+  "art-and-stationery": "Art and stationery",
+  "toys-and-kids": "Toys and kids",
+  "health-and-wellness": "Health and wellness",
+  services: "Services",
+  "garden-and-outdoor": "Garden and outdoor",
+  "spices-and-seasonings": "Spices and seasonings",
+  "oils-and-vinegars": "Oils and vinegars",
 };
 
 export type MenuItem = {
