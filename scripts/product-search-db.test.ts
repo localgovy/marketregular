@@ -7,7 +7,7 @@ import { PGlite } from "@electric-sql/pglite";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
-const migration = "supabase/migrations/20261015203000_search_cuisine_and_goods_terms.sql";
+const migration = "supabase/migrations/20261015210819_search_null_category_name.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -551,4 +551,176 @@ test("cuisine search uses vendor tags under origin tags and skips pet food", asy
   assert.ok(middle.some((row) => row.item_name === "Hummus"));
   const middleFood = await search(db, "middle-eastern food");
   assert.ok(middleFood.some((row) => row.item_name === "Hummus"));
+});
+
+test("the null-category migration still gates pet food and keeps trigram matching", () => {
+  const sql = readFileSync(join(root, migration), "utf8");
+  assert.match(sql, /vm\.product_category is null\s+and match\.existing/);
+  assert.match(sql, /when vm\.product_category is null then 0\.01/);
+  assert.match(sql, /vm\.product_category = 'pet-food'/);
+  assert.match(sql, /similarity\(lower\(vm\.name\), lower\(clock\.query\)\) >= 0\.45/);
+  assert.match(sql, /security invoker/);
+  assert.match(sql, /grant execute on function public\.search_products/);
+});
+
+test("uncategorized published items match by name and rank under categorized rows", async () => {
+  const db = await database();
+  const draftVendor = "4b4b4b4b-4b4b-44b4-84b4-4b4b4b4b4b4b";
+  const lonelyVendor = "4f4f4f4f-4f4f-44f4-84f4-4f4f4f4f4f4f";
+  await db.exec(`
+    insert into public.search_terms (term) values ('milk'), ('tea'), ('beer');
+    insert into public.search_term_classifiers (term, classifier_slug, weight) values
+      ('milk', 'kind.milk', 3),
+      ('tea', 'kind.tea', 3),
+      ('beer', 'kind.beer', 3);
+  `);
+  await db.query(
+    `insert into public.vendors (id, slug, name, status) values
+      ($1, 'draft-stall', 'Draft stall', 'draft'),
+      ($2, 'lonely-stall', 'Lonely stall', 'published')`,
+    [draftVendor, lonelyVendor],
+  );
+  await db.query(
+    "insert into public.market_vendors (market_id, vendor_id, days) values ($1, $2, '{6}')",
+    [MARKET, draftVendor],
+  );
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category, product_slug) values
+      ('3a3a3a3a-3a3a-43a3-83a3-3a3a3a3a3a3a', $1, 'Taro Milk Tea', null, null),
+      ('3b3b3b3b-3b3b-43b3-83b3-3b3b3b3b3b3b', $1, 'Taro Milk Tea', 'prepared-foods', 'taro-milk-tea'),
+      ('3c3c3c3c-3c3c-43c3-83c3-3c3c3c3c3c3c', $1, 'Taro Milk Tea', 'beverages', 'taro-milk-tea-plain'),
+      ('3d3d3d3d-3d3d-43d3-83d3-3d3d3d3d3d3d', $1, 'Aqua Koshi Chime', null, null),
+      ('3e3e3e3e-3e3e-43e3-83e3-3e3e3e3e3e3e', $1, 'Aqua Koshi Chime', 'beverages', 'koshi-chime'),
+      ('4a4a4a4a-4a4a-44a4-84a4-4a4a4a4a4a4a', $1, 'Koshi Chime dog chew', 'pet-food', 'koshi-chew'),
+      ('4c4c4c4c-4c4c-44c4-84c4-4c4c4c4c4c4c', $2, 'Hidden Taro Milk Tea', null, null),
+      ('4d4d4d4d-4d4d-44d4-84d4-4d4d4d4d4d4d', $3, 'Unlisted Taro Milk Tea', null, null),
+      ('4e4e4e4e-4e4e-44e4-84e4-4e4e4e4e4e4e', $1, 'Smoked turkey', null, null),
+      ('5a5a5a5a-5a5a-45a5-85a5-5a5a5a5a5a5a', $1, 'Hoop earrings', null, null),
+      ('5b5b5b5b-5b5b-45b5-85b5-5b5b5b5b5b5b', $1, 'Stacking rings', null, null),
+      ('5c5c5c5c-5c5c-45c5-85c5-5c5c5c5c5c5c', $1, 'Pork dumplings', null, null),
+      ('5d5d5d5d-5d5d-45d5-85d5-5d5d5d5d5d5d', $1, 'Farmhouse beer', null, null),
+      ('5e5e5e5e-5e5e-45e5-85e5-5e5e5e5e5e5e', $1, 'Pilsner', 'alcohol', 'pilsner'),
+      ('6a6a6a6a-6a6a-46a6-86a6-6a6a6a6a6a6a', $1, 'Beef beer dog treats', 'pet-food', 'beer-dog'),
+      ('6b6b6b6b-6b6b-46b6-86b6-6b6b6b6b6b6b', $1, 'Zzxxyy Tray', null, null),
+      ('6c6c6c6c-6c6c-46c6-86c6-6c6c6c6c6c6c', $1, 'Zzxxyy Bowl', 'beverages', 'zzxxyy-bowl'),
+      ('6d6d6d6d-6d6d-46d6-86d6-6d6d6d6d6d6d', $1, 'Zzxxyy dog chew', 'pet-food', 'zzxxyy-chew'),
+      ('6e6e6e6e-6e6e-46e6-86e6-6e6e6e6e6e6e', $1, 'Mystery crate', null, null)`,
+    [VENDOR, draftVendor, lonelyVendor],
+  );
+  await db.exec(`
+    insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values
+      ('3b3b3b3b-3b3b-43b3-83b3-3b3b3b3b3b3b', 'kind.milk'),
+      ('3b3b3b3b-3b3b-43b3-83b3-3b3b3b3b3b3b', 'kind.tea'),
+      ('5e5e5e5e-5e5e-45e5-85e5-5e5e5e5e5e5e', 'kind.beer');
+  `);
+
+  const taro = await search(db, "Taro Milk Tea");
+  const taroNames = taro.filter((row) => row.item_name === "Taro Milk Tea");
+  const tagged = taroNames.findIndex((row) => row.product_category === "prepared-foods");
+  const plain = taroNames.findIndex((row) => row.product_category === "beverages");
+  const uncategorized = taroNames.findIndex((row) => row.product_category == null);
+  assert.ok(tagged >= 0);
+  assert.ok(plain >= 0);
+  assert.ok(uncategorized >= 0);
+  assert.ok(tagged < plain);
+  assert.ok(plain < uncategorized);
+  assert.equal(indexOf(taro, "Hidden Taro Milk Tea"), -1);
+  assert.equal(indexOf(taro, "Unlisted Taro Milk Tea"), -1);
+  assert.equal(indexOf(taro, "Mystery crate"), -1);
+
+  const koshi = await search(db, "Koshi Chime");
+  const koshiCat = indexOf(koshi, "Aqua Koshi Chime");
+  assert.ok(koshiCat >= 0);
+  assert.equal(koshi[koshiCat]?.product_category, "beverages");
+  const koshiNull = koshi.findIndex(
+    (row, index) => index > koshiCat && row.item_name === "Aqua Koshi Chime" && row.product_category == null,
+  );
+  assert.ok(koshiNull >= 0);
+  assert.equal(indexOf(koshi, "Koshi Chime dog chew"), -1);
+  assert.equal(
+    koshi.some((row) => row.product_category === "pet-food"),
+    false,
+  );
+
+  const turkey = await search(db, "turkey");
+  const heritage = indexOf(turkey, "Heritage turkey");
+  const smoked = indexOf(turkey, "Smoked turkey");
+  assert.ok(heritage >= 0);
+  assert.ok(smoked >= 0);
+  assert.ok(heritage < smoked);
+  assert.equal(turkey[smoked]?.product_category, null);
+  assert.equal(
+    turkey.some((row) => row.product_category === "pet-food"),
+    false,
+  );
+
+  const beer = await search(db, "beer");
+  const pilsner = indexOf(beer, "Pilsner");
+  const farmhouse = indexOf(beer, "Farmhouse beer");
+  assert.ok(pilsner >= 0);
+  assert.ok(farmhouse >= 0);
+  assert.ok(pilsner < farmhouse);
+  assert.equal(beer[farmhouse]?.product_category, null);
+  assert.equal(
+    beer.some((row) => row.product_category === "pet-food"),
+    false,
+  );
+
+  const earrings = await search(db, "earrings");
+  const sterling = indexOf(earrings, "Sterling hoop earrings");
+  const hoop = indexOf(earrings, "Hoop earrings");
+  assert.ok(sterling >= 0);
+  assert.ok(hoop >= 0);
+  assert.ok(sterling < hoop);
+  assert.equal(earrings[hoop]?.product_category, null);
+  assert.equal(indexOf(earrings, "Candied hoop earrings"), -1);
+
+  const rings = await search(db, "rings");
+  const silver = indexOf(rings, "Silver band");
+  const stacking = indexOf(rings, "Stacking rings");
+  assert.ok(silver >= 0);
+  assert.ok(stacking >= 0);
+  assert.ok(silver < stacking);
+  assert.equal(indexOf(rings, "Onion rings"), -1);
+
+  const dumpling = await search(db, "dumpling");
+  assert.ok(dumpling.some((row) => row.item_name === "Pork dumplings" && row.product_category == null));
+  const dumplings = await search(db, "dumplings");
+  assert.ok(dumplings.some((row) => row.item_name === "Pork dumplings" && row.product_category == null));
+
+  const ethiopian = await search(db, "ethiopian");
+  assert.equal(indexOf(ethiopian, "Ethiopian dog treats"), -1);
+  assert.ok(indexOf(ethiopian, "Doro wat") < indexOf(ethiopian, "Misir wat"));
+
+  await db.exec(`
+    create or replace function similarity(text, text)
+    returns real
+    language sql
+    immutable
+    as $$
+      select case
+        when lower($2) = 'zzxxy' and position('zzxxy' in lower($1)) > 0 then 0.55
+        else 0
+      end::real
+    $$;
+    create or replace function trgm_like(text, text)
+    returns boolean
+    language sql
+    immutable
+    as $$ select public.similarity($1, $2) >= 0.45 $$;
+  `);
+
+  const fuzzy = await search(db, "zzxxy");
+  const bowl = indexOf(fuzzy, "Zzxxyy Bowl");
+  const tray = indexOf(fuzzy, "Zzxxyy Tray");
+  assert.ok(bowl >= 0);
+  assert.ok(tray >= 0);
+  assert.equal(fuzzy[bowl]?.product_category, "beverages");
+  assert.equal(fuzzy[tray]?.product_category, null);
+  assert.ok(bowl < tray);
+  assert.equal(indexOf(fuzzy, "Zzxxyy dog chew"), -1);
+  assert.equal(
+    fuzzy.some((row) => row.product_category === "pet-food"),
+    false,
+  );
 });
