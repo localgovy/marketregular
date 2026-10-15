@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { countLabel } from "@/lib/format";
-import { productsBrowseHref, productsBrowsePath, type CatalogueSort } from "@/lib/product-browse-href";
+import { productsBrowseHref, type CatalogueSort } from "@/lib/product-browse-href";
 import { cn } from "@/lib/utils";
 
 const FIRST = 6;
@@ -44,7 +43,6 @@ export function ProductCatalogue({
   title: string;
   blurb: string;
 }) {
-  const router = useRouter();
   const [limit, setLimit] = useState(FIRST);
   const shown = pages.slice(0, limit);
 
@@ -72,24 +70,25 @@ export function ProductCatalogue({
         <div className="mt-6 min-w-0 lg:mt-0">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
             <h2>{title}</h2>
-            <label className="inline-flex items-baseline gap-1.5 text-sm text-muted-foreground">
-              <span>Sort by</span>
-              <select
-                aria-label="Sort by"
-                value={sort}
-                onChange={(event) => {
-                  const next = event.target.value === "name" ? "name" : "featured";
-                  router.push(productsBrowsePath(aisle, next), { scroll: false });
-                }}
-                className="bg-transparent font-medium text-foreground"
-              >
-                {SORTS.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <form action="/products" className="inline-flex items-baseline gap-1.5 text-sm text-muted-foreground">
+              {aisle ? <input type="hidden" name="aisle" value={aisle} /> : null}
+              <label>
+                <span>Sort by</span>{" "}
+                <select
+                  name="sort"
+                  aria-label="Sort by"
+                  defaultValue={sort}
+                  onChange={(event) => event.currentTarget.form?.requestSubmit()}
+                  className="bg-transparent font-medium text-foreground"
+                >
+                  {SORTS.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </form>
           </div>
           <p className="mt-2 max-w-2xl text-base text-muted-foreground">{blurb}</p>
           {shown.length ? (
@@ -113,9 +112,15 @@ export function ProductCatalogue({
                       {page.categoryLabel !== page.term ? (
                         <span className="block text-sm text-muted-foreground">{page.categoryLabel}</span>
                       ) : null}
-                      <h3 className={page.imageUrl ? "mt-1" : "sr-only"}>{page.term}</h3>
-                      <span className={cn("block text-base font-medium", page.imageUrl || page.categoryLabel !== page.term ? "mt-2" : undefined)}>
-                        Find vendors
+                      <h3 className="sr-only">{page.term}</h3>
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "block text-base font-medium",
+                          page.categoryLabel !== page.term ? "mt-2" : undefined,
+                        )}
+                      >
+                        {page.term}
                       </span>
                     </span>
                   </Link>

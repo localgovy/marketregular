@@ -10,11 +10,11 @@ export function ProductDirectory({ aisles }: { aisles: CatalogueAisle[] }) {
       <p className="mt-2 text-base text-muted-foreground">The full list. Open an aisle.</p>
       <div className="mt-4 border-t border-border">
         {aisles.map((aisle) => (
-          <details key={aisle.id} className="group border-b border-border">
+          <details key={aisle.id} className="border-b border-border">
             <summary className="cursor-pointer list-none py-3 text-base font-medium [&::-webkit-details-marker]:hidden">
               <span className="flex items-baseline justify-between gap-3">
                 <span className="inline-flex items-center gap-2">
-                  <CaretDownMark className="size-3.5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                  <CaretDownMark className="directory-caret size-3.5 shrink-0 text-muted-foreground transition-transform" />
                   {aisle.label}
                 </span>
                 <span className="text-sm font-normal text-muted-foreground">

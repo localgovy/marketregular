@@ -764,3 +764,7 @@
     background-color: color-mix(in srgb, var(--chalk) 42%, var(--primary));
   }
 }
+
+details[open] > summary .directory-caret {
+  transform: rotate(180deg);
+}
