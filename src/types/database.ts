@@ -91,6 +91,80 @@ export type MarketVendor = {
   days: number[];
 };
 
+/** Values allowed by vendor_menus_product_category_chk. */
+export const PRODUCT_CATEGORIES = [
+  "bread-and-bakery",
+  "eggs",
+  "honey",
+  "cheese-and-dairy",
+  "maple",
+  "apples-and-fruit",
+  "vegetables",
+  "meat-and-turkey",
+  "pies-and-sweets",
+  "prepared-foods",
+  "preserves-and-sauces",
+  "coffee-and-tea",
+  "plants-and-flowers",
+  "alcohol",
+  "seafood",
+  "flour-and-grains",
+  "nuts-and-snacks",
+  "beverages",
+  "body-care",
+  "candles-and-crafts",
+  "jewellery-and-accessories",
+  "other",
+  "pet-food",
+  "clothing-and-accessories",
+  "home-and-kitchen",
+  "art-and-stationery",
+  "toys-and-kids",
+  "health-and-wellness",
+  "services",
+  "garden-and-outdoor",
+  "spices-and-seasonings",
+  "oils-and-vinegars",
+] as const;
+
+export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
+
+/** Sentence-case labels, except Pet Food which title-cases both words. */
+export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
+  "bread-and-bakery": "Bread and bakery",
+  eggs: "Eggs",
+  honey: "Honey",
+  "cheese-and-dairy": "Cheese and dairy",
+  maple: "Maple",
+  "apples-and-fruit": "Apples and fruit",
+  vegetables: "Vegetables",
+  "meat-and-turkey": "Meat and turkey",
+  "pies-and-sweets": "Pies and sweets",
+  "prepared-foods": "Prepared foods",
+  "preserves-and-sauces": "Preserves and sauces",
+  "coffee-and-tea": "Coffee and tea",
+  "plants-and-flowers": "Plants and flowers",
+  alcohol: "Alcohol",
+  seafood: "Seafood",
+  "flour-and-grains": "Flour and grains",
+  "nuts-and-snacks": "Nuts and snacks",
+  beverages: "Beverages",
+  "body-care": "Body care",
+  "candles-and-crafts": "Candles and crafts",
+  "jewellery-and-accessories": "Jewellery and accessories",
+  other: "Other",
+  "pet-food": "Pet Food",
+  "clothing-and-accessories": "Clothing and accessories",
+  "home-and-kitchen": "Home and kitchen",
+  "art-and-stationery": "Art and stationery",
+  "toys-and-kids": "Toys and kids",
+  "health-and-wellness": "Health and wellness",
+  services: "Services",
+  "garden-and-outdoor": "Garden and outdoor",
+  "spices-and-seasonings": "Spices and seasonings",
+  "oils-and-vinegars": "Oils and vinegars",
+};
+
 export type MenuItem = {
   id: string;
   vendor_id: string;
@@ -101,6 +175,8 @@ export type MenuItem = {
   dietary: string[];
   menu_section: string | null;
   menu_section_order: number | null;
+  product_category?: ProductCategory | null;
+  product_slug?: string | null;
   for_sale?: boolean;
   offer_delivery?: boolean;
   offer_pickup?: boolean;

@@ -45,6 +45,7 @@ export function ProductAisles({
                 aria-current={active ? "true" : undefined}
                 className={tileClass(active)}
               >
+                {photo ? null : <span className="sr-only">{item.label}</span>}
                 <ProductPhotoFrame name={item.label} photo={photo} decorative />
                 {photo || (item.line && item.line !== item.label) ? (
                   <span className="block p-2.5">

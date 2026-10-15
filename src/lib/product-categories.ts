@@ -1,0 +1,62 @@
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_CATEGORY_LABELS,
+  type ProductCategory,
+} from "@/types/database";
+
+/** People-food categories listed on find pages. Pet food and goods are searchable, not here. */
+export const FOOD_CATEGORIES = [
+  "bread-and-bakery",
+  "eggs",
+  "honey",
+  "cheese-and-dairy",
+  "maple",
+  "apples-and-fruit",
+  "vegetables",
+  "meat-and-turkey",
+  "pies-and-sweets",
+  "prepared-foods",
+  "preserves-and-sauces",
+  "coffee-and-tea",
+  "alcohol",
+  "seafood",
+  "flour-and-grains",
+  "nuts-and-snacks",
+  "beverages",
+  "spices-and-seasonings",
+  "oils-and-vinegars",
+] as const;
+
+export const GOODS_CATEGORIES = [
+  "clothing-and-accessories",
+  "home-and-kitchen",
+  "art-and-stationery",
+  "toys-and-kids",
+  "health-and-wellness",
+  "services",
+  "garden-and-outdoor",
+] as const;
+
+export const PET_FOOD_CATEGORY = "pet-food" satisfies ProductCategory;
+
+const PRODUCT_SEARCH_CATEGORY_SET = new Set<string>(PRODUCT_CATEGORIES);
+
+/** Label for a stored category slug. */
+export function menuCategoryLabel(category: string) {
+  if (category in PRODUCT_CATEGORY_LABELS) {
+    return PRODUCT_CATEGORY_LABELS[category as ProductCategory];
+  }
+  const [head, ...rest] = category.split("-");
+  if (!head) return category;
+  return [head.slice(0, 1).toUpperCase() + head.slice(1), ...rest].join(" ");
+}
+
+/**
+ * Product search keeps food, pet food, goods, and the older craft buckets.
+ * Classified items of any of those categories (and null) can match.
+ * Pet-food rows still need a pet word in search_products.
+ */
+export function menuInProductSearch(category: string | null | undefined) {
+  if (category == null) return true;
+  return PRODUCT_SEARCH_CATEGORY_SET.has(category);
+}

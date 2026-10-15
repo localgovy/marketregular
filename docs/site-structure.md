@@ -19,7 +19,7 @@ Launch copy uses Toronto / GTA and timezone `America/Toronto` (`src/lib/launch.t
 - `geofence_radius_m` (default 250) only suggests the nearest hall in the review composer when the browser is inside that radius. It does not prove a visit, and it does not gate posting.
 - Directory “score” is the external `rating_avg` / `review_count` stored on the listing. It is not computed from on-site posts.
 - `posts` is on the `supabase_realtime` publication. The app does not subscribe. The tape refreshes on the 120s directory cache and on `revalidatePublishedDirectory`.
-- Product search is food categories only. Crafts, jewelry, and plants can be listing tags and still be absent from `/products`.
+- Product search is food, the newer goods categories, and any classified item. Pet-food rows match only on a pet query. Unclassified rows in the older craft buckets still need a non-food word in the query.
 - A season alias is a second database row that 308s onto a host. A sibling is a separate page with a cross-link. Only Leslieville’s indoor hall is an alias. The other pairs stay as two URLs.
 
 ## Actors
@@ -220,13 +220,13 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 
 **`product_photos`** — aisle tiles, find-page cards, and the products hero. `(subject, slug)` is the key. `subject` is `aisle`, `product`, or `hero`. `image_url` is null or a public object in the `product-photos` bucket, and the object name is `{subject}/{slug}.jpg|jpeg|png|webp`. Service role only. The seeder manual is `docs/product-photos.md`.
 
-**`menu_classifiers`** — allowed values. `slug` is `facet.value`. Facets are `kind`, `use`, `occasion`, `meal`, `ingredient`, `diet`. Bots insert values. They do not add facets.
+**`menu_classifiers`** — allowed values. `slug` is `facet.value`. Facets are `kind`, `use`, `occasion`, `meal`, `ingredient`, `diet`, `origin`, `material`, `audience`, `format`, `production`, `style`. `kind` covers food and goods. Bots insert values. They do not add facets.
 
 **`vendor_menu_classifier_assignments`** — `(menu_id, classifier_slug, source)`. Many rows per menu item. Cascade on menu delete.
 
 **`vendor_menu_classifier_reviews`** — one row after a bot has judged an item, including a judgment that nothing applies. `basis` is `lower(btrim(name)) || '|' || left(coalesce(btrim(description), ''), 160)`. A name or description change puts the item back on the queue. Service role only. Not returned by `search_products`.
 
-**`search_terms`** — general phrases (`dessert`, `sweet corn`, `gluten free`). No stemmer. `search_term_classifiers` links each term to classifiers with weight 3 (the thing asked for), 2 (a defining member), or 1 (related). Bots add terms and links. The bot manual is `docs/menu-classifiers.md`.
+**`search_terms`** — general phrases (`dessert`, `sweet corn`, `gluten free`). No stemmer. If a phrase is not a term, `search_query_parts` tries `s`, `es`, and `ies`→`y`. `search_term_classifiers` links each term to classifiers with weight 3 (the thing asked for), 2 (a defining member), or 1 (related). Bots add terms and links. The bot manual is `docs/menu-classifiers.md`.
 
 ### Views and storage
 
@@ -293,9 +293,9 @@ Page ISR on top of that: home 120s; day hub, day pages, and open-today 900s; mar
 
 ### Product search gate
 
-`menuInProductSearch` keeps a menu row only when `product_category` is one of: bread-and-bakery, eggs, honey, cheese-and-dairy, maple, apples-and-fruit, vegetables, meat-and-turkey, pies-and-sweets, prepared-foods, preserves-and-sauces, coffee-and-tea, alcohol, seafood, flour-and-grains, nuts-and-snacks, beverages. Query max is 80 characters. Page size is 40. Alcohol prices are stripped (`visiblePriceCents`). A hit links to `/find/{slug}` when that product slug has a find page, otherwise `/products?q={item name}`.
+`menuInProductSearch` is true for every stored `product_category` and for a null category. `search_products` still gates pet-food behind a pet word, always allows people-food plus spices, oils, and the new goods categories, and lets a classified item through whatever its category. Query max is 80 characters. Page size is 40. Alcohol prices are stripped (`visiblePriceCents`). A hit links to `/find/{slug}` when that product slug has a find page, otherwise `/products?q={item name}`.
 
-`flour-and-grains` is searchable and has no browse chip. Find-page browse groups are `FIND_CATEGORIES` and do not include it.
+`flour-and-grains` is searchable and has no browse chip. Find-page browse groups are `FIND_CATEGORIES`. Empty groups (pet food, goods) stay hidden until they have pages. Find pages themselves still query people-food categories only and skip `pet-food`.
 
 ## Consumer pipeline
 
@@ -317,7 +317,7 @@ Market detail joins schedules, stalls, vendors, posts, and reviews. Contact phon
 
 Empty `/products` is an aisle page: six tiles, chips for the other aisles plus Breakfast, a find-page grid (featured or A–Z, six at a time), and a collapsed directory. Cards link to `/find/{slug}`. Slugs in `FIND_SLUGS_AT_PRODUCTS` stay in `FIND_PAGES` for search and are not linked, because they 308 back to `/products`. `?aisle=` and `?sort=name` filter that directory. A query calls Postgres `search_products`, cached 60s, page size 40, and replaces the aisle page with the vendor lists. Filters: selling today, market slug, weekday. Those need a query. Sorts on the results: best match, next open, price, name. Name matches that are not already product hits show as vendors. Alcohol prices are hidden. A pickup filter is a comment only. It is not in the UI. Photos come from `product_photos` when a row exists; otherwise the card is a paper plate. A product row wins over the aisle row.
 
-When the query is a `search_terms` row, that term is used whole (`sweet corn` stays corn). Otherwise the query is split left to right into the longest known phrases. Each term must match (AND). Classifiers on one term are alternatives (OR). Words that are not a term must appear in the item name. A query that matches no term stays on the name, synonym slug, category-only-when-the-query-is-the-category, and trigram path. A classifier hit may include a null `product_category`. Non-food categories do not expand. Name matches lead, then an exact `product_slug`, then classifier weight. Find pages still match exact slugs and do not read this graph.
+When the query is a `search_terms` row, that term is used whole (`sweet corn` stays corn). Otherwise the query is split left to right into the longest known phrases. Singular/plural variants (`s`, `es`, `ies`→`y`) are tried when the typed phrase is not a term. Each term must match (AND). Classifiers on one term are alternatives (OR). Words that are not a term must appear in the item name. A query that matches no term stays on the name, synonym slug, category-only-when-the-query-is-the-category, and trigram path. A classifier hit may include a null `product_category` and a non-food category. When the query has terms, a weight-3 tag match ranks above a name that merely contains the query. Find pages still match exact slugs and do not read this graph.
 
 Each find page matches exact `vendor_menus.product_slug` values on `published_menus`.
 
@@ -576,7 +576,7 @@ Directory data path: live reads go through `published_*`. `scripts/import-toront
 | On-site verified posts | absent | `verified_on_site` is always false. The Leslieville stamp is separate |
 | Geofence as a visit proof | absent | Composer suggestion only. Default radius 250 m, admin-editable |
 | Realtime tape | absent | Table is on the publication. The UI does not subscribe |
-| Product search outside food categories | absent | `menuInProductSearch` |
+| Product search outside food categories | live | Classified items of any category. Pet-food needs a pet query |
 | Sibling halls merged into one URL | absent | Only the Leslieville indoor slug is a season alias |
 
 ## File index
