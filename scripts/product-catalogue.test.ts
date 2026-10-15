@@ -5,6 +5,8 @@ import {
   BREAKFAST_ID,
   BREAKFAST_SLUGS,
   FEATURED_PRODUCT_SLUGS,
+  canonicalBrowsePath,
+  canonicalProductPath,
   catalogueAisles,
   filterCatalogue,
   liveFindPages,
@@ -34,6 +36,60 @@ test("featured order leads with sourdough and name order is alphabetical", () =>
   const named = sortCatalogue(live, "name").map((page) => page.term);
   const sorted = [...named].sort((a, b) => a.localeCompare(b, "en-CA"));
   assert.deepEqual(named, sorted);
+});
+
+test("redundant and invalid browse params canonicalize", () => {
+  assert.equal(canonicalBrowsePath(undefined, undefined), null);
+  assert.equal(canonicalBrowsePath("", "featured"), "/products");
+  assert.equal(canonicalBrowsePath("vegetables", "featured"), "/products?aisle=vegetables");
+  assert.equal(canonicalBrowsePath("vegetables", "name"), null);
+  assert.equal(canonicalBrowsePath("nope", "name"), "/products?sort=name");
+  assert.equal(canonicalBrowsePath("nope", "price"), "/products");
+});
+
+test("product filters that the page ignores are dropped from the URL", () => {
+  assert.equal(
+    canonicalProductPath({
+      q: "honey",
+      openRaw: "1",
+      openToday: true,
+      market: "wychwood",
+      marketRaw: "wychwood",
+      dayRaw: "6",
+      day: 6,
+      aisleRaw: "",
+      sortRaw: "",
+    }),
+    null,
+  );
+  assert.equal(
+    canonicalProductPath({
+      q: "honey",
+      openRaw: "1",
+      openToday: true,
+      market: "",
+      marketRaw: "missing",
+      dayRaw: "9",
+      day: null,
+      aisleRaw: "vegetables",
+      sortRaw: "name",
+    }),
+    "/products?q=honey&open=1",
+  );
+  assert.equal(
+    canonicalProductPath({
+      q: "",
+      openRaw: "yes",
+      openToday: false,
+      market: "",
+      marketRaw: "",
+      dayRaw: "",
+      day: null,
+      aisleRaw: "",
+      sortRaw: "featured",
+    }),
+    "/products",
+  );
 });
 
 test("an unknown aisle is ignored and every live aisle has a page", () => {

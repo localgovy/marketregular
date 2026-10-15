@@ -29,7 +29,7 @@ export function ProductPhotoFrame({
           className="size-full object-cover"
           onError={() => setFailed(true)}
         />
-      ) : (
+      ) : decorative && photo ? null : (
         <span aria-hidden className="type-column px-3 text-center">
           {name}
         </span>

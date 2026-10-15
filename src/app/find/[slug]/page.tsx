@@ -71,7 +71,7 @@ export default async function FindProductPage({
           })),
         })}
       />
-      <BackButton href="/markets" />
+      <BackButton href="/products" />
       <h1 className="mt-3">{title}</h1>
       <p className="type-lede mt-3">
         {page.term} from stalls at {LAUNCH_CITY} farmers&apos; markets. These vendors list it, with

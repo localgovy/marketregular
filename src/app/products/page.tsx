@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { permanentRedirect } from "next/navigation";
 import { ProductAisles } from "@/components/product-aisles";
 import { ProductCatalogue, type CatalogueCard } from "@/components/product-catalogue";
 import { ProductDirectory } from "@/components/product-directory";
@@ -18,6 +19,7 @@ import { LAUNCH_CITY } from "@/lib/launch";
 import { parseCatalogueSort } from "@/lib/product-browse-href";
 import {
   BREAKFAST_ID,
+  canonicalProductPath,
   catalogueAisles,
   catalogueHeading,
   filterCatalogue,
@@ -28,32 +30,56 @@ import {
 import { torontoWeekday } from "@/lib/product-sort";
 import { pageMeta } from "@/lib/seo";
 
-function dayParam(value: string | undefined) {
-  if (value == null || value === "") return null;
+function textParam(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return raw?.trim() ?? "";
+}
+
+function dayParam(value: string) {
+  if (!value) return null;
   const day = Number(value);
   if (!Number.isInteger(day) || day < 0 || day > 6) return null;
   return day;
 }
 
+type ProductQuery = {
+  q?: string | string[];
+  open?: string | string[];
+  market?: string | string[];
+  day?: string | string[];
+  aisle?: string | string[];
+  sort?: string | string[];
+};
+
+function readProductQuery(params: ProductQuery) {
+  const q = textParam(params.q);
+  const open = textParam(params.open);
+  const market = textParam(params.market);
+  const dayRaw = textParam(params.day);
+  const aisle = textParam(params.aisle);
+  const sort = textParam(params.sort);
+  return {
+    q,
+    openRaw: open,
+    openToday: open === "1",
+    market,
+    dayRaw,
+    day: dayParam(dayRaw),
+    aisle,
+    sort,
+  };
+}
+
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{
-    q?: string;
-    open?: string;
-    market?: string;
-    day?: string;
-    aisle?: string;
-    sort?: string;
-  }>;
+  searchParams: Promise<ProductQuery>;
 }): Promise<Metadata> {
   const params = await searchParams;
-  const query = params.q?.trim() ?? "";
-  const filtered = Boolean(
-    query || params.open === "1" || params.market?.trim() || params.day || params.aisle?.trim() || params.sort?.trim(),
-  );
+  const { q, openToday, market, dayRaw, aisle, sort } = readProductQuery(params);
+  const filtered = Boolean(q || openToday || market || dayRaw || aisle || sort);
   return pageMeta({
-    title: query ? `${query} at ${LAUNCH_CITY} farmers' markets` : "Products",
+    title: q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Products",
     description: `Search products and the vendors who sell them at ${LAUNCH_CITY} farmers' markets.`,
     path: "/products",
     index: !filtered,
@@ -63,29 +89,33 @@ export async function generateMetadata({
 export default async function ProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{
-    q?: string;
-    open?: string;
-    market?: string;
-    day?: string;
-    aisle?: string;
-    sort?: string;
-  }>;
+  searchParams: Promise<ProductQuery>;
 }) {
   const params = await searchParams;
-  const q = params.q?.trim() ?? "";
-  const openToday = params.open === "1";
-  const marketSlug = params.market?.trim() || null;
-  const day = dayParam(params.day);
-  const aisle = parseAisle(params.aisle);
-  const sort = parseCatalogueSort(params.sort);
-  const filtersNeedQuery = !q && (openToday || Boolean(marketSlug) || day != null);
+  const { q, openRaw, openToday, market, dayRaw, day, aisle: aisleRaw, sort: sortRaw } = readProductQuery(params);
+  const aisle = parseAisle(aisleRaw);
+  const sort = parseCatalogueSort(sortRaw);
   const [markets, products, vendors, photos] = await Promise.all([
     listMarkets(),
-    q ? searchProducts({ q, openToday, marketSlug, day }) : Promise.resolve([]),
+    q ? searchProducts({ q, openToday, marketSlug: market || null, day }) : Promise.resolve([]),
     q ? searchVendorsByName(q) : Promise.resolve([]),
     q ? Promise.resolve(EMPTY_PRODUCT_PHOTOS) : listProductPhotos(),
   ]);
+  const marketKnown = !market || markets.some((item) => item.slug === market);
+  const canonical = canonicalProductPath({
+    q,
+    openRaw,
+    openToday,
+    market: marketKnown ? market : "",
+    marketRaw: market,
+    dayRaw,
+    day,
+    aisleRaw,
+    sortRaw,
+  });
+  if (canonical) permanentRedirect(canonical);
+  const marketSlug = marketKnown ? market || null : null;
+  const filtersNeedQuery = !q && (openToday || Boolean(marketSlug) || day != null);
   const seen = new Set(products.map((hit) => hit.vendorSlug));
   const shops = vendors.filter((vendor) => !seen.has(vendor.slug));
   const halls = [...markets]

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { countLabel } from "@/lib/format";
-import { productsBrowseHref, type CatalogueSort } from "@/lib/product-browse-href";
+import { productsBrowseHref, productsBrowsePath, type CatalogueSort } from "@/lib/product-browse-href";
 import { cn } from "@/lib/utils";
 
 const FIRST = 6;
@@ -79,7 +79,7 @@ export function ProductCatalogue({
                 value={sort}
                 onChange={(event) => {
                   const next = event.target.value === "name" ? "name" : "featured";
-                  router.push(productsBrowseHref(aisle, next), { scroll: false });
+                  router.push(productsBrowsePath(aisle, next), { scroll: false });
                 }}
                 className="bg-transparent font-medium text-foreground"
               >

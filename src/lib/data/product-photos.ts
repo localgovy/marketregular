@@ -57,11 +57,17 @@ function indexPhotos(rows: PhotoRow[]): ProductPhotoIndex {
 
 const loadCachedProductPhotos = unstable_cache(
   async () => {
-    const supabase = createServiceClient();
-    if (!supabase) return EMPTY_PRODUCT_PHOTOS;
-    const { data, error } = await supabase.from("product_photos").select("subject, slug, image_url, alt");
-    if (error) throw new Error("Could not load product photos");
-    return indexPhotos((data ?? []) as PhotoRow[]);
+    try {
+      const supabase = createServiceClient();
+      if (!supabase) return EMPTY_PRODUCT_PHOTOS;
+      const { data, error } = await supabase.from("product_photos").select("subject, slug, image_url, alt");
+      if (error) throw new Error("Could not load product photos");
+      return indexPhotos((data ?? []) as PhotoRow[]);
+    } catch (error) {
+      // Plates are the page. A photo outage must not take the directory down.
+      console.error("product photos", error instanceof Error ? error.message : "failed");
+      return EMPTY_PRODUCT_PHOTOS;
+    }
   },
   ["product-photos-v1"],
   { revalidate: 120, tags: ["product-photos"] },

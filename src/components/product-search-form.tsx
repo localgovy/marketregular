@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GetForm } from "@/components/get-form";
 import { SearchField } from "@/components/search-field";
 import { PRODUCT_SEARCH_LABEL, PRODUCT_SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
 import { PRODUCT_TRIES } from "@/lib/product-catalogue";
@@ -20,7 +21,7 @@ export function ProductSearchForm({
   markets: { slug: string; name: string }[];
 }) {
   return (
-    <form action="/products" role="search" className="mt-6">
+    <GetForm action="/products" role="search" className="mt-6">
       <div className="flex min-w-0 items-stretch rounded-[2px] border border-[#cfc6b6] bg-receipt shadow-[inset_0_1px_0_#fff] focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/20">
         <SearchField
           name="q"
@@ -82,6 +83,6 @@ export function ProductSearchForm({
         </label>
         {/* Pickup stays out until vendors have a pickup flag. Do not invent one. */}
       </div>
-    </form>
+    </GetForm>
   );
 }

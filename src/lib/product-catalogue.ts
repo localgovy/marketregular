@@ -1,6 +1,6 @@
-import { FIND_CATEGORIES, FIND_PAGES } from "@/data/find-pages";
+import { FIND_CATEGORIES, listedFindPages } from "@/data/find-pages";
 import { findSlugRedirectsToProducts } from "@/data/find-redirects";
-import { parseCatalogueSort, type CatalogueSort } from "@/lib/product-browse-href";
+import { parseCatalogueSort, productsBrowsePath, type CatalogueSort } from "@/lib/product-browse-href";
 
 export type { CatalogueSort };
 export { parseCatalogueSort };
@@ -50,11 +50,11 @@ export const PRODUCT_TRIES = [
 ] as const;
 
 const AISLE_LINES: Record<string, string> = {
-  "bread-and-bakery": "Loaves, bagels, and the bakery stall",
+  "bread-and-bakery": "Loaves, bagels, and delectable baked goods",
   "pies-and-sweets": "Pies, cookies, cakes, and tarts",
   "prepared-foods": "Soups, sandwiches, and cooked plates",
-  vegetables: "Greens, roots, and the rest of the stall",
-  "apples-and-fruit": "Apples, berries, and stone fruit",
+  vegetables: "Greens, roots, any type of produce you need",
+  "apples-and-fruit": "Apples, berries, even hard-to-find exotic fruits",
   "meat-and-turkey": "Beef, pork, chicken, and sausages",
   seafood: "Fish and seafood",
   eggs: "Eggs",
@@ -89,6 +89,54 @@ export function parseAisle(value: string | null | undefined) {
   return aisleIds.has(aisle) ? aisle : null;
 }
 
+/**
+ * Path to replace a browse URL that does not match the page.
+ * `sort=featured` is the default, so it is not a different page.
+ * Null means the URL can stay.
+ */
+export function canonicalBrowsePath(rawAisle: string | undefined, rawSort: string | undefined) {
+  const aisleRaw = rawAisle?.trim() ?? "";
+  const sortRaw = rawSort?.trim() ?? "";
+  const aisle = parseAisle(aisleRaw);
+  const aisleInvalid = aisleRaw !== "" && aisle == null;
+  const sortInvalid = sortRaw !== "" && sortRaw !== "name" && sortRaw !== "featured";
+  const sortRedundant = sortRaw === "featured";
+  if (!aisleInvalid && !sortInvalid && !sortRedundant) return null;
+  const sort: CatalogueSort = sortRaw === "name" ? "name" : "featured";
+  return productsBrowsePath(aisleInvalid ? null : aisle, sort);
+}
+
+/** Full products URL for the filters the page actually applies. Null when the request already matches. */
+export function canonicalProductPath(input: {
+  q: string;
+  openRaw: string;
+  openToday: boolean;
+  market: string;
+  marketRaw: string;
+  dayRaw: string;
+  day: number | null;
+  aisleRaw: string;
+  sortRaw: string;
+}) {
+  const aisle = parseAisle(input.aisleRaw);
+  const params = new URLSearchParams();
+  if (input.q) params.set("q", input.q);
+  if (input.openToday) params.set("open", "1");
+  if (input.market) params.set("market", input.market);
+  if (input.day != null) params.set("day", String(input.day));
+  if (!input.q && aisle) params.set("aisle", aisle);
+  if (!input.q && input.sortRaw === "name") params.set("sort", "name");
+  const query = params.toString();
+  const path = query ? `/products?${query}` : "/products";
+  const openDirty = input.openRaw !== "" && input.openRaw !== "1";
+  const dayDirty = input.dayRaw !== "" && input.day == null;
+  const marketDirty = input.marketRaw !== "" && input.market === "";
+  const browseDirty = !input.q && canonicalBrowsePath(input.aisleRaw, input.sortRaw) != null;
+  const searchDirty = Boolean(input.q && (input.aisleRaw || input.sortRaw));
+  if (!openDirty && !dayDirty && !marketDirty && !browseDirty && !searchDirty) return null;
+  return path;
+}
+
 export function aisleLabel(aisle: string) {
   if (aisle === BREAKFAST_ID) return "Breakfast";
   return FIND_CATEGORIES.find((category) => category.id === aisle)?.label ?? null;
@@ -104,7 +152,9 @@ export function liveFindPages(): CataloguePage[] {
   const labels = new Map<string, string>(
     FIND_CATEGORIES.map((category) => [category.id, category.label]),
   );
-  return FIND_PAGES.filter((page) => !findSlugRedirectsToProducts(page.slug)).map((page) => ({
+  return listedFindPages()
+    .filter((page) => !findSlugRedirectsToProducts(page.slug))
+    .map((page) => ({
     term: page.term,
     slug: page.slug,
     category: page.category,
