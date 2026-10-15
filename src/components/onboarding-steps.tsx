@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { normalizeUsername, usernameError } from "@/lib/username";
-import { marketListName } from "@/lib/listing-copy";
 import { cn } from "@/lib/utils";
 
 export type OnboardingMarket = {
@@ -238,7 +237,7 @@ export function OnboardingSteps({
                         className={cn("size-4 shrink-0 self-center", on ? "opacity-100" : "opacity-0")}
                       />
                       <span className="min-w-0 text-base font-medium">
-                        {marketListName(market.name, market.city)}
+                        {market.name}
                       </span>
                       <Hours
                         value={market.hours}

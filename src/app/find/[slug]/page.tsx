@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BackButton } from "@/components/back-button";
 import { JsonLd } from "@/components/json-ld";
+import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { SortableFindVendors } from "@/components/product-sort-list";
 import { FIND_PAGES, findPageBySlug } from "@/data/find-pages";
+import { listProductPhotos, productPhoto } from "@/lib/data/product-photos";
 import { findTitle, listFindVendors, pageIsAlcohol } from "@/lib/data/product-search";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { sortFindVendors, torontoWeekday } from "@/lib/product-sort";
@@ -46,7 +48,12 @@ export default async function FindProductPage({
   const title = findTitle(page.term, LAUNCH_CITY);
   const now = new Date();
   const today = torontoWeekday(now);
-  const vendors = sortFindVendors(await listFindVendors(page.matchSlugs), "next", today);
+  const [vendors, photos] = await Promise.all([
+    listFindVendors(page.matchSlugs),
+    listProductPhotos(),
+  ]);
+  const ordered = sortFindVendors(vendors, "next", today);
+  const photo = productPhoto(photos, page.slug, page.category);
   const alcohol = pageIsAlcohol(page.category);
 
   return (
@@ -55,7 +62,7 @@ export default async function FindProductPage({
         data={itemListJsonLd({
           name: title,
           path: `/find/${page.slug}`,
-          items: vendors.map((vendor) => ({
+          items: ordered.map((vendor) => ({
             name: vendor.name,
             path: `/vendors/${vendor.slug}`,
           })),
@@ -72,7 +79,10 @@ export default async function FindProductPage({
           Prices show when the vendor has added them.
         </p>
       )}
-      <SortableFindVendors vendors={vendors} today={today} />
+      {photo ? (
+        <ProductPhotoFrame name={page.term} photo={photo} className="mt-6 max-w-sm" />
+      ) : null}
+      <SortableFindVendors vendors={ordered} today={today} />
     </div>
   );
 }

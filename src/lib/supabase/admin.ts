@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { supabaseUrl } from "@/lib/supabase/env";
+import { fetchWithGatewayRetry } from "@/lib/supabase/gateway-fetch";
 
 function supabaseServiceRoleKey() {
   return process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
@@ -12,5 +13,6 @@ export function createServiceClient() {
   if (!url || !key) return null;
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: fetchWithGatewayRetry() },
   });
 }

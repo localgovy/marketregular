@@ -2,7 +2,6 @@ import { HoursRow } from "@/components/hours-row";
 import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
-import { marketListName } from "@/lib/listing-copy";
 import { VerifiedName } from "@/components/verified-stamp";
 import type { WeekListSlot } from "@/lib/upcoming";
 
@@ -13,7 +12,7 @@ export function WeekSlotRow({ slot }: { slot: WeekListSlot }) {
       name={
         <VerifiedName
           slug={slot.market.slug}
-          name={marketListName(slot.market.name, slot.market.city)}
+          name={slot.market.name}
         />
       }
       hours={slot.hours}

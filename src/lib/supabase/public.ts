@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
+import { fetchWithGatewayRetry } from "@/lib/supabase/gateway-fetch";
 
 /** Anon client for auth-adjacent reads that still use row policies, such as posts. Directory tables are not granted to this key. */
 export function createPublicSupabaseClient() {
@@ -8,5 +9,6 @@ export function createPublicSupabaseClient() {
   if (!url || !key) return null;
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: fetchWithGatewayRetry() },
   });
 }

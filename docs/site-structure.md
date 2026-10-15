@@ -91,7 +91,7 @@ Status words used below: **live**, **paused** (built, switched off), **redirect*
 | `/markets/day/[day]` | live | Everyone | One weekday. Slugs `sunday`…`saturday` | `marketsOnWeekday` |
 | `/markets/open-today` | live | Everyone | Open now, later today, already closed, tomorrow | Toronto clock |
 | `/markets/tag/[tag]` | live | Everyone | Category page. Vendor list capped at 48 when scope is both | `CATEGORIES` in `src/lib/landing.ts` |
-| `/products` | live | Everyone | Product search. Query `q`, `open=1`, `market`, `day`. Filtered URLs are noindex. Bare `/products` is indexable | `searchProducts`, `searchVendorsByName` |
+| `/products` | live | Everyone | Aisle browse and product search. Query `q`, `open=1`, `market`, `day`, `aisle`, `sort`. Filtered URLs are noindex. Bare `/products` is indexable | `searchProducts`, `searchVendorsByName`, `listProductPhotos` |
 | `/find/[slug]` | live | Everyone | Fixed product page. `dynamicParams = false`. Index only if at least 5 vendors | `FIND_PAGES` in `src/data/find-pages.ts` (100 pages) |
 | `/vendors/[slug]` | live | Everyone | Stall: markets, menu, reviews, save, claim CTA. Thin pages (name and halls only) are noindex, follow | `getVendorBySlug` |
 | `/events` | live | Everyone | Month grid and this week. Query `m=YYYY-MM`, `d` | Markets and schedules |
@@ -218,6 +218,8 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 
 **`product_synonyms`** — read by `search_products` (`term`, `canonical`, `category`). No `CREATE TABLE` in this repo. A specific word can point at a broader canonical (`sourdough` → `bread`). That path is separate from the general-term graph.
 
+**`product_photos`** — aisle tiles, find-page cards, and the products hero. `(subject, slug)` is the key. `subject` is `aisle`, `product`, or `hero`. `image_url` is null or a public object in the `product-photos` bucket, and the object name is `{subject}/{slug}.jpg|jpeg|png|webp`. Service role only. The seeder manual is `docs/product-photos.md`.
+
 **`menu_classifiers`** — allowed values. `slug` is `facet.value`. Facets are `kind`, `use`, `occasion`, `meal`, `ingredient`, `diet`. Bots insert values. They do not add facets.
 
 **`vendor_menu_classifier_assignments`** — `(menu_id, classifier_slug, source)`. Many rows per menu item. Cascade on menu delete.
@@ -230,7 +232,7 @@ If Supabase env is missing, `src/lib/data/catalog.ts` falls back to `src/lib/dat
 
 Service-role selects: `published_markets`, `published_vendors`, `published_schedules`, `published_stalls`, `published_menus`. Phone and email are not on these views. Contact goes through `get_listing_contact`. `published_menus` includes `menu_section` and `menu_section_order`. `can_buy` is currently `false`. Public stall reads use `MENU_PUBLIC` in `catalog.ts` (no `product_category`). If those section columns are not on the view yet, catalog probes once and falls back to the flat select so a deploy before the migration still builds. `StallMenu` keeps a flat receipt list when no item has a section; otherwise it groups under `h3` kickers, with unsectioned items last.
 
-Storage: `post-photos` (public read, authenticated upload under `{userId}/`, JPEG/PNG/WebP, 5 MB) and `listing-marks` (public read, service-role writes). Logos live at `vendors/{id}/{uuid}.{ext}` or `markets/{id}/`.
+Storage: `post-photos` (public read, authenticated upload under `{userId}/`, JPEG/PNG/WebP, 5 MB), `listing-marks` (public read, service-role writes), and `product-photos` (public read, service-role writes, JPEG/PNG/WebP, 5 MB). Logos live at `vendors/{id}/{uuid}.{ext}` or `markets/{id}/`. Product photos live at `aisle/{category-id}.{ext}`, `product/{find-slug}.{ext}`, and `hero/products.{ext}`.
 
 Extensions: PostGIS, `pg_trgm`, `pg_cron`. Schema `private` holds census refresh and slug-alias recording.
 
@@ -313,7 +315,7 @@ Market detail joins schedules, stalls, vendors, posts, and reviews. Contact phon
 
 ### Products and find pages
 
-Empty `/products` is chips to `/find/{slug}`, grouped by `FIND_CATEGORIES` (bread, sweets, prepared food, vegetables, fruit, meat, seafood, eggs, dairy, honey, maple, preserves, nuts, coffee and tea, drinks, alcohol). A query calls Postgres `search_products`, cached 60s, page size 40. Filters: selling today, market slug, weekday. Sorts: best match, next open, price, name. Name matches that are not already product hits show as vendors. Alcohol prices are hidden. A pickup filter is a comment only. It is not in the UI.
+Empty `/products` is an aisle page: six tiles, chips for the other aisles plus Breakfast, a find-page grid (featured or A–Z, six at a time), and a collapsed directory. Cards link to `/find/{slug}`. Slugs in `FIND_SLUGS_AT_PRODUCTS` stay in `FIND_PAGES` for search and are not linked, because they 308 back to `/products`. `?aisle=` and `?sort=name` filter that directory. A query calls Postgres `search_products`, cached 60s, page size 40, and replaces the aisle page with the vendor lists. Filters: selling today, market slug, weekday. Those need a query. Sorts on the results: best match, next open, price, name. Name matches that are not already product hits show as vendors. Alcohol prices are hidden. A pickup filter is a comment only. It is not in the UI. Photos come from `product_photos` when a row exists; otherwise the card is a paper plate. A product row wins over the aisle row.
 
 When the query is a `search_terms` row, that term is used whole (`sweet corn` stays corn). Otherwise the query is split left to right into the longest known phrases. Each term must match (AND). Classifiers on one term are alternatives (OR). Words that are not a term must appear in the item name. A query that matches no term stays on the name, synonym slug, category-only-when-the-query-is-the-category, and trigram path. A classifier hit may include a null `product_category`. Non-food categories do not expand. Name matches lead, then an exact `product_slug`, then classifier weight. Find pages still match exact slugs and do not read this graph.
 
@@ -487,7 +489,7 @@ Tag vocabulary for filters (not all of these have a landing page): `PRODUCT_TAGS
 
 ### SEO
 
-Sitemap (`src/app/sitemap.ts`, `publicSitemapEntries`, revalidate 1h): `/`, `/markets`, `/products`, day hub, open today, 7 days, every category, every find page, `/events`, `/feed`, `/about`, `/blog` and public posts, privacy, terms, each published market, each vendor that `vendorHasSubstance` would index (about, menu, feed, review count, phone, email, or a social/website link). Drops robots-disallowed paths and redirect sources.
+Sitemap (`src/app/sitemap.ts`, `publicSitemapEntries`, revalidate 1h): `/`, `/markets`, `/products`, day hub, open today, 7 days, every category, every find page that does not 308 to `/products`, `/events`, `/feed`, `/about`, `/blog` and public posts, privacy, terms, each published market, each vendor that `vendorHasSubstance` would index (about, menu, feed, review count, phone, email, or a social/website link). Drops robots-disallowed paths and redirect sources.
 
 Robots (`src/lib/robots-policy.ts`): allow `/`, `/markets`, `/vendors`. Disallow exact `/admin`, `/account`, `/vendor`, `/market`, `/auth`, `/onboarding`, `/saved`, `/kept` using `$` plus a trailing slash and `?`, so `/vendors` and `/markets` stay open. Login and signup stay crawlable and noindex.
 

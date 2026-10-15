@@ -3,14 +3,11 @@ import { ListingScore } from "@/components/listing-score";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
-import { marketListName } from "@/lib/listing-copy";
-
 type OpenMarket = {
   id: string;
   name: string;
   slug: string;
   hours: string;
-  city?: string;
   rating_avg?: number | null;
   review_count?: number;
 };
@@ -47,7 +44,7 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
                 name={
                   <VerifiedName
                     slug={market.slug}
-                    name={marketListName(market.name, market.city ?? "")}
+                    name={market.name}
                   />
                 }
                 hours={market.hours}

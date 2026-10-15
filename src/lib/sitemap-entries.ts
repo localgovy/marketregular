@@ -1,4 +1,5 @@
 import { FIND_PAGES } from "@/data/find-pages";
+import { findSlugRedirectsToProducts } from "@/data/find-redirects";
 import { isListingRedirectSource } from "@/data/listing-redirects";
 import { CATEGORIES, DAY_SLUGS } from "@/lib/landing";
 import { isRobotsDisallowed } from "@/lib/robots-policy";
@@ -70,7 +71,7 @@ export function publicSitemapEntries({
       changeFrequency: "weekly" as const,
       priority: 0.7,
     })),
-    ...FIND_PAGES.map((page) => ({
+    ...FIND_PAGES.filter((page) => !findSlugRedirectsToProducts(page.slug)).map((page) => ({
       path: `/find/${page.slug}`,
       changeFrequency: "weekly" as const,
       priority: 0.6,

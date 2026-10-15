@@ -161,13 +161,6 @@ export function marketPlaceLine(address: string | null | undefined, city: string
   return `${street} · ${town}`;
 }
 
-export function marketListName(name: string, city: string) {
-  const town = city.trim();
-  if (!town || town.toLowerCase() === LAUNCH_CITY.toLowerCase()) return name;
-  if (name.toLowerCase().includes(town.toLowerCase())) return name;
-  return `${name} · ${town}`;
-}
-
 /**
  * A qualifier wins over the city: for two floors of one market, "which floor" is the
  * thing that has to be visible in the SERP, and the city is already in the description.
