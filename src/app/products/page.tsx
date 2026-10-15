@@ -125,7 +125,7 @@ export default async function ProductsPage({
   const live = liveFindPages();
   const aisles = catalogueAisles(live);
   const heading = catalogueHeading(aisle);
-  const cards: CatalogueCard[] = sortCatalogue(filterCatalogue(live, aisle), sort).map((page) => {
+  const cards: CatalogueCard[] = sortCatalogue(filterCatalogue(live, aisle), sort, aisle).map((page) => {
     const photo = productPhoto(photos, page.slug, page.category);
     return {
       term: page.term,

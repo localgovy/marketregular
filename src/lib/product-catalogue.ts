@@ -193,12 +193,17 @@ export function filterCatalogue(pages: CataloguePage[], aisle: string | null) {
   return pages.filter((page) => page.category === aisle);
 }
 
-export function sortCatalogue(pages: CataloguePage[], sort: CatalogueSort) {
+/** First card in an aisle when the sort is featured. */
+const AISLE_FEATURED_LEADS: Partial<Record<string, string>> = {
+  "bread-and-bakery": "bread-toronto",
+};
+
+export function sortCatalogue(pages: CataloguePage[], sort: CatalogueSort, aisle: string | null = null) {
   if (sort === "name") {
     return [...pages].sort((a, b) => a.term.localeCompare(b.term, "en-CA"));
   }
   const rank = new Map<string, number>(FEATURED_PRODUCT_SLUGS.map((slug, index) => [slug, index]));
-  return [...pages].sort((a, b) => {
+  const sorted = [...pages].sort((a, b) => {
     const ai = rank.get(a.slug);
     const bi = rank.get(b.slug);
     if (ai != null && bi != null) return ai - bi;
@@ -206,6 +211,13 @@ export function sortCatalogue(pages: CataloguePage[], sort: CatalogueSort) {
     if (bi != null) return 1;
     return 0;
   });
+  const lead = aisle ? AISLE_FEATURED_LEADS[aisle] : undefined;
+  if (!lead) return sorted;
+  const index = sorted.findIndex((page) => page.slug === lead);
+  if (index <= 0) return sorted;
+  const [page] = sorted.splice(index, 1);
+  sorted.unshift(page);
+  return sorted;
 }
 
 export function catalogueHeading(aisle: string | null) {

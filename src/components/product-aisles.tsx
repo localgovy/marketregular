@@ -32,7 +32,7 @@ export function ProductAisles({
     <section id="aisles" className="scroll-mt-header mt-12 border-t border-border pt-6">
       <h2>Aisles</h2>
       <p className="mt-2 text-base text-muted-foreground">
-        A kind of food, then the stalls that list it.
+        Shop farmers&apos; markets by product instead, fuelled by your cravings
       </p>
       <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {featured.map((item) => {

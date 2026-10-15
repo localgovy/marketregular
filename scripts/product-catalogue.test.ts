@@ -31,6 +31,12 @@ test("featured and breakfast products are live find pages", () => {
   assert.equal(filterCatalogue(live, BREAKFAST_ID).length, BREAKFAST_SLUGS.length);
 });
 
+test("general bread leads the bakery aisle", () => {
+  const bakery = sortCatalogue(filterCatalogue(live, "bread-and-bakery"), "featured", "bread-and-bakery");
+  assert.equal(bakery[0]?.slug, "bread-toronto");
+  assert.equal(bakery[0]?.term, "General Bread");
+});
+
 test("featured order leads with sourdough and name order is alphabetical", () => {
   assert.equal(sortCatalogue(live, "featured")[0]?.slug, "sourdough-toronto");
   const named = sortCatalogue(live, "name").map((page) => page.term);

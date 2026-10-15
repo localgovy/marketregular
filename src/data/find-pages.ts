@@ -51,7 +51,7 @@ export const FIND_CATEGORIES = [
 ] as const;
 
 export const FIND_PAGES: FindPage[] = [
-  { term: "Bread", slug: "bread-toronto", category: "bread-and-bakery", matchSlugs: ["bread"], vendors: 55 },
+  { term: "General Bread", slug: "bread-toronto", category: "bread-and-bakery", matchSlugs: ["bread"], vendors: 55 },
   { term: "Sourdough", slug: "sourdough-toronto", category: "bread-and-bakery", matchSlugs: ["sourdough"], vendors: 39 },
   { term: "Bagels", slug: "bagels-toronto", category: "bread-and-bakery", matchSlugs: ["bagels"], vendors: 21 },
   { term: "Croissants", slug: "croissants-toronto", category: "bread-and-bakery", matchSlugs: ["croissants", "almond-croissant"], vendors: 23 },
