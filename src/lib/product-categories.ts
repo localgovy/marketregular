@@ -39,6 +39,37 @@ export const GOODS_CATEGORIES = [
 
 export const PET_FOOD_CATEGORY = "pet-food" satisfies ProductCategory;
 
+/** Older goods buckets a classifier find page can still list. */
+export const LEGACY_GOODS_CATEGORIES = [
+  "plants-and-flowers",
+  "body-care",
+  "candles-and-crafts",
+  "jewellery-and-accessories",
+  "other",
+] as const;
+
+export type FindClassifierScope = "food" | "goods" | "any";
+
+/** Categories a find page may list. Pet food is never included. */
+export function categoriesForFindScope(scope: FindClassifierScope | undefined) {
+  if (scope === "goods") {
+    return {
+      categories: [...GOODS_CATEGORIES, ...LEGACY_GOODS_CATEGORIES],
+      includeNull: true,
+    };
+  }
+  if (scope === "any") {
+    return {
+      categories: [...FOOD_CATEGORIES, ...GOODS_CATEGORIES, ...LEGACY_GOODS_CATEGORIES],
+      includeNull: true,
+    };
+  }
+  return {
+    categories: [...FOOD_CATEGORIES],
+    includeNull: false,
+  };
+}
+
 const PRODUCT_SEARCH_CATEGORY_SET = new Set<string>(PRODUCT_CATEGORIES);
 
 /** Label for a stored category slug. */

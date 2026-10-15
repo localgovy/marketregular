@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { FIND_CATEGORIES, FIND_PAGES, findPagesByCategory } from "../src/data/find-pages.ts";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { FIND_CATEGORIES, FIND_PAGES, findPagesByCategory, listedFindPages } from "../src/data/find-pages.ts";
+import { COUNTRY_TAGS } from "../src/lib/constants.ts";
 import {
+  categoriesForFindScope,
   FOOD_CATEGORIES,
   GOODS_CATEGORIES,
   menuCategoryLabel,
@@ -39,14 +44,24 @@ test("new categories and pet-food have labels and are searchable", () => {
   assert.equal(menuInProductSearch("not-a-category"), false);
 });
 
-test("find pages stay on people-food slugs; new groups hide when empty", () => {
+test("find pages stay off pet food; empty groups stay hidden", () => {
   assert.equal(PET_FOOD_CATEGORY, "pet-food");
   assert.equal((FOOD_CATEGORIES as readonly string[]).includes("pet-food"), false);
   assert.ok((FOOD_CATEGORIES as readonly string[]).includes("spices-and-seasonings"));
   assert.ok((FOOD_CATEGORIES as readonly string[]).includes("oils-and-vinegars"));
   assert.ok((GOODS_CATEGORIES as readonly string[]).includes("clothing-and-accessories"));
-  assert.ok(FIND_PAGES.every((page) => (FOOD_CATEGORIES as readonly string[]).includes(page.category)));
+  const browseGroups = new Set<string>([
+    ...FOOD_CATEGORIES,
+    ...GOODS_CATEGORIES,
+    "cuisine",
+    "production",
+    "format",
+  ]);
+  assert.ok(FIND_PAGES.every((page) => browseGroups.has(page.category)));
   assert.ok(FIND_PAGES.every((page) => page.category !== "pet-food"));
+  assert.ok(FIND_PAGES.every((page) => page.vendors > 0));
+  const slugs = FIND_PAGES.map((page) => page.slug);
+  assert.equal(new Set(slugs).size, slugs.length);
   assert.ok(FIND_CATEGORIES.some((category) => category.id === "pet-food" && category.label === "Pet Food"));
   assert.ok(
     FIND_CATEGORIES.some(
@@ -55,6 +70,67 @@ test("find pages stay on people-food slugs; new groups hide when empty", () => {
   );
   const shown = findPagesByCategory().map((category) => category.id);
   assert.equal(shown.includes("pet-food"), false);
-  assert.equal(shown.includes("clothing-and-accessories"), false);
+  for (const id of [
+    "clothing-and-accessories",
+    "home-and-kitchen",
+    "art-and-stationery",
+    "toys-and-kids",
+    "health-and-wellness",
+    "services",
+    "garden-and-outdoor",
+    "spices-and-seasonings",
+    "oils-and-vinegars",
+    "cuisine",
+    "production",
+    "format",
+  ]) {
+    assert.ok(shown.includes(id), id);
+  }
   assert.ok(shown.includes("preserves-and-sauces"));
+  assert.equal(listedFindPages([{ ...FIND_PAGES[0]!, vendors: 0 }]).length, 0);
+});
+
+test("classifier find pages map kinds, origin, production, and format", () => {
+  const dumplings = FIND_PAGES.find((page) => page.slug === "dumplings-toronto");
+  assert.deepEqual(dumplings?.matchClassifiers, ["kind.dumplings"]);
+  assert.equal(dumplings?.classifierScope, "food");
+  const indian = FIND_PAGES.find((page) => page.slug === "indian-food-toronto");
+  assert.deepEqual(indian?.matchClassifiers, ["origin.indian"]);
+  assert.equal(indian?.classifierScope, "food");
+  const organic = FIND_PAGES.find((page) => page.slug === "organic-toronto");
+  assert.deepEqual(organic?.matchClassifiers, ["production.organic"]);
+  const frozen = FIND_PAGES.find((page) => page.slug === "frozen-toronto");
+  assert.deepEqual(frozen?.matchClassifiers, ["format.frozen"]);
+  const giftCards = FIND_PAGES.find((page) => page.slug === "gift-cards-toronto");
+  assert.equal(giftCards?.category, "services");
+  assert.equal(giftCards?.classifierScope, "goods");
+  const food = categoriesForFindScope("food");
+  assert.equal(food.includeNull, false);
+  assert.equal(food.categories.includes("pet-food"), false);
+  assert.equal(food.categories.includes("prepared-foods"), true);
+  const goods = categoriesForFindScope("goods");
+  assert.equal(goods.includeNull, true);
+  assert.equal(goods.categories.includes("pet-food"), false);
+  assert.equal(goods.categories.includes("clothing-and-accessories"), true);
+  assert.equal(goods.categories.includes("prepared-foods"), false);
+  const any = categoriesForFindScope("any");
+  assert.equal(any.categories.includes("pet-food"), false);
+  assert.equal(any.categories.includes("prepared-foods"), true);
+  assert.equal(any.categories.includes("services"), true);
+});
+
+test("the search migration covers cuisine tags and gift-card phrases", () => {
+  const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const sql = readFileSync(
+    join(root, "supabase/migrations/20261015203000_search_cuisine_and_goods_terms.sql"),
+    "utf8",
+  );
+  for (const tag of COUNTRY_TAGS) {
+    assert.ok(sql.includes(`'${tag}'`), tag);
+  }
+  assert.match(sql, /'gift card'/);
+  assert.match(sql, /'gift cards'/);
+  assert.match(sql, /kind\.gift-cards/);
+  assert.match(sql, /security invoker/);
+  assert.match(sql, /grant execute on function public\.search_products/);
 });

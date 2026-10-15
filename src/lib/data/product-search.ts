@@ -16,7 +16,11 @@ import { hallDayHours } from "@/lib/schedule";
 import { stallHall } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { FOOD_CATEGORIES, PET_FOOD_CATEGORY } from "@/lib/product-categories";
+import {
+  categoriesForFindScope,
+  PET_FOOD_CATEGORY,
+  type FindClassifierScope,
+} from "@/lib/product-categories";
 import type { MarketSchedule } from "@/types/database";
 
 export {
@@ -57,11 +61,18 @@ function reviewFields(row: { rating_avg?: number | null; review_count?: number }
 }
 
 type MenuRow = {
+  id?: string;
   name: string;
   product_category: string | null;
   product_slug: string | null;
   price_cents: number | null;
   vendor_id: string;
+};
+
+export type FindPageQuery = {
+  matchSlugs: readonly string[];
+  matchClassifiers?: readonly string[];
+  classifierScope?: FindClassifierScope;
 };
 
 type RpcRow = {
@@ -87,37 +98,120 @@ export function normalizeSearchQuery(q: string) {
   return q.trim().replace(/\s+/g, " ").slice(0, SEARCH_QUERY_MAX);
 }
 
-async function menuRows(slugs: string[]): Promise<MenuRow[]> {
+const MENU_FIND_SELECT = "id, name, product_category, product_slug, price_cents, vendor_id";
+
+function keepFindRow(row: MenuRow) {
+  return row.product_category !== PET_FOOD_CATEGORY;
+}
+
+async function menuRows(
+  slugs: readonly string[],
+  categories: readonly string[],
+  includeNull: boolean,
+): Promise<MenuRow[]> {
   const supabase = createServiceClient();
   if (!supabase || slugs.length === 0) return [];
   const rows: MenuRow[] = [];
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from("published_menus")
-      .select("name, product_category, product_slug, price_cents, vendor_id")
-      .in("product_slug", slugs)
-      .in("product_category", [...FOOD_CATEGORIES])
+      .select(MENU_FIND_SELECT)
+      .in("product_slug", [...slugs])
+      .in("product_category", [...categories])
       .order("id")
       .range(from, from + 999);
     if (error) throw new Error("Could not load this product");
     assertPublicSearchPayload(data);
-    const chunk = (data ?? []) as MenuRow[];
-    rows.push(...chunk);
-    if (chunk.length < 1000) return rows;
+    rows.push(...((data ?? []) as MenuRow[]).filter(keepFindRow));
+    if ((data ?? []).length < 1000) break;
   }
+  if (!includeNull) return rows;
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from("published_menus")
+      .select(MENU_FIND_SELECT)
+      .in("product_slug", [...slugs])
+      .is("product_category", null)
+      .order("id")
+      .range(from, from + 999);
+    if (error) throw new Error("Could not load this product");
+    assertPublicSearchPayload(data);
+    rows.push(...((data ?? []) as MenuRow[]).filter(keepFindRow));
+    if ((data ?? []).length < 1000) break;
+  }
+  return rows;
+}
+
+async function menusForClassifiers(
+  classifiers: readonly string[],
+  categories: readonly string[],
+  includeNull: boolean,
+): Promise<MenuRow[]> {
+  const supabase = createServiceClient();
+  if (!supabase || classifiers.length === 0) return [];
+  const ids: string[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from("vendor_menu_classifier_assignments")
+      .select("menu_id, classifier_slug")
+      .in("classifier_slug", [...classifiers])
+      .order("menu_id")
+      .order("classifier_slug")
+      .range(from, from + 999);
+    if (error) throw new Error("Could not load this product");
+    const chunk = data ?? [];
+    for (const row of chunk) ids.push(row.menu_id as string);
+    if (chunk.length < 1000) break;
+  }
+  const unique = [...new Set(ids)];
+  const rows: MenuRow[] = [];
+  for (let index = 0; index < unique.length; index += 150) {
+    const slice = unique.slice(index, index + 150);
+    const { data, error } = await supabase
+      .from("published_menus")
+      .select(MENU_FIND_SELECT)
+      .in("id", slice)
+      .in("product_category", [...categories]);
+    if (error) throw new Error("Could not load this product");
+    assertPublicSearchPayload(data);
+    rows.push(...((data ?? []) as MenuRow[]).filter(keepFindRow));
+    if (!includeNull) continue;
+    const nulls = await supabase
+      .from("published_menus")
+      .select(MENU_FIND_SELECT)
+      .in("id", slice)
+      .is("product_category", null);
+    if (nulls.error) throw new Error("Could not load this product");
+    assertPublicSearchPayload(nulls.data);
+    rows.push(...((nulls.data ?? []) as MenuRow[]).filter(keepFindRow));
+  }
+  return rows;
+}
+
+function dedupeMenus(rows: MenuRow[]) {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key = row.id ?? `${row.vendor_id}\0${row.name}\0${row.product_slug ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export const listFindVendors = cache(async function listFindVendors(
-  matchSlugs: string[],
+  page: FindPageQuery,
   now = new Date(),
 ): Promise<FindVendor[]> {
-  const [menus, vendors, stalls, markets, schedules] = await Promise.all([
-    menuRows(matchSlugs),
+  const scope = categoriesForFindScope(page.classifierScope);
+  const [slugRows, classifierRows, vendors, stalls, markets, schedules] = await Promise.all([
+    menuRows(page.matchSlugs, scope.categories, scope.includeNull),
+    menusForClassifiers(page.matchClassifiers ?? [], scope.categories, scope.includeNull),
     listVendors(),
     listStalls(),
     listMarkets(),
     listSchedules(),
   ]);
+  const menus = dedupeMenus([...slugRows, ...classifierRows]);
   const vendorById = new Map(vendors.map((vendor) => [vendor.id, vendor]));
   const schedulesByMarket = new Map<string, MarketSchedule[]>();
   for (const row of schedules) {
@@ -210,7 +304,7 @@ const loadCachedSearchRows = unstable_cache(
     assertPublicSearchPayload(data);
     return (data ?? []) as RpcRow[];
   },
-  ["search-products-v3"],
+  ["search-products-v4"],
   { revalidate: 60 },
 );
 
