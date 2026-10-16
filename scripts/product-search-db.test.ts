@@ -7,7 +7,7 @@ import { PGlite } from "@electric-sql/pglite";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
-const migration = "supabase/migrations/20261015210819_search_null_category_name.sql";
+const migration = "supabase/migrations/20261016192256_search_accent_and_alcohol.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -49,7 +49,7 @@ function extractFunction(name: string, file = constraints) {
   const lowered = sql.toLowerCase();
   const signature = `create or replace function public.${name.toLowerCase()}`;
   const createAt = lowered.indexOf(signature);
-  if (createAt < 0) throw new Error(`Missing ${name} in ${migration}`);
+  if (createAt < 0) throw new Error(`Missing ${name} in ${file}`);
   const header = sql.slice(createAt);
   const asMatch = header.match(/\bas\s+(\$[A-Za-z0-9_]*\$)/);
   if (!asMatch || asMatch.index == null) throw new Error(`Missing body for ${name}`);
@@ -148,10 +148,23 @@ create operator % (
   procedure = trgm_like
 );
 
+create function public.fold_search_text(input text)
+returns text
+language sql
+immutable
+strict
+as $$
+  select translate(
+    lower(input),
+    'ÀÁÂÃÄÅàáâãäåÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖòóôõöÙÚÛÜùúûüÝŸýÿÑñÇç',
+    'AAAAAAaaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuYYyyNnCc'
+  )
+$$;
+
 ${extractThrough("alter table public.vendor_menus")}
 ${extractThrough("alter table public.menu_classifiers")}
-${extractFunction("search_term_match")}
-${extractFunction("search_query_parts")}
+${extractFunction("search_term_match", migration)}
+${extractFunction("search_query_parts", migration)}
 ${extractFunction("search_products", migration)}
 `;
 
@@ -553,14 +566,20 @@ test("cuisine search uses vendor tags under origin tags and skips pet food", asy
   assert.ok(middleFood.some((row) => row.item_name === "Hummus"));
 });
 
-test("the null-category migration still gates pet food and keeps trigram matching", () => {
+test("the search migration keeps null-category matches, pet food, trigram, accents, and the alcohol gate", () => {
   const sql = readFileSync(join(root, migration), "utf8");
   assert.match(sql, /vm\.product_category is null\s+and match\.existing/);
   assert.match(sql, /when vm\.product_category is null then 0\.01/);
   assert.match(sql, /vm\.product_category = 'pet-food'/);
-  assert.match(sql, /similarity\(lower\(vm\.name\), lower\(clock\.query\)\) >= 0\.45/);
+  assert.match(sql, /vm\.product_category = 'alcohol'/);
+  assert.match(sql, /alcohol_query\.allow/);
+  assert.match(sql, /vm\.product_category is distinct from 'alcohol'/);
+  assert.match(sql, /public\.fold_search_text\(vm\.name\) % clock\.query/);
+  assert.match(sql, /similarity\(public\.fold_search_text\(vm\.name\), clock\.query\) >= 0\.45/);
   assert.match(sql, /security invoker/);
   assert.match(sql, /grant execute on function public\.search_products/);
+  assert.match(sql, /grant execute on function public\.fold_search_text/);
+  assert.doesNotMatch(sql, /security definer/i);
 });
 
 test("uncategorized published items match by name and rank under categorized rows", async () => {
@@ -723,4 +742,190 @@ test("uncategorized published items match by name and rank under categorized row
     fuzzy.some((row) => row.product_category === "pet-food"),
     false,
   );
+});
+
+test("accent folding matches rose, creme fraiche, and jalapeno either way", async () => {
+  const db = await database();
+  await db.exec(`
+    insert into public.search_terms (term) values
+      ('rosé'),
+      ('roses'),
+      ('jalapenos');
+    insert into public.search_term_classifiers (term, classifier_slug, weight) values
+      ('rosé', 'kind.rose-wine', 3),
+      ('roses', 'kind.cut-flowers', 3),
+      ('jalapenos', 'kind.hot-peppers', 3);
+  `);
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category, product_slug) values
+      ('7a7a7a7a-7a7a-47a7-87a7-7a7a7a7a7a7a', $1, '2024 Rosé', 'alcohol', 'wine'),
+      ('7b7b7b7b-7b7b-47b7-87b7-7b7b7b7b7b7b', $1, '2024 Rose', 'alcohol', 'wine'),
+      ('7c7c7c7c-7c7c-47c7-87c7-7c7c7c7c7c7c', $1, 'Crème Fraîche', 'cheese-and-dairy', null),
+      ('7d7d7d7d-7d7d-47d7-87d7-7d7d7d7d7d7d', $1, 'Creme Fraiche', 'cheese-and-dairy', null),
+      ('7e7e7e7e-7e7e-47e7-87e7-7e7e7e7e7e7e', $1, 'Crème Fraîche Spirit', 'alcohol', null),
+      ('8a8a8a8a-8a8a-48a8-88a8-8a8a8a8a8a8a', $1, 'Jalapeño Poppers', 'prepared-foods', null),
+      ('8b8b8b8b-8b8b-48b8-88b8-8b8b8b8b8b8b', $1, 'Jalapeno Salsa', 'preserves-and-sauces', null),
+      ('8c8c8c8c-8c8c-48c8-88c8-8c8c8c8c8c8c', $1, 'Roses', 'plants-and-flowers', 'flowers')`,
+    [VENDOR],
+  );
+  await db.exec(`
+    insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values
+      ('7a7a7a7a-7a7a-47a7-87a7-7a7a7a7a7a7a', 'kind.rose-wine'),
+      ('8a8a8a8a-8a8a-48a8-88a8-8a8a8a8a8a8a', 'kind.hot-peppers'),
+      ('8c8c8c8c-8c8c-48c8-88c8-8c8c8c8c8c8c', 'kind.cut-flowers');
+  `);
+
+  const roseParts = await db.query<PartRow>("select * from public.search_query_parts('rose')");
+  assert.equal(roseParts.rows[0]?.part_kind, "term");
+  assert.equal(roseParts.rows[0]?.part_value, "rosé");
+  const accentParts = await db.query<PartRow>("select * from public.search_query_parts('rosé')");
+  assert.equal(accentParts.rows[0]?.part_value, "rosé");
+  const jalaParts = await db.query<PartRow>("select * from public.search_query_parts('jalapeño')");
+  assert.equal(jalaParts.rows[0]?.part_kind, "term");
+  assert.equal(jalaParts.rows[0]?.part_value, "jalapenos");
+  const cremeParts = await db.query<PartRow>(
+    "select part_kind, part_value, part_ord from public.search_query_parts('crème fraîche') order by part_ord",
+  );
+  assert.deepEqual(
+    cremeParts.rows.map((row) => row.part_value),
+    ["creme", "fraiche"],
+  );
+
+  for (const query of ["rosé", "rose"]) {
+    const rows = await search(db, query);
+    assert.ok(rows.some((row) => row.item_name === "2024 Rosé" && row.product_category === "alcohol"));
+    assert.ok(rows.some((row) => row.item_name === "2024 Rose" && row.product_category === "alcohol"));
+  }
+
+  for (const query of ["crème fraîche", "creme fraiche"]) {
+    const rows = await search(db, query);
+    assert.ok(rows.some((row) => row.item_name === "Crème Fraîche" && row.product_category === "cheese-and-dairy"));
+    assert.ok(rows.some((row) => row.item_name === "Creme Fraiche" && row.product_category === "cheese-and-dairy"));
+    assert.equal(
+      rows.some((row) => row.product_category === "alcohol"),
+      false,
+    );
+  }
+
+  for (const query of ["jalapeño", "jalapeno"]) {
+    const rows = await search(db, query);
+    assert.ok(rows.some((row) => row.item_name === "Jalapeño Poppers"));
+    assert.ok(rows.some((row) => row.item_name === "Jalapeno Salsa"));
+  }
+
+  const roses = await search(db, "roses");
+  assert.ok(roses.some((row) => row.item_name === "Roses" && row.product_category === "plants-and-flowers"));
+  assert.equal(
+    roses.some((row) => row.product_category === "alcohol"),
+    false,
+  );
+});
+
+test("alcohol stays out of food searches and alcohol words still match", async () => {
+  const db = await database();
+  await db.exec(`
+    insert into public.search_terms (term) values
+      ('pumpkin pie'),
+      ('muffins'),
+      ('wine'),
+      ('cider'),
+      ('gin'),
+      ('cabernet');
+    insert into public.search_term_classifiers (term, classifier_slug, weight) values
+      ('pumpkin pie', 'kind.pumpkin-pie', 3),
+      ('muffins', 'kind.muffins', 3),
+      ('wine', 'kind.wine', 3),
+      ('wine', 'kind.red-wine', 2),
+      ('cider', 'kind.hard-cider', 3),
+      ('gin', 'kind.gin', 3),
+      ('cabernet', 'kind.red-wine', 3);
+  `);
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category, product_slug) values
+      ('8d8d8d8d-8d8d-48d8-88d8-8d8d8d8d8d8d', $1, 'Pumpkin Pie', 'alcohol', null),
+      ('8e8e8e8e-8e8e-48e8-88e8-8e8e8e8e8e8e', $1, 'Blueberry Muffin', 'alcohol', null),
+      ('9a9a9a9a-9a9a-49a9-89a9-9a9a9a9a9a9a', $1, 'Blueberry muffin', 'bread-and-bakery', 'muffins'),
+      ('9b9b9b9b-9b9b-49b9-89b9-9b9b9b9b9b9b', $1, 'Dry Cider', 'alcohol', null),
+      ('9c9c9c9c-9c9c-49c9-89c9-9c9c9c9c9c9c', $1, 'Dry Gin', 'alcohol', null),
+      ('9d9d9d9d-9d9d-49d9-89d9-9d9d9d9d9d9d', $1, 'House Wine', 'alcohol', 'wine'),
+      ('9e9e9e9e-9e9e-49e9-89e9-9e9e9e9e9e9e', $1, 'Corn Moonshine', 'alcohol', null),
+      ('a1a1a1a1-a1a1-4a11-8a11-a1a1a1a1a1a1', $1, 'Berry Seltzer', 'alcohol', null)`,
+    [VENDOR],
+  );
+  await db.exec(`
+    insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values
+      ('9b9b9b9b-9b9b-49b9-89b9-9b9b9b9b9b9b', 'kind.hard-cider'),
+      ('9c9c9c9c-9c9c-49c9-89c9-9c9c9c9c9c9c', 'kind.gin'),
+      ('9d9d9d9d-9d9d-49d9-89d9-9d9d9d9d9d9d', 'kind.wine');
+  `);
+
+  const pumpkin = await search(db, "pumpkin pie");
+  assert.ok(pumpkin.some((row) => row.item_name === "Pumpkin pie" && row.product_category === "pies-and-sweets"));
+  assert.equal(
+    pumpkin.some((row) => row.product_category === "alcohol"),
+    false,
+  );
+  assert.equal(
+    pumpkin.some((row) => row.product_category === "pet-food"),
+    false,
+  );
+
+  const muffin = await search(db, "blueberry muffin");
+  assert.ok(muffin.some((row) => row.item_name === "Blueberry muffin" && row.product_category === "bread-and-bakery"));
+  assert.equal(
+    muffin.some((row) => row.item_name === "Blueberry Muffin" && row.product_category === "alcohol"),
+    false,
+  );
+
+  const cider = await search(db, "cider");
+  assert.ok(cider.some((row) => row.item_name === "Dry Cider" && row.product_category === "alcohol"));
+  const gin = await search(db, "gin");
+  assert.ok(gin.some((row) => row.item_name === "Dry Gin" && row.product_category === "alcohol"));
+  const wine = await search(db, "wine");
+  assert.ok(wine.some((row) => row.item_name === "House Wine" && row.product_category === "alcohol"));
+  assert.ok(wine.some((row) => row.item_name === "Baco Noir" && row.product_category === "alcohol"));
+  assert.equal(
+    wine.some((row) => row.product_category === "pet-food"),
+    false,
+  );
+
+  const moonshine = await search(db, "moonshine");
+  assert.ok(moonshine.some((row) => row.item_name === "Corn Moonshine" && row.product_category === "alcohol"));
+  const seltzer = await search(db, "seltzer");
+  assert.ok(seltzer.some((row) => row.item_name === "Berry Seltzer" && row.product_category === "alcohol"));
+
+  const cabernet = await search(db, "cabernet");
+  assert.ok(cabernet.some((row) => row.item_name === "Cabernet Franc" && row.product_category === "alcohol"));
+});
+
+test("pet food, null-category names, rings, dumplings, and turkey still hold", async () => {
+  const db = await database();
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category, product_slug) values
+      ('b1b1b1b1-b1b1-41b1-81b1-b1b1b1b1b1b1', $1, 'Taro Milk Tea', null, null),
+      ('b2b2b2b2-b2b2-41b2-81b2-b2b2b2b2b2b2', $1, 'Pork dumplings', null, null)`,
+    [VENDOR],
+  );
+
+  const turkey = await search(db, "turkey");
+  assert.ok(turkey.some((row) => row.item_name === "Heritage turkey"));
+  assert.equal(
+    turkey.some((row) => row.product_category === "pet-food"),
+    false,
+  );
+
+  const rings = await search(db, "rings");
+  assert.ok(rings.some((row) => row.item_name === "Silver band"));
+  assert.equal(indexOf(rings, "Onion rings"), -1);
+
+  const dumpling = await search(db, "dumpling");
+  assert.ok(dumpling.some((row) => row.item_name === "Pork dumplings" && row.product_category == null));
+  const dumplings = await search(db, "dumplings");
+  assert.ok(dumplings.some((row) => row.item_name === "Pork dumplings" && row.product_category == null));
+
+  const taro = await search(db, "Taro Milk Tea");
+  assert.ok(taro.some((row) => row.item_name === "Taro Milk Tea" && row.product_category == null));
+
+  const dogTreats = await search(db, "dog treats");
+  assert.ok(dogTreats.some((row) => row.product_category === "pet-food"));
 });
