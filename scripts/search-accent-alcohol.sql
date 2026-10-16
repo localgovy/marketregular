@@ -1,11 +1,13 @@
--- Production checks for accent-insensitive search_products and the alcohol gate.
--- Run after 20261016192256_search_accent_and_alcohol.sql. Read-only except the
+-- Production checks for accent-insensitive search and the rose/alcohol split.
+-- Run after 20261016195249_rose_keeps_flower_meaning.sql. Read-only except the
 -- exception this block raises when a check fails.
 
 do $$
 declare
   rose_from_plain int;
   rose_from_accent int;
+  rose_flowers int;
+  rose_wine_alcohol int;
   cab_plain_from_plain int;
   cab_plain_from_accent int;
   cab_accent_from_plain int;
@@ -34,13 +36,20 @@ declare
 begin
   select count(*) into rose_from_plain
   from public.search_products('rose')
-  where item_name ~ 'Rosé'
-    and product_category = 'alcohol';
+  where product_category = 'alcohol';
 
   select count(*) into rose_from_accent
   from public.search_products('rosé')
   where item_name ~ 'Rosé'
     and product_category = 'alcohol';
+
+  select count(*) into rose_flowers
+  from public.search_products('rose')
+  where product_category = 'plants-and-flowers';
+
+  select count(*) into rose_wine_alcohol
+  from public.search_products('rose wine')
+  where product_category = 'alcohol';
 
   select count(*) into cab_plain_from_plain
   from public.search_products('cabernet rose')
@@ -144,8 +153,9 @@ begin
   from public.search_products('rings')
   where product_category = 'jewellery-and-accessories';
 
-  if rose_from_plain < 1 or rose_from_accent < 1 then
-    raise exception 'rose/rosé did not return accented wine (plain %, accent %)', rose_from_plain, rose_from_accent;
+  if rose_from_plain <> 0 or rose_flowers < 1 or rose_from_accent < 1 or rose_wine_alcohol < 1 then
+    raise exception 'rose meaning drifted (plain alcohol %, flowers %, rosé alcohol %, rose wine alcohol %)',
+      rose_from_plain, rose_flowers, rose_from_accent, rose_wine_alcohol;
   end if;
   if cab_plain_from_plain < 1 or cab_plain_from_accent < 1 or cab_accent_from_plain < 1 or cab_accent_from_accent < 1 then
     raise exception 'cabernet rose/rosé did not cross spellings (plain->plain %, accent->plain %, plain->accent %, accent->accent %)',

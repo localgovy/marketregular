@@ -7,7 +7,7 @@ import { PGlite } from "@electric-sql/pglite";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
-const migration = "supabase/migrations/20261016192256_search_accent_and_alcohol.sql";
+const migration = "supabase/migrations/20261016195249_rose_keeps_flower_meaning.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -163,6 +163,8 @@ $$;
 
 ${extractThrough("alter table public.vendor_menus")}
 ${extractThrough("alter table public.menu_classifiers")}
+${extractFunction("search_term_is_alcohol", migration)}
+${extractFunction("search_alcohol_term_hit", migration)}
 ${extractFunction("search_term_match", migration)}
 ${extractFunction("search_query_parts", migration)}
 ${extractFunction("search_products", migration)}
@@ -574,11 +576,12 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.match(sql, /vm\.product_category = 'alcohol'/);
   assert.match(sql, /alcohol_query\.allow/);
   assert.match(sql, /vm\.product_category is distinct from 'alcohol'/);
-  assert.match(sql, /public\.fold_search_text\(vm\.name\) % clock\.query/);
-  assert.match(sql, /similarity\(public\.fold_search_text\(vm\.name\), clock\.query\) >= 0\.45/);
+  assert.match(sql, /public\.fold_search_text\(vm\.name\) % public\.fold_search_text\(clock\.query\)/);
+  assert.match(sql, /similarity\(public\.fold_search_text\(vm\.name\), public\.fold_search_text\(clock\.query\)\) >= 0\.45/);
+  assert.match(sql, /not hits\.term_plain/);
+  assert.match(sql, /search_alcohol_term_hit/);
   assert.match(sql, /security invoker/);
   assert.match(sql, /grant execute on function public\.search_products/);
-  assert.match(sql, /grant execute on function public\.fold_search_text/);
   assert.doesNotMatch(sql, /security definer/i);
 });
 
@@ -750,10 +753,12 @@ test("accent folding matches rose, creme fraiche, and jalapeno either way", asyn
     insert into public.search_terms (term) values
       ('rosé'),
       ('roses'),
+      ('rose wine'),
       ('jalapenos');
     insert into public.search_term_classifiers (term, classifier_slug, weight) values
       ('rosé', 'kind.rose-wine', 3),
       ('roses', 'kind.cut-flowers', 3),
+      ('rose wine', 'kind.rose-wine', 3),
       ('jalapenos', 'kind.hot-peppers', 3);
   `);
   await db.query(
@@ -777,9 +782,12 @@ test("accent folding matches rose, creme fraiche, and jalapeno either way", asyn
 
   const roseParts = await db.query<PartRow>("select * from public.search_query_parts('rose')");
   assert.equal(roseParts.rows[0]?.part_kind, "term");
-  assert.equal(roseParts.rows[0]?.part_value, "rosé");
+  assert.equal(roseParts.rows[0]?.part_value, "roses");
   const accentParts = await db.query<PartRow>("select * from public.search_query_parts('rosé')");
   assert.equal(accentParts.rows[0]?.part_value, "rosé");
+  const roseWineParts = await db.query<PartRow>("select * from public.search_query_parts('rose wine')");
+  assert.equal(roseWineParts.rows[0]?.part_kind, "term");
+  assert.equal(roseWineParts.rows[0]?.part_value, "rose wine");
   const jalaParts = await db.query<PartRow>("select * from public.search_query_parts('jalapeño')");
   assert.equal(jalaParts.rows[0]?.part_kind, "term");
   assert.equal(jalaParts.rows[0]?.part_value, "jalapenos");
@@ -788,14 +796,23 @@ test("accent folding matches rose, creme fraiche, and jalapeno either way", asyn
   );
   assert.deepEqual(
     cremeParts.rows.map((row) => row.part_value),
-    ["creme", "fraiche"],
+    ["crème", "fraîche"],
   );
 
-  for (const query of ["rosé", "rose"]) {
-    const rows = await search(db, query);
-    assert.ok(rows.some((row) => row.item_name === "2024 Rosé" && row.product_category === "alcohol"));
-    assert.ok(rows.some((row) => row.item_name === "2024 Rose" && row.product_category === "alcohol"));
-  }
+  const plainRose = await search(db, "rose");
+  assert.ok(plainRose.some((row) => row.item_name === "Roses" && row.product_category === "plants-and-flowers"));
+  assert.equal(
+    plainRose.some((row) => row.product_category === "alcohol"),
+    false,
+  );
+
+  const accentRose = await search(db, "rosé");
+  assert.ok(accentRose.some((row) => row.item_name === "2024 Rosé" && row.product_category === "alcohol"));
+  assert.ok(accentRose.some((row) => row.item_name === "2024 Rose" && row.product_category === "alcohol"));
+
+  const roseWine = await search(db, "rose wine");
+  assert.ok(roseWine.some((row) => row.item_name === "2024 Rosé" && row.product_category === "alcohol"));
+  assert.ok(roseWine.some((row) => row.product_category === "alcohol"));
 
   for (const query of ["crème fraîche", "creme fraiche"]) {
     const rows = await search(db, query);
