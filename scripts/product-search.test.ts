@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { FIND_CATEGORIES, FIND_PAGES, findPagesByCategory, listedFindPages } from "../src/data/find-pages.ts";
 import { COUNTRY_TAGS } from "../src/lib/constants.ts";
 import {
+  BABY_GOODS_CATEGORY,
   categoriesForFindScope,
   FOOD_CATEGORIES,
   GOODS_CATEGORIES,
@@ -30,6 +31,7 @@ test("new categories and pet-food have labels and are searchable", () => {
     "garden-and-outdoor",
     "spices-and-seasonings",
     "oils-and-vinegars",
+    "baby-goods",
   ] as const) {
     assert.ok(PRODUCT_CATEGORIES.includes(id));
     assert.equal(menuInProductSearch(id), true);
@@ -37,6 +39,8 @@ test("new categories and pet-food have labels and are searchable", () => {
   }
   assert.equal(PRODUCT_CATEGORY_LABELS["pet-food"], "Pet Food");
   assert.equal(menuCategoryLabel("pet-food"), "Pet Food");
+  assert.equal(PRODUCT_CATEGORY_LABELS["baby-goods"], "Baby goods");
+  assert.equal(menuCategoryLabel("baby-goods"), "Baby goods");
   assert.equal(menuCategoryLabel("bread-and-bakery"), "Bread and bakery");
   assert.equal(menuCategoryLabel("clothing-and-accessories"), "Clothing and accessories");
   assert.equal(menuInProductSearch(null), true);
@@ -46,7 +50,10 @@ test("new categories and pet-food have labels and are searchable", () => {
 
 test("find pages stay off pet food; empty groups stay hidden", () => {
   assert.equal(PET_FOOD_CATEGORY, "pet-food");
+  assert.equal(BABY_GOODS_CATEGORY, "baby-goods");
   assert.equal((FOOD_CATEGORIES as readonly string[]).includes("pet-food"), false);
+  assert.equal((FOOD_CATEGORIES as readonly string[]).includes("baby-goods"), false);
+  assert.ok((GOODS_CATEGORIES as readonly string[]).includes("baby-goods"));
   assert.ok((FOOD_CATEGORIES as readonly string[]).includes("spices-and-seasonings"));
   assert.ok((FOOD_CATEGORIES as readonly string[]).includes("oils-and-vinegars"));
   assert.ok((GOODS_CATEGORIES as readonly string[]).includes("clothing-and-accessories"));
@@ -59,10 +66,12 @@ test("find pages stay off pet food; empty groups stay hidden", () => {
   ]);
   assert.ok(FIND_PAGES.every((page) => browseGroups.has(page.category)));
   assert.ok(FIND_PAGES.every((page) => page.category !== "pet-food"));
+  assert.ok(FIND_PAGES.every((page) => page.category !== "baby-goods"));
   assert.ok(FIND_PAGES.every((page) => page.vendors > 0));
   const slugs = FIND_PAGES.map((page) => page.slug);
   assert.equal(new Set(slugs).size, slugs.length);
   assert.ok(FIND_CATEGORIES.some((category) => category.id === "pet-food" && category.label === "Pet Food"));
+  assert.ok(FIND_CATEGORIES.some((category) => category.id === "baby-goods" && category.label === "Baby goods"));
   assert.ok(
     FIND_CATEGORIES.some(
       (category) => category.id === "clothing-and-accessories" && category.label === "Clothing and accessories",
@@ -70,6 +79,7 @@ test("find pages stay off pet food; empty groups stay hidden", () => {
   );
   const shown = findPagesByCategory().map((category) => category.id);
   assert.equal(shown.includes("pet-food"), false);
+  assert.equal(shown.includes("baby-goods"), false);
   for (const id of [
     "clothing-and-accessories",
     "home-and-kitchen",
@@ -107,14 +117,17 @@ test("classifier find pages map kinds, origin, production, and format", () => {
   const food = categoriesForFindScope("food");
   assert.equal(food.includeNull, false);
   assert.equal(food.categories.includes("pet-food"), false);
+  assert.equal(food.categories.includes("baby-goods"), false);
   assert.equal(food.categories.includes("prepared-foods"), true);
   const goods = categoriesForFindScope("goods");
   assert.equal(goods.includeNull, true);
   assert.equal(goods.categories.includes("pet-food"), false);
+  assert.equal(goods.categories.includes("baby-goods"), true);
   assert.equal(goods.categories.includes("clothing-and-accessories"), true);
   assert.equal(goods.categories.includes("prepared-foods"), false);
   const any = categoriesForFindScope("any");
   assert.equal(any.categories.includes("pet-food"), false);
+  assert.equal(any.categories.includes("baby-goods"), true);
   assert.equal(any.categories.includes("prepared-foods"), true);
   assert.equal(any.categories.includes("services"), true);
 });

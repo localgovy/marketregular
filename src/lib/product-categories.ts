@@ -35,9 +35,11 @@ export const GOODS_CATEGORIES = [
   "health-and-wellness",
   "services",
   "garden-and-outdoor",
+  "baby-goods",
 ] as const;
 
 export const PET_FOOD_CATEGORY = "pet-food" satisfies ProductCategory;
+export const BABY_GOODS_CATEGORY = "baby-goods" satisfies ProductCategory;
 
 /** Older goods buckets a classifier find page can still list. */
 export const LEGACY_GOODS_CATEGORIES = [
@@ -50,7 +52,7 @@ export const LEGACY_GOODS_CATEGORIES = [
 
 export type FindClassifierScope = "food" | "goods" | "any";
 
-/** Categories a find page may list. Pet food is never included. */
+/** Categories a find page may list. Pet food is never included. Baby goods lists with goods. */
 export function categoriesForFindScope(scope: FindClassifierScope | undefined) {
   if (scope === "goods") {
     return {
@@ -86,6 +88,7 @@ export function menuCategoryLabel(category: string) {
  * Product search keeps food, pet food, goods, and the older craft buckets.
  * Classified items of any of those categories (and null) can match.
  * Pet-food rows still need a pet word in search_products.
+ * Baby-goods rows still need a baby word.
  */
 export function menuInProductSearch(category: string | null | undefined) {
   if (category == null) return true;

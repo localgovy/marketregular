@@ -125,6 +125,55 @@ if (riesling.some((row) => row.product_category === "alcohol" && row.price_cents
   throw new Error("alcohol row included a price");
 }
 
+const cakePlate = await allRows(url, key, "cake plate");
+if (!cakePlate.length) throw new Error("cake plate returned no rows");
+if (cakePlate.some((row) => /melamine cake plate/i.test(row.item_name ?? ""))) {
+  throw new Error("cake plate returned the baby melamine plate");
+}
+if (cakePlate.some((row) => row.product_category === "baby-goods")) {
+  throw new Error("cake plate returned baby goods");
+}
+
+for (const query of ["baby", "kids", "bibs"]) {
+  const rows = await allRows(url, key, query);
+  if (!rows.some((row) => row.product_category === "baby-goods")) {
+    throw new Error(`${query} returned no baby goods`);
+  }
+}
+
+const turkey = await allRows(url, key, "turkey");
+if (turkey.some((row) => row.product_category === "pet-food" || row.product_category === "baby-goods")) {
+  throw new Error("turkey returned pet food or baby goods");
+}
+
+const pumpkinPie = await allRows(url, key, "pumpkin pie");
+if (!pumpkinPie.some((row) => row.product_slug === "pumpkin-pie" || /pumpkin pie/i.test(row.item_name ?? ""))) {
+  throw new Error("pumpkin pie returned no pie");
+}
+if (pumpkinPie.some((row) => row.product_category === "alcohol" || row.product_category === "pet-food" || row.product_category === "baby-goods")) {
+  throw new Error("pumpkin pie returned alcohol, pet food, or baby goods");
+}
+
+const dumplings = await allRows(url, key, "dumplings");
+if (!dumplings.length) throw new Error("dumplings returned no rows");
+if (dumplings.some((row) => row.product_category === "baby-goods" || row.product_category === "pet-food")) {
+  throw new Error("dumplings returned baby goods or pet food");
+}
+
+const rose = await allRows(url, key, "rose");
+if (rose.some((row) => row.product_category === "alcohol")) {
+  throw new Error("rose returned alcohol");
+}
+const roseWine = await allRows(url, key, "rosé");
+if (!roseWine.some((row) => row.product_category === "alcohol")) {
+  throw new Error("rosé returned no alcohol");
+}
+
+const dogTreats = await allRows(url, key, "dog treats");
+if (!dogTreats.some((row) => row.product_category === "pet-food")) {
+  throw new Error("dog treats returned no pet food");
+}
+
 const base = process.argv[2];
 if (base) {
   const response = await fetch(`${base.replace(/\/$/, "")}/api/search?q=sourdough`);
