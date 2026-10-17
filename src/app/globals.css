@@ -62,9 +62,11 @@
 }
 
 :root {
-  /* Shared header + homepage rail so the brand column and reviews column meet. */
+  /* Shared header + homepage rail so the brand column and reviews column meet.
+     Brand track is the desktop lockup plus 1.25rem of green on each side. */
   --header-bar: 3rem;
   --header-bar-lg: 4rem;
+  --header-brand: calc(2rem * 405 / 60 + 2.5rem);
   --header-nav: 2.5rem;
   --header-stripe: 2px;
   --header-offset: calc(var(--header-bar) + var(--header-nav));
