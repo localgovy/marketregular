@@ -64,7 +64,7 @@
 :root {
   /* Shared header + homepage rail so the brand column and reviews column meet. */
   --header-bar: 3rem;
-  --header-bar-lg: 4.25rem;
+  --header-bar-lg: 4rem;
   --header-nav: 2.5rem;
   --header-stripe: 2px;
   --header-offset: calc(var(--header-bar) + var(--header-nav));
@@ -207,13 +207,11 @@
   mask-position: center;
 }
 
-/* Header plate: lockup fills the brand cell, kept clear of the edges. */
+/* Header lockup sits at half the desktop bar: the usual nav-wordmark size. */
 @media (min-width: 1024px) {
   .header-lockup {
-    position: absolute;
-    inset: 0;
-    width: auto;
-    height: auto;
+    height: 2rem;
+    width: calc(2rem * 405 / 60);
   }
 }
 
