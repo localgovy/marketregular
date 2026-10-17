@@ -64,7 +64,7 @@
 :root {
   /* Shared header + homepage rail so the brand column and reviews column meet. */
   --header-bar: 3rem;
-  --header-bar-lg: 3.5rem;
+  --header-bar-lg: 4.25rem;
   --header-nav: 2.5rem;
   --header-stripe: 2px;
   --header-offset: calc(var(--header-bar) + var(--header-nav));
@@ -196,7 +196,7 @@
 @utility site-wordmark {
   display: block;
   height: 1.25rem;
-  width: calc(1.25rem * 506 / 75);
+  width: calc(1.25rem * 405 / 60);
   flex-shrink: 0;
   background-color: currentColor;
   -webkit-mask-size: contain;
@@ -205,6 +205,16 @@
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
+}
+
+/* Header plate: lockup fills the brand cell, kept clear of the edges. */
+@media (min-width: 1024px) {
+  .header-lockup {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+  }
 }
 
 /* Baked green lockup — do not mask; the PNG is already board green. */

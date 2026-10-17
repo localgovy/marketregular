@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingMark } from "@/components/listing-mark";
@@ -37,6 +38,10 @@ type ListingMarket = {
   reviewCount: number;
 };
 
+function moreMarketsLabel(hidden: number) {
+  return hidden === 1 ? "Show 1 more market" : `Show ${hidden} more markets`;
+}
+
 function ProductListing({
   vendorName,
   vendorSlug,
@@ -46,6 +51,7 @@ function ProductListing({
   badge,
   items,
   markets,
+  previewMarkets,
 }: {
   vendorName: string;
   vendorSlug: string;
@@ -55,7 +61,15 @@ function ProductListing({
   badge: string | null;
   items: ListingItem[];
   markets: ListingMarket[];
+  /** Product pages keep the first markets visible until the rest are opened. */
+  previewMarkets?: number;
 }) {
+  const [marketsOpen, setMarketsOpen] = useState(false);
+  const focusIndex = useRef<number | null>(null);
+  const marketLinks = useRef<(HTMLAnchorElement | null)[]>([]);
+  const shownMarkets =
+    previewMarkets != null && !marketsOpen ? markets.slice(0, previewMarkets) : markets;
+  const hiddenMarkets = markets.length - shownMarkets.length;
   const product = productFromInput({
     vendorSlug,
     vendorName,
@@ -64,6 +78,18 @@ function ProductListing({
     items,
     markets,
   });
+
+  useLayoutEffect(() => {
+    const index = focusIndex.current;
+    if (index == null) return;
+    focusIndex.current = null;
+    marketLinks.current[index]?.focus();
+  }, [marketsOpen]);
+
+  function openMarkets() {
+    focusIndex.current = shownMarkets.length;
+    setMarketsOpen(true);
+  }
 
   return (
     <li className="rounded-xl bg-card ring-1 ring-foreground/10">
@@ -115,14 +141,17 @@ function ProductListing({
           })}
         </ul>
       ) : null}
-      {markets.length ? (
+      {shownMarkets.length ? (
         <ul>
-          {markets.map((market) => {
+          {shownMarkets.map((market, index) => {
             const days = shortDays(market.days);
             return (
               <li key={market.slug} className="border-b border-border px-4 py-2.5">
                 <p className="min-w-0">
                   <Link
+                    ref={(node) => {
+                      marketLinks.current[index] = node;
+                    }}
                     href={`/markets/${market.slug}`}
                     className="text-base font-medium hover:underline"
                   >
@@ -152,6 +181,17 @@ function ProductListing({
           })}
         </ul>
       ) : null}
+      {hiddenMarkets > 0 ? (
+        <div className="p-3">
+          <button
+            type="button"
+            onClick={openMarkets}
+            className="stall-chip inline-flex h-11 w-full cursor-pointer items-center justify-center bg-primary px-5 text-sm font-medium text-primary-foreground outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-foreground"
+          >
+            {moreMarketsLabel(hiddenMarkets)}
+          </button>
+        </div>
+      ) : null}
     </li>
   );
 }
@@ -173,6 +213,7 @@ export function FindVendorList({ vendors }: { vendors: FindVendor[] }) {
           badge={vendor.badge}
           items={vendor.items}
           markets={vendor.markets}
+          previewMarkets={2}
         />
       ))}
     </ul>
