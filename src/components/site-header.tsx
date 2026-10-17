@@ -72,7 +72,7 @@ function HeaderFrame({ q }: { q: string }) {
   return (
     <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md lg:border-b-2 lg:border-board">
       <div className="flex h-12 w-full items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:grid lg:h-header-bar-lg lg:site-rail lg:gap-0 lg:px-0">
-        <div className="flex shrink-0 items-center lg:h-header-bar-lg lg:border-r lg:border-board lg:bg-board lg:px-5">
+        <div className="flex shrink-0 items-center justify-center lg:h-header-bar-lg lg:border-r lg:border-board lg:bg-board">
           <Link
             href="/"
             prefetch={false}

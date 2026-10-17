@@ -62,11 +62,9 @@
 }
 
 :root {
-  /* Shared header + homepage rail so the brand column and reviews column meet.
-     Brand track is the desktop lockup plus 1.25rem of green on each side. */
+  /* Header bar. The brand column width lives on site-rail so it meets the reviews rail. */
   --header-bar: 3rem;
   --header-bar-lg: 4rem;
-  --header-brand: calc(2rem * 405 / 60 + 2.5rem);
   --header-nav: 2.5rem;
   --header-stripe: 2px;
   --header-offset: calc(var(--header-bar) + var(--header-nav));
@@ -546,10 +544,10 @@
   }
 }
 
-/* Header + homepage: one column template so the green brand and reviews rail share an edge.
-   Cap the first track so wide desktops don’t leave an empty awning beside the lockup. */
+/* Header and homepage share one column so the green plate and reviews rail meet.
+   Width is the desktop lockup plus 1.5rem of green on each side. */
 @utility site-rail {
-  grid-template-columns: minmax(18rem, min(26%, 23rem)) minmax(0, 1fr);
+  grid-template-columns: calc(2rem * 405 / 60 + 3rem) minmax(0, 1fr);
 }
 
 @utility h-header-bar-lg {
