@@ -131,7 +131,7 @@ export const PRODUCT_CATEGORIES = [
 
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
 
-/** Sentence-case labels, except Pet Food which title-cases both words. */
+/** Sentence-case labels. */
 export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   "bread-and-bakery": "Bread and bakery",
   eggs: "Eggs",
@@ -155,7 +155,7 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   "candles-and-crafts": "Candles and crafts",
   "jewellery-and-accessories": "Jewellery and accessories",
   other: "Other",
-  "pet-food": "Pet Food",
+  "pet-food": "Pet food and supplies",
   "clothing-and-accessories": "Clothing and accessories",
   "home-and-kitchen": "Home and kitchen",
   "art-and-stationery": "Art and stationery",

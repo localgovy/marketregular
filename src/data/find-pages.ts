@@ -49,7 +49,7 @@ export const FIND_CATEGORIES = [
   { id: "health-and-wellness", label: "Health and wellness" },
   { id: "garden-and-outdoor", label: "Garden and outdoor" },
   { id: "services", label: "Services" },
-  { id: "pet-food", label: "Pet Food" },
+  { id: "pet-food", label: "Pet food and supplies" },
 ] as const;
 
 export const FIND_PAGES: FindPage[] = [
