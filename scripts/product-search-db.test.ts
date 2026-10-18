@@ -8,7 +8,7 @@ import { PGlite } from "@electric-sql/pglite";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
 const migration = "supabase/migrations/20261016195249_rose_keeps_flower_meaning.sql";
-const babyMigration = "supabase/migrations/20261018001500_baby_product_category.sql";
+const giftsMigration = "supabase/migrations/20261018154000_gifts_and_sets_product_category.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -162,13 +162,13 @@ as $$
   )
 $$;
 
-${extractThrough("alter table public.vendor_menus", babyMigration)}
+${extractThrough("alter table public.vendor_menus", giftsMigration)}
 ${extractThrough("alter table public.menu_classifiers")}
 ${extractFunction("search_term_is_alcohol", migration)}
 ${extractFunction("search_alcohol_term_hit", migration)}
 ${extractFunction("search_term_match", migration)}
 ${extractFunction("search_query_parts", migration)}
-${extractFunction("search_products", babyMigration)}
+${extractFunction("search_products", giftsMigration)}
 `;
 
 type SearchRow = {
@@ -353,6 +353,10 @@ test("the constraints accept new categories and facets", async () => {
   await db.query(
     "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Cotton onesie', 'baby')",
     ["99999999-bbbb-4999-8999-999999999999", VENDOR],
+  );
+  await db.query(
+    "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Honey Gift Box', 'gifts-and-sets')",
+    ["99999999-cccc-4999-8999-999999999999", VENDOR],
   );
   await db.query(
     "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Toque', 'clothing-and-accessories')",
@@ -574,7 +578,7 @@ test("cuisine search uses vendor tags under origin tags and skips pet food", asy
 });
 
 test("the search migration keeps null-category matches, pet food, trigram, accents, and the alcohol gate", () => {
-  const sql = readFileSync(join(root, babyMigration), "utf8");
+  const sql = readFileSync(join(root, giftsMigration), "utf8");
   const helpers = readFileSync(join(root, migration), "utf8");
   assert.match(sql, /vm\.product_category is null\s+and match\.existing/);
   assert.match(sql, /when vm\.product_category is null then 0\.01/);
@@ -585,6 +589,10 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.match(sql, /alcohol_query\.allow/);
   assert.match(sql, /vm\.product_category is distinct from 'baby'/);
   assert.match(sql, /vm\.product_category is distinct from 'alcohol'/);
+  assert.match(sql, /'baby'::text,\s*'gifts-and-sets'::text/);
+  assert.match(sql, /\('baby'\),\s*\('gifts-and-sets'\)/);
+  assert.match(sql, /'garden-and-outdoor',\s*'gifts-and-sets'/);
+  assert.doesNotMatch(sql, /gifts_query/);
   assert.match(sql, /public\.fold_search_text\(vm\.name\) % public\.fold_search_text\(clock\.query\)/);
   assert.match(sql, /similarity\(public\.fold_search_text\(vm\.name\), public\.fold_search_text\(clock\.query\)\) >= 0\.45/);
   assert.match(helpers, /not hits\.term_plain/);
@@ -630,6 +638,28 @@ test("balm, calendula, and powder return no baby items and baby queries do", asy
   assert.ok(babyPowder.some((row) => row.item_name === "Lavender baby powder"));
   assert.equal(babyPowder.some((row) => row.product_category === "baby"), true);
   assert.equal(indexOf(babyPowder, "Calendula lip balm"), -1);
+});
+
+test("gift box queries return gifts-and-sets rows", async () => {
+  const db = await database();
+  await db.query(
+    "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Honey Gift Box', 'gifts-and-sets')",
+    ["c0c0c0c0-c0c0-41c0-81c0-c0c0c0c0c0c0", VENDOR],
+  );
+
+  const giftBox = await search(db, "gift box");
+  assert.ok(giftBox.some((row) => row.item_name === "Honey Gift Box"));
+  assert.equal(
+    giftBox.find((row) => row.item_name === "Honey Gift Box")?.product_category,
+    "gifts-and-sets",
+  );
+
+  const honeyGiftBox = await search(db, "honey gift box");
+  assert.ok(honeyGiftBox.some((row) => row.item_name === "Honey Gift Box"));
+  assert.equal(
+    honeyGiftBox.find((row) => row.item_name === "Honey Gift Box")?.product_category,
+    "gifts-and-sets",
+  );
 });
 
 test("uncategorized published items match by name and rank under categorized rows", async () => {

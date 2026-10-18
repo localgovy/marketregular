@@ -11,7 +11,7 @@ export type FindPage = {
   matchClassifiers?: string[];
   /**
    * food: people-food categories.
-   * goods: non-food categories, including baby goods and a null category.
+   * goods: non-food categories, including baby goods, gift sets, and a null category.
    * any: both, still never pet food.
    */
   classifierScope?: "food" | "goods" | "any";
@@ -45,6 +45,7 @@ export const FIND_CATEGORIES = [
   { id: "art-and-stationery", label: "Art and stationery" },
   { id: "toys-and-kids", label: "Toys and kids" },
   { id: "baby", label: "Baby goods" },
+  { id: "gifts-and-sets", label: "Gift sets and boxes" },
   { id: "health-and-wellness", label: "Health and wellness" },
   { id: "garden-and-outdoor", label: "Garden and outdoor" },
   { id: "services", label: "Services" },
@@ -195,7 +196,7 @@ export const FIND_PAGES: FindPage[] = [
   { term: "Pasture-raised", slug: "pasture-raised-toronto", category: "production", matchSlugs: [], matchClassifiers: ["production.pasture-raised"], classifierScope: "food", vendors: 21 },
   { term: "Free-range", slug: "free-range-toronto", category: "production", matchSlugs: [], matchClassifiers: ["production.free-range"], classifierScope: "food", vendors: 19 },
   { term: "Frozen", slug: "frozen-toronto", category: "format", matchSlugs: [], matchClassifiers: ["format.frozen"], classifierScope: "food", vendors: 30 },
-  { term: "Gift sets", slug: "gift-sets-toronto", category: "format", matchSlugs: [], matchClassifiers: ["format.gift-set"], classifierScope: "any", vendors: 13 },
+  { term: "Gift sets", slug: "gift-sets-toronto", category: "gifts-and-sets", matchSlugs: [], matchClassifiers: ["format.gift-set"], classifierScope: "any", vendors: 13 },
   { term: "Sweaters", slug: "sweaters-toronto", category: "clothing-and-accessories", matchSlugs: ["sweaters"], matchClassifiers: ["kind.sweaters"], classifierScope: "goods", vendors: 24 },
   { term: "Tops", slug: "tops-toronto", category: "clothing-and-accessories", matchSlugs: ["tops"], matchClassifiers: ["kind.tops"], classifierScope: "goods", vendors: 24 },
   { term: "Hats and scarves", slug: "hats-and-scarves-toronto", category: "clothing-and-accessories", matchSlugs: ["hats-scarves"], matchClassifiers: ["kind.hats-scarves"], classifierScope: "goods", vendors: 26 },

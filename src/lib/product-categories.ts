@@ -4,7 +4,7 @@ import {
   type ProductCategory,
 } from "@/types/database";
 
-/** People-food categories listed on find pages. Pet food and baby goods are not in this list. */
+/** People-food categories listed on find pages. Pet food, baby goods, and gift sets are not in this list. */
 export const FOOD_CATEGORIES = [
   "bread-and-bakery",
   "eggs",
@@ -33,6 +33,7 @@ export const GOODS_CATEGORIES = [
   "art-and-stationery",
   "toys-and-kids",
   "baby",
+  "gifts-and-sets",
   "health-and-wellness",
   "services",
   "garden-and-outdoor",
@@ -41,6 +42,8 @@ export const GOODS_CATEGORIES = [
 export const PET_FOOD_CATEGORY = "pet-food" satisfies ProductCategory;
 
 export const BABY_CATEGORY = "baby" satisfies ProductCategory;
+
+export const GIFTS_CATEGORY = "gifts-and-sets" satisfies ProductCategory;
 
 /** Older goods buckets a classifier find page can still list. */
 export const LEGACY_GOODS_CATEGORIES = [
@@ -53,7 +56,7 @@ export const LEGACY_GOODS_CATEGORIES = [
 
 export type FindClassifierScope = "food" | "goods" | "any";
 
-/** Categories a find page may list. Pet food is never included. Baby goods are included for goods and any. */
+/** Categories a find page may list. Pet food is never included. Baby goods and gift sets are included for goods and any. */
 export function categoriesForFindScope(scope: FindClassifierScope | undefined) {
   if (scope === "goods") {
     return {
@@ -90,6 +93,7 @@ export function menuCategoryLabel(category: string) {
  * Classified items of any of those categories (and null) can match.
  * Pet-food rows still need a pet word in search_products.
  * Baby rows still need a baby word in search_products.
+ * Gift sets are always allowed. They are not gated.
  */
 export function menuInProductSearch(category: string | null | undefined) {
   if (category == null) return true;
