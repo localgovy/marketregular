@@ -293,9 +293,9 @@ Page ISR on top of that: home 120s; day hub, day pages, and open-today 900s; mar
 
 ### Product search gate
 
-`menuInProductSearch` is true for every stored `product_category` and for a null category. `search_products` still gates pet-food behind a pet word and gates `baby` behind a baby word the same way, always allows people-food plus spices, oils, and the new goods categories, and lets a classified item through whatever its category. Query max is 80 characters. Page size is 40. Alcohol prices are stripped (`visiblePriceCents`). A hit links to `/find/{slug}` when that product slug has a find page, otherwise `/products?q={item name}`.
+`menuInProductSearch` is true for every stored `product_category` and for a null category. `search_products` still gates pet-food behind a pet word and gates `baby` behind a baby word the same way. `gifts-and-sets` is always allowed, not gated. The function always allows people-food plus spices, oils, and the new goods categories, and lets a classified item through whatever its category. Query max is 80 characters. Page size is 40. Alcohol prices are stripped (`visiblePriceCents`). A hit links to `/find/{slug}` when that product slug has a find page, otherwise `/products?q={item name}`.
 
-`flour-and-grains` is searchable and has no browse chip. Find-page browse groups are `FIND_CATEGORIES`. Empty groups (pet food) stay hidden until they have pages. Food-scope find pages skip `pet-food` and `baby`. Goods-scope find pages include `baby`. The Baby goods find page lists category `baby`.
+`flour-and-grains` is searchable and has no browse chip. Find-page browse groups are `FIND_CATEGORIES`. Empty groups (pet food) stay hidden until they have pages. Food-scope find pages skip `pet-food`, `baby`, and `gifts-and-sets`. Goods-scope find pages include `baby` and `gifts-and-sets`. Any-scope find pages include `gifts-and-sets`. The Baby goods find page lists category `baby`. The Gift sets find page lists category `gifts-and-sets`.
 
 ## Consumer pipeline
 
