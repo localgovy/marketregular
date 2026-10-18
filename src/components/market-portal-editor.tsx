@@ -33,6 +33,7 @@ import {
   type MarketRosterStall,
   type PortalVendorHit,
 } from "@/lib/market-portal";
+import { sortScheduleRows } from "@/lib/schedule";
 import { tagLabel } from "@/lib/tag-label";
 import { cn } from "@/lib/utils";
 import {
@@ -843,7 +844,7 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
         </p>
         {listing.schedules.length ? (
           <ul className="mt-2">
-            {listing.schedules.map((schedule) => (
+            {sortScheduleRows(listing.schedules).map((schedule) => (
               <li key={schedule.id}>
                 <HoursForm marketId={listing.id} schedule={schedule} />
               </li>

@@ -1,9 +1,9 @@
 import { Hours } from "@/components/hours";
-import { formatSchedule } from "@/lib/schedule";
+import { formatSchedule, sortScheduleRows } from "@/lib/schedule";
 import type { MarketSchedule } from "@/types/database";
 
 export function ScheduleList({ schedules }: { schedules: MarketSchedule[] }) {
-  const rows = [...schedules].sort((a, b) => a.weekday - b.weekday);
+  const rows = sortScheduleRows(schedules);
   if (!rows.length) {
     return <p className="text-sm text-muted-foreground">Schedule coming soon.</p>;
   }
