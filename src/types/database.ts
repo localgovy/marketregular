@@ -125,6 +125,7 @@ export const PRODUCT_CATEGORIES = [
   "garden-and-outdoor",
   "spices-and-seasonings",
   "oils-and-vinegars",
+  "baby",
 ] as const;
 
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
@@ -163,6 +164,7 @@ export const PRODUCT_CATEGORY_LABELS: Record<ProductCategory, string> = {
   "garden-and-outdoor": "Garden and outdoor",
   "spices-and-seasonings": "Spices and seasonings",
   "oils-and-vinegars": "Oils and vinegars",
+  baby: "Baby goods",
 };
 
 export type MenuItem = {

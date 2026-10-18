@@ -8,6 +8,7 @@ import { PGlite } from "@electric-sql/pglite";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
 const migration = "supabase/migrations/20261016195249_rose_keeps_flower_meaning.sql";
+const babyMigration = "supabase/migrations/20261018001500_baby_product_category.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -62,8 +63,8 @@ function extractFunction(name: string, file = constraints) {
   return sql.slice(createAt, end + 1);
 }
 
-function extractThrough(marker: string) {
-  const sql = readFileSync(join(root, constraints), "utf8");
+function extractThrough(marker: string, file = constraints) {
+  const sql = readFileSync(join(root, file), "utf8");
   const start = sql.indexOf(marker);
   if (start < 0) throw new Error(`Missing ${marker}`);
   const addAt = sql.indexOf("add constraint", start);
@@ -161,13 +162,13 @@ as $$
   )
 $$;
 
-${extractThrough("alter table public.vendor_menus")}
+${extractThrough("alter table public.vendor_menus", babyMigration)}
 ${extractThrough("alter table public.menu_classifiers")}
 ${extractFunction("search_term_is_alcohol", migration)}
 ${extractFunction("search_alcohol_term_hit", migration)}
 ${extractFunction("search_term_match", migration)}
 ${extractFunction("search_query_parts", migration)}
-${extractFunction("search_products", migration)}
+${extractFunction("search_products", babyMigration)}
 `;
 
 type SearchRow = {
@@ -348,6 +349,10 @@ test("the constraints accept new categories and facets", async () => {
   await db.query(
     "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Kibble', 'pet-food')",
     ["99999999-aaaa-4999-8999-999999999999", VENDOR],
+  );
+  await db.query(
+    "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Cotton onesie', 'baby')",
+    ["99999999-bbbb-4999-8999-999999999999", VENDOR],
   );
   await db.query(
     "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Toque', 'clothing-and-accessories')",
@@ -569,20 +574,62 @@ test("cuisine search uses vendor tags under origin tags and skips pet food", asy
 });
 
 test("the search migration keeps null-category matches, pet food, trigram, accents, and the alcohol gate", () => {
-  const sql = readFileSync(join(root, migration), "utf8");
+  const sql = readFileSync(join(root, babyMigration), "utf8");
+  const helpers = readFileSync(join(root, migration), "utf8");
   assert.match(sql, /vm\.product_category is null\s+and match\.existing/);
   assert.match(sql, /when vm\.product_category is null then 0\.01/);
   assert.match(sql, /vm\.product_category = 'pet-food'/);
+  assert.match(sql, /vm\.product_category = 'baby'/);
+  assert.match(sql, /baby_query\.allow/);
   assert.match(sql, /vm\.product_category = 'alcohol'/);
   assert.match(sql, /alcohol_query\.allow/);
+  assert.match(sql, /vm\.product_category is distinct from 'baby'/);
   assert.match(sql, /vm\.product_category is distinct from 'alcohol'/);
   assert.match(sql, /public\.fold_search_text\(vm\.name\) % public\.fold_search_text\(clock\.query\)/);
   assert.match(sql, /similarity\(public\.fold_search_text\(vm\.name\), public\.fold_search_text\(clock\.query\)\) >= 0\.45/);
-  assert.match(sql, /not hits\.term_plain/);
+  assert.match(helpers, /not hits\.term_plain/);
   assert.match(sql, /search_alcohol_term_hit/);
   assert.match(sql, /security invoker/);
   assert.match(sql, /grant execute on function public\.search_products/);
   assert.doesNotMatch(sql, /security definer/i);
+});
+
+test("balm, calendula, and powder return no baby items and baby queries do", async () => {
+  const db = await database();
+  const bum = "b0b0b0b0-b0b0-40b0-80b0-b0b0b0b0b0b0";
+  const powder = "b1b1b1b1-b1b1-41b1-81b1-b1b1b1b1b1b1";
+  const lip = "b2b2b2b2-b2b2-42b2-82b2-b2b2b2b2b2b2";
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category, product_slug) values
+      ($1, $4, 'Calendula bum balm', 'baby', 'bum-balm'),
+      ($2, $4, 'Lavender baby powder', 'baby', 'baby-powder'),
+      ($3, $4, 'Calendula lip balm', 'body-care', 'lip-balm')`,
+    [bum, powder, lip, VENDOR],
+  );
+
+  const balm = await search(db, "balm");
+  assert.equal(balm.some((row) => row.product_category === "baby"), false);
+  assert.equal(indexOf(balm, "Calendula bum balm"), -1);
+  assert.ok(balm.some((row) => row.item_name === "Calendula lip balm"));
+
+  const calendula = await search(db, "calendula");
+  assert.equal(calendula.some((row) => row.product_category === "baby"), false);
+  assert.equal(indexOf(calendula, "Calendula bum balm"), -1);
+  assert.equal(indexOf(calendula, "Lavender baby powder"), -1);
+
+  const powderRows = await search(db, "powder");
+  assert.equal(powderRows.some((row) => row.product_category === "baby"), false);
+  assert.equal(indexOf(powderRows, "Lavender baby powder"), -1);
+
+  const baby = await search(db, "baby");
+  assert.ok(baby.some((row) => row.item_name === "Lavender baby powder"));
+  assert.equal(baby.some((row) => row.product_category === "baby"), true);
+  assert.equal(indexOf(baby, "Calendula lip balm"), -1);
+
+  const babyPowder = await search(db, "baby powder");
+  assert.ok(babyPowder.some((row) => row.item_name === "Lavender baby powder"));
+  assert.equal(babyPowder.some((row) => row.product_category === "baby"), true);
+  assert.equal(indexOf(babyPowder, "Calendula lip balm"), -1);
 });
 
 test("uncategorized published items match by name and rank under categorized rows", async () => {

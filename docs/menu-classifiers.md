@@ -162,6 +162,7 @@ When nothing applies, still keep the taxo rows, skip your own inserts, and upser
 - Empty classifiers are allowed.
 - `kind` now covers goods as well as food. Earrings, houseplants, gift cards, and repairs are kinds, not a separate goods facet.
 - Do not tag pet food as people food. Pet treats stay `product_category = pet-food`.
+- Baby care stays `product_category = baby`; tag `audience.baby` / `kind.baby-goods` as before.
 
 ## Kind tags from taxo_20261015_0905
 

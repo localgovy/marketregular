@@ -25,6 +25,7 @@ import {
 import type { MarketSchedule } from "@/types/database";
 
 export {
+  BABY_CATEGORY,
   FOOD_CATEGORIES,
   GOODS_CATEGORIES,
   PET_FOOD_CATEGORY,
