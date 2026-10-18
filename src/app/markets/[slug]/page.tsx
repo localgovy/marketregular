@@ -26,7 +26,7 @@ import { listingNote, listingQualifier, seasonAliasTarget, seasonPlace, siblingL
 import { toGeoMarket } from "@/lib/geo";
 import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle, directionsHref } from "@/lib/listing-copy";
-import { sessionToday } from "@/lib/schedule";
+import { orderWeekdays, sessionToday } from "@/lib/schedule";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { serverNowMs } from "@/lib/clock";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
@@ -304,6 +304,7 @@ export default async function MarketPage({
           <div className="lg:col-span-2">
             <MarketVendors
               vendors={market.vendors}
+              schedules={market.schedules}
               todayWeekday={weekdayInToronto(now)}
               todayStill={todayStill}
             />
@@ -317,7 +318,11 @@ export default async function MarketPage({
         <div className="lg:col-span-2">
           <ListingAlsoLinks
             heading="Other markets like this one"
-            weekdays={market.schedules.map((row) => Number(row.weekday))}
+            weekdays={orderWeekdays(
+              market.schedules.map((row) => Number(row.weekday)),
+              market.schedules,
+            )}
+            preserveOrder
             tags={market.tags}
           />
         </div>

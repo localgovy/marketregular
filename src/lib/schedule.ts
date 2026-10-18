@@ -249,6 +249,25 @@ export function sortScheduleRows<T extends ScheduleOrder>(rows: readonly T[]) {
   return [...rows].sort(compareScheduleRows);
 }
 
+/** Weekdays in hours-list order. Days with no schedule row follow, by weekday number. */
+export function orderWeekdays(days: readonly number[], schedules: readonly ScheduleOrder[]) {
+  const unique = [...new Set(days.map(Number))].filter((day) => day >= 0 && day <= 6);
+  const rank = new Map<number, number>();
+  for (const row of sortScheduleRows(schedules)) {
+    const day = Number(row.weekday);
+    if (day < 0 || day > 6 || rank.has(day)) continue;
+    rank.set(day, rank.size);
+  }
+  return unique.sort((a, b) => {
+    const left = rank.get(a);
+    const right = rank.get(b);
+    if (left != null && right != null) return left - right;
+    if (left != null) return -1;
+    if (right != null) return 1;
+    return a - b;
+  });
+}
+
 /** When every session is the same weekday: "Saturday only". */
 export function onlyWeekdayLabel(schedules: ScheduleRow[]) {
   const days = [...new Set(schedules.map((row) => Number(row.weekday)))];
