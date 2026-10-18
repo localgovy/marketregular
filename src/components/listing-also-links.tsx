@@ -17,15 +17,17 @@ export function ListingAlsoLinks({
   tags,
   className,
   heading = "More like this",
+  preserveOrder = false,
 }: {
   weekdays: number[];
   tags: string[];
   className?: string;
   heading?: string;
+  /** Keep the caller's weekday order. Otherwise Sunday through Saturday. */
+  preserveOrder?: boolean;
 }) {
-  const days = [...new Set(weekdays)]
-    .filter((day) => day >= 0 && day <= 6)
-    .sort((a, b) => a - b);
+  const days = [...new Set(weekdays)].filter((day) => day >= 0 && day <= 6);
+  if (!preserveOrder) days.sort((a, b) => a - b);
   const categories = tags.filter((tag) => CATEGORY_TAGS.has(tag)).slice(0, 6);
 
   if (!days.length && !categories.length) return null;

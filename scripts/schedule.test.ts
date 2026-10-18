@@ -5,6 +5,7 @@ import {
   formatSchedule,
   formatSeasonRange,
   inSeason,
+  orderWeekdays,
   sortScheduleRows,
 } from "../src/lib/schedule.ts";
 
@@ -95,6 +96,21 @@ test("schedule rows sort by season start, then weekday", () => {
     sortScheduleRows([afternoon, morning]).map((item) => item.opens_at),
     ["08:00", "12:00"],
   );
+});
+
+test("vendor day filters follow the hours list", () => {
+  const holiday = [
+    row(0, "12-06", "12-13", "10:00"),
+    row(5, "12-04", "12-11", "17:30"),
+    row(6, "12-05", "12-12", "10:00"),
+  ];
+  assert.deepEqual(orderWeekdays([0, 5, 6], holiday), [5, 6, 0]);
+  assert.deepEqual(orderWeekdays([6, 0, 5, 5], holiday), [5, 6, 0]);
+  assert.deepEqual(
+    orderWeekdays([0, 6], [row(6, null, null, "08:00"), row(0, null, null, "09:00")]),
+    [0, 6],
+  );
+  assert.deepEqual(orderWeekdays([1, 0, 5], holiday), [5, 0, 1]);
 });
 
 function row(weekday: number, season_start: string | null, season_end: string | null, opens_at: string) {

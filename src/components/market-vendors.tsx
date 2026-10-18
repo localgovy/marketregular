@@ -16,6 +16,7 @@ import {
   tagLabel,
   tagsPresent,
 } from "@/lib/find-paths";
+import { orderWeekdays, type ScheduleRow } from "@/lib/schedule";
 import { productTagsFromQuery, vendorFilterTags } from "@/lib/vendor-tags";
 import { cn } from "@/lib/utils";
 import type { MarketDetail } from "@/types/database";
@@ -105,10 +106,12 @@ function browseActive(find: StallBrowse) {
 
 export function MarketVendors({
   vendors,
+  schedules,
   todayWeekday,
   todayStill = true,
 }: {
   vendors: MarketStall[];
+  schedules: ScheduleRow[];
   todayWeekday: number;
   /** False after today's session has closed, or when the hall is not open today. */
   todayStill?: boolean;
@@ -126,8 +129,8 @@ export function MarketVendors({
         if (day >= 0 && day <= 6) days.add(day);
       }
     }
-    return [...days].sort((a, b) => a - b);
-  }, [vendors]);
+    return orderWeekdays([...days], schedules);
+  }, [vendors, schedules]);
   const productChips = useMemo(
     () => tagsPresent(vendors, FIND_PRODUCTS),
     [vendors],
@@ -360,7 +363,7 @@ export function MarketVendors({
                     key={vendor.id}
                     vendor={vendor}
                     stall={vendor.stall}
-                    days={vendor.days}
+                    days={orderWeekdays(vendor.days, schedules)}
                     halls={vendor.halls}
                   />
                 ))}
