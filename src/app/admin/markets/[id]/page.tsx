@@ -6,7 +6,7 @@ import { readOptOuts } from "@/lib/maintenance-sections";
 import { MarketOwnerForm } from "@/components/admin/market-owner-form";
 import { fetchAllRows, requireAdmin } from "@/lib/admin";
 import { isSupabaseConfigured, WEEKDAYS } from "@/lib/constants";
-import { formatSchedule } from "@/lib/schedule";
+import { formatSchedule, sortScheduleRows } from "@/lib/schedule";
 import { readVendorPassword } from "@/lib/vendor-password";
 import { deleteMarket, deleteSchedule, linkVendorToMarket, saveSchedule, unlinkVendorFromMarket } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
@@ -103,10 +103,7 @@ export default async function EditMarketPage({
           <p className="mt-3 text-base text-muted-foreground">Could not load hours.</p>
         ) : null}
         <ul className="mt-3 divide-y divide-border">
-          {((schedulesRes.data ?? []) as MarketSchedule[])
-            .slice()
-            .sort((a, b) => a.weekday - b.weekday || String(a.opens_at).localeCompare(String(b.opens_at)))
-            .map((row) => {
+          {sortScheduleRows((schedulesRes.data ?? []) as MarketSchedule[]).map((row) => {
               const formatted = formatSchedule(row);
               return (
                 <li key={row.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-2 text-sm">

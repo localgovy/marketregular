@@ -11,7 +11,7 @@ export type FindPage = {
   matchClassifiers?: string[];
   /**
    * food: people-food categories.
-   * goods: non-food categories, including a null category.
+   * goods: non-food categories, including baby goods and a null category.
    * any: both, still never pet food.
    */
   classifierScope?: "food" | "goods" | "any";
@@ -44,6 +44,7 @@ export const FIND_CATEGORIES = [
   { id: "home-and-kitchen", label: "Home and kitchen" },
   { id: "art-and-stationery", label: "Art and stationery" },
   { id: "toys-and-kids", label: "Toys and kids" },
+  { id: "baby", label: "Baby goods" },
   { id: "health-and-wellness", label: "Health and wellness" },
   { id: "garden-and-outdoor", label: "Garden and outdoor" },
   { id: "services", label: "Services" },
@@ -207,7 +208,7 @@ export const FIND_PAGES: FindPage[] = [
   { term: "Greeting cards", slug: "greeting-cards-toronto", category: "art-and-stationery", matchSlugs: ["cards-stationery"], matchClassifiers: ["kind.cards-stationery"], classifierScope: "goods", vendors: 43 },
   { term: "Books", slug: "books-toronto", category: "art-and-stationery", matchSlugs: ["books"], matchClassifiers: ["kind.books"], classifierScope: "goods", vendors: 9 },
   { term: "Toys", slug: "toys-toronto", category: "toys-and-kids", matchSlugs: ["toys"], matchClassifiers: ["kind.toys"], classifierScope: "goods", vendors: 31 },
-  { term: "Baby goods", slug: "baby-goods-toronto", category: "toys-and-kids", matchSlugs: ["baby-goods"], matchClassifiers: ["kind.baby-goods"], classifierScope: "goods", vendors: 30 },
+  { term: "Baby goods", slug: "baby-goods-toronto", category: "baby", matchSlugs: ["baby-goods"], matchClassifiers: ["kind.baby-goods"], classifierScope: "goods", vendors: 30 },
   { term: "Wellness", slug: "wellness-toronto", category: "health-and-wellness", matchSlugs: ["wellness"], matchClassifiers: ["kind.wellness"], classifierScope: "goods", vendors: 13 },
   { term: "Gift cards", slug: "gift-cards-toronto", category: "services", matchSlugs: ["gift-cards"], matchClassifiers: ["kind.gift-cards"], classifierScope: "goods", vendors: 5 },
   { term: "Repairs", slug: "repairs-toronto", category: "services", matchSlugs: ["repairs"], matchClassifiers: ["kind.repairs"], classifierScope: "goods", vendors: 15 },

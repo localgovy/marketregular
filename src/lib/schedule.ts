@@ -209,10 +209,44 @@ export function formatMonthDay(value: string) {
 export function formatSeasonRange(start: string | null, end: string | null) {
   const from = seasonBound(start);
   const to = seasonBound(end);
-  if (from && to) return `${formatMonthDay(from)} to ${formatMonthDay(to)}`;
+  if (from && to) {
+    if (from === to) return formatMonthDay(from);
+    return `${formatMonthDay(from)} to ${formatMonthDay(to)}`;
+  }
   if (from) return `From ${formatMonthDay(from)}`;
   if (to) return `Until ${formatMonthDay(to)}`;
   return "Year-round";
+}
+
+type ScheduleOrder = {
+  weekday: number;
+  season_start: string | null;
+  opens_at?: string;
+};
+
+/**
+ * Dated sessions first, by season start (MM-DD), then weekday, then open time.
+ * A one-day weekend reads Friday, Saturday, Sunday when each row has its own date.
+ * Year-round rows have no start, so they stay in weekday order after the dated ones.
+ */
+export function compareScheduleRows(a: ScheduleOrder, b: ScheduleOrder) {
+  const startA = seasonBound(a.season_start);
+  const startB = seasonBound(b.season_start);
+  if (startA !== startB) {
+    if (!startA) return 1;
+    if (!startB) return -1;
+    return startA < startB ? -1 : 1;
+  }
+  const day = Number(a.weekday) - Number(b.weekday);
+  if (day !== 0) return day;
+  const openA = a.opens_at ?? "";
+  const openB = b.opens_at ?? "";
+  if (openA === openB) return 0;
+  return openA < openB ? -1 : 1;
+}
+
+export function sortScheduleRows<T extends ScheduleOrder>(rows: readonly T[]) {
+  return [...rows].sort(compareScheduleRows);
 }
 
 /** When every session is the same weekday: "Saturday only". */

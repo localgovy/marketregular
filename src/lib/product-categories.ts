@@ -4,7 +4,7 @@ import {
   type ProductCategory,
 } from "@/types/database";
 
-/** People-food categories listed on find pages. Pet food and goods are searchable, not here. */
+/** People-food categories listed on find pages. Pet food and baby goods are not in this list. */
 export const FOOD_CATEGORIES = [
   "bread-and-bakery",
   "eggs",
@@ -32,12 +32,15 @@ export const GOODS_CATEGORIES = [
   "home-and-kitchen",
   "art-and-stationery",
   "toys-and-kids",
+  "baby",
   "health-and-wellness",
   "services",
   "garden-and-outdoor",
 ] as const;
 
 export const PET_FOOD_CATEGORY = "pet-food" satisfies ProductCategory;
+
+export const BABY_CATEGORY = "baby" satisfies ProductCategory;
 
 /** Older goods buckets a classifier find page can still list. */
 export const LEGACY_GOODS_CATEGORIES = [
@@ -50,7 +53,7 @@ export const LEGACY_GOODS_CATEGORIES = [
 
 export type FindClassifierScope = "food" | "goods" | "any";
 
-/** Categories a find page may list. Pet food is never included. */
+/** Categories a find page may list. Pet food is never included. Baby goods are included for goods and any. */
 export function categoriesForFindScope(scope: FindClassifierScope | undefined) {
   if (scope === "goods") {
     return {
@@ -86,6 +89,7 @@ export function menuCategoryLabel(category: string) {
  * Product search keeps food, pet food, goods, and the older craft buckets.
  * Classified items of any of those categories (and null) can match.
  * Pet-food rows still need a pet word in search_products.
+ * Baby rows still need a baby word in search_products.
  */
 export function menuInProductSearch(category: string | null | undefined) {
   if (category == null) return true;

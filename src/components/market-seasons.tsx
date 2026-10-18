@@ -2,7 +2,7 @@ import { AddressLink } from "@/components/address-link";
 import { ScheduleList } from "@/components/schedule-list";
 import { provinceTz } from "@/lib/constants";
 import { directionsHref } from "@/lib/listing-copy";
-import { formatSeasonRange, inSeason } from "@/lib/schedule";
+import { formatSeasonRange, inSeason, sortScheduleRows } from "@/lib/schedule";
 import type { MarketSchedule } from "@/types/database";
 
 export type SeasonPlace = {
@@ -21,7 +21,7 @@ export type SeasonPlace = {
 function windows(schedules: MarketSchedule[]) {
   const seen = new Set<string>();
   const labels: string[] = [];
-  for (const row of schedules) {
+  for (const row of sortScheduleRows(schedules)) {
     const label = formatSeasonRange(row.season_start, row.season_end);
     if (seen.has(label)) continue;
     seen.add(label);
