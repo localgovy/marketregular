@@ -39,8 +39,8 @@ test("new categories and pet-food have labels and are searchable", () => {
     assert.equal(menuInProductSearch(id), true);
     assert.equal(menuCategoryLabel(id), PRODUCT_CATEGORY_LABELS[id]);
   }
-  assert.equal(PRODUCT_CATEGORY_LABELS["pet-food"], "Pet Food");
-  assert.equal(menuCategoryLabel("pet-food"), "Pet Food");
+  assert.equal(PRODUCT_CATEGORY_LABELS["pet-food"], "Pet food and supplies");
+  assert.equal(menuCategoryLabel("pet-food"), "Pet food and supplies");
   assert.equal(PRODUCT_CATEGORY_LABELS.baby, "Baby goods");
   assert.equal(menuCategoryLabel("baby"), "Baby goods");
   assert.equal(PRODUCT_CATEGORY_LABELS["gifts-and-sets"], "Gift sets and boxes");
@@ -76,7 +76,11 @@ test("find pages stay off pet food; empty groups stay hidden", () => {
   assert.ok(FIND_PAGES.every((page) => page.vendors > 0));
   const slugs = FIND_PAGES.map((page) => page.slug);
   assert.equal(new Set(slugs).size, slugs.length);
-  assert.ok(FIND_CATEGORIES.some((category) => category.id === "pet-food" && category.label === "Pet Food"));
+  assert.ok(
+    FIND_CATEGORIES.some(
+      (category) => category.id === "pet-food" && category.label === "Pet food and supplies",
+    ),
+  );
   assert.ok(FIND_CATEGORIES.some((category) => category.id === "baby" && category.label === "Baby goods"));
   assert.ok(
     FIND_CATEGORIES.some(

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Installed into .git/hooks by scripts/install-git-hooks.sh.
+
+root=$(git rev-parse --show-toplevel) || exit 1
+cd "$root" || exit 1
+exec sh scripts/check-conflict-markers.sh --staged

@@ -9,7 +9,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
 const migration = "supabase/migrations/20261016195249_rose_keeps_flower_meaning.sql";
 const giftsMigration = "supabase/migrations/20261018154000_gifts_and_sets_product_category.sql";
-const searchMigration = "supabase/migrations/20261019152725_search_candidate_lookup.sql";
+const searchMigration =
+  "supabase/migrations/20261019154204_search_products_spread_and_candidates.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -611,6 +612,12 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.match(sql, /security invoker/);
   assert.match(sql, /grant execute on function public\.search_products/);
   assert.doesNotMatch(sql, /security definer/i);
+  assert.match(sql, /partition by ranked\.vendor_id/);
+  assert.match(sql, /ranked\.score - \(ranked\.vendor_rank - 1\) desc/);
+  assert.match(
+    sql,
+    /create or replace function public\.search_products\(\s*q text,\s*open_today boolean default false,\s*market_slug text default null,\s*day integer default null,\s*lim integer default 40,\s*off integer default 0\s*\)/,
+  );
 });
 
 test("balm, calendula, and powder return no baby items and baby queries do", async () => {
@@ -1033,4 +1040,132 @@ test("pet food, null-category names, rings, dumplings, and turkey still hold", a
 
   const dogTreats = await search(db, "dog treats");
   assert.ok(dogTreats.some((row) => row.product_category === "pet-food"));
+});
+
+type SpreadRow = SearchRow & { vendor_name: string; vendor_slug: string };
+
+function spreadId(n: number) {
+  return `a1000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
+}
+
+async function searchPage(db: PGlite, q: string, lim: number, off: number) {
+  const result = await db.query<SpreadRow>(
+    "select item_name, product_category, vendor_name, vendor_slug from public.search_products($1, false, null, null, $2, $3)",
+    [q, lim, off],
+  );
+  return result.rows;
+}
+
+test("one vendor cannot fill the top matches, and pages stay disjoint", async () => {
+  const db = await database();
+  const best = spreadId(1);
+  const earth = spreadId(2);
+  const gift = spreadId(3);
+  const others = Array.from({ length: 12 }, (_, index) => spreadId(10 + index));
+
+  await db.query(
+    `insert into public.vendors (id, slug, name) values
+      ($1, 'z-best', 'Z Best Soap'),
+      ($2, 'earth-witch', 'Earth Witch Apothecary'),
+      ($3, 'gift-stall', 'Gift Stall')`,
+    [best, earth, gift],
+  );
+  for (const [index, vendorId] of others.entries()) {
+    const label = String(index + 1).padStart(2, "0");
+    await db.query("insert into public.vendors (id, slug, name) values ($1, $2, $3)", [
+      vendorId,
+      `vendor-${label}`,
+      `Vendor ${label}`,
+    ]);
+  }
+
+  const vendorIds = [best, earth, gift, ...others];
+  for (const vendorId of vendorIds) {
+    await db.query(
+      "insert into public.market_vendors (market_id, vendor_id, days) values ($1, $2, '{6}')",
+      [MARKET, vendorId],
+    );
+  }
+
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category, product_slug) values
+      ($1, $2, 'Signature Bath Bomb', 'body-care', 'bath-bomb')`,
+    [spreadId(100), best],
+  );
+  for (let index = 1; index <= 12; index += 1) {
+    const label = String(index).padStart(2, "0");
+    await db.query(
+      "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, $3, 'body-care')",
+      [spreadId(200 + index), earth, `Earth Bath Bomb ${label}`],
+    );
+  }
+  await db.query(
+    "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Dog Bath Bomb', 'pet-food')",
+    [spreadId(300), earth],
+  );
+  await db.query(
+    "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Baby Bath Bomb', 'baby')",
+    [spreadId(301), earth],
+  );
+  await db.query(
+    "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Bath Bomb Gift Set', 'gifts-and-sets')",
+    [spreadId(302), gift],
+  );
+  for (const [index, vendorId] of others.entries()) {
+    const label = String(index + 1).padStart(2, "0");
+    await db.query(
+      `insert into public.vendor_menus (id, vendor_id, name, product_category) values
+        ($1, $3, $4, 'body-care'),
+        ($2, $3, $5, 'body-care')`,
+      [
+        spreadId(400 + index * 2),
+        spreadId(401 + index * 2),
+        vendorId,
+        `Vendor ${label} Bath Bomb A`,
+        `Vendor ${label} Bath Bomb B`,
+      ],
+    );
+  }
+
+  const top = await searchPage(db, "bath bomb", 24, 0);
+  assert.equal(top[0]?.item_name, "Signature Bath Bomb");
+  assert.equal(top[0]?.vendor_name, "Z Best Soap");
+  const earthTop = top.filter((row) => row.vendor_slug === "earth-witch");
+  assert.equal(earthTop.length, 2);
+  assert.equal(
+    top.some((row) => row.item_name === "Earth Bath Bomb 12"),
+    false,
+  );
+  assert.equal(
+    top.some((row) => row.item_name === "Vendor 12 Bath Bomb A"),
+    true,
+  );
+  assert.equal(new Set(top.map((row) => row.vendor_slug)).size, 15);
+  const perVendor = new Map<string, number>();
+  for (const row of top) perVendor.set(row.vendor_slug, (perVendor.get(row.vendor_slug) ?? 0) + 1);
+  for (const [slug, count] of perVendor) assert.ok(count <= 2, `${slug} has ${count} in the top 24`);
+
+  const full = await searchPage(db, "bath bomb", 40, 0);
+  assert.equal(full.length, 38);
+  assert.equal(full.filter((row) => row.vendor_slug === "earth-witch").length, 12);
+  assert.equal(
+    full.some((row) => row.product_category === "pet-food"),
+    false,
+  );
+  assert.equal(
+    full.some((row) => row.product_category === "baby"),
+    false,
+  );
+  assert.equal(
+    full.find((row) => row.item_name === "Bath Bomb Gift Set")?.product_category,
+    "gifts-and-sets",
+  );
+
+  const pages = await Promise.all([0, 10, 20, 30].map((off) => searchPage(db, "bath bomb", 10, off)));
+  const flat = pages.flat();
+  const key = (row: SpreadRow) => `${row.vendor_slug}\0${row.item_name}`;
+  assert.deepEqual(flat.map(key), full.map(key));
+  assert.equal(new Set(flat.map(key)).size, flat.length);
+  assert.equal(pages[0]?.[0]?.item_name, "Signature Bath Bomb");
+  assert.equal((await searchPage(db, "bath bomb", 10, 40)).length, 0);
 });
