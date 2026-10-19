@@ -9,6 +9,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
 const migration = "supabase/migrations/20261016195249_rose_keeps_flower_meaning.sql";
 const giftsMigration = "supabase/migrations/20261018154000_gifts_and_sets_product_category.sql";
+const searchMigration = "supabase/migrations/20261019152725_search_candidate_lookup.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -168,7 +169,14 @@ ${extractFunction("search_term_is_alcohol", migration)}
 ${extractFunction("search_alcohol_term_hit", migration)}
 ${extractFunction("search_term_match", migration)}
 ${extractFunction("search_query_parts", migration)}
-${extractFunction("search_products", giftsMigration)}
+
+create function public.set_limit(real)
+returns real
+language sql
+volatile
+as $$ select $1 $$;
+
+${extractFunction("search_products", searchMigration)}
 `;
 
 type SearchRow = {
@@ -578,8 +586,10 @@ test("cuisine search uses vendor tags under origin tags and skips pet food", asy
 });
 
 test("the search migration keeps null-category matches, pet food, trigram, accents, and the alcohol gate", () => {
-  const sql = readFileSync(join(root, giftsMigration), "utf8");
+  const gifts = readFileSync(join(root, giftsMigration), "utf8");
+  const sql = readFileSync(join(root, searchMigration), "utf8");
   const helpers = readFileSync(join(root, migration), "utf8");
+  assert.match(gifts, /'baby'::text,\s*'gifts-and-sets'::text/);
   assert.match(sql, /vm\.product_category is null\s+and match\.existing/);
   assert.match(sql, /when vm\.product_category is null then 0\.01/);
   assert.match(sql, /vm\.product_category = 'pet-food'/);
@@ -589,9 +599,10 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.match(sql, /alcohol_query\.allow/);
   assert.match(sql, /vm\.product_category is distinct from 'baby'/);
   assert.match(sql, /vm\.product_category is distinct from 'alcohol'/);
-  assert.match(sql, /'baby'::text,\s*'gifts-and-sets'::text/);
   assert.match(sql, /\('baby'\),\s*\('gifts-and-sets'\)/);
   assert.match(sql, /'garden-and-outdoor',\s*'gifts-and-sets'/);
+  assert.match(sql, /from candidates cand/);
+  assert.match(sql, /public\.set_limit\(0\.3\)/);
   assert.doesNotMatch(sql, /gifts_query/);
   assert.match(sql, /public\.fold_search_text\(vm\.name\) % public\.fold_search_text\(clock\.query\)/);
   assert.match(sql, /similarity\(public\.fold_search_text\(vm\.name\), public\.fold_search_text\(clock\.query\)\) >= 0\.45/);
