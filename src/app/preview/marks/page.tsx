@@ -164,26 +164,96 @@ const SECTIONS: SectionSpec[] = [
 ];
 
 /* ============================================================================
- * CURRENT MARKS (for side-by-side comparison)
+ * LEGACY BASELINE MARKS (preserved here for side-by-side comparison)
  * ========================================================================== */
-function RenderCurrentMark({ section, className }: { section: SectionKey; className?: string }) {
+function LegacyBaselineMark({ section, className }: { section: SectionKey; className?: string }) {
+  const base: SvgProps = {
+    viewBox: "0 0 24 24",
+    fill: "currentColor",
+    className,
+    "aria-hidden": true,
+  };
+  const platePath = (x: number, y: number, w: number, h: number, c = 1.6) =>
+    `M${x + c} ${y}H${x + w - c}L${x + w} ${y + c}V${y + h - c}L${x + w - c} ${y + h}H${x + c}L${x} ${y + h - c}V${y + c}Z`;
+
   switch (section) {
     case "find":
-      return <SlatsMark className={className} />;
+      return (
+        <svg {...base}>
+          <path d={platePath(3, 3.4, 18, 4.4, 1.3)} />
+          <path d={platePath(3, 9.8, 14.2, 4.4, 1.3)} />
+          <path d={platePath(3, 16.2, 16.2, 4.4, 1.3)} />
+        </svg>
+      );
     case "week":
-      return <WeekMark className={className} />;
+      return (
+        <svg {...base}>
+          <rect x="2.6" y="9" width="1.7" height="8" />
+          <rect x="5.5" y="9" width="1.7" height="8" />
+          <rect x="8.4" y="9" width="1.7" height="8" />
+          <rect x="11.3" y="9" width="1.7" height="8" />
+          <rect x="14.2" y="9" width="1.7" height="8" />
+          <rect x="17.1" y="4.6" width="1.85" height="12.4" />
+          <rect x="20.1" y="9" width="1.7" height="8" />
+        </svg>
+      );
     case "vendorsToday":
-      return <CrateMark className={className} />;
+      return (
+        <svg {...base}>
+          <path d="M5.5 5h13l2.2 3.4H3.3Z" />
+          <path
+            fillRule="evenodd"
+            d="M4 8.4h16v11.2H4Zm4.35 1.6h1.7v8h-1.7Zm5.6 0h1.7v8h-1.7Z"
+          />
+        </svg>
+      );
     case "vendorsWeek":
-      return <TallyMark className={className} />;
+      return (
+        <svg {...base}>
+          <rect x="3.2" y="3.8" width="2.15" height="16.4" />
+          <rect x="6.9" y="3.8" width="2.15" height="16.4" />
+          <rect x="10.6" y="3.8" width="2.15" height="16.4" />
+          <rect x="14.3" y="3.8" width="2.15" height="16.4" />
+          <polygon points="15.4,4.6 21.1,18.2 18.7,19.4 13,5.8" />
+        </svg>
+      );
     case "saved":
-      return <TicketMark className={className} />;
+      return (
+        <svg {...base}>
+          <path
+            fillRule="evenodd"
+            d="M3 6.2h18v11.6H3ZM0.85 12a2.15 2.15 0 1 0 4.3 0 2.15 2.15 0 1 0-4.3 0ZM13.6 8.8h5.2v1.45h-5.2Zm0 2.7h4.1v1.45h-4.1Zm0 2.7h5.2v1.45h-5.2Z"
+          />
+        </svg>
+      );
     case "weekly":
-      return <SignMark className={className} />;
+      return (
+        <svg {...base}>
+          <path
+            fillRule="evenodd"
+            d={`${platePath(3, 3, 18, 18, 2.4)}M7 7.2h10v2.4H7zm0 3.8h10v2.4H7zm0 3.8h7.2v2.4H7z`}
+          />
+        </svg>
+      );
     case "map":
-      return <BlocksMark className={className} />;
+      return (
+        <svg {...base}>
+          <rect x="3" y="7.2" width="18" height="2.1" />
+          <rect x="3" y="14.7" width="18" height="2.1" />
+          <rect x="7.2" y="3" width="2.1" height="18" />
+          <rect x="14.7" y="3" width="2.1" height="18" />
+          <path d={platePath(16.6, 16.6, 4.6, 4.6, 1)} />
+        </svg>
+      );
     case "directory":
-      return <RulesMark className={className} />;
+      return (
+        <svg {...base}>
+          <rect x="3" y="4.2" width="18" height="2.2" />
+          <rect x="3" y="8.7" width="13.5" height="2.2" />
+          <rect x="3" y="13.2" width="16.2" height="2.2" />
+          <rect x="3" y="17.7" width="10.4" height="2.2" />
+        </svg>
+      );
   }
 }
 
@@ -347,25 +417,28 @@ function DraftMark({ section, className }: { section: SectionKey; className?: st
 }
 
 /* ============================================================================
- * DIRECTION 2: FARMERS' HALL WOODCUT & SIGNWRITER STAMPS
- * Crisp negative-space woodblock / linocut silhouettes representing real
- * market hall objects: striped canopy awning, slatted bushel crate, hanging
- * chalkboard, woven basket, arched market hall truss.
+ * DIRECTION 2: FARMERS' HALL WOODCUT & SIGNWRITER STAMPS (Canonical Production Marks)
+ * Renders the exact production components from @/components/marks.
  * ========================================================================== */
-const STAMP_MARKS: Record<SectionKey, (props: SvgProps) => ReactNode> = {
-  find: SlatsMark,
-  week: WeekMark,
-  vendorsToday: CrateMark,
-  vendorsWeek: TallyMark,
-  saved: TicketMark,
-  weekly: SignMark,
-  map: BlocksMark,
-  directory: RulesMark,
-};
-
 function WoodcutMark({ section, className }: { section: SectionKey; className?: string }) {
-  const Mark = STAMP_MARKS[section];
-  return <Mark className={className} />;
+  switch (section) {
+    case "find":
+      return <SlatsMark className={className} />;
+    case "week":
+      return <WeekMark className={className} />;
+    case "vendorsToday":
+      return <CrateMark className={className} />;
+    case "vendorsWeek":
+      return <TallyMark className={className} />;
+    case "saved":
+      return <TicketMark className={className} />;
+    case "weekly":
+      return <SignMark className={className} />;
+    case "map":
+      return <BlocksMark className={className} />;
+    case "directory":
+      return <RulesMark className={className} />;
+  }
 }
 
 /* ============================================================================
@@ -478,7 +551,7 @@ function MockupPanelHeader({
                 currentChipTone,
               )}
             >
-              <RenderCurrentMark section={spec.key} className={rail ? "size-4" : "size-5"} />
+              <LegacyBaselineMark section={spec.key} className={rail ? "size-4" : "size-5"} />
             </span>
           )}
 
@@ -685,24 +758,28 @@ export default function MarksPreviewPage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pt-6 lg:px-6">
+        {/* Section 0: 10x (240px) SVG Construction Grid Loupe */}
         <section className="mb-8 bg-card p-5 ring-1 ring-border">
           <div className="border-b border-border pb-3">
-            <h2>Construction loupe</h2>
+            <h2>10× Construction Grid Loupe — Direction B Woodcut Stamps</h2>
             <p className="mt-1 text-base text-muted-foreground">
-              Each stamp at 10× on the 24×24 grid, then at the page size (36px) and the rail size (32px).
+              Every stamp inspected at 240×240px on its 24×24 coordinate grid alongside its exact 36px page tile and 32px rail tile.
             </p>
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {SECTIONS.map((spec) => (
-              <figure key={spec.key} className="border border-border bg-background p-3">
-                <figcaption className="mb-2 flex items-baseline justify-between gap-2">
-                  <span className="text-base font-medium">{spec.title}</span>
+              <figure
+                key={spec.key}
+                className="flex flex-col justify-between border border-border bg-background p-3.5"
+              >
+                <figcaption className="mb-2.5 flex items-baseline justify-between gap-2">
+                  <span className="text-base font-medium text-foreground">{spec.title}</span>
                   <span className="type-nums text-sm text-muted-foreground">{spec.idLabel}</span>
                 </figcaption>
-                <div className="relative size-60 bg-secondary/70">
+                <div className="relative mx-auto size-60 bg-secondary/70 ring-1 ring-border">
                   <svg
                     viewBox="0 0 24 24"
-                    className="absolute inset-0 size-full text-foreground/20"
+                    className="absolute inset-0 size-full text-foreground/15"
                     aria-hidden
                   >
                     {Array.from({ length: 25 }, (_, index) => (
@@ -713,7 +790,7 @@ export default function MarksPreviewPage() {
                           x2={index}
                           y2="24"
                           stroke="currentColor"
-                          strokeWidth="0.035"
+                          strokeWidth="0.04"
                         />
                         <line
                           x1="0"
@@ -721,20 +798,23 @@ export default function MarksPreviewPage() {
                           x2="24"
                           y2={index}
                           stroke="currentColor"
-                          strokeWidth="0.035"
+                          strokeWidth="0.04"
                         />
                       </g>
                     ))}
                   </svg>
                   <WoodcutMark section={spec.key} className="relative size-60 text-board" />
                 </div>
-                <div className="mt-3 flex items-end gap-3">
-                  <span className="flex size-9 items-center justify-center bg-board text-chalk shadow-[2px_2px_0_0_rgba(28,25,22,0.25)]">
-                    <WoodcutMark section={spec.key} className="size-5" />
-                  </span>
-                  <span className="flex size-8 items-center justify-center bg-stamp text-chalk shadow-[2px_2px_0_0_rgba(28,25,22,0.28)]">
-                    <WoodcutMark section={spec.key} className="size-[18px]" />
-                  </span>
+                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex size-9 items-center justify-center bg-board text-chalk shadow-[2px_2px_0_0_rgba(28,25,22,0.25)]">
+                      <WoodcutMark section={spec.key} className="size-5" />
+                    </span>
+                    <span className="flex size-8 items-center justify-center bg-stamp text-chalk shadow-[2px_2px_0_0_rgba(28,25,22,0.28)]">
+                      <WoodcutMark section={spec.key} className="size-[18px]" />
+                    </span>
+                  </div>
+                  <span className="type-nums text-sm text-muted-foreground">36px / 32px</span>
                 </div>
               </figure>
             ))}
@@ -769,9 +849,9 @@ export default function MarksPreviewPage() {
                   {/* Current */}
                   <div className="flex flex-col items-center gap-1.5 bg-card p-2.5 ring-1 ring-border">
                     <span className="stall-chip-sm flex size-10 items-center justify-center bg-secondary text-muted-foreground">
-                      <RenderCurrentMark section={spec.key} className="size-5" />
+                      <LegacyBaselineMark section={spec.key} className="size-5" />
                     </span>
-                    <span className="text-sm text-muted-foreground">Current</span>
+                    <span className="text-sm text-muted-foreground">Old</span>
                   </div>
 
                   {/* Direction A: Architectural Drafting */}

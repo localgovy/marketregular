@@ -22,7 +22,7 @@ function plate(x: number, y: number, w: number, h: number, c = 1.6) {
   return `M${x + c} ${y}H${x + w - c}L${x + w} ${y + c}V${y + h - c}L${x + w - c} ${y + h}H${x + c}L${x} ${y + h - c}V${y + c}Z`;
 }
 
-/** Solid woodcut / signwriter stamp. Gaps are cut out of the fill. */
+/** Solid woodcut / signwriter stamp — high-contrast negative-space relief on a 24x24 grid. */
 function StampMark({ children, className, ...props }: MarkProps & { children: ReactNode }) {
   return (
     <svg
@@ -39,53 +39,57 @@ function StampMark({ children, className, ...props }: MarkProps & { children: Re
   );
 }
 
-/** Slatted harvest crate with apple, carrot, and greens — vendors selling today. */
+/** Slatted harvest crate with orchard apple, tapered root carrot, and berry cluster — vendors selling today. */
 export function CrateMark(props: MarkProps) {
   return (
     <StampMark {...props}>
+      {/* Left: orchard apple with stem & leaf */}
+      <circle cx="6.2" cy="6.8" r="2.2" />
+      <path d="M5.9 3.1H6.7V4.9H5.9Z" />
+      <path d="M6.7 3.8C7.9 2.4 9.2 2.8 8.3 4.3C7.6 4.3 7.0 4.1 6.7 3.8Z" />
+      {/* Center: tapered root carrot with 3-frond crown */}
+      <polygon points="10.2,4.5 13.8,4.5 12.6,9.2 11.4,9.2" />
+      <polygon points="12,4.5 10.1,1.6 11.5,3.4 12,1.2 12.5,3.4 13.9,1.6" />
+      {/* Right: harvest berry cluster + stem */}
+      <circle cx="16.2" cy="5.5" r="1.15" />
+      <circle cx="18.6" cy="5.5" r="1.15" />
+      <circle cx="15.4" cy="7.5" r="1.15" />
+      <circle cx="17.6" cy="7.5" r="1.15" />
+      <circle cx="19.8" cy="7.5" r="1.15" />
+      <path d="M17.1 3.2H17.9V4.8H17.1Z" />
+      {/* Dovetail slatted wooden bushel crate with corner stiles & top rim */}
       <path
         fillRule="evenodd"
-        d="M3.2 9.35H20.8V21.35H3.2Z M5.55 11.35H18.45V12.85H5.55Z M5.55 14.55H18.45V16.05H5.55Z M5.55 17.75H18.45V19.15H5.55Z M3.2 13.7A1.85 1.85 0 0 1 3.2 17.4Z M20.8 13.7A1.85 1.85 0 0 0 20.8 17.4Z"
+        d="M2.2 9.2H21.8V11.3H20.6V21.4H3.4V11.3H2.2V9.2ZM5.6 12.6H18.4V14.3H5.6V12.6ZM5.6 16.0H18.4V17.7H5.6V16.0Z"
       />
-      <path d="M10.4 4.15h3.2L12.15 9.6h-1.15z" />
-      <path d="M10.55 4.15 9.2 1.5 11.25 3.65Z" />
-      <path d="M11.2 3.9 11.9 1.15 12.65 3.9Z" />
-      <path d="M12.5 4.15 14.75 1.65 13.2 3.8Z" />
-      <path
-        fillRule="evenodd"
-        d="M4.25 7.2a2.2 2.2 0 1 0 4.4 0 2.2 2.2 0 1 0-4.4 0M5.95 5.2h1.05l.05 1.15h-1.15z"
-      />
-      <path d="M6.15 3.05h.75V5.25h-.75z" />
-      <path d="M6.95 3.55C8.4 2.15 9.55 2.85 8.25 4.55 7.55 4.05 7.15 3.75 6.95 3.55Z" />
-      <path d="M15.85 6.45a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0M17.55 6.05a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0M16.7 7.85a1.45 1.45 0 1 0 2.9 0 1.45 1.45 0 1 0-2.9 0" />
-      <path d="M18.15 4.85c1.35-1.2 2.35-.45 1.15.85-.4-.35-.8-.5-1.15-.6z" />
     </StampMark>
   );
 }
 
-/** County-fair rosette with a cut star and notched tails — this week’s top stalls. */
+/** County-fair 16-pleat prize rosette with 5-point center star cutout and twin notched tails — top 5 this week. */
 export function TallyMark(props: MarkProps) {
   return (
     <StampMark {...props}>
       <path
         fillRule="evenodd"
-        d="M12 2.6 12.87 3.79 14.12 3.02 14.47 4.45 15.92 4.23 15.7 5.68 17.13 6.03 16.36 7.28 17.55 8.15 16.36 9.02 17.13 10.27 15.7 10.62 15.92 12.07 14.47 11.85 14.12 13.28 12.87 12.51 12 13.7 11.13 12.51 9.88 13.28 9.53 11.85 8.08 12.07 8.3 10.62 6.87 10.27 7.64 9.02 6.45 8.15 7.64 7.28 6.87 6.03 8.3 5.68 8.08 4.23 9.53 4.45 9.88 3.02 11.13 3.79Z M12 5.7 12.58 7.36 14.33 7.39 12.93 8.45 13.44 10.13 12 9.13 10.56 10.13 11.07 8.45 9.67 7.39 11.42 7.36Z"
+        d="M12 2.6 12.87 3.79 14.12 3.02 14.47 4.45 15.92 4.23 15.7 5.68 17.13 6.03 16.36 7.28 17.55 8.15 16.36 9.02 17.13 10.27 15.7 10.62 15.92 12.07 14.47 11.85 14.12 13.28 12.87 12.51 12 13.7 11.13 12.51 9.88 13.28 9.53 11.85 8.08 12.07 8.3 10.62 6.87 10.27 7.64 9.02 6.45 8.15 7.64 7.28 6.87 6.03 8.3 5.68 8.08 4.23 9.53 4.45 9.88 3.02 11.13 3.79ZM12 5.45 12.64 7.28 14.57 7.31 13.03 8.48 13.59 10.33 12 9.23 10.41 10.33 10.97 8.48 9.43 7.31 11.36 7.28Z"
       />
-      <path d="M9.1 12.2 6.7 21.4 9 19.7 10.2 21.6 11.4 12.8Z" />
-      <path d="M14.9 12.2 17.3 21.4 15 19.7 13.8 21.6 12.6 12.8Z" />
+      <polygon points="8.9,13.4 6.6,21.5 9.0,19.8 10.3,21.6 11.4,14.2" />
+      <polygon points="15.1,13.4 17.4,21.5 15.0,19.8 13.7,21.6 12.6,14.2" />
     </StampMark>
   );
 }
 
-/** Woven market basket — saved. */
+/** Woven market shopper's basket with twin handles, projecting rim, and wicker stave slots — saved. */
 export function TicketMark(props: MarkProps) {
   return (
     <StampMark {...props}>
-      <path d="M6.15 7.75 8.35 2.25h1.9L8.45 7.75Z" />
-      <path d="M17.85 7.75 15.65 2.25h-1.9l1.8 5.5Z" />
+      <polygon points="6.0,7.4 8.3,2.2 10.2,2.2 8.2,7.4" />
+      <polygon points="18.0,7.4 15.7,2.2 13.8,2.2 15.8,7.4" />
+      <rect x="2.4" y="7.8" width="19.2" height="2.3" />
       <path
         fillRule="evenodd"
-        d="M3.55 7.55h16.9l-.6 2.35H4.15ZM4.95 9.9h14.1l-1.65 11.45H6.6ZM8.35 12.35h1.55l-.25 6.7H8.1ZM11.25 12.35h1.55v6.7h-1.55ZM14.15 12.35h1.55l-.25 6.7h-1.55Z"
+        d="M3.8 10.8H20.2L18.4 21.4H5.6L3.8 10.8ZM7.1 12.6L7.7 19.0H9.4L8.9 12.6H7.1ZM11.15 12.6V19.0H12.85V12.6H11.15ZM15.1 12.6L14.6 19.0H16.3L16.9 12.6H15.1Z"
       />
     </StampMark>
   );
@@ -104,82 +108,94 @@ export function SearchMark(props: MarkProps) {
   );
 }
 
-/** Striped stall awning and wayfinding lens — find / filters. */
+/** 4-bay striped market canopy & scalloped valance over an optical wayfinding lens — find / filters. */
 export function SlatsMark(props: MarkProps) {
   return (
     <StampMark {...props}>
+      {/* Sloped 4-bay canopy with 3 perspective rib cutouts */}
       <path
         fillRule="evenodd"
-        d="M3.15 1.55h17.7L21.98 6.05H1.55ZM5.57 6.05 6.63 1.55h1.26L7.02 6.05ZM11.04 6.05 11.37 1.55h1.25l-.13 4.5ZM16.51 6.05 16.11 1.55h1.25L17.96 6.05Z"
+        d="M3.2 1.5H20.8L22.4 5.8H1.6L3.2 1.5ZM5.75 5.8L6.7 1.5H7.85L7.15 5.8H5.75ZM11.3 5.8L11.4 1.5H12.6L12.7 5.8H11.3ZM16.85 5.8L16.15 1.5H17.3L18.25 5.8H16.85Z"
       />
-      <path d="M1.66 6.15C1.66 7.2 2.51 8.05 3.56 8.05 4.61 8.05 5.46 7.2 5.46 6.15ZM7.13 6.15C7.13 7.2 7.98 8.05 9.03 8.05 10.08 8.05 10.93 7.2 10.93 6.15ZM12.6 6.15C12.6 7.2 13.45 8.05 14.5 8.05 15.55 8.05 16.4 7.2 16.4 6.15ZM18.07 6.15C18.07 7.2 18.92 8.05 19.97 8.05 21.02 8.05 21.87 7.2 21.87 6.15Z" />
+      {/* 4 semicircular valance scallops aligned under the 4 canopy bays */}
+      <path d="M1.6 6.6H5.75A2.075 2.075 0 0 1 1.6 6.6ZM7.15 6.6H11.3A2.075 2.075 0 0 1 7.15 6.6ZM12.7 6.6H16.85A2.075 2.075 0 0 1 12.7 6.6ZM18.25 6.6H22.4A2.075 2.075 0 0 1 18.25 6.6Z" />
+      {/* Precision wayfinding loupe */}
       <path
         fillRule="evenodd"
-        d="M11.15 10a4.2 4.2 0 1 0 .02 0ZM11.15 12.2a2 2 0 1 1-.02 0Z"
+        d="M10.8 10.2A5.2 5.2 0 1 0 10.8 20.6A5.2 5.2 0 0 0 10.8 10.2ZM10.8 12.45A2.95 2.95 0 1 1 10.8 18.35A2.95 2.95 0 0 1 10.8 12.45Z"
       />
-      <path d="m13.4 17.5 2.1-1.9 3.7 3.9-2.1 1.9z" />
+      <polygon points="14.1,19.1 15.8,17.4 19.8,21.4 18.1,23.1" />
     </StampMark>
   );
 }
 
-/** Hanging market-day board. Saturday takes the wide stall — month / week. */
+/** Hanging market-day flip board with twin binding clasps and Saturday stamped tall — month / week. */
 export function WeekMark(props: MarkProps) {
   return (
     <StampMark {...props}>
-      <path d="M2.6 5.7h18.8v3.45H2.6z" />
+      {/* Twin top iron binding clasps */}
+      <rect x="6.4" y="1.6" width="2.2" height="3.8" />
+      <rect x="15.4" y="1.6" width="2.2" height="3.8" />
+      {/* Board frame with clasp cutouts, recessed calendar well, and 7-day blocks (Saturday tall on right) */}
       <path
         fillRule="evenodd"
-        d="M5.65 4.55a2.05 2.05 0 1 0 4.1 0 2.05 2.05 0 0 0-4.1 0Zm1.1 0a.95.95 0 1 1 1.9 0 .95.95 0 0 1-1.9 0ZM14.25 4.55a2.05 2.05 0 1 0 4.1 0 2.05 2.05 0 0 0-4.1 0Zm1.1 0a.95.95 0 1 1 1.9 0 .95.95 0 0 1-1.9 0Z"
+        d="M2.6 4.2H5.5V6.2H9.5V4.2H14.5V6.2H18.5V4.2H21.4V21.4H2.6V4.2ZM4.6 8.6H19.4V19.4H4.6V8.6ZM6.1 10.2H9.1V13.2H6.1V10.2ZM10.5 10.2H13.5V13.2H10.5V10.2ZM14.9 10.2H17.9V17.8H14.9V10.2ZM6.1 14.8H9.1V17.8H6.1V14.8ZM10.5 14.8H13.5V17.8H10.5V14.8Z"
       />
-      <path d="M3.5 10.55h3.15v3.35H3.5zm4.65 0h3.15v3.35H8.15zm4.65 0h3.15v3.35h-3.15zm4.65 0h3.15v3.35h-3.15zM3.5 15.4h3.15v3.35H3.5zm4.65 0h7.8v3.35h-7.8zm9.3 0h3.15v3.35h-3.15z" />
     </StampMark>
   );
 }
 
-/** Folded street atlas with a survey pin — map. */
+/** Folded triptych street atlas with arterial grid cuts and surveyor pin — map. */
 export function BlocksMark(props: MarkProps) {
   return (
     <StampMark {...props}>
+      {/* Left map fold with street intersection */}
       <path
         fillRule="evenodd"
-        d="M2.25 6.35 8.05 4.35v13.2l-5.8 2ZM3.15 11.15h4.15v1.55H3.15ZM4.55 6.7h1.55v9.4H4.55Z"
+        d="M2.2 5.4L8.0 3.4V19.0L2.2 21.0V5.4ZM3.2 11.2L7.2 9.8V11.4L3.2 12.8V11.2ZM4.6 6.2L6.0 5.7V18.0L4.6 18.5V6.2Z"
       />
+      {/* Center map fold with street intersection */}
       <path
         fillRule="evenodd"
-        d="M9.45 4.35h5.4v15.3h-5.4ZM10.15 10.7h3.95v1.55h-3.95ZM11.35 5.7h1.55v8.6h-1.55Z"
+        d="M9.3 3.4L14.7 5.4V21.0L9.3 19.0V3.4ZM10.1 9.8L13.9 11.2V12.8L10.1 11.4V9.8ZM11.4 5.9L12.8 6.4V18.5L11.4 18.0V5.9Z"
       />
+      {/* Right map fold with carved surveyor pin + center dot */}
       <path
         fillRule="evenodd"
-        d="M16.25 4.7 21.85 6.55v12.7l-5.6-1.85ZM19 7.55a2.15 2.15 0 0 0-2.15 2.15c0 1.7 2.15 4.15 2.15 4.15s2.15-2.45 2.15-4.15A2.15 2.15 0 0 0 19 7.55Z"
+        d="M16.0 5.4L21.8 3.4V19.0L16.0 21.0V5.4ZM18.9 7.8C17.45 7.8 16.5 8.85 16.5 10.2C16.5 12.0 18.9 14.9 18.9 14.9C18.9 14.9 21.3 12.0 21.3 10.2C21.3 8.85 20.35 7.8 18.9 7.8Z"
       />
-      <circle cx="19" cy="9.7" r="0.78" />
+      <circle cx="18.9" cy="10.15" r="0.95" />
     </StampMark>
   );
 }
 
-/** Market hall: monitor roof, arch, and side bays — directory. */
+/** Grand brick market hall facade with clerestory roof lantern, pediment, central arch, and side arcade bays — directory. */
 export function RulesMark(props: MarkProps) {
   return (
     <StampMark {...props}>
-      <path d="M1.5 8.25 9.15 3.4V1.45h5.7V3.4L22.5 8.25Z" />
-      <path d="M1.15 7.85h21.7v1.7H1.15z" />
+      {/* Clerestory roof monitor & gabled pediment with louver vent */}
       <path
         fillRule="evenodd"
-        d="M2 9.35h20v9.85H2ZM3.35 11.7h2.7v4.5h-2.7ZM17.95 11.7h2.7v4.5h-2.7ZM9 19.2V13.55A3 3 0 0 0 15 13.55V19.2Z"
+        d="M8.6 1.6H15.4V3.6L22.4 7.8V8.8H1.6V7.8L8.6 3.6V1.6ZM10.2 5.2H13.8V6.8H10.2V5.2Z"
       />
-      <path d="M11.2 10.55h1.6l.3 1.65h-2.2z" />
-      <path d="M1.35 18.55h21.3v3.05H1.35z" />
+      {/* Main hall masonry facade with central arched entrance & flanking arcade windows */}
+      <path
+        fillRule="evenodd"
+        d="M2.6 9.8H21.4V18.8H15.2V14.2A3.2 3.2 0 0 0 8.8 14.2V18.8H2.6V9.8ZM4.5 11.6H6.9V16.6H4.5V11.6ZM17.1 11.6H19.5V16.6H17.1V11.6Z"
+      />
+      {/* Stone foundation plinth */}
+      <rect x="1.6" y="19.6" width="20.8" height="2.0" />
     </StampMark>
   );
 }
 
-/** Enamel stall plate with corner rivets — a market, a place. */
+/** Enamel stall plate with four corner rivets and recessed inner tablet — a market, a place, identity plate. */
 export function PlateMark(props: MarkProps) {
   return (
     <StampMark {...props}>
       <path
         fillRule="evenodd"
-        d="M3 4h18v16H3Zm3.4 3.4h11.2v9.2H6.4ZM3.98 5.7a.72.72 0 1 0 1.44 0 .72.72 0 0 0-1.44 0Zm14.6 0a.72.72 0 1 0 1.44 0 .72.72 0 0 0-1.44 0ZM3.98 18.3a.72.72 0 1 0 1.44 0 .72.72 0 0 0-1.44 0Zm14.6 0a.72.72 0 1 0 1.44 0 .72.72 0 0 0-1.44 0Z"
+        d="M2.5 4.0H21.5V20.0H2.5V4.0ZM6.2 7.6H17.8V16.4H6.2V7.6ZM4.4 5.9A0.85 0.85 0 1 0 4.4 7.6A0.85 0.85 0 0 0 4.4 5.9ZM19.6 5.9A0.85 0.85 0 1 0 19.6 7.6A0.85 0.85 0 0 0 19.6 5.9ZM4.4 16.4A0.85 0.85 0 1 0 4.4 18.1A0.85 0.85 0 0 0 4.4 16.4ZM19.6 16.4A0.85 0.85 0 1 0 19.6 18.1A0.85 0.85 0 0 0 19.6 16.4ZM8.4 10.6H15.6V13.4H8.4V10.6Z"
       />
     </StampMark>
   );
@@ -233,19 +249,20 @@ export function TagMark(props: MarkProps) {
   );
 }
 
-/** Field clipboard with a spring clip and two-column dispatch — notes, blog, portals. */
+/** Field reporter's clipboard with brass spring clip, masthead bar, and two-column dispatch rules — notes, blog, portals. */
 export function SignMark(props: MarkProps) {
   return (
     <StampMark {...props}>
+      {/* Brass spring clip with center hanging hole */}
       <path
         fillRule="evenodd"
-        d="M4.4 6h15.2v15.4H4.4ZM6.5 8.55h11v10.7h-11z"
+        d="M8.6 1.8H15.4V5.4H8.6V1.8ZM12 2.75A0.85 0.85 0 1 0 12 4.45A0.85 0.85 0 0 0 12 2.75Z"
       />
+      {/* Clipboard frame, recessed sheet, masthead block, and 2-column broadsheet rules */}
       <path
         fillRule="evenodd"
-        d="M8.7 6.9V3.7A3.3 1.7 0 0 1 12 2.15 3.3 1.7 0 0 1 15.3 3.7V6.9ZM10.95 4.15a1.05 1.05 0 1 0 2.1 0 1.05 1.05 0 0 0-2.1 0Z"
+        d="M4.2 4.2H7.4V6.4H16.6V4.2H19.8V21.4H4.2V4.2ZM6.4 8.0H17.6V19.2H6.4V8.0ZM7.6 9.2H16.4V11.0H7.6V9.2ZM7.6 12.4H11.4V13.6H7.6V12.4ZM12.6 12.4H16.4V13.6H12.6V12.4ZM7.6 14.6H11.4V15.8H7.6V14.6ZM12.6 14.6H16.4V15.8H12.6V14.6ZM7.6 16.8H11.4V18.0H7.6V16.8ZM12.6 16.8H15.2V18.0H12.6V16.8Z"
       />
-      <path d="M7.55 9.45h8.9v1.6h-8.9zM7.55 12.45h3.7v1.05h-3.7zm4.85 0h3.9v1.05h-3.9zM7.55 14.55h3.7v1.05h-3.7zm4.85 0h3.9v1.05h-3.9zM7.55 16.65h3.7v1.05h-3.7zm4.85 0h3.9v1.05h-3.9z" />
     </StampMark>
   );
 }
