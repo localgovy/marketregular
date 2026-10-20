@@ -24,37 +24,37 @@ type ToneStyle = {
 const quiet: ToneStyle = {
   shell: "bg-card text-card-foreground ring-1 ring-border",
   ink: "paper",
-  mark: "border-border bg-secondary/70 text-foreground shadow-[inset_0_0_0_2px_rgba(28,25,22,0.05)]",
+  mark: "bg-board text-chalk shadow-[2px_2px_0_0_rgba(28,25,22,0.25)]",
 };
 
 const tones: Record<PanelTone, ToneStyle> = {
   find: {
     shell: "bg-panel-find text-primary-foreground",
     ink: "leaf",
-    mark: "border-chalk/50 bg-board/60 text-chalk shadow-[inset_0_0_0_2px_rgba(243,238,228,0.12)]",
+    mark: "bg-chalk text-board shadow-[2px_2px_0_0_rgba(28,25,22,0.35)]",
     band: "awning-leaf",
   },
   open: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
     ink: "paper",
-    mark: "border-primary bg-primary/10 text-primary shadow-[inset_0_0_0_2px_rgba(58,101,88,0.12)]",
+    mark: "bg-primary text-chalk shadow-[2px_2px_0_0_var(--board)]",
     band: "bg-[color-mix(in_srgb,var(--primary)_9%,var(--card))]",
   },
   vendors: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
     ink: "paper",
-    mark: "border-stamp/60 bg-stamp/10 text-stamp shadow-[inset_0_0_0_2px_rgba(158,74,62,0.1)]",
+    mark: "bg-stamp text-chalk shadow-[2px_2px_0_0_rgba(28,25,22,0.28)]",
   },
   menus: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
     ink: "paper",
-    mark: "border-foreground bg-secondary text-foreground shadow-[inset_0_0_0_2px_rgba(28,25,22,0.08)]",
+    mark: "bg-foreground text-receipt shadow-[2px_2px_0_0_var(--stamp)]",
   },
   here: quiet,
   map: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
     ink: "paper",
-    mark: "border-primary/60 bg-primary/10 text-primary shadow-[inset_0_0_0_2px_rgba(58,101,88,0.1)]",
+    mark: "bg-board text-chalk shadow-[2px_2px_0_0_rgba(28,25,22,0.25)]",
   },
   back: quiet,
   more: quiet,
@@ -109,7 +109,7 @@ export function HomePanel({
         <div className="flex min-w-0 items-start gap-3">
           <span
             className={cn(
-              "mt-0.5 flex shrink-0 items-center justify-center border",
+              "mt-0.5 flex shrink-0 items-center justify-center",
               rail ? "size-8" : "size-9",
               t.mark,
             )}

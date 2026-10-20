@@ -352,123 +352,20 @@ function DraftMark({ section, className }: { section: SectionKey; className?: st
  * market hall objects: striped canopy awning, slatted bushel crate, hanging
  * chalkboard, woven basket, arched market hall truss.
  * ========================================================================== */
+const STAMP_MARKS: Record<SectionKey, (props: SvgProps) => ReactNode> = {
+  find: SlatsMark,
+  week: WeekMark,
+  vendorsToday: CrateMark,
+  vendorsWeek: TallyMark,
+  saved: TicketMark,
+  weekly: SignMark,
+  map: BlocksMark,
+  directory: RulesMark,
+};
+
 function WoodcutMark({ section, className }: { section: SectionKey; className?: string }) {
-  const base: SvgProps = {
-    viewBox: "0 0 24 24",
-    fill: "currentColor",
-    className,
-    "aria-hidden": true,
-  };
-
-  switch (section) {
-    case "find":
-      // Striped Market Canopy Valance over a Wayfinding Lens
-      return (
-        <svg {...base}>
-          {/* 5-pleat market awning */}
-          <path d="M2.5 3.5H21.5L22.5 7.5H1.5L2.5 3.5Z" />
-          <path d="M1.5 8.3H6.1C6.1 9.6 5.1 10.6 3.8 10.6C2.5 10.6 1.5 9.6 1.5 8.3ZM6.9 8.3H11.5C11.5 9.6 10.5 10.6 9.2 10.6C7.9 10.6 6.9 9.6 6.9 8.3ZM12.5 8.3H17.1C17.1 9.6 16.1 10.6 14.8 10.6C13.5 10.6 12.5 9.6 12.5 8.3ZM17.9 8.3H22.5C22.5 9.6 21.5 10.6 20.2 10.6C18.9 10.6 17.9 9.6 17.9 8.3Z" />
-          {/* Precision optical lens below */}
-          <path
-            fillRule="evenodd"
-            d="M11 11.8A4.6 4.6 0 1 0 11 21A4.6 4.6 0 0 0 11 11.8ZM11 13.7A2.7 2.7 0 1 1 11 19.1A2.7 2.7 0 0 1 11 13.7Z"
-          />
-          <polygon points="14.3,18.5 15.7,17.1 19.4,20.8 18.0,22.2" />
-        </svg>
-      );
-
-    case "week":
-      // Hanging Market-Day Flip Board with Twin Iron Hooks & Starred Day
-      return (
-        <svg {...base}>
-          {/* Twin iron hanging rings */}
-          <path d="M6.8 2H8.8V5.5H6.8V2ZM15.2 2H17.2V5.5H15.2V2Z" />
-          <path
-            fillRule="evenodd"
-            d="M3 4.5H21V21H3V4.5ZM4.8 8.8H19.2V19.2H4.8V8.8ZM6.5 10.6H9.5V13.4H6.5V10.6ZM10.5 10.6H13.5V13.4H10.5V10.6ZM14.5 10.6H17.5V17.4H14.5V10.6ZM6.5 14.6H9.5V17.4H6.5V14.6ZM10.5 14.6H13.5V17.4H10.5V14.6Z"
-          />
-        </svg>
-      );
-
-    case "vendorsToday":
-      // Slatted Harvest Crate Overflowing with Botanical Leaves & Root Produce
-      return (
-        <svg {...base}>
-          {/* Leafy tops & produce emerging from crate */}
-          <path d="M7.5 7.8C5.8 7.8 4.8 6.3 5.2 4.2C7.2 4.2 8.6 5.5 8.6 7.8H7.5Z" />
-          <path d="M12 7.8C10.8 5.6 11.2 3.4 13.2 2.4C14.4 4.2 14.1 6.3 12.8 7.8H12Z" />
-          <path d="M15.8 7.8C15.8 5.8 17.1 4.4 19.2 4.4C19.4 6.3 18.2 7.8 16.5 7.8H15.8Z" />
-          {/* Dovetail slatted wood crate with hand-grips */}
-          <path
-            fillRule="evenodd"
-            d="M2.5 8.8H21.5V11.4H20.4V20.5H3.6V11.4H2.5V8.8ZM5.4 11.4H18.6V13.6H5.4V11.4ZM5.4 15.0H18.6V17.2H5.4V15.0Z"
-          />
-        </svg>
-      );
-
-    case "vendorsWeek":
-      // Enamel Crown / 5-Point Hall Standard Plaque
-      return (
-        <svg {...base}>
-          <path
-            fillRule="evenodd"
-            d="M3 4.5L7.5 8.2L12 3.2L16.5 8.2L21 4.5L19.2 16.5H4.8L3 4.5ZM12 8.8L13.1 11.1L15.6 11.4L13.8 13.1L14.3 15.5L12 14.3L9.7 15.5L10.2 13.1L8.4 11.4L10.9 11.1L12 8.8Z"
-          />
-          <rect x="4.8" y="18" width="14.4" height="2.5" />
-        </svg>
-      );
-
-    case "saved":
-      // Woven Market Shopper's Basket with Twin Handles
-      return (
-        <svg {...base}>
-          <path d="M8.2 3.2L6.2 8.2H8.2L9.8 4.2H14.2L15.8 8.2H17.8L15.8 3.2H8.2Z" />
-          <path
-            fillRule="evenodd"
-            d="M2.5 9H21.5L19.3 20.5H4.7L2.5 9ZM6.8 11.8H8.6L9.2 17.8H7.4L6.8 11.8ZM11.1 11.8H12.9V17.8H11.1V11.8ZM15.4 11.8H17.2L16.6 17.8H14.8L15.4 11.8Z"
-          />
-        </svg>
-      );
-
-    case "weekly":
-      // Reporter's Field Clipboard with Brass Clip & Ruled Dispatch
-      return (
-        <svg {...base}>
-          <path d="M9 2.2H15V4.8H9V2.2Z" />
-          <path
-            fillRule="evenodd"
-            d="M4.5 4H7.6V6.2H16.4V4H19.5V21H4.5V4ZM7.2 9.2H16.8V11H7.2V9.2ZM7.2 12.6H16.8V14.4H7.2V12.6ZM7.2 16H13.4V17.8H7.2V16Z"
-          />
-        </svg>
-      );
-
-    case "map":
-      // Folded Triptych Street Atlas with Cutout Pin
-      return (
-        <svg {...base}>
-          <path
-            fillRule="evenodd"
-            d="M2.5 5.2L8.5 3.2V18.8L2.5 20.8V5.2ZM9.7 3.2L14.3 5.2V20.8L9.7 18.8V3.2ZM15.5 5.2L21.5 3.2V18.8L15.5 20.8V5.2ZM18.5 8.2C17.3 8.2 16.4 9.1 16.4 10.3C16.4 11.9 18.5 14.4 18.5 14.4C18.5 14.4 20.6 11.9 20.6 10.3C20.6 9.1 19.7 8.2 18.5 8.2Z"
-          />
-        </svg>
-      );
-
-    case "directory":
-      // Brick Market Hall Archway & Pediment (St. Lawrence / Wychwood Hall)
-      return (
-        <svg {...base}>
-          {/* Gabled Hall Roof with Clerestory Vent */}
-          <path
-            fillRule="evenodd"
-            d="M12 2.2L22 7.5V9.2H2V7.5L12 2.2ZM10.2 5.8H13.8V7.4H10.2V5.8Z"
-          />
-          {/* Colonnade Pillars & Grand Center Arch */}
-          <path d="M3.2 10.2H6.5V18.5H3.2V10.2ZM17.5 10.2H20.8V18.5H17.5V10.2Z" />
-          <path d="M7.8 10.2H16.2V18.5H14.2V14.2C14.2 12.9 13.2 11.9 12 11.9C10.8 11.9 9.8 12.9 9.8 14.2V18.5H7.8V10.2Z" />
-          <rect x="2" y="19.3" width="20" height="2" />
-        </svg>
-      );
-  }
+  const Mark = STAMP_MARKS[section];
+  return <Mark className={className} />;
 }
 
 /* ============================================================================
@@ -605,7 +502,7 @@ function MockupPanelHeader({
                 woodcutPlateTone,
               )}
             >
-              <WoodcutMark section={spec.key} className={rail ? "size-4" : "size-5"} />
+              <WoodcutMark section={spec.key} className={rail ? "size-[18px]" : "size-5"} />
             </span>
           )}
 
@@ -691,7 +588,7 @@ function MockupPanelHeader({
 }
 
 export default function MarksPreviewPage() {
-  const [activeDirection, setActiveDirection] = useState<DesignVariant>("swiss-framed");
+  const [activeDirection, setActiveDirection] = useState<DesignVariant>("woodcut-seal");
 
   const directions: Array<{
     id: DesignVariant;
@@ -788,6 +685,62 @@ export default function MarksPreviewPage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pt-6 lg:px-6">
+        <section className="mb-8 bg-card p-5 ring-1 ring-border">
+          <div className="border-b border-border pb-3">
+            <h2>Construction loupe</h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              Each stamp at 10× on the 24×24 grid, then at the page size (36px) and the rail size (32px).
+            </p>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {SECTIONS.map((spec) => (
+              <figure key={spec.key} className="border border-border bg-background p-3">
+                <figcaption className="mb-2 flex items-baseline justify-between gap-2">
+                  <span className="text-base font-medium">{spec.title}</span>
+                  <span className="type-nums text-sm text-muted-foreground">{spec.idLabel}</span>
+                </figcaption>
+                <div className="relative size-60 bg-secondary/70">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="absolute inset-0 size-full text-foreground/20"
+                    aria-hidden
+                  >
+                    {Array.from({ length: 25 }, (_, index) => (
+                      <g key={index}>
+                        <line
+                          x1={index}
+                          y1="0"
+                          x2={index}
+                          y2="24"
+                          stroke="currentColor"
+                          strokeWidth="0.035"
+                        />
+                        <line
+                          x1="0"
+                          y1={index}
+                          x2="24"
+                          y2={index}
+                          stroke="currentColor"
+                          strokeWidth="0.035"
+                        />
+                      </g>
+                    ))}
+                  </svg>
+                  <WoodcutMark section={spec.key} className="relative size-60 text-board" />
+                </div>
+                <div className="mt-3 flex items-end gap-3">
+                  <span className="flex size-9 items-center justify-center bg-board text-chalk shadow-[2px_2px_0_0_rgba(28,25,22,0.25)]">
+                    <WoodcutMark section={spec.key} className="size-5" />
+                  </span>
+                  <span className="flex size-8 items-center justify-center bg-stamp text-chalk shadow-[2px_2px_0_0_rgba(28,25,22,0.28)]">
+                    <WoodcutMark section={spec.key} className="size-[18px]" />
+                  </span>
+                </div>
+              </figure>
+            ))}
+          </div>
+        </section>
+
         {/* Section 1: Close-Up Mark Inspection Sheet (All 8 Sections Side by Side) */}
         <section className="mb-8 bg-card p-5 ring-1 ring-border">
           <div className="border-b border-border pb-3">

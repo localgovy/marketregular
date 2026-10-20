@@ -22,19 +22,16 @@ function plate(x: number, y: number, w: number, h: number, c = 1.6) {
   return `M${x + c} ${y}H${x + w - c}L${x + w} ${y + c}V${y + h - c}L${x + w - c} ${y + h}H${x + c}L${x} ${y + h - c}V${y + c}Z`;
 }
 
-/** Architectural drafting mark — 1.65px geometric line + selective solid fills. */
-function DraftMark({ children, className, ...props }: MarkProps & { children: ReactNode }) {
+/** Solid woodcut / signwriter stamp. Gaps are cut out of the fill. */
+function StampMark({ children, className, ...props }: MarkProps & { children: ReactNode }) {
   return (
     <svg
       viewBox="0 0 24 24"
       className={className}
       aria-hidden
       focusable="false"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.65}
-      strokeLinecap="square"
-      strokeLinejoin="miter"
+      fill="currentColor"
+      shapeRendering="geometricPrecision"
       {...props}
     >
       {children}
@@ -42,53 +39,55 @@ function DraftMark({ children, className, ...props }: MarkProps & { children: Re
   );
 }
 
-/** Countertop brass produce scale — vendors, stalls selling today. */
+/** Slatted harvest crate with apple, carrot, and greens — vendors selling today. */
 export function CrateMark(props: MarkProps) {
   return (
-    <DraftMark {...props}>
-      <path d="M8 20.5H16" />
-      <path d="M10 20.5L11 14.5H13L14 20.5" />
-      <circle cx="12" cy="11.5" r="2.75" />
-      <line x1="12" y1="11.5" x2="13.2" y2="10.1" />
-      <line x1="4.5" y1="7.5" x2="19.5" y2="7.5" />
-      <line x1="12" y1="5" x2="12" y2="8.75" />
+    <StampMark {...props}>
       <path
-        d="M2.75 7.5C2.75 9.6 4.2 10.8 6 10.8C7.8 10.8 9.25 9.6 9.25 7.5Z"
-        fill="currentColor"
-        stroke="none"
+        fillRule="evenodd"
+        d="M3.2 9.35H20.8V21.35H3.2Z M5.55 11.35H18.45V12.85H5.55Z M5.55 14.55H18.45V16.05H5.55Z M5.55 17.75H18.45V19.15H5.55Z M3.2 13.7A1.85 1.85 0 0 1 3.2 17.4Z M20.8 13.7A1.85 1.85 0 0 0 20.8 17.4Z"
       />
+      <path d="M10.4 4.15h3.2L12.15 9.6h-1.15z" />
+      <path d="M10.55 4.15 9.2 1.5 11.25 3.65Z" />
+      <path d="M11.2 3.9 11.9 1.15 12.65 3.9Z" />
+      <path d="M12.5 4.15 14.75 1.65 13.2 3.8Z" />
       <path
-        d="M14.75 7.5C14.75 9.6 16.2 10.8 18 10.8C19.8 10.8 21.25 9.6 21.25 7.5Z"
-        fill="currentColor"
-        stroke="none"
+        fillRule="evenodd"
+        d="M4.25 7.2a2.2 2.2 0 1 0 4.4 0 2.2 2.2 0 1 0-4.4 0M5.95 5.2h1.05l.05 1.15h-1.15z"
       />
-    </DraftMark>
+      <path d="M6.15 3.05h.75V5.25h-.75z" />
+      <path d="M6.95 3.55C8.4 2.15 9.55 2.85 8.25 4.55 7.55 4.05 7.15 3.75 6.95 3.55Z" />
+      <path d="M15.85 6.45a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0M17.55 6.05a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0M16.7 7.85a1.45 1.45 0 1 0 2.9 0 1.45 1.45 0 1 0-2.9 0" />
+      <path d="M18.15 4.85c1.35-1.2 2.35-.45 1.15.85-.4-.35-.8-.5-1.15-.6z" />
+    </StampMark>
   );
 }
 
-/** County-fair prize rosette — ranking, this week’s top stalls. */
+/** County-fair rosette with a cut star and notched tails — this week’s top stalls. */
 export function TallyMark(props: MarkProps) {
   return (
-    <DraftMark {...props}>
-      <path d="M9.5 14.5L7.5 21.2L10.5 19.6L11.8 21.5L12 15" />
-      <path d="M14.5 14.5L16.5 21.2L13.5 19.6L12.2 21.5" />
-      <polygon points="12,2.4 14.1,3.7 16.5,3.4 17.5,5.6 19.7,6.6 19.4,9.0 20.7,11.1 19.4,13.2 19.7,15.6 17.5,16.6 16.5,18.8 14.1,18.5 12,19.8 9.9,18.5 7.5,18.8 6.5,16.6 4.3,15.6 4.6,13.2 3.3,11.1 4.6,9.0 4.3,6.6 6.5,5.6 7.5,3.4 9.9,3.7" />
-      <circle cx="12" cy="11.1" r="4.2" fill="currentColor" stroke="none" />
-    </DraftMark>
+    <StampMark {...props}>
+      <path
+        fillRule="evenodd"
+        d="M12 2.6 12.87 3.79 14.12 3.02 14.47 4.45 15.92 4.23 15.7 5.68 17.13 6.03 16.36 7.28 17.55 8.15 16.36 9.02 17.13 10.27 15.7 10.62 15.92 12.07 14.47 11.85 14.12 13.28 12.87 12.51 12 13.7 11.13 12.51 9.88 13.28 9.53 11.85 8.08 12.07 8.3 10.62 6.87 10.27 7.64 9.02 6.45 8.15 7.64 7.28 6.87 6.03 8.3 5.68 8.08 4.23 9.53 4.45 9.88 3.02 11.13 3.79Z M12 5.7 12.58 7.36 14.33 7.39 12.93 8.45 13.44 10.13 12 9.13 10.56 10.13 11.07 8.45 9.67 7.39 11.42 7.36Z"
+      />
+      <path d="M9.1 12.2 6.7 21.4 9 19.7 10.2 21.6 11.4 12.8Z" />
+      <path d="M14.9 12.2 17.3 21.4 15 19.7 13.8 21.6 12.6 12.8Z" />
+    </StampMark>
   );
 }
 
-/** Symmetric twin-notch perforated admission stub — saved. */
+/** Woven market basket — saved. */
 export function TicketMark(props: MarkProps) {
   return (
-    <DraftMark {...props}>
-      <path d="M3 6.5H21V9.6C19.5 9.6 18.4 10.65 18.4 12C18.4 13.35 19.5 14.4 21 14.4V17.5H3V14.4C4.5 14.4 5.6 13.35 5.6 12C5.6 10.65 4.5 9.6 3 9.6V6.5Z" />
-      <line x1="14.5" y1="6.5" x2="14.5" y2="8.4" />
-      <line x1="14.5" y1="10.8" x2="14.5" y2="13.2" />
-      <line x1="14.5" y1="15.6" x2="14.5" y2="17.5" />
-      <line x1="7.5" y1="10.2" x2="11.8" y2="10.2" />
-      <line x1="7.5" y1="13.8" x2="10.5" y2="13.8" />
-    </DraftMark>
+    <StampMark {...props}>
+      <path d="M6.15 7.75 8.35 2.25h1.9L8.45 7.75Z" />
+      <path d="M17.85 7.75 15.65 2.25h-1.9l1.8 5.5Z" />
+      <path
+        fillRule="evenodd"
+        d="M3.55 7.55h16.9l-.6 2.35H4.15ZM4.95 9.9h14.1l-1.65 11.45H6.6ZM8.35 12.35h1.55l-.25 6.7H8.1ZM11.25 12.35h1.55v6.7h-1.55ZM14.15 12.35h1.55l-.25 6.7h-1.55Z"
+      />
+    </StampMark>
   );
 }
 
@@ -105,86 +104,84 @@ export function SearchMark(props: MarkProps) {
   );
 }
 
-/** Precision wayfinding compass & reticle — find / filters. */
+/** Striped stall awning and wayfinding lens — find / filters. */
 export function SlatsMark(props: MarkProps) {
   return (
-    <DraftMark {...props}>
-      <circle cx="12" cy="12" r="8.25" />
-      <line x1="12" y1="1.75" x2="12" y2="4.25" />
-      <line x1="12" y1="19.75" x2="12" y2="22.25" />
-      <line x1="1.75" y1="12" x2="4.25" y2="12" />
-      <line x1="19.75" y1="12" x2="22.25" y2="12" />
-      <polygon
-        points="12,12 9.8,9.8 15.8,8.2 14.2,14.2"
-        fill="currentColor"
-        stroke="none"
+    <StampMark {...props}>
+      <path
+        fillRule="evenodd"
+        d="M3.15 1.55h17.7L21.98 6.05H1.55ZM5.57 6.05 6.63 1.55h1.26L7.02 6.05ZM11.04 6.05 11.37 1.55h1.25l-.13 4.5ZM16.51 6.05 16.11 1.55h1.25L17.96 6.05Z"
       />
-      <polygon points="15.8,8.2 14.2,14.2 8.2,15.8 9.8,9.8" />
-      <circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none" />
-    </DraftMark>
+      <path d="M1.66 6.15C1.66 7.2 2.51 8.05 3.56 8.05 4.61 8.05 5.46 7.2 5.46 6.15ZM7.13 6.15C7.13 7.2 7.98 8.05 9.03 8.05 10.08 8.05 10.93 7.2 10.93 6.15ZM12.6 6.15C12.6 7.2 13.45 8.05 14.5 8.05 15.55 8.05 16.4 7.2 16.4 6.15ZM18.07 6.15C18.07 7.2 18.92 8.05 19.97 8.05 21.02 8.05 21.87 7.2 21.87 6.15Z" />
+      <path
+        fillRule="evenodd"
+        d="M11.15 10a4.2 4.2 0 1 0 .02 0ZM11.15 12.2a2 2 0 1 1-.02 0Z"
+      />
+      <path d="m13.4 17.5 2.1-1.9 3.7 3.9-2.1 1.9z" />
+    </StampMark>
   );
 }
 
-/** Split-leaf almanac calendar with 7-day grid & Saturday stamped — month / week. */
+/** Hanging market-day board. Saturday takes the wide stall — month / week. */
 export function WeekMark(props: MarkProps) {
   return (
-    <DraftMark {...props}>
-      <rect x="3" y="4.5" width="18" height="16.5" />
-      <line x1="3" y1="9" x2="21" y2="9" />
-      <line x1="7.5" y1="2.25" x2="7.5" y2="6" />
-      <line x1="16.5" y1="2.25" x2="16.5" y2="6" />
-      <rect x="5.5" y="11.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
-      <rect x="9.2" y="11.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
-      <rect x="12.9" y="11.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
-      <rect x="16.2" y="10.9" width="2.8" height="6.8" fill="currentColor" stroke="none" />
-      <rect x="5.5" y="15.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
-      <rect x="9.2" y="15.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
-      <rect x="12.9" y="15.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
-    </DraftMark>
+    <StampMark {...props}>
+      <path d="M2.6 5.7h18.8v3.45H2.6z" />
+      <path
+        fillRule="evenodd"
+        d="M5.65 4.55a2.05 2.05 0 1 0 4.1 0 2.05 2.05 0 0 0-4.1 0Zm1.1 0a.95.95 0 1 1 1.9 0 .95.95 0 0 1-1.9 0ZM14.25 4.55a2.05 2.05 0 1 0 4.1 0 2.05 2.05 0 0 0-4.1 0Zm1.1 0a.95.95 0 1 1 1.9 0 .95.95 0 0 1-1.9 0Z"
+      />
+      <path d="M3.5 10.55h3.15v3.35H3.5zm4.65 0h3.15v3.35H8.15zm4.65 0h3.15v3.35h-3.15zm4.65 0h3.15v3.35h-3.15zM3.5 15.4h3.15v3.35H3.5zm4.65 0h7.8v3.35h-7.8zm9.3 0h3.15v3.35h-3.15z" />
+    </StampMark>
   );
 }
 
-/** Street grid with surveyor pin — map. */
+/** Folded street atlas with a survey pin — map. */
 export function BlocksMark(props: MarkProps) {
   return (
-    <DraftMark {...props}>
-      <rect x="3" y="3.5" width="18" height="17" />
-      <line x1="3" y1="14.5" x2="21" y2="11.5" />
-      <line x1="9.2" y1="3.5" x2="7.5" y2="20.5" />
+    <StampMark {...props}>
       <path
-        d="M14.5 6.2C12.7 6.2 11.3 7.6 11.3 9.4C11.3 11.7 14.5 15.2 14.5 15.2C14.5 15.2 17.7 11.7 17.7 9.4C17.7 7.6 16.3 6.2 14.5 6.2Z"
-        fill="currentColor"
-        stroke="none"
+        fillRule="evenodd"
+        d="M2.25 6.35 8.05 4.35v13.2l-5.8 2ZM3.15 11.15h4.15v1.55H3.15ZM4.55 6.7h1.55v9.4H4.55Z"
       />
-      <circle cx="14.5" cy="9.3" r="1.25" fill="var(--card)" stroke="none" />
-    </DraftMark>
+      <path
+        fillRule="evenodd"
+        d="M9.45 4.35h5.4v15.3h-5.4ZM10.15 10.7h3.95v1.55h-3.95ZM11.35 5.7h1.55v8.6h-1.55Z"
+      />
+      <path
+        fillRule="evenodd"
+        d="M16.25 4.7 21.85 6.55v12.7l-5.6-1.85ZM19 7.55a2.15 2.15 0 0 0-2.15 2.15c0 1.7 2.15 4.15 2.15 4.15s2.15-2.45 2.15-4.15A2.15 2.15 0 0 0 19 7.55Z"
+      />
+      <circle cx="19" cy="9.7" r="0.78" />
+    </StampMark>
   );
 }
 
-/** Archival hall ledger with A–Z index tabs — directory / list. */
+/** Market hall: monitor roof, arch, and side bays — directory. */
 export function RulesMark(props: MarkProps) {
   return (
-    <DraftMark {...props}>
-      <rect x="4" y="3.5" width="13.5" height="17" />
-      <line x1="7.2" y1="3.5" x2="7.2" y2="20.5" />
-      <path d="M17.5 5.5H20.2V9H17.5" fill="currentColor" stroke="none" />
-      <path d="M17.5 10.2H20.2V13.7H17.5" />
-      <path d="M17.5 15H20.2V18.5H17.5" />
-      <line x1="9.8" y1="8" x2="14.8" y2="8" />
-      <line x1="9.8" y1="12" x2="14.8" y2="12" />
-      <line x1="9.8" y1="16" x2="13.2" y2="16" />
-    </DraftMark>
+    <StampMark {...props}>
+      <path d="M1.5 8.25 9.15 3.4V1.45h5.7V3.4L22.5 8.25Z" />
+      <path d="M1.15 7.85h21.7v1.7H1.15z" />
+      <path
+        fillRule="evenodd"
+        d="M2 9.35h20v9.85H2ZM3.35 11.7h2.7v4.5h-2.7ZM17.95 11.7h2.7v4.5h-2.7ZM9 19.2V13.55A3 3 0 0 0 15 13.55V19.2Z"
+      />
+      <path d="M11.2 10.55h1.6l.3 1.65h-2.2z" />
+      <path d="M1.35 18.55h21.3v3.05H1.35z" />
+    </StampMark>
   );
 }
 
-/** Architectural hall badge with corner bolts — a market, a place, identity plate. */
+/** Enamel stall plate with corner rivets — a market, a place. */
 export function PlateMark(props: MarkProps) {
   return (
-    <DraftMark {...props}>
-      <rect x="3" y="4.5" width="18" height="15" />
-      <rect x="6" y="7.5" width="12" height="9" />
-      <rect x="8.8" y="10.2" width="6.4" height="3.6" fill="currentColor" stroke="none" />
-    </DraftMark>
+    <StampMark {...props}>
+      <path
+        fillRule="evenodd"
+        d="M3 4h18v16H3Zm3.4 3.4h11.2v9.2H6.4ZM3.98 5.7a.72.72 0 1 0 1.44 0 .72.72 0 0 0-1.44 0Zm14.6 0a.72.72 0 1 0 1.44 0 .72.72 0 0 0-1.44 0ZM3.98 18.3a.72.72 0 1 0 1.44 0 .72.72 0 0 0-1.44 0Zm14.6 0a.72.72 0 1 0 1.44 0 .72.72 0 0 0-1.44 0Z"
+      />
+    </StampMark>
   );
 }
 
@@ -236,20 +233,20 @@ export function TagMark(props: MarkProps) {
   );
 }
 
-/** Folded broadsheet gazette with masthead & column rules — notes, blog, website. */
+/** Field clipboard with a spring clip and two-column dispatch — notes, blog, portals. */
 export function SignMark(props: MarkProps) {
   return (
-    <DraftMark {...props}>
-      <path d="M3.5 4.5H17.5V19.5H5.5C4.4 19.5 3.5 18.6 3.5 17.5V4.5Z" />
-      <path d="M17.5 8.5H20.5V17.5C20.5 18.6 19.6 19.5 18.5 19.5H17.5" />
-      <rect x="6.2" y="7" width="8.6" height="2.4" fill="currentColor" stroke="none" />
-      <line x1="6.2" y1="12" x2="9.6" y2="12" />
-      <line x1="6.2" y1="14.5" x2="9.6" y2="14.5" />
-      <line x1="6.2" y1="17" x2="9.6" y2="17" />
-      <line x1="11.4" y1="12" x2="14.8" y2="12" />
-      <line x1="11.4" y1="14.5" x2="14.8" y2="14.5" />
-      <line x1="11.4" y1="17" x2="14.8" y2="17" />
-    </DraftMark>
+    <StampMark {...props}>
+      <path
+        fillRule="evenodd"
+        d="M4.4 6h15.2v15.4H4.4ZM6.5 8.55h11v10.7h-11z"
+      />
+      <path
+        fillRule="evenodd"
+        d="M8.7 6.9V3.7A3.3 1.7 0 0 1 12 2.15 3.3 1.7 0 0 1 15.3 3.7V6.9ZM10.95 4.15a1.05 1.05 0 1 0 2.1 0 1.05 1.05 0 0 0-2.1 0Z"
+      />
+      <path d="M7.55 9.45h8.9v1.6h-8.9zM7.55 12.45h3.7v1.05h-3.7zm4.85 0h3.9v1.05h-3.9zM7.55 14.55h3.7v1.05h-3.7zm4.85 0h3.9v1.05h-3.9zM7.55 16.65h3.7v1.05h-3.7zm4.85 0h3.9v1.05h-3.9z" />
+    </StampMark>
   );
 }
 
