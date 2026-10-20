@@ -22,41 +22,73 @@ function plate(x: number, y: number, w: number, h: number, c = 1.6) {
   return `M${x + c} ${y}H${x + w - c}L${x + w} ${y + c}V${y + h - c}L${x + w - c} ${y + h}H${x + c}L${x} ${y + h - c}V${y + c}Z`;
 }
 
-/** Produce crate — vendors, stalls. */
+/** Architectural drafting mark — 1.65px geometric line + selective solid fills. */
+function DraftMark({ children, className, ...props }: MarkProps & { children: ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      aria-hidden
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.65}
+      strokeLinecap="square"
+      strokeLinejoin="miter"
+      {...props}
+    >
+      {children}
+    </svg>
+  );
+}
+
+/** Countertop brass produce scale — vendors, stalls selling today. */
 export function CrateMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <path d="M5.5 5h13l2.2 3.4H3.3Z" />
+    <DraftMark {...props}>
+      <path d="M8 20.5H16" />
+      <path d="M10 20.5L11 14.5H13L14 20.5" />
+      <circle cx="12" cy="11.5" r="2.75" />
+      <line x1="12" y1="11.5" x2="13.2" y2="10.1" />
+      <line x1="4.5" y1="7.5" x2="19.5" y2="7.5" />
+      <line x1="12" y1="5" x2="12" y2="8.75" />
       <path
-        fillRule="evenodd"
-        d="M4 8.4h16v11.2H4Zm4.35 1.6h1.7v8h-1.7Zm5.6 0h1.7v8h-1.7Z"
+        d="M2.75 7.5C2.75 9.6 4.2 10.8 6 10.8C7.8 10.8 9.25 9.6 9.25 7.5Z"
+        fill="currentColor"
+        stroke="none"
       />
-    </Mark>
+      <path
+        d="M14.75 7.5C14.75 9.6 16.2 10.8 18 10.8C19.8 10.8 21.25 9.6 21.25 7.5Z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </DraftMark>
   );
 }
 
-/** Chalk tally of five — ranking, this week’s top stalls. */
+/** County-fair prize rosette — ranking, this week’s top stalls. */
 export function TallyMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <rect x="3.2" y="3.8" width="2.15" height="16.4" />
-      <rect x="6.9" y="3.8" width="2.15" height="16.4" />
-      <rect x="10.6" y="3.8" width="2.15" height="16.4" />
-      <rect x="14.3" y="3.8" width="2.15" height="16.4" />
-      <polygon points="15.4,4.6 21.1,18.2 18.7,19.4 13,5.8" />
-    </Mark>
+    <DraftMark {...props}>
+      <path d="M9.5 14.5L7.5 21.2L10.5 19.6L11.8 21.5L12 15" />
+      <path d="M14.5 14.5L16.5 21.2L13.5 19.6L12.2 21.5" />
+      <polygon points="12,2.4 14.1,3.7 16.5,3.4 17.5,5.6 19.7,6.6 19.4,9.0 20.7,11.1 19.4,13.2 19.7,15.6 17.5,16.6 16.5,18.8 14.1,18.5 12,19.8 9.9,18.5 7.5,18.8 6.5,16.6 4.3,15.6 4.6,13.2 3.3,11.1 4.6,9.0 4.3,6.6 6.5,5.6 7.5,3.4 9.9,3.7" />
+      <circle cx="12" cy="11.1" r="4.2" fill="currentColor" stroke="none" />
+    </DraftMark>
   );
 }
 
-/** Kept market ticket with a punch — saved. */
+/** Symmetric twin-notch perforated admission stub — saved. */
 export function TicketMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <path
-        fillRule="evenodd"
-        d="M3 6.2h18v11.6H3ZM0.85 12a2.15 2.15 0 1 0 4.3 0 2.15 2.15 0 1 0-4.3 0ZM13.6 8.8h5.2v1.45h-5.2Zm0 2.7h4.1v1.45h-4.1Zm0 2.7h5.2v1.45h-5.2Z"
-      />
-    </Mark>
+    <DraftMark {...props}>
+      <path d="M3 6.5H21V9.6C19.5 9.6 18.4 10.65 18.4 12C18.4 13.35 19.5 14.4 21 14.4V17.5H3V14.4C4.5 14.4 5.6 13.35 5.6 12C5.6 10.65 4.5 9.6 3 9.6V6.5Z" />
+      <line x1="14.5" y1="6.5" x2="14.5" y2="8.4" />
+      <line x1="14.5" y1="10.8" x2="14.5" y2="13.2" />
+      <line x1="14.5" y1="15.6" x2="14.5" y2="17.5" />
+      <line x1="7.5" y1="10.2" x2="11.8" y2="10.2" />
+      <line x1="7.5" y1="13.8" x2="10.5" y2="13.8" />
+    </DraftMark>
   );
 }
 
@@ -73,63 +105,86 @@ export function SearchMark(props: MarkProps) {
   );
 }
 
-/** Stacked stall plates — find / filters. */
+/** Precision wayfinding compass & reticle — find / filters. */
 export function SlatsMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <path d={plate(3, 3.4, 18, 4.4, 1.3)} />
-      <path d={plate(3, 9.8, 14.2, 4.4, 1.3)} />
-      <path d={plate(3, 16.2, 16.2, 4.4, 1.3)} />
-    </Mark>
+    <DraftMark {...props}>
+      <circle cx="12" cy="12" r="8.25" />
+      <line x1="12" y1="1.75" x2="12" y2="4.25" />
+      <line x1="12" y1="19.75" x2="12" y2="22.25" />
+      <line x1="1.75" y1="12" x2="4.25" y2="12" />
+      <line x1="19.75" y1="12" x2="22.25" y2="12" />
+      <polygon
+        points="12,12 9.8,9.8 15.8,8.2 14.2,14.2"
+        fill="currentColor"
+        stroke="none"
+      />
+      <polygon points="15.8,8.2 14.2,14.2 8.2,15.8 9.8,9.8" />
+      <circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none" />
+    </DraftMark>
   );
 }
 
-/** Seven day ticks; Saturday stands taller — month / week. */
+/** Split-leaf almanac calendar with 7-day grid & Saturday stamped — month / week. */
 export function WeekMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <rect x="2.6" y="9" width="1.7" height="8" />
-      <rect x="5.5" y="9" width="1.7" height="8" />
-      <rect x="8.4" y="9" width="1.7" height="8" />
-      <rect x="11.3" y="9" width="1.7" height="8" />
-      <rect x="14.2" y="9" width="1.7" height="8" />
-      <rect x="17.1" y="4.6" width="1.85" height="12.4" />
-      <rect x="20.1" y="9" width="1.7" height="8" />
-    </Mark>
+    <DraftMark {...props}>
+      <rect x="3" y="4.5" width="18" height="16.5" />
+      <line x1="3" y1="9" x2="21" y2="9" />
+      <line x1="7.5" y1="2.25" x2="7.5" y2="6" />
+      <line x1="16.5" y1="2.25" x2="16.5" y2="6" />
+      <rect x="5.5" y="11.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
+      <rect x="9.2" y="11.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
+      <rect x="12.9" y="11.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
+      <rect x="16.2" y="10.9" width="2.8" height="6.8" fill="currentColor" stroke="none" />
+      <rect x="5.5" y="15.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
+      <rect x="9.2" y="15.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
+      <rect x="12.9" y="15.2" width="2.2" height="2.2" fill="currentColor" stroke="none" />
+    </DraftMark>
   );
 }
 
-/** Street grid with one occupied block — map. */
+/** Street grid with surveyor pin — map. */
 export function BlocksMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <rect x="3" y="7.2" width="18" height="2.1" />
-      <rect x="3" y="14.7" width="18" height="2.1" />
-      <rect x="7.2" y="3" width="2.1" height="18" />
-      <rect x="14.7" y="3" width="2.1" height="18" />
-      <path d={plate(16.6, 16.6, 4.6, 4.6, 1)} />
-    </Mark>
+    <DraftMark {...props}>
+      <rect x="3" y="3.5" width="18" height="17" />
+      <line x1="3" y1="14.5" x2="21" y2="11.5" />
+      <line x1="9.2" y1="3.5" x2="7.5" y2="20.5" />
+      <path
+        d="M14.5 6.2C12.7 6.2 11.3 7.6 11.3 9.4C11.3 11.7 14.5 15.2 14.5 15.2C14.5 15.2 17.7 11.7 17.7 9.4C17.7 7.6 16.3 6.2 14.5 6.2Z"
+        fill="currentColor"
+        stroke="none"
+      />
+      <circle cx="14.5" cy="9.3" r="1.25" fill="var(--card)" stroke="none" />
+    </DraftMark>
   );
 }
 
-/** Chalkboard rules — directory / list. */
+/** Archival hall ledger with A–Z index tabs — directory / list. */
 export function RulesMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <rect x="3" y="4.2" width="18" height="2.2" />
-      <rect x="3" y="8.7" width="13.5" height="2.2" />
-      <rect x="3" y="13.2" width="16.2" height="2.2" />
-      <rect x="3" y="17.7" width="10.4" height="2.2" />
-    </Mark>
+    <DraftMark {...props}>
+      <rect x="4" y="3.5" width="13.5" height="17" />
+      <line x1="7.2" y1="3.5" x2="7.2" y2="20.5" />
+      <path d="M17.5 5.5H20.2V9H17.5" fill="currentColor" stroke="none" />
+      <path d="M17.5 10.2H20.2V13.7H17.5" />
+      <path d="M17.5 15H20.2V18.5H17.5" />
+      <line x1="9.8" y1="8" x2="14.8" y2="8" />
+      <line x1="9.8" y1="12" x2="14.8" y2="12" />
+      <line x1="9.8" y1="16" x2="13.2" y2="16" />
+    </DraftMark>
   );
 }
 
-/** Cut-corner stall plate — a market, a place. */
+/** Architectural hall badge with corner bolts — a market, a place, identity plate. */
 export function PlateMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <path fillRule="evenodd" d={`${plate(2.4, 2.4, 19.2, 19.2, 3.2)}M9.4 9.4h5.2v5.2H9.4z`} />
-    </Mark>
+    <DraftMark {...props}>
+      <rect x="3" y="4.5" width="18" height="15" />
+      <rect x="6" y="7.5" width="12" height="9" />
+      <rect x="8.8" y="10.2" width="6.4" height="3.6" fill="currentColor" stroke="none" />
+    </DraftMark>
   );
 }
 
@@ -181,15 +236,20 @@ export function TagMark(props: MarkProps) {
   );
 }
 
-/** Stall board with rules — website. */
+/** Folded broadsheet gazette with masthead & column rules — notes, blog, website. */
 export function SignMark(props: MarkProps) {
   return (
-    <Mark {...props}>
-      <path
-        fillRule="evenodd"
-        d={`${plate(3, 3, 18, 18, 2.4)}M7 7.2h10v2.4H7zm0 3.8h10v2.4H7zm0 3.8h7.2v2.4H7z`}
-      />
-    </Mark>
+    <DraftMark {...props}>
+      <path d="M3.5 4.5H17.5V19.5H5.5C4.4 19.5 3.5 18.6 3.5 17.5V4.5Z" />
+      <path d="M17.5 8.5H20.5V17.5C20.5 18.6 19.6 19.5 18.5 19.5H17.5" />
+      <rect x="6.2" y="7" width="8.6" height="2.4" fill="currentColor" stroke="none" />
+      <line x1="6.2" y1="12" x2="9.6" y2="12" />
+      <line x1="6.2" y1="14.5" x2="9.6" y2="14.5" />
+      <line x1="6.2" y1="17" x2="9.6" y2="17" />
+      <line x1="11.4" y1="12" x2="14.8" y2="12" />
+      <line x1="11.4" y1="14.5" x2="14.8" y2="14.5" />
+      <line x1="11.4" y1="17" x2="14.8" y2="17" />
+    </DraftMark>
   );
 }
 

@@ -61,18 +61,18 @@ const CONCEPTS: Array<{
   },
   {
     id: "3",
-    shortLabel: "Concept 3 · Craving & Atlas",
-    title: "The Craving, Crate & Neighbourhood Atlas",
-    subtitle: "Product-first & spatial-first split hero with interactive aisle crates and above-the-fold live map",
+    shortLabel: "Concept 3 · Vendors, Products & Atlas",
+    title: "The Priority Stall, Table & Neighbourhood Atlas",
+    subtitle: "Unified Vendor × Product × Market matrix above the fold with synchronized aisle crates & live map",
     standaloneHref: "/preview/home-3",
-    primaryQuestion: "“What am I craving today, and where is the market walk in my neighbourhood?”",
+    primaryQuestion: "“Which vendors make what I'm craving, what is on their tables, and which market halls do they set up at?”",
     keyInnovations: [
-      "Brings sensory food discovery and spatial orientation above the fold in a 50/50 split hero: an interactive Craving & Aisle Crate Explorer on the left and the live interactive Toronto Market Map on the right.",
-      "Includes 1-click craving shortcuts (Sourdough, Butter tarts, Heirloom tomatoes, Ontario apples, Smoked fish) directly inside the search bar.",
-      "Organizes the middle of the page into 6 Neighbourhood Market Walk cards (St. Lawrence, Wychwood, Dufferin Grove, Junction, Leslieville, East York) with stall counts and unclipped hours.",
+      "Puts Vendors in priority above the fold in a 6-card Featured Stalls, Tables & Market Halls showcase: each card pairs the vendor's stall plate, live status, dashed-rule menu items/prices ('On their table'), and exact market halls + unclipped hours ('Where they set up').",
+      "Provides a 3-way interactive filter bar (Product Aisle × Market Walk × Selling Window) that synchronizes in real time with the Products & Aisle Crates explorer and the Live Neighbourhood Atlas below.",
+      "Enriches every Product Crate with the top stalls known for that aisle, and every Neighbourhood Market Walk card with both its market halls and anchor vendors.",
     ],
     critiqueRefinement:
-      "Refined in Iteration 2 to trigger immediate map rendering above the fold via visible intersection loading, guarantee 3 consistent hall rows in the Neighbourhood Circuit inspector, and bind full week schedule names in the Upcoming Sessions card.",
+      "Evolved to unify Vendors, Products, and Markets as equal first-class citizens — elevating vendor table cards above the fold and cross-linking every aisle crate and neighbourhood walk with its participating stalls.",
   },
 ];
 

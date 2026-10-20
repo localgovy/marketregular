@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { HomePreviewData } from "@/app/preview/_lib/home-preview-data";
+import type {
+  HomePreviewData,
+  PreviewVendorSpotlight,
+} from "@/app/preview/_lib/home-preview-data";
 import { AddressLink } from "@/components/address-link";
 import { useGeo } from "@/components/geo-provider";
 import { Hours } from "@/components/hours";
+import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
 import {
   AsteriskMark,
@@ -28,8 +32,9 @@ import { SavedRail } from "@/components/saved-rail";
 import { SearchField } from "@/components/search-field";
 import { VerifiedName } from "@/components/verified-stamp";
 import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item";
-import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/lib/constants";
+import { SEARCH_LABEL, SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
 import { marketsHref, tagLabel } from "@/lib/find-paths";
+import { formatPrice } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { cn } from "@/lib/utils";
 
@@ -37,16 +42,197 @@ function formatCensus(n: number) {
   return n.toLocaleString("en-CA");
 }
 
+function shortDays(days: number[]) {
+  const names = [...new Set(days.filter((day) => day >= 0 && day <= 6))].sort((a, b) => a - b);
+  if (!names.length) return null;
+  return names.map((day) => WEEKDAYS[day].slice(0, 3)).join(", ");
+}
+
 const CRAVING_SHORTCUTS = [
-  { label: "Sourdough", href: "/find/sourdough" },
-  { label: "Butter tarts", href: "/find/butter-tarts" },
-  { label: "Heirloom tomatoes", href: "/find/tomatoes" },
-  { label: "Ontario apples", href: "/find/apples" },
-  { label: "Bagels", href: "/find/bagels" },
-  { label: "Smoked fish", href: "/find/smoked-fish" },
-  { label: "Garlic", href: "/find/garlic" },
-  { label: "Farm eggs", href: "/find/eggs" },
+  { label: "Sourdough", href: "/find/sourdough-toronto", aisleId: "bread-and-bakery" },
+  { label: "Butter tarts", href: "/find/butter-tarts-toronto", aisleId: "pies-and-sweets" },
+  { label: "Farmstead cheese", href: "/find/cheese-toronto", aisleId: "cheese-and-dairy" },
+  { label: "Heirloom tomatoes", href: "/find/tomatoes-toronto", aisleId: "vegetables" },
+  { label: "Ontario apples", href: "/find/apples-toronto", aisleId: "apples-and-fruit" },
+  { label: "Farm eggs", href: "/find/eggs-toronto", aisleId: "eggs" },
+  { label: "Raw honey", href: "/find/honey-toronto", aisleId: "honey" },
+  { label: "Maple syrup", href: "/find/maple-syrup-toronto", aisleId: "maple" },
 ] as const;
+
+function VendorTableCard({
+  vendor,
+  onSelectAisle,
+  onSelectNeighbourhood,
+}: {
+  vendor: PreviewVendorSpotlight;
+  onSelectAisle?: (aisleId: string) => void;
+  onSelectNeighbourhood?: (neighbourhood: string) => void;
+}) {
+  const shownMarkets = vendor.markets.slice(0, 2);
+  const extraMarketCount = Math.max(0, vendor.markets.length - shownMarkets.length);
+
+  return (
+    <li className="flex flex-col justify-between bg-card ring-1 ring-board">
+      <div>
+        {/* Vendor Plate Header */}
+        <div className="flex items-start justify-between gap-2.5 border-b border-black/15 bg-primary px-3.5 py-3 text-primary-foreground">
+          <div className="flex min-w-0 flex-1 items-start gap-2.5">
+            <ListingMark src={vendor.logoUrl} plate className="mt-0.5 shrink-0" />
+            <div className="min-w-0">
+              <p className="min-w-0 leading-snug">
+                <Link
+                  href={`/vendors/${vendor.slug}`}
+                  className="text-base font-medium text-primary-foreground hover:underline"
+                >
+                  <VerifiedName slug={vendor.slug} name={vendor.name} />
+                </Link>
+                <ListingScore
+                  parens
+                  ratingAvg={vendor.ratingAvg}
+                  reviewCount={vendor.reviewCount}
+                  className="ml-1.5 text-chalk"
+                />
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                {vendor.openNow ? (
+                  <span className="stall-chip-sm inline-flex items-center bg-stamp px-2 py-0.5 text-sm font-medium text-receipt">
+                    Selling now
+                  </span>
+                ) : (
+                  <span className="stall-chip-sm inline-flex items-center bg-board/65 px-2 py-0.5 text-sm font-medium text-chalk">
+                    {vendor.badge}
+                  </span>
+                )}
+                {vendor.aisleIds[0] && onSelectAisle ? (
+                  <button
+                    type="button"
+                    onClick={() => onSelectAisle(vendor.aisleIds[0])}
+                    className="stall-chip-sm cursor-pointer bg-primary-foreground/15 px-2 py-0.5 text-sm text-chalk hover:bg-card hover:text-primary"
+                  >
+                    {vendor.primaryAisleLabel}
+                  </button>
+                ) : (
+                  <span className="text-sm text-chalk/85">{vendor.primaryAisleLabel}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <span className="shrink-0">
+            <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
+          </span>
+        </div>
+
+        {/* Products on the Table (Dashed Slip Rows) */}
+        <div className="border-b border-border bg-secondary">
+          <div className="flex items-baseline justify-between px-3.5 pt-2 pb-1">
+            <span className="type-kicker text-muted-foreground">On their table</span>
+            <Link
+              href={`/vendors/${vendor.slug}`}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Stall menu
+            </Link>
+          </div>
+          <ul>
+            {vendor.items.slice(0, 3).map((item, idx) => {
+              const price = formatPrice(item.priceCents);
+              return (
+                <li
+                  key={`${vendor.slug}-item-${idx}`}
+                  className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-t border-dashed border-border px-3.5 py-2 text-foreground"
+                >
+                  <p className="min-w-0 text-base font-medium">
+                    <Link href={item.href} className="hover:text-primary hover:underline">
+                      {item.name}
+                    </Link>
+                  </p>
+                  {price ? (
+                    <span className="type-nums shrink-0 whitespace-nowrap text-sm font-medium text-stamp">
+                      {price}
+                    </span>
+                  ) : (
+                    <span className="type-nums shrink-0 whitespace-nowrap text-sm text-muted-foreground">
+                      Guide
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
+
+      {/* Market Halls & Unclipped Schedule Hours */}
+      <div className="bg-card">
+        <div className="flex items-baseline justify-between px-3.5 pt-2.5 pb-1">
+          <span className="type-kicker text-muted-foreground">Where they set up</span>
+          {extraMarketCount > 0 ? (
+            <Link
+              href={`/vendors/${vendor.slug}`}
+              className="type-nums text-sm font-medium text-primary hover:underline"
+            >
+              +{extraMarketCount} more {extraMarketCount === 1 ? "hall" : "halls"}
+            </Link>
+          ) : null}
+        </div>
+        <ul className="divide-y divide-border/70">
+          {shownMarkets.map((market) => {
+            const daysText = shortDays(market.days);
+            const firstHour = market.hours[0];
+            return (
+              <li key={market.slug} className="px-3.5 py-2.5 hover:bg-secondary/35">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3">
+                  <p className="min-w-0">
+                    <Link
+                      href={`/markets/${market.slug}`}
+                      className="text-base font-medium text-foreground hover:text-primary hover:underline"
+                    >
+                      {market.name}
+                    </Link>
+                    {market.stall ? (
+                      <span className="type-nums ml-1.5 text-sm text-muted-foreground">
+                        · Stall {market.stall}
+                      </span>
+                    ) : null}
+                  </p>
+                  {firstHour ? (
+                    <span className="flex shrink-0 items-baseline gap-1.5 whitespace-nowrap">
+                      <span className="text-sm text-muted-foreground">{firstHour.day}</span>
+                      <Hours
+                        value={firstHour.hours}
+                        className={
+                          market.openNow ? "font-medium text-stamp" : "text-muted-foreground"
+                        }
+                      />
+                    </span>
+                  ) : daysText ? (
+                    <span className="type-nums shrink-0 whitespace-nowrap text-sm text-muted-foreground">
+                      {daysText}
+                    </span>
+                  ) : null}
+                </div>
+
+                {onSelectNeighbourhood && market.neighbourhood ? (
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onSelectNeighbourhood(market.neighbourhood)}
+                      className="cursor-pointer text-sm text-primary hover:underline"
+                    >
+                      {market.neighbourhood} walk
+                    </button>
+                    {market.openNow ? <NowLabel>Hall open</NowLabel> : null}
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </li>
+  );
+}
 
 export function ConceptNeighbourhoodAtlas({
   data,
@@ -60,8 +246,15 @@ export function ConceptNeighbourhoodAtlas({
 
   const [q, setQ] = useState("");
   const [locating, setLocating] = useState(false);
+
+  // Unified Tri-Pillar Filter State (Vendors × Products × Markets)
+  const [vendorAisleFilter, setVendorAisleFilter] = useState<string>("all");
+  const [vendorAreaFilter, setVendorAreaFilter] = useState<string>("all");
+  const [vendorWhenFilter, setVendorWhenFilter] = useState<"all" | "today" | "weekend">("all");
+
+  // Synchronized Craving Crate & Neighbourhood Atlas State
   const [selectedAisleId, setSelectedAisleId] = useState<string>(
-    data.aisles[0]?.id ?? "bakery",
+    data.aisles[0]?.id ?? "bread-and-bakery",
   );
   const [selectedCircuitIndex, setSelectedCircuitIndex] = useState<number>(0);
 
@@ -71,6 +264,71 @@ export function ConceptNeighbourhoodAtlas({
     data.neighbourhoodCircuits[selectedCircuitIndex] ??
     data.neighbourhoodCircuits[0] ??
     null;
+
+  function syncAisleSelection(aisleId: string) {
+    setVendorAisleFilter(aisleId);
+    if (aisleId !== "all" && data.aisles.some((a) => a.id === aisleId)) {
+      setSelectedAisleId(aisleId);
+    }
+  }
+
+  function syncAreaSelection(areaLabel: string) {
+    setVendorAreaFilter(areaLabel);
+    if (areaLabel !== "all") {
+      const idx = data.neighbourhoodCircuits.findIndex(
+        (c) => c.label.toLowerCase() === areaLabel.toLowerCase(),
+      );
+      if (idx >= 0) setSelectedCircuitIndex(idx);
+    }
+  }
+
+  const filteredVendorSpotlights = useMemo(() => {
+    const strict = data.vendorSpotlights.filter((vendor) => {
+      if (vendorAisleFilter !== "all" && !vendor.aisleIds.includes(vendorAisleFilter)) {
+        return false;
+      }
+      if (
+        vendorAreaFilter !== "all" &&
+        !vendor.markets.some(
+          (m) => m.neighbourhood.toLowerCase() === vendorAreaFilter.toLowerCase(),
+        )
+      ) {
+        return false;
+      }
+      if (vendorWhenFilter === "today" && !vendor.sellingToday && !vendor.openNow) {
+        return false;
+      }
+      if (
+        vendorWhenFilter === "weekend" &&
+        !vendor.markets.some((m) => m.days.includes(6) || m.days.includes(0))
+      ) {
+        return false;
+      }
+      return true;
+    });
+
+    if (strict.length >= 6) return strict.slice(0, 6);
+
+    // Pad with top matches so the 6-card showcase never looks sparse
+    const seen = new Set(strict.map((v) => v.id));
+    const padded = [...strict];
+    for (const candidate of data.vendorSpotlights) {
+      if (padded.length >= 6) break;
+      if (seen.has(candidate.id)) continue;
+      if (vendorAisleFilter !== "all" && !candidate.aisleIds.includes(vendorAisleFilter)) {
+        continue;
+      }
+      padded.push(candidate);
+      seen.add(candidate.id);
+    }
+    for (const candidate of data.vendorSpotlights) {
+      if (padded.length >= 6) break;
+      if (seen.has(candidate.id)) continue;
+      padded.push(candidate);
+      seen.add(candidate.id);
+    }
+    return padded;
+  }, [data.vendorSpotlights, vendorAisleFilter, vendorAreaFilter, vendorWhenFilter]);
 
   async function handleNearMe() {
     if (locating) return;
@@ -88,9 +346,11 @@ export function ConceptNeighbourhoodAtlas({
     );
   }
 
+  const topDistrictFilters = data.neighbourhoodCircuits.slice(0, 6);
+
   return (
     <div className="bg-background text-foreground">
-      {/* Top Canadian Banner + Open Now Pulse */}
+      {/* Top Canadian Banner + Live Hall & Stall Pulse */}
       <div className="border-b border-board bg-secondary">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2.5 lg:px-6">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -102,7 +362,7 @@ export function ConceptNeighbourhoodAtlas({
               ·
             </span>
             <span className="type-nums text-sm text-muted-foreground">
-              {LAUNCH_CITY} neighbourhood &amp; product atlas · {data.todayFormatted}
+              {LAUNCH_CITY} vendors, products &amp; markets · {data.todayFormatted}
             </span>
           </div>
 
@@ -117,55 +377,48 @@ export function ConceptNeighbourhoodAtlas({
                 </NowLabel>
               </Link>
             ) : null}
-            <Link href="/products" className="font-medium text-primary hover:underline">
-              Full product catalogue
+            <Link
+              href="/markets#directory-vendors"
+              className="font-medium text-primary hover:underline"
+            >
+              <span className="type-nums">{data.sellingToday.length}</span> stalls active today
             </Link>
             <span aria-hidden className="text-muted-foreground">
               ·
             </span>
-            <Link href="/events" className="font-medium text-primary hover:underline">
-              Month calendar
+            <Link href="/products" className="font-medium text-primary hover:underline">
+              Full product catalogue
             </Link>
           </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-6 lg:px-6 lg:py-8">
-        {/* Masthead + Craving Search Deck */}
+        {/* Masthead + Tri-Pillar Census + Search Deck */}
         <header className="border-b-2 border-board pb-6">
           <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
             <div className="lg:col-span-7">
               <p className="type-kicker font-medium text-primary">
-                Explore by neighbourhood walk or what is on the tables
+                Stalls, tables &amp; neighbourhood market halls in one view
               </p>
               <h1 className="mt-1">{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
-                Start with a craving — sourdough, butter tarts, heirloom produce — or pick a{" "}
-                {LAUNCH_CITY} neighbourhood on the atlas to see every stall and schedule.
+                Meet the growers, bakers, and makers first — see what is on their tables, what it
+                costs, and the exact {LAUNCH_CITY} market halls and hours where they set up.
               </p>
             </div>
 
-            {/* 3-Stamp Ticket Strip */}
+            {/* 3-Stamp Ticket Strip (Vendors First, Products Second, Markets Third) */}
             <div className="lg:col-span-5">
               <nav
                 aria-label="On the directory"
                 className="grid grid-cols-3 divide-x divide-border bg-card ring-1 ring-board"
               >
                 <Link
-                  href="/markets"
-                  className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
-                >
-                  <span className="type-kicker text-muted-foreground">Atlas</span>
-                  <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
-                    {formatCensus(data.census.markets)}
-                  </span>
-                  <span className="mt-1 text-sm font-medium text-primary">markets</span>
-                </Link>
-                <Link
                   href="/markets#directory-vendors"
-                  className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
+                  className="flex flex-col justify-between bg-secondary/45 p-3.5 transition-colors hover:bg-secondary"
                 >
-                  <span className="type-kicker text-muted-foreground">Stalls</span>
+                  <span className="type-kicker font-medium text-primary">Priority stalls</span>
                   <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
                     {formatCensus(data.census.vendors)}
                   </span>
@@ -175,17 +428,27 @@ export function ConceptNeighbourhoodAtlas({
                   href="/products"
                   className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
                 >
-                  <span className="type-kicker text-muted-foreground">Tables</span>
+                  <span className="type-kicker text-muted-foreground">On the tables</span>
                   <span className="type-census mt-1 text-3xl leading-none text-stamp sm:text-4xl">
                     {formatCensus(data.census.menus)}
                   </span>
                   <span className="mt-1 text-sm font-medium text-stamp">menu items</span>
                 </Link>
+                <Link
+                  href="/markets"
+                  className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
+                >
+                  <span className="type-kicker text-muted-foreground">Neighbourhoods</span>
+                  <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
+                    {formatCensus(data.census.markets)}
+                  </span>
+                  <span className="mt-1 text-sm font-medium text-primary">markets</span>
+                </Link>
               </nav>
             </div>
           </div>
 
-          {/* Search & Craving Shortcut Bar */}
+          {/* Search & Interactive Craving Filter Bar */}
           <div className="mt-5 bg-panel-find text-primary-foreground ring-1 ring-board">
             <div className="awning-leaf h-[7px] w-full" aria-hidden />
             <div className="p-4 sm:p-5">
@@ -224,27 +487,207 @@ export function ConceptNeighbourhoodAtlas({
               </form>
 
               <div className="mt-3.5 flex flex-wrap items-center gap-1.5 border-t border-primary-foreground/20 pt-3">
-                <span className="type-kicker mr-1 text-chalk">Craving right now:</span>
-                {CRAVING_SHORTCUTS.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="stall-chip-sm bg-primary-foreground/15 px-2.5 py-1 text-sm font-medium text-primary-foreground transition-colors hover:bg-card hover:text-primary"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                <span className="type-kicker mr-1 text-chalk">Jump to a craving or filter stalls:</span>
+                {CRAVING_SHORTCUTS.map((item) => {
+                  const active = vendorAisleFilter === item.aisleId;
+                  return (
+                    <button
+                      key={item.href}
+                      type="button"
+                      onClick={() => syncAisleSelection(active ? "all" : item.aisleId)}
+                      className={cn(
+                        "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                        active
+                          ? "bg-card text-primary"
+                          : "bg-primary-foreground/15 text-primary-foreground hover:bg-card hover:text-primary",
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
         </header>
 
-        {/* Above-the-Fold Split Hero: 6-Col Craving & Aisle Crate Explorer + 6-Col Live Neighbourhood Atlas */}
+        {/* ABOVE-THE-FOLD PRIORITY SHOWCASE: Unified Vendor × Product × Market Matrix */}
+        <section
+          aria-label="Priority Vendor, Product, and Market Showcase"
+          className="mt-8 bg-card ring-1 ring-board"
+        >
+          {/* Section Header */}
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-board bg-secondary px-4 py-3.5 sm:px-5">
+            <div className="flex items-center gap-3">
+              <span className="stall-chip-sm flex size-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
+                <CrateMark className="size-5" />
+              </span>
+              <div>
+                <p className="type-kicker text-muted-foreground">
+                  Vendors in priority · Paired with their signature products &amp; market halls
+                </p>
+                <h2>Featured Stalls, Tables &amp; Market Halls</h2>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {(vendorAisleFilter !== "all" ||
+                vendorAreaFilter !== "all" ||
+                vendorWhenFilter !== "all") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVendorAisleFilter("all");
+                    setVendorAreaFilter("all");
+                    setVendorWhenFilter("all");
+                  }}
+                  className="stall-chip-sm cursor-pointer bg-card px-3 py-1.5 text-sm font-medium text-stamp ring-1 ring-border hover:bg-secondary"
+                >
+                  Reset filters
+                </button>
+              )}
+              <Link
+                href="/markets#directory-vendors"
+                className="stall-chip-sm inline-flex h-9 items-center bg-board px-3.5 text-sm font-medium text-chalk hover:brightness-110"
+              >
+                All {formatCensus(data.census.vendors)} vendors
+              </Link>
+            </div>
+          </div>
+
+          {/* 3-Dimension Filter Bar: Pivot by Product Aisle, Neighbourhood Walk, or Schedule Window */}
+          <div className="grid gap-3 border-b border-border bg-secondary/40 px-4 py-3.5 sm:px-5 lg:grid-cols-12 lg:items-center">
+            {/* 1. Filter by Product Aisle */}
+            <div className="lg:col-span-6">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="type-kicker mr-1 font-medium text-foreground">
+                  1. Product aisle:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => syncAisleSelection("all")}
+                  className={cn(
+                    "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                    vendorAisleFilter === "all"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+                  )}
+                >
+                  All tables
+                </button>
+                {data.aisles.slice(0, 6).map((aisle) => {
+                  const active = vendorAisleFilter === aisle.id;
+                  return (
+                    <button
+                      key={aisle.id}
+                      type="button"
+                      onClick={() => syncAisleSelection(active ? "all" : aisle.id)}
+                      className={cn(
+                        "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                        active
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+                      )}
+                    >
+                      {aisle.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Filter by Market Neighbourhood */}
+            <div className="lg:col-span-4">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="type-kicker mr-1 font-medium text-foreground">
+                  2. Market walk:
+                </span>
+                <button
+                  type="button"
+                  onClick={() => syncAreaSelection("all")}
+                  className={cn(
+                    "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                    vendorAreaFilter === "all"
+                      ? "bg-board text-chalk"
+                      : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+                  )}
+                >
+                  All areas
+                </button>
+                {topDistrictFilters.slice(0, 4).map((circuit) => {
+                  const active =
+                    vendorAreaFilter.toLowerCase() === circuit.label.toLowerCase();
+                  return (
+                    <button
+                      key={circuit.label}
+                      type="button"
+                      onClick={() => syncAreaSelection(active ? "all" : circuit.label)}
+                      className={cn(
+                        "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                        active
+                          ? "bg-board text-chalk"
+                          : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+                      )}
+                    >
+                      {circuit.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 3. Filter by Selling Window */}
+            <div className="lg:col-span-2 lg:justify-self-end">
+              <div className="inline-flex flex-wrap gap-1">
+                {(
+                  [
+                    { id: "all", label: "Any day" },
+                    { id: "today", label: "Today" },
+                    { id: "weekend", label: "Weekend" },
+                  ] as const
+                ).map((tab) => {
+                  const active = vendorWhenFilter === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setVendorWhenFilter(tab.id)}
+                      className={cn(
+                        "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                        active
+                          ? "bg-stamp text-receipt"
+                          : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 6-Card Priority Vendor × Product × Market Grid */}
+          <div className="p-4 sm:p-5">
+            <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {filteredVendorSpotlights.map((vendor) => (
+                <VendorTableCard
+                  key={vendor.id}
+                  vendor={vendor}
+                  onSelectAisle={syncAisleSelection}
+                  onSelectNeighbourhood={syncAreaSelection}
+                />
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* Synchronized Deep-Dive Split: 6-Col Product Crate Explorer (with Stalls) + 6-Col Live Neighbourhood Atlas (with Stalls) */}
         <section
           aria-label="Craving Crate Explorer and Live Atlas"
           className="mt-8 grid gap-8 lg:grid-cols-12 lg:items-start"
         >
-          {/* Left 6 Columns: Interactive Craving & Aisle Crate Explorer */}
+          {/* Left 6 Columns: Interactive Craving & Aisle Crate Explorer + Top Stalls in Aisle */}
           <div className="bg-card ring-1 ring-board lg:col-span-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-board bg-secondary px-4 py-3">
               <div className="flex items-center gap-2.5">
@@ -253,9 +696,9 @@ export function ConceptNeighbourhoodAtlas({
                 </span>
                 <div>
                   <p className="type-kicker text-muted-foreground">
-                    Browse {formatCensus(data.census.menus)} items by crate
+                    Browse {formatCensus(data.census.menus)} items &amp; the stalls that grow or bake them
                   </p>
-                  <h2>What are you shopping for?</h2>
+                  <h2>Products &amp; Aisle Crates</h2>
                 </div>
               </div>
               <Link
@@ -280,7 +723,7 @@ export function ConceptNeighbourhoodAtlas({
                     type="button"
                     role="tab"
                     aria-selected={selected}
-                    onClick={() => setSelectedAisleId(aisle.id)}
+                    onClick={() => syncAisleSelection(aisle.id)}
                     className={cn(
                       "stall-chip-sm inline-flex cursor-pointer items-baseline gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors",
                       selected
@@ -302,10 +745,10 @@ export function ConceptNeighbourhoodAtlas({
               })}
             </div>
 
-            {/* Featured Active Aisle Crate Spotlight */}
+            {/* Featured Active Aisle Crate Spotlight + Vendors Selling This Aisle */}
             {activeAisle ? (
               <div className="p-4 sm:p-5">
-                <div className="grid gap-4 sm:grid-cols-[200px_minmax(0,1fr)] sm:items-start">
+                <div className="grid gap-4 sm:grid-cols-[190px_minmax(0,1fr)] sm:items-start">
                   <Link href={`/products?aisle=${activeAisle.id}`} className="block">
                     <ProductPhotoFrame
                       name={activeAisle.label}
@@ -343,7 +786,7 @@ export function ConceptNeighbourhoodAtlas({
                       {activeAisle.sampleTerms.length > 0 ? (
                         <div className="mt-3">
                           <p className="type-kicker text-muted-foreground">
-                            Popular tables in this aisle:
+                            Popular product guides in this crate:
                           </p>
                           <div className="mt-1.5 flex flex-wrap gap-1.5">
                             {activeAisle.sampleTerms.map((term) => (
@@ -359,27 +802,53 @@ export function ConceptNeighbourhoodAtlas({
                         </div>
                       ) : null}
                     </div>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-3">
-                      <Link
-                        href={`/products?aisle=${activeAisle.id}`}
-                        className="stall-chip-sm inline-flex h-9 items-center bg-primary px-3.5 text-sm font-medium text-primary-foreground hover:brightness-110"
-                      >
-                        Explore {activeAisle.label.toLowerCase()}
-                      </Link>
-                      <Link
-                        href={`/markets?q=${encodeURIComponent(activeAisle.label)}`}
-                        className="text-sm font-medium text-primary hover:underline"
-                      >
-                        Find markets with {activeAisle.label.toLowerCase()}
-                      </Link>
-                    </div>
                   </div>
                 </div>
 
+                {/* Key Stalls Known for This Aisle */}
+                {activeAisle.topVendors.length > 0 ? (
+                  <div className="mt-4 border-t border-border pt-3.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="type-kicker font-medium text-foreground">
+                        Stalls known for {activeAisle.label.toLowerCase()}:
+                      </p>
+                      <Link
+                        href={`/products?aisle=${activeAisle.id}`}
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        Compare all stalls &amp; prices
+                      </Link>
+                    </div>
+                    <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {activeAisle.topVendors.map((v) => (
+                        <li
+                          key={v.slug}
+                          className="flex items-center justify-between gap-2 bg-secondary/55 px-3 py-2 ring-1 ring-border"
+                        >
+                          <div className="flex min-w-0 items-center gap-2">
+                            <ListingMark src={v.logoUrl} className="size-7 shrink-0" />
+                            <div className="min-w-0">
+                              <Link
+                                href={`/vendors/${v.slug}`}
+                                className="block text-sm font-medium text-foreground hover:text-primary hover:underline"
+                              >
+                                {v.name}
+                              </Link>
+                              <p className="text-sm text-muted-foreground">
+                                {v.itemLabel} · {v.marketName}
+                              </p>
+                            </div>
+                          </div>
+                          <SaveButton kind="vendor" slug={v.slug} name={v.name} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
                 {/* Secondary 4-Card Aisle Strip */}
-                <div className="mt-5 border-t border-border pt-4">
-                  <p className="type-kicker mb-2.5 text-muted-foreground">
+                <div className="mt-4 border-t border-border pt-3.5">
+                  <p className="type-kicker mb-2 text-muted-foreground">
                     More crates on the market floor
                   </p>
                   <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -393,7 +862,7 @@ export function ConceptNeighbourhoodAtlas({
                         >
                           <button
                             type="button"
-                            onClick={() => setSelectedAisleId(aisle.id)}
+                            onClick={() => syncAisleSelection(aisle.id)}
                             className="w-full cursor-pointer text-left"
                           >
                             <ProductPhotoFrame
@@ -420,7 +889,7 @@ export function ConceptNeighbourhoodAtlas({
             ) : null}
           </div>
 
-          {/* Right 6 Columns: Live Interactive Neighbourhood Atlas + Circuit Inspector */}
+          {/* Right 6 Columns: Live Interactive Neighbourhood Atlas + Halls & Anchor Vendors */}
           <div className="bg-card ring-1 ring-board lg:col-span-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-board bg-secondary px-4 py-3">
               <div className="flex items-center gap-2.5">
@@ -431,7 +900,7 @@ export function ConceptNeighbourhoodAtlas({
                   <p className="type-kicker text-muted-foreground">
                     {formatCensus(data.census.markets)} halls pinned across {LAUNCH_CITY}
                   </p>
-                  <h2>Live Neighbourhood Atlas</h2>
+                  <h2>Markets &amp; Neighbourhood Atlas</h2>
                 </div>
               </div>
               <Link
@@ -442,15 +911,15 @@ export function ConceptNeighbourhoodAtlas({
               </Link>
             </div>
 
-            {/* Live Map Above the Fold */}
+            {/* Live Map */}
             <div className="border-b border-border">
-              <MarketMapLazy load="visible" className="h-60 w-full overflow-hidden" />
+              <MarketMapLazy load="visible" className="h-56 w-full overflow-hidden" />
             </div>
 
             {/* Neighbourhood Circuit Selector Strip */}
             <div className="border-b border-border bg-secondary/40 px-4 py-3">
               <p className="type-kicker mb-2 text-muted-foreground">
-                Inspect a neighbourhood market walk:
+                Inspect a neighbourhood market walk &amp; its stalls:
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {data.neighbourhoodCircuits.slice(0, 7).map((circuit, idx) => {
@@ -459,7 +928,10 @@ export function ConceptNeighbourhoodAtlas({
                     <button
                       key={circuit.label}
                       type="button"
-                      onClick={() => setSelectedCircuitIndex(idx)}
+                      onClick={() => {
+                        setSelectedCircuitIndex(idx);
+                        setVendorAreaFilter(circuit.label);
+                      }}
                       className={cn(
                         "stall-chip-sm inline-flex cursor-pointer items-baseline gap-1.5 px-3 py-1 text-sm font-medium transition-colors",
                         selected
@@ -482,7 +954,7 @@ export function ConceptNeighbourhoodAtlas({
               </div>
             </div>
 
-            {/* Active Neighbourhood Circuit Hall List */}
+            {/* Active Neighbourhood Circuit Hall List + Anchor Vendors */}
             {activeCircuit ? (
               <div>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border px-4 py-2.5">
@@ -567,12 +1039,33 @@ export function ConceptNeighbourhoodAtlas({
                       );
                     })}
                 </ul>
+
+                {/* Anchor Stalls in This Neighbourhood */}
+                {activeCircuit.topVendors.length > 0 ? (
+                  <div className="border-t border-border bg-secondary/35 px-4 py-3">
+                    <p className="type-kicker text-muted-foreground">
+                      Anchor stalls setting up in {activeCircuit.label}:
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {activeCircuit.topVendors.map((v) => (
+                        <Link
+                          key={v.slug}
+                          href={`/vendors/${v.slug}`}
+                          className="stall-chip-sm inline-flex items-center gap-2 bg-card px-2.5 py-1.5 text-sm ring-1 ring-border hover:bg-secondary"
+                        >
+                          <span className="font-medium text-foreground">{v.name}</span>
+                          <span className="text-muted-foreground">· {v.specialty}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>
         </section>
 
-        {/* Full-Width Section: Toronto Neighbourhood Market Walks (6 District Cards) */}
+        {/* Full-Width Section: Toronto Neighbourhood Market Walks (With Both Halls & Anchor Stalls) */}
         <section
           aria-label="Neighbourhood market walks"
           className="mt-10 border-t-2 border-board pt-8"
@@ -584,7 +1077,7 @@ export function ConceptNeighbourhoodAtlas({
               </span>
               <div>
                 <p className="type-kicker text-muted-foreground">
-                  Every major market district in {LAUNCH_CITY} &amp; the GTA
+                  Every major market district in {LAUNCH_CITY} — paired with its halls &amp; anchor stalls
                 </p>
                 <h2>Neighbourhood Market Walks</h2>
               </div>
@@ -655,12 +1148,33 @@ export function ConceptNeighbourhoodAtlas({
                       </li>
                     ))}
                   </ul>
+
+                  {circuit.topVendors.length > 0 ? (
+                    <div className="border-t border-dashed border-border bg-secondary/30 px-4 py-2.5">
+                      <p className="type-kicker text-muted-foreground">Featured stalls here:</p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {circuit.topVendors.slice(0, 3).map((v) => (
+                          <Link
+                            key={v.slug}
+                            href={`/vendors/${v.slug}`}
+                            className="stall-chip-sm bg-card px-2 py-0.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
+                          >
+                            {v.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="flex items-center justify-between border-t border-border bg-secondary/25 px-4 py-2.5 text-sm">
-                  <span className="text-muted-foreground">
-                    {circuit.marketCount} {circuit.marketCount === 1 ? "hall" : "halls"} in area
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => syncAreaSelection(circuit.label)}
+                    className="cursor-pointer font-medium text-stamp hover:underline"
+                  >
+                    Show {circuit.label} stalls above
+                  </button>
                   <Link
                     href={`/markets?area=${encodeURIComponent(circuit.q)}`}
                     className="font-medium text-primary hover:underline"
@@ -673,13 +1187,13 @@ export function ConceptNeighbourhoodAtlas({
           </div>
         </section>
 
-        {/* Bottom 12-Col Spread: 8-Col Stalls & Regulars Showcase + 4-Col Timetable & Saved Rail */}
+        {/* Bottom 12-Col Spread: 8-Col Live Stalls & Regulars Roster + 4-Col Timetable & Saved Rail */}
         <section
           aria-label="Stalls, notes, and upcoming timetable"
           className="mt-10 border-t-2 border-board pt-8 pb-4"
         >
           <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
-            {/* Left 8 Columns: Active Stalls + Top 5 This Week + Shopper Notes */}
+            {/* Left 8 Columns: Active Stalls Today + Top 5 This Week + Shopper Notes */}
             <div className="flex flex-col gap-6 lg:col-span-8">
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Active Vendors Today */}

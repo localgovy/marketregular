@@ -24,37 +24,37 @@ type ToneStyle = {
 const quiet: ToneStyle = {
   shell: "bg-card text-card-foreground ring-1 ring-border",
   ink: "paper",
-  mark: "bg-secondary text-muted-foreground",
+  mark: "border-border bg-secondary/70 text-foreground shadow-[inset_0_0_0_2px_rgba(28,25,22,0.05)]",
 };
 
 const tones: Record<PanelTone, ToneStyle> = {
   find: {
     shell: "bg-panel-find text-primary-foreground",
     ink: "leaf",
-    mark: "bg-primary-foreground/15 text-primary-foreground",
+    mark: "border-chalk/50 bg-board/60 text-chalk shadow-[inset_0_0_0_2px_rgba(243,238,228,0.12)]",
     band: "awning-leaf",
   },
   open: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
     ink: "paper",
-    mark: "bg-primary text-primary-foreground",
+    mark: "border-primary bg-primary/10 text-primary shadow-[inset_0_0_0_2px_rgba(58,101,88,0.12)]",
     band: "bg-[color-mix(in_srgb,var(--primary)_9%,var(--card))]",
   },
   vendors: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
     ink: "paper",
-    mark: "bg-stamp/15 text-stamp",
+    mark: "border-stamp/60 bg-stamp/10 text-stamp shadow-[inset_0_0_0_2px_rgba(158,74,62,0.1)]",
   },
   menus: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
     ink: "paper",
-    mark: "bg-foreground text-receipt",
+    mark: "border-foreground bg-secondary text-foreground shadow-[inset_0_0_0_2px_rgba(28,25,22,0.08)]",
   },
   here: quiet,
   map: {
     shell: "bg-card text-card-foreground ring-1 ring-border",
     ink: "paper",
-    mark: "bg-secondary text-primary",
+    mark: "border-primary/60 bg-primary/10 text-primary shadow-[inset_0_0_0_2px_rgba(58,101,88,0.1)]",
   },
   back: quiet,
   more: quiet,
@@ -109,12 +109,12 @@ export function HomePanel({
         <div className="flex min-w-0 items-start gap-3">
           <span
             className={cn(
-              "mt-0.5 flex shrink-0 items-center justify-center stall-chip-sm",
+              "mt-0.5 flex shrink-0 items-center justify-center border",
               rail ? "size-8" : "size-9",
               t.mark,
             )}
           >
-            <Icon className={rail ? "size-4" : "size-5"} />
+            <Icon className={rail ? "size-[18px]" : "size-5"} />
           </span>
           <div className="min-w-0">
             <p
