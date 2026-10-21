@@ -18,7 +18,7 @@ export default async function VendorPreviewWorkbenchPage({
   const params = await searchParams;
   const data = await loadVendorPreviewData(params.vendor);
   const initialConcept =
-    params.concept === "2" ? "2" : params.concept === "3" ? "3" : "1";
+    params.concept === "1" ? "1" : params.concept === "2" ? "2" : "3";
 
   return (
     <VendorPreviewWorkbench

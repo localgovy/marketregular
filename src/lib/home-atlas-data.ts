@@ -60,6 +60,12 @@ export type HomeAtlasMarketSlot = {
   notes: string | null;
   vendorCount: number;
   neighbourhood: string;
+  indoorOutdoor: string | null;
+  sampleVendors: Array<{
+    name: string;
+    slug: string;
+    logoUrl: string | null;
+  }>;
 };
 
 export type HomeAtlasDayGroup = {
@@ -191,6 +197,9 @@ export type HomeAtlasData = {
   census: DirectoryCensus;
   fullWeek: HomeAtlasDayGroup[];
   openNowSlots: HomeAtlasMarketSlot[];
+  laterTodaySlots: HomeAtlasMarketSlot[];
+  earlierTodaySlots: HomeAtlasMarketSlot[];
+  nextDayGroup: HomeAtlasDayGroup | null;
   sellingTodayCount: number;
   sellingToday: VendorTodayRow[];
   weekVendors: VendorWeekPick[];
@@ -484,6 +493,25 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
   );
   const torontoVendors = vendors.filter((v) => vendorIds.has(v.id));
 
+  const vendorById = new Map(vendors.map((v) => [v.id, v]));
+  const sampleVendorsByMarketId = new Map<
+    string,
+    Array<{ name: string; slug: string; logoUrl: string | null }>
+  >();
+  for (const stall of stalls) {
+    const v = vendorById.get(stall.id);
+    if (!v) continue;
+    const list = sampleVendorsByMarketId.get(stall.market_id) ?? [];
+    if (list.length < 4 && !list.some((item) => item.slug === v.slug)) {
+      list.push({
+        name: v.name,
+        slug: v.slug,
+        logoUrl: listingMarkSrc(v.logo_url),
+      });
+      sampleVendorsByMarketId.set(stall.market_id, list);
+    }
+  }
+
   const fullWeekAll: HomeAtlasDayGroup[] = rawWeek.map((group) => ({
     id: group.id,
     label: group.label,
@@ -491,28 +519,44 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
     date: group.date,
     iso: group.iso,
     open: group.open,
-    slots: group.slots.map((slot) => ({
-      id: slot.market.id,
-      slug: slot.market.slug,
-      name: slot.market.name,
-      city: slot.market.city,
-      address: slot.market.address,
-      province: slot.market.province,
-      lat: slot.market.lat,
-      lng: slot.market.lng,
-      logo_url: listingMarkSrc(slot.market.logo_url),
-      rating_avg: slot.market.rating_avg ?? null,
-      review_count: slot.market.review_count ?? 0,
-      tags: slot.market.tags ?? [],
-      hours: slot.hours,
-      open: slot.open,
-      notes: slot.notes,
-      vendorCount: vendorCountByMarket.get(slot.market.id) ?? 0,
-      neighbourhood: inferNeighbourhood(slot.market),
-    })),
+    slots: group.slots.map((slot) => {
+      const tagsLower = (slot.market.tags ?? []).map((t) => t.toLowerCase());
+      const indoorOutdoor = tagsLower.includes("indoor")
+        ? "Indoor"
+        : tagsLower.includes("outdoor")
+          ? "Outdoor"
+          : null;
+      return {
+        id: slot.market.id,
+        slug: slot.market.slug,
+        name: slot.market.name,
+        city: slot.market.city,
+        address: slot.market.address,
+        province: slot.market.province,
+        lat: slot.market.lat,
+        lng: slot.market.lng,
+        logo_url: listingMarkSrc(slot.market.logo_url),
+        rating_avg: slot.market.rating_avg ?? null,
+        review_count: slot.market.review_count ?? 0,
+        tags: slot.market.tags ?? [],
+        hours: slot.hours,
+        open: slot.open,
+        notes: slot.notes,
+        vendorCount: vendorCountByMarket.get(slot.market.id) ?? 0,
+        neighbourhood: inferNeighbourhood(slot.market),
+        indoorOutdoor,
+        sampleVendors: sampleVendorsByMarketId.get(slot.market.id) ?? [],
+      };
+    }),
   }));
 
   const openNowSlots = fullWeekAll.find((g) => g.open)?.slots ?? [];
+  const laterTodaySlots = fullWeekAll.find((g) => g.id === "later")?.slots ?? [];
+  const earlierTodaySlots = fullWeekAll.find((g) => g.id === "earlier")?.slots ?? [];
+  const nextDayGroup =
+    fullWeekAll.find(
+      (g) => !g.open && g.id !== "later" && g.id !== "earlier" && g.slots.length > 0,
+    ) ?? null;
   const openIds = new Set(openNowSlots.map((s) => s.id));
 
   const allMarketRows: HomeAtlasMarketRow[] = markets.map((market) => {
@@ -783,6 +827,9 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
     census,
     fullWeek,
     openNowSlots,
+    laterTodaySlots,
+    earlierTodaySlots,
+    nextDayGroup,
     sellingTodayCount: sellingTodayRaw.length,
     sellingToday: sellingTodayRaw.slice(0, 5),
     weekVendors: weekVendors.slice(0, 5),

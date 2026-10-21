@@ -162,6 +162,7 @@ export type VendorPreviewData = {
     nextSessionSummary: string;
     primaryAisleId: string;
     primaryAisleLabel: string;
+    secondaryAisleLabel: string | null;
     bannerPhoto: { url: string; alt: string } | null;
     contact: {
       phone: string | null;
@@ -460,18 +461,49 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
   }
 
   const sortedAisleEntries = [...aisleCounts.entries()].sort((a, b) => b[1] - a[1]);
-  const primaryAisleId = sortedAisleEntries[0]?.[0] ?? fallbackVendorCategory;
+  const vendorNameLower = resolvedVendor.name.toLowerCase();
+  const preferredPrimaryEntry =
+    sortedAisleEntries.find(([id]) => {
+      if (
+        (vendorNameLower.includes("coffee") || vendorNameLower.includes("chocosol")) &&
+        id === "coffee-and-tea"
+      ) {
+        return true;
+      }
+      if (vendorNameLower.includes("melon") && id === "apples-and-fruit") {
+        return true;
+      }
+      return false;
+    }) ?? sortedAisleEntries[0];
+
+  const primaryAisleId = preferredPrimaryEntry?.[0] ?? fallbackVendorCategory;
   const primaryAisleLabel =
     menuCategoryLabel(primaryAisleId) ??
     FIND_CATEGORIES.find((c) => c.id === primaryAisleId)?.label ??
     "Market stall";
 
-  const firstProductSlug = menus.find((m) => m.productSlug)?.productSlug ?? null;
+  const secondaryEntry = sortedAisleEntries.find(([id]) => id !== primaryAisleId);
+  const secondaryAisleLabel = secondaryEntry
+    ? (menuCategoryLabel(secondaryEntry[0]) ??
+      FIND_CATEGORIES.find((c) => c.id === secondaryEntry[0])?.label ??
+      null)
+    : null;
+
+  // Put the primary aisle first in aisleGuides
+  const orderedAisleEntries = [
+    ...(preferredPrimaryEntry ? [preferredPrimaryEntry] : []),
+    ...sortedAisleEntries.filter(([id]) => id !== primaryAisleId),
+  ];
+
+  const firstProductSlug =
+    menus.find((m) => m.productCategory === primaryAisleId && m.productSlug)?.productSlug ??
+    menus.find((m) => m.productSlug)?.productSlug ??
+    null;
   const bannerPhotoObj = firstProductSlug
     ? productPhoto(photos, firstProductSlug, primaryAisleId)
     : (photos.aisle[primaryAisleId] ?? null);
 
-  const aisleGuides: VendorPreviewAisleGuide[] = sortedAisleEntries.map(([aisleId, count]) => {
+  const aisleGuides: VendorPreviewAisleGuide[] = orderedAisleEntries.map(([aisleId, count]) => {
     const label =
       menuCategoryLabel(aisleId) ??
       FIND_CATEGORIES.find((c) => c.id === aisleId)?.label ??
@@ -780,6 +812,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
       nextSessionSummary,
       primaryAisleId,
       primaryAisleLabel,
+      secondaryAisleLabel,
       bannerPhoto: bannerPhotoObj
         ? { url: bannerPhotoObj.url, alt: bannerPhotoObj.alt }
         : null,

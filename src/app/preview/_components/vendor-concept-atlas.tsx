@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AddressLink } from "@/components/address-link";
 import { BackButton } from "@/components/back-button";
+import { Hours } from "@/components/hours";
 import { ListingAlsoLinks } from "@/components/listing-also-links";
 import {
   ListingContact,
@@ -21,6 +22,7 @@ import {
   CheckMark,
   CrateMark,
   PlateMark,
+  RulesMark,
   SearchMark,
   SlatsMark,
   TagMark,
@@ -33,7 +35,9 @@ import { ReviewCard } from "@/components/review-card";
 import { ProductSaveButton, SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { VerifiedName } from "@/components/verified-stamp";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, listingMarkSrc } from "@/lib/format";
+import { tagLabel } from "@/lib/find-paths";
+import { formatRatingAvg, formatReviewCountShort, listingScore } from "@/lib/listing-score";
 import { productFromInput } from "@/lib/product-saves";
 import { cn } from "@/lib/utils";
 import type {
@@ -42,56 +46,162 @@ import type {
   VendorPreviewMenuItem,
 } from "@/app/preview/_lib/vendor-preview-data";
 
-function StallEmblem({
-  name,
-  logoUrl,
-  size = "md",
-}: {
-  name: string;
-  logoUrl: string | null;
-  size?: "sm" | "md" | "lg";
-}) {
-  const box =
-    size === "lg" ? "size-16" : size === "md" ? "size-12" : "size-10";
-  const px = size === "lg" ? 64 : size === "md" ? 48 : 40;
-  const initials = name
-    .split(/[\s&-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("");
+/**
+ * Guard that guarantees an image URL never routes through Supabase's paid
+ * `/storage/v1/render/image/` transform endpoint or Vercel's `/_next/image` optimizer.
+ */
+function directPublicImageSrc(src: string | null | undefined): string | null {
+  if (!src) return null;
+  if (src.includes("/storage/v1/render/image/") || src.startsWith("/_next/image")) {
+    return null;
+  }
+  return src;
+}
 
-  if (logoUrl) {
-    return (
-      <span
-        className={cn(
-          "inline-flex shrink-0 items-center justify-center rounded-lg bg-receipt p-1 ring-1 ring-foreground/15",
-          box,
-        )}
-      >
+/**
+ * Cohesive Stall / Hall Emblem Plate (`StallEmblem`), matching `HomeAtlas`.
+ * Renders the listing's direct public logo inside a framed paper plate, or falls back to a
+ * tactile woodcut stamp so every vendor and market row has a uniform visual anchor.
+ */
+function StallEmblem({
+  src,
+  name,
+  kind = "vendor",
+  size = "md",
+  tone = "paper",
+  className,
+}: {
+  src: string | null | undefined;
+  name: string;
+  kind?: "vendor" | "market";
+  size?: "xs" | "sm" | "md" | "lg";
+  tone?: "paper" | "chalk" | "board";
+  className?: string;
+}) {
+  const url = directPublicImageSrc(listingMarkSrc(src));
+  const [failed, setFailed] = useState(false);
+  const showLogo = Boolean(url && !failed);
+
+  const sizeSpec = {
+    xs: { box: "size-7 p-0.5", px: 28, icon: "size-3.5" },
+    sm: { box: "size-9 p-1", px: 36, icon: "size-4" },
+    md: { box: "size-11 p-1", px: 44, icon: "size-5" },
+    lg: { box: "size-14 p-1.5", px: 56, icon: "size-6" },
+  }[size];
+
+  const toneClasses = {
+    paper: "bg-card text-board ring-1 ring-border",
+    chalk: "bg-primary-foreground text-primary ring-1 ring-black/15",
+    board: "bg-board text-chalk ring-1 ring-board",
+  }[tone];
+
+  return (
+    <span
+      aria-hidden
+      title={name}
+      className={cn(
+        "stall-chip-sm inline-flex shrink-0 items-center justify-center overflow-hidden select-none",
+        sizeSpec.box,
+        showLogo ? "bg-primary-foreground ring-1 ring-border" : toneClasses,
+        className,
+      )}
+    >
+      {showLogo && url ? (
         <img
-          src={logoUrl}
-          alt={name}
-          width={px}
-          height={px}
+          src={url}
+          alt=""
+          width={sizeSpec.px}
+          height={sizeSpec.px}
           loading="lazy"
           decoding="async"
-          className="size-full object-contain"
+          className="block max-h-full max-w-full object-contain object-center"
+          onError={() => setFailed(true)}
         />
-      </span>
-    );
-  }
+      ) : kind === "market" ? (
+        <RulesMark className={sizeSpec.icon} />
+      ) : (
+        <CrateMark className={sizeSpec.icon} />
+      )}
+    </span>
+  );
+}
+
+/**
+ * Cohesive square category/aisle thumbnail (`ProductThumb`).
+ */
+function ProductThumb({
+  src,
+  size = "sm",
+  className,
+}: {
+  src: string | null | undefined;
+  size?: "xs" | "sm" | "md";
+  className?: string;
+}) {
+  const safeSrc = directPublicImageSrc(src);
+  const [failed, setFailed] = useState(false);
+  const show = Boolean(safeSrc && !failed);
+
+  const spec = {
+    xs: { box: "size-6", px: 24, icon: "size-3.5" },
+    sm: { box: "size-9", px: 36, icon: "size-4" },
+    md: { box: "size-12", px: 48, icon: "size-5" },
+  }[size];
 
   return (
     <span
       aria-hidden
       className={cn(
-        "inline-flex shrink-0 flex-col items-center justify-center rounded-lg bg-stamp text-chalk ring-1 ring-foreground/15",
-        box,
+        "inline-flex shrink-0 items-center justify-center overflow-hidden border border-border bg-secondary text-primary",
+        spec.box,
+        className,
       )}
     >
-      <CrateMark className="size-4 text-ticket" />
-      <span className="type-nums text-xs leading-none">{initials || "MR"}</span>
+      {show && safeSrc ? (
+        <img
+          src={safeSrc}
+          alt=""
+          width={spec.px}
+          height={spec.px}
+          loading="lazy"
+          decoding="async"
+          className="size-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <TagMark className={spec.icon} />
+      )}
+    </span>
+  );
+}
+
+/**
+ * High-contrast score badge designed specifically for dark forest-green (`bg-primary`)
+ * masthead bands — avoids red-on-green (`bg-stamp` / `text-muted-foreground`) contrast clashes.
+ */
+function MastheadScore({
+  ratingAvg,
+  reviewCount,
+  className,
+}: {
+  ratingAvg?: number | string | null;
+  reviewCount?: number | null;
+  className?: string;
+}) {
+  const score = listingScore(ratingAvg, reviewCount);
+  if (!score) return null;
+  const avg = formatRatingAvg(score.avg);
+  const count = formatReviewCountShort(score.count);
+  const noun = score.count === 1 ? "rating" : "ratings";
+
+  return (
+    <span className={cn("inline-flex items-center gap-2 text-sm", className)}>
+      <span className="stall-chip-sm type-nums inline-flex h-6 min-w-8 items-center justify-center bg-receipt px-2 text-sm font-semibold text-foreground ring-1 ring-black/15">
+        {avg}
+      </span>
+      <span className="type-nums font-medium text-primary-foreground/95">
+        {count} {noun}
+      </span>
     </span>
   );
 }
@@ -99,9 +209,11 @@ function StallEmblem({
 function SessionLines({
   hours,
   fallback,
+  align = "end",
 }: {
   hours: Array<{ day: string; hours: string }>;
   fallback?: string;
+  align?: "end" | "stretch";
 }) {
   if (!hours.length) {
     return (
@@ -111,16 +223,22 @@ function SessionLines({
     );
   }
   return (
-    <div className="flex flex-col items-end gap-0.5">
+    <ul className="flex flex-col gap-0.5">
       {hours.map((entry) => (
-        <span
+        <li
           key={`${entry.day}-${entry.hours}`}
-          className="type-nums whitespace-nowrap text-sm text-foreground"
+          className={cn(
+            "grid items-baseline gap-x-2",
+            align === "end"
+              ? "grid-cols-[auto_auto] justify-end"
+              : "grid-cols-[minmax(0,1fr)_auto]",
+          )}
         >
-          <span className="text-muted-foreground">{entry.day}</span> {entry.hours}
-        </span>
+          <span className="text-sm text-muted-foreground">{entry.day}</span>
+          <Hours value={entry.hours} className="text-sm font-medium text-foreground" />
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
@@ -175,6 +293,9 @@ export function VendorConceptAtlas({
   const [selectedSection, setSelectedSection] = useState<string>("all");
   const [selectedAisleId, setSelectedAisleId] = useState<string>("all");
   const [selectedDietary, setSelectedDietary] = useState<string>("all");
+  const [fulfillmentFilter, setFulfillmentFilter] = useState<
+    "all" | "pickup" | "preorder" | "delivery"
+  >("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeHallSlug, setActiveHallSlug] = useState<string>(homeMarket?.slug ?? "");
 
@@ -204,13 +325,23 @@ export function VendorConceptAtlas({
       if (selectedSection !== "all" && item.section !== selectedSection) return false;
       if (selectedAisleId !== "all" && item.productCategory !== selectedAisleId) return false;
       if (selectedDietary !== "all" && !item.dietary.includes(selectedDietary)) return false;
+      if (fulfillmentFilter === "pickup" && !item.effectivePickup) return false;
+      if (fulfillmentFilter === "preorder" && !item.effectivePreorder) return false;
+      if (fulfillmentFilter === "delivery" && !item.effectiveDelivery) return false;
       if (q) {
         const hay = `${item.name} ${item.description ?? ""} ${item.productCategoryLabel} ${item.section}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [resolvedMenus, selectedSection, selectedAisleId, selectedDietary, searchQuery]);
+  }, [
+    resolvedMenus,
+    selectedSection,
+    selectedAisleId,
+    selectedDietary,
+    fulfillmentFilter,
+    searchQuery,
+  ]);
 
   const groupedMenus = useMemo(() => {
     const map = new Map<string, typeof filteredMenus>();
@@ -249,24 +380,52 @@ export function VendorConceptAtlas({
     });
   }
 
+  function resetAllFilters() {
+    setSelectedSection("all");
+    setSelectedAisleId("all");
+    setSelectedDietary("all");
+    setFulfillmentFilter("all");
+    setSearchQuery("");
+  }
+
+  const hasActiveFilter =
+    selectedSection !== "all" ||
+    selectedAisleId !== "all" ||
+    selectedDietary !== "all" ||
+    fulfillmentFilter !== "all" ||
+    searchQuery.trim().length > 0;
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6">
       {/* Top Status & Aisle Breadcrumb Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <BackButton href={homeMarket ? `/markets/${homeMarket.slug}` : "/markets"} />
-          <Link
-            href={`/products?aisle=${encodeURIComponent(vendor.primaryAisleId)}`}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            <TagMark className="size-3.5 text-ticket" />
-            <span>{vendor.primaryAisleLabel}</span>
-          </Link>
+          {aisleGuides.slice(0, 2).map((guide, idx) => (
+            <Link
+              key={guide.id}
+              href={guide.href}
+              className={cn(
+                "stall-chip-sm inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors",
+                idx === 0
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+              )}
+            >
+              <TagMark
+                className={cn(
+                  "size-3.5",
+                  idx === 0 ? "text-primary-foreground" : "text-primary",
+                )}
+              />
+              <span>{guide.label}</span>
+            </Link>
+          ))}
           {markets.slice(0, 2).map((m) => (
             <Link
               key={m.slug}
               href={`/markets/${m.slug}`}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-card px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
+              className="inline-flex items-center gap-1.5 rounded-md bg-card px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
             >
               <BlocksMark className="size-3.5 text-primary" />
               <span>{m.name}</span>
@@ -274,131 +433,183 @@ export function VendorConceptAtlas({
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <span
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium",
+              "stall-chip-sm inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium",
               vendor.openNow || vendor.sellingToday
-                ? "bg-ticket text-chalk"
-                : "bg-secondary text-foreground ring-1 ring-border",
+                ? "bg-stamp text-chalk"
+                : "bg-card text-foreground ring-1 ring-border",
             )}
           >
-            <WeekMark className="size-3.5 text-primary" />
+            <WeekMark
+              className={cn(
+                "size-3.5",
+                vendor.openNow || vendor.sellingToday ? "text-chalk" : "text-primary",
+              )}
+            />
             <span>{vendor.badge}</span>
           </span>
           <Link
             href={`/products?aisle=${encodeURIComponent(vendor.primaryAisleId)}`}
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
-            <span>Compare all {vendor.primaryAisleLabel.toLowerCase()} stalls</span>
+            <span>Compare {vendor.primaryAisleLabel.toLowerCase()} stalls</span>
             <CaretRightMark className="size-3.5" />
           </Link>
         </div>
       </div>
 
-      {/* Above-the-Fold Tri-Panel Atlas Header */}
+      {/* Above-the-Fold Dual-Plate Atlas Header */}
       <section className="mt-4 grid gap-5 lg:grid-cols-12">
-        {/* Left 7 Cols: Enamel Stall Plate */}
-        <div className="flex flex-col justify-between rounded-xl bg-primary p-6 text-primary-foreground ring-2 ring-foreground/15 lg:col-span-7">
+        {/* Left 7 Cols: Full Forest-Green Enamel Stall Identity & Story Plate */}
+        <div className="flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board lg:col-span-7">
           <div>
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="flex min-w-0 items-start gap-4">
-                <StallEmblem name={vendor.name} logoUrl={vendor.logoUrl} size="lg" />
-                <div className="min-w-0">
-                  <p className="type-kicker text-primary-foreground/80">
-                    {vendor.primaryAisleLabel} · Toronto market stall
+              <div className="flex min-w-0 flex-1 items-start gap-4">
+                <StallEmblem
+                  src={vendor.logoUrl}
+                  name={vendor.name}
+                  kind="vendor"
+                  size="lg"
+                  tone="chalk"
+                  className="mt-0.5"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="type-kicker text-primary-foreground/90">
+                    {vendor.primaryAisleLabel}
+                    {vendor.secondaryAisleLabel ? ` · ${vendor.secondaryAisleLabel}` : ""} ·
+                    Toronto market stall
                   </p>
                   <h1 className="mt-1 text-primary-foreground">
                     <VerifiedName slug={vendor.slug} name={vendor.name} />
                   </h1>
-                  <ListingScore
-                    className="mt-2 text-base text-primary-foreground/90"
-                    ratingAvg={vendor.ratingAvg}
-                    reviewCount={vendor.reviewCount}
-                  />
+                  <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
+                    <MastheadScore
+                      ratingAvg={vendor.ratingAvg}
+                      reviewCount={vendor.reviewCount}
+                    />
+                    <span className="stall-chip-sm inline-flex items-center bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
+                      {vendor.nextSessionSummary}
+                    </span>
+                  </div>
                 </div>
               </div>
-              <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="lg" />
+
+              <div className="shrink-0 rounded-md bg-receipt p-1 ring-1 ring-black/15">
+                <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} size="md" />
+              </div>
             </div>
 
             {vendor.about ? (
-              <p className="mt-4 text-base leading-relaxed text-primary-foreground/90">
+              <p className="mt-5 text-base leading-relaxed text-primary-foreground/95">
                 {vendor.about}
               </p>
             ) : null}
+
+            {vendor.tags.length > 0 ? (
+              <div className="mt-5 flex flex-wrap items-center gap-1.5 border-t border-primary-foreground/15 pt-4">
+                <span className="mr-1 text-sm font-medium text-primary-foreground/85">
+                  Specialties:
+                </span>
+                {vendor.tags.slice(0, 6).map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded bg-primary-foreground/15 px-2.5 py-0.5 text-sm font-medium text-primary-foreground"
+                  >
+                    {tagLabel(tag)}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
 
+          {/* Bottom 2-Stamp Census Strip */}
           <div className="mt-6 border-t border-primary-foreground/15 pt-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-lg bg-primary-foreground/12 px-3 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg bg-primary-foreground/12 px-4 py-2.5">
                 <p className="type-census text-2xl text-primary-foreground">{menus.length}</p>
-                <p className="text-sm text-primary-foreground/80">On their table</p>
+                <p className="text-sm text-primary-foreground/85">Items on their table</p>
               </div>
-              <div className="rounded-lg bg-primary-foreground/10 px-3 py-2">
+              <div className="rounded-lg bg-primary-foreground/12 px-4 py-2.5">
                 <p className="type-census text-2xl text-primary-foreground">{markets.length}</p>
-                <p className="text-sm text-primary-foreground/80">Market halls</p>
-              </div>
-              <div className="rounded-lg bg-primary-foreground/10 px-3 py-2">
-                <p className="type-census text-2xl text-primary-foreground">
-                  {similarAisleVendors.length}
+                <p className="text-sm text-primary-foreground/85">
+                  Market {markets.length === 1 ? "hall" : "halls"}
                 </p>
-                <p className="text-sm text-primary-foreground/80">Similar stalls</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right 5 Cols: Next Market Session & Table Photo Plate */}
-        <div className="flex flex-col justify-between rounded-xl bg-card p-5 ring-1 ring-foreground/10 sm:p-6 lg:col-span-5">
+        {/* Right 5 Cols: On Their Table & Active Market Setup Plate */}
+        <div className="flex flex-col justify-between bg-card ring-1 ring-board lg:col-span-5">
           <div>
-            <div className="flex items-center justify-between gap-2">
-              <p className="type-kicker text-primary">On their table &amp; circuit</p>
-              <span className="rounded-md bg-ticket px-2.5 py-0.5 text-sm font-medium text-chalk">
+            {/* Top Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-receipt px-5 py-3">
+              <div className="flex items-center gap-2">
+                <PlateMark className="size-4 text-primary" />
+                <p className="type-kicker font-medium text-foreground">
+                  On their table &amp; circuit
+                </p>
+              </div>
+              <span className="stall-chip-sm bg-stamp px-2.5 py-0.5 text-sm font-medium text-chalk">
                 {isSimulated ? "Pickup · Pre-order · Delivery" : "Published stall table"}
               </span>
             </div>
 
-            <div className="mt-3">
+            <div className="p-5">
               <ProductPhotoFrame
                 name={vendor.primaryAisleLabel}
                 photo={vendor.bannerPhoto}
-                className="aspect-[16/9] w-full rounded-xl ring-1 ring-foreground/10"
+                className="aspect-[16/9] w-full border border-border"
               />
-            </div>
 
-            {activeHall ? (
-              <div className="mt-4 rounded-xl bg-receipt p-3.5 ring-1 ring-border">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
-                  <div className="min-w-0">
-                    <p className="type-kicker text-primary">Next market setup</p>
-                    <Link
-                      href={`/markets/${activeHall.slug}`}
-                      className="mt-0.5 block text-base font-medium text-foreground hover:text-primary hover:underline"
-                    >
-                      {activeHall.name}
-                    </Link>
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                      {activeHall.neighbourhood}
-                      {activeHall.stall ? ` · Stall ${activeHall.stall}` : ""}
-                    </p>
+              {activeHall ? (
+                <div className="mt-4 bg-receipt p-3.5 ring-1 ring-border shadow-[inset_3px_0_0_var(--primary)]">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
+                    <div className="flex min-w-0 items-start gap-2.5">
+                      <StallEmblem
+                        src={activeHall.logoUrl}
+                        name={activeHall.name}
+                        kind="market"
+                        size="sm"
+                        tone="paper"
+                        className="mt-0.5"
+                      />
+                      <div className="min-w-0">
+                        <p className="type-kicker text-primary">Selected market setup</p>
+                        <Link
+                          href={`/markets/${activeHall.slug}`}
+                          className="mt-0.5 block text-base font-medium text-foreground hover:text-primary hover:underline"
+                        >
+                          {activeHall.name}
+                        </Link>
+                        <p className="mt-0.5 text-sm text-muted-foreground">
+                          {activeHall.neighbourhood}
+                          {activeHall.stall ? ` · Stall ${activeHall.stall}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <SessionLines hours={activeHall.hours} fallback={activeHall.nextOpen} />
                   </div>
-                  <SessionLines hours={activeHall.hours} fallback={activeHall.nextOpen} />
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-dashed border-border pt-3 text-sm">
-            <span className="text-muted-foreground">Compare in directory:</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-receipt px-5 py-3 text-sm">
+            <span className="font-medium text-muted-foreground">Browse market aisles:</span>
             <div className="flex flex-wrap gap-1.5">
-              {aisleGuides.slice(0, 2).map((guide) => (
+              {aisleGuides.slice(0, 3).map((guide) => (
                 <Link
                   key={guide.id}
                   href={guide.href}
-                  className="inline-flex items-center gap-1 rounded-md bg-secondary px-2.5 py-1 font-medium text-foreground hover:bg-primary hover:text-primary-foreground"
+                  className="inline-flex items-center gap-1 rounded bg-card px-2.5 py-1 font-medium text-foreground ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
                 >
                   <span>{guide.label}</span>
-                  <CaretRightMark className="size-3" />
+                  <span className="type-nums text-muted-foreground">
+                    ({guide.itemCountOnMenu})
+                  </span>
                 </Link>
               ))}
             </div>
@@ -411,19 +622,32 @@ export function VendorConceptAtlas({
         {/* Left 8 Columns: Interactive Quick-Buy Drawer + Stall Menu Table */}
         <div className="flex flex-col gap-8 lg:col-span-8">
           {/* Docked Quick-Buy & Pre-Order Slip */}
-          <section className="rounded-xl bg-receipt p-5 ring-2 ring-stamp shadow-[inset_4px_0_0_var(--primary)]">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-dashed border-border pb-3">
-              <div className="flex items-center gap-2.5">
-                <TicketMark className="size-5 text-primary" />
+          <section className="bg-receipt p-5 ring-2 ring-board shadow-[inset_4px_0_0_var(--stamp)] sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-dashed border-border pb-4">
+              <div className="flex items-start gap-3">
+                <span className="stall-chip-sm mt-0.5 flex size-9 shrink-0 items-center justify-center bg-stamp text-chalk">
+                  <TicketMark className="size-4" />
+                </span>
                 <div>
-                  <h2>Order &amp; reserve from {vendor.name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Select menu items below to pre-order for market hall pickup or local delivery.
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2>Order &amp; reserve slip</h2>
+                    <span className="stall-chip-sm bg-secondary px-2 py-0.5 text-sm font-medium text-foreground">
+                      Direct from stall
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    Build your order from {vendor.name}&apos;s table below for market hall pickup,
+                    pre-order, or local delivery.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Fulfillment Selector */}
+              <div
+                role="group"
+                aria-label="Choose fulfillment method"
+                className="flex flex-wrap items-center gap-1.5"
+              >
                 {(
                   [
                     { id: "pickup", label: "Market pickup" },
@@ -436,7 +660,7 @@ export function VendorConceptAtlas({
                     type="button"
                     onClick={() => setFulfillmentChoice(mode.id)}
                     className={cn(
-                      "stall-chip-sm cursor-pointer px-3 py-1.5 text-sm font-medium",
+                      "stall-chip-sm cursor-pointer px-3 py-1.5 text-sm font-medium transition-colors",
                       fulfillmentChoice === mode.id
                         ? "bg-primary text-primary-foreground"
                         : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
@@ -448,50 +672,104 @@ export function VendorConceptAtlas({
               </div>
             </div>
 
+            {/* Synchronized Pickup Hall & Session Bar (when Pickup or Pre-order is selected) */}
+            {fulfillmentChoice !== "delivery" && markets.length > 0 ? (
+              <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 border-b border-dashed border-border pb-3.5 text-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-foreground">Pickup market hall:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {markets.slice(0, 3).map((m) => (
+                      <button
+                        key={m.slug}
+                        type="button"
+                        onClick={() => setActiveHallSlug(m.slug)}
+                        className={cn(
+                          "cursor-pointer rounded px-2.5 py-1 text-sm font-medium transition-colors",
+                          activeHall?.slug === m.slug
+                            ? "bg-board text-chalk"
+                            : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+                        )}
+                      >
+                        {m.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {activeHall ? (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Session:</span>
+                    <span className="type-nums font-medium text-foreground">
+                      {activeHall.hours[0]
+                        ? `${activeHall.hours[0].day} ${activeHall.hours[0].hours}`
+                        : activeHall.nextOpen}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-border pb-3.5 text-sm">
+                <span className="font-medium text-foreground">
+                  Local Toronto &amp; GTA delivery window:
+                </span>
+                <span className="text-muted-foreground">
+                   Packed fresh from the stall · Next-day courier dispatch
+                </span>
+              </div>
+            )}
+
+            {/* Slip Line Items & Checkout Handoff */}
             <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
               <div className="flex flex-wrap items-center gap-2">
                 {slipItems.length === 0 ? (
-                  <span className="text-sm text-muted-foreground">
-                    No items in your slip yet — click <strong className="text-foreground">+ Order</strong> on any row below.
-                  </span>
+                  <p className="text-sm text-muted-foreground">
+                    Your order slip is empty — click{" "}
+                    <strong className="font-medium text-foreground">+ Add to slip</strong> on any
+                    item below.
+                  </p>
                 ) : (
-                  slipItems.map(({ item, qty }) => (
-                    <span
+                  slipItems.map(({ item, qty, lineCents }) => (
+                    <div
                       key={item.id}
-                      className="inline-flex items-center gap-2 rounded-lg bg-card px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border"
+                      className="inline-flex items-center gap-2 bg-card px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border"
                     >
                       <span>{item.name}</span>
-                      <span className="type-nums text-muted-foreground">×{qty}</span>
-                      <button
-                        type="button"
-                        onClick={() => adjustQty(item.id, -1)}
-                        className="cursor-pointer text-muted-foreground hover:text-foreground"
-                        aria-label={`Remove one ${item.name}`}
-                      >
-                        −
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => adjustQty(item.id, 1)}
-                        className="cursor-pointer text-primary hover:text-primary/80"
-                        aria-label={`Add one ${item.name}`}
-                      >
-                        +
-                      </button>
-                    </span>
+                      <span className="type-nums text-muted-foreground">
+                        {formatPrice(lineCents)}
+                      </span>
+                      <div className="ml-1 inline-flex items-center gap-1 border-l border-border pl-2">
+                        <button
+                          type="button"
+                          onClick={() => adjustQty(item.id, -1)}
+                          className="flex size-5 cursor-pointer items-center justify-center rounded bg-secondary text-foreground hover:bg-border"
+                          aria-label={`Remove one ${item.name}`}
+                        >
+                          −
+                        </button>
+                        <span className="type-nums min-w-4 text-center text-sm">{qty}</span>
+                        <button
+                          type="button"
+                          onClick={() => adjustQty(item.id, 1)}
+                          className="flex size-5 cursor-pointer items-center justify-center rounded bg-primary text-primary-foreground hover:bg-primary/90"
+                          aria-label={`Add one ${item.name}`}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
                   ))
                 )}
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-end gap-4 border-t border-border pt-3 sm:border-t-0 sm:pt-0">
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">
-                    {slipItemCount} {slipItemCount === 1 ? "item" : "items"}
-                    {fulfillmentChoice !== "delivery" && activeHall
-                      ? ` · ${activeHall.name}`
-                      : " · Delivery"}
+                    <span className="type-nums font-medium text-foreground">{slipItemCount}</span>{" "}
+                    {slipItemCount === 1 ? "item" : "items"} ·{" "}
+                    {fulfillmentChoice === "delivery"
+                      ? "Delivery"
+                      : activeHall?.name ?? "Market pickup"}
                   </p>
-                  <p className="type-nums text-lg text-foreground">
+                  <p className="type-nums text-xl font-semibold text-foreground">
                     {formatPrice(slipTotalCents) ?? "$0.00"}
                   </p>
                 </div>
@@ -499,7 +777,7 @@ export function VendorConceptAtlas({
                 {primaryCheckoutItem ? (
                   <Link
                     href={`/vendors/${vendor.slug}/buy/${primaryCheckoutItem.id}`}
-                    className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-base font-medium text-primary-foreground hover:bg-primary/90"
+                    className="stall-chip-sm inline-flex shrink-0 items-center gap-2 bg-primary px-4 py-2.5 text-base font-medium text-primary-foreground hover:bg-primary/90"
                   >
                     <span>Checkout</span>
                     <CaretRightMark className="size-3.5" />
@@ -510,30 +788,38 @@ export function VendorConceptAtlas({
           </section>
 
           {/* The Stall Table (Filterable Menu with Per-Item Category & Search Links) */}
-          <section
-            id="menu"
-            className="rounded-xl bg-card p-5 ring-1 ring-foreground/10 sm:p-6"
-          >
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <section id="menu" className="bg-card p-5 ring-1 ring-board sm:p-6">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
               <div>
                 <p className="type-kicker text-primary">Published stall table</p>
                 <h2 className="mt-0.5">Menu &amp; item-by-item market comparisons</h2>
               </div>
-              <span className="type-nums text-sm text-muted-foreground">
-                Showing {filteredMenus.length} of {menus.length} items
-              </span>
+              <div className="flex items-center gap-3">
+                {hasActiveFilter ? (
+                  <button
+                    type="button"
+                    onClick={resetAllFilters}
+                    className="cursor-pointer text-sm font-medium text-primary hover:underline"
+                  >
+                    Reset filters
+                  </button>
+                ) : null}
+                <span className="type-nums text-sm text-muted-foreground">
+                  Showing {filteredMenus.length} of {menus.length} items
+                </span>
+              </div>
             </div>
 
             {/* Filter & Search Bar */}
             <div className="mt-4 flex flex-col gap-3 border-b border-border pb-4">
               <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
-                <label className="flex items-center gap-2 rounded-lg bg-receipt px-3 py-2 ring-1 ring-border">
+                <label className="flex items-center gap-2.5 bg-receipt px-3.5 py-2 ring-1 ring-border focus-within:ring-2 focus-within:ring-primary">
                   <SearchMark className="size-4 shrink-0 text-muted-foreground" />
                   <input
                     type="search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={`Search ${vendor.name}'s menu…`}
+                    placeholder={`Search ${vendor.name}'s ${menus.length} items…`}
                     className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
                   />
                 </label>
@@ -541,16 +827,10 @@ export function VendorConceptAtlas({
                 <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedSection("all");
-                      setSelectedAisleId("all");
-                      setSelectedDietary("all");
-                    }}
+                    onClick={resetAllFilters}
                     className={cn(
-                      "stall-chip-sm cursor-pointer px-3 py-1.5 text-sm font-medium",
-                      selectedSection === "all" &&
-                        selectedAisleId === "all" &&
-                        selectedDietary === "all"
+                      "stall-chip-sm cursor-pointer px-3 py-1.5 text-sm font-medium transition-colors",
+                      !hasActiveFilter
                         ? "bg-stamp text-chalk"
                         : "bg-secondary text-foreground hover:bg-secondary/80",
                     )}
@@ -565,347 +845,469 @@ export function VendorConceptAtlas({
                         setSelectedAisleId(selectedAisleId === guide.id ? "all" : guide.id)
                       }
                       className={cn(
-                        "stall-chip-sm cursor-pointer px-3 py-1.5 text-sm font-medium",
+                        "stall-chip-sm inline-flex cursor-pointer items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors",
                         selectedAisleId === guide.id
                           ? "bg-primary text-primary-foreground"
                           : "bg-secondary text-foreground hover:bg-secondary/80",
                       )}
                     >
-                      {guide.label}
+                      <span>{guide.label}</span>
+                      <span
+                        className={cn(
+                          "type-nums text-sm",
+                          selectedAisleId === guide.id
+                            ? "text-primary-foreground/85"
+                            : "text-muted-foreground",
+                        )}
+                      >
+                        ({guide.itemCountOnMenu})
+                      </span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {menuSections.length > 1 || dietaryOptions.length > 0 ? (
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  {menuSections.length > 1 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {menuSections.map((sec) => (
-                        <button
-                          key={sec}
-                          type="button"
-                          onClick={() =>
-                            setSelectedSection(selectedSection === sec ? "all" : sec)
-                          }
-                          className={cn(
-                            "rounded-md px-2.5 py-1 text-sm font-medium",
-                            selectedSection === sec
-                              ? "bg-stamp text-chalk"
-                              : "bg-receipt text-muted-foreground ring-1 ring-border hover:text-foreground",
-                          )}
-                        >
-                          {sec}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
+              {/* Section Tabs + Fulfillment & Dietary Filters */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                {menuSections.length > 1 ? (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="mr-1 text-sm text-muted-foreground">Section:</span>
+                    {menuSections.map((sec) => (
+                      <button
+                        key={sec}
+                        type="button"
+                        onClick={() =>
+                          setSelectedSection(selectedSection === sec ? "all" : sec)
+                        }
+                        className={cn(
+                          "cursor-pointer rounded px-2.5 py-1 text-sm font-medium transition-colors",
+                          selectedSection === sec
+                            ? "bg-board text-chalk"
+                            : "bg-receipt text-foreground ring-1 ring-border hover:bg-secondary",
+                        )}
+                      >
+                        {sec}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
 
-                  {dietaryOptions.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {dietaryOptions.map((diet) => (
-                        <button
-                          key={diet}
-                          type="button"
-                          onClick={() =>
-                            setSelectedDietary(selectedDietary === diet ? "all" : diet)
-                          }
-                          className={cn(
-                            "rounded-md px-2 py-0.5 text-sm font-medium",
-                            selectedDietary === diet
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-receipt text-muted-foreground ring-1 ring-border hover:text-foreground",
-                          )}
-                        >
-                          {diet.replaceAll("-", " ")}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {(
+                    [
+                      { id: "pickup", label: "Pickup" },
+                      { id: "preorder", label: "Pre-order" },
+                      { id: "delivery", label: "Delivery" },
+                    ] as const
+                  ).map((mode) => (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      onClick={() =>
+                        setFulfillmentFilter(fulfillmentFilter === mode.id ? "all" : mode.id)
+                      }
+                      className={cn(
+                        "cursor-pointer rounded px-2.5 py-1 text-sm font-medium transition-colors",
+                        fulfillmentFilter === mode.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-receipt text-muted-foreground ring-1 ring-border hover:text-foreground",
+                      )}
+                    >
+                      {mode.label}
+                    </button>
+                  ))}
+
+                  {dietaryOptions.map((diet) => (
+                    <button
+                      key={diet}
+                      type="button"
+                      onClick={() =>
+                        setSelectedDietary(selectedDietary === diet ? "all" : diet)
+                      }
+                      className={cn(
+                        "cursor-pointer rounded px-2.5 py-1 text-sm font-medium transition-colors",
+                        selectedDietary === diet
+                          ? "bg-stamp text-chalk"
+                          : "bg-receipt text-muted-foreground ring-1 ring-border hover:text-foreground",
+                      )}
+                    >
+                      {diet.replaceAll("-", " ")}
+                    </button>
+                  ))}
                 </div>
-              ) : null}
+              </div>
             </div>
 
             {/* Menu Sections */}
-            <div className="mt-5 flex flex-col gap-6">
-              {groupedMenus.map(([sectionName, sectionItems]) => (
-                <div key={sectionName}>
-                  <div className="flex items-center justify-between gap-2">
-                    <h3>{sectionName}</h3>
-                    <span className="type-nums text-sm text-muted-foreground">
-                      {sectionItems.length} {sectionItems.length === 1 ? "item" : "items"}
-                    </span>
-                  </div>
+            {groupedMenus.length === 0 ? (
+              <div className="mt-6 bg-receipt p-6 text-center ring-1 ring-border">
+                <p className="text-base font-medium text-foreground">
+                  No menu items match that filter combination.
+                </p>
+                <button
+                  type="button"
+                  onClick={resetAllFilters}
+                  className="mt-3 cursor-pointer rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Show all {menus.length} stall items
+                </button>
+              </div>
+            ) : (
+              <div className="mt-5 flex flex-col gap-6">
+                {groupedMenus.map(([sectionName, sectionItems]) => (
+                  <div key={sectionName}>
+                    <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
+                      <div className="flex items-center gap-2">
+                        <CrateMark className="size-4 text-primary" />
+                        <h3>{sectionName}</h3>
+                      </div>
+                      <span className="type-nums text-sm text-muted-foreground">
+                        {sectionItems.length} {sectionItems.length === 1 ? "item" : "items"}
+                      </span>
+                    </div>
 
-                  <ul className="mt-2.5 bg-receipt ring-1 ring-border shadow-[inset_3px_0_0_var(--stamp)]">
-                    {sectionItems.map((item) => {
-                      const qty = orderQuantities[item.id] ?? 0;
-                      const priceLabel = formatPrice(
-                        item.effectivePriceCents ?? item.activePriceCents,
-                      );
-                      const savedProduct = buildSavedProduct(
-                        vendor,
-                        markets,
-                        item,
-                        item.effectivePriceCents ?? item.activePriceCents,
-                      );
+                    <ul className="mt-2.5 bg-receipt ring-1 ring-border shadow-[inset_3px_0_0_var(--primary)]">
+                      {sectionItems.map((item) => {
+                        const qty = orderQuantities[item.id] ?? 0;
+                        const priceLabel = formatPrice(
+                          item.effectivePriceCents ?? item.activePriceCents,
+                        );
+                        const savedProduct = buildSavedProduct(
+                          vendor,
+                          markets,
+                          item,
+                          item.effectivePriceCents ?? item.activePriceCents,
+                        );
 
-                      return (
-                        <li
-                          key={item.id}
-                          className={cn(
-                            "border-b border-dashed border-border px-4 py-3.5 last:border-b-0",
-                            qty > 0 ? "bg-ticket/10" : "",
-                          )}
-                        >
-                          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-2">
-                            <div className="flex min-w-0 items-start gap-3">
-                              <MenuItemPhoto url={item.imageUrl} menuId={item.id} />
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <p className="text-base font-medium text-foreground">
-                                    {item.name}
-                                  </p>
-                                  <Link
-                                    href={item.aisleHref}
-                                    className="rounded bg-secondary px-2 py-0.5 text-sm text-muted-foreground hover:text-foreground"
-                                  >
-                                    {item.productCategoryLabel}
-                                  </Link>
+                        return (
+                          <li
+                            key={item.id}
+                            className={cn(
+                              "border-b border-dashed border-border px-4 py-4 last:border-b-0 transition-colors",
+                              qty > 0 ? "bg-secondary/75" : "hover:bg-card/60",
+                            )}
+                          >
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
+                              <div className="flex min-w-0 items-start gap-3.5">
+                                <MenuItemPhoto url={item.imageUrl} menuId={item.id} />
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="text-base font-medium text-foreground">
+                                      {item.name}
+                                    </p>
+                                    <Link
+                                      href={item.aisleHref}
+                                      className="rounded bg-card px-2 py-0.5 text-sm font-medium text-muted-foreground ring-1 ring-border hover:text-foreground"
+                                    >
+                                      {item.productCategoryLabel}
+                                    </Link>
+                                    {item.season ? (
+                                      <span className="text-sm text-muted-foreground">
+                                        · {item.season}
+                                      </span>
+                                    ) : null}
+                                  </div>
+
+                                  {item.description ? (
+                                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                                      {item.description}
+                                    </p>
+                                  ) : null}
+
+                                  {item.dietary.length > 0 ? (
+                                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                      {item.dietary.map((d) => (
+                                        <span
+                                          key={d}
+                                          className="rounded bg-secondary px-2 py-0.5 text-sm text-foreground"
+                                        >
+                                          {d.replaceAll("-", " ")}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : null}
+
+                                  <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
+                                    {item.effectivePickup ? (
+                                      <span className="inline-flex items-center gap-1 font-medium text-primary">
+                                        <CheckMark className="size-3.5" />
+                                        <span>
+                                          Market pickup
+                                          {item.effectiveDelivery ? " & delivery" : " & pre-order"}
+                                        </span>
+                                      </span>
+                                    ) : null}
+                                    <Link
+                                      href={item.compareHref}
+                                      className="inline-flex items-center gap-1 font-medium text-foreground underline decoration-foreground/35 underline-offset-4 hover:text-primary"
+                                    >
+                                      <span>{item.compareLabel}</span>
+                                      <CaretRightMark className="size-3" />
+                                    </Link>
+                                  </div>
                                 </div>
-                                {item.description ? (
-                                  <p className="mt-1 text-sm text-muted-foreground">
-                                    {item.description}
-                                  </p>
-                                ) : null}
+                              </div>
 
-                                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                                  {item.effectivePickup ? (
-                                    <span className="inline-flex items-center gap-1 font-medium text-primary">
-                                      <CheckMark className="size-3.5" />
-                                      <span>Pickup &amp; pre-order</span>
+                              {/* Right Column: Price Stamp, Save, & Order Controls */}
+                              <div className="flex flex-row items-center justify-between gap-2 sm:flex-col sm:items-end">
+                                <div className="flex items-center gap-2">
+                                  {priceLabel ? (
+                                    <span className="stall-chip-sm type-nums shrink-0 whitespace-nowrap bg-stamp px-2.5 py-0.5 text-sm font-medium text-chalk">
+                                      {priceLabel}
                                     </span>
                                   ) : null}
-                                  <Link
-                                    href={item.compareHref}
-                                    className="inline-flex items-center gap-1 font-medium text-foreground underline decoration-foreground/35 underline-offset-4 hover:text-primary"
-                                  >
-                                    <span>{item.compareLabel}</span>
-                                    <CaretRightMark className="size-3" />
-                                  </Link>
+                                  {savedProduct ? (
+                                    <ProductSaveButton product={savedProduct} size="sm" />
+                                  ) : null}
                                 </div>
+
+                                {item.effectiveCanBuy ? (
+                                  <div className="flex items-center gap-1.5">
+                                    {qty > 0 ? (
+                                      <div className="inline-flex items-center gap-1 bg-card px-2 py-1 ring-1 ring-primary">
+                                        <button
+                                          type="button"
+                                          onClick={() => adjustQty(item.id, -1)}
+                                          className="flex size-5 cursor-pointer items-center justify-center rounded bg-secondary text-sm font-medium text-foreground hover:bg-border"
+                                          aria-label={`Decrease quantity of ${item.name}`}
+                                        >
+                                          −
+                                        </button>
+                                        <span className="type-nums min-w-5 text-center text-sm font-medium text-foreground">
+                                          {qty}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => adjustQty(item.id, 1)}
+                                          className="flex size-5 cursor-pointer items-center justify-center rounded bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                                          aria-label={`Increase quantity of ${item.name}`}
+                                        >
+                                          +
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => adjustQty(item.id, 1)}
+                                        className="stall-chip-sm cursor-pointer bg-primary px-3 py-1 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                                      >
+                                        + Add to slip
+                                      </button>
+                                    )}
+                                    <Link
+                                      href={`/vendors/${vendor.slug}/buy/${item.id}`}
+                                      className="rounded bg-card px-2.5 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
+                                    >
+                                      Buy now
+                                    </Link>
+                                  </div>
+                                ) : null}
                               </div>
                             </div>
-
-                            <div className="flex flex-col items-end gap-2">
-                              <div className="flex items-center gap-2">
-                                {priceLabel ? (
-                                  <span className="type-nums shrink-0 whitespace-nowrap bg-stamp px-2 py-0.5 text-sm text-chalk">
-                                    {priceLabel}
-                                  </span>
-                                ) : null}
-                                {savedProduct ? (
-                                  <ProductSaveButton product={savedProduct} size="sm" />
-                                ) : null}
-                              </div>
-
-                              {item.effectiveCanBuy ? (
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => adjustQty(item.id, 1)}
-                                    className="stall-chip-sm cursor-pointer bg-primary px-3 py-1 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                                  >
-                                    {qty > 0 ? `+ Order (${qty})` : "+ Order"}
-                                  </button>
-                                  <Link
-                                    href={`/vendors/${vendor.slug}/buy/${item.id}`}
-                                    className="rounded-md bg-card px-2.5 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
-                                  >
-                                    Buy
-                                  </Link>
-                                </div>
-                              ) : null}
-                            </div>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
-            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </div>
 
         {/* Right 4 Columns: Interactive Market Hall Circuit & Fellow Stalls Rail */}
         <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:col-span-4">
-          <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-            <div className="flex items-center justify-between gap-2">
+          <div className="bg-card ring-1 ring-board">
+            {/* Rail Header Band */}
+            <div className="flex items-center justify-between gap-2 border-b border-black/15 bg-primary px-5 py-3.5 text-primary-foreground">
               <div className="flex items-center gap-2">
-                <SlatsMark className="size-4 text-primary" />
-                <h2>Market hall circuit</h2>
+                <SlatsMark className="size-4 text-primary-foreground" />
+                <h2 className="text-xl text-primary-foreground">Market hall circuit</h2>
               </div>
-              <span className="type-nums text-sm text-muted-foreground">
+              <span className="stall-chip-sm type-nums bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
                 {markets.length} {markets.length === 1 ? "hall" : "halls"}
               </span>
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Select a hall to inspect {vendor.name}&apos;s hours and fellow stalls setting up alongside them.
-            </p>
 
-            {/* Hall Selector Pills (up to 4 quick pills + full selector if more) */}
-            {markets.length > 1 ? (
-              <div className="mt-3 flex flex-col gap-2">
-                <div className="flex flex-wrap gap-1.5">
-                  {markets.slice(0, 4).map((m) => (
-                    <button
-                      key={m.slug}
-                      type="button"
-                      onClick={() => setActiveHallSlug(m.slug)}
-                      className={cn(
-                        "cursor-pointer rounded-lg px-2.5 py-1 text-left text-sm font-medium transition-colors",
-                        activeHall?.slug === m.slug
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-receipt text-foreground ring-1 ring-border hover:bg-secondary",
-                      )}
-                    >
-                      {m.name}
-                    </button>
-                  ))}
-                </div>
-                {markets.length > 4 ? (
-                  <select
-                    aria-label="Choose market hall on this vendor's circuit"
-                    value={activeHall?.slug ?? ""}
-                    onChange={(e) => setActiveHallSlug(e.target.value)}
-                    className="w-full rounded-lg bg-receipt px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border"
-                  >
-                    {markets.map((m) => (
-                      <option key={m.slug} value={m.slug}>
-                        {m.name} ({m.neighbourhood})
-                      </option>
-                    ))}
-                  </select>
-                ) : null}
-              </div>
-            ) : null}
+            <div className="p-5">
+              <p className="text-sm text-muted-foreground">
+                Select a market hall to inspect {vendor.name}&apos;s hours and fellow stalls setting
+                up alongside them.
+              </p>
 
-            {/* Active Market Hall Card */}
-            {activeHall ? (
-              <div className="mt-4 rounded-xl bg-receipt p-4 ring-1 ring-border">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <StallEmblem name={activeHall.name} logoUrl={activeHall.logoUrl} size="sm" />
-                    <div className="min-w-0">
-                      <Link
-                        href={`/markets/${activeHall.slug}`}
-                        className="text-base font-medium text-foreground hover:text-primary hover:underline"
-                      >
-                        {activeHall.name}
-                      </Link>
-                      <p className="mt-0.5 text-sm text-muted-foreground">
-                        <AddressLink
-                          address={activeHall.address}
-                          city={activeHall.city}
-                          province={activeHall.province}
-                          lat={activeHall.lat}
-                          lng={activeHall.lng}
-                        />
-                        {activeHall.stall ? ` · Stall ${activeHall.stall}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                  <SaveButton
-                    kind="market"
-                    slug={activeHall.slug}
-                    name={activeHall.name}
-                    size="sm"
-                  />
-                </div>
-
-                <div className="mt-3 flex items-center justify-between border-t border-dashed border-border pt-3">
-                  <span className="text-sm font-medium text-muted-foreground">Hall hours</span>
-                  <SessionLines hours={activeHall.hours} fallback={activeHall.nextOpen} />
-                </div>
-
-                {/* Fellow Stalls at Selected Hall */}
-                {activeHall.fellowVendors.length > 0 ? (
-                  <div className="mt-4 border-t border-dashed border-border pt-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-medium text-foreground">
-                        Fellow stalls at {activeHall.name}
-                      </p>
-                      <Link
-                        href={`/markets/${activeHall.slug}`}
-                        className="text-sm font-medium text-primary hover:underline"
-                      >
-                        Full roster →
-                      </Link>
-                    </div>
-                    <ul className="mt-2.5 divide-y divide-dashed divide-border">
-                      {activeHall.fellowVendors.slice(0, 5).map((fellow) => (
-                        <li
-                          key={fellow.slug}
-                          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-2"
-                        >
-                          <div className="flex min-w-0 items-center gap-2.5">
-                            <StallEmblem
-                              name={fellow.name}
-                              logoUrl={fellow.logoUrl}
-                              size="sm"
-                            />
-                            <div className="min-w-0">
-                              <Link
-                                href={`/vendors/${fellow.slug}`}
-                                className="block text-sm font-medium text-foreground hover:text-primary hover:underline"
-                              >
-                                {fellow.name}
-                              </Link>
-                              <p className="text-sm text-muted-foreground">
-                                {fellow.aisleLabel}
-                              </p>
-                            </div>
-                          </div>
-                          <Link
-                            href={`/vendors/${fellow.slug}`}
-                            className="rounded bg-card px-2 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
-                          >
-                            Visit
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            {/* All Halls Compact Timetable */}
-            {markets.length > 1 ? (
-              <div className="mt-4 border-t border-border pt-4">
-                <p className="text-sm font-medium text-foreground">All market halls &amp; hours</p>
-                <ul className="mt-2 divide-y divide-dashed divide-border">
-                  {markets.map((m) => (
-                    <li
-                      key={m.id}
-                      className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-2 text-sm"
-                    >
-                      <Link
-                        href={`/markets/${m.slug}`}
-                        className="font-medium text-foreground hover:text-primary hover:underline"
+              {/* Hall Selector Pills (up to 4 quick pills + full selector if more) */}
+              {markets.length > 1 ? (
+                <div className="mt-3 flex flex-col gap-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {markets.slice(0, 4).map((m) => (
+                      <button
+                        key={m.slug}
+                        type="button"
+                        onClick={() => setActiveHallSlug(m.slug)}
+                        className={cn(
+                          "cursor-pointer rounded px-2.5 py-1 text-left text-sm font-medium transition-colors",
+                          activeHall?.slug === m.slug
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-receipt text-foreground ring-1 ring-border hover:bg-secondary",
+                        )}
                       >
                         {m.name}
-                      </Link>
-                      <SessionLines hours={m.hours} fallback={m.nextOpen} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
+                      </button>
+                    ))}
+                  </div>
+                  {markets.length > 4 ? (
+                    <select
+                      aria-label="Choose market hall on this vendor's circuit"
+                      value={activeHall?.slug ?? ""}
+                      onChange={(e) => setActiveHallSlug(e.target.value)}
+                      className="w-full rounded bg-receipt px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border"
+                    >
+                      {markets.map((m) => (
+                        <option key={m.slug} value={m.slug}>
+                          {m.name} ({m.neighbourhood})
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {/* Active Market Hall Card */}
+              {activeHall ? (
+                <div className="mt-4 bg-receipt p-4 ring-1 ring-border">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <StallEmblem
+                        src={activeHall.logoUrl}
+                        name={activeHall.name}
+                        kind="market"
+                        size="md"
+                        tone="paper"
+                      />
+                      <div className="min-w-0">
+                        <Link
+                          href={`/markets/${activeHall.slug}`}
+                          className="text-base font-medium text-foreground hover:text-primary hover:underline"
+                        >
+                          {activeHall.name}
+                        </Link>
+                        <ListingScore
+                          className="mt-0.5 text-sm"
+                          ratingAvg={activeHall.ratingAvg}
+                          reviewCount={activeHall.reviewCount}
+                        />
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          <AddressLink
+                            address={activeHall.address}
+                            city={activeHall.city}
+                            province={activeHall.province}
+                            lat={activeHall.lat}
+                            lng={activeHall.lng}
+                          />
+                          {activeHall.stall ? ` · Stall ${activeHall.stall}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <SaveButton
+                      kind="market"
+                      slug={activeHall.slug}
+                      name={activeHall.name}
+                      size="sm"
+                    />
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 border-t border-dashed border-border pt-3">
+                    <span className="text-sm font-medium text-muted-foreground">Hall hours</span>
+                    <SessionLines hours={activeHall.hours} fallback={activeHall.nextOpen} />
+                  </div>
+
+                  {/* Fellow Stalls at Selected Hall */}
+                  {activeHall.fellowVendors.length > 0 ? (
+                    <div className="mt-4 border-t border-dashed border-border pt-3.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-medium text-foreground">
+                          Fellow stalls at {activeHall.name}
+                        </p>
+                        <Link
+                          href={`/markets/${activeHall.slug}`}
+                          className="text-sm font-medium text-primary hover:underline"
+                        >
+                          Full roster →
+                        </Link>
+                      </div>
+                      <ul className="mt-2.5 divide-y divide-dashed divide-border">
+                        {activeHall.fellowVendors.slice(0, 5).map((fellow) => (
+                          <li
+                            key={fellow.slug}
+                            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-2"
+                          >
+                            <div className="flex min-w-0 items-center gap-2.5">
+                              <StallEmblem
+                                src={fellow.logoUrl}
+                                name={fellow.name}
+                                kind="vendor"
+                                size="sm"
+                                tone="paper"
+                              />
+                              <div className="min-w-0">
+                                <Link
+                                  href={`/vendors/${fellow.slug}`}
+                                  className="block text-sm font-medium text-foreground hover:text-primary hover:underline"
+                                >
+                                  {fellow.name}
+                                </Link>
+                                <p className="text-sm text-muted-foreground">
+                                  {fellow.aisleLabel}
+                                  {fellow.stall ? ` · Stall ${fellow.stall}` : ""}
+                                </p>
+                              </div>
+                            </div>
+                            <Link
+                              href={`/vendors/${fellow.slug}`}
+                              className="rounded bg-card px-2.5 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
+                            >
+                              Visit
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {/* All Halls Compact Timetable */}
+              {markets.length > 1 ? (
+                <div className="mt-4 border-t border-border pt-4">
+                  <p className="text-sm font-medium text-foreground">
+                    All market halls &amp; hours
+                  </p>
+                  <ul className="mt-2 divide-y divide-dashed divide-border">
+                    {markets.map((m) => (
+                      <li
+                        key={m.id}
+                        className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 py-2 text-sm"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setActiveHallSlug(m.slug)}
+                          className={cn(
+                            "cursor-pointer text-left font-medium hover:text-primary hover:underline",
+                            activeHall?.slug === m.slug ? "text-primary" : "text-foreground",
+                          )}
+                        >
+                          {m.name}
+                        </button>
+                        <SessionLines hours={m.hours} fallback={m.nextOpen} />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
           </div>
 
-          <div className="rounded-xl bg-card p-5 text-foreground ring-1 ring-foreground/10">
+          <div className="bg-card p-5 text-foreground ring-1 ring-board">
             <h3>Contact &amp; direct links</h3>
             <ListingContact
               phone={vendor.contact.phone}
@@ -932,9 +1334,9 @@ export function VendorConceptAtlas({
         </aside>
       </div>
 
-      {/* Bottom Atlas Discovery Spread: Similar Stalls in Aisle + Broad Product Guides + Reviews */}
-      <section className="mt-10 rounded-xl bg-card p-6 ring-1 ring-foreground/10">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
+      {/* Bottom Atlas Discovery Spread: Peer Stalls in Aisle (HomeAtlas VendorTableCard Style) + Broad Product Guides */}
+      <section className="mt-10 bg-card p-5 ring-1 ring-board sm:p-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
           <div>
             <p className="type-kicker text-primary">Atlas stall comparison</p>
             <h2 className="mt-0.5">
@@ -950,115 +1352,199 @@ export function VendorConceptAtlas({
           </Link>
         </div>
 
-        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {similarAisleVendors.slice(0, 3).map((peer) => (
-            <article
+            <li
               key={peer.slug}
-              className="flex flex-col justify-between rounded-xl bg-receipt p-4 ring-1 ring-border"
+              className="flex flex-col justify-between bg-card ring-1 ring-board"
             >
               <div>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <StallEmblem name={peer.name} logoUrl={peer.logoUrl} size="md" />
-                    <div className="min-w-0">
+                {/* 1. Peer Stall Plate Header (Matching HomeAtlas VendorTableCard, with high-contrast paper header) */}
+                <div className="flex items-start justify-between gap-2.5 border-b border-border bg-receipt px-4 py-3.5">
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <StallEmblem
+                      src={peer.logoUrl}
+                      name={peer.name}
+                      kind="vendor"
+                      size="md"
+                      tone="paper"
+                      className="mt-0.5"
+                    />
+                    <div className="min-w-0 flex-1">
                       <Link
                         href={`/vendors/${peer.slug}`}
-                        className="text-base font-medium text-foreground hover:text-primary hover:underline"
+                        className="block text-base font-medium text-foreground hover:text-primary hover:underline"
                       >
-                        {peer.name}
+                        <VerifiedName slug={peer.slug} name={peer.name} />
                       </Link>
                       <ListingScore
-                        className="mt-0.5 text-sm"
+                        className="mt-1 text-sm"
                         ratingAvg={peer.ratingAvg}
                         reviewCount={peer.reviewCount}
                       />
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        <span className="stall-chip-sm bg-secondary px-2 py-0.5 text-sm font-medium text-foreground">
+                          {peer.primaryAisleLabel}
+                        </span>
+                        {peer.sharedMarketName ? (
+                          <span className="text-sm text-primary">
+                            · Also at {peer.sharedMarketName}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
                   </div>
                   <SaveButton kind="vendor" slug={peer.slug} name={peer.name} size="sm" />
                 </div>
 
-                <div className="mt-3">
-                  <ProductPhotoFrame
-                    name={peer.primaryAisleLabel}
-                    photo={
-                      peer.photoUrl
-                        ? { url: peer.photoUrl, alt: peer.photoAlt ?? peer.primaryAisleLabel }
-                        : null
-                    }
-                    className="aspect-[16/9] w-full rounded-lg ring-1 ring-foreground/10"
-                  />
-                </div>
-
-                {peer.items.length > 0 ? (
-                  <ul className="mt-3 divide-y divide-dashed divide-border">
-                    {peer.items.slice(0, 3).map((pi) => (
-                      <li
-                        key={pi.name}
-                        className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-2 py-1.5 text-sm"
+                {/* 2. On Their Table Banner + Seeded Items */}
+                <div className="border-b border-border bg-secondary/50">
+                  <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-3 border-b border-border bg-card px-4 py-2.5">
+                    <Link href={`/vendors/${peer.slug}`} className="block">
+                      <ProductPhotoFrame
+                        name={peer.primaryAisleLabel}
+                        decorative
+                        photo={
+                          peer.photoUrl
+                            ? {
+                                url: peer.photoUrl,
+                                alt: peer.photoAlt ?? peer.primaryAisleLabel,
+                              }
+                            : null
+                        }
+                        className="h-12 w-[4.5rem] aspect-auto border border-border"
+                      />
+                    </Link>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <div>
+                        <p className="type-kicker font-medium text-foreground">On their table</p>
+                        <p className="text-sm text-muted-foreground">{peer.badge}</p>
+                      </div>
+                      <Link
+                        href={`/vendors/${peer.slug}`}
+                        className="shrink-0 text-sm font-medium text-primary hover:underline"
                       >
-                        <Link
-                          href={pi.href}
-                          className="font-medium text-foreground hover:text-primary hover:underline"
+                        Stall menu →
+                      </Link>
+                    </div>
+                  </div>
+
+                  {peer.items.length > 0 ? (
+                    <ul className="bg-receipt">
+                      {peer.items.slice(0, 3).map((pi) => (
+                        <li
+                          key={pi.name}
+                          className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-2 border-t border-dashed border-border px-4 py-2 text-sm first:border-t-0"
                         >
-                          {pi.name}
-                        </Link>
-                        {pi.priceCents != null ? (
-                          <span className="type-nums text-muted-foreground">
-                            {formatPrice(pi.priceCents)}
-                          </span>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
+                          <Link
+                            href={pi.href}
+                            className="font-medium text-foreground hover:text-primary hover:underline"
+                          >
+                            {pi.name}
+                          </Link>
+                          {pi.priceCents != null ? (
+                            <span className="type-nums font-medium text-stamp">
+                              {formatPrice(pi.priceCents)}
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
               </div>
 
+              {/* 3. Where They Set Up */}
               {peer.markets[0] ? (
-                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 border-t border-dashed border-border pt-3 text-sm">
+                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 bg-card px-4 py-3 text-sm">
                   <Link
                     href={`/markets/${peer.markets[0].slug}`}
-                    className="font-medium text-primary hover:underline"
+                    className="font-medium text-foreground hover:text-primary hover:underline"
                   >
                     {peer.markets[0].name}
                   </Link>
                   <SessionLines hours={peer.markets[0].hours.slice(0, 1)} />
                 </div>
               ) : null}
-            </article>
+            </li>
           ))}
-        </div>
+        </ul>
 
-        {/* Broad Product Guides Strip */}
+        {/* Broad Product Guides & Category Crates */}
         <div className="mt-6 border-t border-dashed border-border pt-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-base font-medium text-foreground">
-              Jump to broad product guides &amp; category searches:
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {aisleGuides.flatMap((g) => g.findPages).slice(0, 6).map((fp) => (
-                <Link
-                  key={fp.slug}
-                  href={fp.href}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-card px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
-                >
-                  <span>{fp.term}</span>
-                  <span className="type-nums text-muted-foreground">({fp.vendorsCount})</span>
-                </Link>
-              ))}
-              <Link
-                href="/products"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                <span>All product categories</span>
-                <CaretRightMark className="size-3.5" />
-              </Link>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div>
+              <p className="type-kicker text-primary">Broad product &amp; aisle guides</p>
+              <h3 className="mt-0.5">
+                Compare every Toronto market stall in {vendor.name}&apos;s aisles
+              </h3>
             </div>
+            <Link
+              href="/products"
+              className="inline-flex items-center gap-1.5 rounded bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              <span>All product categories</span>
+              <CaretRightMark className="size-3.5" />
+            </Link>
+          </div>
+
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {aisleGuides.slice(0, 3).map((guide) => (
+              <div
+                key={guide.id}
+                className="flex flex-col justify-between bg-receipt p-4 ring-1 ring-border"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <ProductThumb src={guide.photoUrl} size="sm" />
+                      <div>
+                        <Link
+                          href={guide.href}
+                          className="text-base font-medium text-foreground hover:text-primary hover:underline"
+                        >
+                          {guide.label}
+                        </Link>
+                        <p className="type-nums text-sm text-muted-foreground">
+                          {guide.itemCountOnMenu}{" "}
+                          {guide.itemCountOnMenu === 1 ? "item" : "items"} on this stall&apos;s
+                          table
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href={guide.href}
+                      className="text-sm font-medium text-primary hover:underline"
+                    >
+                      Aisle →
+                    </Link>
+                  </div>
+
+                  {guide.findPages.length > 0 ? (
+                    <div className="mt-3 flex flex-wrap gap-1.5 border-t border-dashed border-border pt-3">
+                      {guide.findPages.slice(0, 4).map((fp) => (
+                        <Link
+                          key={fp.slug}
+                          href={fp.href}
+                          className="inline-flex items-center gap-1 rounded bg-card px-2.5 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
+                        >
+                          <span>{fp.term}</span>
+                          <span className="type-nums text-muted-foreground">
+                            ({fp.vendorsCount})
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Shopper Floor Notes & Reviews */}
-      <section className="mt-8 rounded-xl bg-card p-5 ring-1 ring-foreground/10 sm:p-6">
+      <section className="mt-8 bg-card p-5 ring-1 ring-board sm:p-6">
         <h2>Shopper notes &amp; reviews</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Notes from regulars who stopped by {vendor.name}.

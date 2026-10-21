@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type {
   HomeAtlasData,
+  HomeAtlasMarketSlot,
   HomeAtlasVendorSpotlight,
 } from "@/lib/home-atlas-data";
 import { AddressLink } from "@/components/address-link";
@@ -437,6 +438,307 @@ function VendorTableCard({
   );
 }
 
+function LiveMarketHallCard({
+  slot,
+  statusBadge,
+  onSelectNeighbourhood,
+}: {
+  slot: HomeAtlasMarketSlot;
+  statusBadge: "open" | "later" | "earlier" | "upcoming";
+  onSelectNeighbourhood: (area: string) => void;
+}) {
+  const isOpen = statusBadge === "open" || slot.open;
+
+  return (
+    <li className="flex flex-col justify-between bg-card px-3.5 py-3 transition-colors hover:bg-secondary/35">
+      <div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
+          <div className="flex min-w-0 items-start gap-2.5">
+            <StallEmblem
+              src={slot.logo_url}
+              name={slot.name}
+              kind="market"
+              size="sm"
+              tone={isOpen ? "board" : "paper"}
+              className="mt-0.5"
+            />
+            <div className="min-w-0">
+              <p className="min-w-0 leading-snug">
+                <Link
+                  href={`/markets/${slot.slug}`}
+                  className="text-base font-medium text-foreground hover:text-primary hover:underline"
+                >
+                  <VerifiedName slug={slot.slug} name={slot.name} />
+                </Link>
+                <ListingScore
+                  parens
+                  ratingAvg={slot.rating_avg}
+                  reviewCount={slot.review_count}
+                  className="ml-1.5 text-stamp"
+                />
+              </p>
+
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={() => onSelectNeighbourhood(slot.neighbourhood)}
+                  className="cursor-pointer font-medium text-primary hover:underline"
+                >
+                  {slot.neighbourhood}
+                </button>
+                {slot.indoorOutdoor ? (
+                  <>
+                    <span aria-hidden>·</span>
+                    <span>{slot.indoorOutdoor}</span>
+                  </>
+                ) : null}
+                {slot.vendorCount > 0 ? (
+                  <>
+                    <span aria-hidden>·</span>
+                    <span>
+                      <span className="type-nums font-medium text-foreground">
+                        {slot.vendorCount}
+                      </span>{" "}
+                      stalls
+                    </span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-start gap-2.5">
+            <div className="text-right">
+              {isOpen ? (
+                <div className="mb-0.5 flex justify-end">
+                  <NowLabel>Open now</NowLabel>
+                </div>
+              ) : statusBadge === "later" ? (
+                <p className="text-sm font-medium text-primary">Later today</p>
+              ) : statusBadge === "earlier" ? (
+                <p className="text-sm text-muted-foreground">Closed for today</p>
+              ) : null}
+              <Hours
+                value={slot.hours}
+                className={cn(
+                  "whitespace-nowrap",
+                  isOpen ? "font-medium text-stamp" : "text-foreground",
+                )}
+              />
+            </div>
+            <SaveButton kind="market" slug={slot.slug} name={slot.name} />
+          </div>
+        </div>
+      </div>
+
+      {slot.sampleVendors.length > 0 ? (
+        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-dashed border-border pt-2 pl-10">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-sm text-muted-foreground">Stalls here:</span>
+            {slot.sampleVendors.slice(0, 2).map((v) => (
+              <Link
+                key={v.slug}
+                href={`/vendors/${v.slug}`}
+                className="stall-chip-sm inline-flex items-center gap-1.5 bg-secondary/70 py-0.5 pr-2 pl-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
+              >
+                <StallEmblem src={v.logoUrl} name={v.name} kind="vendor" size="xs" />
+                <span>{v.name}</span>
+              </Link>
+            ))}
+          </div>
+          <Link
+            href={`/markets/${slot.slug}`}
+            className="shrink-0 text-sm font-medium text-primary hover:underline"
+          >
+            Hall roster
+          </Link>
+        </div>
+      ) : null}
+    </li>
+  );
+}
+
+function MastheadLiveFloorStrip({
+  data,
+  onSelectNeighbourhood,
+  onFilterTodayStalls,
+}: {
+  data: HomeAtlasData;
+  onSelectNeighbourhood: (area: string) => void;
+  onFilterTodayStalls: () => void;
+}) {
+  const hasOpen = data.openNowSlots.length > 0;
+  const hasLater = data.laterTodaySlots.length > 0;
+  const nextGroup = data.nextDayGroup;
+
+  const [tab, setTab] = useState<"live" | "next" | "earlier">("live");
+  const [expanded, setExpanded] = useState(false);
+
+  const activeMode = tab === "live" && !hasOpen && !hasLater ? "next" : tab;
+
+  const displayedSlots: HomeAtlasMarketSlot[] =
+    activeMode === "live"
+      ? [...data.openNowSlots, ...data.laterTodaySlots]
+      : activeMode === "earlier"
+        ? data.earlierTodaySlots
+        : (nextGroup?.slots ?? []);
+
+  const badgeMode: "open" | "later" | "earlier" | "upcoming" =
+    activeMode === "live"
+      ? hasOpen
+        ? "open"
+        : "later"
+      : activeMode === "earlier"
+        ? "earlier"
+        : "upcoming";
+
+  const visibleSlots = expanded ? displayedSlots : displayedSlots.slice(0, 6);
+  const restCount = Math.max(0, displayedSlots.length - 6);
+
+  return (
+    <nav
+      aria-label="Live markets on the floor"
+      className="mt-5 bg-card shadow-[inset_4px_0_0_var(--stamp)] ring-1 ring-board"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-secondary/55 px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-3">
+          {hasOpen ? (
+            <NowLabel className="text-base">
+              <span>
+                <span className="type-nums font-semibold">{data.openNowSlots.length}</span>{" "}
+                {data.openNowSlots.length === 1
+                  ? "market hall open right now"
+                  : "market halls open right now"}
+              </span>
+            </NowLabel>
+          ) : hasLater ? (
+            <span className="inline-flex items-center gap-2 text-base font-medium text-primary">
+              <WeekMark className="size-4 text-primary" />
+              <span>
+                <span className="type-nums">{data.laterTodaySlots.length}</span>{" "}
+                {data.laterTodaySlots.length === 1
+                  ? "market opening later today"
+                  : "markets opening later today"}
+              </span>
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 text-base font-medium text-board">
+              <WeekMark className="size-4 text-stamp" />
+              <span>
+                Today&apos;s halls have wrapped up · Next up:{" "}
+                <span className="text-primary">
+                  {nextGroup ? `${nextGroup.label} (${nextGroup.date})` : "Upcoming schedule"}
+                </span>
+              </span>
+            </span>
+          )}
+
+          {data.sellingTodayCount > 0 ? (
+            <>
+              <span aria-hidden className="text-muted-foreground">
+                ·
+              </span>
+              <button
+                type="button"
+                onClick={onFilterTodayStalls}
+                className="cursor-pointer text-sm font-medium text-primary hover:underline"
+              >
+                <span className="type-nums">{data.sellingTodayCount}</span> stalls active today
+              </button>
+            </>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {(hasOpen || hasLater) && (
+            <button
+              type="button"
+              onClick={() => {
+                setTab("live");
+                setExpanded(false);
+              }}
+              className={cn(
+                "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                activeMode === "live"
+                  ? "bg-stamp text-receipt"
+                  : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+              )}
+            >
+              {hasOpen ? `Open now (${data.openNowSlots.length})` : "Today"}
+            </button>
+          )}
+          {nextGroup ? (
+            <button
+              type="button"
+              onClick={() => {
+                setTab("next");
+                setExpanded(false);
+              }}
+              className={cn(
+                "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                activeMode === "next"
+                  ? "bg-board text-chalk"
+                  : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+              )}
+            >
+              {nextGroup.label} ({nextGroup.slots.length})
+            </button>
+          ) : null}
+          {data.earlierTodaySlots.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => {
+                setTab("earlier");
+                setExpanded(false);
+              }}
+              className={cn(
+                "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                activeMode === "earlier"
+                  ? "bg-board text-chalk"
+                  : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+              )}
+            >
+              Earlier today ({data.earlierTodaySlots.length})
+            </button>
+          ) : null}
+          {restCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="cursor-pointer px-2 py-1 text-sm font-medium text-primary underline underline-offset-4"
+            >
+              {expanded ? "Show fewer" : `+${restCount} more`}
+            </button>
+          ) : null}
+          <Link
+            href="/markets/open-today"
+            className="ml-1 text-sm font-medium text-primary underline underline-offset-4"
+          >
+            Full day schedule
+          </Link>
+        </div>
+      </div>
+
+      {visibleSlots.length > 0 ? (
+        <ul className="grid gap-px bg-border md:grid-cols-2">
+          {visibleSlots.map((slot) => (
+            <LiveMarketHallCard
+              key={slot.id}
+              slot={slot}
+              statusBadge={slot.open ? "open" : badgeMode}
+              onSelectNeighbourhood={onSelectNeighbourhood}
+            />
+          ))}
+        </ul>
+      ) : (
+        <p className="px-4 py-3 text-sm text-muted-foreground">
+          No market sessions scheduled in this window.
+        </p>
+      )}
+    </nav>
+  );
+}
+
 export function HomeAtlas({ data }: { data: HomeAtlasData }) {
   const router = useRouter();
   const { coords, requestAsync } = useGeo();
@@ -645,6 +947,13 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
               </nav>
             </div>
           </div>
+
+          {/* Masthead Live Floor Strip (Open Now / Later Today / Next Up) */}
+          <MastheadLiveFloorStrip
+            data={data}
+            onSelectNeighbourhood={(area) => syncAreaSelection(area)}
+            onFilterTodayStalls={() => setVendorWhenFilter("today")}
+          />
 
           {/* Search & Visual Craving Shortcut Bar */}
           <div className="mt-5 bg-panel-find text-primary-foreground ring-1 ring-board">

@@ -66,7 +66,7 @@ const VENDOR_CONCEPTS: Array<{
 
 export function VendorPreviewWorkbench({
   data,
-  initialConcept = "1",
+  initialConcept = "3",
   basePath = "/preview/vendors",
 }: {
   data: VendorPreviewData;
