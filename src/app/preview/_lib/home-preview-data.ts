@@ -7,7 +7,7 @@ import {
   listVendors,
   type DirectoryCensus,
 } from "@/lib/data/catalog";
-import { EMPTY_PRODUCT_PHOTOS, listProductPhotos } from "@/lib/data/product-photos";
+import { EMPTY_PRODUCT_PHOTOS, listProductPhotos, productPhoto } from "@/lib/data/product-photos";
 import { featuredBlogPost, listPublicBlogPosts, plainBlogText } from "@/lib/blog";
 import {
   FIND_AREAS,
@@ -40,6 +40,7 @@ export type PreviewMarketSlot = {
   province: string;
   lat: number | null;
   lng: number | null;
+  logo_url: string | null;
   rating_avg: number | null;
   review_count: number;
   tags: string[];
@@ -69,6 +70,7 @@ export type PreviewMarketRow = {
   province: string;
   lat: number | null;
   lng: number | null;
+  logo_url: string | null;
   rating_avg: number | null;
   review_count: number;
   tags: string[];
@@ -96,6 +98,7 @@ export type PreviewNeighbourhoodCircuit = {
     logoUrl: string | null;
     specialty: string;
     marketName: string;
+    photoUrl: string | null;
   }>;
 };
 
@@ -106,7 +109,7 @@ export type PreviewAisleCard = {
   count: number;
   photoUrl: string | null;
   photoAlt: string | null;
-  sampleTerms: Array<{ term: string; slug: string }>;
+  sampleTerms: Array<{ term: string; slug: string; photoUrl: string | null }>;
   topVendors: Array<{
     name: string;
     slug: string;
@@ -121,11 +124,14 @@ export type PreviewVendorSpotlightItem = {
   href: string;
   priceCents: number | null;
   aisleId: string;
+  photoUrl: string | null;
+  photoAlt: string | null;
 };
 
 export type PreviewVendorSpotlightMarket = {
   name: string;
   slug: string;
+  logoUrl: string | null;
   neighbourhood: string;
   stall: string | null;
   days: number[];
@@ -146,6 +152,8 @@ export type PreviewVendorSpotlight = {
   tags: string[];
   aisleIds: string[];
   primaryAisleLabel: string;
+  photoUrl: string | null;
+  photoAlt: string | null;
   badge: "Selling now" | "Later today" | "Selling this weekend" | "On the schedule";
   openNow: boolean;
   sellingToday: boolean;
@@ -339,6 +347,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
       province: slot.market.province,
       lat: slot.market.lat,
       lng: slot.market.lng,
+      logo_url: slot.market.logo_url ?? null,
       rating_avg: slot.market.rating_avg ?? null,
       review_count: slot.market.review_count ?? 0,
       tags: slot.market.tags ?? [],
@@ -387,6 +396,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
       province: market.province,
       lat: market.lat,
       lng: market.lng,
+      logo_url: market.logo_url ?? null,
       rating_avg: market.rating_avg ?? null,
       review_count: market.review_count ?? 0,
       tags: market.tags ?? [],
@@ -456,6 +466,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
   const aisleSetByVendorSlug = new Map<string, Set<string>>();
 
   for (const { page, vendors: foundVendors } of findResultsByPage) {
+    const pagePhoto = productPhoto(photos, page.slug, page.category);
     for (const fv of foundVendors) {
       const list = itemsByVendorSlug.get(fv.slug) ?? [];
       const aSet = aisleSetByVendorSlug.get(fv.slug) ?? new Set<string>();
@@ -469,6 +480,8 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
             href: `/find/${page.slug}`,
             priceCents: item.priceCents,
             aisleId: page.category,
+            photoUrl: pagePhoto?.url ?? null,
+            photoAlt: pagePhoto?.alt ?? page.term,
           });
         }
       }
@@ -478,31 +491,36 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
           href: `/find/${page.slug}`,
           priceCents: null,
           aisleId: page.category,
+          photoUrl: pagePhoto?.url ?? null,
+          photoAlt: pagePhoto?.alt ?? page.term,
         });
       }
       itemsByVendorSlug.set(fv.slug, list);
     }
   }
 
-  const TAG_TO_AISLE_FALLBACK: Record<string, { aisleId: string; label: string; href: string }> = {
-    bakery: { aisleId: "bread-and-bakery", label: "Fresh-baked loaves & pastries", href: "/find/bread-toronto" },
-    bread: { aisleId: "bread-and-bakery", label: "Artisan sourdough & bread", href: "/find/sourdough-toronto" },
-    produce: { aisleId: "vegetables", label: "Seasonal field vegetables & greens", href: "/products?aisle=vegetables" },
-    organic: { aisleId: "vegetables", label: "Certified organic farm produce", href: "/find/organic-toronto" },
-    cheese: { aisleId: "cheese-and-dairy", label: "Small-batch farmstead cheese", href: "/find/cheese-toronto" },
-    dairy: { aisleId: "cheese-and-dairy", label: "Creamery butter & dairy", href: "/find/cheese-toronto" },
-    meat: { aisleId: "meat-and-turkey", label: "Pasture-raised cuts & sausages", href: "/find/sausages-toronto" },
-    poultry: { aisleId: "meat-and-turkey", label: "Farm-raised poultry & eggs", href: "/find/chicken-toronto" },
-    eggs: { aisleId: "eggs", label: "Free-run farm eggs", href: "/find/eggs-toronto" },
-    honey: { aisleId: "honey", label: "Raw Ontario wildflower honey", href: "/find/honey-toronto" },
-    maple: { aisleId: "maple", label: "Wood-fired Ontario maple syrup", href: "/find/maple-syrup-toronto" },
-    "prepared-food": { aisleId: "prepared-foods", label: "Hot market table dishes & hand pies", href: "/products?aisle=prepared-foods" },
-    coffee: { aisleId: "coffee-and-tea", label: "Small-batch roasted coffee & espresso", href: "/find/coffee-toronto" },
-    tea: { aisleId: "coffee-and-tea", label: "Botanical & loose-leaf teas", href: "/find/tea-toronto" },
-    seafood: { aisleId: "seafood", label: "Smoked trout & Great Lakes fish", href: "/find/fish-toronto" },
-    fruit: { aisleId: "apples-and-fruit", label: "Orchard apples, berries & stone fruit", href: "/find/apples-toronto" },
-    preserves: { aisleId: "preserves-and-sauces", label: "Small-batch jams, pickles & sauces", href: "/find/jam-toronto" },
-    sweets: { aisleId: "pies-and-sweets", label: "Fruit pies, cookies & butter tarts", href: "/find/butter-tarts-toronto" },
+  const TAG_TO_AISLE_FALLBACK: Record<
+    string,
+    { aisleId: string; label: string; href: string; slug: string }
+  > = {
+    bakery: { aisleId: "bread-and-bakery", label: "Fresh-baked loaves & pastries", href: "/find/bread-toronto", slug: "bread-toronto" },
+    bread: { aisleId: "bread-and-bakery", label: "Artisan sourdough & bread", href: "/find/sourdough-toronto", slug: "sourdough-toronto" },
+    produce: { aisleId: "vegetables", label: "Seasonal field vegetables & greens", href: "/products?aisle=vegetables", slug: "carrots-toronto" },
+    organic: { aisleId: "vegetables", label: "Certified organic farm produce", href: "/find/organic-toronto", slug: "tomatoes-toronto" },
+    cheese: { aisleId: "cheese-and-dairy", label: "Small-batch farmstead cheese", href: "/find/cheese-toronto", slug: "cheese-toronto" },
+    dairy: { aisleId: "cheese-and-dairy", label: "Creamery butter & dairy", href: "/find/cheese-toronto", slug: "cheese-toronto" },
+    meat: { aisleId: "meat-and-turkey", label: "Pasture-raised cuts & sausages", href: "/find/sausages-toronto", slug: "sausages-toronto" },
+    poultry: { aisleId: "meat-and-turkey", label: "Farm-raised poultry & eggs", href: "/find/chicken-toronto", slug: "chicken-toronto" },
+    eggs: { aisleId: "eggs", label: "Free-run farm eggs", href: "/find/eggs-toronto", slug: "eggs-toronto" },
+    honey: { aisleId: "honey", label: "Raw Ontario wildflower honey", href: "/find/honey-toronto", slug: "honey-toronto" },
+    maple: { aisleId: "maple", label: "Wood-fired Ontario maple syrup", href: "/find/maple-syrup-toronto", slug: "maple-syrup-toronto" },
+    "prepared-food": { aisleId: "prepared-foods", label: "Hot market table dishes & hand pies", href: "/products?aisle=prepared-foods", slug: "pizza-toronto" },
+    coffee: { aisleId: "coffee-and-tea", label: "Small-batch roasted coffee & espresso", href: "/find/coffee-toronto", slug: "coffee-toronto" },
+    tea: { aisleId: "coffee-and-tea", label: "Botanical & loose-leaf teas", href: "/find/tea-toronto", slug: "tea-toronto" },
+    seafood: { aisleId: "seafood", label: "Smoked trout & Great Lakes fish", href: "/find/fish-toronto", slug: "fish-toronto" },
+    fruit: { aisleId: "apples-and-fruit", label: "Orchard apples, berries & stone fruit", href: "/find/apples-toronto", slug: "apples-toronto" },
+    preserves: { aisleId: "preserves-and-sauces", label: "Small-batch jams, pickles & sauces", href: "/find/jam-toronto", slug: "jam-toronto" },
+    sweets: { aisleId: "pies-and-sweets", label: "Fruit pies, cookies & butter tarts", href: "/find/butter-tarts-toronto", slug: "butter-tarts-toronto" },
   };
 
   const AISLE_LABEL_BY_ID: Record<string, string> = {
@@ -551,11 +569,14 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
       if (!mapped) continue;
       aisleSet.add(mapped.aisleId);
       if (items.length < 3 && !items.some((i) => i.name === mapped.label)) {
+        const fbPhoto = productPhoto(photos, mapped.slug, mapped.aisleId);
         items.push({
           name: mapped.label,
           href: mapped.href,
           priceCents: null,
           aisleId: mapped.aisleId,
+          photoUrl: fbPhoto?.url ?? null,
+          photoAlt: fbPhoto?.alt ?? mapped.label,
         });
       }
     }
@@ -563,6 +584,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
     if (items.length === 0) {
       const fallbackAisle = aisleSet.values().next().value ?? "vegetables";
       aisleSet.add(fallbackAisle);
+      const fbPhoto = photos.aisle[fallbackAisle] ?? null;
       items.push({
         name: vendor.about
           ? vendor.about.slice(0, 58) + (vendor.about.length > 58 ? "…" : "")
@@ -570,6 +592,8 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
         href: `/vendors/${vendor.slug}`,
         priceCents: null,
         aisleId: fallbackAisle,
+        photoUrl: fbPhoto?.url ?? null,
+        photoAlt: fbPhoto?.alt ?? vendor.name,
       });
     }
 
@@ -583,6 +607,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
       spotMarkets.push({
         name: hall.market.name,
         slug: hall.market.slug,
+        logoUrl: hall.market.logo_url ?? null,
         neighbourhood: inferNeighbourhood(hall.market),
         stall: stall.stall,
         days: stall.days,
@@ -610,6 +635,11 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
     const aisleIds = [...aisleSet];
     const primaryAisleId = aisleIds[0] ?? "vegetables";
     const primaryAisleLabel = AISLE_LABEL_BY_ID[primaryAisleId] ?? "Market stall";
+    const firstItemWithPhoto = items.find((i) => Boolean(i.photoUrl));
+    const primaryAislePhoto = photos.aisle[primaryAisleId] ?? null;
+    const vendorPhotoUrl = firstItemWithPhoto?.photoUrl ?? primaryAislePhoto?.url ?? null;
+    const vendorPhotoAlt =
+      firstItemWithPhoto?.photoAlt ?? primaryAislePhoto?.alt ?? primaryAisleLabel;
 
     vendorSpotlightsAll.push({
       id: vendor.id,
@@ -622,6 +652,8 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
       tags,
       aisleIds,
       primaryAisleLabel,
+      photoUrl: vendorPhotoUrl,
+      photoAlt: vendorPhotoAlt,
       badge,
       openNow,
       sellingToday,
@@ -671,6 +703,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
           logoUrl: v.logoUrl,
           specialty: v.items[0]?.name ?? v.primaryAisleLabel,
           marketName: matchedMarket?.name ?? area.label,
+          photoUrl: v.photoUrl,
         };
       });
     neighbourhoodCircuits.push({
@@ -708,6 +741,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
           logoUrl: v.logoUrl,
           specialty: v.items[0]?.name ?? v.primaryAisleLabel,
           marketName: matchedMarket?.name ?? city,
+          photoUrl: v.photoUrl,
         };
       });
     neighbourhoodCircuits.push({
@@ -749,7 +783,14 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
       count: aisle.pages.length,
       photoUrl: photo?.url ?? null,
       photoAlt: photo?.alt ?? null,
-      sampleTerms: aisle.pages.slice(0, 4).map((p) => ({ term: p.term, slug: p.slug })),
+      sampleTerms: aisle.pages.slice(0, 4).map((p) => {
+        const termPhoto = productPhoto(photos, p.slug, aisle.id);
+        return {
+          term: p.term,
+          slug: p.slug,
+          photoUrl: termPhoto?.url ?? null,
+        };
+      }),
       topVendors: aisleVendors,
     };
   });
