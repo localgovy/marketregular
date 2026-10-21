@@ -106,6 +106,8 @@ function StallEmblem({
         <img
           src={url}
           alt=""
+          width={36}
+          height={36}
           loading="lazy"
           decoding="async"
           className="block max-h-full max-w-full object-contain object-center"
@@ -155,6 +157,8 @@ function ProductThumb({
         <img
           src={src}
           alt=""
+          width={32}
+          height={32}
           loading="lazy"
           decoding="async"
           className="size-full object-cover"
@@ -291,18 +295,15 @@ function VendorTableCard({
                 <li
                   key={`${vendor.slug}-item-${idx}`}
                   className={cn(
-                    "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 px-3.5 py-2 text-foreground",
+                    "grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-3.5 py-2 text-foreground",
                     idx > 0 && "border-t border-dashed border-border",
                   )}
                 >
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <ProductThumb src={item.photoUrl ?? vendor.photoUrl} size="xs" />
-                    <p className="min-w-0 text-base font-medium">
-                      <Link href={item.href} className="hover:text-primary hover:underline">
-                        {item.name}
-                      </Link>
-                    </p>
-                  </div>
+                  <p className="min-w-0 text-base font-medium">
+                    <Link href={item.href} className="hover:text-primary hover:underline">
+                      {item.name}
+                    </Link>
+                  </p>
                   {price ? (
                     <span className="type-nums shrink-0 whitespace-nowrap text-sm font-medium text-stamp">
                       {price}
@@ -1003,9 +1004,8 @@ export function ConceptNeighbourhoodAtlas({
                               <Link
                                 key={term.slug}
                                 href={`/find/${term.slug}`}
-                                className="stall-chip-sm inline-flex items-center gap-1.5 bg-secondary py-1 pr-3 pl-1.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
+                                className="stall-chip-sm inline-flex items-center bg-secondary px-3 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
                               >
-                                <ProductThumb src={term.photoUrl ?? activeAisle.photoUrl} size="xs" />
                                 <span>{term.term}</span>
                               </Link>
                             ))}

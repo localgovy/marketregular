@@ -124,8 +124,6 @@ export type PreviewVendorSpotlightItem = {
   href: string;
   priceCents: number | null;
   aisleId: string;
-  photoUrl: string | null;
-  photoAlt: string | null;
 };
 
 export type PreviewVendorSpotlightMarket = {
@@ -464,14 +462,17 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
 
   const itemsByVendorSlug = new Map<string, PreviewVendorSpotlightItem[]>();
   const aisleSetByVendorSlug = new Map<string, Set<string>>();
+  const primarySlugByVendorSlug = new Map<string, string>();
 
   for (const { page, vendors: foundVendors } of findResultsByPage) {
-    const pagePhoto = productPhoto(photos, page.slug, page.category);
     for (const fv of foundVendors) {
       const list = itemsByVendorSlug.get(fv.slug) ?? [];
       const aSet = aisleSetByVendorSlug.get(fv.slug) ?? new Set<string>();
       aSet.add(page.category);
       aisleSetByVendorSlug.set(fv.slug, aSet);
+      if (!primarySlugByVendorSlug.has(fv.slug)) {
+        primarySlugByVendorSlug.set(fv.slug, page.slug);
+      }
 
       for (const item of fv.items.slice(0, 2)) {
         if (list.length < 4 && !list.some((existing) => existing.name === item.name)) {
@@ -480,8 +481,6 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
             href: `/find/${page.slug}`,
             priceCents: item.priceCents,
             aisleId: page.category,
-            photoUrl: pagePhoto?.url ?? null,
-            photoAlt: pagePhoto?.alt ?? page.term,
           });
         }
       }
@@ -491,8 +490,6 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
           href: `/find/${page.slug}`,
           priceCents: null,
           aisleId: page.category,
-          photoUrl: pagePhoto?.url ?? null,
-          photoAlt: pagePhoto?.alt ?? page.term,
         });
       }
       itemsByVendorSlug.set(fv.slug, list);
@@ -563,20 +560,19 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
     const tags = vendorProductTags(vendor.name, vendor.tags);
     const items = [...(itemsByVendorSlug.get(vendor.slug) ?? [])];
     const aisleSet = new Set<string>(aisleSetByVendorSlug.get(vendor.slug) ?? []);
+    let primaryProductSlug = primarySlugByVendorSlug.get(vendor.slug) ?? null;
 
     for (const tag of tags) {
       const mapped = TAG_TO_AISLE_FALLBACK[tag];
       if (!mapped) continue;
       aisleSet.add(mapped.aisleId);
+      if (!primaryProductSlug) primaryProductSlug = mapped.slug;
       if (items.length < 3 && !items.some((i) => i.name === mapped.label)) {
-        const fbPhoto = productPhoto(photos, mapped.slug, mapped.aisleId);
         items.push({
           name: mapped.label,
           href: mapped.href,
           priceCents: null,
           aisleId: mapped.aisleId,
-          photoUrl: fbPhoto?.url ?? null,
-          photoAlt: fbPhoto?.alt ?? mapped.label,
         });
       }
     }
@@ -584,7 +580,6 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
     if (items.length === 0) {
       const fallbackAisle = aisleSet.values().next().value ?? "vegetables";
       aisleSet.add(fallbackAisle);
-      const fbPhoto = photos.aisle[fallbackAisle] ?? null;
       items.push({
         name: vendor.about
           ? vendor.about.slice(0, 58) + (vendor.about.length > 58 ? "…" : "")
@@ -592,8 +587,6 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
         href: `/vendors/${vendor.slug}`,
         priceCents: null,
         aisleId: fallbackAisle,
-        photoUrl: fbPhoto?.url ?? null,
-        photoAlt: fbPhoto?.alt ?? vendor.name,
       });
     }
 
@@ -635,11 +628,11 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
     const aisleIds = [...aisleSet];
     const primaryAisleId = aisleIds[0] ?? "vegetables";
     const primaryAisleLabel = AISLE_LABEL_BY_ID[primaryAisleId] ?? "Market stall";
-    const firstItemWithPhoto = items.find((i) => Boolean(i.photoUrl));
-    const primaryAislePhoto = photos.aisle[primaryAisleId] ?? null;
-    const vendorPhotoUrl = firstItemWithPhoto?.photoUrl ?? primaryAislePhoto?.url ?? null;
-    const vendorPhotoAlt =
-      firstItemWithPhoto?.photoAlt ?? primaryAislePhoto?.alt ?? primaryAisleLabel;
+    const generalPhoto = primaryProductSlug
+      ? productPhoto(photos, primaryProductSlug, primaryAisleId)
+      : (photos.aisle[primaryAisleId] ?? null);
+    const vendorPhotoUrl = generalPhoto?.url ?? null;
+    const vendorPhotoAlt = generalPhoto?.alt ?? primaryAisleLabel;
 
     vendorSpotlightsAll.push({
       id: vendor.id,
