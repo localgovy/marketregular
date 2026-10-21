@@ -17,6 +17,7 @@ import { stallHall } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { FIND_PAGES } from "@/data/find-pages";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { menuItemPhotoUrl, publishedMenuSelectMissingPhoto } from "@/lib/menu-item-photo-url";
 import {
   categoriesForFindScope,
   PET_FOOD_CATEGORY,
@@ -49,7 +50,7 @@ export type FindVendor = {
   logoUrl: string | null;
   ratingAvg: number | null;
   reviewCount: number;
-  items: Array<{ name: string; priceCents: number | null }>;
+  items: Array<{ name: string; priceCents: number | null; imageUrl: string | null }>;
   markets: FindMarket[];
   badge: "Open now" | "Later today" | "Selling this weekend" | null;
   /** 0 means open today. Higher means later in the week. 8 means no upcoming day. */
@@ -70,6 +71,7 @@ type MenuRow = {
   product_slug: string | null;
   price_cents: number | null;
   vendor_id: string;
+  image_url?: string | null;
 };
 
 export type FindPageQuery = {
@@ -87,6 +89,7 @@ type RpcRow = {
   vendor_slug: string;
   markets: ProductMarketHit[] | null;
   open_today: boolean;
+  image_url?: string | null;
 };
 
 function asDays(value: unknown): number[] {
@@ -102,6 +105,7 @@ export function normalizeSearchQuery(q: string) {
 }
 
 const MENU_FIND_SELECT = "id, name, product_category, product_slug, price_cents, vendor_id";
+const MENU_FIND_PHOTO_SELECT = `${MENU_FIND_SELECT}, image_url`;
 
 type FindMenuIndex = {
   bySlug: Map<string, MenuRow[]>;
@@ -117,17 +121,36 @@ function inFindScope(
   return scope.categories.includes(row.product_category);
 }
 
-/** One sequential read per worker. A query per find page timed out PostgREST during prerender. */
-let findMenuIndex: Promise<FindMenuIndex> | null = null;
+/** One sequential read per worker, refreshed every 2 minutes so a seeded picture can show up. */
+const FIND_MENU_INDEX_MS = 120_000;
+let findMenuIndex: { at: number; promise: Promise<FindMenuIndex> } | null = null;
 
 function loadFindMenuIndex() {
-  if (!findMenuIndex) {
-    findMenuIndex = readFindMenuIndex().catch((error: unknown) => {
-      findMenuIndex = null;
-      throw error;
-    });
+  const now = Date.now();
+  if (findMenuIndex && now - findMenuIndex.at < FIND_MENU_INDEX_MS) return findMenuIndex.promise;
+  const promise = readFindMenuIndex().catch((error: unknown) => {
+    findMenuIndex = null;
+    throw error;
+  });
+  findMenuIndex = { at: now, promise };
+  return promise;
+}
+
+type FindMenuPage = {
+  data: unknown;
+  error: { message?: string; code?: string } | null;
+};
+
+async function selectFindMenuPage(
+  columns: { current: string },
+  run: (columns: string) => PromiseLike<FindMenuPage>,
+): Promise<FindMenuPage> {
+  const first = await run(columns.current);
+  if (!first.error || columns.current === MENU_FIND_SELECT || !publishedMenuSelectMissingPhoto(first.error)) {
+    return first;
   }
-  return findMenuIndex;
+  columns.current = MENU_FIND_SELECT;
+  return run(MENU_FIND_SELECT);
 }
 
 async function readFindMenuIndex(): Promise<FindMenuIndex> {
@@ -135,17 +158,20 @@ async function readFindMenuIndex(): Promise<FindMenuIndex> {
   const byClassifier = new Map<string, MenuRow[]>();
   const supabase = createServiceClient();
   if (!supabase) return { bySlug, byClassifier };
+  const findColumns = { current: MENU_FIND_PHOTO_SELECT };
 
   const slugs = [...new Set(FIND_PAGES.flatMap((page) => page.matchSlugs))];
   for (let index = 0; index < slugs.length; index += 40) {
     const slice = slugs.slice(index, index + 40);
     for (let from = 0; ; from += 1000) {
-      const { data, error } = await supabase
-        .from("published_menus")
-        .select(MENU_FIND_SELECT)
-        .in("product_slug", slice)
-        .order("id")
-        .range(from, from + 999);
+      const { data, error } = await selectFindMenuPage(findColumns, (columns) =>
+        supabase
+          .from("published_menus")
+          .select(columns)
+          .in("product_slug", slice)
+          .order("id")
+          .range(from, from + 999),
+      );
       if (error) throw new Error("Could not load this product");
       assertPublicSearchPayload(data);
       const chunk = (data ?? []) as MenuRow[];
@@ -187,10 +213,9 @@ async function readFindMenuIndex(): Promise<FindMenuIndex> {
     const byId = new Map<string, MenuRow>();
     for (let index = 0; index < ids.length; index += 80) {
       const slice = ids.slice(index, index + 80);
-      const { data, error } = await supabase
-        .from("published_menus")
-        .select(MENU_FIND_SELECT)
-        .in("id", slice);
+      const { data, error } = await selectFindMenuPage(findColumns, (columns) =>
+        supabase.from("published_menus").select(columns).in("id", slice),
+      );
       if (error) throw new Error("Could not load this product");
       assertPublicSearchPayload(data);
       for (const row of (data ?? []) as MenuRow[]) {
@@ -296,6 +321,7 @@ export const listFindVendors = cache(async function listFindVendors(
     group.items.push({
       name: menu.name,
       priceCents: visiblePriceCents(menu.product_category, menu.price_cents),
+      imageUrl: menuItemPhotoUrl(menu.image_url, menu.id),
     });
   }
 
@@ -329,7 +355,7 @@ const loadCachedSearchRows = unstable_cache(
     assertPublicSearchPayload(data);
     return (data ?? []) as RpcRow[];
   },
-  ["search-products-v4"],
+  ["search-products-v5"],
   { revalidate: 60 },
 );
 
@@ -407,6 +433,7 @@ export async function searchProducts(args: {
       openToday,
       badge,
       href: productHref(row.product_slug, row.item_name),
+      imageUrl: menuItemPhotoUrl(row.image_url),
     };
   });
   if (!args.openToday) return hits;

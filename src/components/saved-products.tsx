@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { menuItemPhotoUrls } from "@/app/actions/menu-item-photos";
 import { Hours } from "@/components/hours";
 import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
+import { MenuItemPhoto } from "@/components/menu-item-photo";
 import { ProductSaveButton } from "@/components/save-button";
 import { WEEKDAYS } from "@/lib/constants";
 import { formatPrice } from "@/lib/format";
@@ -20,10 +23,12 @@ function SavedProductCard({
   product,
   vendor,
   markets,
+  photos,
 }: {
   product: SavedProduct;
   vendor?: Vendor;
   markets: Map<string, Market>;
+  photos: Record<string, string>;
 }) {
   const vendorName = vendor?.name ?? product.vendorName;
   const ratingAvg = vendor ? vendor.rating_avg : product.ratingAvg;
@@ -49,17 +54,20 @@ function SavedProductCard({
           return (
             <li
               key={`${product.slug}-item-${index}`}
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-dashed border-border bg-secondary px-4 py-2.5 text-foreground"
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 border-b border-dashed border-border bg-secondary px-4 py-2.5 text-foreground"
             >
-              <p className="min-w-0 text-base font-medium">
-                {item.href ? (
-                  <Link href={item.href} className="hover:underline">
-                    {item.name}
-                  </Link>
-                ) : (
-                  item.name
-                )}
-              </p>
+              <div className="flex min-w-0 items-start gap-3">
+                <MenuItemPhoto url={photos[`${product.vendorSlug}\n${item.name.trim()}`]} />
+                <p className="min-w-0 text-base font-medium">
+                  {item.href ? (
+                    <Link href={item.href} className="hover:underline">
+                      {item.name}
+                    </Link>
+                  ) : (
+                    item.name
+                  )}
+                </p>
+              </div>
               {price ? (
                 <span className="type-nums shrink-0 self-start whitespace-nowrap text-sm text-foreground">
                   {price}
@@ -127,6 +135,29 @@ export function SavedProductsSection({
   const vendorBySlug = new Map(vendors.map((vendor) => [vendor.slug, vendor]));
   const marketBySlug = new Map(markets.map((market) => [market.slug, market]));
   const rows = [...products].reverse();
+  const pairs = useMemo(
+    () =>
+      products.flatMap((product) =>
+        product.items.map((item) => ({ vendorSlug: product.vendorSlug, name: item.name })),
+      ),
+    [products],
+  );
+  const [photos, setPhotos] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!pairs.length) return;
+    let cancelled = false;
+    void menuItemPhotoUrls(pairs)
+      .then((next) => {
+        if (!cancelled) setPhotos(next);
+      })
+      .catch(() => {
+        if (!cancelled) setPhotos({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pairs]);
 
   return (
     <section className={className}>
@@ -139,6 +170,7 @@ export function SavedProductsSection({
               product={product}
               vendor={vendorBySlug.get(product.vendorSlug)}
               markets={marketBySlug}
+              photos={photos}
             />
           ))}
         </ul>

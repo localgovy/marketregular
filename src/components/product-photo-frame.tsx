@@ -24,12 +24,14 @@ export function ProductPhotoFrame({
         <img
           src={photo.url}
           alt={decorative ? "" : photo.alt}
+          width={400}
+          height={300}
           loading="lazy"
           decoding="async"
           className="size-full object-cover"
           onError={() => setFailed(true)}
         />
-      ) : decorative && photo ? null : (
+      ) : (
         <span aria-hidden className="type-column px-3 text-center">
           {name}
         </span>

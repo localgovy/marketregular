@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
+import { MenuItemPhoto } from "@/components/menu-item-photo";
 import { ProductSaveButton } from "@/components/save-button";
 import { formatPrice } from "@/lib/format";
 import { productFromInput } from "@/lib/product-saves";
@@ -27,6 +28,7 @@ type ListingItem = {
   name: string;
   href?: string;
   priceCents: number | null;
+  imageUrl?: string | null;
 };
 
 type ListingMarket = {
@@ -120,17 +122,20 @@ function ProductListing({
             return (
               <li
                 key={`${vendorSlug}-item-${index}`}
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-dashed border-border bg-secondary px-4 py-2.5 text-foreground"
+                className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 border-b border-dashed border-border bg-secondary px-4 py-2.5 text-foreground"
               >
-                <p className="min-w-0 text-base font-medium">
-                  {item.href ? (
-                    <Link href={item.href} className="hover:underline">
-                      {item.name}
-                    </Link>
-                  ) : (
-                    item.name
-                  )}
-                </p>
+                <div className="flex min-w-0 items-start gap-3">
+                  <MenuItemPhoto url={item.imageUrl} />
+                  <p className="min-w-0 text-base font-medium">
+                    {item.href ? (
+                      <Link href={item.href} className="hover:underline">
+                        {item.name}
+                      </Link>
+                    ) : (
+                      item.name
+                    )}
+                  </p>
+                </div>
                 {price ? (
                   <span className="type-nums shrink-0 self-start whitespace-nowrap text-sm text-foreground">
                     {price}
@@ -233,7 +238,7 @@ export function ProductHitList({ hits }: { hits: ProductHit[] }) {
           ratingAvg={hit.ratingAvg}
           reviewCount={hit.reviewCount}
           badge={hit.badge}
-          items={[{ name: hit.itemName, href: hit.href, priceCents: hit.priceCents }]}
+          items={[{ name: hit.itemName, href: hit.href, priceCents: hit.priceCents, imageUrl: hit.imageUrl }]}
           markets={hit.markets}
         />
       ))}

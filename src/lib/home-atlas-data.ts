@@ -24,6 +24,7 @@ import { listingMarkSrc } from "@/lib/format";
 import { LAUNCH_TZ } from "@/lib/launch";
 import { catalogueAisles, liveFindPages } from "@/lib/product-catalogue";
 import {
+  currentWeekSessions,
   formatSchedule,
   hallDayHours,
   nextOpenLabel,
@@ -88,9 +89,10 @@ export type HomeAtlasMarketRow = {
   hours: string;
   nextOpen: string;
   scheduleSummary: string;
+  sessions: Array<{ day: string; hours: string }>;
   vendorCount: number;
   neighbourhood: string;
-  waitMinutes: number;
+  waitMinutes: number | null;
   dayNames: string[];
   indoor_outdoor: string | null;
 };
@@ -133,6 +135,7 @@ export type HomeAtlasVendorItem = {
   href: string;
   priceCents: number | null;
   aisleId: string;
+  imageUrl: string | null;
 };
 
 export type HomeAtlasVendorMarket = {
@@ -159,12 +162,16 @@ export type HomeAtlasVendorSpotlight = {
   tags: string[];
   aisleIds: string[];
   primaryAisleLabel: string;
-  /** Single general product/category photo for the vendor's table banner (no per-item photos). */
+  /** Aisle or find-page picture for the card banner. Item rows carry their own pictures. */
   photoUrl: string | null;
   photoAlt: string | null;
   badge: "Selling now" | "Later today" | "Selling this weekend" | "On the schedule";
   openNow: boolean;
   sellingToday: boolean;
+  /** True only when `items` come from a published stall menu, not a category guess. */
+  publishedMenu: boolean;
+  /** In-season Saturday or Sunday hours, not a raw day number from an off-season row. */
+  onWeekend: boolean;
   items: HomeAtlasVendorItem[];
   markets: HomeAtlasVendorMarket[];
 };
@@ -184,7 +191,6 @@ export type HomeAtlasData = {
   census: DirectoryCensus;
   fullWeek: HomeAtlasDayGroup[];
   openNowSlots: HomeAtlasMarketSlot[];
-  fallbackMarkets: HomeAtlasMarketRow[];
   sellingTodayCount: number;
   sellingToday: VendorTodayRow[];
   weekVendors: VendorWeekPick[];
@@ -409,6 +415,7 @@ const loadCachedVendorMenuSample = unstable_cache(
               href: `/find/${page.slug}`,
               priceCents: item.priceCents,
               aisleId: page.category,
+              imageUrl: item.imageUrl,
             });
           }
         }
@@ -418,6 +425,7 @@ const loadCachedVendorMenuSample = unstable_cache(
             href: `/find/${page.slug}`,
             priceCents: null,
             aisleId: page.category,
+            imageUrl: null,
           });
         }
         out[fv.slug] = entry;
@@ -425,7 +433,7 @@ const loadCachedVendorMenuSample = unstable_cache(
     }
     return out;
   },
-  ["home-atlas-vendor-menu-sample-v1"],
+  ["home-atlas-vendor-menu-sample-v2"],
   { revalidate: 120 },
 );
 
@@ -518,9 +526,9 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
         : "Hours";
     const hours = hallHours(market, marketSchedules, undefined, now);
     const sortedRows = sortScheduleRows(marketSchedules);
-    const firstFormatted = sortedRows[0] ? formatSchedule(sortedRows[0]) : null;
-    const scheduleSummary = firstFormatted
-      ? `${firstFormatted.day} · ${firstFormatted.hours}`
+    const sessions = currentWeekSessions(marketSchedules, market.province, now);
+    const scheduleSummary = sessions.length
+      ? `${sessions[0].day} · ${sessions[0].hours}`
       : hours || "Schedule posted on page";
     const dayNames = Array.from(new Set(sortedRows.map((row) => formatSchedule(row).day)));
     const tagsLower = (market.tags ?? []).map((t) => t.toLowerCase());
@@ -544,24 +552,17 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
       review_count: market.review_count ?? 0,
       tags: market.tags ?? [],
       open,
-      hours: hours || (firstFormatted?.hours ?? ""),
+      hours: hours || sessions[0]?.hours || "",
       nextOpen,
       scheduleSummary,
+      sessions,
       vendorCount: vendorCountByMarket.get(market.id) ?? 0,
       neighbourhood: inferNeighbourhood(market),
-      waitMinutes: open ? 0 : (nextSlot?.waitMinutes ?? Number.POSITIVE_INFINITY),
+      waitMinutes: open ? 0 : (nextSlot && Number.isFinite(nextSlot.waitMinutes) ? nextSlot.waitMinutes : null),
       dayNames,
       indoor_outdoor,
     };
   });
-
-  allMarketRows.sort(
-    (a, b) =>
-      Number(b.open) - Number(a.open) ||
-      a.waitMinutes - b.waitMinutes ||
-      (b.review_count ?? 0) - (a.review_count ?? 0) ||
-      a.name.localeCompare(b.name),
-  );
 
   const stallsByVendorId = new Map<string, typeof stalls>();
   for (const stall of stalls) {
@@ -586,37 +587,23 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
 
     const tags = vendorProductTags(vendor.name, vendor.tags);
     const sample = menuSample[vendor.slug];
-    const items: HomeAtlasVendorItem[] = sample ? [...sample.items] : [];
-    const aisleSet = new Set<string>(sample?.aisles ?? []);
-    let primaryProductSlug = sample?.primaryProductSlug ?? null;
+    const items: HomeAtlasVendorItem[] = sample ? sample.items.slice(0, 3) : [];
+    const publishedMenu = items.length > 0;
+    // Filter membership follows the rows on the card. A later find page or a
+    // stored tag must not file a cookie stall under Eggs.
+    const aisleSet = new Set<string>(publishedMenu ? items.map((item) => item.aisleId) : []);
+    let primaryProductSlug = publishedMenu ? (sample?.primaryProductSlug ?? null) : null;
 
-    for (const tag of tags) {
-      const mapped = TAG_TO_AISLE_FALLBACK[tag];
-      if (!mapped) continue;
-      aisleSet.add(mapped.aisleId);
-      if (!primaryProductSlug) primaryProductSlug = mapped.slug;
-      if (items.length < 3 && !items.some((i) => i.name === mapped.label)) {
-        items.push({
-          name: mapped.label,
-          href: mapped.href,
-          priceCents: null,
-          aisleId: mapped.aisleId,
-        });
+    if (!publishedMenu) {
+      for (const tag of tags) {
+        const mapped = TAG_TO_AISLE_FALLBACK[tag];
+        if (!mapped) continue;
+        aisleSet.add(mapped.aisleId);
+        if (!primaryProductSlug) primaryProductSlug = mapped.slug;
       }
     }
 
-    if (items.length === 0) {
-      const fallbackAisle = aisleSet.values().next().value ?? "vegetables";
-      aisleSet.add(fallbackAisle);
-      items.push({
-        name: vendor.about
-          ? vendor.about.slice(0, 58) + (vendor.about.length > 58 ? "…" : "")
-          : "Seasonal farm table & market goods",
-        href: `/vendors/${vendor.slug}`,
-        priceCents: null,
-        aisleId: fallbackAisle,
-      });
-    }
+    if (aisleSet.size === 0) aisleSet.add("vegetables");
 
     const spotMarkets: HomeAtlasVendorMarket[] = [];
     const seenMarketSlug = new Set<string>();
@@ -644,12 +631,14 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
     const todayRow = sellingTodayMap.get(vendor.slug);
     const openNow = Boolean(todayRow?.open || spotMarkets.some((m) => m.openNow));
     const sellingToday = Boolean(todayRow);
-    const hasWeekend = spotMarkets.some((m) => m.days.includes(6) || m.days.includes(0));
+    const onWeekend = spotMarkets.some((market) =>
+      market.hours.some((row) => row.day === "Sat" || row.day === "Sun"),
+    );
     const badge: HomeAtlasVendorSpotlight["badge"] = openNow
       ? "Selling now"
       : sellingToday
         ? "Later today"
-        : hasWeekend
+        : onWeekend
           ? "Selling this weekend"
           : "On the schedule";
 
@@ -678,7 +667,9 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
       badge,
       openNow,
       sellingToday,
-      items: items.slice(0, 3),
+      publishedMenu,
+      onWeekend,
+      items,
       markets: spotMarkets,
     });
   }
@@ -778,7 +769,7 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
   const setupOptions = [...tagsPresent(markets, FIND_SETUP)];
 
   const fullWeek = fullWeekAll
-    .filter((g) => g.slots.length > 0)
+    .filter((g) => g.id !== "earlier" && g.slots.length > 0)
     .slice(0, 4)
     .map((g) => ({
       ...g,
@@ -792,7 +783,6 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
     census,
     fullWeek,
     openNowSlots,
-    fallbackMarkets: allMarketRows.slice(0, 4),
     sellingTodayCount: sellingTodayRaw.length,
     sellingToday: sellingTodayRaw.slice(0, 5),
     weekVendors: weekVendors.slice(0, 5),

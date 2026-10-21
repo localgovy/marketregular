@@ -10,7 +10,7 @@ const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
 const migration = "supabase/migrations/20261016195249_rose_keeps_flower_meaning.sql";
 const giftsMigration = "supabase/migrations/20261018154000_gifts_and_sets_product_category.sql";
 const searchMigration =
-  "supabase/migrations/20261019154204_search_products_spread_and_candidates.sql";
+  "supabase/migrations/20261021005523_menu_item_photos.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -176,6 +176,11 @@ returns real
 language sql
 volatile
 as $$ select $1 $$;
+
+create table public.menu_item_photos (
+  menu_id uuid primary key references public.vendor_menus (id) on delete cascade,
+  image_url text not null
+);
 
 ${extractFunction("search_products", searchMigration)}
 `;
@@ -614,9 +619,32 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.doesNotMatch(sql, /security definer/i);
   assert.match(sql, /partition by ranked\.vendor_id/);
   assert.match(sql, /ranked\.score - \(ranked\.vendor_rank - 1\) desc/);
+  assert.match(sql, /left join public\.menu_item_photos mip/);
+  assert.match(sql, /on mip\.menu_id = vm\.id/);
+  assert.match(sql, /ranked\.image_url/);
+  assert.match(sql, /image_url text/);
   assert.match(
     sql,
     /create or replace function public\.search_products\(\s*q text,\s*open_today boolean default false,\s*market_slug text default null,\s*day integer default null,\s*lim integer default 40,\s*off integer default 0\s*\)/,
+  );
+});
+
+test("search_products returns the picture stored for that menu row", async () => {
+  const db = await database();
+  const url =
+    "https://pxsndrlptceafhsxfays.supabase.co/storage/v1/object/public/menu-photos/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/hoops.webp";
+  await db.query("insert into public.menu_item_photos (menu_id, image_url) values ($1, $2)", [
+    EARRINGS,
+    url,
+  ]);
+  const result = await db.query<{ item_name: string; image_url: string | null }>(
+    "select item_name, image_url from public.search_products('earrings')",
+  );
+  const sterling = result.rows.find((row) => row.item_name === "Sterling hoop earrings");
+  assert.equal(sterling?.image_url, url);
+  assert.equal(
+    result.rows.some((row) => row.item_name !== "Sterling hoop earrings" && row.image_url === url),
+    false,
   );
 });
 

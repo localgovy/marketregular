@@ -1,5 +1,6 @@
 import { formatPrice } from "@/lib/format";
 import { groupMenuItems } from "@/lib/menu-sections";
+import { MenuItemPhoto } from "@/components/menu-item-photo";
 import type { MenuItem } from "@/types/database";
 import Link from "next/link";
 
@@ -17,23 +18,26 @@ function MenuItemRow({
   const price = formatPrice(item.price_cents);
   const meta = [item.season, ...tagWords(item.dietary ?? [])].filter(Boolean);
   return (
-    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 border-b border-dashed border-border px-4 py-3 last:border-b-0">
-      <div className="min-w-0">
-        <p className="text-base font-medium">{item.name}</p>
-        {item.description ? (
-          <p className="text-sm text-muted-foreground">{item.description}</p>
-        ) : null}
-        {meta.length ? (
-          <p className="type-kicker mt-0.5 text-muted-foreground">{meta.join(" · ")}</p>
-        ) : null}
-        {item.can_buy && vendorSlug ? (
-          <Link
-            href={`/vendors/${vendorSlug}/buy/${item.id}`}
-            className="mt-1 inline-flex text-sm font-medium hover:underline"
-          >
-            Buy
-          </Link>
-        ) : null}
+    <li className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 border-b border-dashed border-border px-4 py-3 last:border-b-0">
+      <div className="flex min-w-0 items-start gap-3">
+        <MenuItemPhoto url={item.image_url} menuId={item.id} />
+        <div className="min-w-0">
+          <p className="text-base font-medium">{item.name}</p>
+          {item.description ? (
+            <p className="text-sm text-muted-foreground">{item.description}</p>
+          ) : null}
+          {meta.length ? (
+            <p className="type-kicker mt-0.5 text-muted-foreground">{meta.join(" · ")}</p>
+          ) : null}
+          {item.can_buy && vendorSlug ? (
+            <Link
+              href={`/vendors/${vendorSlug}/buy/${item.id}`}
+              className="mt-1 inline-flex text-sm font-medium hover:underline"
+            >
+              Buy
+            </Link>
+          ) : null}
+        </div>
       </div>
       {price ? (
         <span className="type-nums shrink-0 self-start whitespace-nowrap bg-stamp px-1.5 py-0.5 text-sm text-chalk">

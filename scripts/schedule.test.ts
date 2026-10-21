@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
   compareScheduleRows,
+  currentWeekSessions,
   formatSchedule,
   formatSeasonRange,
   inSeason,
@@ -111,6 +112,29 @@ test("vendor day filters follow the hours list", () => {
     [0, 6],
   );
   assert.deepEqual(orderWeekdays([1, 0, 5], holiday), [5, 0, 1]);
+});
+
+test("current week sessions keep in-season days and skip the rest", () => {
+  const tuesday = new Date("2026-10-20T16:00:00Z");
+  assert.deepEqual(
+    currentWeekSessions(
+      [row(6, null, null, "08:00"), row(0, "05-01", "10-01", "09:00")],
+      "ON",
+      tuesday,
+    ),
+    [{ day: "Sat", hours: "8 AM–2 PM" }],
+  );
+  assert.deepEqual(
+    currentWeekSessions(
+      [row(6, null, null, "08:00"), row(0, null, null, "09:00")],
+      "ON",
+      tuesday,
+    ),
+    [
+      { day: "Sun", hours: "9 AM–2 PM" },
+      { day: "Sat", hours: "8 AM–2 PM" },
+    ],
+  );
 });
 
 function row(weekday: number, season_start: string | null, season_end: string | null, opens_at: string) {

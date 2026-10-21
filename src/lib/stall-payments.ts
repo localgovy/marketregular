@@ -20,6 +20,7 @@ import {
 } from "@/lib/selling";
 import { capabilityFlags, getStripe, integrationIdentifier } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/admin";
+import { menuItemPhotoUrl, publishedMenuSelectMissingPhoto } from "@/lib/menu-item-photo-url";
 
 type OrderRow = {
   id: string;
@@ -577,6 +578,7 @@ type Sellable = {
   vendor_name: string;
   vendor_slug: string;
   stripe_account_id: string;
+  image_url: string | null;
 };
 
 export async function loadSellable(slug: string, itemId: string): Promise<Sellable | null> {
@@ -589,14 +591,23 @@ export async function loadSellable(slug: string, itemId: string): Promise<Sellab
     .eq("slug", slug)
     .maybeSingle();
   if (!vendor || vendor.slug !== slug) return null;
-  const { data: item } = await db
+  const menuColumns =
+    "id, vendor_id, name, price_cents, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
+  let itemResult = await db
     .from("published_menus")
-    .select(
-      "id, vendor_id, name, price_cents, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy",
-    )
+    .select(`${menuColumns}, image_url`)
     .eq("id", itemId)
     .eq("vendor_id", vendor.id)
     .maybeSingle();
+  if (itemResult.error && publishedMenuSelectMissingPhoto(itemResult.error)) {
+    itemResult = await db
+      .from("published_menus")
+      .select(menuColumns)
+      .eq("id", itemId)
+      .eq("vendor_id", vendor.id)
+      .maybeSingle();
+  }
+  const item = itemResult.data;
   if (!item?.can_buy || typeof item.price_cents !== "number") return null;
   const { data: account } = await db
     .from("vendor_stripe_accounts")
@@ -617,6 +628,10 @@ export async function loadSellable(slug: string, itemId: string): Promise<Sellab
     vendor_name: vendor.name,
     vendor_slug: vendor.slug,
     stripe_account_id: account.stripe_account_id,
+    image_url: menuItemPhotoUrl(
+      "image_url" in item ? item.image_url : null,
+      item.id,
+    ),
   };
 }
 

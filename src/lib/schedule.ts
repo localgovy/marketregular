@@ -94,6 +94,23 @@ export function sessionOnWeekday(
   );
 }
 
+/** Hours for each weekday that is actually in season on its next date. */
+export function currentWeekSessions(
+  schedules: ScheduleRow[],
+  province: string,
+  now = new Date(),
+): HallDayHours[] {
+  const sessions: HallDayHours[] = [];
+  for (let weekday = 0; weekday < 7; weekday += 1) {
+    const session = sessionOnWeekday(schedules, weekday, province, now);
+    if (!session) continue;
+    const day = WEEKDAYS[weekday]?.slice(0, 3);
+    if (!day) continue;
+    sessions.push({ day, hours: formatHours(session.opens_at, session.closes_at) });
+  }
+  return sessions;
+}
+
 /** Noon-ish UTC for a civil date in `tz`, shifted by whole days from `now`. */
 export function civilDateAtOffset(now: Date, offset: number, tz: string) {
   const parts = new Intl.DateTimeFormat("en-CA", {

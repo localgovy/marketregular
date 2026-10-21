@@ -42,10 +42,39 @@ function formatCensus(n: number) {
   return n.toLocaleString("en-CA");
 }
 
-function shortDays(days: number[]) {
-  const names = [...new Set(days.filter((day) => day >= 0 && day <= 6))].sort((a, b) => a - b);
-  if (!names.length) return null;
-  return names.map((day) => WEEKDAYS[day].slice(0, 3)).join(", ");
+function SessionLines({
+  sessions,
+  highlightDay,
+  align = "end",
+}: {
+  sessions: Array<{ day: string; hours: string }>;
+  highlightDay?: string | null;
+  align?: "end" | "stretch";
+}) {
+  if (!sessions.length) return null;
+  return (
+    <ul>
+      {sessions.map((session) => (
+        <li
+          key={`${session.day}-${session.hours}`}
+          className={cn(
+            "grid gap-x-2",
+            align === "end" ? "grid-cols-[auto_auto] justify-end" : "grid-cols-[minmax(0,1fr)_auto]",
+          )}
+        >
+          <span className="text-sm text-muted-foreground">{session.day}</span>
+          <Hours
+            value={session.hours}
+            className={
+              highlightDay && session.day === highlightDay
+                ? "font-medium text-stamp"
+                : "text-muted-foreground"
+            }
+          />
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 /**
@@ -184,13 +213,16 @@ const CRAVING_SHORTCUTS = [
 
 function VendorTableCard({
   vendor,
+  todayWeekday,
   onSelectAisle,
   onSelectNeighbourhood,
 }: {
   vendor: PreviewVendorSpotlight;
+  todayWeekday: number;
   onSelectAisle?: (aisleId: string) => void;
   onSelectNeighbourhood?: (neighbourhood: string) => void;
 }) {
+  const todayShort = WEEKDAYS[todayWeekday]?.slice(0, 3) ?? null;
   const shownMarkets = vendor.markets.slice(0, 2);
   const extraMarketCount = Math.max(0, vendor.markets.length - shownMarkets.length);
 
@@ -276,7 +308,8 @@ function VendorTableCard({
               <div>
                 <p className="type-kicker font-medium text-foreground">On their table</p>
                 <p className="text-sm text-muted-foreground">
-                  {vendor.primaryAisleLabel} · Published stall items
+                  {vendor.primaryAisleLabel}
+                  {vendor.publishedMenu ? " · Published stall items" : ""}
                 </p>
               </div>
               <Link
@@ -288,35 +321,38 @@ function VendorTableCard({
             </div>
           </div>
 
-          <ul>
-            {vendor.items.slice(0, 3).map((item, idx) => {
-              const price = formatPrice(item.priceCents);
-              return (
-                <li
-                  key={`${vendor.slug}-item-${idx}`}
-                  className={cn(
-                    "grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-3.5 py-2 text-foreground",
-                    idx > 0 && "border-t border-dashed border-border",
-                  )}
-                >
-                  <p className="min-w-0 text-base font-medium">
-                    <Link href={item.href} className="hover:text-primary hover:underline">
-                      {item.name}
-                    </Link>
-                  </p>
-                  {price ? (
-                    <span className="type-nums shrink-0 whitespace-nowrap text-sm font-medium text-stamp">
-                      {price}
-                    </span>
-                  ) : (
-                    <span className="type-nums shrink-0 whitespace-nowrap text-sm text-muted-foreground">
-                      Guide
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+          {vendor.publishedMenu ? (
+            <ul>
+              {vendor.items.slice(0, 3).map((item) => {
+                const price = formatPrice(item.priceCents);
+                return (
+                  <li
+                    key={`${vendor.slug}-${item.href}-${item.name}`}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-t border-dashed border-border px-3.5 py-2 text-foreground first:border-t-0"
+                  >
+                    <p className="min-w-0 text-base font-medium">
+                      <Link href={item.href} className="hover:text-primary hover:underline">
+                        {item.name}
+                      </Link>
+                    </p>
+                    {price ? (
+                      <span className="type-nums shrink-0 whitespace-nowrap text-sm font-medium text-stamp">
+                        {price}
+                      </span>
+                    ) : (
+                      <span className="type-nums shrink-0 whitespace-nowrap text-sm text-muted-foreground">
+                        Guide
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="px-3.5 py-2 text-base text-foreground">
+              {vendor.about?.trim() || `${vendor.primaryAisleLabel} from this stall.`}
+            </p>
+          )}
         </div>
       </div>
 
@@ -335,19 +371,18 @@ function VendorTableCard({
         </div>
         <ul className="divide-y divide-border/70">
           {shownMarkets.map((market) => {
-            const daysText = shortDays(market.days);
-            const firstHour = market.hours[0];
             return (
               <li key={market.slug} className="px-3.5 py-2.5 hover:bg-secondary/35">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <StallEmblem
-                      src={market.logoUrl}
-                      name={market.name}
-                      kind="market"
-                      size="xs"
-                      tone="paper"
-                    />
+                <div className="flex min-w-0 items-start gap-2">
+                  <StallEmblem
+                    src={market.logoUrl}
+                    name={market.name}
+                    kind="market"
+                    size="xs"
+                    tone="paper"
+                    className="mt-0.5"
+                  />
+                  <div className="min-w-0 flex-1">
                     <p className="min-w-0">
                       <Link
                         href={`/markets/${market.slug}`}
@@ -361,22 +396,12 @@ function VendorTableCard({
                         </span>
                       ) : null}
                     </p>
+                    <SessionLines
+                      sessions={market.hours}
+                      highlightDay={market.openNow ? todayShort : null}
+                      align="stretch"
+                    />
                   </div>
-                  {firstHour ? (
-                    <span className="flex shrink-0 items-baseline gap-1.5 whitespace-nowrap">
-                      <span className="text-sm text-muted-foreground">{firstHour.day}</span>
-                      <Hours
-                        value={firstHour.hours}
-                        className={
-                          market.openNow ? "font-medium text-stamp" : "text-muted-foreground"
-                        }
-                      />
-                    </span>
-                  ) : daysText ? (
-                    <span className="type-nums shrink-0 whitespace-nowrap text-sm text-muted-foreground">
-                      {daysText}
-                    </span>
-                  ) : null}
                 </div>
 
                 {onSelectNeighbourhood && market.neighbourhood ? (
@@ -479,35 +504,13 @@ export function ConceptNeighbourhoodAtlas({
       if (vendorWhenFilter === "today" && !vendor.sellingToday && !vendor.openNow) {
         return false;
       }
-      if (
-        vendorWhenFilter === "weekend" &&
-        !vendor.markets.some((m) => m.days.includes(6) || m.days.includes(0))
-      ) {
+      if (vendorWhenFilter === "weekend" && !vendor.onWeekend) {
         return false;
       }
       return true;
     });
 
-    if (strict.length >= 6) return strict.slice(0, 6);
-
-    const seen = new Set(strict.map((v) => v.id));
-    const padded = [...strict];
-    for (const candidate of data.vendorSpotlights) {
-      if (padded.length >= 6) break;
-      if (seen.has(candidate.id)) continue;
-      if (vendorAisleFilter !== "all" && !candidate.aisleIds.includes(vendorAisleFilter)) {
-        continue;
-      }
-      padded.push(candidate);
-      seen.add(candidate.id);
-    }
-    for (const candidate of data.vendorSpotlights) {
-      if (padded.length >= 6) break;
-      if (seen.has(candidate.id)) continue;
-      padded.push(candidate);
-      seen.add(candidate.id);
-    }
-    return padded;
+    return strict.slice(0, 6);
   }, [data.vendorSpotlights, vendorAisleFilter, vendorAreaFilter, vendorWhenFilter]);
 
   async function handleNearMe() {
@@ -651,11 +654,11 @@ export function ConceptNeighbourhoodAtlas({
                   </label>
                   <SearchField
                     id="atlas-search"
+                    name="q"
                     value={q}
                     onChange={setQ}
                     placeholder={SEARCH_PLACEHOLDER}
                   />
-                  {q.trim() ? <input type="hidden" name="q" value={q.trim()} /> : null}
                 </div>
 
                 <button
@@ -879,16 +882,34 @@ export function ConceptNeighbourhoodAtlas({
 
           {/* 6-Card Priority Vendor × Product × Market Grid */}
           <div className="p-4 sm:p-5">
-            <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-              {filteredVendorSpotlights.map((vendor) => (
-                <VendorTableCard
-                  key={vendor.id}
-                  vendor={vendor}
-                  onSelectAisle={syncAisleSelection}
-                  onSelectNeighbourhood={syncAreaSelection}
-                />
-              ))}
-            </ul>
+            {filteredVendorSpotlights.length ? (
+              <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {filteredVendorSpotlights.map((vendor) => (
+                  <VendorTableCard
+                    key={vendor.id}
+                    vendor={vendor}
+                    todayWeekday={data.todayWeekday}
+                    onSelectAisle={syncAisleSelection}
+                    onSelectNeighbourhood={syncAreaSelection}
+                  />
+                ))}
+              </ul>
+            ) : (
+              <p className="text-base text-muted-foreground">
+                No stalls match these filters.{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVendorAisleFilter("all");
+                    setVendorAreaFilter("all");
+                    setVendorWhenFilter("all");
+                  }}
+                  className="cursor-pointer font-medium text-primary hover:underline"
+                >
+                  Reset filters
+                </button>
+              </p>
+            )}
           </div>
         </section>
 
@@ -1186,15 +1207,7 @@ export function ConceptNeighbourhoodAtlas({
                 </div>
 
                 <ul className="divide-y divide-border">
-                  {[
-                    ...activeCircuit.topMarkets,
-                    ...data.directoryMarkets.filter(
-                      (m) => !activeCircuit.topMarkets.some((tm) => tm.id === m.id),
-                    ),
-                  ]
-                    .slice(0, 3)
-                    .map((market, idx) => {
-                      const isPrimary = idx < activeCircuit.topMarkets.length;
+                  {activeCircuit.topMarkets.map((market) => {
                       return (
                         <li key={market.id} className="px-4 py-3 hover:bg-secondary/40">
                           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
@@ -1220,11 +1233,6 @@ export function ConceptNeighbourhoodAtlas({
                                     reviewCount={market.review_count}
                                     className="ml-2 text-stamp"
                                   />
-                                  {!isPrimary ? (
-                                    <span className="ml-2 text-sm text-muted-foreground">
-                                      · Nearby ({market.neighbourhood})
-                                    </span>
-                                  ) : null}
                                 </p>
                                 <p className="mt-0.5 text-sm text-muted-foreground">
                                   <AddressLink
@@ -1248,9 +1256,7 @@ export function ConceptNeighbourhoodAtlas({
                                     {market.nextOpen}
                                   </span>
                                 )}
-                                <p className="type-nums whitespace-nowrap text-sm text-muted-foreground">
-                                  {market.scheduleSummary}
-                                </p>
+                                <SessionLines sessions={market.sessions} align="end" />
                               </div>
                               <SaveButton kind="market" slug={market.slug} name={market.name} />
                             </div>
@@ -1364,24 +1370,26 @@ export function ConceptNeighbourhoodAtlas({
                               className="mt-0.5"
                             />
                             <div className="min-w-0">
-                              <Link
-                                href={`/markets/${market.slug}`}
-                                className="text-base font-medium hover:underline"
-                              >
-                                <VerifiedName slug={market.slug} name={market.name} />
-                              </Link>
-                              <ListingScore
-                                parens
-                                ratingAvg={market.rating_avg}
-                                reviewCount={market.review_count}
-                                className="ml-1.5 text-stamp"
-                              />
-                              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
-                                {market.open ? <NowLabel>Open</NowLabel> : null}
-                                <span className="type-nums whitespace-nowrap">
-                                  {market.scheduleSummary}
-                                </span>
+                              <p>
+                                <Link
+                                  href={`/markets/${market.slug}`}
+                                  className="text-base font-medium hover:underline"
+                                >
+                                  <VerifiedName slug={market.slug} name={market.name} />
+                                </Link>
+                                <ListingScore
+                                  parens
+                                  ratingAvg={market.rating_avg}
+                                  reviewCount={market.review_count}
+                                  className="ml-1.5 text-stamp"
+                                />
                               </p>
+                              {market.open ? (
+                                <p className="mt-0.5">
+                                  <NowLabel>Open</NowLabel>
+                                </p>
+                              ) : null}
+                              <SessionLines sessions={market.sessions} align="stretch" />
                             </div>
                           </div>
                           <SaveButton kind="market" slug={market.slug} name={market.name} />
@@ -1540,7 +1548,7 @@ export function ConceptNeighbourhoodAtlas({
 
                 <div className="divide-y divide-border">
                   {data.fullWeek
-                    .filter((g) => g.slots.length > 0)
+                    .filter((g) => g.id !== "earlier" && g.slots.length > 0)
                     .slice(0, 3)
                     .map((group) => (
                       <div key={group.id} className="p-3.5">

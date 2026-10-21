@@ -26,6 +26,7 @@ export type ProductHit = {
   openToday: boolean;
   badge: "Open now" | "Later today" | "Selling this weekend" | null;
   href: string;
+  imageUrl: string | null;
 };
 
 export type VendorHit = {

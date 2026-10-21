@@ -187,6 +187,7 @@ export type MenuItem = {
   offer_preorder?: boolean;
   offer_terms?: string | null;
   can_buy?: boolean;
+  image_url?: string | null;
 };
 
 export type Post = {

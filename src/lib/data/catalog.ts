@@ -46,6 +46,7 @@ import { isSeasonAlias, seasonAliasTarget } from "@/lib/listing-siblings";
 import { scheduleOrigin, type FoldedSchedule } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
+import { menuItemPhotoUrl, publishedMenuSelectMissingPhoto } from "@/lib/menu-item-photo-url";
 import { publishedMenuSelectMissingSections } from "@/lib/menu-sections";
 import type {
   FloorItem,
@@ -95,18 +96,28 @@ const POST_PUBLIC = "id, user_id, market_id, body, photos, flagged, created_at";
 const REVIEW_PUBLIC = "id, user_id, market_id, vendor_id, rating, body, flagged, created_at";
 const MENU_PUBLIC =
   "id, vendor_id, name, description, price_cents, season, dietary, menu_section, menu_section_order, for_sale, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
+const MENU_PUBLIC_PHOTO = `${MENU_PUBLIC}, image_url`;
 const MENU_PUBLIC_FLAT =
   "id, vendor_id, name, description, price_cents, season, dietary, for_sale, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
 const STALL_PUBLIC = "market_id, vendor_id, stall, days";
 
 type DirectoryClient = NonNullable<ReturnType<typeof createServiceClient>>;
-type PublishedMenuSelect = typeof MENU_PUBLIC | typeof MENU_PUBLIC_FLAT;
+type PublishedMenuSelect = typeof MENU_PUBLIC_PHOTO | typeof MENU_PUBLIC | typeof MENU_PUBLIC_FLAT;
 
 let publishedMenuSelect: PublishedMenuSelect | null = null;
 let publishedMenuSelectProbe: Promise<PublishedMenuSelect> | null = null;
 
 async function probePublishedMenuSelect(supabase: DirectoryClient): Promise<PublishedMenuSelect> {
   try {
+    const photo = await supabase.from("published_menus").select("image_url").limit(1);
+    if (!photo.error) {
+      publishedMenuSelect = MENU_PUBLIC_PHOTO;
+      return MENU_PUBLIC_PHOTO;
+    }
+    if (!publishedMenuSelectMissingPhoto(photo.error)) {
+      publishedMenuSelect = MENU_PUBLIC;
+      return MENU_PUBLIC;
+    }
     const result = await supabase.from("published_menus").select("menu_section").limit(1);
     const next: PublishedMenuSelect = publishedMenuSelectMissingSections(result.error)
       ? MENU_PUBLIC_FLAT
@@ -130,6 +141,10 @@ function resolvePublishedMenuSelect(supabase: DirectoryClient) {
 async function selectPublishedMenusForVendor(supabase: DirectoryClient, vendorId: string) {
   const columns = await resolvePublishedMenuSelect(supabase);
   const result = await supabase.from("published_menus").select(columns).eq("vendor_id", vendorId);
+  if (result.error && columns === MENU_PUBLIC_PHOTO && publishedMenuSelectMissingPhoto(result.error)) {
+    publishedMenuSelect = MENU_PUBLIC;
+    return supabase.from("published_menus").select(MENU_PUBLIC).eq("vendor_id", vendorId);
+  }
   if (
     result.error &&
     columns === MENU_PUBLIC &&
@@ -152,6 +167,7 @@ function asPublishedMenus(rows: unknown): MenuItem[] {
         typeof item.menu_section_order === "number" && Number.isInteger(item.menu_section_order)
           ? item.menu_section_order
           : null,
+      image_url: menuItemPhotoUrl(item.image_url, item.id),
     };
   });
 }
