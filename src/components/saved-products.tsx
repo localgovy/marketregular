@@ -7,6 +7,7 @@ import { Hours } from "@/components/hours";
 import { ListingMark } from "@/components/listing-mark";
 import { ListingScore } from "@/components/listing-score";
 import { MenuItemPhoto } from "@/components/menu-item-photo";
+import { menuItemPhotoPairKey } from "@/lib/menu-item-photo-match";
 import { ProductSaveButton } from "@/components/save-button";
 import { WEEKDAYS } from "@/lib/constants";
 import { formatPrice } from "@/lib/format";
@@ -57,7 +58,7 @@ function SavedProductCard({
               className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 border-b border-dashed border-border bg-secondary px-4 py-2.5 text-foreground"
             >
               <div className="flex min-w-0 items-start gap-3">
-                <MenuItemPhoto url={photos[`${product.vendorSlug}\n${item.name.trim()}`]} />
+                <MenuItemPhoto url={photos[menuItemPhotoPairKey(product.vendorSlug, item.name) ?? ""]} />
                 <p className="min-w-0 text-base font-medium">
                   {item.href ? (
                     <Link href={item.href} className="hover:underline">

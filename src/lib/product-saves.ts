@@ -51,10 +51,15 @@ export function productSaveSlug(vendorSlug: string, itemNames: string[]) {
   return `product-${shortKey(body)}`;
 }
 
-function cleanName(value: unknown) {
+/** The name a product save actually stores. Menu names can be longer. */
+export function savedItemName(value: unknown) {
   if (typeof value !== "string") return null;
   const name = value.trim().slice(0, MAX_NAME);
   return name || null;
+}
+
+function cleanName(value: unknown) {
+  return savedItemName(value);
 }
 
 function cleanScore(ratingAvg: unknown, reviewCount: unknown) {

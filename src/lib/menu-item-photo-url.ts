@@ -7,7 +7,7 @@ export function menuItemPhotoUrl(value: unknown, menuId?: string | null): string
   const url = value.trim();
   if (!url || url.length > 500 || url.includes("..") || /[\\#\s]/.test(url)) return null;
   if (!MENU_ITEM_PHOTO_URL.test(url)) return null;
-  if (menuId && !url.includes(`/menu-photos/${menuId}/`)) return null;
+  if (menuId && !url.includes(`/menu-photos/${menuId.toLowerCase()}/`)) return null;
   return url;
 }
 

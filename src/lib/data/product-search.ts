@@ -126,14 +126,23 @@ const FIND_MENU_INDEX_MS = 120_000;
 let findMenuIndex: { at: number; promise: Promise<FindMenuIndex> } | null = null;
 
 function loadFindMenuIndex() {
-  const now = Date.now();
-  if (findMenuIndex && now - findMenuIndex.at < FIND_MENU_INDEX_MS) return findMenuIndex.promise;
-  const promise = readFindMenuIndex().catch((error: unknown) => {
-    findMenuIndex = null;
-    throw error;
-  });
-  findMenuIndex = { at: now, promise };
-  return promise;
+  if (findMenuIndex && Date.now() - findMenuIndex.at < FIND_MENU_INDEX_MS) return findMenuIndex.promise;
+  const entry: { at: number; promise: Promise<FindMenuIndex> } = {
+    at: Date.now(),
+    promise: Promise.resolve({ bySlug: new Map(), byClassifier: new Map() }),
+  };
+  entry.promise = readFindMenuIndex().then(
+    (index) => {
+      if (findMenuIndex === entry) entry.at = Date.now();
+      return index;
+    },
+    (error: unknown) => {
+      if (findMenuIndex === entry) findMenuIndex = null;
+      throw error;
+    },
+  );
+  findMenuIndex = entry;
+  return entry.promise;
 }
 
 type FindMenuPage = {

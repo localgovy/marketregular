@@ -4,6 +4,7 @@ import { BackButton } from "@/components/back-button";
 import { BuyForm } from "@/components/buy-form";
 import { MenuItemPhoto } from "@/components/menu-item-photo";
 import { formatPrice } from "@/lib/format";
+import { menuItemPhotoUrl } from "@/lib/menu-item-photo-url";
 import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { loadSellable } from "@/lib/stall-payments";
 import { stripeChargesConfigured } from "@/lib/stripe";
@@ -38,17 +39,27 @@ export default async function BuyItemPage({
   if (!item) notFound();
   const price = formatPrice(item.price_cents);
 
+  const photo = menuItemPhotoUrl(item.image_url, item.id);
+
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <BackButton href={`/vendors/${slug}`} />
-      <div className="flex items-start gap-3">
-        <MenuItemPhoto url={item.image_url} menuId={item.id} />
-        <div className="min-w-0">
+      {photo ? (
+        <div className="flex items-start gap-3">
+          <MenuItemPhoto url={photo} menuId={item.id} />
+          <div className="min-w-0">
+            <h1>{item.name}</h1>
+            <p className="type-lede mt-2 text-muted-foreground">{item.vendor_name}</p>
+            {price ? <p className="type-nums mt-3 text-base">{price}</p> : null}
+          </div>
+        </div>
+      ) : (
+        <>
           <h1>{item.name}</h1>
           <p className="type-lede mt-2 text-muted-foreground">{item.vendor_name}</p>
           {price ? <p className="type-nums mt-3 text-base">{price}</p> : null}
-        </div>
-      </div>
+        </>
+      )}
       <BuyForm
         vendorSlug={slug}
         itemId={item.id}

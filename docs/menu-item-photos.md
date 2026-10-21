@@ -19,7 +19,7 @@ The object name has to include that menu id. A picture for another item, a hotli
 
 Allowed files are JPEG, PNG, and WebP, up to 256 KB. The bucket is `menu-photos`. It is public to read by URL. It cannot be listed. Upload with the service role. There is no insert policy for signed-in users, and the service role does not need one.
 
-Make a square picture of the food filling the frame, with no words, logo, or border in the image. Encode WebP, longest edge 800 px, quality about 80. That is usually under 120 KB and stays sharp at the size the site draws.
+Make a square picture of the food filling the frame, with no words, logo, or border in the image. Encode WebP, longest edge 800 px, quality about 80. Keep the file under 256 KB. The bucket rejects anything larger, so lower the quality and upload again rather than leaving the row empty.
 
 Use a new file name when you replace a picture. The upload cache is one year, so the same object name would keep the old picture. After the row points at the new URL, delete the old object.
 

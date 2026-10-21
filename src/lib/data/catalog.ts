@@ -107,33 +107,30 @@ type PublishedMenuSelect = typeof MENU_PUBLIC_PHOTO | typeof MENU_PUBLIC | typeo
 let publishedMenuSelect: PublishedMenuSelect | null = null;
 let publishedMenuSelectProbe: Promise<PublishedMenuSelect> | null = null;
 
-async function probePublishedMenuSelect(supabase: DirectoryClient): Promise<PublishedMenuSelect> {
+async function probePublishedMenuSelect(supabase: DirectoryClient): Promise<PublishedMenuSelect | null> {
   try {
     const photo = await supabase.from("published_menus").select("image_url").limit(1);
-    if (!photo.error) {
-      publishedMenuSelect = MENU_PUBLIC_PHOTO;
-      return MENU_PUBLIC_PHOTO;
-    }
-    if (!publishedMenuSelectMissingPhoto(photo.error)) {
-      publishedMenuSelect = MENU_PUBLIC;
-      return MENU_PUBLIC;
-    }
+    if (!photo.error) return MENU_PUBLIC_PHOTO;
+    if (!publishedMenuSelectMissingPhoto(photo.error)) return null;
     const result = await supabase.from("published_menus").select("menu_section").limit(1);
-    const next: PublishedMenuSelect = publishedMenuSelectMissingSections(result.error)
-      ? MENU_PUBLIC_FLAT
-      : MENU_PUBLIC;
-    publishedMenuSelect = next;
-    return next;
+    if (result.error && !publishedMenuSelectMissingSections(result.error)) return null;
+    return publishedMenuSelectMissingSections(result.error) ? MENU_PUBLIC_FLAT : MENU_PUBLIC;
   } catch {
-    publishedMenuSelect = MENU_PUBLIC;
-    return MENU_PUBLIC;
+    return null;
   }
 }
 
 function resolvePublishedMenuSelect(supabase: DirectoryClient) {
   if (publishedMenuSelect) return Promise.resolve(publishedMenuSelect);
   if (!publishedMenuSelectProbe) {
-    publishedMenuSelectProbe = probePublishedMenuSelect(supabase);
+    publishedMenuSelectProbe = probePublishedMenuSelect(supabase).then((columns) => {
+      if (columns) {
+        publishedMenuSelect = columns;
+        return columns;
+      }
+      publishedMenuSelectProbe = null;
+      return MENU_PUBLIC_PHOTO;
+    });
   }
   return publishedMenuSelectProbe;
 }

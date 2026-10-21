@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createServiceClient } from "@/lib/supabase/admin";
-import { menuItemPhotoUrl, publishedMenuSelectMissingPhoto } from "@/lib/menu-item-photo-url";
+import { menuItemPhotoUrl } from "@/lib/menu-item-photo-url";
 
 export type MenuItemPhotoName = {
   vendorSlug: string;
@@ -12,6 +12,7 @@ export type MenuItemPhotoName = {
 const PHOTO_TTL_MS = 120_000;
 
 let photoNames: { at: number; rows: MenuItemPhotoName[] } | null = null;
+let photoNamesInFlight: Promise<MenuItemPhotoName[]> | null = null;
 
 type PageResult<T> = { data: T[] | null; error: { message?: string; code?: string } | null };
 
@@ -20,18 +21,28 @@ type PageResult<T> = { data: T[] | null; error: { message?: string; code?: strin
  * and a picture on every menu item can pass that. This refreshes every 2 minutes
  * per server process and does not fetch image bytes.
  */
-export async function listMenuItemPhotoNames(): Promise<MenuItemPhotoName[]> {
-  const now = Date.now();
-  if (photoNames && now - photoNames.at < PHOTO_TTL_MS) return photoNames.rows;
-  try {
-    const rows = await readMenuItemPhotoNames();
-    photoNames = { at: now, rows };
-    return rows;
-  } catch (error) {
-    console.error("menu item photos", error instanceof Error ? error.message : "failed");
-    photoNames = { at: now, rows: [] };
-    return [];
+export function listMenuItemPhotoNames(): Promise<MenuItemPhotoName[]> {
+  if (photoNames && Date.now() - photoNames.at < PHOTO_TTL_MS) return Promise.resolve(photoNames.rows);
+  if (!photoNamesInFlight) {
+    photoNamesInFlight = readMenuItemPhotoNames()
+      .then((rows) => {
+        photoNames = { at: Date.now(), rows };
+        return rows;
+      })
+      .finally(() => {
+        photoNamesInFlight = null;
+      });
   }
+  return photoNamesInFlight;
+}
+
+function menuPhotoTableMissing(error: { message?: string; code?: string }) {
+  const message = (error.message ?? "").toLowerCase();
+  const code = (error.code ?? "").toUpperCase();
+  return (
+    message.includes("menu_item_photos") &&
+    (code === "42P01" || code === "PGRST205" || message.includes("schema cache") || message.includes("does not exist"))
+  );
 }
 
 async function readMenuItemPhotoNames(): Promise<MenuItemPhotoName[]> {
@@ -49,8 +60,7 @@ async function readMenuItemPhotoNames(): Promise<MenuItemPhotoName[]> {
       image_url: string;
     }>;
     if (error) {
-      const message = error.message ?? "";
-      if (publishedMenuSelectMissingPhoto(error) || /menu_item_photos|schema cache/i.test(message)) return [];
+      if (menuPhotoTableMissing(error)) return [];
       throw new Error("Could not load menu item photos");
     }
     const chunk = data ?? [];

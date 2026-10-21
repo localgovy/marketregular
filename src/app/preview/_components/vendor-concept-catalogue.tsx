@@ -28,11 +28,11 @@ import {
   WeekMark,
 } from "@/components/marks";
 import { MenuItemPhoto } from "@/components/menu-item-photo";
-import { ProductPhotoFrame, ProductThumb } from "@/components/product-photo-frame";
+import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { ReviewCard } from "@/components/review-card";
 import { ProductSaveButton, SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
-import { VerifiedName } from "@/components/verified-name";
+import { VerifiedName } from "@/components/verified-stamp";
 import { formatPrice } from "@/lib/format";
 import { productFromInput } from "@/lib/product-saves";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,43 @@ import type {
 } from "@/app/preview/_lib/vendor-preview-data";
 
 type CatalogueViewMode = "cards" | "receipt";
+
+function ProductThumb({
+  url,
+  alt,
+  className,
+}: {
+  url: string | null | undefined;
+  alt: string;
+  className?: string;
+}) {
+  if (url) {
+    return (
+      <span className={cn("inline-flex shrink-0 items-center justify-center overflow-hidden bg-secondary", className)}>
+        <img
+          src={url}
+          alt={alt}
+          width={48}
+          height={48}
+          loading="lazy"
+          decoding="async"
+          className="size-full object-cover"
+        />
+      </span>
+    );
+  }
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center bg-secondary text-primary",
+        className,
+      )}
+    >
+      <CrateMark className="size-5" />
+    </span>
+  );
+}
 
 function StallEmblem({
   name,
@@ -282,7 +319,7 @@ export function VendorConceptCatalogue({
                   className={cn(
                     "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium",
                     vendor.openNow || vendor.sellingToday
-                      ? "bg-ticket text-stamp"
+                      ? "bg-ticket text-chalk"
                       : "bg-primary text-primary-foreground",
                   )}
                 >
@@ -298,7 +335,7 @@ export function VendorConceptCatalogue({
               <StallEmblem name={vendor.name} logoUrl={vendor.logoUrl} size="lg" />
               <div className="min-w-0 flex-1">
                 <h1>
-                  <VerifiedName name={vendor.name} verified={vendor.claimed} />
+                  <VerifiedName slug={vendor.slug} name={vendor.name} />
                 </h1>
                 <ListingScore
                   className="mt-1.5 text-base"
@@ -340,8 +377,10 @@ export function VendorConceptCatalogue({
               </div>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-              <ListingContact phone={vendor.contact.phone} email={vendor.contact.email} />
+            <div className="mt-4 grid gap-2 border-t border-dashed border-border pt-4 text-foreground sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <ListingContact phone={vendor.contact.phone} email={vendor.contact.email} />
+              </div>
               <ListingWebsite href={vendor.contact.website} />
               <ListingInstagram href={vendor.contact.instagram} />
               <ListingTiktok href={vendor.contact.tiktok} />
@@ -354,10 +393,10 @@ export function VendorConceptCatalogue({
         <div className="flex flex-col justify-between rounded-xl bg-primary p-5 text-primary-foreground ring-2 ring-foreground/15 sm:p-6 lg:col-span-5">
           <div>
             <div className="flex items-center justify-between gap-2">
-              <p className="type-kicker text-ticket">Featured stall table</p>
+              <p className="type-kicker text-primary-foreground/85">Featured stall table</p>
               <Link
                 href={`/products?aisle=${encodeURIComponent(vendor.primaryAisleId)}`}
-                className="text-sm font-medium text-primary-foreground/90 underline decoration-primary-foreground/40 underline-offset-4 hover:text-ticket"
+                className="text-sm font-medium text-primary-foreground underline decoration-primary-foreground/40 underline-offset-4 hover:decoration-primary-foreground"
               >
                 {vendor.primaryAisleLabel} guide →
               </Link>
@@ -365,16 +404,15 @@ export function VendorConceptCatalogue({
 
             <div className="mt-3">
               <ProductPhotoFrame
-                url={vendor.bannerPhoto?.url}
-                alt={vendor.bannerPhoto?.alt ?? vendor.primaryAisleLabel}
-                Mark={PlateMark}
+                name={vendor.primaryAisleLabel}
+                photo={vendor.bannerPhoto}
                 className="aspect-[16/9] w-full rounded-xl ring-1 ring-primary-foreground/20"
               />
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-2">
               <h2 className="text-primary-foreground">Order from this stall</h2>
-              <span className="type-nums rounded bg-ticket px-2.5 py-0.5 text-sm font-medium text-stamp">
+              <span className="type-nums rounded bg-ticket px-2.5 py-0.5 text-sm font-medium text-chalk">
                 {slipCount} {slipCount === 1 ? "item" : "items"} ·{" "}
                 {formatPrice(slipTotalCents) ?? "$0.00"}
               </span>
@@ -395,7 +433,7 @@ export function VendorConceptCatalogue({
                   className={cn(
                     "cursor-pointer rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
                     fulfillmentMethod === m.id
-                      ? "bg-ticket text-stamp"
+                      ? "bg-ticket text-chalk"
                       : "bg-primary-foreground/12 text-primary-foreground hover:bg-primary-foreground/20",
                   )}
                 >
@@ -405,7 +443,7 @@ export function VendorConceptCatalogue({
             </div>
           </div>
 
-          <div className="mt-4 rounded-xl bg-stamp/40 p-3.5 ring-1 ring-primary-foreground/15">
+          <div className="mt-4 rounded-xl bg-foreground/25 p-3.5 ring-1 ring-primary-foreground/20">
             {primaryCheckoutItem ? (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-2">
@@ -416,14 +454,14 @@ export function VendorConceptCatalogue({
                       {slipEntries.length > 1 ? ` + ${slipEntries.length - 1} more` : ""}
                     </p>
                   </div>
-                  <span className="type-nums shrink-0 rounded bg-primary-foreground/15 px-2.5 py-1 text-base text-ticket">
+                  <span className="type-nums shrink-0 rounded bg-primary-foreground/15 px-2.5 py-1 text-base text-primary-foreground">
                     {formatPrice(slipTotalCents) ??
                       formatPrice(primaryCheckoutItem.activePriceCents)}
                   </span>
                 </div>
                 <Link
                   href={`/vendors/${vendor.slug}/buy/${primaryCheckoutItem.id}`}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-ticket px-4 py-2.5 text-base font-medium text-stamp hover:bg-ticket/90"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-receipt px-4 py-2.5 text-base font-medium text-foreground hover:bg-card"
                 >
                   <TicketMark className="size-4" />
                   <span>
@@ -732,7 +770,7 @@ export function VendorConceptCatalogue({
       <section className="mt-8 rounded-xl bg-stamp p-6 text-chalk ring-2 ring-foreground/15">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-chalk/15 pb-4">
           <div>
-            <p className="type-kicker text-ticket">Market-wide aisle explorer</p>
+            <p className="type-kicker text-chalk/80">Market-wide aisle explorer</p>
             <h2 className="mt-0.5 text-chalk">
               Compare {vendor.name} with other Toronto stalls &amp; product guides
             </h2>
@@ -747,8 +785,8 @@ export function VendorConceptCatalogue({
                 className={cn(
                   "cursor-pointer rounded-lg px-3.5 py-2 text-sm font-medium transition-colors",
                   activeExplorerGuide?.id === guide.id
-                    ? "bg-ticket text-stamp"
-                    : "bg-chalk/10 text-chalk hover:bg-chalk/20",
+                    ? "bg-receipt text-foreground"
+                    : "bg-chalk/15 text-chalk hover:bg-chalk/25",
                 )}
               >
                 {guide.label}
@@ -764,7 +802,6 @@ export function VendorConceptCatalogue({
               <ProductThumb
                 url={activeExplorerGuide.photoUrl}
                 alt={activeExplorerGuide.photoAlt ?? activeExplorerGuide.label}
-                Mark={CrateMark}
                 className="size-12 rounded-lg ring-1 ring-chalk/20"
               />
               <div>

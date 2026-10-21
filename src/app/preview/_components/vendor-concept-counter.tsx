@@ -28,11 +28,11 @@ import {
   WeekMark,
 } from "@/components/marks";
 import { MenuItemPhoto } from "@/components/menu-item-photo";
-import { ProductPhotoFrame, ProductThumb } from "@/components/product-photo-frame";
+import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { ReviewCard } from "@/components/review-card";
 import { ProductSaveButton, SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
-import { VerifiedName } from "@/components/verified-name";
+import { VerifiedName } from "@/components/verified-stamp";
 import { formatPrice } from "@/lib/format";
 import { productFromInput } from "@/lib/product-saves";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,43 @@ import type {
 
 type FulfillmentFilter = "all" | "pickup" | "preorder" | "delivery";
 type FulfillmentChoice = "pickup" | "preorder" | "delivery";
+
+function ProductThumb({
+  url,
+  alt,
+  className,
+}: {
+  url: string | null | undefined;
+  alt: string;
+  className?: string;
+}) {
+  if (url) {
+    return (
+      <span className={cn("inline-flex shrink-0 items-center justify-center overflow-hidden bg-secondary", className)}>
+        <img
+          src={url}
+          alt={alt}
+          width={56}
+          height={56}
+          loading="lazy"
+          decoding="async"
+          className="size-full object-cover"
+        />
+      </span>
+    );
+  }
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center bg-secondary text-primary",
+        className,
+      )}
+    >
+      <CrateMark className="size-5" />
+    </span>
+  );
+}
 
 function StallEmblem({
   name,
@@ -308,7 +345,7 @@ export function VendorConceptCounter({
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium",
                   vendor.openNow || vendor.sellingToday
-                    ? "bg-ticket text-stamp"
+                    ? "bg-ticket text-chalk"
                     : "bg-primary-foreground/15 text-primary-foreground",
                 )}
               >
@@ -324,7 +361,7 @@ export function VendorConceptCounter({
               <StallEmblem name={vendor.name} logoUrl={vendor.logoUrl} size="lg" />
               <div className="min-w-0 flex-1">
                 <h1 className="text-primary-foreground">
-                  <VerifiedName name={vendor.name} verified={vendor.claimed} />
+                  <VerifiedName slug={vendor.slug} name={vendor.name} />
                 </h1>
                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
                   <ListingScore
@@ -348,22 +385,22 @@ export function VendorConceptCounter({
 
             {/* Active fulfillment capabilities strip */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/12 px-3 py-1 text-sm font-medium text-primary-foreground">
-                <CheckMark className="size-3.5 text-ticket" />
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/15 px-3 py-1 text-sm font-medium text-primary-foreground">
+                <CheckMark className="size-3.5 text-primary-foreground" />
                 <span>Market stall pickup</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/12 px-3 py-1 text-sm font-medium text-primary-foreground">
-                <TicketMark className="size-3.5 text-ticket" />
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/15 px-3 py-1 text-sm font-medium text-primary-foreground">
+                <TicketMark className="size-3.5 text-primary-foreground" />
                 <span>Pre-order for market day</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/12 px-3 py-1 text-sm font-medium text-primary-foreground">
-                <CrateMark className="size-3.5 text-ticket" />
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/15 px-3 py-1 text-sm font-medium text-primary-foreground">
+                <CrateMark className="size-3.5 text-primary-foreground" />
                 <span>Local Toronto delivery</span>
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col justify-between gap-4 rounded-xl bg-stamp/35 p-4 ring-1 ring-primary-foreground/15 lg:col-span-4">
+          <div className="flex flex-col justify-between gap-4 rounded-xl bg-foreground/25 p-4 ring-1 ring-primary-foreground/20 lg:col-span-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="type-kicker text-primary-foreground/75">Save this stall</p>
@@ -375,8 +412,8 @@ export function VendorConceptCounter({
             </div>
 
             <div className="grid grid-cols-3 gap-2 border-t border-primary-foreground/15 pt-3">
-              <div className="rounded-lg bg-primary-foreground/10 px-3 py-2">
-                <p className="type-census text-2xl text-ticket">{menus.length}</p>
+              <div className="rounded-lg bg-primary-foreground/12 px-3 py-2">
+                <p className="type-census text-2xl text-primary-foreground">{menus.length}</p>
                 <p className="text-sm text-primary-foreground/80">Menu items</p>
               </div>
               <div className="rounded-lg bg-primary-foreground/10 px-3 py-2">
@@ -407,15 +444,14 @@ export function VendorConceptCounter({
             {/* Visual Table Banner */}
             <div className="grid gap-4 rounded-xl bg-secondary/55 p-4 ring-1 ring-border sm:grid-cols-[11rem_minmax(0,1fr)] sm:items-center">
               <ProductPhotoFrame
-                url={vendor.bannerPhoto?.url}
-                alt={vendor.bannerPhoto?.alt ?? vendor.primaryAisleLabel}
-                Mark={PlateMark}
+                name={vendor.primaryAisleLabel}
+                photo={vendor.bannerPhoto}
                 className="aspect-[16/10] w-full rounded-lg ring-1 ring-foreground/10"
               />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2>On the stall table</h2>
-                  <span className="rounded-md bg-ticket/35 px-2.5 py-1 text-sm font-medium text-stamp">
+                  <span className="rounded-md bg-ticket px-2.5 py-1 text-sm font-medium text-chalk">
                     {isSimulated ? "Online ordering active" : "Published stall menu"}
                   </span>
                 </div>
@@ -760,7 +796,6 @@ export function VendorConceptCounter({
                     <ProductThumb
                       url={guide.photoUrl}
                       alt={guide.photoAlt ?? guide.label}
-                      Mark={CrateMark}
                       className="size-14 rounded-lg ring-1 ring-foreground/10"
                     />
                     <div className="min-w-0 flex-1">
@@ -923,7 +958,7 @@ export function VendorConceptCounter({
                 <p className="type-kicker text-primary">Direct from the stall</p>
                 <h2 className="mt-0.5">Stall order slip</h2>
               </div>
-              <span className="type-nums rounded bg-ticket px-2.5 py-1 text-sm font-medium text-stamp">
+              <span className="type-nums rounded bg-ticket px-2.5 py-1 text-sm font-medium text-chalk">
                 {slipItems.reduce((acc, e) => acc + e.qty, 0)} selected
               </span>
             </div>

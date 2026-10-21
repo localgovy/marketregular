@@ -32,7 +32,7 @@ import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { ReviewCard } from "@/components/review-card";
 import { ProductSaveButton, SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
-import { VerifiedName } from "@/components/verified-name";
+import { VerifiedName } from "@/components/verified-stamp";
 import { formatPrice } from "@/lib/format";
 import { productFromInput } from "@/lib/product-saves";
 import { cn } from "@/lib/utils";
@@ -279,7 +279,7 @@ export function VendorConceptAtlas({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-sm font-medium",
               vendor.openNow || vendor.sellingToday
-                ? "bg-ticket text-stamp"
+                ? "bg-ticket text-chalk"
                 : "bg-secondary text-foreground ring-1 ring-border",
             )}
           >
@@ -305,11 +305,11 @@ export function VendorConceptAtlas({
               <div className="flex min-w-0 items-start gap-4">
                 <StallEmblem name={vendor.name} logoUrl={vendor.logoUrl} size="lg" />
                 <div className="min-w-0">
-                  <p className="type-kicker text-ticket">
+                  <p className="type-kicker text-primary-foreground/80">
                     {vendor.primaryAisleLabel} · Toronto market stall
                   </p>
                   <h1 className="mt-1 text-primary-foreground">
-                    <VerifiedName name={vendor.name} verified={vendor.claimed} />
+                    <VerifiedName slug={vendor.slug} name={vendor.name} />
                   </h1>
                   <ListingScore
                     className="mt-2 text-base text-primary-foreground/90"
@@ -330,8 +330,8 @@ export function VendorConceptAtlas({
 
           <div className="mt-6 border-t border-primary-foreground/15 pt-4">
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-lg bg-primary-foreground/10 px-3 py-2">
-                <p className="type-census text-2xl text-ticket">{menus.length}</p>
+              <div className="rounded-lg bg-primary-foreground/12 px-3 py-2">
+                <p className="type-census text-2xl text-primary-foreground">{menus.length}</p>
                 <p className="text-sm text-primary-foreground/80">On their table</p>
               </div>
               <div className="rounded-lg bg-primary-foreground/10 px-3 py-2">
@@ -345,14 +345,6 @@ export function VendorConceptAtlas({
                 <p className="text-sm text-primary-foreground/80">Similar stalls</p>
               </div>
             </div>
-
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-primary-foreground/90">
-              <ListingContact phone={vendor.contact.phone} email={vendor.contact.email} />
-              <ListingWebsite href={vendor.contact.website} />
-              <ListingInstagram href={vendor.contact.instagram} />
-              <ListingTiktok href={vendor.contact.tiktok} />
-              <ListingFacebook href={vendor.contact.facebook} />
-            </div>
           </div>
         </div>
 
@@ -361,16 +353,15 @@ export function VendorConceptAtlas({
           <div>
             <div className="flex items-center justify-between gap-2">
               <p className="type-kicker text-primary">On their table &amp; circuit</p>
-              <span className="rounded-md bg-ticket/40 px-2.5 py-0.5 text-sm font-medium text-stamp">
+              <span className="rounded-md bg-ticket px-2.5 py-0.5 text-sm font-medium text-chalk">
                 {isSimulated ? "Pickup · Pre-order · Delivery" : "Published stall table"}
               </span>
             </div>
 
             <div className="mt-3">
               <ProductPhotoFrame
-                url={vendor.bannerPhoto?.url}
-                alt={vendor.bannerPhoto?.alt ?? vendor.primaryAisleLabel}
-                Mark={PlateMark}
+                name={vendor.primaryAisleLabel}
+                photo={vendor.bannerPhoto}
                 className="aspect-[16/9] w-full rounded-xl ring-1 ring-foreground/10"
               />
             </div>
@@ -763,24 +754,40 @@ export function VendorConceptAtlas({
               Select a hall to inspect {vendor.name}&apos;s hours and fellow stalls setting up alongside them.
             </p>
 
-            {/* Hall Selector Pills */}
+            {/* Hall Selector Pills (up to 4 quick pills + full selector if more) */}
             {markets.length > 1 ? (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {markets.map((m) => (
-                  <button
-                    key={m.slug}
-                    type="button"
-                    onClick={() => setActiveHallSlug(m.slug)}
-                    className={cn(
-                      "cursor-pointer rounded-lg px-3 py-1.5 text-left text-sm font-medium transition-colors",
-                      activeHall?.slug === m.slug
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-receipt text-foreground ring-1 ring-border hover:bg-secondary",
-                    )}
+              <div className="mt-3 flex flex-col gap-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {markets.slice(0, 4).map((m) => (
+                    <button
+                      key={m.slug}
+                      type="button"
+                      onClick={() => setActiveHallSlug(m.slug)}
+                      className={cn(
+                        "cursor-pointer rounded-lg px-2.5 py-1 text-left text-sm font-medium transition-colors",
+                        activeHall?.slug === m.slug
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-receipt text-foreground ring-1 ring-border hover:bg-secondary",
+                      )}
+                    >
+                      {m.name}
+                    </button>
+                  ))}
+                </div>
+                {markets.length > 4 ? (
+                  <select
+                    aria-label="Choose market hall on this vendor's circuit"
+                    value={activeHall?.slug ?? ""}
+                    onChange={(e) => setActiveHallSlug(e.target.value)}
+                    className="w-full rounded-lg bg-receipt px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border"
                   >
-                    {m.name}
-                  </button>
-                ))}
+                    {markets.map((m) => (
+                      <option key={m.slug} value={m.slug}>
+                        {m.name} ({m.neighbourhood})
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
               </div>
             ) : null}
 
@@ -898,14 +905,26 @@ export function VendorConceptAtlas({
             ) : null}
           </div>
 
-          {vendor.tags.length > 0 ? (
-            <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-              <h3>Stall specialties &amp; tags</h3>
-              <div className="mt-3">
+          <div className="rounded-xl bg-card p-5 text-foreground ring-1 ring-foreground/10">
+            <h3>Contact &amp; direct links</h3>
+            <ListingContact
+              phone={vendor.contact.phone}
+              email={vendor.contact.email}
+              heading={false}
+            />
+            <ListingWebsite href={vendor.contact.website} />
+            <ListingInstagram href={vendor.contact.instagram} />
+            <ListingTiktok href={vendor.contact.tiktok} />
+            <ListingFacebook href={vendor.contact.facebook} />
+            {vendor.tags.length > 0 ? (
+              <div className="mt-4 border-t border-dashed border-border pt-4">
+                <p className="mb-2 text-sm font-medium text-muted-foreground">
+                  Stall specialties &amp; tags
+                </p>
                 <TagList tags={vendor.tags} />
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
 
           <div id="account">
             <ListingPortalCta kind="vendor" listingId={vendor.id} taken={vendor.claimed} />
@@ -960,9 +979,12 @@ export function VendorConceptAtlas({
 
                 <div className="mt-3">
                   <ProductPhotoFrame
-                    url={peer.photoUrl}
-                    alt={peer.photoAlt ?? peer.primaryAisleLabel}
-                    Mark={PlateMark}
+                    name={peer.primaryAisleLabel}
+                    photo={
+                      peer.photoUrl
+                        ? { url: peer.photoUrl, alt: peer.photoAlt ?? peer.primaryAisleLabel }
+                        : null
+                    }
                     className="aspect-[16/9] w-full rounded-lg ring-1 ring-foreground/10"
                   />
                 </div>

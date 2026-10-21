@@ -238,29 +238,27 @@ function fallbackPriceCents(name: string, index: number): number {
 function matchFindPageByName(
   itemName: string,
   productSlug: string | null,
-  category: string | null,
 ): FindPage | null {
   const bySlug = findPageForProductSlug(productSlug);
-  if (bySlug) return bySlug;
+  if (bySlug && bySlug.vendors > 0) return bySlug;
 
   const lower = itemName.toLowerCase();
   for (const page of FIND_PAGES) {
     if (page.vendors <= 0) continue;
     const termLower = page.term.toLowerCase().replace(/^general\s+/, "");
-    if (termLower.length >= 3 && lower.includes(termLower)) {
+    const regex = new RegExp(`\\b${termLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+    if (termLower.length >= 3 && regex.test(lower)) {
       return page;
     }
     for (const ms of page.matchSlugs) {
       const words = ms.replace(/-/g, " ");
-      if (words.length >= 3 && lower.includes(words)) {
+      const msRegex = new RegExp(`\\b${words.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+      if (words.length >= 3 && msRegex.test(lower)) {
         return page;
       }
     }
   }
 
-  if (category) {
-    return FIND_PAGES.find((p) => p.category === category && p.vendors > 0) ?? null;
-  }
   return null;
 }
 
@@ -376,7 +374,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
     const dbMeta = menuCategoryMap.get(item.id);
     const rawCategory = dbMeta?.product_category ?? item.product_category ?? null;
     const rawSlug = dbMeta?.product_slug ?? item.product_slug ?? null;
-    const matchedFindPage = matchFindPageByName(item.name, rawSlug, rawCategory);
+    const matchedFindPage = matchFindPageByName(item.name, rawSlug);
 
     const productCategory =
       rawCategory ?? matchedFindPage?.category ?? fallbackVendorCategory;
@@ -388,10 +386,10 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
     const productSlug = rawSlug ?? matchedFindPage?.matchSlugs[0] ?? null;
     const compareHref = matchedFindPage
       ? `/find/${matchedFindPage.slug}`
-      : `/products?q=${encodeURIComponent(item.name)}`;
+      : `/products?aisle=${encodeURIComponent(productCategory)}&q=${encodeURIComponent(item.name.split("(")[0]?.trim() || item.name)}`;
     const compareLabel = matchedFindPage
       ? `Compare ${matchedFindPage.vendors} ${matchedFindPage.term.replace(/^General\s+/i, "").toLowerCase()} stalls`
-      : `Find more ${productCategoryLabel.toLowerCase()} stalls`;
+      : `Compare in ${productCategoryLabel.toLowerCase()} aisle`;
     const compareVendorsCount = matchedFindPage?.vendors ?? null;
 
     const livePriceCents = visiblePriceCents(productCategory, item.price_cents);
