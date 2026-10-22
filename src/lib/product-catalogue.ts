@@ -75,6 +75,7 @@ export type CataloguePage = {
   slug: string;
   category: string;
   categoryLabel: string;
+  vendors: number;
 };
 
 export type CatalogueAisle = {
@@ -155,11 +156,12 @@ export function liveFindPages(): CataloguePage[] {
   return listedFindPages()
     .filter((page) => !findSlugRedirectsToProducts(page.slug))
     .map((page) => ({
-    term: page.term,
-    slug: page.slug,
-    category: page.category,
-    categoryLabel: labels.get(page.category) ?? page.category,
-  }));
+      term: page.term,
+      slug: page.slug,
+      category: page.category,
+      categoryLabel: labels.get(page.category) ?? page.category,
+      vendors: page.vendors,
+    }));
 }
 
 export function catalogueAisles(pages: CataloguePage[]): CatalogueAisle[] {

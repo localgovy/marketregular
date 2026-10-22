@@ -42,6 +42,8 @@ export type FindMarket = {
   hours: Array<{ day: string; hours: string }>;
   ratingAvg: number | null;
   reviewCount: number;
+  logoUrl?: string | null;
+  stall?: string | null;
 };
 
 export type FindVendor = {
@@ -50,7 +52,7 @@ export type FindVendor = {
   logoUrl: string | null;
   ratingAvg: number | null;
   reviewCount: number;
-  items: Array<{ name: string; priceCents: number | null; imageUrl: string | null }>;
+  items: Array<{ id?: string; name: string; priceCents: number | null; imageUrl: string | null }>;
   markets: FindMarket[];
   badge: "Open now" | "Later today" | "Selling this weekend" | null;
   /** 0 means open today. Higher means later in the week. 8 means no upcoming day. */
@@ -311,6 +313,8 @@ export const listFindVendors = cache(async function listFindVendors(
           slug: market.slug,
           days: stall.days,
           hours: hallDayHours(stall.days, marketSchedules, market.province, now),
+          logoUrl: market.logo_url,
+          stall: stall.stall,
           ...reviewFields(market),
         });
       }
@@ -328,6 +332,7 @@ export const listFindVendors = cache(async function listFindVendors(
       grouped.set(vendor.id, group);
     }
     group.items.push({
+      id: menu.id,
       name: menu.name,
       priceCents: visiblePriceCents(menu.product_category, menu.price_cents),
       imageUrl: menuItemPhotoUrl(menu.image_url, menu.id),
@@ -412,6 +417,7 @@ export async function searchProducts(args: {
         hours: hall
           ? hallDayHours(days, schedulesByMarket.get(hall.id) ?? [], hall.province, now)
           : [],
+        logoUrl: hall?.logo_url ?? null,
         ...reviewFields(hall),
       };
     });

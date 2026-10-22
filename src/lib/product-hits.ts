@@ -9,6 +9,7 @@ export type ProductMarketHit = {
   hours: Array<{ day: string; hours: string }>;
   ratingAvg: number | null;
   reviewCount: number;
+  logoUrl?: string | null;
 };
 
 export type ProductHit = {
