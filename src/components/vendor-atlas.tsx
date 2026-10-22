@@ -469,9 +469,11 @@ export function VendorAtlas({ data }: { data: VendorAtlasData }) {
                       ratingAvg={vendor.ratingAvg}
                       reviewCount={vendor.reviewCount}
                     />
-                    <span className="stall-chip-sm inline-flex items-center bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
-                      {vendor.nextSessionSummary}
-                    </span>
+                    {vendor.nextSessionSummary ? (
+                      <span className="stall-chip-sm inline-flex items-center bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
+                        {vendor.nextSessionSummary}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </div>

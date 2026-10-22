@@ -150,7 +150,7 @@ export type VendorAtlasData = {
     badge: "Selling now" | "Later today" | "Selling this weekend" | "On the schedule";
     openNow: boolean;
     sellingToday: boolean;
-    nextSessionSummary: string;
+    nextSessionSummary: string | null;
     primaryCategoryId: string;
     primaryCategoryLabel: string;
     secondaryCategoryLabel: string | null;
@@ -577,7 +577,7 @@ export async function buildVendorAtlasData({
     ? firstActiveMarket.hours[0]
       ? `${firstActiveMarket.name} · ${firstActiveMarket.hours[0].day} ${firstActiveMarket.hours[0].hours}`
       : `${firstActiveMarket.name} · ${firstActiveMarket.nextOpen}`
-    : "Toronto farmers' markets";
+    : null;
 
   // Similar stalls in the same product category
   const vendorMarketSlugSet = new Set(markets.map((m) => m.slug));
