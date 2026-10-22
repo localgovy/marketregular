@@ -761,7 +761,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
           {
             id: `preview-note-1-${resolvedVendor.slug}`,
             kind: "review",
-            body: `Stopped by ${resolvedVendor.name} early in the morning — their ${menus[0]?.name ?? "featured items"} were fresh out and worth the walk.`,
+            body: `Stopped by ${resolvedVendor.name} early in the morning — their ${menus[0]?.name ?? "featured items"} were fresh out.`,
             created_at: new Date(nowMs - 2 * 24 * 3600 * 1000).toISOString(),
             author_name: "Claire M.",
             market_name: firstActiveMarket?.name ?? "Toronto Farmers' Market",

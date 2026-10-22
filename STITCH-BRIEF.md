@@ -10,7 +10,7 @@ When you bring the exports back, I will implement them in the Next.js app. Expor
 
 You are designing **MarketRegular**, a Canadian public-market floor guide. Not a grocery app, not a farm-to-table restaurant, not a CSA startup, not Airbnb for farms.
 
-It is the thing a regular would keep open on their phone while walking a shed: who is here, what is on the tables, whether to bother crossing town, and a live tape of people who are physically at a stall right now.
+It is the thing a regular would keep open on their phone at a stall: who is here, what is for sale, whether to bother crossing town, and a live tape of people who are physically at a stall right now.
 
 **Product in one sentence:** A Canada-wide directory of farmers’ markets and vendors (hours, maps, menus, phones, tags) plus on-site-only posts and reviews that appear on a live homepage feed.
 

@@ -51,7 +51,7 @@ const VARIANTS: Array<{
     shortLabel: "Option A · Masthead Floor Strip",
     title: "Masthead Live Floor Strip + Next-Up Dispatch",
     subtitle:
-      "Restores the signature stamp-red FloorStrip directly inside the masthead, upgraded with hall emblems, neighbourhood walk links, and active stall chips.",
+      "Restores the signature stamp-red FloorStrip directly inside the masthead, upgraded with hall emblems, neighbourhood links, and active stall chips.",
     summary:
       "Keeps the new homepage's vertical rhythm tight while giving live markets immediate above-the-fold prominence right between the title/census and the green search bar.",
     highlights: [
@@ -1147,7 +1147,7 @@ function VendorTableCard({
                     onClick={() => onSelectNeighbourhood(market.neighbourhood)}
                     className="cursor-pointer text-sm text-primary hover:underline"
                   >
-                    {market.neighbourhood} walk
+                    {market.neighbourhood}
                   </button>
                   {market.openNow ? <NowLabel>Hall open</NowLabel> : null}
                 </div>
@@ -1729,7 +1729,7 @@ export function LiveMarketsWorkbench({
             <div className="lg:col-span-4">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="type-kicker mr-1 font-medium text-foreground">
-                  2. Market walk:
+                  2. Neighbourhood:
                 </span>
                 <button
                   type="button"

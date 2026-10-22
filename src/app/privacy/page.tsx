@@ -110,7 +110,7 @@ export default function PrivacyPage() {
         <p className={body}>
           Sign-in needs cookies for the session and to remember where to send you after Google or
           email confirm. Signed-in saves may also sit in this browser so the site feels instant.
-          We use this browser to remember that you dismissed the sign-in slip or home walkthrough.
+          We use this browser to remember that you dismissed the sign-in slip or welcome note.
           Google sign-in keeps a short handoff in session storage, then drops it.
         </p>
         <p className={body}>

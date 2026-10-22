@@ -1,6 +1,11 @@
-# No "table", "circuit", or "aisle" rhetoric
+---
+description: No table, circuit, aisle, or walk rhetoric in site copy
+alwaysApply: true
+---
 
-Do not use the words **table** / **tables**, **circuit** / **circuits**, or **aisle** / **aisles** in user-facing copy, headings, kickers, buttons, badges, empty states, or mockup descriptions anywhere on the site.
+# No "table", "circuit", "aisle", or "walk" rhetoric
+
+Do not use the words **table** / **tables**, **circuit** / **circuits**, **aisle** / **aisles**, or **walk** / **walks** / **walking** in user-facing copy, headings, kickers, buttons, badges, empty states, or mockup descriptions anywhere on the site.
 
 Use plain, direct language instead:
 
@@ -9,15 +14,20 @@ Use plain, direct language instead:
 | On their table / On the tables / Stall table / Table items | Menu, Products, What they sell, Items, Menu items |
 | Market hall circuit / On their circuit / Neighbourhood circuit | Markets, Where they sell, Market locations, Neighbourhoods |
 | Aisle / Product aisle / Market aisle / Peer aisle stalls | Category, Product category, Specialty, Similar vendors / Other stalls |
+| Market walk / Neighbourhood walk / Neighbourhood market walks / Worth the walk | Neighbourhood, Neighbourhood markets, Where they sell |
 
 ```tsx
 // BAD
 <p className="type-kicker">Published stall table</p>
 <h2>Market hall circuit</h2>
 <span>Compare in pies and sweets aisle</span>
+<h2>Neighbourhood market walks</h2>
 
 // GOOD
 <p className="type-kicker">Menu &amp; products</p>
 <h2>Markets &amp; hours</h2>
 <span>Compare in pies and sweets</span>
+<h2>Neighbourhood markets</h2>
 ```
+
+A place note can still say a market sits along walkways. Code names such as `home-walkthrough` are not copy. The welcome panel is a welcome note in user-facing text.

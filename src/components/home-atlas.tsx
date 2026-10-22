@@ -424,7 +424,7 @@ function VendorTableCard({
                       onClick={() => onSelectNeighbourhood(market.neighbourhood)}
                       className="cursor-pointer text-sm text-primary hover:underline"
                     >
-                      {market.neighbourhood} walk
+                      {market.neighbourhood}
                     </button>
                     {market.openNow ? <NowLabel>Hall open</NowLabel> : null}
                   </div>
@@ -1082,7 +1082,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
             </div>
           </div>
 
-          {/* 3-Dimension Filter Bar: Pivot by Product Aisle (with Thumbs), Neighbourhood Walk, or Schedule Window */}
+          {/* 3-Dimension Filter Bar: Pivot by Category, Neighbourhood, or Schedule Window */}
           <div className="grid gap-3 border-b border-border bg-secondary/40 px-4 py-3.5 sm:px-5 lg:grid-cols-12 lg:items-center">
             {/* 1. Filter by Product Category (with Visual Thumbnails) */}
             <div className="lg:col-span-6">
@@ -1128,7 +1128,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
             <div className="lg:col-span-4">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="type-kicker mr-1 font-medium text-foreground">
-                  2. Market walk:
+                  2. Neighbourhood:
                 </span>
                 <button
                   type="button"
@@ -1466,7 +1466,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
             {/* Neighbourhood Circuit Selector Strip */}
             <div className="border-b border-border bg-secondary/40 px-4 py-3">
               <p className="type-kicker mb-2 text-muted-foreground">
-                Inspect a neighbourhood market walk &amp; its stalls:
+                Inspect a neighbourhood and its stalls:
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {data.neighbourhoodCircuits.slice(0, 7).map((circuit, idx) => {
@@ -1609,10 +1609,10 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
           </div>
         </section>
 
-        {/* Full-Width Section: Toronto Neighbourhood Market Walks (With Both Hall & Stall Emblems) */}
+        {/* Full-Width Section: Toronto Neighbourhood Markets (With Both Hall & Stall Emblems) */}
         <section
           id="directory"
-          aria-label="Neighbourhood market walks"
+          aria-label="Neighbourhood markets"
           className="mt-10 scroll-mt-24 border-t-2 border-board pt-8"
         >
           <div className="flex flex-wrap items-end justify-between gap-3 pb-5">
@@ -1624,7 +1624,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                 <p className="type-kicker text-muted-foreground">
                   Every major market district in {LAUNCH_CITY} — paired with its halls &amp; anchor stalls
                 </p>
-                <h2>Neighbourhood Market Walks</h2>
+                <h2>Neighbourhood Markets</h2>
               </div>
             </div>
 

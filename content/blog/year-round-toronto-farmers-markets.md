@@ -33,7 +33,7 @@ The North Market farmers’ market — Saturday only, year-round. This is **not*
 
 [Allan Gardens Farmers’ Market](https://www.marketregular.com/markets/allan-gardens-farmers-market) · 19 Horticultural Avenue · **10 AM–2 PM** · year-round
 
-Indoor Saturday under the conservatory. If you're an early-bird then start with North, then walk or take a streetcar over.
+Indoor Saturday under the conservatory. If you're an early-bird then start with North, then take a streetcar over.
 
 **Vendors to look for:**
 

@@ -11,7 +11,7 @@ Here’s our take on how to do your first North Market Saturday (not to be confu
 
 ---
 
-## What you’re walking into
+## The hall
 
 [St. Lawrence Farmers’ Market](https://www.marketregular.com/markets/st-lawrence-farmers-market) · 92 Front Street East · **5 AM–3 PM** · year-round · indoor
 
@@ -86,7 +86,7 @@ On the roster (lineup can shift Saturday to Saturday):
 ## MarketRegular Recommended first-timer plan:
 
 - **Before 7 AM:** Be in [North](https://www.marketregular.com/markets/st-lawrence-farmers-market) if you want the farmers’ market at full open — South isn’t open yet on Saturday until 7.
-- **After the farm stalls:** Walk over to [South](https://www.marketregular.com/markets/st-lawrence-market) for permanent merchants if you still have energy; South is **7 AM–5 PM** Saturdays.
+- **After the farm stalls:** Continue to [South](https://www.marketregular.com/markets/st-lawrence-market) for permanent merchants if you still have energy; South is **7 AM–5 PM** Saturdays.
 - **MarketRegular Tip:** St. Lawrence can feel like one destination, but it’s two buildings sharing Front Street. North is where the Saturday farmers’ market lives — farm vendors from 5 AM in the Market Hall, year-round, back in the new North building since April 2025. South is the year-round hall of butchers, cheese counters, and the classic market crowd, open from 7 AM Saturdays and closed Mondays. For a first visit, start at North while it’s early, then wander to South when you’re ready — or save South for a weekday when North isn’t running. Pair this with our [year-round halls guide](https://www.marketregular.com/blog/year-round-toronto-farmers-markets) if you also want Allan Gardens and Dufferin Grove.
 
 Filter by Saturday on the [homepage](https://www.marketregular.com). Year-round circuit: [Year-round Toronto farmers’ markets](https://www.marketregular.com/blog/year-round-toronto-farmers-markets). West-end Saturday: [West-end Saturday farmers’ markets](https://www.marketregular.com/blog/west-end-saturday-farmers-markets).

@@ -824,7 +824,7 @@ export function ConceptBroadsheet({
               </span>
               <div>
                 <p className="type-kicker text-muted-foreground">Where the regulars go</p>
-                <h2>Neighbourhood market walks</h2>
+                <h2>Neighbourhood markets</h2>
               </div>
             </div>
             <Link

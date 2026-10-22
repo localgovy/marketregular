@@ -68,11 +68,11 @@ const CONCEPTS: Array<{
     primaryQuestion: "“Which vendors make what I'm craving, what do they sell, and which markets do they set up at?”",
     keyInnovations: [
       "Puts Vendors in priority above the fold in a 6-card Featured Stalls, Products & Markets showcase: each card pairs the vendor's stall plate, live status, dashed-rule menu items/prices ('Menu highlights'), and exact markets + unclipped hours ('Where they set up').",
-      "Provides a 3-way interactive filter bar (Category × Market Walk × Selling Window) that synchronizes in real time with the Products & Categories explorer and the Live Neighbourhood Atlas below.",
-      "Enriches every Product Crate with the top stalls known for that category, and every Neighbourhood Market Walk card with both its markets and anchor vendors.",
+      "Provides a 3-way interactive filter bar (Category × Neighbourhood × Selling Window) that synchronizes in real time with the Products & Categories explorer and the Live Neighbourhood Atlas below.",
+      "Enriches every Product Crate with the top stalls known for that category, and every neighbourhood card with both its markets and anchor vendors.",
     ],
     critiqueRefinement:
-      "Evolved to unify Vendors, Products, and Markets as equal first-class citizens — elevating vendor cards above the fold and cross-linking every category crate and neighbourhood walk with its participating stalls.",
+      "Evolved to unify Vendors, Products, and Markets as equal first-class citizens — elevating vendor cards above the fold and cross-linking every category and neighbourhood with its participating stalls.",
   },
 ];
 
