@@ -205,6 +205,14 @@ function MastheadScore({
   );
 }
 
+function formatStallNote(stall: string | null | undefined): string | null {
+  const trimmed = stall?.trim();
+  if (!trimmed) return null;
+  if (/^stall\b/i.test(trimmed)) return trimmed;
+  if (/^[A-Za-z]?\d+[A-Za-z]?$/.test(trimmed)) return `Stall ${trimmed}`;
+  return trimmed;
+}
+
 function SessionLines({
   hours,
   fallback,
@@ -552,7 +560,9 @@ export function VendorConceptAtlas({
                         </Link>
                         <p className="mt-0.5 text-sm text-muted-foreground">
                           {activeHall.neighbourhood}
-                          {activeHall.stall ? ` · Stall ${activeHall.stall}` : ""}
+                          {formatStallNote(activeHall.stall)
+                            ? ` · ${formatStallNote(activeHall.stall)}`
+                            : ""}
                         </p>
                       </div>
                     </div>
@@ -968,7 +978,9 @@ export function VendorConceptAtlas({
                             lat={activeHall.lat}
                             lng={activeHall.lng}
                           />
-                          {activeHall.stall ? ` · Stall ${activeHall.stall}` : ""}
+                          {formatStallNote(activeHall.stall)
+                            ? ` · ${formatStallNote(activeHall.stall)}`
+                            : ""}
                         </p>
                       </div>
                     </div>
@@ -981,7 +993,7 @@ export function VendorConceptAtlas({
                   </div>
 
                   <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 border-t border-dashed border-border pt-3">
-                    <span className="text-sm font-medium text-muted-foreground">Hall hours</span>
+                    <span className="text-sm font-medium text-muted-foreground">Market hours</span>
                     <SessionLines hours={activeHall.hours} fallback={activeHall.nextOpen} />
                   </div>
 
@@ -1022,7 +1034,9 @@ export function VendorConceptAtlas({
                                 </Link>
                                 <p className="text-sm text-muted-foreground">
                                   {fellow.aisleLabel}
-                                  {fellow.stall ? ` · Stall ${fellow.stall}` : ""}
+                                  {formatStallNote(fellow.stall)
+                                    ? ` · ${formatStallNote(fellow.stall)}`
+                                    : ""}
                                 </p>
                               </div>
                             </div>
@@ -1040,11 +1054,11 @@ export function VendorConceptAtlas({
                 </div>
               ) : null}
 
-              {/* All Halls Compact Timetable */}
+              {/* All Markets Compact Schedule */}
               {markets.length > 1 ? (
                 <div className="mt-4 border-t border-border pt-4">
                   <p className="text-sm font-medium text-foreground">
-                    All market halls &amp; hours
+                    All markets &amp; hours
                   </p>
                   <ul className="mt-2 divide-y divide-dashed divide-border">
                     {markets.map((m) => (

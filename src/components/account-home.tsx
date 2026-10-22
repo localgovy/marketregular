@@ -364,7 +364,7 @@ export function AccountHome({
                 <Link href="#note" className="font-medium text-primary hover:underline">
                   Tell the next shopper
                 </Link>{" "}
-                what was on the tables.
+                what was fresh at the stalls.
               </p>
             )}
           </HomePanel>

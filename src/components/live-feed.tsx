@@ -58,7 +58,7 @@ export function LiveFeed({
   if (!items.length) {
     return (
       <p className="text-base text-muted-foreground">
-        Nothing on the live list yet. Tell the next shopper what was on the tables.
+        Nothing on the live list yet. Tell the next shopper what was fresh at the stalls.
       </p>
     );
   }

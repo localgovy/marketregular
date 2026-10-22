@@ -7,7 +7,7 @@ export function ProductDirectory({ aisles }: { aisles: CatalogueAisle[] }) {
   return (
     <section id="directory" className="scroll-mt-header mt-12 border-t border-border pt-6">
       <h2>Every product</h2>
-      <p className="mt-2 text-base text-muted-foreground">The full list. Open an aisle.</p>
+      <p className="mt-2 text-base text-muted-foreground">The full list. Open a category.</p>
       <div className="mt-4 border-t border-border">
         {aisles.map((aisle) => (
           <details key={aisle.id} className="border-b border-border">
