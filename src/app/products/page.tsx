@@ -1,23 +1,15 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { permanentRedirect } from "next/navigation";
-import { ProductAisles } from "@/components/product-aisles";
-import { ProductCatalogue, type CatalogueCard } from "@/components/product-catalogue";
-import { ProductDirectory } from "@/components/product-directory";
-import { ProductSearchForm } from "@/components/product-search-form";
-import { SortableProductHits } from "@/components/product-sort-list";
-import { VendorHitList } from "@/components/product-results";
+import type { CatalogueCard } from "@/components/product-catalogue";
+import { ProductsAtlas } from "@/components/products-atlas";
 import { listMarkets } from "@/lib/data/catalog";
-import {
-  EMPTY_PRODUCT_PHOTOS,
-  listProductPhotos,
-  productPhoto,
-} from "@/lib/data/product-photos";
+import { productPhoto } from "@/lib/data/product-photos";
 import { searchProducts, searchVendorsByName } from "@/lib/data/product-search";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { parseCatalogueSort } from "@/lib/product-browse-href";
 import {
   BREAKFAST_ID,
+  BREAKFAST_SLUGS,
   canonicalProductPath,
   catalogueAisles,
   catalogueHeading,
@@ -27,6 +19,7 @@ import {
   sortCatalogue,
 } from "@/lib/product-catalogue";
 import { torontoWeekday } from "@/lib/product-sort";
+import { loadProductsHubContext } from "@/lib/products-atlas-data";
 import { pageMeta } from "@/lib/seo";
 
 function textParam(value: string | string[] | undefined) {
@@ -91,15 +84,26 @@ export default async function ProductsPage({
   searchParams: Promise<ProductQuery>;
 }) {
   const params = await searchParams;
-  const { q, openRaw, openToday, market, dayRaw, day, aisle: aisleRaw, sort: sortRaw } = readProductQuery(params);
+  const {
+    q,
+    openRaw,
+    openToday,
+    market,
+    dayRaw,
+    day,
+    aisle: aisleRaw,
+    sort: sortRaw,
+  } = readProductQuery(params);
   const aisle = parseAisle(aisleRaw);
   const sort = parseCatalogueSort(sortRaw);
-  const [markets, products, vendors, photos] = await Promise.all([
+
+  const [markets, products, vendors, hubContext] = await Promise.all([
     listMarkets(),
     q ? searchProducts({ q, openToday, marketSlug: market || null, day }) : Promise.resolve([]),
     q ? searchVendorsByName(q) : Promise.resolve([]),
-    q ? Promise.resolve(EMPTY_PRODUCT_PHOTOS) : listProductPhotos(),
+    loadProductsHubContext(aisle),
   ]);
+
   const marketKnown = !market || markets.some((item) => item.slug === market);
   const canonical = canonicalProductPath({
     q,
@@ -113,104 +117,66 @@ export default async function ProductsPage({
     sortRaw,
   });
   if (canonical) permanentRedirect(canonical);
+
   const marketSlug = marketKnown ? market || null : null;
   const filtersNeedQuery = !q && (openToday || Boolean(marketSlug) || day != null);
   const seen = new Set(products.map((hit) => hit.vendorSlug));
   const shops = vendors.filter((vendor) => !seen.has(vendor.slug));
   const halls = [...markets]
     .sort((a, b) => a.name.localeCompare(b.name, "en-CA"))
-    .map((market) => ({ slug: market.slug, name: market.name }));
+    .map((item) => ({ slug: item.slug, name: item.name }));
+
   const today = torontoWeekday();
   const live = liveFindPages();
   const aisles = catalogueAisles(live);
   const heading = catalogueHeading(aisle);
-  const cards: CatalogueCard[] = sortCatalogue(filterCatalogue(live, aisle), sort, aisle).map((page) => {
-    const photo = productPhoto(photos, page.slug, page.category);
-    return {
-      term: page.term,
-      slug: page.slug,
-      categoryLabel: page.categoryLabel,
-      imageUrl: photo?.url ?? null,
-      imageAlt: photo?.alt ?? null,
-    };
-  });
+  const { photos, census, openNowCount, sellingTodayCount, spotlight, stallsByAisle, featuredStalls } =
+    hubContext;
+
+  const cards: CatalogueCard[] = sortCatalogue(filterCatalogue(live, aisle), sort, aisle).map(
+    (page) => {
+      const photo = productPhoto(photos, page.slug, page.category);
+      return {
+        term: page.term,
+        slug: page.slug,
+        categoryLabel: page.categoryLabel,
+        imageUrl: photo?.url ?? null,
+        imageAlt: photo?.alt ?? null,
+        vendors: page.vendors,
+      };
+    },
+  );
+
   const choices = [
-    { id: null, label: "All products" },
-    { id: BREAKFAST_ID, label: "Breakfast" },
-    ...aisles.map((item) => ({ id: item.id, label: item.label })),
+    { id: null, label: "All products", count: live.length },
+    { id: BREAKFAST_ID, label: "Breakfast", count: BREAKFAST_SLUGS.length },
+    ...aisles.map((item) => ({ id: item.id, label: item.label, count: item.pages.length })),
   ];
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-8 lg:px-6">
-      <h1>{q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Products"}</h1>
-      <p className="type-lede mt-3 max-w-2xl">
-        Search what the stalls sell, or start from a category. Each product opens the vendors who
-        list it and the markets where they set up.
-      </p>
-      <ProductSearchForm
-        q={q}
-        openToday={openToday}
-        marketSlug={marketSlug}
-        day={day}
-        markets={halls}
-      />
-      {filtersNeedQuery ? (
-        <p className="mt-3 text-base text-muted-foreground">
-          Add a product name to use selling today, a market, or a day.
-        </p>
-      ) : null}
-      {q ? (
-        <div className="mt-8 grid gap-8">
-          <p>
-            <Link href="/products" className="text-base font-medium hover:underline">
-              Browse categories
-            </Link>
-          </p>
-          <section>
-            <h2>Products</h2>
-            {products.length ? (
-              <div className="mt-4">
-                <SortableProductHits
-                  hits={products}
-                  today={today}
-                  page={{ q, openToday, marketSlug, day }}
-                />
-              </div>
-            ) : (
-              <p className="mt-3 text-base text-muted-foreground">No products match that search.</p>
-            )}
-          </section>
-          <section>
-            <h2>Vendors</h2>
-            {shops.length ? (
-              <div className="mt-4">
-                <VendorHitList vendors={shops} />
-              </div>
-            ) : (
-              <p className="mt-3 text-base text-muted-foreground">No other vendors match that name.</p>
-            )}
-          </section>
-        </div>
-      ) : (
-        <>
-          <ProductAisles aisles={aisles} aisle={aisle} sort={sort} photos={photos.aisle} />
-          <ProductCatalogue
-            key={`${aisle ?? "all"}-${sort}`}
-            pages={cards}
-            choices={choices}
-            aisle={aisle}
-            sort={sort}
-            title={heading.title}
-            blurb={heading.blurb}
-          />
-          <ProductDirectory aisles={aisles} />
-          <p className="mt-10 text-base">
-            <Link href="/markets" className="font-medium hover:underline">
-              See this week&apos;s markets
-            </Link>
-          </p>
-        </>
-      )}
-    </div>
+    <ProductsAtlas
+      q={q}
+      openToday={openToday}
+      marketSlug={marketSlug}
+      day={day}
+      aisle={aisle}
+      sort={sort}
+      filtersNeedQuery={filtersNeedQuery}
+      today={today}
+      halls={halls}
+      products={products}
+      shops={shops}
+      aisles={aisles}
+      cards={cards}
+      choices={choices}
+      heading={heading}
+      aislePhotos={photos.aisle}
+      census={census}
+      openNowCount={openNowCount}
+      sellingTodayCount={sellingTodayCount}
+      spotlight={spotlight}
+      stallsByAisle={stallsByAisle}
+      featuredStalls={featuredStalls}
+    />
   );
 }

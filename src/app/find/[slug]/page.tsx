@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BackButton } from "@/components/back-button";
+import { FindProductAtlas } from "@/components/find-product-atlas";
 import { JsonLd } from "@/components/json-ld";
-import { SortableFindVendors } from "@/components/product-sort-list";
 import { findPageBySlug, listedFindPages } from "@/data/find-pages";
 import { findSlugRedirectsToProducts } from "@/data/find-redirects";
-import { findTitle, listFindVendors, pageIsAlcohol } from "@/lib/data/product-search";
+import { findTitle, listFindVendors } from "@/lib/data/product-search";
 import { LAUNCH_CITY } from "@/lib/launch";
-import { sortFindVendors, torontoWeekday } from "@/lib/product-sort";
+import { loadFindProductAtlasData } from "@/lib/products-atlas-data";
 import { itemListJsonLd, pageMeta } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -46,37 +45,23 @@ export default async function FindProductPage({
   const { slug } = await params;
   const page = findPageBySlug(slug);
   if (!page) notFound();
-  const title = findTitle(page.term, LAUNCH_CITY);
+
   const now = new Date();
-  const today = torontoWeekday(now);
-  const vendors = await listFindVendors(page);
-  const ordered = sortFindVendors(vendors, "next", today);
-  const alcohol = pageIsAlcohol(page.category);
+  const data = await loadFindProductAtlasData(page, now);
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-10">
+    <>
       <JsonLd
         data={itemListJsonLd({
-          name: title,
+          name: data.title,
           path: `/find/${page.slug}`,
-          items: ordered.map((vendor) => ({
+          items: data.vendors.map((vendor) => ({
             name: vendor.name,
             path: `/vendors/${vendor.slug}`,
           })),
         })}
       />
-      <BackButton href="/products" />
-      <h1 className="mt-3">{title}</h1>
-      <p className="type-lede mt-3">
-        {page.term} from stalls at {LAUNCH_CITY} farmers&apos; markets. These vendors list it, with
-        the markets and days where they sell.
-      </p>
-      {alcohol ? null : (
-        <p className="mt-2 text-base text-muted-foreground">
-          Prices show when the vendor has added them.
-        </p>
-      )}
-      <SortableFindVendors vendors={ordered} today={today} />
-    </div>
+      <FindProductAtlas data={data} />
+    </>
   );
 }
