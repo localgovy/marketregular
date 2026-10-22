@@ -310,7 +310,7 @@ const TAG_TO_AISLE_FALLBACK: Record<
   },
   "prepared-food": {
     aisleId: "prepared-foods",
-    label: "Hot market table dishes & hand pies",
+    label: "Hot prepared dishes & hand pies",
     href: "/products?aisle=prepared-foods",
     slug: "pizza-toronto",
   },

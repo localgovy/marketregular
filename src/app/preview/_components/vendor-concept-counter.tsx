@@ -309,7 +309,7 @@ export function VendorConceptCounter({
             className="inline-flex items-center gap-1.5 rounded-lg bg-card px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
           >
             <TagMark className="size-3.5 text-primary" />
-            <span>{vendor.primaryAisleLabel} aisle</span>
+            <span>{vendor.primaryAisleLabel}</span>
           </Link>
           {homeMarket ? (
             <Link
@@ -370,7 +370,7 @@ export function VendorConceptCounter({
                     reviewCount={vendor.reviewCount}
                   />
                   <span className="type-nums text-sm text-primary-foreground/80">
-                    {menus.length} {menus.length === 1 ? "table item" : "table items"} ·{" "}
+                    {menus.length} {menus.length === 1 ? "menu item" : "menu items"} ·{" "}
                     {markets.length} {markets.length === 1 ? "market hall" : "market halls"}
                   </span>
                 </div>
@@ -425,7 +425,7 @@ export function VendorConceptCounter({
                   {aisleGuides.length}
                 </p>
                 <p className="text-sm text-primary-foreground/80">
-                  {aisleGuides.length === 1 ? "Market aisle" : "Market aisles"}
+                  {aisleGuides.length === 1 ? "Category" : "Categories"}
                 </p>
               </div>
             </div>
@@ -450,7 +450,7 @@ export function VendorConceptCounter({
               />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2>On the stall table</h2>
+                  <h2>Menu &amp; products</h2>
                   <span className="rounded-md bg-ticket px-2.5 py-1 text-sm font-medium text-chalk">
                     {isSimulated ? "Online ordering active" : "Published stall menu"}
                   </span>
@@ -772,7 +772,7 @@ export function VendorConceptCounter({
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
                 <p className="type-kicker text-primary">Compare across the market directory</p>
-                <h2 className="mt-0.5">Browse broad product guides &amp; aisles</h2>
+                <h2 className="mt-0.5">Browse broad product guides &amp; categories</h2>
               </div>
               <Link
                 href="/products"
@@ -783,7 +783,7 @@ export function VendorConceptCounter({
               </Link>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Looking for more stalls that carry what {vendor.name} sells? Jump straight to the Toronto product guides or full aisle directories.
+              Looking for more stalls that carry what {vendor.name} sells? Jump straight to the Toronto product guides or category directories.
             </p>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -837,12 +837,11 @@ export function VendorConceptCounter({
             </div>
           </section>
 
-          {/* Similar Stalls in This Aisle */}
           {similarAisleVendors.length > 0 ? (
             <section className="rounded-xl bg-card p-5 ring-1 ring-foreground/10 sm:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
-                  <p className="type-kicker text-primary">Peer stalls in this aisle</p>
+                  <p className="type-kicker text-primary">More stalls to explore</p>
                   <h2 className="mt-0.5">
                     Other stalls known for {vendor.primaryAisleLabel.toLowerCase()}
                   </h2>

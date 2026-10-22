@@ -232,7 +232,7 @@ export function ConceptDispatchBoard({
               <h1 className="mt-1 text-chalk">{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-2 max-w-2xl text-chalk/85">
                 Filter all {formatCensus(data.census.markets)} {LAUNCH_CITY} market halls right on
-                the board by day, neighbourhood, indoor/outdoor setup, or what is on the tables.
+                the board by day, neighbourhood, indoor/outdoor setup, or what the stalls sell.
               </p>
             </div>
 

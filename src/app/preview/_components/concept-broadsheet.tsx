@@ -380,7 +380,7 @@ export function ConceptBroadsheet({
                 href="/products"
                 className="text-sm font-medium text-chalk underline underline-offset-4 hover:text-white"
               >
-                Or browse all {formatCensus(data.census.menus)} menu items by aisle
+                Or browse all {formatCensus(data.census.menus)} menu items by category
               </Link>
             </div>
 
@@ -756,16 +756,16 @@ export function ConceptBroadsheet({
                   </span>
                   <div>
                     <p className="type-kicker text-muted-foreground">
-                      {formatCensus(data.census.menus)} items on the tables
+                      {formatCensus(data.census.menus)} menu items
                     </p>
-                    <h2 className="type-column">Shop by aisle &amp; craving</h2>
+                    <h2 className="type-column">Shop by category &amp; craving</h2>
                   </div>
                 </div>
                 <Link
                   href="/products"
                   className="text-sm font-medium text-primary hover:underline"
                 >
-                  All aisles
+                  All categories
                 </Link>
               </div>
 
@@ -824,7 +824,7 @@ export function ConceptBroadsheet({
               </span>
               <div>
                 <p className="type-kicker text-muted-foreground">Where the regulars go</p>
-                <h2>Neighbourhood market circuits</h2>
+                <h2>Neighbourhood market walks</h2>
               </div>
             </div>
             <Link
@@ -894,8 +894,8 @@ export function ConceptBroadsheet({
         <section aria-label="Stalls and reviews" className="mt-10 border-t-2 border-board pt-8">
           <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
             <div>
-              <p className="type-kicker text-muted-foreground">On the stalls and in the aisles</p>
-              <h2>The Stall &amp; Table Gazette</h2>
+              <p className="type-kicker text-muted-foreground">Live from the stalls</p>
+              <h2>The Stall Gazette</h2>
             </div>
             <p className="text-sm text-muted-foreground">
               Who is setting up today, the five busiest stalls of the week, and live notes from

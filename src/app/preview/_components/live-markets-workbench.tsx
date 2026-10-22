@@ -841,7 +841,7 @@ function VariantCSplitLiveDispatch({
             </span>
             <div>
               <p className="type-kicker text-muted-foreground">
-                Growers, bakers &amp; makers at today&apos;s tables
+                Growers, bakers &amp; makers at today&apos;s stalls
               </p>
               <h2>Stalls on the Floor</h2>
             </div>
@@ -921,7 +921,7 @@ function VariantCSplitLiveDispatch({
                 onClick={onFilterTodayStalls}
                 className="cursor-pointer font-medium text-stamp hover:underline"
               >
-                Show today&apos;s stalls in the table showcase below
+                Show today&apos;s stalls in the showcase below
               </button>
               <Link
                 href="/markets#directory-vendors"
@@ -1042,7 +1042,7 @@ function VendorTableCard({
             </Link>
             <div className="flex items-baseline justify-between gap-2">
               <div>
-                <p className="type-kicker font-medium text-foreground">On their table</p>
+                <p className="type-kicker font-medium text-foreground">Menu highlights</p>
                 <p className="text-sm text-muted-foreground">
                   {vendor.primaryAisleLabel}
                   {vendor.publishedMenu ? " · Published stall items" : ""}
@@ -1473,12 +1473,12 @@ export function LiveMarketsWorkbench({
           <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
             <div className="lg:col-span-7">
               <p className="type-kicker font-medium text-primary">
-                Stalls, tables &amp; neighbourhood market halls in one view
+                Stalls, products &amp; neighbourhood markets in one view
               </p>
               <h1 className="mt-1">{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
-                See which {LAUNCH_CITY} market halls are open on the floor right now, meet the
-                growers and bakers inside, and inspect what is on their tables.
+                See which {LAUNCH_CITY} markets are open right now, meet the
+                growers and bakers inside, and inspect what they sell.
               </p>
             </div>
 
@@ -1506,7 +1506,7 @@ export function LiveMarketsWorkbench({
                   className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker text-muted-foreground">On the tables</span>
+                    <span className="type-kicker text-muted-foreground">Products</span>
                     <TagMark className="size-4 shrink-0 text-stamp" />
                   </div>
                   <span className="type-census mt-1 text-3xl leading-none text-stamp sm:text-4xl">
@@ -1690,7 +1690,7 @@ export function LiveMarketsWorkbench({
             <div className="lg:col-span-6">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="type-kicker mr-1 font-medium text-foreground">
-                  1. Product aisle:
+                  1. Category:
                 </span>
                 <button
                   type="button"
@@ -1702,7 +1702,7 @@ export function LiveMarketsWorkbench({
                       : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
                   )}
                 >
-                  All tables
+                  All stalls
                 </button>
                 {data.aisles.slice(0, 5).map((aisle) => {
                   const active = vendorAisleFilter === aisle.id;

@@ -6,7 +6,7 @@ import { SITE_NAME } from "@/lib/constants";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: `Vendor Concept 3: Hall Circuit, Table & Maker Atlas · ${SITE_NAME}`,
+  title: `Vendor Concept 3: Stall Profile, Menu & Markets · ${SITE_NAME}`,
   robots: { index: false, follow: false },
 };
 

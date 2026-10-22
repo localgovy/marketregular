@@ -49,7 +49,7 @@ export function ProductCatalogue({
   return (
     <section id="products" className="scroll-mt-header mt-12 border-t border-border pt-6">
       <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start lg:gap-8">
-        <nav aria-label="Browse by aisle" className="flex flex-wrap gap-x-4 gap-y-2 lg:flex-col lg:gap-1">
+        <nav aria-label="Browse by category" className="flex flex-wrap gap-x-4 gap-y-2 lg:flex-col lg:gap-1">
           {choices.map((choice) => {
             const active = aisle === choice.id;
             return (
@@ -128,7 +128,7 @@ export function ProductCatalogue({
               ))}
             </ul>
           ) : (
-            <p className="mt-4 text-base text-muted-foreground">No products in that aisle.</p>
+            <p className="mt-4 text-base text-muted-foreground">No products in that category.</p>
           )}
           <p className="mt-4 text-sm text-muted-foreground">
             {countLabel(pages.length, "product", "products")}

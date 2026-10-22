@@ -188,7 +188,7 @@ export type VendorPreviewData = {
 const CURATED_SAMPLE_VENDOR_SLUGS: Array<{ slug: string; label: string }> = [
   { slug: "chocosol-traders", label: "Coffee & Bean-to-Bar" },
   { slug: "thames-river-melons", label: "Orchard, Produce & Pies" },
-  { slug: "romagnoli-farms", label: "Bakery & Farm Table" },
+  { slug: "romagnoli-farms", label: "Bakery & Farm Goods" },
   { slug: "magic-oven", label: "Breads & Savoury Bakes" },
   { slug: "british-baked-goods", label: "Traditional Bakery" },
   { slug: "coopers-csa-farm", label: "Pasture Eggs & Meats" },
@@ -382,7 +382,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
     const productCategoryLabel =
       menuCategoryLabel(productCategory) ??
       FIND_CATEGORIES.find((c) => c.id === productCategory)?.label ??
-      "Market table";
+      "Market goods";
 
     const productSlug = rawSlug ?? matchedFindPage?.matchSlugs[0] ?? null;
     const compareHref = matchedFindPage
@@ -390,7 +390,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
       : `/products?aisle=${encodeURIComponent(productCategory)}&q=${encodeURIComponent(item.name.split("(")[0]?.trim() || item.name)}`;
     const compareLabel = matchedFindPage
       ? `Compare ${matchedFindPage.vendors} ${matchedFindPage.term.replace(/^General\s+/i, "").toLowerCase()} stalls`
-      : `Compare in ${productCategoryLabel.toLowerCase()} aisle`;
+      : `Compare in ${productCategoryLabel.toLowerCase()}`;
     const compareVendorsCount = matchedFindPage?.vendors ?? null;
 
     const livePriceCents = visiblePriceCents(productCategory, item.price_cents);
@@ -507,7 +507,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
     const label =
       menuCategoryLabel(aisleId) ??
       FIND_CATEGORIES.find((c) => c.id === aisleId)?.label ??
-      "Market aisle";
+      "Product category";
     const matchingPages = FIND_PAGES.filter((p) => p.category === aisleId && p.vendors > 0).slice(
       0,
       6,
@@ -638,7 +638,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
     ? firstActiveMarket.hours[0]
       ? `${firstActiveMarket.name} · ${firstActiveMarket.hours[0].day} ${firstActiveMarket.hours[0].hours}`
       : `${firstActiveMarket.name} · ${firstActiveMarket.nextOpen}`
-    : "Toronto farmers' market circuit";
+    : "Toronto farmers' markets";
 
   // Similar Aisle Vendors (peer stalls in the same aisle/category)
   const vendorAisleSet = new Set(aisleGuides.map((a) => a.id));
@@ -761,7 +761,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
           {
             id: `preview-note-1-${resolvedVendor.slug}`,
             kind: "review",
-            body: `Stopped by ${resolvedVendor.name} early in the morning — their ${menus[0]?.name ?? "featured table items"} were fresh out and worth the walk.`,
+            body: `Stopped by ${resolvedVendor.name} early in the morning — their ${menus[0]?.name ?? "featured items"} were fresh out and worth the walk.`,
             created_at: new Date(nowMs - 2 * 24 * 3600 * 1000).toISOString(),
             author_name: "Claire M.",
             market_name: firstActiveMarket?.name ?? "Toronto Farmers' Market",

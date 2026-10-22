@@ -316,10 +316,10 @@ function VendorTableCard({
             </Link>
             <div className="flex items-baseline justify-between gap-2">
               <div>
-                <p className="type-kicker font-medium text-foreground">On their table</p>
+                <p className="type-kicker font-medium text-foreground">Menu highlights</p>
                 <p className="text-sm text-muted-foreground">
                   {vendor.primaryAisleLabel}
-                  {vendor.publishedMenu ? " · Published stall items" : ""}
+                  {vendor.publishedMenu ? " · Published menu" : ""}
                 </p>
               </div>
               <Link
@@ -890,12 +890,12 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
           <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
             <div className="lg:col-span-7">
               <p className="type-kicker font-medium text-primary">
-                Stalls, tables &amp; neighbourhood market halls in one view
+                Stalls, products &amp; neighbourhood markets in one view
               </p>
               <h1 className="mt-1">{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
-                Meet the growers, bakers, and makers first — see what is on their tables, what it
-                costs, and the exact {LAUNCH_CITY} market halls and hours where they set up.
+                Meet the growers, bakers, and makers first — see what they sell, what it
+                costs, and the exact {LAUNCH_CITY} markets and hours where they set up.
               </p>
             </div>
 
@@ -923,7 +923,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                   className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker text-muted-foreground">On the tables</span>
+                    <span className="type-kicker text-muted-foreground">Products</span>
                     <TagMark className="size-4 shrink-0 text-stamp" />
                   </div>
                   <span className="type-census mt-1 text-3xl leading-none text-stamp sm:text-4xl">
@@ -1034,9 +1034,9 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
               </span>
               <div>
                 <p className="type-kicker text-muted-foreground">
-                  Vendors in priority · Paired with their signature products &amp; market halls
+                  Vendors in priority · Paired with their signature products &amp; markets
                 </p>
-                <h2>Featured Stalls, Tables &amp; Market Halls</h2>
+                <h2>Featured Stalls, Products &amp; Markets</h2>
               </div>
             </div>
 
@@ -1084,11 +1084,11 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
 
           {/* 3-Dimension Filter Bar: Pivot by Product Aisle (with Thumbs), Neighbourhood Walk, or Schedule Window */}
           <div className="grid gap-3 border-b border-border bg-secondary/40 px-4 py-3.5 sm:px-5 lg:grid-cols-12 lg:items-center">
-            {/* 1. Filter by Product Aisle (with Visual Thumbnails) */}
+            {/* 1. Filter by Product Category (with Visual Thumbnails) */}
             <div className="lg:col-span-6">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="type-kicker mr-1 font-medium text-foreground">
-                  1. Product aisle:
+                  1. Category:
                 </span>
                 <button
                   type="button"
@@ -1100,7 +1100,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                       : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
                   )}
                 >
-                  All tables
+                  All stalls
                 </button>
                 {data.aisles.slice(0, 6).map((aisle) => {
                   const active = vendorAisleFilter === aisle.id;
@@ -1244,21 +1244,21 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                   <p className="type-kicker text-muted-foreground">
                     Browse {formatCensus(data.census.menus)} items &amp; the stalls that grow or bake them
                   </p>
-                  <h2>Products &amp; Aisle Crates</h2>
+                  <h2>Products &amp; Categories</h2>
                 </div>
               </div>
               <Link
                 href="/products"
                 className="text-sm font-medium text-primary underline underline-offset-4"
               >
-                All aisles
+                All categories
               </Link>
             </div>
 
-            {/* Aisle Selector Tabs (with Visual Thumbnails) */}
+            {/* Category Selector Tabs (with Visual Thumbnails) */}
             <div
               role="tablist"
-              aria-label="Select product aisle"
+              aria-label="Select product category"
               className="flex flex-wrap gap-1.5 border-b border-border bg-secondary/35 px-4 py-3"
             >
               {data.aisles.slice(0, 8).map((aisle) => {
@@ -1855,7 +1855,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                     <Link href="/feed" className="font-medium text-primary hover:underline">
                       the live feed
                     </Link>{" "}
-                    to share what is fresh on the tables.
+                    to share what is fresh at the stalls.
                   </p>
                 )}
               </div>

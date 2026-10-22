@@ -144,7 +144,7 @@ export default async function ProductsPage({
     <div className="mx-auto w-full max-w-6xl px-4 py-8 lg:px-6">
       <h1>{q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Products"}</h1>
       <p className="type-lede mt-3 max-w-2xl">
-        Search what the stalls sell, or start from an aisle. Each product opens the vendors who
+        Search what the stalls sell, or start from a category. Each product opens the vendors who
         list it and the markets where they set up.
       </p>
       <ProductSearchForm
@@ -163,7 +163,7 @@ export default async function ProductsPage({
         <div className="mt-8 grid gap-8">
           <p>
             <Link href="/products" className="text-base font-medium hover:underline">
-              Browse aisles
+              Browse categories
             </Link>
           </p>
           <section>

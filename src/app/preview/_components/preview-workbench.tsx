@@ -33,16 +33,16 @@ const CONCEPTS: Array<{
     id: "1",
     shortLabel: "Concept 1 · Broadsheet",
     title: "The Saturday Broadsheet & Almanac",
-    subtitle: "Editorial print-inspired weekly timetable, compact enamel finder & 3-column stall gazette",
+    subtitle: "Editorial print-inspired weekly schedule, compact enamel finder & 3-column stall gazette",
     standaloneHref: "/preview/home-1",
     primaryQuestion: "“When can I go this week, and what is the weekly market rhythm?”",
     keyInnovations: [
       "Replaces the tall vertical filter form with a compact, single-ribbon Quick Market Finder featuring expandable Neighbourhood, Product, and Cuisine drawers.",
-      "Elevates the 7-day Market Timetable above the fold as a 2-column broadsheet spread with day-by-day tabs and a live Open Now masthead ribbon.",
-      "Pairs the schedule with a featured Field Note dispatch, a 2x2 photographic Aisle Crate grid, a 6-card Neighbourhood Circuit strip, and a 3-column Stall & Table Gazette.",
+      "Elevates the 7-day Market Schedule above the fold as a 2-column broadsheet spread with day-by-day tabs and a live Open Now masthead ribbon.",
+      "Pairs the schedule with a featured Field Note dispatch, a 2x2 photographic Category grid, a 6-card Neighbourhood strip, and a 3-column Stall Gazette.",
     ],
     critiqueRefinement:
-      "Refined in Iteration 2 to default the timetable to the full 6-day weekday grid (avoiding duplication with the Open Now masthead strip), added a vertical broadsheet column rule, and balanced column heights across the spread.",
+      "Refined in Iteration 2 to default the schedule to the full 6-day weekday grid (avoiding duplication with the Open Now masthead strip), added a vertical broadsheet column rule, and balanced column heights across the spread.",
   },
   {
     id: "2",
@@ -62,17 +62,17 @@ const CONCEPTS: Array<{
   {
     id: "3",
     shortLabel: "Concept 3 · Vendors, Products & Atlas",
-    title: "The Priority Stall, Table & Neighbourhood Atlas",
-    subtitle: "Unified Vendor × Product × Market matrix above the fold with synchronized aisle crates & live map",
+    title: "The Priority Stall, Product & Neighbourhood Atlas",
+    subtitle: "Unified Vendor × Product × Market matrix above the fold with synchronized category crates & live map",
     standaloneHref: "/preview/home-3",
-    primaryQuestion: "“Which vendors make what I'm craving, what is on their tables, and which market halls do they set up at?”",
+    primaryQuestion: "“Which vendors make what I'm craving, what do they sell, and which markets do they set up at?”",
     keyInnovations: [
-      "Puts Vendors in priority above the fold in a 6-card Featured Stalls, Tables & Market Halls showcase: each card pairs the vendor's stall plate, live status, dashed-rule menu items/prices ('On their table'), and exact market halls + unclipped hours ('Where they set up').",
-      "Provides a 3-way interactive filter bar (Product Aisle × Market Walk × Selling Window) that synchronizes in real time with the Products & Aisle Crates explorer and the Live Neighbourhood Atlas below.",
-      "Enriches every Product Crate with the top stalls known for that aisle, and every Neighbourhood Market Walk card with both its market halls and anchor vendors.",
+      "Puts Vendors in priority above the fold in a 6-card Featured Stalls, Products & Markets showcase: each card pairs the vendor's stall plate, live status, dashed-rule menu items/prices ('Menu highlights'), and exact markets + unclipped hours ('Where they set up').",
+      "Provides a 3-way interactive filter bar (Category × Market Walk × Selling Window) that synchronizes in real time with the Products & Categories explorer and the Live Neighbourhood Atlas below.",
+      "Enriches every Product Crate with the top stalls known for that category, and every Neighbourhood Market Walk card with both its markets and anchor vendors.",
     ],
     critiqueRefinement:
-      "Evolved to unify Vendors, Products, and Markets as equal first-class citizens — elevating vendor table cards above the fold and cross-linking every aisle crate and neighbourhood walk with its participating stalls.",
+      "Evolved to unify Vendors, Products, and Markets as equal first-class citizens — elevating vendor cards above the fold and cross-linking every category crate and neighbourhood walk with its participating stalls.",
   },
 ];
 

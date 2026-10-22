@@ -373,7 +373,7 @@ export function VendorConceptCatalogue({
                 <p className="type-census text-2xl text-foreground">
                   {similarAisleVendors.length}
                 </p>
-                <p className="text-sm text-muted-foreground">Peer aisle stalls</p>
+                <p className="text-sm text-muted-foreground">Similar stalls</p>
               </div>
             </div>
 
@@ -389,11 +389,11 @@ export function VendorConceptCatalogue({
           </div>
         </div>
 
-        {/* Right 5 Columns: Signature Table Showcase & Express Order Card */}
+        {/* Right 5 Columns: Featured Products Showcase & Express Order Card */}
         <div className="flex flex-col justify-between rounded-xl bg-primary p-5 text-primary-foreground ring-2 ring-foreground/15 sm:p-6 lg:col-span-5">
           <div>
             <div className="flex items-center justify-between gap-2">
-              <p className="type-kicker text-primary-foreground/85">Featured stall table</p>
+              <p className="type-kicker text-primary-foreground/85">Featured products</p>
               <Link
                 href={`/products?aisle=${encodeURIComponent(vendor.primaryAisleId)}`}
                 className="text-sm font-medium text-primary-foreground underline decoration-primary-foreground/40 underline-offset-4 hover:decoration-primary-foreground"
@@ -482,7 +482,7 @@ export function VendorConceptCatalogue({
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
           <div>
             <p className="type-kicker text-primary">Interactive stall catalogue</p>
-            <h2 className="mt-0.5">Shop {vendor.name}&apos;s table &amp; compare across the market</h2>
+            <h2 className="mt-0.5">Shop {vendor.name} &amp; compare across the market</h2>
           </div>
 
           {/* View Mode Switcher: Visual Cards vs Receipt Table */}
@@ -524,7 +524,7 @@ export function VendorConceptCatalogue({
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter items by name, ingredient, or aisle…"
+              placeholder="Filter items by name, ingredient, or category…"
               className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </label>
@@ -766,11 +766,11 @@ export function VendorConceptCatalogue({
         )}
       </section>
 
-      {/* Interactive "Compare Across the Market" Aisle Explorer Band */}
+      {/* Interactive "Compare Across the Market" Category Explorer Band */}
       <section className="mt-8 rounded-xl bg-stamp p-6 text-chalk ring-2 ring-foreground/15">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-chalk/15 pb-4">
           <div>
-            <p className="type-kicker text-chalk/80">Market-wide aisle explorer</p>
+            <p className="type-kicker text-chalk/80">Market-wide category explorer</p>
             <h2 className="mt-0.5 text-chalk">
               Compare {vendor.name} with other Toronto stalls &amp; product guides
             </h2>
@@ -795,7 +795,7 @@ export function VendorConceptCatalogue({
           </div>
         </div>
 
-        {/* Active Aisle Guide Pills */}
+        {/* Active Category Guide Pills */}
         {activeExplorerGuide ? (
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-chalk/10 p-4">
             <div className="flex items-center gap-3">
@@ -809,7 +809,7 @@ export function VendorConceptCatalogue({
                   Explore {activeExplorerGuide.label} across Toronto
                 </p>
                 <p className="text-sm text-chalk/75">
-                  Jump to a specific product guide or search every stall in this aisle.
+                  Jump to a specific product guide or search every stall in this category.
                 </p>
               </div>
             </div>
@@ -829,7 +829,7 @@ export function VendorConceptCatalogue({
                 href={activeExplorerGuide.href}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
               >
-                <span>Open full {activeExplorerGuide.label.toLowerCase()} aisle</span>
+                <span>Open full {activeExplorerGuide.label.toLowerCase()} directory</span>
                 <CaretRightMark className="size-3.5" />
               </Link>
             </div>
@@ -907,7 +907,7 @@ export function VendorConceptCatalogue({
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <BlocksMark className="size-4 text-primary" />
-                <h2>Markets &amp; fellow stalls on their circuit</h2>
+                <h2>Markets &amp; fellow stalls</h2>
               </div>
               <Link href="/markets" className="text-sm font-medium text-primary hover:underline">
                 All Toronto markets →

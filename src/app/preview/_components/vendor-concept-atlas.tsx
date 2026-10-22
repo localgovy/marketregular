@@ -26,7 +26,6 @@ import {
   SearchMark,
   SlatsMark,
   TagMark,
-  TicketMark,
   WeekMark,
 } from "@/components/marks";
 import { MenuItemPhoto } from "@/components/menu-item-photo";
@@ -299,14 +298,6 @@ export function VendorConceptAtlas({
   const [searchQuery, setSearchQuery] = useState("");
   const [activeHallSlug, setActiveHallSlug] = useState<string>(homeMarket?.slug ?? "");
 
-  // Synchronized Quick-Buy Order Drawer state
-  const [orderQuantities, setOrderQuantities] = useState<Record<string, number>>(() =>
-    menus[0]?.id ? { [menus[0].id]: 1 } : {},
-  );
-  const [fulfillmentChoice, setFulfillmentChoice] = useState<"pickup" | "preorder" | "delivery">(
-    "pickup",
-  );
-
   const resolvedMenus = useMemo(() => {
     return menus.map((item) => ({
       ...item,
@@ -353,32 +344,7 @@ export function VendorConceptAtlas({
     return [...map.entries()];
   }, [filteredMenus]);
 
-  const slipItems = useMemo(() => {
-    return resolvedMenus
-      .filter((item) => (orderQuantities[item.id] ?? 0) > 0)
-      .map((item) => ({
-        item,
-        qty: orderQuantities[item.id] ?? 1,
-        lineCents:
-          (item.effectivePriceCents ?? item.activePriceCents) * (orderQuantities[item.id] ?? 1),
-      }));
-  }, [resolvedMenus, orderQuantities]);
-
-  const slipTotalCents = slipItems.reduce((sum, entry) => sum + entry.lineCents, 0);
-  const slipItemCount = slipItems.reduce((sum, entry) => sum + entry.qty, 0);
-  const primaryCheckoutItem = slipItems[0]?.item ?? resolvedMenus[0];
-
   const activeHall = markets.find((m) => m.slug === activeHallSlug) ?? homeMarket;
-
-  function adjustQty(menuId: string, delta: number) {
-    setOrderQuantities((prev) => {
-      const next = Math.max(0, Math.min(20, (prev[menuId] ?? 0) + delta));
-      const copy = { ...prev };
-      if (next === 0) delete copy[menuId];
-      else copy[menuId] = next;
-      return copy;
-    });
-  }
 
   function resetAllFilters() {
     setSelectedSection("all");
@@ -529,19 +495,19 @@ export function VendorConceptAtlas({
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-lg bg-primary-foreground/12 px-4 py-2.5">
                 <p className="type-census text-2xl text-primary-foreground">{menus.length}</p>
-                <p className="text-sm text-primary-foreground/85">Items on their table</p>
+                <p className="text-sm text-primary-foreground/85">Menu items</p>
               </div>
               <div className="rounded-lg bg-primary-foreground/12 px-4 py-2.5">
                 <p className="type-census text-2xl text-primary-foreground">{markets.length}</p>
                 <p className="text-sm text-primary-foreground/85">
-                  Market {markets.length === 1 ? "hall" : "halls"}
+                  Market {markets.length === 1 ? "location" : "locations"}
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right 5 Cols: On Their Table & Active Market Setup Plate */}
+        {/* Right 5 Cols: Featured Products & Active Market Setup Plate */}
         <div className="flex flex-col justify-between bg-card ring-1 ring-board lg:col-span-5">
           <div>
             {/* Top Bar */}
@@ -549,11 +515,11 @@ export function VendorConceptAtlas({
               <div className="flex items-center gap-2">
                 <PlateMark className="size-4 text-primary" />
                 <p className="type-kicker font-medium text-foreground">
-                  On their table &amp; circuit
+                  Products &amp; markets
                 </p>
               </div>
               <span className="stall-chip-sm bg-stamp px-2.5 py-0.5 text-sm font-medium text-chalk">
-                {isSimulated ? "Pickup · Pre-order · Delivery" : "Published stall table"}
+                {isSimulated ? "Pickup · Pre-order · Delivery" : "Published menu"}
               </span>
             </div>
 
@@ -577,7 +543,7 @@ export function VendorConceptAtlas({
                         className="mt-0.5"
                       />
                       <div className="min-w-0">
-                        <p className="type-kicker text-primary">Selected market setup</p>
+                        <p className="type-kicker text-primary">Selected market</p>
                         <Link
                           href={`/markets/${activeHall.slug}`}
                           className="mt-0.5 block text-base font-medium text-foreground hover:text-primary hover:underline"
@@ -598,7 +564,7 @@ export function VendorConceptAtlas({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-receipt px-5 py-3 text-sm">
-            <span className="font-medium text-muted-foreground">Browse market aisles:</span>
+            <span className="font-medium text-muted-foreground">Product categories:</span>
             <div className="flex flex-wrap gap-1.5">
               {aisleGuides.slice(0, 3).map((guide) => (
                 <Link
@@ -617,182 +583,16 @@ export function VendorConceptAtlas({
         </div>
       </section>
 
-      {/* Synchronized 12-Column Stall Table (8 Cols) & Hall Circuit / Fellow Stalls Rail (4 Cols) */}
+      {/* Synchronized 12-Column Menu (8 Cols) & Markets / Fellow Stalls Rail (4 Cols) */}
       <div className="mt-8 grid gap-8 lg:grid-cols-12 lg:items-start">
-        {/* Left 8 Columns: Interactive Quick-Buy Drawer + Stall Menu Table */}
+        {/* Left 8 Columns: Stall Menu */}
         <div className="flex flex-col gap-8 lg:col-span-8">
-          {/* Docked Quick-Buy & Pre-Order Slip */}
-          <section className="bg-receipt p-5 ring-2 ring-board shadow-[inset_4px_0_0_var(--stamp)] sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-dashed border-border pb-4">
-              <div className="flex items-start gap-3">
-                <span className="stall-chip-sm mt-0.5 flex size-9 shrink-0 items-center justify-center bg-stamp text-chalk">
-                  <TicketMark className="size-4" />
-                </span>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2>Order &amp; reserve slip</h2>
-                    <span className="stall-chip-sm bg-secondary px-2 py-0.5 text-sm font-medium text-foreground">
-                      Direct from stall
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    Build your order from {vendor.name}&apos;s table below for market hall pickup,
-                    pre-order, or local delivery.
-                  </p>
-                </div>
-              </div>
-
-              {/* Fulfillment Selector */}
-              <div
-                role="group"
-                aria-label="Choose fulfillment method"
-                className="flex flex-wrap items-center gap-1.5"
-              >
-                {(
-                  [
-                    { id: "pickup", label: "Market pickup" },
-                    { id: "preorder", label: "Pre-order" },
-                    { id: "delivery", label: "Local delivery" },
-                  ] as const
-                ).map((mode) => (
-                  <button
-                    key={mode.id}
-                    type="button"
-                    onClick={() => setFulfillmentChoice(mode.id)}
-                    className={cn(
-                      "stall-chip-sm cursor-pointer px-3 py-1.5 text-sm font-medium transition-colors",
-                      fulfillmentChoice === mode.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-                    )}
-                  >
-                    {mode.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Synchronized Pickup Hall & Session Bar (when Pickup or Pre-order is selected) */}
-            {fulfillmentChoice !== "delivery" && markets.length > 0 ? (
-              <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 border-b border-dashed border-border pb-3.5 text-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-foreground">Pickup market hall:</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {markets.slice(0, 3).map((m) => (
-                      <button
-                        key={m.slug}
-                        type="button"
-                        onClick={() => setActiveHallSlug(m.slug)}
-                        className={cn(
-                          "cursor-pointer rounded px-2.5 py-1 text-sm font-medium transition-colors",
-                          activeHall?.slug === m.slug
-                            ? "bg-board text-chalk"
-                            : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-                        )}
-                      >
-                        {m.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                {activeHall ? (
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-muted-foreground">Session:</span>
-                    <span className="type-nums font-medium text-foreground">
-                      {activeHall.hours[0]
-                        ? `${activeHall.hours[0].day} ${activeHall.hours[0].hours}`
-                        : activeHall.nextOpen}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-            ) : (
-              <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-border pb-3.5 text-sm">
-                <span className="font-medium text-foreground">
-                  Local Toronto &amp; GTA delivery window:
-                </span>
-                <span className="text-muted-foreground">
-                   Packed fresh from the stall · Next-day courier dispatch
-                </span>
-              </div>
-            )}
-
-            {/* Slip Line Items & Checkout Handoff */}
-            <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-              <div className="flex flex-wrap items-center gap-2">
-                {slipItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Your order slip is empty — click{" "}
-                    <strong className="font-medium text-foreground">+ Add to slip</strong> on any
-                    item below.
-                  </p>
-                ) : (
-                  slipItems.map(({ item, qty, lineCents }) => (
-                    <div
-                      key={item.id}
-                      className="inline-flex items-center gap-2 bg-card px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border"
-                    >
-                      <span>{item.name}</span>
-                      <span className="type-nums text-muted-foreground">
-                        {formatPrice(lineCents)}
-                      </span>
-                      <div className="ml-1 inline-flex items-center gap-1 border-l border-border pl-2">
-                        <button
-                          type="button"
-                          onClick={() => adjustQty(item.id, -1)}
-                          className="flex size-5 cursor-pointer items-center justify-center rounded bg-secondary text-foreground hover:bg-border"
-                          aria-label={`Remove one ${item.name}`}
-                        >
-                          −
-                        </button>
-                        <span className="type-nums min-w-4 text-center text-sm">{qty}</span>
-                        <button
-                          type="button"
-                          onClick={() => adjustQty(item.id, 1)}
-                          className="flex size-5 cursor-pointer items-center justify-center rounded bg-primary text-primary-foreground hover:bg-primary/90"
-                          aria-label={`Add one ${item.name}`}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="flex items-center justify-end gap-4 border-t border-border pt-3 sm:border-t-0 sm:pt-0">
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">
-                    <span className="type-nums font-medium text-foreground">{slipItemCount}</span>{" "}
-                    {slipItemCount === 1 ? "item" : "items"} ·{" "}
-                    {fulfillmentChoice === "delivery"
-                      ? "Delivery"
-                      : activeHall?.name ?? "Market pickup"}
-                  </p>
-                  <p className="type-nums text-xl font-semibold text-foreground">
-                    {formatPrice(slipTotalCents) ?? "$0.00"}
-                  </p>
-                </div>
-
-                {primaryCheckoutItem ? (
-                  <Link
-                    href={`/vendors/${vendor.slug}/buy/${primaryCheckoutItem.id}`}
-                    className="stall-chip-sm inline-flex shrink-0 items-center gap-2 bg-primary px-4 py-2.5 text-base font-medium text-primary-foreground hover:bg-primary/90"
-                  >
-                    <span>Checkout</span>
-                    <CaretRightMark className="size-3.5" />
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-          </section>
-
-          {/* The Stall Table (Filterable Menu with Per-Item Category & Search Links) */}
+          {/* Filterable Menu with Per-Item Category & Search Links */}
           <section id="menu" className="bg-card p-5 ring-1 ring-board sm:p-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
               <div>
-                <p className="type-kicker text-primary">Published stall table</p>
-                <h2 className="mt-0.5">Menu &amp; item-by-item market comparisons</h2>
+                <p className="type-kicker text-primary">Menu &amp; products</p>
+                <h2 className="mt-0.5">What {vendor.name} sells</h2>
               </div>
               <div className="flex items-center gap-3">
                 {hasActiveFilter ? (
@@ -968,7 +768,6 @@ export function VendorConceptAtlas({
 
                     <ul className="mt-2.5 bg-receipt ring-1 ring-border shadow-[inset_3px_0_0_var(--primary)]">
                       {sectionItems.map((item) => {
-                        const qty = orderQuantities[item.id] ?? 0;
                         const priceLabel = formatPrice(
                           item.effectivePriceCents ?? item.activePriceCents,
                         );
@@ -982,10 +781,7 @@ export function VendorConceptAtlas({
                         return (
                           <li
                             key={item.id}
-                            className={cn(
-                              "border-b border-dashed border-border px-4 py-4 last:border-b-0 transition-colors",
-                              qty > 0 ? "bg-secondary/75" : "hover:bg-card/60",
-                            )}
+                            className="border-b border-dashed border-border px-4 py-4 transition-colors last:border-b-0 hover:bg-card/60"
                           >
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start">
                               <div className="flex min-w-0 items-start gap-3.5">
@@ -1048,7 +844,7 @@ export function VendorConceptAtlas({
                                 </div>
                               </div>
 
-                              {/* Right Column: Price Stamp, Save, & Order Controls */}
+                              {/* Right Column: Price Stamp, Save, & Buy Control */}
                               <div className="flex flex-row items-center justify-between gap-2 sm:flex-col sm:items-end">
                                 <div className="flex items-center gap-2">
                                   {priceLabel ? (
@@ -1062,45 +858,13 @@ export function VendorConceptAtlas({
                                 </div>
 
                                 {item.effectiveCanBuy ? (
-                                  <div className="flex items-center gap-1.5">
-                                    {qty > 0 ? (
-                                      <div className="inline-flex items-center gap-1 bg-card px-2 py-1 ring-1 ring-primary">
-                                        <button
-                                          type="button"
-                                          onClick={() => adjustQty(item.id, -1)}
-                                          className="flex size-5 cursor-pointer items-center justify-center rounded bg-secondary text-sm font-medium text-foreground hover:bg-border"
-                                          aria-label={`Decrease quantity of ${item.name}`}
-                                        >
-                                          −
-                                        </button>
-                                        <span className="type-nums min-w-5 text-center text-sm font-medium text-foreground">
-                                          {qty}
-                                        </span>
-                                        <button
-                                          type="button"
-                                          onClick={() => adjustQty(item.id, 1)}
-                                          className="flex size-5 cursor-pointer items-center justify-center rounded bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                                          aria-label={`Increase quantity of ${item.name}`}
-                                        >
-                                          +
-                                        </button>
-                                      </div>
-                                    ) : (
-                                      <button
-                                        type="button"
-                                        onClick={() => adjustQty(item.id, 1)}
-                                        className="stall-chip-sm cursor-pointer bg-primary px-3 py-1 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                                      >
-                                        + Add to slip
-                                      </button>
-                                    )}
-                                    <Link
-                                      href={`/vendors/${vendor.slug}/buy/${item.id}`}
-                                      className="rounded bg-card px-2.5 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
-                                    >
-                                      Buy now
-                                    </Link>
-                                  </div>
+                                  <Link
+                                    href={`/vendors/${vendor.slug}/buy/${item.id}`}
+                                    className="stall-chip-sm inline-flex items-center gap-1.5 bg-primary px-3 py-1 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                                  >
+                                    <span>Buy now</span>
+                                    <CaretRightMark className="size-3" />
+                                  </Link>
                                 ) : null}
                               </div>
                             </div>
@@ -1115,27 +879,27 @@ export function VendorConceptAtlas({
           </section>
         </div>
 
-        {/* Right 4 Columns: Interactive Market Hall Circuit & Fellow Stalls Rail */}
+        {/* Right 4 Columns: Interactive Markets & Fellow Stalls Rail */}
         <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:col-span-4">
           <div className="bg-card ring-1 ring-board">
             {/* Rail Header Band */}
             <div className="flex items-center justify-between gap-2 border-b border-black/15 bg-primary px-5 py-3.5 text-primary-foreground">
               <div className="flex items-center gap-2">
                 <SlatsMark className="size-4 text-primary-foreground" />
-                <h2 className="text-xl text-primary-foreground">Market hall circuit</h2>
+                <h2 className="text-xl text-primary-foreground">Where they sell</h2>
               </div>
               <span className="stall-chip-sm type-nums bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
-                {markets.length} {markets.length === 1 ? "hall" : "halls"}
+                {markets.length} {markets.length === 1 ? "market" : "markets"}
               </span>
             </div>
 
             <div className="p-5">
               <p className="text-sm text-muted-foreground">
-                Select a market hall to inspect {vendor.name}&apos;s hours and fellow stalls setting
-                up alongside them.
+                Select a market to inspect {vendor.name}&apos;s hours and fellow stalls selling
+                alongside them.
               </p>
 
-              {/* Hall Selector Pills (up to 4 quick pills + full selector if more) */}
+              {/* Market Selector Pills (up to 4 quick pills + full selector if more) */}
               {markets.length > 1 ? (
                 <div className="mt-3 flex flex-col gap-2">
                   <div className="flex flex-wrap gap-1.5">
@@ -1157,7 +921,7 @@ export function VendorConceptAtlas({
                   </div>
                   {markets.length > 4 ? (
                     <select
-                      aria-label="Choose market hall on this vendor's circuit"
+                      aria-label="Choose market location"
                       value={activeHall?.slug ?? ""}
                       onChange={(e) => setActiveHallSlug(e.target.value)}
                       className="w-full rounded bg-receipt px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border"
@@ -1334,11 +1098,11 @@ export function VendorConceptAtlas({
         </aside>
       </div>
 
-      {/* Bottom Atlas Discovery Spread: Peer Stalls in Aisle (HomeAtlas VendorTableCard Style) + Broad Product Guides */}
+      {/* Bottom Discovery Spread: Similar Stalls + Broad Product Guides */}
       <section className="mt-10 bg-card p-5 ring-1 ring-board sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
           <div>
-            <p className="type-kicker text-primary">Atlas stall comparison</p>
+            <p className="type-kicker text-primary">More stalls to explore</p>
             <h2 className="mt-0.5">
               Other stalls known for {vendor.primaryAisleLabel.toLowerCase()}
             </h2>
@@ -1359,7 +1123,7 @@ export function VendorConceptAtlas({
               className="flex flex-col justify-between bg-card ring-1 ring-board"
             >
               <div>
-                {/* 1. Peer Stall Plate Header (Matching HomeAtlas VendorTableCard, with high-contrast paper header) */}
+                {/* 1. Peer Stall Plate Header */}
                 <div className="flex items-start justify-between gap-2.5 border-b border-border bg-receipt px-4 py-3.5">
                   <div className="flex min-w-0 flex-1 items-start gap-3">
                     <StallEmblem
@@ -1397,7 +1161,7 @@ export function VendorConceptAtlas({
                   <SaveButton kind="vendor" slug={peer.slug} name={peer.name} size="sm" />
                 </div>
 
-                {/* 2. On Their Table Banner + Seeded Items */}
+                {/* 2. Featured Products Banner + Seeded Items */}
                 <div className="border-b border-border bg-secondary/50">
                   <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-3 border-b border-border bg-card px-4 py-2.5">
                     <Link href={`/vendors/${peer.slug}`} className="block">
@@ -1417,7 +1181,7 @@ export function VendorConceptAtlas({
                     </Link>
                     <div className="flex items-baseline justify-between gap-2">
                       <div>
-                        <p className="type-kicker font-medium text-foreground">On their table</p>
+                        <p className="type-kicker font-medium text-foreground">Menu highlights</p>
                         <p className="text-sm text-muted-foreground">{peer.badge}</p>
                       </div>
                       <Link
@@ -1454,7 +1218,7 @@ export function VendorConceptAtlas({
                 </div>
               </div>
 
-              {/* 3. Where They Set Up */}
+              {/* 3. Where They Sell */}
               {peer.markets[0] ? (
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 bg-card px-4 py-3 text-sm">
                   <Link
@@ -1470,13 +1234,13 @@ export function VendorConceptAtlas({
           ))}
         </ul>
 
-        {/* Broad Product Guides & Category Crates */}
+        {/* Broad Product Guides & Categories */}
         <div className="mt-6 border-t border-dashed border-border pt-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div>
-              <p className="type-kicker text-primary">Broad product &amp; aisle guides</p>
+              <p className="type-kicker text-primary">Product categories &amp; guides</p>
               <h3 className="mt-0.5">
-                Compare every Toronto market stall in {vendor.name}&apos;s aisles
+                Compare Toronto market stalls by category
               </h3>
             </div>
             <Link
@@ -1507,8 +1271,7 @@ export function VendorConceptAtlas({
                         </Link>
                         <p className="type-nums text-sm text-muted-foreground">
                           {guide.itemCountOnMenu}{" "}
-                          {guide.itemCountOnMenu === 1 ? "item" : "items"} on this stall&apos;s
-                          table
+                          {guide.itemCountOnMenu === 1 ? "item" : "items"} on this menu
                         </p>
                       </div>
                     </div>
@@ -1516,7 +1279,7 @@ export function VendorConceptAtlas({
                       href={guide.href}
                       className="text-sm font-medium text-primary hover:underline"
                     >
-                      Aisle →
+                      Browse →
                     </Link>
                   </div>
 
