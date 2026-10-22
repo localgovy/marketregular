@@ -12,12 +12,7 @@ import {
   productPhoto,
 } from "@/lib/data/product-photos";
 import { menuCategoryLabel } from "@/lib/data/product-search";
-import {
-  FIND_CATEGORIES,
-  FIND_PAGES,
-  findPageForProductSlug,
-  type FindPage,
-} from "@/data/find-pages";
+import { FIND_CATEGORIES, FIND_PAGES } from "@/data/find-pages";
 import { DIRECTORY_REVALIDATE_SECONDS } from "@/lib/directory-cache";
 import { FIND_AREAS, sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
 import { listingMarkSrc } from "@/lib/format";
@@ -36,6 +31,11 @@ import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeChargesConfigured } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { rankVendorMarkets, vendorMarketInSeason } from "@/lib/vendor-markets";
+import {
+  matchFindPageByName,
+  orderedSectionNames,
+  stallCompareLabel,
+} from "@/lib/vendor-atlas-match";
 import { vendorProductTags } from "@/lib/vendor-tags";
 import type { FloorItem, Market, StallPick, StallRef, Vendor, VendorDetail } from "@/types/database";
 
@@ -44,7 +44,7 @@ export type VendorAtlasMenuItem = {
   name: string;
   description: string | null;
   section: string;
-  sectionOrder: number;
+  sectionOrder: number | null;
   season: string | null;
   dietary: string[];
   imageUrl: string | null;
@@ -203,110 +203,104 @@ function inferNeighbourhood(market: Pick<Market, "slug" | "city">): string {
   return market.city || "Toronto";
 }
 
-function matchFindPageByName(
-  itemName: string,
-  productSlug: string | null,
-): FindPage | null {
-  const bySlug = findPageForProductSlug(productSlug);
-  if (bySlug && bySlug.vendors > 0) return bySlug;
+type MenuCategoryMeta = { product_category: string | null; product_slug: string | null };
 
-  const lower = itemName.toLowerCase();
-  for (const page of FIND_PAGES) {
-    if (page.vendors <= 0) continue;
-    const termLower = page.term.toLowerCase().replace(/^general\s+/, "");
-    const regex = new RegExp(`\\b${termLower.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
-    if (termLower.length >= 3 && regex.test(lower)) {
-      return page;
-    }
-    for (const ms of page.matchSlugs) {
-      const words = ms.replace(/-/g, " ");
-      const msRegex = new RegExp(`\\b${words.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
-      if (words.length >= 3 && msRegex.test(lower)) {
-        return page;
-      }
-    }
-  }
-
-  return null;
-}
-
-async function fetchMenuCategoryMetadata(
-  vendorId: string,
-): Promise<Map<string, { product_category: string | null; product_slug: string | null }>> {
-  const out = new Map<string, { product_category: string | null; product_slug: string | null }>();
+/** One pass for every stall page, instead of a category query per vendor. */
+async function fetchAllMenuCategoryMetadata(): Promise<Map<string, MenuCategoryMeta>> {
+  const out = new Map<string, MenuCategoryMeta>();
   try {
     const supabase = createServiceClient();
     if (!supabase) return out;
-    const { data, error } = await supabase
-      .from("published_menus")
-      .select("id, product_category, product_slug")
-      .eq("vendor_id", vendorId);
-    if (error || !data) return out;
-    for (const row of data as Array<{
-      id: string;
-      product_category: string | null;
-      product_slug: string | null;
-    }>) {
-      if (row.id) {
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await supabase
+        .from("published_menus")
+        .select("id, product_category, product_slug")
+        .range(from, from + pageSize - 1);
+      if (error || !data) return out;
+      for (const row of data as Array<{ id: string } & MenuCategoryMeta>) {
+        if (!row.id) continue;
         out.set(row.id, {
           product_category: row.product_category ?? null,
           product_slug: row.product_slug ?? null,
         });
       }
+      if (data.length < pageSize) break;
     }
   } catch {
-    // Ignore and fall back to name/tag inference
+    // Name matching still classifies the menu when this column is unavailable.
   }
   return out;
 }
 
 type SharedVendorAtlasContext = {
   expires: number;
-  atlasData: HomeAtlasData;
+  atlasData: Pick<HomeAtlasData, "vendorSpotlights">;
   vendorById: Map<string, Vendor>;
   spotlightBySlug: Map<string, HomeAtlasVendorSpotlight>;
   stallsByMarketId: Map<string, StallRef[]>;
   photos: typeof EMPTY_PRODUCT_PHOTOS;
+  menuCategoryById: Map<string, MenuCategoryMeta>;
 };
 
 let sharedContextMemory: SharedVendorAtlasContext | null = null;
 let sharedContextTask: Promise<SharedVendorAtlasContext> | null = null;
+
+function fallbackSharedContext(): SharedVendorAtlasContext {
+  return {
+    expires: 0,
+    atlasData: { vendorSpotlights: [] },
+    vendorById: new Map(),
+    spotlightBySlug: new Map(),
+    stallsByMarketId: new Map(),
+    photos: EMPTY_PRODUCT_PHOTOS,
+    menuCategoryById: new Map(),
+  };
+}
+
+async function loadSharedVendorAtlasContext(): Promise<SharedVendorAtlasContext> {
+  const [atlasData, allVendors, allStalls, photos, menuCategoryById] = await Promise.all([
+    loadHomeAtlasData(),
+    listVendors(),
+    listStalls(),
+    listProductPhotos().catch(() => EMPTY_PRODUCT_PHOTOS),
+    fetchAllMenuCategoryMetadata(),
+  ]);
+
+  const vendorById = new Map(allVendors.map((v) => [v.id, v]));
+  const spotlightBySlug = new Map(atlasData.vendorSpotlights.map((s) => [s.slug, s]));
+  const stallsByMarketId = new Map<string, StallRef[]>();
+  for (const stall of allStalls) {
+    const list = stallsByMarketId.get(stall.market_id) ?? [];
+    list.push(stall);
+    stallsByMarketId.set(stall.market_id, list);
+  }
+
+  return {
+    expires: Date.now() + DIRECTORY_REVALIDATE_SECONDS * 1000,
+    atlasData: { vendorSpotlights: atlasData.vendorSpotlights },
+    vendorById,
+    spotlightBySlug,
+    stallsByMarketId,
+    photos,
+    menuCategoryById,
+  };
+}
 
 async function getSharedVendorAtlasContext(): Promise<SharedVendorAtlasContext> {
   if (sharedContextMemory && sharedContextMemory.expires > Date.now()) {
     return sharedContextMemory;
   }
   if (!sharedContextTask) {
-    sharedContextTask = (async () => {
-      const [atlasData, allVendors, allStalls, photos] = await Promise.all([
-        loadHomeAtlasData(),
-        listVendors(),
-        listStalls(),
-        listProductPhotos().catch(() => EMPTY_PRODUCT_PHOTOS),
-      ]);
-
-      const vendorById = new Map(allVendors.map((v) => [v.id, v]));
-      const spotlightBySlug = new Map(atlasData.vendorSpotlights.map((s) => [s.slug, s]));
-      const stallsByMarketId = new Map<string, StallRef[]>();
-      for (const stall of allStalls) {
-        const list = stallsByMarketId.get(stall.market_id) ?? [];
-        list.push(stall);
-        stallsByMarketId.set(stall.market_id, list);
-      }
-
-      const ctx: SharedVendorAtlasContext = {
-        expires: Date.now() + DIRECTORY_REVALIDATE_SECONDS * 1000,
-        atlasData,
-        vendorById,
-        spotlightBySlug,
-        stallsByMarketId,
-        photos,
-      };
-      sharedContextMemory = ctx;
-      return ctx;
-    })().finally(() => {
-      sharedContextTask = null;
-    });
+    sharedContextTask = loadSharedVendorAtlasContext()
+      .then((ctx) => {
+        sharedContextMemory = ctx;
+        return ctx;
+      })
+      .catch(() => fallbackSharedContext())
+      .finally(() => {
+        sharedContextTask = null;
+      });
   }
   return sharedContextTask;
 }
@@ -322,14 +316,9 @@ export async function buildVendorAtlasData({
   claimed: boolean;
   nowMs: number;
 }): Promise<VendorAtlasData> {
-  const [ctx, menuCategoryMap] = await Promise.all([
-    getSharedVendorAtlasContext(),
-    resolvedVendor.menus.length > 0
-      ? fetchMenuCategoryMetadata(resolvedVendor.id)
-      : Promise.resolve(new Map<string, { product_category: string | null; product_slug: string | null }>()),
-  ]);
+  const ctx = await getSharedVendorAtlasContext();
 
-  const { atlasData, vendorById, spotlightBySlug, stallsByMarketId, photos } = ctx;
+  const { atlasData, vendorById, spotlightBySlug, stallsByMarketId, photos, menuCategoryById: menuCategoryMap } = ctx;
   const now = new Date(nowMs);
   const todayWeekday = weekdayInToronto(now);
 
@@ -343,7 +332,7 @@ export async function buildVendorAtlasData({
   const liveSalesEnabled = VENDOR_SALES_OPEN && stripeChargesConfigured();
 
   // Enrich menu items with category, find-page comparison links, and live selling state
-  const menus: VendorAtlasMenuItem[] = resolvedVendor.menus.map((item, index) => {
+  const menus: VendorAtlasMenuItem[] = resolvedVendor.menus.map((item) => {
     const dbMeta = menuCategoryMap.get(item.id);
     const rawCategory = dbMeta?.product_category ?? item.product_category ?? null;
     const rawSlug = dbMeta?.product_slug ?? item.product_slug ?? null;
@@ -361,7 +350,7 @@ export async function buildVendorAtlasData({
       ? `/find/${matchedFindPage.slug}`
       : `/products?aisle=${encodeURIComponent(productCategory)}&q=${encodeURIComponent(item.name.split("(")[0]?.trim() || item.name)}`;
     const compareLabel = matchedFindPage
-      ? `Compare ${matchedFindPage.vendors} ${matchedFindPage.term.replace(/^General\s+/i, "").toLowerCase()} stalls`
+      ? stallCompareLabel(matchedFindPage.vendors, matchedFindPage.term)
       : `Compare in ${productCategoryLabel.toLowerCase()}`;
     const compareVendorsCount = matchedFindPage?.vendors ?? null;
 
@@ -371,8 +360,13 @@ export async function buildVendorAtlasData({
     const preorder = Boolean(item.offer_preorder);
     const delivery = Boolean(item.offer_delivery);
 
-    const section = item.menu_section?.trim() || productCategoryLabel;
-    const sectionOrder = item.menu_section_order ?? index;
+    const namedSection = item.menu_section?.trim() || null;
+    const section = namedSection || productCategoryLabel;
+    const sectionOrder = namedSection
+      ? typeof item.menu_section_order === "number"
+        ? item.menu_section_order
+        : null
+      : null;
 
     return {
       id: item.id,
@@ -399,16 +393,9 @@ export async function buildVendorAtlasData({
     };
   });
 
-  // Distinct menu sections in display order
-  const sectionOrderMap = new Map<string, number>();
-  for (const item of menus) {
-    if (!sectionOrderMap.has(item.section)) {
-      sectionOrderMap.set(item.section, item.sectionOrder);
-    }
-  }
-  const menuSections = [...sectionOrderMap.entries()]
-    .sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))
-    .map(([name]) => name);
+  const menuSections = orderedSectionNames(
+    menus.map((item) => ({ name: item.section, order: item.sectionOrder })),
+  );
 
   const dietaryOptions = [
     ...new Set(menus.flatMap((item) => item.dietary.map((d) => d.trim())).filter(Boolean)),
@@ -432,23 +419,10 @@ export async function buildVendorAtlasData({
     }
   }
 
-  const sortedCategoryEntries = [...categoryCounts.entries()].sort((a, b) => b[1] - a[1]);
-  const vendorNameLower = resolvedVendor.name.toLowerCase();
-  const preferredPrimaryEntry =
-    sortedCategoryEntries.find(([id]) => {
-      if (
-        (vendorNameLower.includes("coffee") || vendorNameLower.includes("chocosol")) &&
-        id === "coffee-and-tea"
-      ) {
-        return true;
-      }
-      if (vendorNameLower.includes("melon") && id === "apples-and-fruit") {
-        return true;
-      }
-      return false;
-    }) ?? sortedCategoryEntries[0];
-
-  const primaryCategoryId = preferredPrimaryEntry?.[0] ?? fallbackVendorCategory;
+  const sortedCategoryEntries = [...categoryCounts.entries()].sort(
+    (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
+  );
+  const primaryCategoryId = sortedCategoryEntries[0]?.[0] ?? fallbackVendorCategory;
   const primaryCategoryLabel =
     menuCategoryLabel(primaryCategoryId) ??
     FIND_CATEGORIES.find((c) => c.id === primaryCategoryId)?.label ??
@@ -462,7 +436,7 @@ export async function buildVendorAtlasData({
     : null;
 
   const orderedCategoryEntries = [
-    ...(preferredPrimaryEntry ? [preferredPrimaryEntry] : []),
+    ...sortedCategoryEntries.filter(([id]) => id === primaryCategoryId),
     ...sortedCategoryEntries.filter(([id]) => id !== primaryCategoryId),
   ];
 
@@ -606,84 +580,52 @@ export async function buildVendorAtlasData({
     : "Toronto farmers' markets";
 
   // Similar stalls in the same product category
-  const vendorCategorySet = new Set(categoryGuides.map((a) => a.id));
   const vendorMarketSlugSet = new Set(markets.map((m) => m.slug));
 
-  const similarVendors: VendorAtlasPeer[] = atlasData.vendorSpotlights
-    .filter(
-      (spot) =>
-        spot.slug !== resolvedVendor.slug &&
-        spot.aisleIds.some((id) => vendorCategorySet.has(id)),
-    )
-    .slice(0, 6)
-    .map((spot) => {
-      const shared = spot.markets.find((m) => vendorMarketSlugSet.has(m.slug)) ?? null;
-      return {
-        id: spot.id,
-        slug: spot.slug,
-        name: spot.name,
-        logoUrl: spot.logoUrl,
-        ratingAvg: spot.ratingAvg,
-        reviewCount: spot.reviewCount,
-        badge: spot.badge,
-        primaryCategoryId: spot.aisleIds[0] ?? primaryCategoryId,
-        primaryCategoryLabel: spot.primaryAisleLabel,
-        photoUrl: spot.photoUrl,
-        photoAlt: spot.photoAlt,
-        sharedMarketName: shared?.name ?? null,
-        sharedMarketSlug: shared?.slug ?? null,
-        items: spot.items.map((i) => ({
-          name: i.name,
-          priceCents: i.priceCents,
-          href: i.href,
-        })),
-        markets: spot.markets.slice(0, 2).map((m) => ({
-          name: m.name,
-          slug: m.slug,
-          hours: m.hours,
-        })),
-      };
-    });
-
-  if (similarVendors.length < 3) {
-    const seen = new Set([resolvedVendor.slug, ...similarVendors.map((v) => v.slug)]);
-    for (const spot of atlasData.vendorSpotlights) {
-      if (similarVendors.length >= 6) break;
-      if (seen.has(spot.slug)) continue;
-      const shared = spot.markets.find((m) => vendorMarketSlugSet.has(m.slug)) ?? null;
-      similarVendors.push({
-        id: spot.id,
-        slug: spot.slug,
-        name: spot.name,
-        logoUrl: spot.logoUrl,
-        ratingAvg: spot.ratingAvg,
-        reviewCount: spot.reviewCount,
-        badge: spot.badge,
-        primaryCategoryId: spot.aisleIds[0] ?? primaryCategoryId,
-        primaryCategoryLabel: spot.primaryAisleLabel,
-        photoUrl: spot.photoUrl,
-        photoAlt: spot.photoAlt,
-        sharedMarketName: shared?.name ?? null,
-        sharedMarketSlug: shared?.slug ?? null,
-        items: spot.items.map((i) => ({
-          name: i.name,
-          priceCents: i.priceCents,
-          href: i.href,
-        })),
-        markets: spot.markets.slice(0, 2).map((m) => ({
-          name: m.name,
-          slug: m.slug,
-          hours: m.hours,
-        })),
-      });
-      seen.add(spot.slug);
-    }
-  }
+  const rankedPeers = [...atlasData.vendorSpotlights].sort((a, b) => {
+    const aShared = a.markets.some((m) => vendorMarketSlugSet.has(m.slug)) ? 1 : 0;
+    const bShared = b.markets.some((m) => vendorMarketSlugSet.has(m.slug)) ? 1 : 0;
+    return bShared - aShared || (b.reviewCount ?? 0) - (a.reviewCount ?? 0) || a.name.localeCompare(b.name);
+  });
+  const primaryPeers = rankedPeers.filter(
+    (spot) => spot.slug !== resolvedVendor.slug && spot.aisleIds.includes(primaryCategoryId),
+  );
+  const similarVendors: VendorAtlasPeer[] = primaryPeers.slice(0, 6).map((spot) => {
+    const shared = spot.markets.find((m) => vendorMarketSlugSet.has(m.slug)) ?? null;
+    return {
+      id: spot.id,
+      slug: spot.slug,
+      name: spot.name,
+      logoUrl: spot.logoUrl,
+      ratingAvg: spot.ratingAvg,
+      reviewCount: spot.reviewCount,
+      badge: spot.badge,
+      primaryCategoryId: spot.aisleIds[0] ?? primaryCategoryId,
+      primaryCategoryLabel: spot.primaryAisleLabel,
+      photoUrl: spot.photoUrl,
+      photoAlt: spot.photoAlt,
+      sharedMarketName: shared?.name ?? null,
+      sharedMarketSlug: shared?.slug ?? null,
+      items: spot.items.map((i) => ({
+        name: i.name,
+        priceCents: i.priceCents,
+        href: i.href,
+      })),
+      markets: spot.markets.slice(0, 2).map((m) => ({
+        name: m.name,
+        slug: m.slug,
+        hours: m.hours,
+      })),
+    };
+  });
 
   const summaryLine =
     resolvedVendor.about?.trim() ||
     (markets.length > 0
-      ? `${resolvedVendor.name} brings ${primaryCategoryLabel.toLowerCase()} and seasonal market goods to ${markets.map((m) => m.name).slice(0, 2).join(" and ")}${markets.length > 2 ? ` and ${markets.length - 2} other Ontario farmers' ${markets.length - 2 === 1 ? "market" : "markets"}` : ""}.`
+      ? `${resolvedVendor.name} brings ${primaryCategoryLabel.toLowerCase()} and seasonal market goods to ${markets
+          .map((m) => m.name)
+          .slice(0, 2)
+          .join(" and ")}${markets.length > 2 ? `, and ${markets.length - 2} other Ontario farmers' ${markets.length - 2 === 1 ? "market" : "markets"}` : ""}.`
       : `${resolvedVendor.name} is a Toronto & Ontario farmers' market stall known for ${primaryCategoryLabel.toLowerCase()}.`);
 
   return {

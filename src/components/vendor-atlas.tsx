@@ -346,8 +346,17 @@ export function VendorAtlas({ data }: { data: VendorAtlasData }) {
       list.push(item);
       map.set(item.section, list);
     }
-    return [...map.entries()];
-  }, [filteredMenus]);
+    const names = [
+      ...menuSections.filter((name) => map.has(name)),
+      ...[...map.keys()].filter((name) => !menuSections.includes(name)),
+    ];
+    return names.map((name) => {
+      const items = [...(map.get(name) ?? [])].sort(
+        (a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id),
+      );
+      return [name, items] as const;
+    });
+  }, [filteredMenus, menuSections]);
 
   const activeMarket = markets.find((m) => m.slug === activeMarketSlug) ?? homeMarket;
 
@@ -641,6 +650,7 @@ export function VendorAtlas({ data }: { data: VendorAtlasData }) {
                         type="search"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        aria-label={`Search ${vendor.name}'s menu`}
                         placeholder={`Search ${vendor.name}'s ${menus.length} ${menus.length === 1 ? "item" : "items"}…`}
                         className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
                       />
@@ -650,6 +660,7 @@ export function VendorAtlas({ data }: { data: VendorAtlasData }) {
                       <button
                         type="button"
                         onClick={resetAllFilters}
+                        aria-pressed={!hasActiveFilter}
                         className={cn(
                           "stall-chip-sm cursor-pointer px-3 py-1.5 text-sm font-medium transition-colors",
                           !hasActiveFilter
@@ -660,15 +671,16 @@ export function VendorAtlas({ data }: { data: VendorAtlasData }) {
                         All ({menus.length})
                       </button>
                       {categoryGuides.map((guide) => (
-                        <button
-                          key={guide.id}
-                          type="button"
-                          onClick={() =>
-                            setSelectedCategoryId(
-                              selectedCategoryId === guide.id ? "all" : guide.id,
-                            )
-                          }
-                          className={cn(
+                      <button
+                        key={guide.id}
+                        type="button"
+                        aria-pressed={selectedCategoryId === guide.id}
+                        onClick={() =>
+                          setSelectedCategoryId(
+                            selectedCategoryId === guide.id ? "all" : guide.id,
+                          )
+                        }
+                        className={cn(
                             "stall-chip-sm inline-flex cursor-pointer items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors",
                             selectedCategoryId === guide.id
                               ? "bg-primary text-primary-foreground"
@@ -983,7 +995,7 @@ export function VendorAtlas({ data }: { data: VendorAtlasData }) {
         </div>
 
         {/* Right 4 Columns: Interactive Markets & Fellow Stalls Rail */}
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:col-span-4">
+        <aside className="flex flex-col gap-6 lg:sticky lg:top-[var(--header-offset)] lg:col-span-4">
           {markets.length > 0 ? (
             <div className="bg-card ring-1 ring-board">
               {/* Rail Header Band */}
@@ -1211,22 +1223,25 @@ export function VendorAtlas({ data }: { data: VendorAtlasData }) {
 
       {/* Bottom Discovery Spread: Similar Stalls + Broad Product Guides */}
       <section className="mt-10 bg-card p-5 ring-1 ring-board sm:p-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
-          <div>
-            <p className="type-kicker text-primary">More stalls to explore</p>
-            <h2 className="mt-0.5">
-              Other stalls known for {vendor.primaryCategoryLabel.toLowerCase()}
-            </h2>
+        {similarVendors.length > 0 ? (
+          <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
+            <div>
+              <p className="type-kicker text-primary">More stalls to explore</p>
+              <h2 className="mt-0.5">
+                Other stalls known for {vendor.primaryCategoryLabel.toLowerCase()}
+              </h2>
+            </div>
+            <Link
+              href={`/products?aisle=${encodeURIComponent(vendor.primaryCategoryId)}`}
+              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            >
+              <span>Browse all {vendor.primaryCategoryLabel.toLowerCase()} stalls</span>
+              <CaretRightMark className="size-3.5" />
+            </Link>
           </div>
-          <Link
-            href={`/products?aisle=${encodeURIComponent(vendor.primaryCategoryId)}`}
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-          >
-            <span>Browse all {vendor.primaryCategoryLabel.toLowerCase()} stalls</span>
-            <CaretRightMark className="size-3.5" />
-          </Link>
-        </div>
+        ) : null}
 
+        {similarVendors.length > 0 ? (
         <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {similarVendors.slice(0, 3).map((peer) => (
             <li
@@ -1344,9 +1359,14 @@ export function VendorAtlas({ data }: { data: VendorAtlasData }) {
             </li>
           ))}
         </ul>
+        ) : null}
 
         {/* Broad Product Guides & Categories */}
-        <div className="mt-6 border-t border-dashed border-border pt-5">
+        <div
+          className={cn(
+            similarVendors.length > 0 && "mt-6 border-t border-dashed border-border pt-5",
+          )}
+        >
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div>
               <p className="type-kicker text-primary">Product categories &amp; guides</p>

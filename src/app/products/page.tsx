@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { permanentRedirect } from "next/navigation";
 import type { CatalogueCard } from "@/components/product-catalogue";
 import { ProductsAtlas } from "@/components/products-atlas";
-import { listMarkets } from "@/lib/data/catalog";
 import { productPhoto } from "@/lib/data/product-photos";
 import { searchProducts, searchVendorsByName } from "@/lib/data/product-search";
 import { LAUNCH_CITY } from "@/lib/launch";
@@ -97,12 +96,22 @@ export default async function ProductsPage({
   const aisle = parseAisle(aisleRaw);
   const sort = parseCatalogueSort(sortRaw);
 
-  const [markets, products, vendors, hubContext] = await Promise.all([
-    listMarkets(),
+  const [products, vendors, hubContext] = await Promise.all([
     q ? searchProducts({ q, openToday, marketSlug: market || null, day }) : Promise.resolve([]),
     q ? searchVendorsByName(q) : Promise.resolve([]),
     loadProductsHubContext(aisle),
   ]);
+
+  const {
+    markets,
+    photos,
+    census,
+    openNowCount,
+    sellingTodayCount,
+    spotlight,
+    stallsByAisle,
+    featuredStalls,
+  } = hubContext;
 
   const marketKnown = !market || markets.some((item) => item.slug === market);
   const canonical = canonicalProductPath({
@@ -130,8 +139,6 @@ export default async function ProductsPage({
   const live = liveFindPages();
   const aisles = catalogueAisles(live);
   const heading = catalogueHeading(aisle);
-  const { photos, census, openNowCount, sellingTodayCount, spotlight, stallsByAisle, featuredStalls } =
-    hubContext;
 
   const cards: CatalogueCard[] = sortCatalogue(filterCatalogue(live, aisle), sort, aisle).map(
     (page) => {

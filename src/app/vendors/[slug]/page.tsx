@@ -103,7 +103,7 @@ export default async function VendorPage({
           { name: vendor.name, path: `/vendors/${vendor.slug}` },
         ])}
       />
-      <VendorAtlas data={atlasData} />
+      <VendorAtlas key={vendor.slug} data={atlasData} />
     </>
   );
 }

@@ -1,6 +1,12 @@
 import "server-only";
 
-import { getDirectoryCensus } from "@/lib/data/catalog";
+import {
+  getDirectoryCensus,
+  listMarkets,
+  listSchedules,
+  listStalls,
+  listVendors,
+} from "@/lib/data/catalog";
 import {
   EMPTY_PRODUCT_PHOTOS,
   listProductPhotos,
@@ -14,7 +20,8 @@ import {
   type FindVendor,
 } from "@/lib/data/product-search";
 import { FIND_CATEGORIES, type FindPage } from "@/data/find-pages";
-import { loadHomeAtlasData, type HomeAtlasVendorSpotlight } from "@/lib/home-atlas-data";
+import { weekdayInToronto } from "@/lib/find-paths";
+import { listingMarkSrc } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";
 import {
   BREAKFAST_ID,
@@ -23,6 +30,11 @@ import {
   liveFindPages,
 } from "@/lib/product-catalogue";
 import { knownPrice, sortFindVendors, torontoWeekday } from "@/lib/product-sort";
+import { isMarketOpen } from "@/lib/schedule";
+import { stallHall } from "@/lib/season-fold";
+import { vendorProductTags } from "@/lib/vendor-tags";
+import { vendorsSellingToday } from "@/lib/vendor-week";
+import type { MarketSchedule } from "@/types/database";
 
 export type ProductsAtlasStallPreview = {
   name: string;
@@ -102,48 +114,210 @@ export type FindProductAtlasData = {
   popularGuides: FindProductSiblingGuide[];
 };
 
-function mapVendorSpotlightToPreview(
-  spot: HomeAtlasVendorSpotlight,
-  preferredAisleId?: string | null,
-): ProductsAtlasStallPreview {
-  const matchedItem =
-    (preferredAisleId
-      ? spot.items.find((i) => i.aisleId === preferredAisleId)
-      : null) ?? spot.items[0];
-  const primaryMarket = spot.markets[0];
-  return {
-    name: spot.name,
-    slug: spot.slug,
-    logoUrl: spot.logoUrl,
-    ratingAvg: spot.ratingAvg,
-    reviewCount: spot.reviewCount,
-    badge: spot.badge,
-    marketName: primaryMarket?.name ?? null,
-    marketSlug: primaryMarket?.slug ?? null,
-    itemName: matchedItem?.name ?? spot.primaryAisleLabel,
-    priceCents: matchedItem?.priceCents ?? null,
-    itemHref: matchedItem?.href ?? `/vendors/${spot.slug}`,
-  };
-}
+const TAG_TO_AISLE_PREVIEW: Record<
+  string,
+  { aisleId: string; itemName: string; itemHref: string }
+> = {
+  bakery: {
+    aisleId: "bread-and-bakery",
+    itemName: "Fresh-baked loaves & pastries",
+    itemHref: "/find/bread-toronto",
+  },
+  bread: {
+    aisleId: "bread-and-bakery",
+    itemName: "Artisan sourdough & bread",
+    itemHref: "/find/sourdough-toronto",
+  },
+  produce: {
+    aisleId: "vegetables",
+    itemName: "Seasonal field vegetables & greens",
+    itemHref: "/products?aisle=vegetables",
+  },
+  organic: {
+    aisleId: "vegetables",
+    itemName: "Certified organic farm produce",
+    itemHref: "/find/organic-toronto",
+  },
+  cheese: {
+    aisleId: "cheese-and-dairy",
+    itemName: "Small-batch farmstead cheese",
+    itemHref: "/find/cheese-toronto",
+  },
+  dairy: {
+    aisleId: "cheese-and-dairy",
+    itemName: "Creamery butter & dairy",
+    itemHref: "/find/cheese-toronto",
+  },
+  meat: {
+    aisleId: "meat-and-turkey",
+    itemName: "Pasture-raised cuts & sausages",
+    itemHref: "/find/sausages-toronto",
+  },
+  poultry: {
+    aisleId: "meat-and-turkey",
+    itemName: "Farm-raised poultry & eggs",
+    itemHref: "/find/chicken-toronto",
+  },
+  eggs: {
+    aisleId: "eggs",
+    itemName: "Free-run farm eggs",
+    itemHref: "/find/eggs-toronto",
+  },
+  honey: {
+    aisleId: "honey",
+    itemName: "Raw Ontario wildflower honey",
+    itemHref: "/find/honey-toronto",
+  },
+  maple: {
+    aisleId: "maple",
+    itemName: "Wood-fired Ontario maple syrup",
+    itemHref: "/find/maple-syrup-toronto",
+  },
+  "prepared-food": {
+    aisleId: "prepared-foods",
+    itemName: "Hot prepared dishes & hand pies",
+    itemHref: "/products?aisle=prepared-foods",
+  },
+  coffee: {
+    aisleId: "coffee-and-tea",
+    itemName: "Small-batch roasted coffee & espresso",
+    itemHref: "/find/coffee-toronto",
+  },
+  tea: {
+    aisleId: "coffee-and-tea",
+    itemName: "Botanical & loose-leaf teas",
+    itemHref: "/find/tea-toronto",
+  },
+  seafood: {
+    aisleId: "seafood",
+    itemName: "Smoked trout & Great Lakes fish",
+    itemHref: "/find/fish-toronto",
+  },
+  fruit: {
+    aisleId: "apples-and-fruit",
+    itemName: "Orchard apples, berries & stone fruit",
+    itemHref: "/find/apples-toronto",
+  },
+  preserves: {
+    aisleId: "preserves-and-sauces",
+    itemName: "Small-batch jams, pickles & sauces",
+    itemHref: "/find/jam-toronto",
+  },
+  sweets: {
+    aisleId: "pies-and-sweets",
+    itemName: "Fruit pies, cookies & butter tarts",
+    itemHref: "/find/butter-tarts-toronto",
+  },
+};
 
 export async function loadProductsHubContext(activeAisle: string | null) {
-  const [homeAtlas, photos, census] = await Promise.all([
-    loadHomeAtlasData().catch(() => null),
+  const [markets, vendors, stalls, schedules, photos, census] = await Promise.all([
+    listMarkets(),
+    listVendors(),
+    listStalls(),
+    listSchedules(),
     listProductPhotos().catch(() => EMPTY_PRODUCT_PHOTOS),
     getDirectoryCensus(),
   ]);
 
+  const now = new Date();
+  const todayWeekday = weekdayInToronto(now);
+  const scheduleMap = new Map<string, MarketSchedule[]>();
+  for (const row of schedules) {
+    const list = scheduleMap.get(row.market_id) ?? [];
+    list.push(row);
+    scheduleMap.set(row.market_id, list);
+  }
+
+  let openNowCount = 0;
+  for (const market of markets) {
+    const mSched = scheduleMap.get(market.id) ?? [];
+    if (isMarketOpen(mSched, market.province, now)) {
+      openNowCount += 1;
+    }
+  }
+
+  const sellingTodayRaw = vendorsSellingToday(stalls, markets, vendors, scheduleMap, now);
+  const sellingTodayBySlug = new Map(sellingTodayRaw.map((r) => [r.vendorSlug, r]));
+
+  const stallsByVendorId = new Map<string, typeof stalls>();
+  for (const stall of stalls) {
+    if (!stallHall(markets, scheduleMap, stall.market_id)) continue;
+    const list = stallsByVendorId.get(stall.id) ?? [];
+    list.push(stall);
+    stallsByVendorId.set(stall.id, list);
+  }
+
   const live = liveFindPages();
   const aisles = catalogueAisles(live);
-  const spotlights = homeAtlas?.vendorSpotlights ?? [];
 
-  // Map each aisle to its top stall previews
   const stallsByAisle: Record<string, ProductsAtlasStallPreview[]> = {};
   for (const aisle of aisles) {
-    stallsByAisle[aisle.id] = spotlights
-      .filter((v) => v.aisleIds.includes(aisle.id))
-      .slice(0, 4)
-      .map((v) => mapVendorSpotlightToPreview(v, aisle.id));
+    stallsByAisle[aisle.id] = [];
+  }
+
+  const allPreviews: Array<ProductsAtlasStallPreview & { aisleIds: string[]; openNow: boolean; sellingToday: boolean }> = [];
+
+  for (const vendor of vendors) {
+    const vStalls = stallsByVendorId.get(vendor.id);
+    if (!vStalls?.length) continue;
+
+    const tags = vendorProductTags(vendor.name, vendor.tags);
+    const matchedPreviews = tags
+      .map((t) => TAG_TO_AISLE_PREVIEW[t])
+      .filter((x): x is NonNullable<typeof x> => Boolean(x));
+    if (!matchedPreviews.length) continue;
+
+    const primaryHall = stallHall(markets, scheduleMap, vStalls[0]!.market_id);
+    const todayRow = sellingTodayBySlug.get(vendor.slug);
+    const openNow = Boolean(todayRow?.open);
+    const sellingToday = Boolean(todayRow);
+    const onWeekend = vStalls.some(
+      (s) => s.days.includes(0) || s.days.includes(6) || s.days.includes(todayWeekday),
+    );
+    const badge = openNow
+      ? "Selling now"
+      : sellingToday
+        ? "Later today"
+        : onWeekend
+          ? "Selling this weekend"
+          : "On the schedule";
+
+    const lead = matchedPreviews[0]!;
+    allPreviews.push({
+      name: vendor.name,
+      slug: vendor.slug,
+      logoUrl: listingMarkSrc(vendor.logo_url),
+      ratingAvg: vendor.rating_avg ?? null,
+      reviewCount: vendor.review_count ?? 0,
+      badge,
+      marketName: primaryHall?.market.name ?? null,
+      marketSlug: primaryHall?.market.slug ?? null,
+      itemName: lead.itemName,
+      priceCents: null,
+      itemHref: lead.itemHref,
+      aisleIds: [...new Set(matchedPreviews.map((m) => m.aisleId))],
+      openNow,
+      sellingToday,
+    });
+  }
+
+  allPreviews.sort(
+    (a, b) =>
+      Number(b.openNow) - Number(a.openNow) ||
+      Number(b.sellingToday) - Number(a.sellingToday) ||
+      Number(Boolean(b.logoUrl)) - Number(Boolean(a.logoUrl)) ||
+      (b.reviewCount ?? 0) - (a.reviewCount ?? 0) ||
+      a.name.localeCompare(b.name, "en-CA"),
+  );
+
+  for (const preview of allPreviews) {
+    for (const aisleId of preview.aisleIds) {
+      const list = stallsByAisle[aisleId];
+      if (list && list.length < 4) {
+        list.push(preview);
+      }
+    }
   }
 
   const activeAisleObj =
@@ -169,7 +343,8 @@ export async function loadProductsHubContext(activeAisle: string | null) {
     activeAisle === BREAKFAST_ID
       ? "Fresh-baked sourdough, free-run farm eggs, raw Ontario honey, small-batch coffee, and wood-fired maple syrup."
       : activeAisleObj
-        ? activeAisleObj.line || `Compare ${activeAisleObj.label.toLowerCase()} across Toronto farmers' markets.`
+        ? activeAisleObj.line ||
+          `Compare ${activeAisleObj.label.toLowerCase()} across Toronto farmers' markets.`
         : "Compare what Toronto market stalls grow, bake, and prepare — with listed prices, stall ratings, and weekly market hours.";
 
   const leadSlug = spotlightPages[0]?.slug ?? "sourdough-toronto";
@@ -178,10 +353,10 @@ export async function loadProductsHubContext(activeAisle: string | null) {
     (activeAisleObj ? photos.aisle[activeAisleObj.id] : null) ??
     productPhoto(photos, leadSlug, leadCategory);
 
-  const featuredStalls: ProductsAtlasStallPreview[] =
+  const featuredStallsForSpotlight: ProductsAtlasStallPreview[] =
     activeAisle && activeAisle !== BREAKFAST_ID && stallsByAisle[activeAisle]?.length
       ? stallsByAisle[activeAisle]!
-      : spotlights.slice(0, 4).map((v) => mapVendorSpotlightToPreview(v, activeAisle));
+      : allPreviews.slice(0, 4);
 
   const totalVendorsInSpotlight = spotlightPages.reduce((sum, p) => sum + p.vendors, 0);
 
@@ -201,17 +376,18 @@ export async function loadProductsHubContext(activeAisle: string | null) {
         photoUrl: pPhoto?.url ?? null,
       };
     }),
-    featuredStalls,
+    featuredStalls: featuredStallsForSpotlight,
   };
 
   return {
-    census: homeAtlas?.census ?? census,
-    openNowCount: homeAtlas?.openNowSlots.length ?? 0,
-    sellingTodayCount: homeAtlas?.sellingTodayCount ?? 0,
+    markets,
+    census,
+    openNowCount,
+    sellingTodayCount: sellingTodayRaw.length,
     photos,
     spotlight,
     stallsByAisle,
-    featuredStalls: spotlights.slice(0, 6).map((v) => mapVendorSpotlightToPreview(v, activeAisle)),
+    featuredStalls: allPreviews.slice(0, 6),
   };
 }
 
