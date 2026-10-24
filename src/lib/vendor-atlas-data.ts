@@ -6,6 +6,7 @@ import {
   listStalls,
   listVendors,
 } from "@/lib/data/catalog";
+import { cachedQuery } from "@/lib/data/query-cache";
 import {
   EMPTY_PRODUCT_PHOTOS,
   listProductPhotos,
@@ -206,7 +207,19 @@ function inferNeighbourhood(market: Pick<Market, "slug" | "city">): string {
 type MenuCategoryMeta = { product_category: string | null; product_slug: string | null };
 
 /** One pass for every stall page, instead of a category query per vendor. */
-async function fetchAllMenuCategoryMetadata(): Promise<Map<string, MenuCategoryMeta>> {
+function fetchAllMenuCategoryMetadata(): Promise<Map<string, MenuCategoryMeta>> {
+  return cachedQuery(
+    "published_menus|select=id,product_category,product_slug|order=id",
+    DIRECTORY_REVALIDATE_SECONDS,
+    readAllMenuCategoryMetadata,
+    {
+      toJson: (rows) => [...rows],
+      fromJson: (value) => new Map(value as Array<[string, MenuCategoryMeta]>),
+    },
+  );
+}
+
+async function readAllMenuCategoryMetadata(): Promise<Map<string, MenuCategoryMeta>> {
   const out = new Map<string, MenuCategoryMeta>();
   try {
     const supabase = createServiceClient();

@@ -1,7 +1,8 @@
 /**
  * Public 308s for renamed or retired listings. next.config.ts serves these at
- * the edge so unknown slugs never render (vendor/market pages set
- * `dynamicParams = false` and must not probe live drafts).
+ * the edge. Market pages keep `dynamicParams = false`, so an unknown market
+ * slug never renders. Vendor pages prerender the busiest stalls and render
+ * other slugs on demand from the published view, which does not include drafts.
  *
  * In-place slug edits after `listing_slug_aliases` is applied are captured by
  * a database trigger and merged into next.config at build time. Merges that

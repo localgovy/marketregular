@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { JsonLd } from "@/components/json-ld";
 import { VendorAtlas } from "@/components/vendor-atlas";
-import { getListingContact, getVendorBySlug, listVendors } from "@/lib/data/catalog";
+import {
+  getListingContact,
+  getVendorBySlug,
+  listMenuVendorIds,
+  listStalls,
+  listVendors,
+} from "@/lib/data/catalog";
+import { prerenderVendorSlugs } from "@/lib/prerender-vendors";
 import { listingIsClaimed } from "@/lib/listing-claimed";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
 import { serverNowMs } from "@/lib/clock";
@@ -16,13 +23,18 @@ import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/s
 export const revalidate = 3600;
 // A dynamic segment stays uncached until this is set. The hour window is revalidate.
 export const dynamic = "force-static";
-// Unknown slugs 404 in the layout, the same way a missing post does. On-demand
-// rendering of a missing slug is what cached the error document that reloaded.
-export const dynamicParams = false;
+// The busiest stalls are written at build time. Any other published slug is
+// rendered on the first request and kept for the hour. A slug that is not
+// published 404s from the published view.
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  const vendors = await listVendors();
-  return vendors.map((vendor) => ({ slug: vendor.slug }));
+  const [vendors, stalls, menuVendorIds] = await Promise.all([
+    listVendors(),
+    listStalls(),
+    listMenuVendorIds(),
+  ]);
+  return prerenderVendorSlugs(vendors, stalls, menuVendorIds).map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
