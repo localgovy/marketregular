@@ -43,16 +43,19 @@ export default async function SavedPage() {
             Sign in to keep markets, vendors, and products on a list that follows you.
           </p>
           {suggested.length ? (
-            <ul className="mb-6 divide-y divide-border ring-1 ring-border">
-              {suggested.map((market) => (
-                <li key={market.id} className="px-4 py-3">
-                  <Link href={`/markets/${market.slug}`} className="font-medium hover:underline">
-                    {market.name}
-                  </Link>
-                  <p className="text-sm text-muted-foreground">{market.city}</p>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className="mb-2 text-base font-medium">Popular in {LAUNCH_CITY}</p>
+              <ul className="mb-6 divide-y divide-border ring-1 ring-border">
+                {suggested.map((market) => (
+                  <li key={market.id} className="px-4 py-3">
+                    <Link href={`/markets/${market.slug}`} className="font-medium hover:underline">
+                      {market.name}
+                    </Link>
+                    <p className="text-sm text-muted-foreground">{market.city}</p>
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : null}
           <Link
             href="/login?next=/saved"

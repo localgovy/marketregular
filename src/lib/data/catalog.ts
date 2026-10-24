@@ -33,7 +33,7 @@ import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { productTagsFromQuery, isProductNounQuery, withVendorProductTags } from "@/lib/vendor-tags";
 import { preferQueryNameHits, hallsHostingNameHits } from "@/lib/search-rank";
-import { isMarketOpen, isOpenOnWeekday, nextOpenSlot } from "@/lib/schedule";
+import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { withListingStats } from "@/lib/listing-score";
 import { vendorHasSubstance, type ListingContactFields } from "@/lib/listing-substance";
@@ -710,9 +710,6 @@ type DirectorySnapshot = {
   halls: Map<string, VendorHall[]>;
   marketsBySlug: Map<string, Market>;
   stallLinks: Array<{ market_id: string; vendor_id: string; days: number[] }>;
-  /** Next-open rank at `sortedAt`. Reused so every tag click does not recompute it. */
-  waitMinutes: Map<string, number>;
-  sortedAt: string;
 };
 
 let directorySnapshotMemory: DirectorySnapshot | null = null;
@@ -739,15 +736,6 @@ async function buildDirectorySnapshot(generation: number): Promise<DirectorySnap
     list.push(row);
     schedulesByMarket.set(row.market_id, list);
   }
-  const builtAt = new Date();
-  const waitMinutes = new Map<string, number>();
-  for (const market of markets) {
-    waitMinutes.set(
-      market.id,
-      nextOpenSlot(schedulesByMarket.get(market.id) ?? [], market.province, builtAt)?.waitMinutes ??
-        Number.POSITIVE_INFINITY,
-    );
-  }
   const snapshot: DirectorySnapshot = {
     expires: Date.now() + DIRECTORY_REVALIDATE_SECONDS * 1000,
     markets,
@@ -762,8 +750,6 @@ async function buildDirectorySnapshot(generation: number): Promise<DirectorySnap
       vendor_id: stall.id,
       days: stall.days,
     })),
-    waitMinutes,
-    sortedAt: builtAt.toISOString(),
   };
   if (generation === directorySnapshotGeneration) directorySnapshotMemory = snapshot;
   return snapshot;
@@ -932,18 +918,11 @@ export async function searchDirectory(filters: SearchFilters, now = new Date()) 
           near: filters.near,
           marketsBySlug,
         });
-  const orderedMarkets =
-    sort === "next"
-      ? [...markets].sort(
-          (a, b) =>
-            (snap.waitMinutes.get(a.id) ?? Number.POSITIVE_INFINITY) -
-              (snap.waitMinutes.get(b.id) ?? Number.POSITIVE_INFINITY) ||
-            a.name.localeCompare(b.name),
-        )
-      : sortDirectoryMarkets(markets, sort, {
-          near: filters.near,
-          schedulesFor: (id) => schedulesByMarket.get(id) ?? [],
-        });
+  const orderedMarkets = sortDirectoryMarkets(markets, sort, {
+    near: filters.near,
+    schedulesFor: (id) => schedulesByMarket.get(id) ?? [],
+    now,
+  });
   const result = {
     markets: preferQueryNameHits(orderedMarkets, raw),
     vendors: preferQueryNameHits(rankedVendors, raw),
@@ -978,13 +957,20 @@ async function buildBareMarketsDirectory(): Promise<BareMarketsDirectory> {
 
 const loadCachedBareMarketsDirectory = unstable_cache(
   buildBareMarketsDirectory,
-  ["markets-page-bare-v3"],
+  ["markets-page-bare-v4"],
   DIRECTORY_CACHE,
 );
 
 export async function getBareMarketsDirectory(): Promise<BareMarketsDirectory> {
   if (!publicDb()) return buildBareMarketsDirectory();
-  return loadCachedBareMarketsDirectory();
+  const cached = await loadCachedBareMarketsDirectory();
+  const age = Date.now() - Date.parse(cached.sortedAt);
+  // The data cache can hand back a list ranked before today's sessions closed.
+  // Rebuild against the current clock instead of labeling that order as now.
+  if (Number.isFinite(age) && age >= 0 && age <= DIRECTORY_REVALIDATE_SECONDS * 1000) {
+    return cached;
+  }
+  return buildBareMarketsDirectory();
 }
 
 const EMPTY_CONTACT: ListingContactFields = { phone: null, email: null };
@@ -1450,6 +1436,16 @@ export const listSchedules = cache(async function listSchedules(): Promise<Marke
   if (!publicDb()) return localSchedules();
   const { schedules } = await getPublishedDirectory();
   return schedules;
+});
+
+/**
+ * Markets and their hours only. The header strip must not assemble vendors,
+ * stalls, and menus just to name the halls open today.
+ */
+export const listMarketHours = cache(async function listMarketHours() {
+  if (!publicDb()) return foldSeasonAliases(localMarkets(), localSchedules());
+  const [markets, schedules] = await Promise.all([loadCachedMarkets(), loadCachedSchedules()]);
+  return foldSeasonAliases(markets, schedules);
 });
 
 export async function getSchedules(marketId: string) {

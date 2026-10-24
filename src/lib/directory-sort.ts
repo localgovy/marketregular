@@ -36,9 +36,12 @@ export function sortDirectoryMarkets(
   options: {
     near?: { lat: number; lng: number };
     schedulesFor: (marketId: string) => ScheduleRow[];
+    /** Rank "next open" against this instant. Callers that page a cached list must pass the same clock. */
+    now?: Date;
   },
 ) {
   const list = [...markets];
+  const now = options.now ?? new Date();
   if (sort === "near" && options.near) {
     const here = options.near;
     return list.sort(
@@ -50,10 +53,10 @@ export function sortDirectoryMarkets(
   if (sort === "next") {
     return list.sort((a, b) => {
       const waitA =
-        nextOpenSlot(options.schedulesFor(a.id), a.province)?.waitMinutes ??
+        nextOpenSlot(options.schedulesFor(a.id), a.province, now)?.waitMinutes ??
         Number.POSITIVE_INFINITY;
       const waitB =
-        nextOpenSlot(options.schedulesFor(b.id), b.province)?.waitMinutes ??
+        nextOpenSlot(options.schedulesFor(b.id), b.province, now)?.waitMinutes ??
         Number.POSITIVE_INFINITY;
       return waitA - waitB || byName(a, b);
     });

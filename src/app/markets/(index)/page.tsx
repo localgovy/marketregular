@@ -126,7 +126,6 @@ export default async function MarketsPage({
       <MarketsBrowser
         key={formKey}
         initialSearch={search}
-        initialNow={nowIso}
         initialView={view}
         places={places}
         todayWeekday={todayWeekday}

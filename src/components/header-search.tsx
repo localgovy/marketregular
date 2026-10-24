@@ -1,14 +1,16 @@
 import { SearchField } from "@/components/search-field";
 import { buttonVariants } from "@/components/ui/button";
-import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/lib/constants";
+import { HEADER_SEARCH_PLACEHOLDER, SEARCH_LABEL } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export function HeaderSearch({
   className,
   initialQuery = "",
+  placeholder = HEADER_SEARCH_PLACEHOLDER,
 }: {
   className?: string;
   initialQuery?: string;
+  placeholder?: string;
 }) {
   return (
     <form action="/markets" role="search" className={cn("relative min-w-0", className)}>
@@ -19,13 +21,13 @@ export function HeaderSearch({
           size="bar"
           joined
           aria-label={SEARCH_LABEL}
-          placeholder={SEARCH_PLACEHOLDER}
+          placeholder={placeholder}
         />
         <button
           type="submit"
           className={cn(
             buttonVariants(),
-            "h-10 shrink-0 self-stretch rounded-none px-3 lg:h-11 max-sm:sr-only",
+            "h-10 shrink-0 self-stretch rounded-none px-3 lg:h-11 max-lg:sr-only",
           )}
         >
           Find

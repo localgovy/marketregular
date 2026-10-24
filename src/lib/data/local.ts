@@ -230,6 +230,7 @@ export function localSearch(filters: SearchFilters, now = new Date()) {
       sortDirectoryMarkets(markets, sort, {
         near: filters.near,
         schedulesFor,
+        now,
       }),
       q ?? "",
     ),

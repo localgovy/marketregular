@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   CaretDownMark,
@@ -94,9 +89,10 @@ type MockState = {
   picked: string | null;
   pick: (name: string) => void;
   mode: Mode;
+  setMode: (mode: Mode) => void;
 };
 
-function useMockState(mode: Mode): MockState {
+function useMockState(mode: Mode, setMode: (mode: Mode) => void): MockState {
   const [active, setActive] = useState("/markets");
   const [query, setQuery] = useState("");
   const [saved, setSaved] = useState(false);
@@ -119,10 +115,10 @@ function useMockState(mode: Mode): MockState {
       setActive("/markets");
     },
     mode,
+    setMode,
   };
 }
 
-/** Live Toronto weekday and time, so the board always feels current. */
 function useTorontoNow() {
   const [now, setNow] = useState<string | null>(null);
 
@@ -174,11 +170,13 @@ function SearchBox({
   state,
   tone,
   compact = false,
+  placeholder,
   className,
 }: {
   state: MockState;
   tone: "chalk" | "paper";
   compact?: boolean;
+  placeholder?: string;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -223,7 +221,7 @@ function SearchBox({
             type="search"
             value={state.query}
             aria-label="Search markets and vendors"
-            placeholder={compact ? "Search markets…" : "Market, vendor, cuisine, or neighbourhood"}
+            placeholder={placeholder ?? (compact ? "Search markets…" : "Market, vendor, cuisine, or neighbourhood")}
             onChange={(event) => {
               state.setQuery(event.target.value);
               setOpen(true);
@@ -295,12 +293,8 @@ function SearchBox({
                     className="grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-3 py-2 text-left transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:outline-none"
                   >
                     <span className="min-w-0">
-                      <span className="block text-base font-medium">
-                        {result.name}
-                      </span>
-                      <span className="block text-sm text-muted-foreground">
-                        {result.kind}
-                      </span>
+                      <span className="block text-base font-medium">{result.name}</span>
+                      <span className="block text-sm text-muted-foreground">{result.kind}</span>
                     </span>
                     <span className="type-nums text-sm font-semibold whitespace-nowrap">
                       {result.meta}
@@ -434,7 +428,7 @@ function PortalMenu({ compact = false }: { compact?: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Sections and daypart strip                                          */
+/* Sections, day strip, and daypart switch                             */
 /* ------------------------------------------------------------------ */
 
 function Dot() {
@@ -460,9 +454,7 @@ function PriceTag({
       className={cn(
         "stall-chip relative inline-flex h-10 shrink-0 cursor-pointer items-center gap-1.5 px-3 pt-1 text-sm font-medium whitespace-nowrap shadow-[2px_2px_0_0_rgba(0,0,0,0.3)] transition-all duration-200 hover:-translate-y-0.5 hover:rotate-0 hover:shadow-[3px_4px_0_0_rgba(0,0,0,0.3)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk active:translate-y-0",
         tilt,
-        active
-          ? "bg-stamp text-chalk"
-          : "bg-chalk/15 text-chalk hover:bg-chalk/25",
+        active ? "bg-stamp text-chalk" : "bg-chalk/15 text-chalk hover:bg-chalk/25",
       )}
     >
       <TagMark className="size-3.5 shrink-0 opacity-70" />
@@ -521,6 +513,65 @@ function PlateSections({ state }: { state: MockState }) {
   );
 }
 
+/** Underline sections for the search-first slab — quieter than plates. */
+function RuleSections({ state }: { state: MockState }) {
+  return (
+    <span className="inline-flex flex-wrap items-center justify-center gap-x-1 gap-y-1">
+      {SITE_NAV.map((item) => {
+        const current = item.href === state.active;
+        return (
+          <button
+            key={item.href}
+            type="button"
+            onClick={() => state.setActive(item.href)}
+            aria-current={current ? "page" : undefined}
+            className={cn(
+              "relative inline-flex h-10 shrink-0 cursor-pointer items-center px-3 text-sm font-medium whitespace-nowrap transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk",
+              current ? "text-chalk" : "text-chalk/75 hover:text-chalk",
+            )}
+          >
+            {item.label}
+            <span
+              aria-hidden
+              className={cn(
+                "absolute right-3 bottom-1 left-3 h-0.5 origin-left bg-stamp transition-transform duration-300",
+                current ? "scale-x-100" : "scale-x-0",
+              )}
+            />
+          </button>
+        );
+      })}
+    </span>
+  );
+}
+
+function DayToggle({ state, className }: { state: MockState; className?: string }) {
+  return (
+    <span
+      role="group"
+      aria-label="Time of day"
+      className={cn("inline-flex shrink-0 border border-chalk/40 p-0.5", className)}
+    >
+      {(["morning", "evening"] as Mode[]).map((value) => (
+        <button
+          key={value}
+          type="button"
+          onClick={() => state.setMode(value)}
+          aria-pressed={state.mode === value}
+          className={cn(
+            "inline-flex h-8 cursor-pointer items-center px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:outline-2 focus-visible:outline-chalk",
+            state.mode === value
+              ? "bg-chalk text-board shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]"
+              : "text-chalk/80 hover:bg-chalk/10 hover:text-chalk",
+          )}
+        >
+          {DAYPART[value].shortLabel}
+        </button>
+      ))}
+    </span>
+  );
+}
+
 function DaypartStrip({
   state,
   limit,
@@ -542,15 +593,11 @@ function DaypartStrip({
         className,
       )}
     >
-      {live ? (
-        <LiveLine className="mr-1 text-sm text-chalk/85" />
-      ) : null}
+      {live ? <LiveLine className="mr-1 text-sm text-chalk/85" /> : null}
       <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
         <OpenDot />
         <span className="inline-flex items-baseline gap-1.5">
-          <span className="type-census text-2xl leading-none text-chalk">
-            {day.openCount}
-          </span>
+          <span className="type-census text-2xl leading-none text-chalk">{day.openCount}</span>
           <span className="text-sm text-chalk/80">open now</span>
         </span>
       </span>
@@ -567,9 +614,7 @@ function DaypartStrip({
             aria-pressed={picked}
             className={cn(
               "inline-flex cursor-pointer items-baseline gap-1.5 px-2 py-1 whitespace-nowrap transition-all duration-200 focus-visible:outline-2 focus-visible:outline-chalk",
-              picked
-                ? "bg-chalk text-board"
-                : "text-chalk hover:bg-chalk/10",
+              picked ? "bg-chalk text-board" : "text-chalk hover:bg-chalk/10",
             )}
           >
             <span className="text-sm">{name}</span>
@@ -623,9 +668,7 @@ function Frame({
     <figure className="min-w-0">
       <figcaption className="flex flex-wrap items-baseline justify-between gap-2 pb-2">
         <span className="text-sm font-medium text-foreground">{title}</span>
-        <span className="type-nums text-sm text-muted-foreground">
-          {heightNote}
-        </span>
+        <span className="type-nums text-sm text-muted-foreground">{heightNote}</span>
       </figcaption>
       <div className="border-2 border-board bg-background shadow-[4px_4px_0_0_var(--board)]">
         {children}
@@ -634,81 +677,204 @@ function Frame({
   );
 }
 
-function StampTrim({ scallops }: { scallops: number }) {
+/* ------------------------------------------------------------------ */
+/* 5A — The Slab, sharpened                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Sections for the sharpened slab. No icon on the active button and no
+ * borders on the rest, so the row never changes width or jumps when the
+ * current section moves — background colour alone does the marking.
+ */
+function SlabSections({ state }: { state: MockState }) {
   return (
-    <div aria-hidden>
-      <div
-        className="h-2"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(-45deg, var(--stamp) 0 14px, var(--chalk) 14px 28px)",
-        }}
-      />
-      <div className="flex">
-        {Array.from({ length: scallops }).map((_, i) => (
-          <span
-            key={i}
+    <span className="inline-flex items-center gap-1">
+      {SITE_NAV.map((item) => {
+        const current = item.href === state.active;
+        return (
+          <button
+            key={item.href}
+            type="button"
+            onClick={() => state.setActive(item.href)}
+            aria-current={current ? "page" : undefined}
             className={cn(
-              "h-2.5 flex-1 rounded-b-full",
-              i % 2 === 0 ? "bg-stamp" : "bg-chalk",
+              "inline-flex h-10 shrink-0 cursor-pointer items-center px-3 text-sm font-medium whitespace-nowrap transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk",
+              current
+                ? "stall-chip bg-chalk text-board shadow-[2px_2px_0_0_rgba(0,0,0,0.3)]"
+                : "text-chalk/80 hover:bg-chalk/10 hover:text-chalk",
             )}
-          />
-        ))}
-      </div>
+          >
+            {item.label}
+          </button>
+        );
+      })}
+    </span>
+  );
+}
+
+/** The slab's day strip, on the same 20px edge as the slab above it. */
+function SlabStrip({
+  state,
+  limit,
+  bare = false,
+  className,
+}: {
+  state: MockState;
+  limit?: number;
+  /** Phone size: live line and day label drop out so the strip stays one line. */
+  bare?: boolean;
+  className?: string;
+}) {
+  const day = DAYPART[state.mode];
+  const items = limit ? day.items.slice(0, limit) : day.items;
+
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-x-2.5 gap-y-1 border-t border-chalk/25 bg-black/20 px-5 py-2",
+        className,
+      )}
+    >
+      {bare ? null : <LiveLine className="text-sm text-chalk/85" />}
+      <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
+        <OpenDot />
+        <span className="inline-flex items-baseline gap-1.5">
+          <span className="type-census text-2xl leading-none text-chalk">{day.openCount}</span>
+          <span className="text-sm text-chalk/80">open now</span>
+        </span>
+      </span>
+      {bare ? null : (
+        <span className="hidden shrink-0 text-sm font-medium text-chalk sm:inline">{day.label}</span>
+      )}
+      {items.map(([name, hours]) => {
+        const picked = state.picked === name;
+        return (
+          <button
+            key={name}
+            type="button"
+            onClick={() => state.pick(name)}
+            aria-pressed={picked}
+            className={cn(
+              "inline-flex cursor-pointer items-baseline gap-1.5 px-2 py-1 whitespace-nowrap transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-chalk",
+              picked ? "bg-chalk text-board" : "text-chalk hover:bg-chalk/10",
+            )}
+          >
+            <span className="text-sm">{name}</span>
+            <span className="type-nums text-sm font-semibold">{hours}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Concept 2 — The Board Bar, refined                                  */
-/* ------------------------------------------------------------------ */
-
-function BoardBarDesktop({ state }: { state: MockState }) {
+function SlabRefinedDesktop({ state }: { state: MockState }) {
   return (
     <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
-      <div className="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-2 px-5 py-2">
-        <span className="inline-flex shrink-0 items-center text-chalk">
-          <SiteWordmark className="header-lockup" />
-        </span>
-        <nav aria-label="Primary (mock)" className="min-w-0 shrink-0">
-          <PlateSections state={state} />
-        </nav>
-        <SearchBox
-          state={state}
-          tone="chalk"
-          compact
-          className="ml-auto w-52 shrink transition-[width] duration-300 ease-out focus-within:w-72"
-        />
-        <SavedButton state={state} tone="chalk" />
-        <PortalMenu compact />
-        <SignInButton state={state} tone="text" />
+      {/* Two columns on one rhythm: the wordmark (44px) answers the search
+          (44px), the section row (40px) answers the account row (40px),
+          and both columns share the same 12px gap and 20px side edge. */}
+      <div className="grid gap-x-8 gap-y-4 px-5 py-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0">
+          <SiteWordmark className="h-11 w-[297px]" />
+          <nav aria-label="Primary (mock)" className="pt-3">
+            <SlabSections state={state} />
+          </nav>
+        </div>
+        <div className="min-w-0">
+          <SearchBox state={state} tone="paper" placeholder="Market, vendor, or food" />
+          {/* 10px, not 12: the search box's border makes it 2px taller
+              than the wordmark, and this keeps the two 40px rows level. */}
+          <div className="flex items-center justify-end pt-2.5">
+            <SavedButton state={state} tone="chalk" />
+            <PortalMenu compact />
+            <SignInButton state={state} tone="text" />
+          </div>
+        </div>
       </div>
+      <SlabStrip state={state} />
+    </header>
+  );
+}
+
+function SlabRefinedMobile({ state }: { state: MockState }) {
+  return (
+    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
+      {/* One 16px side edge and a steady 12px rhythm all the way down:
+          wordmark, account row, search, sections, strip. Left-aligned
+          like the desktop slab — no centred stack, no orphan row. */}
+      <div className="px-4 pt-4">
+        <SiteWordmark className="h-9 w-[243px]" />
+        <div className="flex items-center justify-between pt-3">
+          <SavedButton state={state} tone="chalk" />
+          <span className="inline-flex items-center">
+            <PortalMenu compact />
+            <SignInButton state={state} tone="text" />
+          </span>
+        </div>
+        <div className="pt-3">
+          <SearchBox state={state} tone="paper" compact />
+        </div>
+      </div>
+      <nav
+        aria-label="Primary (mock)"
+        className="mt-3 flex overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <SlabSections state={state} />
+      </nav>
+      <SlabStrip state={state} limit={1} bare className="px-4" />
+    </header>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* 5B — The Slab, search first (search takes the middle of the slab)   */
+/* ------------------------------------------------------------------ */
+
+function SlabSearchDesktop({ state }: { state: MockState }) {
+  return (
+    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
+      <div className="flex items-center gap-3 px-5 pt-4">
+        <SiteWordmark className="h-10 w-[270px] shrink-0" />
+        <span className="ml-auto inline-flex shrink-0 items-center">
+          <SavedButton state={state} tone="chalk" />
+          <PortalMenu compact />
+          <SignInButton state={state} tone="plate" />
+        </span>
+      </div>
+
+      <div className="mx-auto w-full max-w-2xl px-5 pt-4">
+        <p className="pb-2 text-center text-sm text-chalk/80">
+          Find a market, a vendor, or something good to eat
+        </p>
+        <SearchBox state={state} tone="paper" />
+      </div>
+
+      <nav aria-label="Primary (mock)" className="flex justify-center px-5 pt-2 pb-1">
+        <RuleSections state={state} />
+      </nav>
 
       <DaypartStrip state={state} live />
     </header>
   );
 }
 
-function BoardBarMobile({ state }: { state: MockState }) {
+function SlabSearchMobile({ state }: { state: MockState }) {
   return (
     <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
-      <div className="flex h-12 items-center gap-2 px-3">
-        <span className="inline-flex shrink-0 items-center text-chalk">
-          <SiteWordmark />
-        </span>
-        <span className="ml-auto inline-flex shrink-0 items-center">
-          <SavedButton state={state} tone="chalk" />
-          <SignInButton state={state} tone="text" />
-        </span>
+      <div className="flex justify-center px-3 pt-3">
+        <SiteWordmark className="h-9 w-[243px]" />
       </div>
-      <div className="px-3">
-        <SearchBox state={state} tone="chalk" compact />
+      <div className="px-3 pt-3">
+        <SearchBox state={state} tone="paper" compact />
       </div>
-      <nav
-        aria-label="Primary (mock)"
-        className="flex gap-1.5 overflow-x-auto px-3 py-2.5"
-      >
-        <PlateSections state={state} />
+      <div className="flex items-center justify-center px-3 pt-1">
+        <SavedButton state={state} tone="chalk" />
+        <PortalMenu compact />
+        <SignInButton state={state} tone="text" />
+      </div>
+      <nav aria-label="Primary (mock)" className="flex overflow-x-auto px-3 py-1">
+        <RuleSections state={state} />
       </nav>
       <DaypartStrip state={state} limit={1} live className="px-3" />
     </header>
@@ -716,240 +882,121 @@ function BoardBarMobile({ state }: { state: MockState }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Concept 3 — Canopy Board, refined                                   */
+/* 5C — The Slab, chalk nameplate (the sign is a chalk plate)          */
 /* ------------------------------------------------------------------ */
 
-function BoardScallops({ count }: { count: number }) {
+function SlabPlateDesktop({ state }: { state: MockState }) {
   return (
-    <div aria-hidden className="flex bg-background">
-      {Array.from({ length: count }).map((_, i) => (
-        <span key={i} className="h-3 flex-1 rounded-b-full bg-board" />
-      ))}
+    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
+      <div className="flex flex-wrap items-stretch gap-x-6 gap-y-4 px-5 py-4">
+        <div className="shrink-0 bg-chalk px-4 py-3 text-board shadow-[5px_5px_0_0_rgba(0,0,0,0.35)] transition-transform duration-300 hover:-translate-y-0.5">
+          <SiteWordmark className="h-11 w-[297px]" />
+          <LiveLine className="pt-2 text-sm text-board/70" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-start gap-3">
+            <SearchBox state={state} tone="paper" className="min-w-56 flex-1" />
+            <span className="inline-flex shrink-0 items-center">
+              <SavedButton state={state} tone="chalk" />
+              <PortalMenu compact />
+              <SignInButton state={state} tone="plate" />
+            </span>
+          </div>
+          <nav aria-label="Primary (mock)" className="pt-3">
+            <TagSections state={state} />
+          </nav>
+        </div>
+      </div>
+      <DaypartStrip state={state} />
+    </header>
+  );
+}
+
+function SlabPlateMobile({ state }: { state: MockState }) {
+  return (
+    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
+      <div className="px-3 pt-3">
+        <div className="bg-chalk px-3 py-2.5 text-center text-board shadow-[4px_4px_0_0_rgba(0,0,0,0.35)]">
+          <SiteWordmark className="mx-auto h-9 w-[243px]" />
+        </div>
+      </div>
+      <div className="px-3 pt-2.5">
+        <SearchBox state={state} tone="paper" compact />
+      </div>
+      <nav aria-label="Primary (mock)" className="flex overflow-x-auto px-3 py-2.5">
+        <TagSections state={state} />
+      </nav>
+      <div className="flex items-center justify-center px-3 pb-1">
+        <SavedButton state={state} tone="chalk" />
+        <SignInButton state={state} tone="text" />
+      </div>
+      <DaypartStrip state={state} limit={1} live className="px-3" />
+    </header>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* 5D — The Living Slab (the day switches inside the slab)             */
+/* ------------------------------------------------------------------ */
+
+function LivingStrip({ state, limit }: { state: MockState; limit?: number }) {
+  const day = DAYPART[state.mode];
+  const items = limit ? day.items.slice(0, limit) : day.items;
+
+  return (
+    <div
+      key={state.mode}
+      className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-chalk/25 bg-black/20 px-5 py-2"
+    >
+      <LiveLine className="mr-1 text-sm text-chalk/85" />
+      <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
+        <OpenDot />
+        <span className="inline-flex items-baseline gap-1.5">
+          <span className="type-census text-2xl leading-none text-chalk">{day.openCount}</span>
+          <span className="text-sm text-chalk/80">open now</span>
+        </span>
+      </span>
+      <span className="inline-flex shrink-0 items-baseline gap-1.5 whitespace-nowrap">
+        <span className="type-census text-2xl leading-none text-chalk">{day.stallCount}</span>
+        <span className="text-sm text-chalk/80">stalls today</span>
+      </span>
+      <span className="ml-1 hidden shrink-0 text-sm font-medium text-chalk sm:inline">{day.label}</span>
+      {items.map(([name, hours]) => {
+        const picked = state.picked === name;
+        return (
+          <button
+            key={name}
+            type="button"
+            onClick={() => state.pick(name)}
+            aria-pressed={picked}
+            className={cn(
+              "inline-flex cursor-pointer items-baseline gap-1.5 px-2 py-1 whitespace-nowrap transition-all duration-200 focus-visible:outline-2 focus-visible:outline-chalk",
+              picked ? "bg-chalk text-board" : "text-chalk hover:bg-chalk/10",
+            )}
+          >
+            <span className="text-sm">{name}</span>
+            <span className="type-nums text-sm font-semibold">{hours}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-function CanopyDesktop({ state }: { state: MockState }) {
-  const day = DAYPART[state.mode];
-  return (
-    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
-      <StampTrim scallops={28} />
-      <div className="flex items-center justify-between gap-4 px-5 pt-2 text-sm text-chalk/80">
-        <LiveLine />
-        <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
-          <OpenDot />
-          <span>
-            <span className="type-nums font-semibold text-chalk">
-              {day.openCount}
-            </span>{" "}
-            markets open now
-          </span>
-        </span>
-        <span className="inline-flex shrink-0 items-center">
-          <SavedButton state={state} tone="chalk" />
-          <PortalMenu compact />
-          <SignInButton state={state} tone="plate" />
-        </span>
-      </div>
-
-      <div className="flex justify-center px-5 pt-1 pb-3">
-        <SiteWordmark className="h-12 w-[324px]" />
-      </div>
-
-      <div className="flex justify-center px-5">
-        <SearchBox state={state} tone="paper" className="w-full max-w-lg min-w-0" />
-      </div>
-
-      <nav
-        aria-label="Primary (mock)"
-        className="flex flex-wrap items-center justify-center gap-2 px-5 pt-3.5 pb-3"
-      >
-        {SITE_NAV.map((item, i) => (
-          <PriceTag
-            key={item.href}
-            label={item.label}
-            active={item.href === state.active}
-            tilt={i % 2 === 0 ? "-rotate-1" : "rotate-1"}
-            onClick={() => state.setActive(item.href)}
-          />
-        ))}
-      </nav>
-
-      <DaypartStrip state={state} className="border-chalk/20 bg-black/15" />
-      <BoardScallops count={28} />
-    </header>
-  );
-}
-
-function CanopyMobile({ state }: { state: MockState }) {
-  return (
-    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
-      <StampTrim scallops={14} />
-      <div className="flex items-center justify-between gap-2 px-3 pt-2 text-sm text-chalk/80">
-        <LiveLine />
-        <SignInButton state={state} tone="plate" />
-      </div>
-      <div className="flex justify-center px-3 pt-1 pb-2.5">
-        <SiteWordmark className="h-9 w-[243px]" />
-      </div>
-      <div className="px-3">
-        <SearchBox state={state} tone="paper" compact />
-      </div>
-      <nav
-        aria-label="Primary (mock)"
-        className="flex gap-2 overflow-x-auto px-3 pt-3 pb-3"
-      >
-        {SITE_NAV.map((item, i) => (
-          <PriceTag
-            key={item.href}
-            label={item.label}
-            active={item.href === state.active}
-            tilt={i % 2 === 0 ? "-rotate-1" : "rotate-1"}
-            onClick={() => state.setActive(item.href)}
-          />
-        ))}
-      </nav>
-      <DaypartStrip state={state} limit={1} className="px-3" />
-      <BoardScallops count={14} />
-    </header>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Concept 4 — Two Greens, refined                                     */
-/* ------------------------------------------------------------------ */
-
-function TwoGreensDesktop({ state }: { state: MockState }) {
-  const day = DAYPART[state.mode];
-  return (
-    <header className="relative z-10 text-chalk">
-      <div className="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-2 bg-primary px-5 py-2">
-        <span className="inline-flex shrink-0 items-center text-primary-foreground">
-          <SiteWordmark className="header-lockup" />
-        </span>
-        <SearchBox
-          state={state}
-          tone="paper"
-          className="mx-auto w-full max-w-xl min-w-0 flex-1"
-        />
-        <PortalMenu compact />
-        <SavedButton state={state} tone="plate" />
-        <SignInButton state={state} tone="plate" />
-      </div>
-
-      <nav
-        aria-label="Primary (mock)"
-        className="flex items-stretch bg-board"
-        style={BOARD_TEXTURE}
-      >
-        {SITE_NAV.map((item) => {
-          const current = item.href === state.active;
-          return (
-            <button
-              key={item.href}
-              type="button"
-              onClick={() => state.setActive(item.href)}
-              aria-current={current ? "page" : undefined}
-              className={cn(
-                "inline-flex h-11 shrink-0 cursor-pointer items-center border-r border-chalk/20 px-3.5 text-sm font-medium whitespace-nowrap transition-colors duration-200 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-chalk",
-                current
-                  ? "bg-stamp text-chalk"
-                  : "text-chalk/85 hover:bg-chalk/10 hover:text-chalk",
-              )}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-        <span className="ml-auto hidden min-w-0 items-center gap-1 pr-3 xl:inline-flex">
-          <span className="mr-2 inline-flex shrink-0 items-center gap-2 whitespace-nowrap">
-            <OpenDot />
-            <span className="inline-flex items-baseline gap-1.5">
-              <span className="type-census text-xl leading-none">
-                {day.openCount}
-              </span>
-              <span className="text-sm text-chalk/80">open now</span>
-            </span>
-          </span>
-          {day.items.slice(0, 2).map(([name, hours]) => {
-            const picked = state.picked === name;
-            return (
-              <button
-                key={name}
-                type="button"
-                onClick={() => state.pick(name)}
-                aria-pressed={picked}
-                className={cn(
-                  "inline-flex cursor-pointer items-baseline gap-1.5 px-2 py-1 whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-chalk",
-                  picked ? "bg-chalk text-board" : "hover:bg-chalk/10",
-                )}
-              >
-                <span className="text-sm">{name}</span>
-                <span className="type-nums text-sm font-semibold">{hours}</span>
-              </button>
-            );
-          })}
-        </span>
-      </nav>
-    </header>
-  );
-}
-
-function TwoGreensMobile({ state }: { state: MockState }) {
-  return (
-    <header className="relative z-10 text-chalk">
-      <div className="flex h-12 items-center gap-2 bg-primary px-3">
-        <span className="inline-flex shrink-0 items-center text-primary-foreground">
-          <SiteWordmark />
-        </span>
-        <span className="ml-auto inline-flex shrink-0 items-center gap-1">
-          <SavedButton state={state} tone="plate" />
-          <SignInButton state={state} tone="plate" />
-        </span>
-      </div>
-      <div className="bg-primary px-3 pb-3">
-        <SearchBox state={state} tone="paper" compact />
-      </div>
-      <nav
-        aria-label="Primary (mock)"
-        className="flex overflow-x-auto bg-board"
-        style={BOARD_TEXTURE}
-      >
-        {SITE_NAV.map((item) => {
-          const current = item.href === state.active;
-          return (
-            <button
-              key={item.href}
-              type="button"
-              onClick={() => state.setActive(item.href)}
-              aria-current={current ? "page" : undefined}
-              className={cn(
-                "inline-flex h-11 shrink-0 cursor-pointer items-center border-r border-chalk/20 px-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-chalk",
-                current ? "bg-stamp text-chalk" : "text-chalk/85",
-              )}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-      </nav>
-    </header>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Concept 5 — The Nameplate Slab (one green slab, no line above)      */
-/* ------------------------------------------------------------------ */
-
-function NameplateDesktop({ state }: { state: MockState }) {
+function SlabLivingDesktop({ state }: { state: MockState }) {
   return (
     <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
       <div className="flex flex-wrap items-start gap-x-6 gap-y-3 px-5 py-4">
         <div className="min-w-0">
           <SiteWordmark className="h-11 w-[297px]" />
-          <nav aria-label="Primary (mock)" className="pt-3">
-            <PlateSections state={state} />
-          </nav>
+          <div className="flex items-center gap-3 pt-3">
+            <DayToggle state={state} />
+            <span className="text-sm text-chalk/75">
+              {state.mode === "morning"
+                ? "Saturday markets are setting up"
+                : "Evening markets, after work"}
+            </span>
+          </div>
         </div>
         <div className="ml-auto w-80 max-w-full min-w-0 shrink-0">
           <SearchBox state={state} tone="paper" />
@@ -960,146 +1007,37 @@ function NameplateDesktop({ state }: { state: MockState }) {
           </div>
         </div>
       </div>
-      <DaypartStrip state={state} live />
+      <nav
+        aria-label="Primary (mock)"
+        className="flex flex-wrap items-center gap-1.5 px-5 pb-3"
+      >
+        <PlateSections state={state} />
+      </nav>
+      <LivingStrip state={state} />
     </header>
   );
 }
 
-function NameplateMobile({ state }: { state: MockState }) {
+function SlabLivingMobile({ state }: { state: MockState }) {
   return (
     <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
       <div className="flex justify-center px-3 pt-3">
         <SiteWordmark className="h-9 w-[243px]" />
       </div>
+      <div className="flex justify-center px-3 pt-2.5">
+        <DayToggle state={state} />
+      </div>
       <div className="px-3 pt-2.5">
         <SearchBox state={state} tone="paper" compact />
       </div>
-      <nav
-        aria-label="Primary (mock)"
-        className="flex gap-1.5 overflow-x-auto px-3 py-2.5"
-      >
+      <nav aria-label="Primary (mock)" className="flex gap-1.5 overflow-x-auto px-3 py-2.5">
         <PlateSections state={state} />
       </nav>
       <div className="flex items-center justify-center px-3 pb-1">
         <SavedButton state={state} tone="chalk" />
-        <PortalMenu compact />
         <SignInButton state={state} tone="text" />
       </div>
-      <DaypartStrip state={state} limit={1} live className="px-3" />
-    </header>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Concept 6 — Search Inset (the search breaks out of the bar)         */
-/* ------------------------------------------------------------------ */
-
-function InsetDesktop({ state }: { state: MockState }) {
-  return (
-    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
-      <div className="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-2 px-5 py-2">
-        <span className="inline-flex shrink-0 items-center text-chalk">
-          <SiteWordmark className="header-lockup" />
-        </span>
-        <span className="ml-auto inline-flex shrink-0 items-center">
-          <SavedButton state={state} tone="chalk" />
-          <PortalMenu compact />
-          <SignInButton state={state} tone="plate" />
-        </span>
-      </div>
-      <nav
-        aria-label="Primary (mock)"
-        className="flex justify-center px-5 pb-2"
-      >
-        <TagSections state={state} />
-      </nav>
-      <DaypartStrip state={state} live />
-      <div className="relative z-20 mx-auto -mb-7 w-full max-w-xl px-5">
-        <div className="border border-[#cfc6b6] bg-receipt p-1.5 shadow-[6px_6px_0_0_rgba(28,25,22,0.4)]">
-          <SearchBox state={state} tone="paper" />
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function InsetMobile({ state }: { state: MockState }) {
-  return (
-    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
-      <div className="flex h-12 items-center gap-2 px-3">
-        <span className="inline-flex shrink-0 items-center text-chalk">
-          <SiteWordmark />
-        </span>
-        <span className="ml-auto inline-flex shrink-0 items-center gap-1">
-          <SavedButton state={state} tone="chalk" />
-          <SignInButton state={state} tone="plate" />
-        </span>
-      </div>
-      <nav
-        aria-label="Primary (mock)"
-        className="flex overflow-x-auto px-3 pb-2"
-      >
-        <TagSections state={state} />
-      </nav>
-      <DaypartStrip state={state} limit={1} live className="px-3" />
-      <div className="relative z-20 mx-auto -mb-7 w-full px-3">
-        <div className="border border-[#cfc6b6] bg-receipt p-1.5 shadow-[6px_6px_0_0_rgba(28,25,22,0.4)]">
-          <SearchBox state={state} tone="paper" compact />
-        </div>
-      </div>
-    </header>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Concept 7 — The Ledger (chalk columns, no line above)               */
-/* ------------------------------------------------------------------ */
-
-function LedgerDesktop({ state }: { state: MockState }) {
-  return (
-    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_21rem]">
-        <div className="flex items-center px-5 py-3">
-          <SiteWordmark className="h-10 w-[270px]" />
-        </div>
-        <nav
-          aria-label="Primary (mock)"
-          className="flex items-center border-x border-chalk/25 px-4 py-3"
-        >
-          <PlateSections state={state} />
-        </nav>
-        <div className="px-4 py-3">
-          <SearchBox state={state} tone="chalk" compact />
-          <div className="flex items-center justify-end pt-1">
-            <SavedButton state={state} tone="chalk" />
-            <PortalMenu compact />
-            <SignInButton state={state} tone="text" />
-          </div>
-        </div>
-      </div>
-      <DaypartStrip state={state} live />
-    </header>
-  );
-}
-
-function LedgerMobile({ state }: { state: MockState }) {
-  return (
-    <header className="relative z-10 bg-board text-chalk" style={BOARD_TEXTURE}>
-      <div className="border-b border-chalk/25 px-3 py-2.5">
-        <span className="flex justify-center text-chalk">
-          <SiteWordmark className="h-8 w-[216px]" />
-        </span>
-      </div>
-      <div className="px-3 py-2.5">
-        <SearchBox state={state} tone="chalk" compact />
-      </div>
-      <nav
-        aria-label="Primary (mock)"
-        className="flex gap-1.5 overflow-x-auto border-t border-chalk/25 px-3 py-2.5"
-      >
-        <PlateSections state={state} />
-      </nav>
-      <DaypartStrip state={state} limit={1} live className="px-3" />
+      <LivingStrip state={state} limit={1} />
     </header>
   );
 }
@@ -1108,7 +1046,7 @@ function LedgerMobile({ state }: { state: MockState }) {
 /* Workbench                                                           */
 /* ------------------------------------------------------------------ */
 
-type ConceptId = "2" | "3" | "4" | "5" | "6" | "7";
+type ConceptId = "5a" | "5b" | "5c" | "5d";
 type MockProps = { state: MockState };
 
 const CONCEPTS: Array<{
@@ -1126,135 +1064,97 @@ const CONCEPTS: Array<{
   peek: string;
 }> = [
   {
-    id: "2",
-    tab: "2 · The Board Bar",
-    title: "Concept 2 — The Board Bar, refined",
+    id: "5a",
+    tab: "5A · Slab, sharpened",
+    title: "Concept 5A — The Nameplate Slab, sharpened",
     pitch:
-      "The compact green bar, made to be used ten times a day — and now with nothing above it: the chalk wordmark starts the bar, sections follow, a search widens when you reach for it, and the live Toronto line moved down into the day strip underneath. Everything in it clicks.",
-    desktopHeight: "One main row + day strip (live line inside it)",
-    mobileHeight: "Live line + wordmark row + search + sections + day strip",
+      "The original slab, put on a grid: wordmark and sections on the left, search and account on the right, day strip along the bottom — with every row the same height as the row it answers, one side edge throughout, and nothing that moves the layout around while you use it.",
+    desktopHeight: "One slab: 44px wordmark/search row, 40px section/account row, day strip",
+    mobileHeight: "Wordmark + account row + search + sections + day strip, on one 16px edge",
     changes: [
-      "Sections are real buttons here: click one and the chalk plate moves. Saved fills its count from 3 to 4, Portal opens its menu, Sign in becomes Account — desktop and phone stay in step.",
-      "Search widens from 13rem to 18rem as you focus it and offers matched markets and products as you type, each row with its hours. Esc closes the list; the day strip's markets fill the search when tapped.",
-      "Comfort passes: 40px-plus targets, chalk focus rings, tags that settle flat under the pointer, and a soft pulse on the open dot that stops for reduced-motion settings.",
+      "Aligned in pairs: the 44px wordmark sits level with the 44px search, and the 40px section row sits level with the 40px account row, both columns separated by the same 12px gap. The search no longer widens on focus, so nothing shoves anything else aside while you type.",
+      "Sections lost their borders and the active plate lost its icon, so the row is the same width no matter which section is current — clicking around no longer makes the slab reflow. Colour and shadow alone mark where you are.",
+      "The phone slab was rebuilt left-aligned like the desktop one: the centred wordmark, the loose 10px gaps, and the orphaned centred account row are gone. One 16px side edge, a steady 12px rhythm, Saved at the left of its row and Portal/Sign in at the right — and the day strip drops its live line and label at this size so it holds one line instead of wrapping to three.",
     ],
     tradeoffs:
-      "Still the least ceremonial of the three — no big nameplate. Its quality has to come from how it behaves, which is exactly what this pass tests: if it feels good to click around in miniature, it will feel good at full size.",
-    verdict: "The daily driver. Best if the header's job is to be reached for, not admired.",
-    Desktop: BoardBarDesktop,
-    Mobile: BoardBarMobile,
-    peek: "Try the strip underneath the green — its markets are buttons here.",
+      "Sharper also means quieter: with the borders, the icon, and the widening search gone, the slab's character rests almost entirely on the wordmark size and the green itself. If it now reads too plain, the character has to come back through the sign, not through more boxes.",
+    verdict: "The slab, measured. Best if the shape was right and only the fitting was off.",
+    Desktop: SlabRefinedDesktop,
+    Mobile: SlabRefinedMobile,
+    peek: "Click through the sections and watch the row: nothing changes width, nothing jumps. That stillness is the sharpening.",
   },
   {
-    id: "3",
-    tab: "3 · Canopy Board",
-    title: "Concept 3 — Canopy Board, refined",
+    id: "5b",
+    tab: "5B · Slab, search first",
+    title: "Concept 5B — The Slab, search first",
     pitch:
-      "The stall on the board, tuned: a calmer trim, the nameplate centred with the account row tucked into its line, a receipt-paper search set into the green, tags that lift and straighten under your hand, and the scalloped edge handing over to the page.",
-    desktopHeight: "Trim + account line + 48px nameplate + paper search + tags + day strip + scallops",
-    mobileHeight: "Trim + nameplate + paper search + tags + day strip + scallops",
+      "The slab rearranged around its most-used tool: wordmark and account share a quiet top line, the search takes the middle of the slab at full comfort width with a plain sentence above it, and the sections sit underneath as underlined text. The day strip still runs along the bottom.",
+    desktopHeight: "Top line + centred search + underlined sections + day strip",
+    mobileHeight: "Nameplate + search + account row + sections + day strip",
     changes: [
-      "Every tag is a button with a small lift on hover and a press back down; the active tag is stamp red, the rest chalk-tinted, and the tilt straightens as you reach for a tag.",
-      "The paper search carries the same suggestions as the bar — markets with hours, product groups with stall counts — so the light inset is also the fastest way in.",
-      "Spacing was re-set so the nameplate, search, and tags sit on one centred rhythm instead of three separate rows competing.",
+      "Search is the widest it has been in any slab — 42rem, centred — with the sentence “Find a market, a vendor, or something good to eat” doing the guiding instead of placeholder text alone.",
+      "Sections trade their plates for a red underline that slides in under the current one, so the row stays calm while the search stays loud.",
+      "Account moves to the top line as a chalk plate, level with the wordmark, so signing in reads as part of the sign rather than part of the search stack.",
     ],
     tradeoffs:
-      "The tallest of the three and the most decorated. The scallops and tilts earn their keep only if the rest of the site stays comparatively straight; two playful systems would fight.",
-    verdict: "The charmer. Best if the header should feel like arriving at a stall, every time.",
-    Desktop: CanopyDesktop,
-    Mobile: CanopyMobile,
-    peek: "Hover the tags. They straighten up to be read — that is the concept, in miniature.",
+      "Centring everything costs the left-aligned rail the rest of the site uses, and the slab grows a line taller. It also bets that most visits start with a search — if most start with a section click, the middle of the slab is working less hard than it looks.",
+    verdict: "The most welcoming slab. Best if search really is the front door.",
+    Desktop: SlabSearchDesktop,
+    Mobile: SlabSearchMobile,
+    peek: "The underline under Markets is the whole section system here. Click around and watch it travel.",
   },
   {
-    id: "4",
-    tab: "4 · Two Greens",
-    title: "Concept 4 — Two Greens, refined",
+    id: "5c",
+    tab: "5C · Slab, chalk nameplate",
+    title: "Concept 5C — The Slab, chalk nameplate",
     pitch:
-      "Two greens with the jobs split cleanly — and nothing above the main band: the primary band opens the header with wordmark, wide paper search, Portal, Saved, and Sign in; the board strip below carries the sections, and the open count and morning hours moved into that strip's right end.",
-    desktopHeight: "64px primary band + 44px section strip",
-    mobileHeight: "Primary band + search + section strip",
+      "The slab with its sign made literal: the wordmark sits on a chalk plate with a hard shadow, hung on the green, with the live Toronto line written underneath it in board green. Search and account fill the space beside the plate, and the sections hang below as price tags.",
+    desktopHeight: "Chalk nameplate beside search + hanging tag sections + day strip",
+    mobileHeight: "Chalk nameplate + search + tag sections + day strip",
     changes: [
-      "The primary band is the action band: the widest search of the three, Saved with its count, and a chalk Sign in that becomes Account. Suggestions open over the strip without pushing the page.",
-      "Sections are a ruled strip of full-height buttons — red fill for the current one, quiet chalk wash on hover — and the day's first markets ride at the strip's right end as tappable hours.",
-      "Colour was balanced so the two greens read as shade and light of one board rather than two paints; red is spent in exactly two places, the current section and the Saved count.",
+      "The nameplate is now an object: chalk on board-green, shadowed, and it lifts slightly under the pointer like a sign being straightened.",
+      "The live Toronto line moved onto the plate itself, so the time belongs to the sign rather than to the day strip — the strip below is purely markets and hours.",
+      "Sections come back as hanging price tags beside the plate, the one red tag marking where you are; the tilt straightens on hover.",
     ],
     tradeoffs:
-      "The most conventional silhouette of the three, and proud of it: its risk is not taste but bandwidth, since three bands must stay aligned at every width. Mobile answers by letting the strip scroll, never squeeze.",
-    verdict: "The system. Best if search volume is high and the header must hold together on every page type.",
-    Desktop: TwoGreensDesktop,
-    Mobile: TwoGreensMobile,
-    peek: "Three bands, three jobs. Try searching from the green band — the list opens over the strip.",
+      "The plate spends contrast the other slabs save — a big chalk block on green is the loudest brand moment in the set, and it will set the tone for every page under it. The tag row is also the least compact section treatment here.",
+    verdict: "The most characterful slab. Best if the header should feel hung, not rendered.",
+    Desktop: SlabPlateDesktop,
+    Mobile: SlabPlateMobile,
+    peek: "The sign is a plate now. Check whether the live line reads better on chalk than it did in the strip.",
   },
   {
-    id: "5",
-    tab: "5 · Nameplate Slab",
-    title: "Concept 5 — The Nameplate Slab",
+    id: "5d",
+    tab: "5D · Living slab",
+    title: "Concept 5D — The Living Slab",
     pitch:
-      "One green slab and nothing above it: the wordmark at nameplate size in the top-left of the slab, sections directly under it, and the search with its account row stacked at the right. The day strip runs along the slab's bottom edge.",
-    desktopHeight: "One slab: nameplate + sections beside search + day strip",
-    mobileHeight: "Nameplate + search + sections + account row + day strip",
+      "The slab that knows what time it is: a Morning/Evening switch sits under the wordmark inside the slab, and flipping it restages everything below — the open count, the stall count, and the markets in the strip. Search and sections hold their places while the day changes around them.",
+    desktopHeight: "Nameplate + day switch beside search + sections + living day strip",
+    mobileHeight: "Nameplate + day switch + search + sections + living strip",
     changes: [
-      "No separate rows at all — the header is a single board with a left half (brand and sections) and a right half (search and account).",
-      "The wordmark gets masthead scale without a masthead layout: 44px, still left-aligned, so the homepage rail logic survives.",
-      "Live Toronto line sits at the left of the day strip, where the day is stated once, next to its markets.",
+      "The day switch lives in the header itself, not in this page's controls: Morning and Evening are chalk buttons under the wordmark, and the strip answers with new counts and new markets.",
+      "The strip gained the day's stall count beside the open count, so the slab states the size of the day, not just its hours.",
+      "A short line beside the switch says what the day is doing — “Saturday markets are setting up” in the morning, “Evening markets, after work” later — in plain sentence case, set in Grotesk.",
     ],
     tradeoffs:
-      "The slab is only as tidy as its two halves: at in-between widths the right stack and the section row can crowd each other, which is why the phone version restacks them in reading order.",
-    verdict: "The most architectural. Best if the header should feel like one sign, hung once.",
-    Desktop: NameplateDesktop,
-    Mobile: NameplateMobile,
-    peek: "One slab, two halves. Check the right stack against the sections at this width.",
-  },
-  {
-    id: "6",
-    tab: "6 · Search Inset",
-    title: "Concept 6 — Search Inset",
-    pitch:
-      "The green bar with its search broken out of it: wordmark and account on the first line, dotted text sections under it, the day strip, and then the receipt-paper search set in a bordered slip that overlaps the bottom edge of the green onto the page.",
-    desktopHeight: "Main row + sections + day strip + search overlapping the edge",
-    mobileHeight: "Wordmark row + sections + day strip + overlapping search",
-    changes: [
-      "Search is the one object that leaves the board: a paper slip with a hard shadow, half on the green and half on the page, so the eye lands on it first.",
-      "Sections go back to dotted text with the lone red tag, keeping the bar quiet so the slip can be loud.",
-      "Suggestions open from the slip over the page — the overlap means the list never pushes the header taller.",
-    ],
-    tradeoffs:
-      "Overlap is a promise the page below must keep: whatever sits under the header needs clear space at its top, or the slip covers it. On busy inner pages that cost is real.",
-    verdict: "The most inviting. Best if search is the front door and should feel like one.",
-    Desktop: InsetDesktop,
-    Mobile: InsetMobile,
-    peek: "The search slip lands on this text on purpose. Decide how much overlap is charm and how much is collision.",
-  },
-  {
-    id: "7",
-    tab: "7 · The Ledger",
-    title: "Concept 7 — The Ledger",
-    pitch:
-      "The board ruled into three chalk columns with nothing above them: wordmark in the first, sections in the second behind chalk rules, and search over its account row in the third. The day strip is the ledger's bottom rule.",
-    desktopHeight: "Three chalk columns + day strip",
-    mobileHeight: "Ruled rows: nameplate, search, sections, day strip",
-    changes: [
-      "Vertical chalk rules do the organising instead of boxes and bands — the header reads as entries in one hand-kept book.",
-      "Search and account share a column, so the right third of the header is the working third at every width.",
-      "On phones the columns become ruled rows in the same order — brand, search, sections — so the book still reads top to bottom.",
-    ],
-    tradeoffs:
-      "The middle column is the squeeze point: six section plates between two rules is the widest fixed thing here, and it will wrap before the others do. The rules also ask the page below to stay unruled, or the effect doubles.",
-    verdict: "The most ordered. Best if the site should feel kept, not decorated.",
-    Desktop: LedgerDesktop,
-    Mobile: LedgerMobile,
-    peek: "Follow the chalk rules down. The page below deliberately has none.",
+      "A switch in the header is a promise to keep it honest: the real version needs real morning and evening data behind it, or the control becomes decoration. It also gives the slab two things competing for the left side — the wordmark and the day — which the other slabs keep separate.",
+    verdict: "The most alive slab. Best if the header should change with the day it is describing.",
+    Desktop: SlabLivingDesktop,
+    Mobile: SlabLivingMobile,
+    peek: "Flip Morning and Evening inside the slab. The strip, the counts, and the line beside the switch all answer.",
   },
 ];
 
 function ConceptStage({
   concept,
   mode,
+  setMode,
 }: {
   concept: (typeof CONCEPTS)[number];
   mode: Mode;
+  setMode: (mode: Mode) => void;
 }) {
-  const state = useMockState(mode);
+  const state = useMockState(mode, setMode);
   const { Desktop, Mobile } = concept;
 
   return (
@@ -1284,19 +1184,12 @@ function ConceptStage({
           </ul>
           <h3 className="mt-5">Trade-offs</h3>
           <p className="mt-1 text-base">{concept.tradeoffs}</p>
-          <p className="mt-4 border-l-2 border-stamp pl-3 text-base font-medium">
-            {concept.verdict}
-          </p>
+          <p className="mt-4 border-l-2 border-stamp pl-3 text-base font-medium">{concept.verdict}</p>
           <p className="mt-5 text-sm text-muted-foreground">
-            Nothing here touches the live header. When one of these feels
-            right, I can build it into the real{" "}
-            <code className="text-foreground">SiteHeader</code> with real
-            counts, the day's real markets, and search that goes somewhere.
-            Compare with the{" "}
-            <Link
-              href="/"
-              className="font-medium text-foreground underline underline-offset-4"
-            >
+            Nothing here touches the live header. When one of these feels right, I can build it
+            into the real <code className="text-foreground">SiteHeader</code> with real counts,
+            the day&rsquo;s real markets, and search that goes somewhere. Compare with the{" "}
+            <Link href="/" className="font-medium text-foreground underline underline-offset-4">
               current home page
             </Link>
             .
@@ -1308,7 +1201,7 @@ function ConceptStage({
 }
 
 export function NavConcepts() {
-  const [active, setActive] = useState<ConceptId>("2");
+  const [active, setActive] = useState<ConceptId>("5a");
   const [mode, setMode] = useState<Mode>("morning");
   const concept = CONCEPTS.find((c) => c.id === active) ?? CONCEPTS[0]!;
 
@@ -1318,23 +1211,19 @@ export function NavConcepts() {
         <p className="text-sm text-muted-foreground">
           Preview · not live · interactive prototypes · {SITE_NAME}
         </p>
-        <h1 className="mt-1">Top nav bar redesign — the green board, working</h1>
+        <h1 className="mt-1">Top nav bar redesign — the Nameplate Slab, developed</h1>
         <p className="type-lede mt-2 max-w-2xl">
-          Concepts 2 and 4 with the line above the main bar removed — that
-          information now lives in the strip below — plus three new green
-          variations that never had one. All of them are prototypes you can
-          use: click the sections, type in the searches, tap the markets
-          in the day strip, save something, open the Portal menu, sign in.
-          Desktop and phone share one state, and the Morning/Evening
-          switch restages every bar.
+          Concept 5 taken four ways. Every version is one green slab with nothing above it;
+          they differ in what the slab puts first — the sign, the search, the plate the sign is
+          painted on, or the day itself. All of them are prototypes you can use: click the
+          sections, type in the searches, tap the markets in the day strip, save something,
+          open the Portal menu, sign in. Desktop and phone share one state, and the
+          Morning/Evening switch restages every slab — in 5D, that switch lives inside the
+          header itself.
         </p>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
-          <div
-            role="tablist"
-            aria-label="Choose nav concept"
-            className="flex flex-wrap gap-1.5"
-          >
+          <div role="tablist" aria-label="Choose nav concept" className="flex flex-wrap gap-1.5">
             {CONCEPTS.map((c) => (
               <button
                 key={c.id}
@@ -1354,11 +1243,7 @@ export function NavConcepts() {
             ))}
           </div>
 
-          <div
-            role="group"
-            aria-label="Time of day"
-            className="ml-auto flex items-center gap-1.5"
-          >
+          <div role="group" aria-label="Time of day" className="ml-auto flex items-center gap-1.5">
             <span className="text-sm text-muted-foreground">Daypart</span>
             {(["morning", "evening"] as Mode[]).map((value) => (
               <button
@@ -1382,11 +1267,7 @@ export function NavConcepts() {
         <section aria-label={concept.title} className="mt-6">
           <h2>{concept.title}</h2>
           <p className="mt-1 max-w-2xl text-base">{concept.pitch}</p>
-          <ConceptStage
-            key={concept.id}
-            concept={concept}
-            mode={mode}
-          />
+          <ConceptStage key={concept.id} concept={concept} mode={mode} setMode={setMode} />
         </section>
       </div>
     </div>

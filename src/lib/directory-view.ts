@@ -51,7 +51,7 @@ async function buildDirectoryView(search: MarketsSearch, now: Date): Promise<Dir
 
 const loadCachedDirectoryView = unstable_cache(
   async (key: string) => buildDirectoryView(searchFromBoundedKey(key), new Date()),
-  ["markets-directory-view-v1"],
+  ["markets-directory-view-v2"],
   DIRECTORY_VIEW_CACHE,
 );
 

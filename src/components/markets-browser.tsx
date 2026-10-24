@@ -61,13 +61,11 @@ function isDirectoryView(value: unknown): value is DirectoryView {
 
 export function MarketsBrowser({
   initialSearch,
-  initialNow,
   initialView,
   places,
   todayWeekday,
 }: {
   initialSearch: MarketsSearch;
-  initialNow: string;
   initialView: DirectoryView;
   places: PlaceAreas;
   todayWeekday: number;
@@ -79,7 +77,6 @@ export function MarketsBrowser({
   const [shown, setShown] = useState({
     search: initialSearch,
     view: initialView,
-    now: initialNow,
   });
 
   if (!views.current.has(marketsHref(initialSearch))) {
@@ -111,7 +108,7 @@ export function MarketsBrowser({
     setSearch(next);
     const cached = views.current.get(href);
     if (cached) {
-      setShown({ search: next, view: cached, now: new Date().toISOString() });
+      setShown({ search: next, view: cached });
       if (href !== currentHref) pushAppUrl(href);
       return;
     }
@@ -121,7 +118,7 @@ export function MarketsBrowser({
     void fetchView(href, next)
       .then((view) => {
         if (requestId.current !== id) return;
-        setShown({ search: next, view, now: new Date().toISOString() });
+        setShown({ search: next, view });
       })
       .catch(() => {
         if (requestId.current !== id) return;
@@ -150,13 +147,13 @@ export function MarketsBrowser({
       setSearch(next);
       const cached = views.current.get(href);
       if (cached) {
-        setShown({ search: next, view: cached, now: new Date().toISOString() });
+        setShown({ search: next, view: cached });
         return;
       }
       void fetchView(href, next)
         .then((view) => {
           if (requestId.current !== id) return;
-          setShown({ search: next, view, now: new Date().toISOString() });
+          setShown({ search: next, view });
         })
         .catch(() => {
           if (requestId.current !== id) return;
@@ -195,7 +192,6 @@ export function MarketsBrowser({
       <div aria-busy={marketsHref(search) !== href}>
         <DirectoryResults
           key={href}
-          now={shown.now}
           sortedAt={shown.view.sortedAt}
           search={shown.search}
           markets={shown.view.markets}

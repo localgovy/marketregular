@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
@@ -16,24 +16,24 @@ const CHIP_CLASS = cn(
   "max-w-[7.5rem] min-w-0 shrink-0 truncate",
 );
 
-function loginHref(pathname: string, search = "") {
+function loginHref(pathname: string, search: string) {
   if (isSignInSlipAuthPath(pathname)) return "/login";
   const next = `${pathname || "/"}${search}`;
   return `/login?next=${encodeURIComponent(next)}`;
 }
 
-export function HeaderAccount() {
-  const pathname = usePathname();
+export function HeaderAccount({
+  tone = "paper",
+  search = "",
+}: {
+  tone?: "paper" | "chalk";
+  /** Current query string without "?". Passed from the header so client navigations stay in the return path. */
+  search?: string;
+}) {
+  const pathname = usePathname() || "/";
   const hasCookie = useAuthCookie(false);
   const ready = useMounted();
-  const search = useSyncExternalStore(
-    (onStoreChange) => {
-      window.addEventListener("popstate", onStoreChange);
-      return () => window.removeEventListener("popstate", onStoreChange);
-    },
-    () => window.location.search,
-    () => "",
-  );
+  const query = search ? `?${search}` : "";
   const [profile, setProfile] = useState<{
     display_name: string | null;
     role: UserRole;
@@ -78,29 +78,34 @@ export function HeaderAccount() {
   }, [pathname, hasCookie]);
 
   const shown = hasCookie ? profile : null;
+  const chalk = tone === "chalk";
+  const textLink = chalk
+    ? "inline-flex h-10 shrink-0 items-center px-1 text-sm font-medium whitespace-nowrap text-chalk underline decoration-dashed underline-offset-4 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
+    : SIGN_IN_CLASS;
+  const nameLink = chalk ? cn(textLink, "max-w-[9rem] min-w-0 truncate") : CHIP_CLASS;
 
   if (shown) {
     return (
       <>
         {shown.ownsMarket ? (
-          <Link href="/market" className={SIGN_IN_CLASS}>
+          <Link href="/market" className={textLink}>
             Your market
           </Link>
         ) : null}
         {shown.ownsVendor ? (
-          <Link href="/vendor" className={SIGN_IN_CLASS}>
+          <Link href="/vendor" className={textLink}>
             Your stall
           </Link>
         ) : null}
         {shown.role === "admin" ? (
-          <Link href="/admin" className={SIGN_IN_CLASS}>
+          <Link href="/admin" className={textLink}>
             Admin
           </Link>
         ) : null}
         <Link
           href="/account"
           title={shown.display_name ?? "Account"}
-          className={CHIP_CLASS}
+          className={nameLink}
         >
           {shown.display_name ?? "Account"}
         </Link>
@@ -110,14 +115,14 @@ export function HeaderAccount() {
 
   if (ready && hasCookie) {
     return (
-      <Link href="/account" title="Account" className={CHIP_CLASS}>
+      <Link href="/account" title="Account" className={nameLink}>
         Account
       </Link>
     );
   }
 
   return (
-    <Link href={loginHref(pathname, search)} rel="nofollow" className={SIGN_IN_CLASS}>
+    <Link href={loginHref(pathname, query)} rel="nofollow" className={textLink}>
       Sign in
     </Link>
   );

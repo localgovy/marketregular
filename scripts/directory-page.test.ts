@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { nextDirectoryPage } from "../src/lib/directory-page.ts";
+import { sortDirectoryMarkets } from "../src/lib/directory-sort.ts";
+import type { Market } from "../src/types/database.ts";
+import type { ScheduleRow } from "../src/lib/schedule.ts";
 
 test("next page continues a stable list", () => {
   const rows = ["a", "b", "c", "d", "e"].map((id) => ({ id }));
@@ -54,6 +57,49 @@ test("bounded directory keys ignore tag order and skip free text", async () => {
   assert.equal(page, "/markets?tag=bakery&tag=produce");
   assert.equal(view, "/api/directory?tag=bakery&tag=produce");
   assert.equal(boundedDirectoryKey(search), same);
+});
+
+test("next-open sort uses the clock it is given, not the moment the schedules were loaded", () => {
+  const markets = [
+    { id: "friday", name: "Friday Hall", province: "ON" },
+    { id: "saturday", name: "Saturday Hall", province: "ON" },
+  ] as Market[];
+  const schedules = new Map<string, ScheduleRow[]>([
+    [
+      "friday",
+      [
+        {
+          weekday: 5,
+          opens_at: "08:00",
+          closes_at: "14:00",
+          season_start: "06-11",
+          season_end: "10-23",
+        },
+      ],
+    ],
+    [
+      "saturday",
+      [
+        {
+          weekday: 6,
+          opens_at: "07:00",
+          closes_at: "14:00",
+          season_start: null,
+          season_end: null,
+        },
+      ],
+    ],
+  ]);
+  const orderAt = (iso: string) =>
+    sortDirectoryMarkets(markets, "next", {
+      now: new Date(iso),
+      schedulesFor: (id) => schedules.get(id) ?? [],
+    }).map((market) => market.id);
+
+  // Friday morning: the Friday hall is open, so it leads.
+  assert.deepEqual(orderAt("2026-10-23T14:00:00.000Z"), ["friday", "saturday"]);
+  // Friday evening, after that hall's last day of the season: Saturday is next.
+  assert.deepEqual(orderAt("2026-10-24T00:30:00.000Z"), ["saturday", "friday"]);
 });
 
 test("next page reports more when unseen rows remain past the page", () => {

@@ -22,7 +22,6 @@ export function DirectoryResults({
   vendorTotal,
   search,
   weekdays,
-  now,
   sortedAt,
 }: {
   markets: DirectoryMarketCard[];
@@ -32,9 +31,7 @@ export function DirectoryResults({
   vendorTotal: number;
   search: MarketsSearch;
   weekdays?: number[];
-  /** Fresh clock for open badges on each card. */
-  now: string;
-  /** Clock the list was ordered with. Later pages keep this order. */
+  /** Clock the list was ordered with. Cards and later pages both use it. */
   sortedAt: string;
 }) {
   const [markets, setMarkets] = useState(initialMarkets);
@@ -115,7 +112,7 @@ export function DirectoryResults({
                   market={market}
                   schedules={schedulesByMarket[market.id]}
                   weekdays={weekdays}
-                  now={now}
+                  now={sortedAt}
                 />
               ))}
             </div>

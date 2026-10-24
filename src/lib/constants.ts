@@ -9,6 +9,8 @@ export const SITE_TITLE = `${SITE_NAME} - ${SITE_TAGLINE}`;
 
 /** Home finder, the markets directory, and the header search. */
 export const SEARCH_PLACEHOLDER = "Market, vendor, cuisine, or neighbourhood";
+/** The header field is narrower than the directory search, so the hint has to fit. */
+export const HEADER_SEARCH_PLACEHOLDER = "Market, vendor, or neighbourhood";
 export const SEARCH_LABEL = "Search markets and vendors";
 export const PRODUCT_SEARCH_PLACEHOLDER = "Bread, eggs, honey, or a vendor";
 export const PRODUCT_SEARCH_LABEL = "Search products and vendors";

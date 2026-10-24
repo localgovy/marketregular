@@ -62,12 +62,12 @@
 }
 
 :root {
-  /* Header bar. The brand column width lives on site-rail so it meets the reviews rail. */
+  /* Fallback until the slab measures itself. Phone stack, then the desktop slab. */
   --header-bar: 3rem;
   --header-bar-lg: 4rem;
   --header-nav: 2.5rem;
   --header-stripe: 2px;
-  --header-offset: calc(var(--header-bar) + var(--header-nav));
+  --header-offset: 17rem;
   --header-lg: var(--header-offset);
   /* Warm paper, quiet leaf. Live/open accents use stamp red. */
   --background: #f4f1ea;
@@ -119,14 +119,7 @@
 
 @media (min-width: 1024px) {
   :root {
-    --header-offset: calc(var(--header-bar-lg) + var(--header-nav));
-    --header-lg: var(--header-offset);
-  }
-}
-
-@media (min-width: 1280px) {
-  :root {
-    --header-offset: calc(var(--header-bar-lg) + var(--header-stripe));
+    --header-offset: 11rem;
     --header-lg: var(--header-offset);
   }
 }
