@@ -10,7 +10,7 @@ const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
 const migration = "supabase/migrations/20261016195249_rose_keeps_flower_meaning.sql";
 const giftsMigration = "supabase/migrations/20261018154000_gifts_and_sets_product_category.sql";
 const searchMigration =
-  "supabase/migrations/20261024174500_search_cuisine_fuzzy_vendor_cap.sql";
+  "supabase/migrations/20261024223000_restore_search_products.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -151,24 +151,6 @@ create operator % (
   procedure = trgm_like
 );
 
-create function public.strict_word_similarity(text, text)
-returns real
-language sql
-immutable
-as $$ select public.similarity($2, $1) $$;
-
-create function public.strict_word_like(text, text)
-returns boolean
-language sql
-immutable
-as $$ select public.strict_word_similarity($1, $2) >= 0.3 $$;
-
-create operator <<% (
-  leftarg = text,
-  rightarg = text,
-  procedure = strict_word_like
-);
-
 create function public.fold_search_text(input text)
 returns text
 language sql
@@ -200,8 +182,6 @@ create table public.menu_item_photos (
   image_url text not null
 );
 
-${extractFunction("search_term_is_alcohol", searchMigration)}
-${extractFunction("search_phrase_fuzzy", searchMigration)}
 ${extractFunction("search_products", searchMigration)}
 `;
 
@@ -361,9 +341,6 @@ async function database() {
   await db.exec(`
     insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values
       ('${DORO}', 'origin.ethiopian'),
-      ('${LUMPIA}', 'origin.filipino'),
-      ('${ADOBO}', 'origin.filipino'),
-      ('${HUMMUS}', 'origin.middle-eastern'),
       ('${BUTTER_CHICKEN}', 'origin.indian'),
       ('${CURRY}', 'kind.curry');
   `);
@@ -558,50 +535,41 @@ test("turkey and pumpkin return no pet-food items and dog treats does", async ()
   assert.ok(dogTreats.some((row) => row.item_name === "Turkey pumpkin beef dessert dog treats"));
 });
 
-test("cuisine search requires an origin tag on the item and skips pet food", async () => {
+test("cuisine search uses vendor tags under origin tags and skips pet food", async () => {
   const db = await database();
-  await db.query(
-    `insert into public.vendor_menus (id, vendor_id, name, product_category, product_slug) values
-      ('c4c4c4c4-c4c4-44c4-84c4-c4c4c4c4c4c4', $1, 'Standard cupcakes', 'pies-and-sweets', 'cupcakes'),
-      ('c5c5c5c5-c5c5-44c5-84c5-c5c5c5c5c5c5', $2, 'Lentil soup', 'prepared-foods', 'lentil-soup')`,
-    [FILIPINO_VENDOR, MIDDLE_VENDOR],
-  );
 
   const ethiopian = await search(db, "ethiopian");
   assert.ok(ethiopian.length > 0);
   assert.equal(indexOf(ethiopian, "Ethiopian dog treats"), -1);
-  assert.equal(indexOf(ethiopian, "Misir wat"), -1);
   assert.equal(
     ethiopian.some((row) => row.product_category === "pet-food"),
     false,
   );
   const doro = indexOf(ethiopian, "Doro wat");
+  const misir = indexOf(ethiopian, "Misir wat");
   const platter = indexOf(ethiopian, "Ethiopian platter");
   assert.ok(doro >= 0);
+  assert.ok(misir >= 0);
   assert.ok(platter >= 0);
+  assert.ok(doro < misir);
   assert.ok(doro < platter);
 
   const ethiopianFood = await search(db, "ethiopian food");
-  assert.ok(ethiopianFood.some((row) => row.item_name === "Doro wat"));
-  assert.equal(indexOf(ethiopianFood, "Misir wat"), -1);
-  assert.equal(indexOf(ethiopianFood, "Ethiopian platter"), -1);
+  assert.ok(ethiopianFood.some((row) => row.item_name === "Misir wat"));
   assert.equal(indexOf(ethiopianFood, "Ethiopian dog treats"), -1);
 
   const filipino = await search(db, "filipino");
+  assert.ok(filipino.length >= 3);
   assert.ok(filipino.some((row) => row.item_name === "Lumpia"));
   assert.ok(filipino.some((row) => row.item_name === "Chicken adobo"));
-  assert.equal(indexOf(filipino, "Pandesal"), -1);
-  assert.equal(indexOf(filipino, "Standard cupcakes"), -1);
+  assert.ok(filipino.some((row) => row.item_name === "Pandesal"));
   assert.equal(
     filipino.some((row) => row.product_category === "pet-food"),
     false,
   );
 
   const filipinoFood = await search(db, "filipino food");
-  assert.ok(filipinoFood.some((row) => row.item_name === "Lumpia"));
-  assert.ok(filipinoFood.some((row) => row.item_name === "Chicken adobo"));
-  assert.equal(indexOf(filipinoFood, "Pandesal"), -1);
-  assert.equal(indexOf(filipinoFood, "Standard cupcakes"), -1);
+  assert.ok(filipinoFood.length >= 3);
   assert.equal(
     filipinoFood.some((row) => row.product_category === "pet-food"),
     false,
@@ -610,17 +578,17 @@ test("cuisine search requires an origin tag on the item and skips pet food", asy
   const indian = await search(db, "indian");
   const butter = indexOf(indian, "Butter chicken");
   const samosa = indexOf(indian, "Vegetable samosa");
+  const pie = indexOf(indian, "Chicken pot pie");
   assert.ok(butter >= 0);
   assert.ok(samosa >= 0);
-  assert.equal(indexOf(indian, "Chicken pot pie"), -1);
+  assert.ok(pie >= 0);
   assert.ok(butter < samosa);
+  assert.ok(samosa < pie);
 
   const middle = await search(db, "middle eastern");
   assert.ok(middle.some((row) => row.item_name === "Hummus"));
-  assert.equal(indexOf(middle, "Lentil soup"), -1);
   const middleFood = await search(db, "middle-eastern food");
   assert.ok(middleFood.some((row) => row.item_name === "Hummus"));
-  assert.equal(indexOf(middleFood, "Lentil soup"), -1);
 });
 
 test("the search migration keeps null-category matches, pet food, trigram, accents, and the alcohol gate", () => {
@@ -651,22 +619,14 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.doesNotMatch(sql, /security definer/i);
   assert.match(sql, /partition by ranked\.vendor_id/);
   assert.match(sql, /ranked\.score - \(ranked\.vendor_rank - 1\) desc/);
-  assert.match(sql, /ranked\.vendor_rank <= 3/);
-  assert.match(sql, /public\.search_phrase_fuzzy\(clock\.query, vm\.name\) >= 0\.45/);
-  assert.match(sql, /exact_tally\.n < 8/);
-  assert.doesNotMatch(sql, /then 0\.25/);
-  for (const slug of [
-    "kind.moonshine",
-    "kind.absinthe",
-    "kind.brandy",
-    "kind.hats",
-    "kind.scarves",
-    "kind.stickers",
-    "kind.greeting-cards",
-    "kind.succulents",
-  ]) {
-    assert.match(sql, new RegExp(`'${slug.replace(".", "\\.")}'`));
-  }
+  assert.doesNotMatch(sql, /create or replace function public\.search_phrase_fuzzy/);
+  assert.doesNotMatch(sql, /as materialized/);
+  assert.doesNotMatch(sql, /fuzzy_only/);
+  assert.match(sql, /drop function if exists public\.search_phrase_fuzzy/);
+  assert.equal(
+    extractFunction("search_products", searchMigration),
+    extractFunction("search_products", "supabase/migrations/20261021005523_menu_item_photos.sql"),
+  );
   assert.match(sql, /left join public\.menu_item_photos mip/);
   assert.match(sql, /on mip\.menu_id = vm\.id/);
   assert.match(sql, /ranked\.image_url/);
@@ -883,8 +843,7 @@ test("uncategorized published items match by name and rank under categorized row
 
   const ethiopian = await search(db, "ethiopian");
   assert.equal(indexOf(ethiopian, "Ethiopian dog treats"), -1);
-  assert.equal(indexOf(ethiopian, "Misir wat"), -1);
-  assert.ok(indexOf(ethiopian, "Doro wat") < indexOf(ethiopian, "Ethiopian platter"));
+  assert.ok(indexOf(ethiopian, "Doro wat") < indexOf(ethiopian, "Misir wat"));
 
   await db.exec(`
     create or replace function similarity(text, text)
@@ -1247,207 +1206,3 @@ test("one vendor cannot fill the top matches, and pages stay disjoint", async ()
   assert.equal((await searchPage(db, "bath bomb", 10, 40)).length, 0);
 });
 
-function berryId(n: number) {
-  return `b2000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
-}
-
-test("an exact search phrase drops trigram look-alikes once eight items match", async () => {
-  const db = await database();
-  await db.exec(`
-    insert into public.search_terms (term) values ('blackberries');
-    insert into public.search_term_classifiers (term, classifier_slug, weight)
-      values ('blackberries', 'kind.blackberries', 3);
-    create or replace function similarity(text, text)
-    returns real
-    language sql
-    immutable
-    as $$
-      select case
-        when lower($2) = 'blackberries' and position('blueberr' in lower($1)) > 0 then 0.5
-        when lower($2) = 'blackberries' and position('blackberr' in lower($1)) > 0 then 1
-        else 0
-      end::real
-    $$;
-    create or replace function trgm_like(text, text)
-    returns boolean
-    language sql
-    immutable
-    as $$ select public.similarity($1, $2) >= 0.45 $$;
-  `);
-  for (let n = 1; n <= 7; n += 1) {
-    const id = berryId(n);
-    await db.query(
-      "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Blackberries', 'apples-and-fruit')",
-      [id, VENDOR],
-    );
-    await db.query(
-      "insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values ($1, 'kind.blackberries')",
-      [id],
-    );
-  }
-  await db.query(
-    "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Blueberries', 'apples-and-fruit')",
-    [berryId(20), VENDOR],
-  );
-
-  const thin = await search(db, "blackberries");
-  const blueAt = indexOf(thin, "Blueberries");
-  assert.ok(blueAt >= 7);
-  assert.equal(
-    thin.slice(0, blueAt).every((row) => row.item_name === "Blackberries"),
-    true,
-  );
-
-  const eighth = berryId(8);
-  await db.query(
-    "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, 'Blackberries', 'apples-and-fruit')",
-    [eighth, VENDOR],
-  );
-  await db.query(
-    "insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values ($1, 'kind.blackberries')",
-    [eighth],
-  );
-  const full = await search(db, "blackberries");
-  assert.equal(indexOf(full, "Blueberries"), -1);
-  assert.equal(full.filter((row) => row.item_name === "Blackberries").length, 8);
-});
-
-test("a multi-word typo matches each word and skips a one-word look-alike", async () => {
-  const db = await database();
-  await db.exec(`
-    create or replace function similarity(text, text)
-    returns real
-    language sql
-    immutable
-    as $$
-      select case
-        when lower($1) in ('cinamon', 'cinnamon') and lower($2) in ('cinamon', 'cinnamon') then 0.7
-        when lower($1) in ('buns', 'bun') and lower($2) in ('buns', 'bun') then 0.9
-        when position('cinnamon bun' in lower($1)) > 0 and lower($2) = 'cinamon buns' then 0.8
-        else 0
-      end::real
-    $$;
-  `);
-  await db.query(
-    `insert into public.vendor_menus (id, vendor_id, name, product_category) values
-      ('d1000000-0000-4000-8000-000000000001', $1, 'Cinnamon Buns', 'bread-and-bakery'),
-      ('d1000000-0000-4000-8000-000000000002', $1, 'Cinnamon Honey', 'honey'),
-      ('d1000000-0000-4000-8000-000000000003', $1, 'Hot dog buns', 'prepared-foods')`,
-    [VENDOR],
-  );
-
-  const fuzzy = await db.query<{ score: number }>(
-    "select public.search_phrase_fuzzy('cinamon buns', 'Cinnamon Buns') as score",
-  );
-  assert.ok((fuzzy.rows[0]?.score ?? 0) >= 0.45);
-  const honey = await db.query<{ score: number }>(
-    "select public.search_phrase_fuzzy('cinamon buns', 'Cinnamon Honey') as score",
-  );
-  assert.equal(honey.rows[0]?.score ?? 0, 0);
-  const coffee = await db.query<{ score: number }>(
-    "select public.search_phrase_fuzzy('ethiopian food', 'Ethiopian Yirgacheffe') as score",
-  );
-  assert.equal(coffee.rows[0]?.score ?? 0, 0);
-
-  const rows = await search(db, "cinamon buns");
-  assert.ok(rows.some((row) => row.item_name === "Cinnamon Buns"));
-  assert.equal(indexOf(rows, "Cinnamon Honey"), -1);
-  assert.equal(indexOf(rows, "Hot dog buns"), -1);
-});
-
-test("a higher-scoring vendor is capped at three items before other vendors", async () => {
-  const db = await database();
-  const wine = "e1000000-0000-4000-8000-000000000001";
-  const other = "e1000000-0000-4000-8000-000000000002";
-  await db.exec(`
-    insert into public.search_terms (term) values ('whisky');
-    insert into public.search_term_classifiers (term, classifier_slug, weight)
-      values ('whisky', 'kind.whisky', 3);
-  `);
-  await db.query(
-    `insert into public.vendors (id, slug, name) values
-      ($1, 'wine-shop', 'The Wine Shop'),
-      ($2, 'other-dram', 'Other Distillery')`,
-    [wine, other],
-  );
-  await db.query(
-    `insert into public.market_vendors (market_id, vendor_id, days) values
-      ($1, $2, '{6}'),
-      ($1, $3, '{6}')`,
-    [MARKET, wine, other],
-  );
-  for (let n = 1; n <= 6; n += 1) {
-    const id = `e2000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
-    await db.query(
-      "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, $3, 'alcohol')",
-      [id, wine, `Whisky Bottle ${n}`],
-    );
-    await db.query(
-      "insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values ($1, 'kind.whisky')",
-      [id],
-    );
-  }
-  for (const [n, name] of ["Single Malt Dram A", "Single Malt Dram B"].entries()) {
-    const id = `e3000000-0000-4000-8000-${(n + 1).toString(16).padStart(12, "0")}`;
-    await db.query(
-      "insert into public.vendor_menus (id, vendor_id, name, product_category) values ($1, $2, $3, 'alcohol')",
-      [id, other, name],
-    );
-    await db.query(
-      "insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values ($1, 'kind.whisky')",
-      [id],
-    );
-  }
-
-  const rows = await searchPage(db, "whisky", 20, 0);
-  assert.equal(rows.filter((row) => row.vendor_slug === "wine-shop").length, 6);
-  assert.deepEqual(
-    rows.slice(0, 5).map((row) => row.vendor_slug),
-    ["wine-shop", "wine-shop", "wine-shop", "other-dram", "other-dram"],
-  );
-  assert.equal(rows[5]?.vendor_slug, "wine-shop");
-});
-
-test("absinthe and brandy stay behind the alcohol gate, and scarves stay with goods", async () => {
-  const db = await database();
-  await db.exec(`
-    insert into public.search_terms (term) values ('scarves'), ('absinthe'), ('brandy');
-    insert into public.search_term_classifiers (term, classifier_slug, weight) values
-      ('scarves', 'kind.scarves', 3),
-      ('absinthe', 'kind.absinthe', 3),
-      ('brandy', 'kind.brandy', 3);
-  `);
-  await db.query(
-    `insert into public.vendor_menus (id, vendor_id, name, product_category) values
-      ('f1000000-0000-4000-8000-000000000001', $1, 'Verte Absinthe', 'alcohol'),
-      ('f1000000-0000-4000-8000-000000000002', $1, 'Apple Brandy', 'alcohol'),
-      ('f1000000-0000-4000-8000-000000000003', $1, 'Wool scarf', 'clothing-and-accessories'),
-      ('f1000000-0000-4000-8000-000000000004', $1, 'Scarf cookies', 'prepared-foods')`,
-    [VENDOR],
-  );
-  await db.exec(`
-    insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values
-      ('f1000000-0000-4000-8000-000000000001', 'kind.absinthe'),
-      ('f1000000-0000-4000-8000-000000000002', 'kind.brandy'),
-      ('f1000000-0000-4000-8000-000000000003', 'kind.scarves');
-  `);
-
-  const absinthe = await search(db, "absinthe");
-  assert.ok(absinthe.some((row) => row.item_name === "Verte Absinthe" && row.product_category === "alcohol"));
-  const brandy = await search(db, "brandy");
-  assert.ok(brandy.some((row) => row.item_name === "Apple Brandy" && row.product_category === "alcohol"));
-  const cookies = await search(db, "cookies");
-  assert.equal(
-    cookies.some((row) => row.product_category === "alcohol"),
-    false,
-  );
-
-  const scarves = await search(db, "scarves");
-  assert.ok(scarves.some((row) => row.item_name === "Wool scarf"));
-  assert.equal(indexOf(scarves, "Scarf cookies"), -1);
-
-  const alcoholTerm = await db.query<{ alcohol: boolean }>(
-    "select public.search_term_is_alcohol('absinthe') as alcohol",
-  );
-  assert.equal(alcoholTerm.rows[0]?.alcohol, true);
-});
