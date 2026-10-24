@@ -1,5 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
+import { cachedQuery } from "@/lib/data/query-cache";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export type ProductPhoto = {
@@ -55,14 +56,20 @@ function indexPhotos(rows: PhotoRow[]): ProductPhotoIndex {
   return index;
 }
 
-const loadCachedProductPhotos = unstable_cache(
+const PRODUCT_PHOTOS_QUERY_KEY = "product_photos|select=subject,slug,image_url,alt";
+
+async function fetchProductPhotos() {
+  const supabase = createServiceClient();
+  if (!supabase) return EMPTY_PRODUCT_PHOTOS;
+  const { data, error } = await supabase.from("product_photos").select("subject, slug, image_url, alt");
+  if (error) throw new Error("Could not load product photos");
+  return indexPhotos((data ?? []) as PhotoRow[]);
+}
+
+const readCachedProductPhotos = unstable_cache(
   async () => {
     try {
-      const supabase = createServiceClient();
-      if (!supabase) return EMPTY_PRODUCT_PHOTOS;
-      const { data, error } = await supabase.from("product_photos").select("subject, slug, image_url, alt");
-      if (error) throw new Error("Could not load product photos");
-      return indexPhotos((data ?? []) as PhotoRow[]);
+      return await cachedQuery(PRODUCT_PHOTOS_QUERY_KEY, 120, fetchProductPhotos);
     } catch (error) {
       // Plates are the page. A photo outage must not take the directory down.
       console.error("product photos", error instanceof Error ? error.message : "failed");
@@ -74,7 +81,7 @@ const loadCachedProductPhotos = unstable_cache(
 );
 
 export async function listProductPhotos() {
-  return loadCachedProductPhotos();
+  return readCachedProductPhotos();
 }
 
 /** Product shot, otherwise the aisle shot. Null until a row is seeded. */

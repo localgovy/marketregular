@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { fetchWithGatewayRetry } from "../src/lib/supabase/gateway-fetch.ts";
+import {
+  BUILD_FETCH_CONCURRENCY,
+  fetchWithGatewayRetry,
+  resetBuildFetchGateForTests,
+} from "../src/lib/supabase/gateway-fetch.ts";
 
 const noWait = async () => {};
 
@@ -57,6 +61,49 @@ test("a client error is not retried", async () => {
   const response = await fetchWithGatewayRetry(fetchImpl, noWait)("https://example.test/vendors");
   assert.equal(response.status, 400);
   assert.equal(calls, 1);
+});
+
+test("a gateway failure waits with backoff before the next try", async () => {
+  const waits: number[] = [];
+  let calls = 0;
+  const fetchImpl: typeof fetch = async () => {
+    calls += 1;
+    return jsonResponse(calls < 3 ? 502 : 200);
+  };
+  const response = await fetchWithGatewayRetry(fetchImpl, async (ms) => {
+    waits.push(ms);
+  })("https://example.test/vendors");
+  assert.equal(response.status, 200);
+  assert.equal(waits.length, 2);
+  assert.ok(waits[0] >= 1000);
+  assert.ok(waits[1] >= 2000);
+  assert.ok(waits[1] > waits[0]);
+});
+
+test("build fetches keep only a handful in flight", async () => {
+  const previous = process.env.NEXT_PHASE;
+  process.env.NEXT_PHASE = "phase-production-build";
+  resetBuildFetchGateForTests();
+  let active = 0;
+  let max = 0;
+  const fetchImpl: typeof fetch = async () => {
+    active += 1;
+    max = Math.max(max, active);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    active -= 1;
+    return jsonResponse(200);
+  };
+  try {
+    const wrapped = fetchWithGatewayRetry(fetchImpl, noWait);
+    await Promise.all(
+      Array.from({ length: 12 }, () => wrapped("https://example.test/published_markets")),
+    );
+    assert.equal(max, BUILD_FETCH_CONCURRENCY);
+  } finally {
+    resetBuildFetchGateForTests();
+    if (previous === undefined) delete process.env.NEXT_PHASE;
+    else process.env.NEXT_PHASE = previous;
+  }
 });
 
 test("a read stops after the last gateway failure", async () => {

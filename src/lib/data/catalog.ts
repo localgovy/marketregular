@@ -1,7 +1,9 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { isSupabaseConfigured, provinceTz } from "@/lib/constants";
+import { cachedQuery, clearQueryCache } from "@/lib/data/query-cache";
 import { DIRECTORY_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
+import { gatewayRetryDelayMs } from "@/lib/supabase/gateway-fetch";
 import { DIRECTORY_CENSUS_ID } from "@/lib/launch";
 import {
   localFeatured,
@@ -299,11 +301,21 @@ function marketFromStall(row: StallRow) {
 }
 
 /**
- * Next's data cache rejects a single entry over 2MB. The whole directory is
- * past that, so one `unstable_cache` never stored and every page refetched it.
- * Each table is its own entry, still under the cap, and still tagged `directory`.
+ * Next's data cache rejects a single entry over 2MB, and a nested
+ * `unstable_cache` bypasses the outer one. Static workers also do not share a
+ * module-level `let`. `unstable_cache` still runs so a page keeps the directory
+ * revalidate window. The fetch itself is memoized on `globalThis` for that
+ * window and, during `next build`, written once under `.next/cache` so every
+ * worker reuses the first read.
  */
 const DIRECTORY_CACHE = { revalidate: DIRECTORY_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] };
+
+const MARKETS_QUERY_KEY = `published_markets|select=${MARKET_PUBLIC}|status=eq.published|order=name`;
+const VENDORS_QUERY_KEY = `published_vendors|select=${VENDOR_PUBLIC}|status=eq.published|order=name`;
+const STALLS_QUERY_KEY =
+  "published_stalls|select=market_id,stall,days,vendor_id,vendor_name,vendor_slug,vendor_status,market_city,market_status|order=market_id,vendor_id";
+const SCHEDULES_QUERY_KEY = `published_schedules|select=${SCHEDULE_PUBLIC}|order=id`;
+const MENU_VENDOR_IDS_QUERY_KEY = "rpc|menu_vendor_ids";
 
 function requirePublicDb() {
   const supabase = publicDb();
@@ -311,100 +323,130 @@ function requirePublicDb() {
   return supabase;
 }
 
-const loadCachedMarkets = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    return fetchAllRows<Market>((from, to) =>
-      supabase
-        .from("published_markets")
-        .select(MARKET_PUBLIC)
-        .eq("status", "published")
-        .order("name")
-        .range(from, to),
-    );
-  },
+async function fetchPublishedMarkets() {
+  const supabase = requirePublicDb();
+  return fetchAllRows<Market>((from, to) =>
+    supabase
+      .from("published_markets")
+      .select(MARKET_PUBLIC)
+      .eq("status", "published")
+      .order("name")
+      .range(from, to),
+  );
+}
+
+const readCachedMarkets = unstable_cache(
+  () => cachedQuery(MARKETS_QUERY_KEY, DIRECTORY_REVALIDATE_SECONDS, fetchPublishedMarkets),
   ["published-directory-markets-v1"],
   DIRECTORY_CACHE,
 );
 
-const loadCachedVendors = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    return fetchAllRows<Vendor>((from, to) =>
-      supabase
-        .from("published_vendors")
-        .select(VENDOR_PUBLIC)
-        .eq("status", "published")
-        .order("name")
-        .range(from, to),
-    );
-  },
+function loadCachedMarkets() {
+  return readCachedMarkets();
+}
+
+async function fetchPublishedVendors() {
+  const supabase = requirePublicDb();
+  return fetchAllRows<Vendor>((from, to) =>
+    supabase
+      .from("published_vendors")
+      .select(VENDOR_PUBLIC)
+      .eq("status", "published")
+      .order("name")
+      .range(from, to),
+  );
+}
+
+const readCachedVendors = unstable_cache(
+  () => cachedQuery(VENDORS_QUERY_KEY, DIRECTORY_REVALIDATE_SECONDS, fetchPublishedVendors),
   ["published-directory-vendors-v1"],
   DIRECTORY_CACHE,
 );
 
-const loadCachedStallRows = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    const rows = await fetchAllRows<{
-      market_id: string;
-      stall: string | null;
-      days: number[] | null;
-      vendor_id: string;
-      vendor_name: string;
-      vendor_slug: string;
-      vendor_status: string;
-      market_city: string;
-      market_status: string;
-    }>((from, to) =>
-      supabase
-        .from("published_stalls")
-        .select(
-          "market_id, stall, days, vendor_id, vendor_name, vendor_slug, vendor_status, market_city, market_status",
-        )
-        .order("market_id")
-        .order("vendor_id")
-        .range(from, to),
-    );
-    return rows.map((row) => ({
-      market_id: row.market_id,
-      stall: row.stall,
-      days: row.days ?? [],
-      vendors: {
-        id: row.vendor_id,
-        name: row.vendor_name,
-        slug: row.vendor_slug,
-        status: row.vendor_status,
-      },
-      markets: { city: row.market_city, status: row.market_status },
-    }));
-  },
+function loadCachedVendors() {
+  return readCachedVendors();
+}
+
+async function fetchPublishedStallRows() {
+  const supabase = requirePublicDb();
+  const rows = await fetchAllRows<{
+    market_id: string;
+    stall: string | null;
+    days: number[] | null;
+    vendor_id: string;
+    vendor_name: string;
+    vendor_slug: string;
+    vendor_status: string;
+    market_city: string;
+    market_status: string;
+  }>((from, to) =>
+    supabase
+      .from("published_stalls")
+      .select(
+        "market_id, stall, days, vendor_id, vendor_name, vendor_slug, vendor_status, market_city, market_status",
+      )
+      .order("market_id")
+      .order("vendor_id")
+      .range(from, to),
+  );
+  return rows.map((row) => ({
+    market_id: row.market_id,
+    stall: row.stall,
+    days: row.days ?? [],
+    vendors: {
+      id: row.vendor_id,
+      name: row.vendor_name,
+      slug: row.vendor_slug,
+      status: row.vendor_status,
+    },
+    markets: { city: row.market_city, status: row.market_status },
+  }));
+}
+
+const readCachedStallRows = unstable_cache(
+  () => cachedQuery(STALLS_QUERY_KEY, DIRECTORY_REVALIDATE_SECONDS, fetchPublishedStallRows),
   ["published-directory-stalls-v1"],
   DIRECTORY_CACHE,
 );
 
-const loadCachedSchedules = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    return fetchAllRows<MarketSchedule>((from, to) =>
-      supabase.from("published_schedules").select(SCHEDULE_PUBLIC).order("id").range(from, to),
-    );
-  },
+function loadCachedStallRows() {
+  return readCachedStallRows();
+}
+
+async function fetchPublishedSchedules() {
+  const supabase = requirePublicDb();
+  return fetchAllRows<MarketSchedule>((from, to) =>
+    supabase.from("published_schedules").select(SCHEDULE_PUBLIC).order("id").range(from, to),
+  );
+}
+
+const readCachedSchedules = unstable_cache(
+  () => cachedQuery(SCHEDULES_QUERY_KEY, DIRECTORY_REVALIDATE_SECONDS, fetchPublishedSchedules),
   ["published-directory-schedules-v1"],
   DIRECTORY_CACHE,
 );
 
-const loadCachedMenuVendorIds = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    const menuIds = await supabase.rpc("menu_vendor_ids");
-    if (menuIds.error) directoryFailed(menuIds.error);
-    if (!Array.isArray(menuIds.data)) directoryFailed({ message: "Menu vendor ids were not a list" });
-    return menuIds.data.filter((id): id is string => typeof id === "string");
-  },
+function loadCachedSchedules() {
+  return readCachedSchedules();
+}
+
+async function fetchMenuVendorIds() {
+  const supabase = requirePublicDb();
+  const menuIds = await supabase.rpc("menu_vendor_ids");
+  if (menuIds.error) directoryFailed(menuIds.error);
+  if (!Array.isArray(menuIds.data)) directoryFailed({ message: "Menu vendor ids were not a list" });
+  return menuIds.data.filter((id): id is string => typeof id === "string");
+}
+
+const readCachedMenuVendorIds = unstable_cache(
+  () => cachedQuery(MENU_VENDOR_IDS_QUERY_KEY, DIRECTORY_REVALIDATE_SECONDS, fetchMenuVendorIds),
   ["published-directory-menu-ids-v1"],
   DIRECTORY_CACHE,
 );
+
+function loadCachedMenuVendorIds() {
+  return readCachedMenuVendorIds();
+}
 
 async function loadPublishedDirectory(): Promise<PublishedDirectory> {
   const [markets, vendors, stallRows, schedules, menuVendorIds] = await Promise.all([
@@ -434,7 +476,9 @@ async function loadPublishedDirectoryWithRetry(): Promise<PublishedDirectory> {
     return await loadPublishedDirectory();
   } catch (first) {
     console.error("published directory", directoryErrorMessage(first));
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    // Datasets that already succeeded stay in the query cache. Wait before
+    // reading the ones that failed so a blip does not immediately double the load.
+    await new Promise((resolve) => setTimeout(resolve, gatewayRetryDelayMs(0)));
     return loadPublishedDirectory();
   }
 }
@@ -478,25 +522,33 @@ export type DirectoryCensus = {
  * Published directory totals for the homepage ticket. Kept in `directory_census`
  * and refreshed on listing writes — not a hardcoded city list.
  */
-const loadCachedDirectoryCensus = unstable_cache(
-  async (): Promise<DirectoryCensus> => {
-    const supabase = requirePublicDb();
-    const { data, error } = await supabase
-      .from("directory_census")
-      .select("markets, vendors, menus, tallied_at")
-      .eq("id", DIRECTORY_CENSUS_ID)
-      .maybeSingle();
-    if (error || !data) directoryFailed(error);
-    return {
-      markets: data.markets,
-      vendors: data.vendors,
-      menus: data.menus ?? 0,
-      talliedAt: data.tallied_at,
-    };
-  },
+async function fetchDirectoryCensus(): Promise<DirectoryCensus> {
+  const supabase = requirePublicDb();
+  const { data, error } = await supabase
+    .from("directory_census")
+    .select("markets, vendors, menus, tallied_at")
+    .eq("id", DIRECTORY_CENSUS_ID)
+    .maybeSingle();
+  if (error || !data) directoryFailed(error);
+  return {
+    markets: data.markets,
+    vendors: data.vendors,
+    menus: data.menus ?? 0,
+    talliedAt: data.tallied_at,
+  };
+}
+
+const CENSUS_QUERY_KEY = `directory_census|select=markets,vendors,menus,tallied_at|id=eq.${DIRECTORY_CENSUS_ID}`;
+
+const readCachedDirectoryCensus = unstable_cache(
+  () => cachedQuery(CENSUS_QUERY_KEY, DIRECTORY_REVALIDATE_SECONDS, fetchDirectoryCensus),
   ["directory-census-v2"],
   DIRECTORY_CACHE,
 );
+
+function loadCachedDirectoryCensus() {
+  return readCachedDirectoryCensus();
+}
 
 export async function getDirectoryCensus(): Promise<DirectoryCensus> {
   if (!publicDb()) {
@@ -721,6 +773,7 @@ export function clearDirectoryMemory() {
   directorySnapshotGeneration += 1;
   directorySnapshotMemory = null;
   directorySnapshotTask = null;
+  clearQueryCache();
 }
 
 async function buildDirectorySnapshot(generation: number): Promise<DirectorySnapshot> {

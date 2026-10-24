@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/catalog";
+import { cachedQuery } from "@/lib/data/query-cache";
 import {
   assertPublicSearchPayload,
   isAlcoholCategory,
@@ -123,28 +124,33 @@ function inFindScope(
   return scope.categories.includes(row.product_category);
 }
 
-/** One sequential read per worker, refreshed every 2 minutes so a seeded picture can show up. */
-const FIND_MENU_INDEX_MS = 120_000;
-let findMenuIndex: { at: number; promise: Promise<FindMenuIndex> } | null = null;
+const FIND_MENU_INDEX_SECONDS = 120;
 
+type SerializedFindMenuIndex = {
+  bySlug: Array<[string, MenuRow[]]>;
+  byClassifier: Array<[string, MenuRow[]]>;
+};
+
+/** One read of the find-page menus per build and per two-minute window. */
 function loadFindMenuIndex() {
-  if (findMenuIndex && Date.now() - findMenuIndex.at < FIND_MENU_INDEX_MS) return findMenuIndex.promise;
-  const entry: { at: number; promise: Promise<FindMenuIndex> } = {
-    at: Date.now(),
-    promise: Promise.resolve({ bySlug: new Map(), byClassifier: new Map() }),
-  };
-  entry.promise = readFindMenuIndex().then(
-    (index) => {
-      if (findMenuIndex === entry) entry.at = Date.now();
-      return index;
-    },
-    (error: unknown) => {
-      if (findMenuIndex === entry) findMenuIndex = null;
-      throw error;
+  return cachedQuery(
+    "published_menus|find-index|product_slug,classifier",
+    FIND_MENU_INDEX_SECONDS,
+    readFindMenuIndex,
+    {
+      toJson: (index) => ({
+        bySlug: [...index.bySlug],
+        byClassifier: [...index.byClassifier],
+      }),
+      fromJson: (value) => {
+        const parsed = value as SerializedFindMenuIndex;
+        return {
+          bySlug: new Map(parsed.bySlug),
+          byClassifier: new Map(parsed.byClassifier),
+        };
+      },
     },
   );
-  findMenuIndex = entry;
-  return entry.promise;
 }
 
 type FindMenuPage = {

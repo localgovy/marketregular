@@ -93,7 +93,7 @@ Status words used below: **live**, **paused** (built, switched off), **redirect*
 | `/markets/tag/[tag]` | live | Everyone | Category page. Vendor list capped at 48 when scope is both | `CATEGORIES` in `src/lib/landing.ts` |
 | `/products` | live | Everyone | Aisle browse and product search. Query `q`, `open=1`, `market`, `day`, `aisle`, `sort`. Filtered URLs are noindex. Bare `/products` is indexable | `searchProducts`, `searchVendorsByName`, `listProductPhotos` |
 | `/find/[slug]` | live | Everyone | Fixed product page. `dynamicParams = false`. Index only if at least 5 vendors | `FIND_PAGES` in `src/data/find-pages.ts` (100 pages) |
-| `/vendors/[slug]` | live | Everyone | Stall: markets, menu, reviews, save, claim CTA. Thin pages (name and halls only) are noindex, follow | `getVendorBySlug` |
+| `/vendors/[slug]` | live | Everyone | Stall: markets, menu, reviews, save, claim CTA. Thin pages (name and halls only) are noindex, follow. Build writes the 200 busiest stalls; the rest are ISR | `getVendorBySlug` |
 | `/events` | live | Everyone | Month grid and this week. Query `m=YYYY-MM`, `d` | Markets and schedules |
 | `/feed` | live | Read: everyone. Write: signed-in | Posts and older reviews. Query `q`, `market`, `vendor`, `tag`, `sort`. Footer only, not header | `getFloorTape` |
 | `/blog`, `/blog/[slug]` | live | Everyone | Nine markdown files in `content/blog/`. Stale weekend guides stay generated and are noindex | `src/lib/blog.ts` |
@@ -289,9 +289,9 @@ Siblings are real second pages, with a qualifier and a cross-link (`MarketSeason
 
 ### Cache and revalidation
 
-Next’s data cache rejects one entry over 2 MB, so markets, vendors, stalls, schedules, menu ids, census, the bare directory, and the floor tape are separate `unstable_cache` entries, tag `directory`, revalidate 120s. Portal and admin writes call `revalidatePublishedDirectory`: drop the tag, then `/`, `/markets` (layout), `/vendors` (layout), `/events`, `/feed`, `/sitemap.xml`, plus the edited path.
+Next’s data cache rejects one entry over 2 MB and skips a nested `unstable_cache`, so markets, vendors, stalls, schedules, menu ids, census, product photos, and the find-page menu index are also memoized in the process for 120s. During `next build` that memo is written once under `.next/cache` and reused by every worker. The data-cache tag is still `directory` (product photos keep `product-photos`). Portal and admin writes call `revalidatePublishedDirectory`: drop the in-process memo and the tag, then `/`, `/markets` (layout), `/vendors` (layout), `/events`, `/feed`, `/sitemap.xml`, plus the edited path.
 
-Page ISR on top of that: home 120s; day hub, day pages, and open-today 900s; market, vendor, tag, find, and blog 3600s. `dynamicParams = false` on market, vendor, day, tag, find, and blog slugs. Portals, account, auth, and admin are `force-dynamic` or session-gated. A slug that is not generated 404s. `not-found.tsx` offers search. `error.tsx` only offers retry. Retired slugs 308 before the page (`listing-redirects` plus `listing_slug_aliases`).
+Page ISR on top of that: home 120s; day hub, day pages, and open-today 900s; market, vendor, tag, find, and blog 3600s. Build prerenders every market, every find page, and the 200 busiest vendor slugs. Other published vendor slugs render on the first request (`dynamicParams = true`) and stay cached for the hour. `dynamicParams = false` on market, day, tag, find, and blog slugs. Portals, account, auth, and admin are `force-dynamic` or session-gated. A market, day, tag, find, or blog slug that is not generated 404s. An unknown vendor slug is looked up on the published view and 404s when it is not there. `not-found.tsx` offers search. `error.tsx` only offers retry. Retired slugs 308 before the page (`listing-redirects` plus `listing_slug_aliases`).
 
 ### Product search gate
 
