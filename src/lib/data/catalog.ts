@@ -3,6 +3,7 @@ import { cache } from "react";
 import { isSupabaseConfigured, provinceTz } from "@/lib/constants";
 import { cachedQuery, clearQueryCache } from "@/lib/data/query-cache";
 import { DIRECTORY_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
+import { selectInChunks } from "@/lib/data/id-chunks";
 import { gatewayRetryDelayMs } from "@/lib/supabase/gateway-fetch";
 import { DIRECTORY_CENSUS_ID } from "@/lib/launch";
 import {
@@ -646,12 +647,23 @@ async function hallsByVendorIds(vendorIds: string[]): Promise<Map<string, Vendor
   const supabase = publicDb();
   if (!supabase) return groupVendorHalls(localStalls(), localMarkets());
 
-  const { data, error } = await supabase
-    .from("published_stalls")
-    .select("vendor_id, market_id, market_slug, market_name, market_city, market_status")
-    .in("vendor_id", vendorIds);
-  if (error) directoryFailed(error);
-  if (!data?.length) return new Map();
+  const data = await selectInChunks<{
+    vendor_id: string;
+    market_id: string;
+    market_slug: string;
+    market_name: string;
+    market_city: string;
+    market_status: string;
+  }>(
+    vendorIds,
+    (slice) =>
+      supabase
+        .from("published_stalls")
+        .select("vendor_id, market_id, market_slug, market_name, market_city, market_status")
+        .in("vendor_id", slice),
+    directoryFailed,
+  );
+  if (!data.length) return new Map();
 
   const stalls: StallRef[] = [];
   const markets: Pick<Market, "id" | "slug" | "name">[] = [];
@@ -1094,21 +1106,21 @@ export const getMarketBySlug = cache(async function getMarketBySlug(
 
   const vendorIdList = (links ?? []).map((l: { vendor_id: string }) => l.vendor_id);
   const showRoster = publishesVendorRoster(market.slug);
-  const [vendorRes, hallsMap, reviews] = await Promise.all([
+  const [vendors, hallsMap, reviews] = await Promise.all([
     showRoster && vendorIdList.length > 0
-      ? supabase.from("published_vendors").select(VENDOR_PUBLIC).in("id", vendorIdList)
-      : Promise.resolve({ data: [] as Vendor[], error: null }),
+      ? selectInChunks<Vendor>(
+          vendorIdList,
+          (slice) => supabase.from("published_vendors").select(VENDOR_PUBLIC).in("id", slice),
+          directoryFailed,
+        )
+      : Promise.resolve([] as Vendor[]),
     showRoster ? hallsByVendorIds(vendorIdList) : Promise.resolve(new Map<string, VendorHall[]>()),
     visitor
       ? newestListingReviews(visitor, market.id, vendorIdList)
       : Promise.resolve([] as Review[]),
   ]);
-  if (vendorRes.error) directoryFailed(vendorRes.error);
-  const vendors = vendorRes.data;
 
-  const vendorMap = new Map(
-    (vendors ?? []).map((v: Vendor) => [v.id, hydrateVendor(v)]),
-  );
+  const vendorMap = new Map(vendors.map((v: Vendor) => [v.id, hydrateVendor(v)]));
   const vendorIds = new Set(vendorIdList);
   const missingVendorIds = [
     ...new Set(
