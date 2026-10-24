@@ -11,6 +11,7 @@ import {
   WeekMark,
 } from "@/components/marks";
 import { MenuItemPhoto } from "@/components/menu-item-photo";
+import { NowLabel } from "@/components/now-label";
 import { ProductSaveButton, SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
 import { WEEKDAYS } from "@/lib/constants";
@@ -256,15 +257,15 @@ export function ProductListing({
             </div>
 
             <div className="mt-1.5 flex flex-wrap items-center gap-2">
-              {badge ? (
+              {badge === "Open now" ? (
+                <NowLabel tone="board">Open now</NowLabel>
+              ) : badge ? (
                 <span
                   className={cn(
                     "stall-chip-sm inline-flex items-center gap-1.5 px-2.5 py-0.5 text-sm font-medium",
-                    badge === "Open now"
-                      ? "bg-stamp text-chalk"
-                      : isLiveToday
-                        ? "bg-receipt text-foreground"
-                        : "bg-board/80 text-chalk",
+                    isLiveToday
+                      ? "bg-receipt text-foreground"
+                      : "bg-board/80 text-chalk",
                   )}
                 >
                   <WeekMark className="size-3.5" />

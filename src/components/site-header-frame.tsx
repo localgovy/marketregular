@@ -9,6 +9,7 @@ import { HeaderAccount } from "@/components/header-account";
 import { HeaderSearch } from "@/components/header-search";
 import { CaretDownMark, TicketMark, WeekMark } from "@/components/marks";
 import { NavLink } from "@/components/nav-link";
+import { NowLabel } from "@/components/now-label";
 import { SavesHydrator } from "@/components/saves-hydrator";
 import { useSaves } from "@/components/save-button";
 import { SiteWordmark } from "@/components/site-mark";
@@ -176,15 +177,6 @@ function LiveLine({ className }: { className?: string }) {
   );
 }
 
-function OpenDot() {
-  return (
-    <span aria-hidden className="relative inline-flex size-2 shrink-0">
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#9fd3b4] opacity-70 motion-reduce:animate-none" />
-      <span className="relative inline-flex size-2 rounded-full bg-[#9fd3b4]" />
-    </span>
-  );
-}
-
 function Wordmark({ className }: { className?: string }) {
   return (
     <Link
@@ -284,20 +276,16 @@ export function DayStrip({ board }: { board: HeaderBoard | null }) {
         href="/markets/open-today"
         prefetch={false}
         aria-label={countLabel}
-        className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap text-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
+        className="inline-flex shrink-0 items-center whitespace-nowrap rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
       >
-        <OpenDot />
-        <span className="inline-flex items-baseline gap-1.5" aria-hidden>
-          <span
-            className={cn(
-              "type-census text-2xl leading-none text-chalk",
-              !board && "invisible",
-            )}
-          >
-            {board?.openCount ?? 0}
+        <NowLabel tone="board">
+          <span className="inline-flex items-baseline gap-1.5" aria-hidden>
+            <span className={cn("type-nums", !board && "invisible")}>
+              {board?.openCount ?? 0}
+            </span>
+            <span>open now</span>
           </span>
-          <span className="text-sm text-chalk/80">open now</span>
-        </span>
+        </NowLabel>
       </Link>
       {board ? (
         <span className="shrink-0 text-sm font-medium text-chalk">{board.label}</span>

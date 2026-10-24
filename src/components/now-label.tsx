@@ -43,18 +43,25 @@ function OpenNowSprout() {
 export function NowLabel({
   children,
   className,
+  tone = "paper",
 }: {
   children: React.ReactNode;
   className?: string;
+  /** Paper keeps the sprout and the words in stamp red. Board keeps the words in chalk so they sit on the green. */
+  tone?: "paper" | "board";
 }) {
+  const onBoard = tone === "board";
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-sm font-medium leading-none text-stamp",
+        "inline-flex items-center gap-1.5 text-sm font-medium leading-none",
+        onBoard ? "text-chalk" : "text-stamp",
         className,
       )}
     >
-      <OpenNowSprout />
+      <span className={cn("inline-flex", onBoard && "open-now-sprout--on-board")}>
+        <OpenNowSprout />
+      </span>
       {children}
     </span>
   );

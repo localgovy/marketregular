@@ -29,10 +29,12 @@ export function FloorStrip({ openNow }: { openNow: OpenMarket[] }) {
             </span>
           </NowLabel>
         ) : (
-          <p className="text-base font-medium text-stamp">
-            <span className="type-nums">0</span>
-            {` ${countLabel} open now`}
-          </p>
+          <NowLabel className="text-base">
+            <span>
+              <span className="type-nums">0</span>
+              {` ${countLabel} open now`}
+            </span>
+          </NowLabel>
         )}
       </div>
       {openNow.length ? (

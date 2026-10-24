@@ -339,6 +339,14 @@
   overflow: visible;
 }
 
+/* Stamp red sinks into the board. This is the same sprout, a step lighter, and a touch larger so the leaves read. */
+.open-now-sprout--on-board .open-now-sprout {
+  width: 1.35em;
+  height: 1.35em;
+  flex-basis: 1.35em;
+  color: #f4a090;
+}
+
 .open-now-sprout__stem {
   transform-origin: 50.625% 90%;
   animation: open-now-sprout-stem 3200ms linear infinite both;

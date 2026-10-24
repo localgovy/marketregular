@@ -19,6 +19,7 @@ import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { StallEmblem, VendorHitList } from "@/components/product-results";
 import { ProductSearchForm } from "@/components/product-search-form";
 import { SortableProductHits } from "@/components/product-sort-list";
+import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
 import type { DirectoryCensus } from "@/lib/data/catalog";
@@ -128,14 +129,13 @@ export function ProductsAtlas({
 
         <div className="flex flex-wrap items-center gap-2.5">
           {openNowCount > 0 ? (
-            <Link
-              href="/markets/open-today"
-              className="stall-chip-sm inline-flex items-center gap-1.5 bg-stamp px-3 py-1 text-sm font-medium text-chalk hover:brightness-110"
-            >
-              <WeekMark className="size-3.5 text-chalk" />
-              <span>
-                {openNowCount} {openNowCount === 1 ? "market open now" : "markets open now"}
-              </span>
+            <Link href="/markets/open-today" className="inline-flex items-center hover:underline">
+              <NowLabel>
+                <span>
+                  <span className="type-nums">{openNowCount}</span>{" "}
+                  {openNowCount === 1 ? "market open now" : "markets open now"}
+                </span>
+              </NowLabel>
             </Link>
           ) : sellingTodayCount > 0 ? (
             <Link
