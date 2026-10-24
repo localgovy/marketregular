@@ -200,6 +200,7 @@ create table public.menu_item_photos (
   image_url text not null
 );
 
+${extractFunction("search_term_is_alcohol", searchMigration)}
 ${extractFunction("search_phrase_fuzzy", searchMigration)}
 ${extractFunction("search_products", searchMigration)}
 `;
@@ -654,6 +655,18 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.match(sql, /public\.search_phrase_fuzzy\(clock\.query, vm\.name\) >= 0\.45/);
   assert.match(sql, /exact_tally\.n < 8/);
   assert.doesNotMatch(sql, /then 0\.25/);
+  for (const slug of [
+    "kind.moonshine",
+    "kind.absinthe",
+    "kind.brandy",
+    "kind.hats",
+    "kind.scarves",
+    "kind.stickers",
+    "kind.greeting-cards",
+    "kind.succulents",
+  ]) {
+    assert.match(sql, new RegExp(`'${slug.replace(".", "\\.")}'`));
+  }
   assert.match(sql, /left join public\.menu_item_photos mip/);
   assert.match(sql, /on mip\.menu_id = vm\.id/);
   assert.match(sql, /ranked\.image_url/);
@@ -1393,4 +1406,48 @@ test("a higher-scoring vendor is capped at three items before other vendors", as
     ["wine-shop", "wine-shop", "wine-shop", "other-dram", "other-dram"],
   );
   assert.equal(rows[5]?.vendor_slug, "wine-shop");
+});
+
+test("absinthe and brandy stay behind the alcohol gate, and scarves stay with goods", async () => {
+  const db = await database();
+  await db.exec(`
+    insert into public.search_terms (term) values ('scarves'), ('absinthe'), ('brandy');
+    insert into public.search_term_classifiers (term, classifier_slug, weight) values
+      ('scarves', 'kind.scarves', 3),
+      ('absinthe', 'kind.absinthe', 3),
+      ('brandy', 'kind.brandy', 3);
+  `);
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category) values
+      ('f1000000-0000-4000-8000-000000000001', $1, 'Verte Absinthe', 'alcohol'),
+      ('f1000000-0000-4000-8000-000000000002', $1, 'Apple Brandy', 'alcohol'),
+      ('f1000000-0000-4000-8000-000000000003', $1, 'Wool scarf', 'clothing-and-accessories'),
+      ('f1000000-0000-4000-8000-000000000004', $1, 'Scarf cookies', 'prepared-foods')`,
+    [VENDOR],
+  );
+  await db.exec(`
+    insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values
+      ('f1000000-0000-4000-8000-000000000001', 'kind.absinthe'),
+      ('f1000000-0000-4000-8000-000000000002', 'kind.brandy'),
+      ('f1000000-0000-4000-8000-000000000003', 'kind.scarves');
+  `);
+
+  const absinthe = await search(db, "absinthe");
+  assert.ok(absinthe.some((row) => row.item_name === "Verte Absinthe" && row.product_category === "alcohol"));
+  const brandy = await search(db, "brandy");
+  assert.ok(brandy.some((row) => row.item_name === "Apple Brandy" && row.product_category === "alcohol"));
+  const cookies = await search(db, "cookies");
+  assert.equal(
+    cookies.some((row) => row.product_category === "alcohol"),
+    false,
+  );
+
+  const scarves = await search(db, "scarves");
+  assert.ok(scarves.some((row) => row.item_name === "Wool scarf"));
+  assert.equal(indexOf(scarves, "Scarf cookies"), -1);
+
+  const alcoholTerm = await db.query<{ alcohol: boolean }>(
+    "select public.search_term_is_alcohol('absinthe') as alcohol",
+  );
+  assert.equal(alcoholTerm.rows[0]?.alcohol, true);
 });

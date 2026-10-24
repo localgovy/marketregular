@@ -7,6 +7,53 @@
 -- to a word in the item name. The trigram operator only limits the scan.
 -- The first pass lists at most three items from each vendor. Further items
 -- from that vendor come after every vendor has had that pass.
+-- Alcohol kinds include moonshine, absinthe, and brandy. Craft kinds include
+-- hats, scarves, stickers, greeting cards, and succulents. Food kinds
+-- souvlaki, gyro, kebabs, lemons-limes, mangoes, and gourds have no separate
+-- allowlist: those items already match through the food categories below.
+
+create or replace function public.search_term_is_alcohol(term text)
+returns boolean
+language sql
+stable
+security invoker
+set search_path = public
+as $fn$
+  select exists (
+    select 1
+    from public.search_term_classifiers stc
+    where stc.term = search_term_is_alcohol.term
+      and stc.classifier_slug in (
+        'kind.beer',
+        'kind.ipa',
+        'kind.lager',
+        'kind.sour-beer',
+        'kind.stout',
+        'kind.hard-cider',
+        'kind.gin',
+        'kind.liqueur',
+        'kind.rum',
+        'kind.vodka',
+        'kind.whisky',
+        'kind.moonshine',
+        'kind.absinthe',
+        'kind.brandy',
+        'kind.dessert-wine',
+        'kind.fruit-wine',
+        'kind.mead',
+        'kind.cocktails',
+        'kind.sparkling-wine',
+        'kind.red-wine',
+        'kind.rose-wine',
+        'kind.white-wine',
+        'kind.wine'
+      )
+  );
+$fn$;
+
+revoke all on function public.search_term_is_alcohol(text) from public, anon, authenticated;
+grant execute on function public.search_term_is_alcohol(text) to service_role;
+
 
 create or replace function public.search_phrase_fuzzy(query text, item_name text)
 returns real
@@ -195,6 +242,7 @@ as $fn$
         'seedling', 'seedlings',
         'bouquet', 'bouquets',
         'wreath', 'wreaths',
+        'gourd', 'gourds',
         'incense',
         'deodorant',
         'shampoo',
@@ -265,6 +313,9 @@ as $fn$
         ('kind.rum'),
         ('kind.vodka'),
         ('kind.whisky'),
+        ('kind.moonshine'),
+        ('kind.absinthe'),
+        ('kind.brandy'),
         ('kind.dessert-wine'),
         ('kind.fruit-wine'),
         ('kind.mead'),
@@ -293,6 +344,8 @@ as $fn$
             'whisky', 'whiskey', 'whiskies', 'whiskeys',
             'liqueur', 'liqueurs',
             'moonshine',
+            'absinthe',
+            'brandy', 'brandies',
             'mead',
             'seltzer', 'seltzers',
             'alcohol', 'alcoholic', 'booze', 'liquor'
@@ -341,6 +394,11 @@ as $fn$
         ('kind.sweaters'),
         ('kind.dresses-bottoms'),
         ('kind.hats-scarves'),
+        ('kind.hats'),
+        ('kind.scarves'),
+        ('kind.stickers'),
+        ('kind.greeting-cards'),
+        ('kind.succulents'),
         ('kind.socks'),
         ('kind.bags'),
         ('kind.leather-goods'),
