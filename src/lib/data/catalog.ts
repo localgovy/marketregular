@@ -95,15 +95,34 @@ const SCHEDULE_PUBLIC =
   "id, market_id, weekday, opens_at, closes_at, season_start, season_end, notes";
 const POST_PUBLIC = "id, user_id, market_id, body, photos, flagged, created_at";
 const REVIEW_PUBLIC = "id, user_id, market_id, vendor_id, rating, body, flagged, created_at";
+const MENU_CATEGORY = "product_category, product_slug";
 const MENU_PUBLIC =
-  "id, vendor_id, name, description, price_cents, season, dietary, menu_section, menu_section_order, for_sale, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
+  `id, vendor_id, name, description, price_cents, season, dietary, ${MENU_CATEGORY}, menu_section, menu_section_order, for_sale, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy`;
 const MENU_PUBLIC_PHOTO = `${MENU_PUBLIC}, image_url`;
 const MENU_PUBLIC_FLAT =
-  "id, vendor_id, name, description, price_cents, season, dietary, for_sale, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
+  `id, vendor_id, name, description, price_cents, season, dietary, ${MENU_CATEGORY}, for_sale, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy`;
 const STALL_PUBLIC = "market_id, vendor_id, stall, days";
 
 type DirectoryClient = NonNullable<ReturnType<typeof createServiceClient>>;
-type PublishedMenuSelect = typeof MENU_PUBLIC_PHOTO | typeof MENU_PUBLIC | typeof MENU_PUBLIC_FLAT;
+type PublishedMenuSelect = string;
+
+function menuSelectMissingCategory(error: { message?: string; code?: string } | null | undefined) {
+  if (!error) return false;
+  const message = (error.message ?? "").toLowerCase();
+  if (!message.includes("product_category") && !message.includes("product_slug")) return false;
+  const code = (error.code ?? "").toUpperCase();
+  return (
+    code === "42703" ||
+    code === "PGRST204" ||
+    message.includes("does not exist") ||
+    message.includes("schema cache") ||
+    message.includes("could not find")
+  );
+}
+
+function stripMenuCategory(columns: string) {
+  return columns.replace(`, ${MENU_CATEGORY}`, "");
+}
 
 let publishedMenuSelect: PublishedMenuSelect | null = null;
 let publishedMenuSelectProbe: Promise<PublishedMenuSelect> | null = null;
@@ -141,7 +160,7 @@ async function selectPublishedMenusForVendor(supabase: DirectoryClient, vendorId
   const result = await supabase.from("published_menus").select(columns).eq("vendor_id", vendorId);
   if (result.error && columns === MENU_PUBLIC_PHOTO && publishedMenuSelectMissingPhoto(result.error)) {
     publishedMenuSelect = MENU_PUBLIC;
-    return supabase.from("published_menus").select(MENU_PUBLIC).eq("vendor_id", vendorId);
+    return selectPublishedMenusForVendor(supabase, vendorId);
   }
   if (
     result.error &&
@@ -149,7 +168,11 @@ async function selectPublishedMenusForVendor(supabase: DirectoryClient, vendorId
     publishedMenuSelectMissingSections(result.error)
   ) {
     publishedMenuSelect = MENU_PUBLIC_FLAT;
-    return supabase.from("published_menus").select(MENU_PUBLIC_FLAT).eq("vendor_id", vendorId);
+    return selectPublishedMenusForVendor(supabase, vendorId);
+  }
+  if (result.error && menuSelectMissingCategory(result.error)) {
+    publishedMenuSelect = stripMenuCategory(columns);
+    return supabase.from("published_menus").select(publishedMenuSelect).eq("vendor_id", vendorId);
   }
   return result;
 }
@@ -219,6 +242,9 @@ async function newestListingReviews(
     .slice(0, LISTING_NOTE_CAP);
 }
 
+/** Stop a view that ignores offset from repeating the first page until the function is killed. */
+const DIRECTORY_PAGE_CAP = 40;
+
 async function fetchAllRows<T>(
   run: (from: number, to: number) => PromiseLike<{
     data: T[] | null;
@@ -226,13 +252,20 @@ async function fetchAllRows<T>(
   }>,
 ): Promise<T[]> {
   const rows: T[] = [];
-  for (let from = 0; ; from += PAGE) {
+  let previousHead = "";
+  for (let page = 0; page < DIRECTORY_PAGE_CAP; page++) {
+    const from = page * PAGE;
     const { data, error } = await run(from, from + PAGE - 1);
     if (error) directoryFailed(error);
     const chunk = data ?? [];
+    const head = chunk.length ? JSON.stringify(chunk[0]) : "";
+    if (page > 0 && head && head === previousHead) return rows;
+    previousHead = head;
     rows.push(...chunk);
     if (chunk.length < PAGE) return rows;
   }
+  console.error("published directory page cap", DIRECTORY_PAGE_CAP * PAGE);
+  return rows;
 }
 
 type PublishedDirectory = {

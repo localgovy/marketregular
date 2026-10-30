@@ -3,6 +3,8 @@ import "server-only";
 import {
   getListingContact,
   getVendorBySlug,
+  listMarkets,
+  listSchedules,
   listStalls,
   listVendors,
 } from "@/lib/data/catalog";
@@ -17,7 +19,6 @@ import { DIRECTORY_REVALIDATE_SECONDS } from "@/lib/directory-cache";
 import { FIND_AREAS, sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
 import { listingMarkSrc } from "@/lib/format";
 import { toGeoMarket, type GeoMarket } from "@/lib/geo";
-import { loadHomeAtlasData, type HomeAtlasData, type HomeAtlasVendorSpotlight } from "@/lib/home-atlas-data";
 import { listingIsClaimed } from "@/lib/listing-claimed";
 import type { ListingContactFields } from "@/lib/listing-substance";
 import { visiblePriceCents } from "@/lib/product-hits";
@@ -29,7 +30,6 @@ import {
 } from "@/lib/schedule";
 import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeChargesConfigured } from "@/lib/stripe";
-import { createServiceClient } from "@/lib/supabase/admin";
 import { rankVendorMarkets, vendorMarketInSeason } from "@/lib/vendor-markets";
 import {
   matchFindPageByName,
@@ -37,7 +37,15 @@ import {
   stallCompareLabel,
 } from "@/lib/vendor-atlas-match";
 import { vendorProductTags } from "@/lib/vendor-tags";
-import type { FloorItem, Market, StallPick, StallRef, Vendor, VendorDetail } from "@/types/database";
+import type {
+  FloorItem,
+  Market,
+  MarketSchedule,
+  StallPick,
+  StallRef,
+  Vendor,
+  VendorDetail,
+} from "@/types/database";
 
 export type VendorAtlasMenuItem = {
   id: string;
@@ -203,44 +211,14 @@ function inferNeighbourhood(market: Pick<Market, "slug" | "city">): string {
   return market.city || "Toronto";
 }
 
-type MenuCategoryMeta = { product_category: string | null; product_slug: string | null };
-
-/** One pass for every stall page, instead of a category query per vendor. */
-async function fetchAllMenuCategoryMetadata(): Promise<Map<string, MenuCategoryMeta>> {
-  const out = new Map<string, MenuCategoryMeta>();
-  try {
-    const supabase = createServiceClient();
-    if (!supabase) return out;
-    const pageSize = 1000;
-    for (let from = 0; ; from += pageSize) {
-      const { data, error } = await supabase
-        .from("published_menus")
-        .select("id, product_category, product_slug")
-        .range(from, from + pageSize - 1);
-      if (error || !data) return out;
-      for (const row of data as Array<{ id: string } & MenuCategoryMeta>) {
-        if (!row.id) continue;
-        out.set(row.id, {
-          product_category: row.product_category ?? null,
-          product_slug: row.product_slug ?? null,
-        });
-      }
-      if (data.length < pageSize) break;
-    }
-  } catch {
-    // Name matching still classifies the menu when this column is unavailable.
-  }
-  return out;
-}
-
 type SharedVendorAtlasContext = {
   expires: number;
-  atlasData: Pick<HomeAtlasData, "vendorSpotlights">;
   vendorById: Map<string, Vendor>;
-  spotlightBySlug: Map<string, HomeAtlasVendorSpotlight>;
   stallsByMarketId: Map<string, StallRef[]>;
+  stallsByVendorId: Map<string, StallRef[]>;
+  marketsById: Map<string, Market>;
+  schedulesByMarketId: Map<string, MarketSchedule[]>;
   photos: typeof EMPTY_PRODUCT_PHOTOS;
-  menuCategoryById: Map<string, MenuCategoryMeta>;
 };
 
 let sharedContextMemory: SharedVendorAtlasContext | null = null;
@@ -249,41 +227,94 @@ let sharedContextTask: Promise<SharedVendorAtlasContext> | null = null;
 function fallbackSharedContext(): SharedVendorAtlasContext {
   return {
     expires: 0,
-    atlasData: { vendorSpotlights: [] },
     vendorById: new Map(),
-    spotlightBySlug: new Map(),
     stallsByMarketId: new Map(),
+    stallsByVendorId: new Map(),
+    marketsById: new Map(),
+    schedulesByMarketId: new Map(),
     photos: EMPTY_PRODUCT_PHOTOS,
-    menuCategoryById: new Map(),
   };
 }
 
+function categoryFromTags(name: string, tags: string[] | undefined) {
+  for (const tag of vendorProductTags(name, tags)) {
+    const category = TAG_TO_CATEGORY[tag];
+    if (category) return category;
+  }
+  return null;
+}
+
+function sellingBadge(
+  stalls: StallRef[],
+  marketsById: Map<string, Market>,
+  schedulesByMarketId: Map<string, MarketSchedule[]>,
+  now: Date,
+  todayWeekday: number,
+): VendorAtlasPeer["badge"] {
+  let openNow = false;
+  let sellingToday = false;
+  let onWeekend = false;
+  for (const stall of stalls) {
+    const market = marketsById.get(stall.market_id);
+    if (!market) continue;
+    const schedules = schedulesByMarketId.get(market.id) ?? [];
+    if (stall.days.includes(todayWeekday) && isMarketOpen(schedules, market.province, now)) {
+      openNow = true;
+    }
+    if (
+      stall.days.includes(todayWeekday) &&
+      sessionOnWeekday(schedules, todayWeekday, market.province, now) != null
+    ) {
+      sellingToday = true;
+    }
+    if (stall.days.includes(0) || stall.days.includes(6)) onWeekend = true;
+  }
+  if (openNow) return "Selling now";
+  if (sellingToday) return "Later today";
+  if (onWeekend) return "Selling this weekend";
+  return "On the schedule";
+}
+
+/**
+ * Directory rows the stall page already needs.
+ * The homepage atlas and a full menu-table scan do not belong on this path:
+ * they ran until the function was killed, so the page was never cached.
+ */
 async function loadSharedVendorAtlasContext(): Promise<SharedVendorAtlasContext> {
-  const [atlasData, allVendors, allStalls, photos, menuCategoryById] = await Promise.all([
-    loadHomeAtlasData(),
+  const [allVendors, allStalls, markets, schedules, photos] = await Promise.all([
     listVendors(),
     listStalls(),
+    listMarkets(),
+    listSchedules(),
     listProductPhotos().catch(() => EMPTY_PRODUCT_PHOTOS),
-    fetchAllMenuCategoryMetadata(),
   ]);
 
-  const vendorById = new Map(allVendors.map((v) => [v.id, v]));
-  const spotlightBySlug = new Map(atlasData.vendorSpotlights.map((s) => [s.slug, s]));
+  const vendorById = new Map(allVendors.map((vendor) => [vendor.id, vendor]));
   const stallsByMarketId = new Map<string, StallRef[]>();
+  const stallsByVendorId = new Map<string, StallRef[]>();
   for (const stall of allStalls) {
-    const list = stallsByMarketId.get(stall.market_id) ?? [];
-    list.push(stall);
-    stallsByMarketId.set(stall.market_id, list);
+    const atMarket = stallsByMarketId.get(stall.market_id) ?? [];
+    atMarket.push(stall);
+    stallsByMarketId.set(stall.market_id, atMarket);
+    const forVendor = stallsByVendorId.get(stall.id) ?? [];
+    forVendor.push(stall);
+    stallsByVendorId.set(stall.id, forVendor);
+  }
+  const schedulesByMarketId = new Map<string, MarketSchedule[]>();
+  for (const row of schedules) {
+    const list = schedulesByMarketId.get(row.market_id) ?? [];
+    list.push(row);
+    schedulesByMarketId.set(row.market_id, list);
   }
 
   return {
     expires: Date.now() + DIRECTORY_REVALIDATE_SECONDS * 1000,
-    atlasData: { vendorSpotlights: atlasData.vendorSpotlights },
     vendorById,
-    spotlightBySlug,
     stallsByMarketId,
+    stallsByVendorId,
+    marketsById: new Map(markets.map((market) => [market.id, market])),
+    schedulesByMarketId,
     photos,
-    menuCategoryById,
   };
 }
 
@@ -318,7 +349,14 @@ export async function buildVendorAtlasData({
 }): Promise<VendorAtlasData> {
   const ctx = await getSharedVendorAtlasContext();
 
-  const { atlasData, vendorById, spotlightBySlug, stallsByMarketId, photos, menuCategoryById: menuCategoryMap } = ctx;
+  const {
+    vendorById,
+    stallsByMarketId,
+    stallsByVendorId,
+    marketsById,
+    schedulesByMarketId,
+    photos,
+  } = ctx;
   const now = new Date(nowMs);
   const todayWeekday = weekdayInToronto(now);
 
@@ -333,9 +371,8 @@ export async function buildVendorAtlasData({
 
   // Enrich menu items with category, find-page comparison links, and live selling state
   const menus: VendorAtlasMenuItem[] = resolvedVendor.menus.map((item) => {
-    const dbMeta = menuCategoryMap.get(item.id);
-    const rawCategory = dbMeta?.product_category ?? item.product_category ?? null;
-    const rawSlug = dbMeta?.product_slug ?? item.product_slug ?? null;
+    const rawCategory = item.product_category ?? null;
+    const rawSlug = item.product_slug ?? null;
     const matchedFindPage = matchFindPageByName(item.name, rawSlug);
 
     const productCategory =
@@ -499,15 +536,9 @@ export async function buildVendorAtlasData({
     const fellowVendors: VendorAtlasFellowStall[] = rawFellows
       .map((st) => {
         const v = vendorById.get(st.id);
-        const spot = spotlightBySlug.get(st.slug);
-        const tags = vendorProductTags(st.name, v?.tags);
-        const catId =
-          spot?.aisleIds[0] ?? tags.map((t) => TAG_TO_CATEGORY[t]).find(Boolean) ?? "vegetables";
-        const categoryLabel =
-          spot?.primaryAisleLabel ??
-          menuCategoryLabel(catId) ??
-          "Market stall";
-        const specialty = spot?.items[0]?.name ?? categoryLabel;
+        const catId = categoryFromTags(st.name, v?.tags) ?? "vegetables";
+        const categoryLabel = menuCategoryLabel(catId) ?? "Market stall";
+        const specialty = categoryLabel;
         return {
           slug: st.slug,
           name: st.name,
@@ -582,40 +613,65 @@ export async function buildVendorAtlasData({
   // Similar stalls in the same product category
   const vendorMarketSlugSet = new Set(markets.map((m) => m.slug));
 
-  const rankedPeers = [...atlasData.vendorSpotlights].sort((a, b) => {
-    const aShared = a.markets.some((m) => vendorMarketSlugSet.has(m.slug)) ? 1 : 0;
-    const bShared = b.markets.some((m) => vendorMarketSlugSet.has(m.slug)) ? 1 : 0;
-    return bShared - aShared || (b.reviewCount ?? 0) - (a.reviewCount ?? 0) || a.name.localeCompare(b.name);
-  });
-  const primaryPeers = rankedPeers.filter(
-    (spot) => spot.slug !== resolvedVendor.slug && spot.aisleIds.includes(primaryCategoryId),
-  );
-  const similarVendors: VendorAtlasPeer[] = primaryPeers.slice(0, 6).map((spot) => {
-    const shared = spot.markets.find((m) => vendorMarketSlugSet.has(m.slug)) ?? null;
+  const peerPhoto = photos.aisle[primaryCategoryId] ?? null;
+  const peerLabel = menuCategoryLabel(primaryCategoryId) ?? primaryCategoryLabel;
+  const rankedPeers = [...vendorById.values()]
+    .flatMap((vendor) => {
+      if (vendor.slug === resolvedVendor.slug) return [];
+      if (categoryFromTags(vendor.name, vendor.tags) !== primaryCategoryId) return [];
+      const stalls = stallsByVendorId.get(vendor.id);
+      if (!stalls?.length) return [];
+      const shared = stalls.find((stall) => {
+        const market = marketsById.get(stall.market_id);
+        return market ? vendorMarketSlugSet.has(market.slug) : false;
+      });
+      return [{ vendor, stalls, shared: Boolean(shared) }];
+    })
+    .sort(
+      (a, b) =>
+        Number(b.shared) - Number(a.shared) ||
+        (b.vendor.review_count ?? 0) - (a.vendor.review_count ?? 0) ||
+        a.vendor.name.localeCompare(b.vendor.name, "en-CA"),
+    )
+    .slice(0, 6);
+  const similarVendors: VendorAtlasPeer[] = rankedPeers.map(({ vendor, stalls }) => {
+    const sharedStall = stalls.find((stall) => {
+      const market = marketsById.get(stall.market_id);
+      return market ? vendorMarketSlugSet.has(market.slug) : false;
+    });
+    const sharedMarket = sharedStall ? marketsById.get(sharedStall.market_id) : undefined;
+    const peerMarkets = stalls.flatMap((stall) => {
+      const market = marketsById.get(stall.market_id);
+      if (!market) return [];
+      return [
+        {
+          name: market.name,
+          slug: market.slug,
+          hours: hallDayHours(
+            stall.days,
+            schedulesByMarketId.get(market.id) ?? [],
+            market.province,
+            now,
+          ),
+        },
+      ];
+    });
     return {
-      id: spot.id,
-      slug: spot.slug,
-      name: spot.name,
-      logoUrl: spot.logoUrl,
-      ratingAvg: spot.ratingAvg,
-      reviewCount: spot.reviewCount,
-      badge: spot.badge,
-      primaryCategoryId: spot.aisleIds[0] ?? primaryCategoryId,
-      primaryCategoryLabel: spot.primaryAisleLabel,
-      photoUrl: spot.photoUrl,
-      photoAlt: spot.photoAlt,
-      sharedMarketName: shared?.name ?? null,
-      sharedMarketSlug: shared?.slug ?? null,
-      items: spot.items.map((i) => ({
-        name: i.name,
-        priceCents: i.priceCents,
-        href: i.href,
-      })),
-      markets: spot.markets.slice(0, 2).map((m) => ({
-        name: m.name,
-        slug: m.slug,
-        hours: m.hours,
-      })),
+      id: vendor.id,
+      slug: vendor.slug,
+      name: vendor.name,
+      logoUrl: listingMarkSrc(vendor.logo_url),
+      ratingAvg: vendor.rating_avg ?? null,
+      reviewCount: vendor.review_count ?? 0,
+      badge: sellingBadge(stalls, marketsById, schedulesByMarketId, now, todayWeekday),
+      primaryCategoryId,
+      primaryCategoryLabel: peerLabel,
+      photoUrl: peerPhoto?.url ?? null,
+      photoAlt: peerPhoto?.alt ?? peerLabel,
+      sharedMarketName: sharedMarket?.name ?? null,
+      sharedMarketSlug: sharedMarket?.slug ?? null,
+      items: [],
+      markets: peerMarkets.slice(0, 2),
     };
   });
 

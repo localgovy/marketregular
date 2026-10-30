@@ -173,3 +173,13 @@ test("the search migration covers cuisine tags and gift-card phrases", () => {
   assert.match(sql, /security invoker/);
   assert.match(sql, /grant execute on function public\.search_products/);
 });
+
+test("a find page loads its own menus, and a stall page does not rebuild the homepage", () => {
+  const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const search = readFileSync(join(root, "src/lib/data/product-search.ts"), "utf8");
+  const stall = readFileSync(join(root, "src/lib/vendor-atlas-data.ts"), "utf8");
+  assert.equal(search.includes("FIND_PAGES"), false);
+  assert.match(search, /FIND_MENU_PAGE_CAP/);
+  assert.equal(stall.includes("loadHomeAtlasData"), false);
+  assert.equal(stall.includes("published_menus"), false);
+});
