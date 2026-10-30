@@ -4,13 +4,14 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
+import { UNAFFILIATED_VENDOR_SLUGS_LIST } from "../src/lib/unaffiliated-vendors.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
 const migration = "supabase/migrations/20261016195249_rose_keeps_flower_meaning.sql";
 const giftsMigration = "supabase/migrations/20261018154000_gifts_and_sets_product_category.sql";
 const searchMigration =
-  "supabase/migrations/20261024223000_restore_search_products.sql";
+  "supabase/migrations/20261030190000_search_plain_hits_and_unaffiliated.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -105,6 +106,7 @@ create table public.vendor_menus (
   id uuid primary key,
   vendor_id uuid not null references public.vendors (id),
   name text not null,
+  description text,
   product_category text,
   product_slug text,
   price_cents integer
@@ -623,10 +625,17 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.doesNotMatch(sql, /as materialized/);
   assert.doesNotMatch(sql, /fuzzy_only/);
   assert.match(sql, /drop function if exists public\.search_phrase_fuzzy/);
-  assert.equal(
+  assert.match(sql, /match\.plain/);
+  assert.match(sql, /phrase_bound_terms/);
+  assert.match(sql, /silent_diet/);
+  assert.match(sql, /fold_search_text\(vm\.description\)/);
+  assert.notEqual(
     extractFunction("search_products", searchMigration),
     extractFunction("search_products", "supabase/migrations/20261021005523_menu_item_photos.sql"),
   );
+  for (const slug of UNAFFILIATED_VENDOR_SLUGS_LIST) {
+    assert.match(sql, new RegExp(`\\('${slug}'\\)`));
+  }
   assert.match(sql, /left join public\.menu_item_photos mip/);
   assert.match(sql, /on mip\.menu_id = vm\.id/);
   assert.match(sql, /ranked\.image_url/);
@@ -1205,4 +1214,219 @@ test("one vendor cannot fill the top matches, and pages stay disjoint", async ()
   assert.equal(pages[0]?.[0]?.item_name, "Signature Bath Bomb");
   assert.equal((await searchPage(db, "bath bomb", 10, 40)).length, 0);
 });
+
+test("plain name and description hits work in craft, jewellery, and body-care", async () => {
+  const db = await database();
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, description, product_category) values
+      ($1, $9, 'Mineral Zinc Sunscreen', null, 'body-care'),
+      ($2, $9, 'Golfer Gnome', null, 'candles-and-crafts'),
+      ($3, $9, 'Bumble Bee Gnomes', null, 'candles-and-crafts'),
+      ($4, $9, 'Jade Trio Dangle Earrings', null, 'jewellery-and-accessories'),
+      ($5, $9, 'Moonstone Trio Dangle Earrings', null, 'jewellery-and-accessories'),
+      ($6, $9, 'Empress Tarot', null, 'jewellery-and-accessories'),
+      ($7, $9, 'Square Gemstone Studs', null, 'jewellery-and-accessories'),
+      ($8, $9, 'Aquarius', 'Aquarius zodiac necklace with a handmade glass bead.', 'jewellery-and-accessories')`,
+    [
+      "c1c1c1c1-c1c1-41c1-81c1-c1c1c1c1c1c1",
+      "c2c2c2c2-c2c2-42c2-82c2-c2c2c2c2c2c2",
+      "c3c3c3c3-c3c3-43c3-83c3-c3c3c3c3c3c3",
+      "c4c4c4c4-c4c4-44c4-84c4-c4c4c4c4c4c4",
+      "c5c5c5c5-c5c5-45c5-85c5-c5c5c5c5c5c5",
+      "c6c6c6c6-c6c6-46c6-86c6-c6c6c6c6c6c6",
+      "c7c7c7c7-c7c7-47c7-87c7-c7c7c7c7c7c7",
+      "c8c8c8c8-c8c8-48c8-88c8-c8c8c8c8c8c8",
+      VENDOR,
+    ],
+  );
+
+  const sunscreen = await search(db, "sunscreen");
+  assert.ok(sunscreen.some((row) => row.item_name === "Mineral Zinc Sunscreen"));
+  assert.equal(
+    sunscreen.find((row) => row.item_name === "Mineral Zinc Sunscreen")?.product_category,
+    "body-care",
+  );
+
+  const gnome = await search(db, "gnome");
+  assert.ok(gnome.some((row) => row.item_name === "Golfer Gnome"));
+  assert.ok(gnome.some((row) => row.item_name === "Bumble Bee Gnomes"));
+
+  const golfer = await search(db, "Golfer Gnome");
+  assert.ok(golfer.some((row) => row.item_name === "Golfer Gnome"));
+  assert.equal(indexOf(golfer, "Bumble Bee Gnomes"), -1);
+
+  const jade = await search(db, "jade");
+  assert.ok(jade.some((row) => row.item_name === "Jade Trio Dangle Earrings"));
+
+  const moonstone = await search(db, "moonstone");
+  assert.ok(moonstone.some((row) => row.item_name === "Moonstone Trio Dangle Earrings"));
+
+  const tarot = await search(db, "tarot");
+  assert.ok(tarot.some((row) => row.item_name === "Empress Tarot"));
+
+  const gemstone = await search(db, "gemstone");
+  assert.ok(gemstone.some((row) => row.item_name === "Square Gemstone Studs"));
+
+  const zodiac = await search(db, "zodiac");
+  assert.ok(zodiac.some((row) => row.item_name === "Aquarius"));
+  assert.equal(
+    zodiac.find((row) => row.item_name === "Aquarius")?.product_category,
+    "jewellery-and-accessories",
+  );
+});
+
+test("unaffiliated vendors without a hall still match a plain alcohol name", async () => {
+  const db = await database();
+  const trail = "d1d1d1d1-d1d1-41d1-81d1-d1d1d1d1d1d1";
+  await db.query(
+    "insert into public.vendors (id, slug, name) values ($1, 'trail-estate-winery', 'Trail Estate Winery')",
+    [trail],
+  );
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category) values
+      ($1, $2, '2020 ORNG Orange Wine, 254 Days', 'alcohol')`,
+    ["d2d2d2d2-d2d2-42d2-82d2-d2d2d2d2d2d2", trail],
+  );
+  await db.exec(`
+    insert into public.search_terms (term) values ('oranges'), ('wine');
+    insert into public.search_term_classifiers (term, classifier_slug, weight) values
+      ('oranges', 'kind.oranges', 3),
+      ('wine', 'kind.wine', 3);
+  `);
+  await db.query(
+    "insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values ($1, 'kind.wine')",
+    ["d2d2d2d2-d2d2-42d2-82d2-d2d2d2d2d2d2"],
+  );
+
+  const rows = await search(db, "orange wine");
+  assert.ok(rows.some((row) => row.item_name === "2020 ORNG Orange Wine, 254 Days"));
+  assert.equal(
+    rows.find((row) => row.item_name === "2020 ORNG Orange Wine, 254 Days")?.product_category,
+    "alcohol",
+  );
+});
+
+test("sugar-free needs the phrase; gluten-free can stay on a silent diet tag", async () => {
+  const db = await database();
+  await db.exec(`
+    insert into public.search_terms (term) values ('sugar-free'), ('gluten-free'), ('spirits');
+    insert into public.search_term_classifiers (term, classifier_slug, weight) values
+      ('sugar-free', 'diet.sugar-free', 3),
+      ('gluten-free', 'diet.gluten-free', 3),
+      ('spirits', 'kind.gin', 3),
+      ('spirits', 'kind.vodka', 3);
+  `);
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, description, product_category) values
+      ($1, $7, 'Sugar-Free Candies', null, 'preserves-and-sauces'),
+      ($2, $7, 'Soy-Free Umami Mix', 'Miso-inspired seasoning blend made without soy.', 'preserves-and-sauces'),
+      ($3, $7, '355ml Trellis - Hop Fizz', 'A zero alcohol, zero sugar sparkling water.', 'beverages'),
+      ($4, $7, 'Almond brownies', null, 'pies-and-sweets'),
+      ($5, $7, 'Mentara Mojito Cocktail', null, 'alcohol'),
+      ($6, $7, 'Dry Gin', null, 'alcohol')`,
+    [
+      "e1e1e1e1-e1e1-41e1-81e1-e1e1e1e1e1e1",
+      "e2e2e2e2-e2e2-42e2-82e2-e2e2e2e2e2e2",
+      "e3e3e3e3-e3e3-43e3-83e3-e3e3e3e3e3e3",
+      "e4e4e4e4-e4e4-44e4-84e4-e4e4e4e4e4e4",
+      "e5e5e5e5-e5e5-45e5-85e5-e5e5e5e5e5e5",
+      "e6e6e6e6-e6e6-46e6-86e6-e6e6e6e6e6e6",
+      VENDOR,
+    ],
+  );
+  await db.exec(`
+    insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values
+      ('e1e1e1e1-e1e1-41e1-81e1-e1e1e1e1e1e1', 'diet.sugar-free'),
+      ('e2e2e2e2-e2e2-42e2-82e2-e2e2e2e2e2e2', 'diet.sugar-free'),
+      ('e3e3e3e3-e3e3-43e3-83e3-e3e3e3e3e3e3', 'diet.sugar-free'),
+      ('e4e4e4e4-e4e4-44e4-84e4-e4e4e4e4e4e4', 'diet.gluten-free'),
+      ('e5e5e5e5-e5e5-45e5-85e5-e5e5e5e5e5e5', 'kind.cocktails'),
+      ('e6e6e6e6-e6e6-46e6-86e6-e6e6e6e6e6e6', 'kind.gin');
+  `);
+
+  const sugarFree = await search(db, "sugar-free");
+  assert.ok(sugarFree.some((row) => row.item_name === "Sugar-Free Candies"));
+  assert.equal(indexOf(sugarFree, "Soy-Free Umami Mix"), -1);
+  assert.equal(indexOf(sugarFree, "355ml Trellis - Hop Fizz"), -1);
+
+  const glutenFree = await search(db, "gluten-free");
+  assert.ok(glutenFree.some((row) => row.item_name === "Almond brownies"));
+
+  const spirits = await search(db, "spirits");
+  assert.ok(spirits.some((row) => row.item_name === "Dry Gin"));
+  assert.equal(indexOf(spirits, "Mentara Mojito Cocktail"), -1);
+});
+
+test("dessert, tart, thanksgiving, gift, breakfast, cookies, jerky, maple syrup, and ice pops still match", async () => {
+  const db = await database();
+  await db.exec(`
+    insert into public.search_terms (term) values
+      ('dessert'),
+      ('tart'),
+      ('thanksgiving'),
+      ('gift'),
+      ('breakfast'),
+      ('cookies'),
+      ('jerky'),
+      ('maple syrup'),
+      ('ice pops');
+    insert into public.search_term_classifiers (term, classifier_slug, weight) values
+      ('dessert', 'kind.cakes', 2),
+      ('tart', 'kind.tarts', 3),
+      ('thanksgiving', 'occasion.thanksgiving', 3),
+      ('gift', 'kind.gift-cards', 2),
+      ('breakfast', 'meal.breakfast', 3),
+      ('cookies', 'kind.cookies', 3),
+      ('jerky', 'kind.jerky', 3),
+      ('maple syrup', 'kind.maple-syrup', 3),
+      ('ice pops', 'kind.ice-pops', 3);
+  `);
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category) values
+      ($1, $10, 'Lemon tart', 'pies-and-sweets'),
+      ($2, $10, 'Thanksgiving roast turkey', 'meat-and-turkey'),
+      ($3, $10, 'Breakfast bagel', 'bread-and-bakery'),
+      ($4, $10, 'Chocolate cookies', 'pies-and-sweets'),
+      ($5, $10, 'Beef jerky', 'meat-and-turkey'),
+      ($6, $10, 'Maple syrup', 'maple'),
+      ($7, $10, 'Maple syrup infused ice pops', 'pies-and-sweets'),
+      ($8, $10, 'Layer cake', 'pies-and-sweets'),
+      ($9, $10, 'Market gift card two', 'services')`,
+    [
+      "f1f1f1f1-f1f1-41f1-81f1-f1f1f1f1f1f1",
+      "f2f2f2f2-f2f2-42f2-82f2-f2f2f2f2f2f2",
+      "f3f3f3f3-f3f3-43f3-83f3-f3f3f3f3f3f3",
+      "f4f4f4f4-f4f4-44f4-84f4-f4f4f4f4f4f4",
+      "f5f5f5f5-f5f5-45f5-85f5-f5f5f5f5f5f5",
+      "f6f6f6f6-f6f6-46f6-86f6-f6f6f6f6f6f6",
+      "f7f7f7f7-f7f7-47f7-87f7-f7f7f7f7f7f7",
+      "f8f8f8f8-f8f8-48f8-88f8-f8f8f8f8f8f8",
+      "f9f9f9f9-f9f9-49f9-89f9-f9f9f9f9f9f9",
+      VENDOR,
+    ],
+  );
+  await db.exec(`
+    insert into public.vendor_menu_classifier_assignments (menu_id, classifier_slug) values
+      ('f1f1f1f1-f1f1-41f1-81f1-f1f1f1f1f1f1', 'kind.tarts'),
+      ('f2f2f2f2-f2f2-42f2-82f2-f2f2f2f2f2f2', 'occasion.thanksgiving'),
+      ('f3f3f3f3-f3f3-43f3-83f3-f3f3f3f3f3f3', 'meal.breakfast'),
+      ('f4f4f4f4-f4f4-44f4-84f4-f4f4f4f4f4f4', 'kind.cookies'),
+      ('f5f5f5f5-f5f5-45f5-85f5-f5f5f5f5f5f5', 'kind.jerky'),
+      ('f6f6f6f6-f6f6-46f6-86f6-f6f6f6f6f6f6', 'kind.maple-syrup'),
+      ('f7f7f7f7-f7f7-47f7-87f7-f7f7f7f7f7f7', 'kind.ice-pops'),
+      ('f8f8f8f8-f8f8-48f8-88f8-f8f8f8f8f8f8', 'kind.cakes'),
+      ('f9f9f9f9-f9f9-49f9-89f9-f9f9f9f9f9f9', 'kind.gift-cards');
+  `);
+
+  assert.ok((await search(db, "tart")).some((row) => row.item_name === "Lemon tart"));
+  assert.ok((await search(db, "thanksgiving")).some((row) => row.item_name === "Thanksgiving roast turkey"));
+  assert.ok((await search(db, "breakfast")).some((row) => row.item_name === "Breakfast bagel"));
+  assert.ok((await search(db, "cookies")).some((row) => row.item_name === "Chocolate cookies"));
+  assert.ok((await search(db, "jerky")).some((row) => row.item_name === "Beef jerky"));
+  assert.ok((await search(db, "maple syrup")).some((row) => row.item_name === "Maple syrup"));
+  assert.ok((await search(db, "ice pops")).some((row) => row.item_name === "Maple syrup infused ice pops"));
+  assert.ok((await search(db, "dessert")).some((row) => row.item_name === "Layer cake"));
+  assert.ok((await search(db, "gift")).some((row) => row.item_name === "Market gift card two"));
+});
+
 
