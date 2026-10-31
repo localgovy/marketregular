@@ -11,7 +11,7 @@ const constraints = "supabase/migrations/20261015190000_taxonomy_upgrade.sql";
 const migration = "supabase/migrations/20261016195249_rose_keeps_flower_meaning.sql";
 const giftsMigration = "supabase/migrations/20261018154000_gifts_and_sets_product_category.sql";
 const searchMigration =
-  "supabase/migrations/20261030190000_search_plain_hits_and_unaffiliated.sql";
+  "supabase/migrations/20261031120000_search_products_plain_hits_indexed.sql";
 
 const MARKET = "55555555-5555-4555-8555-555555555555";
 const VENDOR = "44444444-4444-4444-8444-444444444444";
@@ -612,8 +612,8 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.match(sql, /from candidates cand/);
   assert.match(sql, /public\.set_limit\(0\.3\)/);
   assert.doesNotMatch(sql, /gifts_query/);
-  assert.match(sql, /public\.fold_search_text\(vm\.name\) % public\.fold_search_text\(clock\.query\)/);
-  assert.match(sql, /similarity\(public\.fold_search_text\(vm\.name\), public\.fold_search_text\(clock\.query\)\) >= 0\.45/);
+  assert.match(sql, /public\.fold_search_text\(vm\.name\) % clock\.query_fold/);
+  assert.match(sql, /similarity\(folded\.name_fold, clock\.query_fold\) >= 0\.45/);
   assert.match(helpers, /not hits\.term_plain/);
   assert.match(sql, /search_alcohol_term_hit/);
   assert.match(sql, /security invoker/);
@@ -622,13 +622,16 @@ test("the search migration keeps null-category matches, pet food, trigram, accen
   assert.match(sql, /partition by ranked\.vendor_id/);
   assert.match(sql, /ranked\.score - \(ranked\.vendor_rank - 1\) desc/);
   assert.doesNotMatch(sql, /create or replace function public\.search_phrase_fuzzy/);
-  assert.doesNotMatch(sql, /as materialized/);
+  assert.match(sql, /candidates as materialized/);
+  assert.doesNotMatch(sql, /ranked as materialized/);
   assert.doesNotMatch(sql, /fuzzy_only/);
   assert.match(sql, /drop function if exists public\.search_phrase_fuzzy/);
   assert.match(sql, /match\.plain/);
   assert.match(sql, /phrase_bound_terms/);
   assert.match(sql, /silent_diet/);
-  assert.match(sql, /fold_search_text\(vm\.description\)/);
+  assert.match(sql, /vendor_menus_description_fold_fts_idx/);
+  assert.match(sql, /vendor_menus_description_fold_trgm_idx/);
+  assert.match(sql, /fold_search_text\(coalesce\(vm\.description/);
   assert.notEqual(
     extractFunction("search_products", searchMigration),
     extractFunction("search_products", "supabase/migrations/20261021005523_menu_item_photos.sql"),
