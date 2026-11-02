@@ -887,13 +887,10 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
       <div className="mx-auto max-w-7xl px-4 py-6 lg:px-6 lg:py-8">
         {/* Masthead + Tri-Pillar Visual Census + Search Deck */}
         <header id="find" className="scroll-mt-24 border-b-2 border-board pb-6">
-          <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
+          <div className="grid gap-6 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-7">
-              <p className="type-kicker font-medium text-primary">
-                Stalls, products &amp; neighbourhood markets in one view
-              </p>
-              <h1 className="mt-1">{LAUNCH_CITY} farmers&apos; markets</h1>
-              <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
+              <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
+              <p className="type-lede mt-3 max-w-2xl text-muted-foreground">
                 Meet the growers, bakers, and makers first — see what they sell, what it
                 costs, and the exact {LAUNCH_CITY} markets and hours where they set up.
               </p>

@@ -289,7 +289,7 @@ Siblings are real second pages, with a qualifier and a cross-link (`MarketSeason
 
 ### Cache and revalidation
 
-Next’s data cache rejects one entry over 2 MB, so markets, vendors, stalls, schedules, menu ids, census, the bare directory, and the floor tape are separate `unstable_cache` entries, tag `directory`, revalidate 120s. Portal and admin writes call `revalidatePublishedDirectory`: drop the tag, then `/`, `/markets` (layout), `/vendors` (layout), `/events`, `/feed`, `/sitemap.xml`, plus the edited path.
+Next’s data cache rejects one entry over 2 MB. Published vendors no longer fit in one entry, so markets, vendors, stalls, schedules, and menu ids are stored as separate ranges under 1.25 MB (`DIRECTORY_CACHE_BUDGET` in `src/lib/directory-cache.ts`), still tagged `directory`, revalidate 120s. A range that does not fit is not stored; its halves are. Census, the bare directory page, and the floor tape stay one entry each. Portal and admin writes call `revalidatePublishedDirectory`: drop the tag, then `/`, `/markets` (layout), `/vendors` (layout), `/events`, `/feed`, `/sitemap.xml`, plus the edited path.
 
 Page ISR on top of that: home 120s; day hub, day pages, and open-today 900s; market, vendor, tag, find, and blog 3600s. `dynamicParams = false` on market, vendor, day, tag, find, and blog slugs. Portals, account, auth, and admin are `force-dynamic` or session-gated. A slug that is not generated 404s. `not-found.tsx` offers search. `error.tsx` only offers retry. Retired slugs 308 before the page (`listing-redirects` plus `listing_slug_aliases`).
 

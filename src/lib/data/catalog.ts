@@ -1,7 +1,20 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { isSupabaseConfigured, provinceTz } from "@/lib/constants";
-import { DIRECTORY_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
+import {
+  DIRECTORY_CACHE_BUDGET,
+  DIRECTORY_FETCH_CAP,
+  DIRECTORY_REVALIDATE_SECONDS,
+  DIRECTORY_TAG,
+  budgetRangeResult,
+  chunkBySerializedSize,
+  joinDirectoryPages,
+  loadBudgetedRange,
+  rangesForCount,
+  serializedBytes,
+  windowFromSample,
+  type BudgetedRange,
+} from "@/lib/directory-cache";
 import { selectInChunks } from "@/lib/data/id-chunks";
 import { DIRECTORY_CENSUS_ID } from "@/lib/launch";
 import {
@@ -80,7 +93,6 @@ function visitorDb() {
   return createPublicSupabaseClient();
 }
 
-const PAGE = 1000;
 /** Notes on a listing page. The live list renders this many; the header score is rating_avg. */
 const LISTING_NOTE_CAP = 40;
 const REVIEW_ID_CHUNK = 100;
@@ -242,32 +254,6 @@ async function newestListingReviews(
     .slice(0, LISTING_NOTE_CAP);
 }
 
-/** Stop a view that ignores offset from repeating the first page until the function is killed. */
-const DIRECTORY_PAGE_CAP = 40;
-
-async function fetchAllRows<T>(
-  run: (from: number, to: number) => PromiseLike<{
-    data: T[] | null;
-    error: { message?: string } | null;
-  }>,
-): Promise<T[]> {
-  const rows: T[] = [];
-  let previousHead = "";
-  for (let page = 0; page < DIRECTORY_PAGE_CAP; page++) {
-    const from = page * PAGE;
-    const { data, error } = await run(from, from + PAGE - 1);
-    if (error) directoryFailed(error);
-    const chunk = data ?? [];
-    const head = chunk.length ? JSON.stringify(chunk[0]) : "";
-    if (page > 0 && head && head === previousHead) return rows;
-    previousHead = head;
-    rows.push(...chunk);
-    if (chunk.length < PAGE) return rows;
-  }
-  console.error("published directory page cap", DIRECTORY_PAGE_CAP * PAGE);
-  return rows;
-}
-
 type PublishedDirectory = {
   markets: Market[];
   vendors: Vendor[];
@@ -333,11 +319,13 @@ function marketFromStall(row: StallRow) {
 }
 
 /**
- * Next's data cache rejects a single entry over 2MB. The whole directory is
- * past that, so one `unstable_cache` never stored and every page refetched it.
- * Each table is its own entry, still under the cap, and still tagged `directory`.
+ * Next's data cache rejects one entry over 2MB. Vendors alone are past that,
+ * so one entry per list never stored and every page refetched it.
+ * Each list is split into ranges under DIRECTORY_CACHE_BUDGET, still tagged `directory`.
+ * A range that does not fit is not stored; the halves are cached instead.
  */
 const DIRECTORY_CACHE = { revalidate: DIRECTORY_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] };
+const DIRECTORY_SAMPLE_ROWS = 50;
 
 function requirePublicDb() {
   const supabase = publicDb();
@@ -345,100 +333,240 @@ function requirePublicDb() {
   return supabase;
 }
 
-const loadCachedMarkets = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    return fetchAllRows<Market>((from, to) =>
-      supabase
-        .from("published_markets")
-        .select(MARKET_PUBLIC)
-        .eq("status", "published")
-        .order("name")
-        .range(from, to),
+async function exactCount(
+  supabase: DirectoryClient,
+  table: "published_markets" | "published_vendors" | "published_stalls" | "published_schedules",
+  column: string,
+  publishedOnly: boolean,
+) {
+  let query = supabase.from(table).select(column, { count: "exact", head: true });
+  if (publishedOnly) query = query.eq("status", "published");
+  const { count, error } = await query;
+  if (error || count == null) directoryFailed(error);
+  return count;
+}
+
+function byName<T extends { id: string; name: string }>(rows: T[]) {
+  return rows.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+}
+
+function byId<T extends { id: string }>(rows: T[]) {
+  return rows.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+type CachedStallRow = {
+  market_id: string;
+  stall: string | null;
+  days: number[];
+  vendors: { id: string; name: string; slug: string; status: string };
+  markets: { city: string; status: string };
+};
+
+function cacheStallRow(row: {
+  market_id: string;
+  stall: string | null;
+  days: number[] | null;
+  vendor_id: string;
+  vendor_name: string;
+  vendor_slug: string;
+  vendor_status: string;
+  market_city: string;
+  market_status: string;
+}): CachedStallRow {
+  return {
+    market_id: row.market_id,
+    stall: row.stall,
+    days: row.days ?? [],
+    vendors: {
+      id: row.vendor_id,
+      name: row.vendor_name,
+      slug: row.vendor_slug,
+      status: row.vendor_status,
+    },
+    markets: { city: row.market_city, status: row.market_status },
+  };
+}
+
+function byStall(rows: CachedStallRow[]) {
+  return rows.sort(
+    (a, b) =>
+      a.market_id.localeCompare(b.market_id) ||
+      a.vendors.id.localeCompare(b.vendors.id) ||
+      (a.stall ?? "").localeCompare(b.stall ?? ""),
+  );
+}
+
+/**
+ * One published list, cached as parallel ranges.
+ * Offsets use a stable id order. Callers sort back to the order the pages used to render.
+ */
+function publishedDirectoryRows<T>(options: {
+  name: string;
+  count: (supabase: DirectoryClient) => Promise<number>;
+  fetchRange: (supabase: DirectoryClient, from: number, to: number) => Promise<T[]>;
+  headId: (row: T) => string;
+  sort: (rows: T[]) => T[];
+}) {
+  const loadManifest = unstable_cache(
+    async () => {
+      const supabase = requirePublicDb();
+      const count = await options.count(supabase);
+      const sampleTo = Math.min(DIRECTORY_SAMPLE_ROWS, count) - 1;
+      const sample = sampleTo >= 0 ? await options.fetchRange(supabase, 0, sampleTo) : [];
+      return { count, window: windowFromSample(sample) };
+    },
+    [`published-directory-${options.name}-manifest-v3`],
+    DIRECTORY_CACHE,
+  );
+
+  const loadRange = unstable_cache(
+    async (from: number, to: number): Promise<BudgetedRange<T>> => {
+      const supabase = requirePublicDb();
+      const rows = await options.fetchRange(supabase, from, to);
+      const result = budgetRangeResult(rows, from, to);
+      if (!result.over) {
+        console.info("directory cache store", options.name, {
+          from,
+          to,
+          bytes: serializedBytes(rows),
+        });
+      }
+      return result;
+    },
+    [`published-directory-${options.name}-range-v3`],
+    DIRECTORY_CACHE,
+  );
+
+  return cache(async function loadPublishedRows() {
+    const { count, window } = await loadManifest();
+    if (count > DIRECTORY_FETCH_CAP) console.error("published directory page cap", DIRECTORY_FETCH_CAP);
+    const ranges = rangesForCount(count, window);
+    const pages = await Promise.all(
+      ranges.map((range) =>
+        loadBudgetedRange(
+          range.from,
+          range.to,
+          (from, to) => loadRange(from, to),
+          DIRECTORY_CACHE_BUDGET,
+          options.name,
+        ),
+      ),
     );
+    return options.sort(joinDirectoryPages(pages, options.headId));
+  });
+}
+
+const loadCachedMarkets = publishedDirectoryRows<Market>({
+  name: "markets",
+  count: (supabase) => exactCount(supabase, "published_markets", "id", true),
+  fetchRange: async (supabase, from, to) => {
+    const { data, error } = await supabase
+      .from("published_markets")
+      .select(MARKET_PUBLIC)
+      .eq("status", "published")
+      .order("id")
+      .range(from, to);
+    if (error) directoryFailed(error);
+    return (data ?? []) as Market[];
   },
-  ["published-directory-markets-v1"],
+  headId: (market) => market.id,
+  sort: byName,
+});
+
+const loadCachedVendors = publishedDirectoryRows<Vendor>({
+  name: "vendors",
+  count: (supabase) => exactCount(supabase, "published_vendors", "id", true),
+  fetchRange: async (supabase, from, to) => {
+    const { data, error } = await supabase
+      .from("published_vendors")
+      .select(VENDOR_PUBLIC)
+      .eq("status", "published")
+      .order("id")
+      .range(from, to);
+    if (error) directoryFailed(error);
+    return (data ?? []) as Vendor[];
+  },
+  headId: (vendor) => vendor.id,
+  sort: byName,
+});
+
+const loadCachedStallRows = publishedDirectoryRows<CachedStallRow>({
+  name: "stalls",
+  count: (supabase) => exactCount(supabase, "published_stalls", "market_id", false),
+  fetchRange: async (supabase, from, to) => {
+    const { data, error } = await supabase
+      .from("published_stalls")
+      .select(
+        "market_id, stall, days, vendor_id, vendor_name, vendor_slug, vendor_status, market_city, market_status",
+      )
+      .order("market_id")
+      .order("vendor_id")
+      .range(from, to);
+    if (error) directoryFailed(error);
+    return (data ?? []).map((row) => cacheStallRow(row));
+  },
+  headId: (row) => `${row.market_id}:${row.vendors.id}`,
+  sort: byStall,
+});
+
+const loadCachedSchedules = publishedDirectoryRows<MarketSchedule>({
+  name: "schedules",
+  count: (supabase) => exactCount(supabase, "published_schedules", "id", false),
+  fetchRange: async (supabase, from, to) => {
+    const { data, error } = await supabase
+      .from("published_schedules")
+      .select(SCHEDULE_PUBLIC)
+      .order("id")
+      .range(from, to);
+    if (error) directoryFailed(error);
+    return (data ?? []) as MarketSchedule[];
+  },
+  headId: (row) => row.id,
+  sort: byId,
+});
+
+const readMenuVendorIds = cache(async function readMenuVendorIds() {
+  const supabase = requirePublicDb();
+  const menuIds = await supabase.rpc("menu_vendor_ids");
+  if (menuIds.error) directoryFailed(menuIds.error);
+  if (!Array.isArray(menuIds.data)) directoryFailed({ message: "Menu vendor ids were not a list" });
+  return menuIds.data.filter((id): id is string => typeof id === "string");
+});
+
+const loadCachedMenuManifest = unstable_cache(
+  async () => {
+    const ids = await readMenuVendorIds();
+    return { parts: chunkBySerializedSize(ids).length };
+  },
+  ["published-directory-menu-ids-manifest-v3"],
   DIRECTORY_CACHE,
 );
 
-const loadCachedVendors = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    return fetchAllRows<Vendor>((from, to) =>
-      supabase
-        .from("published_vendors")
-        .select(VENDOR_PUBLIC)
-        .eq("status", "published")
-        .order("name")
-        .range(from, to),
-    );
+const loadCachedMenuPart = unstable_cache(
+  async (part: number) => {
+    const ids = await readMenuVendorIds();
+    const chunk = chunkBySerializedSize(ids)[part] ?? [];
+    const bytes = serializedBytes(chunk);
+    if (bytes > DIRECTORY_CACHE_BUDGET) {
+      console.warn("directory cache window over budget", { label: "menu-ids", part, bytes });
+      if (chunk.length > 1) throw new Error("directory cache menu ids exceeded budget");
+    } else {
+      console.info("directory cache store", "menu-ids", { part, bytes });
+    }
+    return chunk;
   },
-  ["published-directory-vendors-v1"],
+  ["published-directory-menu-ids-part-v3"],
   DIRECTORY_CACHE,
 );
 
-const loadCachedStallRows = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    const rows = await fetchAllRows<{
-      market_id: string;
-      stall: string | null;
-      days: number[] | null;
-      vendor_id: string;
-      vendor_name: string;
-      vendor_slug: string;
-      vendor_status: string;
-      market_city: string;
-      market_status: string;
-    }>((from, to) =>
-      supabase
-        .from("published_stalls")
-        .select(
-          "market_id, stall, days, vendor_id, vendor_name, vendor_slug, vendor_status, market_city, market_status",
-        )
-        .order("market_id")
-        .order("vendor_id")
-        .range(from, to),
-    );
-    return rows.map((row) => ({
-      market_id: row.market_id,
-      stall: row.stall,
-      days: row.days ?? [],
-      vendors: {
-        id: row.vendor_id,
-        name: row.vendor_name,
-        slug: row.vendor_slug,
-        status: row.vendor_status,
-      },
-      markets: { city: row.market_city, status: row.market_status },
-    }));
-  },
-  ["published-directory-stalls-v1"],
-  DIRECTORY_CACHE,
-);
-
-const loadCachedSchedules = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    return fetchAllRows<MarketSchedule>((from, to) =>
-      supabase.from("published_schedules").select(SCHEDULE_PUBLIC).order("id").range(from, to),
-    );
-  },
-  ["published-directory-schedules-v1"],
-  DIRECTORY_CACHE,
-);
-
-const loadCachedMenuVendorIds = unstable_cache(
-  async () => {
-    const supabase = requirePublicDb();
-    const menuIds = await supabase.rpc("menu_vendor_ids");
-    if (menuIds.error) directoryFailed(menuIds.error);
-    if (!Array.isArray(menuIds.data)) directoryFailed({ message: "Menu vendor ids were not a list" });
-    return menuIds.data.filter((id): id is string => typeof id === "string");
-  },
-  ["published-directory-menu-ids-v1"],
-  DIRECTORY_CACHE,
-);
+const loadCachedMenuVendorIds = cache(async function loadCachedMenuVendorIds() {
+  const { parts } = await loadCachedMenuManifest();
+  if (parts < 1) return [];
+  const chunks = await Promise.all(
+    Array.from({ length: parts }, (_, part) => loadCachedMenuPart(part)),
+  );
+  return chunks.flat();
+});
 
 async function loadPublishedDirectory(): Promise<PublishedDirectory> {
   const [markets, vendors, stallRows, schedules, menuVendorIds] = await Promise.all([
