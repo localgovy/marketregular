@@ -849,12 +849,6 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
               <MapleMark className="h-4 w-8 shrink-0 text-stamp shadow-[0_0_0_1px_rgba(0,0,0,0.18)]" />
               <span>Made by Canadians, for Canadians, to shop Canadian.</span>
             </span>
-            <span aria-hidden className="hidden text-muted-foreground sm:inline">
-              ·
-            </span>
-            <span className="type-nums text-sm text-muted-foreground">
-              {LAUNCH_CITY} vendors, products &amp; markets · {data.todayFormatted}
-            </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -875,7 +869,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
               <span className="type-nums">{data.sellingTodayCount}</span> stalls active today
             </Link>
             <span aria-hidden className="text-muted-foreground">
-              ·
+              –
             </span>
             <Link href="/products" className="font-medium text-primary hover:underline">
               Full product catalogue
@@ -891,8 +885,8 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
             <div className="lg:col-span-7">
               <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-3 max-w-2xl text-muted-foreground">
-                Meet the growers, bakers, and makers first — see what they sell, what it
-                costs, and the exact {LAUNCH_CITY} markets and hours where they set up.
+                Find everything from the products you enjoy every weekend to the markets and
+                vendors that sell them, all in one place.
               </p>
             </div>
 

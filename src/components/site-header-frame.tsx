@@ -2,14 +2,13 @@
 
 import "@/lib/native-history";
 
-import { Suspense, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { HeaderAccount } from "@/components/header-account";
 import { HeaderSearch } from "@/components/header-search";
-import { CaretDownMark, TicketMark, WeekMark } from "@/components/marks";
+import { CaretDownMark, TicketMark } from "@/components/marks";
 import { NavLink } from "@/components/nav-link";
-import { NowLabel } from "@/components/now-label";
 import { SavesHydrator } from "@/components/saves-hydrator";
 import { useSaves } from "@/components/save-button";
 import { SiteWordmark } from "@/components/site-mark";
@@ -20,12 +19,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SITE_NAME } from "@/lib/constants";
-import {
-  parseHeaderBoard,
-  sameHeaderBoard,
-  type HeaderBoard,
-  type HeaderBoardMarket,
-} from "@/lib/header-board";
 import { PORTAL_NAV_LABEL, SITE_NAV, SITE_PORTAL_NAV } from "@/lib/nav";
 import type { Saves } from "@/lib/saves";
 import { useMounted } from "@/lib/use-now";
@@ -76,105 +69,6 @@ function useHeaderOffset(ref: { current: HTMLElement | null }) {
       document.documentElement.style.removeProperty("--header-lg");
     };
   }, [ref]);
-}
-
-const FRESH_MS = 90_000;
-
-function boardIsFresh(board: HeaderBoard | null) {
-  if (!board?.asOf) return false;
-  const age = Date.now() - board.asOf;
-  return age >= -60_000 && age < FRESH_MS;
-}
-
-/**
- * The server passes a snapshot. A fresh one is kept. An old static page, or a
- * failed read, is replaced from /api/header-board. Visibility and a five-minute
- * timer cover a tab left open across the afternoon.
- */
-function useLiveBoard(initial: HeaderBoard | null) {
-  const [board, setBoard] = useState(initial);
-  const current = useRef(initial);
-  const fetchedAt = useRef(boardIsFresh(initial) ? Date.now() : 0);
-
-  useEffect(() => {
-    let cancelled = false;
-    let pending = false;
-    let retryTimer = 0;
-    let attempt = 0;
-    const controller = new AbortController();
-
-    async function load() {
-      if (pending) return;
-      pending = true;
-      window.clearTimeout(retryTimer);
-      try {
-        const res = await fetch("/api/header-board", { signal: controller.signal });
-        if (!res.ok) throw new Error(String(res.status));
-        const data = parseHeaderBoard(await res.json());
-        if (cancelled) return;
-        if (!data) throw new Error("header board");
-        fetchedAt.current = Date.now();
-        attempt = 0;
-        if (current.current && sameHeaderBoard(current.current, data)) return;
-        current.current = data;
-        setBoard(data);
-      } catch (error) {
-        if (cancelled || (error instanceof DOMException && error.name === "AbortError")) return;
-        attempt += 1;
-        if (attempt > 4) return;
-        retryTimer = window.setTimeout(() => void load(), 5_000 * attempt);
-      } finally {
-        pending = false;
-      }
-    }
-
-    if (!boardIsFresh(current.current)) void load();
-    const timer = window.setInterval(() => void load(), 60_000);
-    function onVisible() {
-      if (document.visibilityState !== "visible") return;
-      if (Date.now() - fetchedAt.current < FRESH_MS) return;
-      void load();
-    }
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      cancelled = true;
-      controller.abort();
-      window.clearInterval(timer);
-      window.clearTimeout(retryTimer);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, []);
-
-  return board;
-}
-
-function useTorontoNow() {
-  const [now, setNow] = useState<string | null>(null);
-
-  useEffect(() => {
-    const format = () =>
-      new Intl.DateTimeFormat("en-CA", {
-        timeZone: "America/Toronto",
-        weekday: "short",
-        hour: "numeric",
-        minute: "2-digit",
-      }).format(new Date());
-    setNow(format());
-    const timer = window.setInterval(() => setNow(format()), 20_000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  return now;
-}
-
-function LiveLine({ className }: { className?: string }) {
-  const now = useTorontoNow();
-  return (
-    <span className={cn("inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap", className)}>
-      <WeekMark className="size-4 shrink-0" />
-      Toronto{now ? ` · ${now}` : ""}
-    </span>
-  );
 }
 
 function Wordmark({ className }: { className?: string }) {
@@ -267,53 +161,6 @@ function PortalNav() {
   );
 }
 
-export function DayStrip({ board }: { board: HeaderBoard | null }) {
-  const countLabel = board ? `${board.openCount} open now` : "Open now";
-  return (
-    <div className="flex flex-nowrap items-center gap-x-2.5 overflow-x-auto border-t border-chalk/25 bg-black/20 px-4 py-2 [scrollbar-width:none] lg:flex-wrap lg:overflow-x-visible lg:px-5 [&::-webkit-scrollbar]:hidden">
-      <LiveLine className="hidden text-sm text-chalk/85 lg:inline-flex" />
-      <Link
-        href="/markets/open-today"
-        prefetch={false}
-        aria-label={countLabel}
-        className="inline-flex shrink-0 items-center whitespace-nowrap rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
-      >
-        <NowLabel tone="board">
-          <span className="inline-flex items-baseline gap-1.5" aria-hidden>
-            <span className={cn("type-nums", !board && "invisible")}>
-              {board?.openCount ?? 0}
-            </span>
-            <span>open now</span>
-          </span>
-        </NowLabel>
-      </Link>
-      {board ? (
-        <span className="shrink-0 text-sm font-medium text-chalk">{board.label}</span>
-      ) : null}
-      {board?.markets.map((market) => (
-        <MarketChip key={market.slug} market={market} />
-      ))}
-    </div>
-  );
-}
-
-function MarketChip({ market }: { market: HeaderBoardMarket }) {
-  return (
-    <Link
-      href={`/markets/${market.slug}`}
-      prefetch={false}
-      className="inline-flex shrink-0 items-baseline gap-1.5 px-2 py-1 whitespace-nowrap text-chalk transition-colors hover:bg-chalk/10 focus-visible:outline-2 focus-visible:outline-chalk"
-    >
-      <span className="text-sm">{market.name}</span>
-      <span className="type-nums text-sm font-semibold">{market.hours}</span>
-    </Link>
-  );
-}
-
-export function LiveDayStrip({ initial }: { initial: HeaderBoard }) {
-  return <DayStrip board={useLiveBoard(initial)} />;
-}
-
 function HeaderBody({ q, search }: { q: string; search: string }) {
   return (
     <div className="grid items-start gap-y-3 px-4 pt-4 pb-3 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,22rem)] lg:gap-x-8 lg:gap-y-3 lg:px-5 lg:py-4">
@@ -344,7 +191,7 @@ function HeaderQuery({ pathname }: { pathname: string }) {
   return <HeaderBody q={q} search={params.toString()} />;
 }
 
-export function SiteHeaderFrame({ strip }: { strip: ReactNode }) {
+export function SiteHeaderFrame() {
   const pathname = usePathname() || "/";
   const headerRef = useRef<HTMLElement>(null);
   useHeaderOffset(headerRef);
@@ -355,7 +202,6 @@ export function SiteHeaderFrame({ strip }: { strip: ReactNode }) {
       <Suspense fallback={<HeaderBody q="" search="" />}>
         <HeaderQuery pathname={pathname} />
       </Suspense>
-      {strip}
     </header>
   );
 }
