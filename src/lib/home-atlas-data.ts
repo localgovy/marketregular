@@ -798,7 +798,7 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
       count: aisle.pages.length,
       photoUrl: photo?.url ?? null,
       photoAlt: photo?.alt ?? null,
-      sampleTerms: aisle.pages.slice(0, 4).map((p) => {
+      sampleTerms: aisle.pages.slice(0, 24).map((p) => {
         const termPhoto = productPhoto(photos, p.slug, aisle.id);
         return {
           term: p.term,

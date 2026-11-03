@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type {
+  HomeAtlasAisleCard,
   HomeAtlasData,
   HomeAtlasMarketSlot,
   HomeAtlasVendorSpotlight,
@@ -42,6 +43,44 @@ import { cn } from "@/lib/utils";
 
 function formatCensus(n: number) {
   return n.toLocaleString("en-CA");
+}
+
+const AISLE_GUIDE_CHIP_INITIAL = 6;
+
+function AisleProductGuides({ terms }: { terms: HomeAtlasAisleCard["sampleTerms"] }) {
+  const [expanded, setExpanded] = useState(false);
+  if (terms.length === 0) return null;
+
+  const initialCount = Math.min(AISLE_GUIDE_CHIP_INITIAL, terms.length);
+  const visible = expanded ? terms : terms.slice(0, initialCount);
+  const hidden = terms.length - initialCount;
+  const chipClass =
+    "stall-chip-sm inline-flex items-center bg-secondary px-3 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-primary hover:text-primary-foreground";
+  const toggleClass =
+    "stall-chip-sm cursor-pointer bg-card px-3 py-1 text-sm font-medium text-primary ring-1 ring-border hover:bg-secondary";
+
+  return (
+    <div className="mt-3 min-w-0">
+      <p className="text-sm font-medium text-foreground">Product guides:</p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        {visible.map((term) => (
+          <Link key={term.slug} href={`/find/${term.slug}`} className={chipClass}>
+            <span>{term.term}</span>
+          </Link>
+        ))}
+        {!expanded && hidden > 0 ? (
+          <button type="button" onClick={() => setExpanded(true)} className={toggleClass}>
+            Show more ({hidden})
+          </button>
+        ) : null}
+        {expanded && hidden > 0 ? (
+          <button type="button" onClick={() => setExpanded(false)} className={toggleClass}>
+            Show less
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 function SessionLines({
@@ -369,19 +408,8 @@ function VendorTableCard({
         </div>
       </div>
 
-      {/* 3. Market Halls & Unclipped Schedule Hours (With Market Hall Emblem) */}
-      <div className="bg-card">
-        <div className="flex items-baseline justify-between px-3.5 pt-2.5 pb-1">
-          <span className="type-kicker text-muted-foreground">Where they set up</span>
-          {extraMarketCount > 0 ? (
-            <Link
-              href={`/vendors/${vendor.slug}`}
-              className="type-nums text-sm font-medium text-primary hover:underline"
-            >
-              +{extraMarketCount} more {extraMarketCount === 1 ? "hall" : "halls"}
-            </Link>
-          ) : null}
-        </div>
+      {/* 3. Market halls & schedule hours (with market emblem) */}
+      <div className="bg-card border-t border-border">
         <ul className="divide-y divide-border/70">
           {shownMarkets.map((market) => {
             return (
@@ -433,6 +461,16 @@ function VendorTableCard({
             );
           })}
         </ul>
+        {extraMarketCount > 0 ? (
+          <p className="border-t border-border/70 px-3.5 py-2.5 text-end">
+            <Link
+              href={`/vendors/${vendor.slug}`}
+              className="type-nums text-sm font-medium text-primary hover:underline"
+            >
+              +{extraMarketCount} more {extraMarketCount === 1 ? "hall" : "halls"}
+            </Link>
+          </p>
+        ) : null}
       </div>
     </li>
   );
@@ -1256,7 +1294,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                     aria-selected={selected}
                     onClick={() => syncAisleSelection(aisle.id)}
                     className={cn(
-                      "stall-chip-sm inline-flex cursor-pointer items-center gap-1.5 py-1.5 pr-3 pl-1.5 text-sm font-medium transition-colors",
+                      "stall-chip-sm inline-flex cursor-pointer items-center gap-1.5 py-1.5 pr-2.5 pl-1.5 text-sm font-medium transition-colors",
                       selected
                         ? "bg-board text-chalk"
                         : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
@@ -1264,14 +1302,6 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                   >
                     <ProductThumb src={aisle.photoUrl} size="xs" />
                     <span>{aisle.label}</span>
-                    <span
-                      className={cn(
-                        "type-nums text-sm",
-                        selected ? "text-chalk/80" : "text-stamp",
-                      )}
-                    >
-                      {aisle.count}
-                    </span>
                   </button>
                 );
               })}
@@ -1315,24 +1345,10 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                         {activeAisle.line}
                       </p>
 
-                      {activeAisle.sampleTerms.length > 0 ? (
-                        <div className="mt-3">
-                          <p className="type-kicker text-muted-foreground">
-                            Popular product guides in this crate:
-                          </p>
-                          <div className="mt-1.5 flex flex-wrap gap-1.5">
-                            {activeAisle.sampleTerms.map((term) => (
-                              <Link
-                                key={term.slug}
-                                href={`/find/${term.slug}`}
-                                className="stall-chip-sm inline-flex items-center bg-secondary px-3 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
-                              >
-                                <span>{term.term}</span>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
+                      <AisleProductGuides
+                        key={activeAisle.id}
+                        terms={activeAisle.sampleTerms}
+                      />
                     </div>
                   </div>
                 </div>
