@@ -1,6 +1,7 @@
 "use server";
 
 import { searchDirectory } from "@/lib/data/catalog";
+import { foldSearchText } from "@/lib/search-text";
 import { takeCatalogSlot } from "@/lib/mail-limit";
 import {
   DIRECTORY_MARKET_PAGE,
@@ -117,8 +118,10 @@ export async function suggestListings(q: string) {
     return { markets: [], vendors: [] };
   }
   const { markets, vendors } = await searchDirectory({ q: query }, new Date());
-  const needle = query.toLowerCase();
-  const named = vendors.filter((vendor) => vendor.name.toLowerCase().includes(needle));
+  const needle = foldSearchText(query);
+  const named = needle
+    ? vendors.filter((vendor) => foldSearchText(vendor.name).includes(needle))
+    : [];
   return {
     markets: markets.slice(0, 6).map((market) => ({
       href: `/markets/${market.slug}`,

@@ -5,6 +5,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FIND_CATEGORIES, FIND_PAGES, findPagesByCategory, listedFindPages } from "../src/data/find-pages.ts";
 import { COUNTRY_TAGS } from "../src/lib/constants.ts";
+import { countryTagsFromQuery } from "../src/lib/country-tags.ts";
+import { nameHitRank } from "../src/lib/search-rank.ts";
+import { foldSearchText } from "../src/lib/search-text.ts";
+import { guessVendorTags, productTagsFromQuery } from "../src/lib/vendor-tags.ts";
 import {
   BABY_CATEGORY,
   GIFTS_CATEGORY,
@@ -182,4 +186,31 @@ test("a find page loads its own menus, and a stall page does not rebuild the hom
   assert.match(search, /FIND_MENU_PAGE_CAP/);
   assert.equal(stall.includes("loadHomeAtlasData"), false);
   assert.equal(stall.includes("published_menus"), false);
+});
+
+test("a slash between words is a space, and untouched names stay put", () => {
+  assert.equal(foldSearchText("Ring Dish/Spoon Rest"), "ring dish spoon rest");
+  assert.equal(foldSearchText("Back Road / Melt"), "back road melt");
+  assert.equal(foldSearchText("Spoon-Rest"), "spoon-rest");
+  assert.equal(foldSearchText("Wychwood Barns"), "wychwood barns");
+  assert.equal(nameHitRank("Author/Illustrator", "author illustrator"), 0);
+  assert.equal(nameHitRank("Ring Dish/Spoon Rest", "spoon rest"), 2);
+  assert.equal(nameHitRank("Wychwood Barns", "wychwood"), 1);
+  assert.equal(nameHitRank("Spoon Rest", "spoon rest"), 0);
+  assert.ok(guessVendorTags("Ice/Cream Shop").includes("dairy"));
+  assert.equal(guessVendorTags("Butterfly Bakery").includes("dairy"), false);
+  assert.ok(productTagsFromQuery("ice/cream").includes("dairy"));
+  assert.ok(countryTagsFromQuery("el/salvador").includes("salvadoran"));
+  assert.equal(countryTagsFromQuery("el salvador").includes("salvadoran"), true);
+
+  const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+  const sql = readFileSync(
+    join(root, "supabase/migrations/20261103000513_search_slash_as_space.sql"),
+    "utf8",
+  );
+  assert.match(sql, /replace\(/);
+  assert.match(sql, /'\/'/);
+  assert.match(sql, /reindex index public\.vendor_menus_name_fold_fts_idx/i);
+  assert.match(sql, /reindex index public\.vendor_menus_name_fold_trgm_idx/i);
+  assert.equal(sql.includes("'-'"), false);
 });

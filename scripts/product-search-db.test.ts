@@ -159,10 +159,14 @@ language sql
 immutable
 strict
 as $$
-  select translate(
-    lower(input),
-    'ÀÁÂÃÄÅàáâãäåÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖòóôõöÙÚÛÜùúûüÝŸýÿÑñÇç',
-    'AAAAAAaaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuYYyyNnCc'
+  select replace(
+    translate(
+      lower(input),
+      'ÀÁÂÃÄÅàáâãäåÈÉÊËèéêëÌÍÎÏìíîïÒÓÔÕÖòóôõöÙÚÛÜùúûüÝŸýÿÑñÇç',
+      'AAAAAAaaaaaaEEEEeeeeIIIIiiiiOOOOOoooooUUUUuuuuYYyyNnCc'
+    ),
+    '/',
+    ' '
   )
 $$;
 
@@ -1427,6 +1431,63 @@ test("dessert, tart, thanksgiving, gift, breakfast, cookies, jerky, maple syrup,
   assert.ok((await search(db, "ice pops")).some((row) => row.item_name === "Maple syrup infused ice pops"));
   assert.ok((await search(db, "dessert")).some((row) => row.item_name === "Layer cake"));
   assert.ok((await search(db, "gift")).some((row) => row.item_name === "Market gift card two"));
+});
+
+test("words joined by a slash match the same search as a space", async () => {
+  const db = await database();
+  const folded = await db.query<{ folded: string; accent: string; hyphen: string }>(
+    `select public.fold_search_text('Ring Dish/Spoon Rest') as folded,
+            public.fold_search_text('Crème Fraîche') as accent,
+            public.fold_search_text('Spoon-Rest') as hyphen`,
+  );
+  assert.equal(folded.rows[0]?.folded, "ring dish spoon rest");
+  assert.equal(folded.rows[0]?.accent, "creme fraiche");
+  assert.equal(folded.rows[0]?.hyphen, "spoon-rest");
+
+  await db.query(
+    `insert into public.vendor_menus (id, vendor_id, name, product_category) values
+      ('d0d0d0d0-d0d0-40d0-80d0-d0d0d0d0d0d0', $1, 'Ring Dish/Spoon Rest', 'home-and-kitchen'),
+      ('d1d1d1d1-d1d1-41d1-81d1-d1d1d1d1d1d1', $1, 'Spoon Rest', 'home-and-kitchen'),
+      ('d2d2d2d2-d2d2-42d2-82d2-d2d2d2d2d2d2', $1, 'Spoon-Rest', 'home-and-kitchen'),
+      ('d3d3d3d3-d3d3-43d3-83d3-d3d3d3d3d3d3', $1, 'Bangle/Bracelet/Anklet', 'jewellery-and-accessories'),
+      ('d4d4d4d4-d4d4-44d4-84d4-d4d4d4d4d4d4', $1, '1/2 lb Honey', 'honey')`,
+    [VENDOR],
+  );
+
+  const spoonRest = await search(db, "spoon rest");
+  assert.ok(spoonRest.some((row) => row.item_name === "Ring Dish/Spoon Rest"));
+  assert.ok(spoonRest.some((row) => row.item_name === "Spoon Rest"));
+  assert.ok(spoonRest.some((row) => row.item_name === "Spoon-Rest"));
+  assert.equal(
+    spoonRest.some((row) => row.item_name === "Sterling hoop earrings"),
+    false,
+  );
+
+  const dishSpoon = await search(db, "dish spoon");
+  assert.ok(dishSpoon.some((row) => row.item_name === "Ring Dish/Spoon Rest"));
+  assert.equal(
+    dishSpoon.some((row) => row.item_name === "Spoon Rest"),
+    false,
+  );
+
+  const slashedQuery = await search(db, "spoon/rest");
+  assert.ok(slashedQuery.some((row) => row.item_name === "Ring Dish/Spoon Rest"));
+  assert.ok(slashedQuery.some((row) => row.item_name === "Spoon Rest"));
+
+  const anklet = await search(db, "bracelet anklet");
+  assert.ok(anklet.some((row) => row.item_name === "Bangle/Bracelet/Anklet"));
+
+  const honey = await search(db, "honey");
+  assert.ok(honey.some((row) => row.item_name === "1/2 lb Honey"));
+  const half = await search(db, "1/2");
+  assert.ok(half.some((row) => row.item_name === "1/2 lb Honey"));
+
+  const earrings = await search(db, "earrings");
+  assert.ok(earrings.some((row) => row.item_name === "Sterling hoop earrings"));
+  assert.equal(
+    earrings.some((row) => row.item_name === "Ring Dish/Spoon Rest"),
+    false,
+  );
 });
 
 

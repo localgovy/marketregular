@@ -1,8 +1,7 @@
+import { foldSearchText } from "@/lib/search-text";
+
 function foldName(value: string) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  return foldSearchText(value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
 }
 
 /** 0 exact, 1 prefix, 2 contains, 3 tag-only / no name hit. */

@@ -27,6 +27,7 @@ import { vendorHasSubstance } from "@/lib/listing-substance";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { productTagsFromQuery, isProductNounQuery, vendorFilterTags, withVendorProductTags } from "@/lib/vendor-tags";
 import { preferQueryNameHits, hallsHostingNameHits } from "@/lib/search-rank";
+import { foldSearchText } from "@/lib/search-text";
 import { groupVendorHalls, withVendorHalls } from "@/lib/vendor-halls";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
@@ -48,7 +49,7 @@ function publicVendor(vendor: (typeof seedVendors)[number]) {
 }
 
 function haystack(parts: Array<string | null | undefined>) {
-  return parts.filter(Boolean).join(" ").toLowerCase();
+  return foldSearchText(parts.filter(Boolean).join(" "));
 }
 
 function launchMarketIds() {
@@ -103,12 +104,14 @@ export function localSearch(filters: SearchFilters, now = new Date()) {
   if (q) {
     const queryTags = [...new Set([...productTagsFromQuery(q), ...countryTagsFromQuery(q)])];
     const nounQuery = isProductNounQuery(q);
+    const needle = foldSearchText(q);
     markets = markets.filter((m) =>
+      needle.length > 0 &&
       haystack(
         nounQuery
           ? [m.name, m.city, m.province, m.address]
           : [m.name, m.city, m.province, m.about, m.tags.join(" "), m.address],
-      ).includes(q),
+      ).includes(needle),
     );
     vendors = vendors.filter((v) => {
       const bits: Array<string | null | undefined> = nounQuery
@@ -125,7 +128,7 @@ export function localSearch(filters: SearchFilters, now = new Date()) {
             .map((mv) => seedMarkets.find((m) => m.id === mv.market_id)?.name),
         );
       }
-      return haystack(bits).includes(q);
+      return needle.length > 0 && haystack(bits).includes(needle);
     });
     if (queryTags.length) {
       const tagged = applyDirectoryTags(

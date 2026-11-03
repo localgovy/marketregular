@@ -237,7 +237,7 @@ export function guessCountryTags(name: string, about: string | null | undefined 
 }
 
 export function countryTagsFromQuery(q: string) {
-  const hay = fold(q).replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  const hay = fold(q).replace(/[-_/]+/g, " ").replace(/\s+/g, " ").trim();
   if (!hay) return [] as CountryTag[];
   const tags: CountryTag[] = [];
   for (const { tag, needles } of QUERY_ALIASES) {

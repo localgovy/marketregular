@@ -47,6 +47,7 @@ import { sortDirectoryMarkets, sortDirectoryVendors } from "@/lib/directory-sort
 import { countryTagsFromQuery, withVendorCountryTags } from "@/lib/country-tags";
 import { productTagsFromQuery, isProductNounQuery, withVendorProductTags } from "@/lib/vendor-tags";
 import { preferQueryNameHits, hallsHostingNameHits } from "@/lib/search-rank";
+import { foldSearchText } from "@/lib/search-text";
 import { isMarketOpen, isOpenOnWeekday } from "@/lib/schedule";
 import { mergeReviews, reviewFromPost, reviewFromReview } from "@/lib/floor-note";
 import { withListingStats } from "@/lib/listing-score";
@@ -869,8 +870,9 @@ function searchNeedle(raw: string) {
 }
 
 function includesFold(value: string | null | undefined, needle: string) {
-  if (!value || !needle) return false;
-  return value.toLowerCase().includes(needle.toLowerCase());
+  const folded = foldSearchText(needle);
+  if (!value || !folded) return false;
+  return foldSearchText(value).includes(folded);
 }
 
 type DirectorySnapshot = {

@@ -165,7 +165,10 @@ function fold(value: string) {
   return value
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll("/", " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**
@@ -191,7 +194,7 @@ export function guessVendorTags(name: string) {
 
 /** Typed Find uses the same product tags as the directory chips. */
 export function productTagsFromQuery(q: string) {
-  const hay = fold(q).replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  const hay = fold(q).replace(/[-_/]+/g, " ").replace(/\s+/g, " ").trim();
   if (!hay) return [] as string[];
   const tags: string[] = [];
   const slug = hay.replace(/ /g, "-");
@@ -205,7 +208,7 @@ export function productTagsFromQuery(q: string) {
 
 /** Typed tomato/apple/etc. — not the Produce chip slug itself. */
 export function isProductNounQuery(q: string) {
-  const hay = fold(q).replace(/[-_]+/g, " ").replace(/\s+/g, " ").trim();
+  const hay = fold(q).replace(/[-_/]+/g, " ").replace(/\s+/g, " ").trim();
   if (!hay) return false;
   const slug = hay.replace(/ /g, "-");
   if (PRODUCT_SET.has(slug)) return false;
