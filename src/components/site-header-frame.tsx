@@ -24,11 +24,6 @@ import type { Saves } from "@/lib/saves";
 import { useMounted } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 
-const BOARD_TEXTURE = {
-  backgroundImage: "radial-gradient(rgba(243,238,228,0.07) 1px, transparent 1.4px)",
-  backgroundSize: "22px 22px",
-} as const;
-
 function onPortalPath(path: string) {
   return (
     path === "/market" ||
@@ -197,7 +192,7 @@ export function SiteHeaderFrame() {
   useHeaderOffset(headerRef);
 
   return (
-    <header ref={headerRef} className="sticky top-0 z-40 bg-board text-chalk" style={BOARD_TEXTURE}>
+    <header ref={headerRef} className="sticky top-0 z-40 bg-board text-chalk">
       <SavesHydrator />
       <Suspense fallback={<HeaderBody q="" search="" />}>
         <HeaderQuery pathname={pathname} />
