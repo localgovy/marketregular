@@ -130,7 +130,7 @@ export type HomeAtlasAisleCard = {
   count: number;
   photoUrl: string | null;
   photoAlt: string | null;
-  sampleTerms: Array<{ term: string; slug: string; photoUrl: string | null }>;
+  sampleTerms: Array<{ term: string; slug: string; photoUrl: string | null; vendors: number }>;
   topVendors: Array<{
     name: string;
     slug: string;
@@ -845,6 +845,7 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
           term: p.term,
           slug: p.slug,
           photoUrl: termPhoto?.url ?? null,
+          vendors: p.vendors,
         };
       }),
       topVendors: aisleVendors,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type {
@@ -452,15 +452,114 @@ function ProductThumb({
 }
 
 const CRAVING_SHORTCUTS = [
-  { label: "Sourdough", href: "/find/sourdough-toronto", aisleId: "bread-and-bakery" },
-  { label: "Butter tarts", href: "/find/butter-tarts-toronto", aisleId: "pies-and-sweets" },
-  { label: "Farmstead cheese", href: "/find/cheese-toronto", aisleId: "cheese-and-dairy" },
-  { label: "Heirloom tomatoes", href: "/find/tomatoes-toronto", aisleId: "vegetables" },
-  { label: "Ontario apples", href: "/find/apples-toronto", aisleId: "apples-and-fruit" },
-  { label: "Farm eggs", href: "/find/eggs-toronto", aisleId: "eggs" },
-  { label: "Raw honey", href: "/find/honey-toronto", aisleId: "honey" },
-  { label: "Maple syrup", href: "/find/maple-syrup-toronto", aisleId: "maple" },
+  { label: "Sourdough", slug: "sourdough-toronto", aisleId: "bread-and-bakery" },
+  { label: "Butter tarts", slug: "butter-tarts-toronto", aisleId: "pies-and-sweets" },
+  { label: "Farmstead cheese", slug: "cheese-toronto", aisleId: "cheese-and-dairy" },
+  { label: "Heirloom tomatoes", slug: "tomatoes-toronto", aisleId: "vegetables" },
+  { label: "Ontario apples", slug: "apples-toronto", aisleId: "apples-and-fruit" },
+  { label: "Farm eggs", slug: "eggs-toronto", aisleId: "eggs" },
+  { label: "Raw honey", slug: "honey-toronto", aisleId: "honey" },
+  { label: "Maple syrup", slug: "maple-syrup-toronto", aisleId: "maple" },
 ] as const;
+
+function CravingCycle({ aisles }: { aisles: HomeAtlasAisleCard[] }) {
+  const [index, setIndex] = useState(0);
+  const count = CRAVING_SHORTCUTS.length;
+  const current = CRAVING_SHORTCUTS[index] ?? CRAVING_SHORTCUTS[0];
+  const aisle = aisles.find((item) => item.id === current.aisleId);
+  const term = aisle?.sampleTerms.find((item) => item.slug === current.slug);
+  const siblings = (aisle?.sampleTerms ?? [])
+    .filter((item) => item.slug !== current.slug)
+    .slice(0, 4);
+  const categoryLabel = aisle?.label ?? "";
+  const categoryLower = categoryLabel.toLowerCase();
+
+  function step(delta: number) {
+    setIndex((value) => (value + delta + count) % count);
+  }
+
+  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      step(-1);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      step(1);
+    }
+  }
+
+  const cycleButtonClass =
+    "stall-chip-sm inline-flex size-8 shrink-0 cursor-pointer items-center justify-center bg-primary-foreground/15 text-primary-foreground outline-none hover:bg-card hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk";
+
+  return (
+    <div
+      className="mt-3.5 border-t border-primary-foreground/20 pt-3 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
+      role="group"
+      aria-label="Cravings"
+      tabIndex={0}
+      onKeyDown={onKeyDown}
+    >
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span className="type-kicker text-chalk">Cravings</span>
+        <button type="button" aria-label="Previous craving" onClick={() => step(-1)} className={cycleButtonClass}>
+          <CaretLeftMark className="size-4" />
+        </button>
+        <Link
+          href={`/find/${current.slug}`}
+          className="inline-flex max-w-full items-center gap-2.5 bg-card px-2 py-1.5 text-primary outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
+        >
+          <ProductThumb src={term?.photoUrl} size="sm" />
+          <span>
+            <span className="block text-base font-medium">{current.label}</span>
+            {categoryLabel ? (
+              <span className="block text-sm text-primary/80">
+                {categoryLabel}
+                {term ? (
+                  <>
+                    {" · "}
+                    <span className="type-nums">{formatCensus(term.vendors)}</span>{" "}
+                    {term.vendors === 1 ? "stall" : "stalls"}
+                  </>
+                ) : null}
+              </span>
+            ) : null}
+          </span>
+        </Link>
+        <button type="button" aria-label="Next craving" onClick={() => step(1)} className={cycleButtonClass}>
+          <CaretRightMark className="size-4" />
+        </button>
+        <span className="type-nums text-sm text-chalk">
+          {index + 1} / {count}
+        </span>
+        <span className="sr-only" aria-live="polite">
+          {current.label}, {index + 1} of {count}
+        </span>
+      </div>
+      {aisle && categoryLabel ? (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="text-sm font-medium text-primary-foreground/85">
+            Also in {categoryLower}:
+          </span>
+          {siblings.map((sibling) => (
+            <Link
+              key={sibling.slug}
+              href={`/find/${sibling.slug}`}
+              className="stall-chip-sm inline-flex items-center bg-primary-foreground/15 px-2.5 py-1 text-sm font-medium text-primary-foreground outline-none hover:bg-card hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
+            >
+              {sibling.term}
+            </Link>
+          ))}
+          <Link
+            href={`/products?aisle=${encodeURIComponent(aisle.id)}`}
+            className="text-sm font-medium text-primary-foreground underline underline-offset-4 outline-none hover:text-chalk focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
+          >
+            All {categoryLower}
+          </Link>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function VendorTableCard({
   vendor,
@@ -1073,15 +1172,6 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
     data.neighbourhoodCircuits[0] ??
     null;
 
-  // Map aisleId -> photoUrl for cohesive visual chips
-  const aislePhotoMap = useMemo(() => {
-    const map = new Map<string, string | null>();
-    for (const aisle of data.aisles) {
-      map.set(aisle.id, aisle.photoUrl);
-    }
-    return map;
-  }, [data.aisles]);
-
   // Featured vendors with real uploaded logos for the visual emblem strip
   const logoVendors = useMemo(
     () => data.vendorSpotlights.filter((v) => Boolean(v.logoUrl)).slice(0, 8),
@@ -1345,30 +1435,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                 </button>
               </form>
 
-              {/* Visual Craving Chips with Category Photo Thumbnails */}
-              <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-primary-foreground/20 pt-3">
-                <span className="type-kicker mr-1 text-chalk">Jump to a craving or filter stalls:</span>
-                {CRAVING_SHORTCUTS.map((item) => {
-                  const active = vendorAisleFilter === item.aisleId;
-                  const thumbUrl = aislePhotoMap.get(item.aisleId) ?? null;
-                  return (
-                    <button
-                      key={item.href}
-                      type="button"
-                      onClick={() => syncAisleSelection(active ? "all" : item.aisleId)}
-                      className={cn(
-                        "stall-chip-sm inline-flex cursor-pointer items-center gap-2 py-1 pr-3 pl-1.5 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-card text-primary"
-                          : "bg-primary-foreground/15 text-primary-foreground hover:bg-card hover:text-primary",
-                      )}
-                    >
-                      <ProductThumb src={thumbUrl} size="xs" className="border-chalk/30" />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <CravingCycle aisles={data.aisles} />
             </div>
           </div>
         </header>
