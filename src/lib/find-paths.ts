@@ -71,15 +71,15 @@ export function originChipRow(selected: readonly string[] = []) {
 export const FIND_SETUP = ["indoor", "outdoor", "year-round"] as const;
 
 export const FIND_AREAS: Array<{ label: string; q: string; slugs: string[] }> = [
-  { label: "St. Lawrence", q: "St. Lawrence", slugs: ["st-lawrence-market", "st-lawrence-farmers-market"] },
+  { label: "St. Lawrence", q: "St. Lawrence", slugs: ["st-lawrence-market", "st-lawrence-farmers-market", "sunday-variety-market-st-lawrence"] },
   { label: "Wychwood", q: "Wychwood", slugs: ["the-stops-farmers-market"] },
   { label: "Dufferin Grove", q: "Dufferin Grove", slugs: ["dufferin-grove-organic-farmers-market"] },
   { label: "Junction", q: "Junction", slugs: ["the-junction-farmers-market"] },
-  { label: "Leslieville", q: "Leslieville", slugs: ["the-leslieville-farmers-market", "leslieville-farmers-market-east-end-food-hub"] },
+  { label: "Leslieville", q: "Leslieville", slugs: ["the-leslieville-farmers-market"] },
   { label: "East York", q: "East York", slugs: ["east-york-farmers-market"] },
   { label: "Withrow", q: "Withrow", slugs: ["withrow-park-farmers-market"] },
   { label: "Sorauren", q: "Sorauren", slugs: ["sorauren-farmers-market", "sorauren-farmers-market-henderson-brewery"] },
-  { label: "Brick Works", q: "Brick Works", slugs: ["evergreen-brick-works-saturday-farmers-market"] },
+  { label: "Brick Works", q: "Brick Works", slugs: ["evergreen-brick-works-saturday-farmers-market", "ontario-artisan-market-evergreen-brick-works"] },
   { label: "North York", q: "North York", slugs: ["north-york-farmers-market"] },
 ];
 

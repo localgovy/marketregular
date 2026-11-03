@@ -230,7 +230,7 @@ export function FeedBoard({
                 {filtered
                   ? "No posts match that. Clear the search or pick a place from the rail."
                   : signedIn
-                    ? "The live list is empty. Write the first note, or pick a market from Events."
+                    ? "The live list is empty. Write the first note, or pick a market from Calendar."
                     : "The live list is empty. Sign in to write the first note, or start with a market that's open."}
               </p>
               {!filtered && !items.length ? (

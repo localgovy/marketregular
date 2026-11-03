@@ -76,7 +76,7 @@ Entry is `proxy` in `src/proxy.ts` (Next.js middleware matcher, skipping static 
 
 ## Route catalog
 
-Shared chrome is `src/app/layout.tsx`: header, footer, guest sign-in slip, nav history, JSON-LD, Google Analytics `G-M2JJ68QT2H`, Vercel Analytics. Header nav (`src/lib/nav.ts`): Home, Events, Markets, Products, Blog, Saved. Footer adds Feed, About, Vendor sign in, Market sign in, Privacy, Terms. Header search posts to `/markets?q=`.
+Shared chrome is `src/app/layout.tsx`: header, footer, guest sign-in slip, nav history, JSON-LD, Google Analytics `G-M2JJ68QT2H`, Vercel Analytics. Header nav (`src/lib/nav.ts`): Home, Calendar, Markets, Products, Blog, Saved. Footer adds Feed, About, Vendor sign in, Market sign in, Privacy, Terms. Header search posts to `/markets?q=`.
 
 Status words used below: **live**, **paused** (built, switched off), **redirect**, **legacy**.
 
@@ -94,7 +94,7 @@ Status words used below: **live**, **paused** (built, switched off), **redirect*
 | `/products` | live | Everyone | Aisle browse and product search. Query `q`, `open=1`, `market`, `day`, `aisle`, `sort`. Filtered URLs are noindex. Bare `/products` is indexable | `searchProducts`, `searchVendorsByName`, `listProductPhotos` |
 | `/find/[slug]` | live | Everyone | Fixed product page. `dynamicParams = false`. Index only if at least 5 vendors | `FIND_PAGES` in `src/data/find-pages.ts` (100 pages) |
 | `/vendors/[slug]` | live | Everyone | Stall: markets, menu, reviews, save, claim CTA. Thin pages (name and halls only) are noindex, follow | `getVendorBySlug` |
-| `/events` | live | Everyone | Month grid and this week. Query `m=YYYY-MM`, `d` | Markets and schedules |
+| `/events` | live | Everyone | Calendar. Month grid and this week. Query `m=YYYY-MM`, `d` | Markets and schedules |
 | `/feed` | live | Read: everyone. Write: signed-in | Posts and older reviews. Query `q`, `market`, `vendor`, `tag`, `sort`. Footer only, not header | `getFloorTape` |
 | `/blog`, `/blog/[slug]` | live | Everyone | Nine markdown files in `content/blog/`. Stale weekend guides stay generated and are noindex | `src/lib/blog.ts` |
 | `/about` | live | Everyone | Static | Constants |
@@ -544,7 +544,7 @@ Directory data path: live reads go through `published_*`. `scripts/import-toront
 | Feature | Status | Where |
 | --- | --- | --- |
 | Directory, market and vendor pages, day, tag, open today | live | `src/app/markets`, `src/app/vendors/[slug]` |
-| Events calendar | live | `src/app/events` |
+| Calendar | live | `src/app/events` |
 | Product search and find pages | live | `src/app/products`, `src/app/find` |
 | Feed and posts | live | `src/app/feed`, `src/app/actions/presence.ts` |
 | Older reviews table | legacy | Shown. Composer writes `posts` |

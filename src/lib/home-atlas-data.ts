@@ -21,7 +21,8 @@ import {
 } from "@/lib/find-paths";
 import { hallHours } from "@/lib/day-plan";
 import { listingMarkSrc } from "@/lib/format";
-import { LAUNCH_TZ } from "@/lib/launch";
+import { LAUNCH_CITY, LAUNCH_TZ } from "@/lib/launch";
+import { isSeasonAlias } from "@/lib/listing-siblings";
 import { catalogueAisles, liveFindPages } from "@/lib/product-catalogue";
 import {
   currentWeekSessions,
@@ -106,6 +107,8 @@ export type HomeAtlasMarketRow = {
 export type HomeAtlasNeighbourhoodCircuit = {
   label: string;
   q: string;
+  /** Toronto pockets from the curated list, or a municipality that has stalls. */
+  kind: "neighbourhood" | "city";
   marketCount: number;
   vendorCount: number;
   openCount: number;
@@ -736,14 +739,14 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
   const vendorSpotlights = vendorSpotlightsAll.slice(0, 48);
 
   const rowBySlug = new Map(allMarketRows.map((m) => [m.slug, m]));
-  const neighbourhoodCircuits: HomeAtlasNeighbourhoodCircuit[] = [];
 
-  for (const area of FIND_AREAS) {
-    const matching = area.slugs.flatMap((slug) => {
-      const hit = rowBySlug.get(slug);
-      return hit ? [hit] : [];
-    });
-    if (!matching.length) continue;
+  function circuitFor(
+    label: string,
+    q: string,
+    kind: HomeAtlasNeighbourhoodCircuit["kind"],
+    matching: HomeAtlasMarketRow[],
+  ): HomeAtlasNeighbourhoodCircuit | null {
+    if (!matching.length) return null;
     const totalVendors = matching.reduce((sum, m) => sum + m.vendorCount, 0);
     const openCount = matching.filter((m) => m.open).length;
     const areaSlugSet = new Set(matching.map((m) => m.slug));
@@ -757,19 +760,55 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
           slug: v.slug,
           logoUrl: v.logoUrl,
           specialty: v.items[0]?.name ?? v.primaryAisleLabel,
-          marketName: matchedMarket?.name ?? area.label,
+          marketName: matchedMarket?.name ?? label,
         };
       });
-    neighbourhoodCircuits.push({
-      label: area.label,
-      q: area.q,
+    const byStalls = [...matching].sort(
+      (a, b) => b.vendorCount - a.vendorCount || a.name.localeCompare(b.name),
+    );
+    return {
+      label,
+      q,
+      kind,
       marketCount: matching.length,
       vendorCount: totalVendors,
       openCount,
-      topMarkets: matching,
+      topMarkets: byStalls,
       topVendors: areaVendors,
-    });
+    };
   }
+
+  const byPlace = (a: HomeAtlasNeighbourhoodCircuit, b: HomeAtlasNeighbourhoodCircuit) =>
+    b.vendorCount - a.vendorCount || b.marketCount - a.marketCount || a.label.localeCompare(b.label);
+
+  const torontoCircuits = FIND_AREAS.flatMap((area) => {
+    const matching = area.slugs.flatMap((slug) => {
+      if (isSeasonAlias(slug)) return [];
+      const hit = rowBySlug.get(slug);
+      return hit && !isSeasonAlias(hit.slug) ? [hit] : [];
+    });
+    const circuit = circuitFor(area.label, area.q, "neighbourhood", matching);
+    return circuit ? [circuit] : [];
+  }).sort(byPlace);
+
+  const claimedSlugs = new Set(FIND_AREAS.flatMap((area) => area.slugs));
+  const rowsByCity = new Map<string, HomeAtlasMarketRow[]>();
+  for (const row of allMarketRows) {
+    if (claimedSlugs.has(row.slug) || isSeasonAlias(row.slug)) continue;
+    const city = row.city.trim();
+    if (!city || city.toLowerCase() === LAUNCH_CITY.toLowerCase()) continue;
+    const list = rowsByCity.get(city) ?? [];
+    list.push(row);
+    rowsByCity.set(city, list);
+  }
+  const cityCircuits = [...rowsByCity.entries()]
+    .flatMap(([city, rows]) => {
+      const circuit = circuitFor(city, city, "city", rows);
+      return circuit ? [circuit] : [];
+    })
+    .sort(byPlace);
+
+  const neighbourhoodCircuits = [...torontoCircuits, ...cityCircuits];
 
   const findPages = liveFindPages();
   const rawAisles = catalogueAisles(findPages);

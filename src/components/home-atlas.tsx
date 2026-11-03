@@ -7,6 +7,7 @@ import type {
   HomeAtlasAisleCard,
   HomeAtlasData,
   HomeAtlasMarketSlot,
+  HomeAtlasNeighbourhoodCircuit,
   HomeAtlasVendorSpotlight,
 } from "@/lib/home-atlas-data";
 import { AddressLink } from "@/components/address-link";
@@ -46,6 +47,8 @@ function formatCensus(n: number) {
 }
 
 const AISLE_GUIDE_CHIP_INITIAL = 6;
+const PLACE_CARD_INITIAL = 6;
+const PLACE_CARD_MARKETS = 4;
 
 function AisleProductGuides({ terms }: { terms: HomeAtlasAisleCard["sampleTerms"] }) {
   const [expanded, setExpanded] = useState(false);
@@ -79,6 +82,187 @@ function AisleProductGuides({ terms }: { terms: HomeAtlasAisleCard["sampleTerms"
           </button>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function NeighbourhoodCircuitCard({
+  circuit,
+  onShowStalls,
+  showStalls,
+}: {
+  circuit: HomeAtlasNeighbourhoodCircuit;
+  onShowStalls: (label: string) => void;
+  showStalls: boolean;
+}) {
+  const halls = circuit.topMarkets.slice(0, PLACE_CARD_MARKETS);
+  const moreHalls = circuit.topMarkets.length - halls.length;
+  return (
+    <div className="flex flex-col justify-between bg-card ring-1 ring-border">
+      <div>
+        <div className="flex items-center justify-between gap-2 border-b border-border bg-secondary/55 px-4 py-3">
+          <div className="flex items-center gap-2.5">
+            <StallEmblem
+              src={circuit.topMarkets[0]?.logo_url}
+              name={circuit.label}
+              kind="market"
+              size="sm"
+              tone="board"
+            />
+            <h3>
+              <Link
+                href={`/markets?area=${encodeURIComponent(circuit.q)}`}
+                className="hover:underline"
+              >
+                {circuit.label}
+              </Link>
+            </h3>
+          </div>
+          <span className="type-nums text-sm font-medium text-primary">
+            {circuit.vendorCount > 0
+              ? `${circuit.vendorCount} stalls`
+              : `${circuit.marketCount} ${circuit.marketCount === 1 ? "market" : "markets"}`}
+          </span>
+        </div>
+
+        <ul className="divide-y divide-border/70">
+          {halls.map((market) => (
+            <li key={market.id} className="px-4 py-3 hover:bg-secondary/35">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
+                <div className="flex min-w-0 items-start gap-2.5">
+                  <StallEmblem
+                    src={market.logo_url}
+                    name={market.name}
+                    kind="market"
+                    size="xs"
+                    className="mt-0.5"
+                  />
+                  <div className="min-w-0">
+                    <p>
+                      <Link
+                        href={`/markets/${market.slug}`}
+                        className="text-base font-medium hover:underline"
+                      >
+                        <VerifiedName slug={market.slug} name={market.name} />
+                      </Link>
+                      <ListingScore
+                        parens
+                        ratingAvg={market.rating_avg}
+                        reviewCount={market.review_count}
+                        className="ml-1.5 text-stamp"
+                      />
+                    </p>
+                    {market.open ? (
+                      <p className="mt-0.5">
+                        <NowLabel>Open</NowLabel>
+                      </p>
+                    ) : null}
+                    <SessionLines sessions={market.sessions} align="stretch" />
+                  </div>
+                </div>
+                <SaveButton kind="market" slug={market.slug} name={market.name} />
+              </div>
+            </li>
+          ))}
+        </ul>
+        {moreHalls > 0 ? (
+          <p className="border-t border-border/70 px-4 py-2.5 text-sm">
+            <Link
+              href={`/markets?area=${encodeURIComponent(circuit.q)}`}
+              className="font-medium text-primary hover:underline"
+            >
+              {moreHalls} more {moreHalls === 1 ? "market" : "markets"}
+            </Link>
+          </p>
+        ) : null}
+
+        {circuit.topVendors.length > 0 ? (
+          <div className="border-t border-dashed border-border bg-secondary/30 px-4 py-2.5">
+            <p className="text-sm font-medium text-foreground">Stalls here</p>
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {circuit.topVendors.slice(0, 3).map((v) => (
+                <Link
+                  key={v.slug}
+                  href={`/vendors/${v.slug}`}
+                  className="stall-chip-sm inline-flex items-center gap-1.5 bg-card py-1 pr-2.5 pl-1.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
+                >
+                  <StallEmblem src={v.logoUrl} name={v.name} kind="vendor" size="xs" />
+                  <span>{v.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div
+        className={cn(
+          "flex items-center gap-3 border-t border-border bg-secondary/25 px-4 py-2.5 text-sm",
+          showStalls ? "justify-between" : "justify-end",
+        )}
+      >
+        {showStalls ? (
+          <button
+            type="button"
+            onClick={() => onShowStalls(circuit.label)}
+            className="cursor-pointer font-medium text-stamp hover:underline"
+          >
+            Show {circuit.label} stalls above
+          </button>
+        ) : null}
+        <Link
+          href={`/markets?area=${encodeURIComponent(circuit.q)}`}
+          className="font-medium text-primary hover:underline"
+        >
+          Explore {circuit.label}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function PlaceCircuitGroup({
+  title,
+  circuits,
+  onShowStalls,
+  stallLabels,
+}: {
+  title: string;
+  circuits: HomeAtlasNeighbourhoodCircuit[];
+  onShowStalls: (label: string) => void;
+  stallLabels: Set<string>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  if (!circuits.length) return null;
+
+  const initialCount = Math.min(PLACE_CARD_INITIAL, circuits.length);
+  const visible = expanded ? circuits : circuits.slice(0, initialCount);
+  const hidden = circuits.length - initialCount;
+  const toggleClass =
+    "stall-chip-sm cursor-pointer bg-card px-3 py-1.5 text-sm font-medium text-primary ring-1 ring-border hover:bg-secondary";
+
+  return (
+    <div>
+      <h3 className="mb-3">{title}</h3>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {visible.map((circuit) => (
+          <NeighbourhoodCircuitCard
+            key={circuit.q}
+            circuit={circuit}
+            onShowStalls={onShowStalls}
+            showStalls={stallLabels.has(circuit.label.toLowerCase())}
+          />
+        ))}
+      </div>
+      {hidden > 0 ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((open) => !open)}
+          className={cn(toggleClass, "mt-4")}
+        >
+          {expanded ? "Show less" : `Show more (${hidden})`}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -875,7 +1059,18 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
     );
   }
 
-  const topDistrictFilters = data.neighbourhoodCircuits.slice(0, 6);
+  const torontoCircuits = data.neighbourhoodCircuits.filter(
+    (circuit) => circuit.kind === "neighbourhood",
+  );
+  const cityCircuits = data.neighbourhoodCircuits.filter((circuit) => circuit.kind === "city");
+  const topDistrictFilters = torontoCircuits.slice(0, 6);
+  const stallLabels = useMemo(() => {
+    const labels = new Set<string>();
+    for (const vendor of data.vendorSpotlights) {
+      for (const market of vendor.markets) labels.add(market.neighbourhood.toLowerCase());
+    }
+    return labels;
+  }, [data.vendorSpotlights]);
 
   return (
     <div className="bg-background text-foreground">
@@ -886,6 +1081,10 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
             <span className="inline-flex items-center gap-2 text-sm font-medium text-board">
               <MapleMark className="h-4 w-8 shrink-0 text-stamp shadow-[0_0_0_1px_rgba(0,0,0,0.18)]" />
               <span>Made by Canadians, for Canadians, to shop Canadian.</span>
+            </span>
+            <span className="text-sm text-muted-foreground">
+              Find products, vendors, and markets from all over Toronto, the GTA, and surrounding
+              areas.
             </span>
           </div>
 
@@ -1459,42 +1658,35 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
               <MarketMapLazy load="visible" className="h-56 w-full overflow-hidden" />
             </div>
 
-            {/* Neighbourhood Circuit Selector Strip */}
             <div className="border-b border-border bg-secondary/40 px-4 py-3">
-              <p className="type-kicker mb-2 text-muted-foreground">
-                Inspect a neighbourhood and its stalls:
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {data.neighbourhoodCircuits.slice(0, 7).map((circuit, idx) => {
-                  const selected = idx === selectedCircuitIndex;
-                  return (
-                    <button
-                      key={circuit.label}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCircuitIndex(idx);
-                        setVendorAreaFilter(circuit.label);
-                      }}
-                      className={cn(
-                        "stall-chip-sm inline-flex cursor-pointer items-baseline gap-1.5 px-3 py-1 text-sm font-medium transition-colors",
-                        selected
-                          ? "bg-board text-chalk"
-                          : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-                      )}
-                    >
-                      <span>{circuit.label}</span>
-                      <span
-                        className={cn(
-                          "type-nums text-sm",
-                          selected ? "text-chalk/80" : "text-muted-foreground",
-                        )}
-                      >
-                        {circuit.marketCount}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              <label className="flex min-w-0 items-center gap-3 text-sm font-medium">
+                <span className="shrink-0">Neighbourhood</span>
+                <select
+                  aria-label="Neighbourhood"
+                  className="h-9 min-w-0 flex-1 rounded-none border border-input bg-card px-2.5 text-sm font-medium"
+                  value={activeCircuit?.label ?? ""}
+                  onChange={(event) => syncAreaSelection(event.target.value)}
+                >
+                  {torontoCircuits.length ? (
+                    <optgroup label="Toronto">
+                      {torontoCircuits.map((circuit) => (
+                        <option key={circuit.q} value={circuit.label}>
+                          {circuit.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                  {cityCircuits.length ? (
+                    <optgroup label="Around Toronto">
+                      {cityCircuits.map((circuit) => (
+                        <option key={circuit.q} value={circuit.label}>
+                          {circuit.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                </select>
+              </label>
             </div>
 
             {/* Active Neighbourhood Circuit Hall List + Anchor Vendors (with Emblems) */}
@@ -1632,115 +1824,19 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
             </div>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {data.neighbourhoodCircuits.slice(0, 6).map((circuit) => (
-              <div
-                key={circuit.label}
-                className="flex flex-col justify-between bg-card ring-1 ring-border"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 border-b border-border bg-secondary/55 px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <StallEmblem
-                        src={circuit.topMarkets[0]?.logo_url}
-                        name={circuit.label}
-                        kind="market"
-                        size="sm"
-                        tone="board"
-                      />
-                      <h3>
-                        <Link
-                          href={`/markets?area=${encodeURIComponent(circuit.q)}`}
-                          className="hover:underline"
-                        >
-                          {circuit.label}
-                        </Link>
-                      </h3>
-                    </div>
-                    <span className="type-nums text-sm font-medium text-primary">
-                      {circuit.vendorCount > 0
-                        ? `${circuit.vendorCount} stalls`
-                        : `${circuit.marketCount} ${circuit.marketCount === 1 ? "market" : "markets"}`}
-                    </span>
-                  </div>
-
-                  <ul className="divide-y divide-border/70">
-                    {circuit.topMarkets.map((market) => (
-                      <li key={market.id} className="px-4 py-3 hover:bg-secondary/35">
-                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
-                          <div className="flex min-w-0 items-start gap-2.5">
-                            <StallEmblem
-                              src={market.logo_url}
-                              name={market.name}
-                              kind="market"
-                              size="xs"
-                              className="mt-0.5"
-                            />
-                            <div className="min-w-0">
-                              <p>
-                                <Link
-                                  href={`/markets/${market.slug}`}
-                                  className="text-base font-medium hover:underline"
-                                >
-                                  <VerifiedName slug={market.slug} name={market.name} />
-                                </Link>
-                                <ListingScore
-                                  parens
-                                  ratingAvg={market.rating_avg}
-                                  reviewCount={market.review_count}
-                                  className="ml-1.5 text-stamp"
-                                />
-                              </p>
-                              {market.open ? (
-                                <p className="mt-0.5">
-                                  <NowLabel>Open</NowLabel>
-                                </p>
-                              ) : null}
-                              <SessionLines sessions={market.sessions} align="stretch" />
-                            </div>
-                          </div>
-                          <SaveButton kind="market" slug={market.slug} name={market.name} />
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {circuit.topVendors.length > 0 ? (
-                    <div className="border-t border-dashed border-border bg-secondary/30 px-4 py-2.5">
-                      <p className="type-kicker text-muted-foreground">Featured stalls here:</p>
-                      <div className="mt-1.5 flex flex-wrap gap-1.5">
-                        {circuit.topVendors.slice(0, 3).map((v) => (
-                          <Link
-                            key={v.slug}
-                            href={`/vendors/${v.slug}`}
-                            className="stall-chip-sm inline-flex items-center gap-1.5 bg-card py-1 pr-2.5 pl-1.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
-                          >
-                            <StallEmblem src={v.logoUrl} name={v.name} kind="vendor" size="xs" />
-                            <span>{v.name}</span>
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="flex items-center justify-between border-t border-border bg-secondary/25 px-4 py-2.5 text-sm">
-                  <button
-                    type="button"
-                    onClick={() => syncAreaSelection(circuit.label)}
-                    className="cursor-pointer font-medium text-stamp hover:underline"
-                  >
-                    Show {circuit.label} stalls above
-                  </button>
-                  <Link
-                    href={`/markets?area=${encodeURIComponent(circuit.q)}`}
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Explore {circuit.label}
-                  </Link>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-col gap-8">
+            <PlaceCircuitGroup
+              title="Toronto"
+              circuits={torontoCircuits}
+              onShowStalls={syncAreaSelection}
+              stallLabels={stallLabels}
+            />
+            <PlaceCircuitGroup
+              title="Around Toronto"
+              circuits={cityCircuits}
+              onShowStalls={syncAreaSelection}
+              stallLabels={stallLabels}
+            />
           </div>
         </section>
 

@@ -9,7 +9,7 @@ import { upcomingByDay } from "@/lib/upcoming";
 import type { MarketSchedule } from "@/types/database";
 
 export const metadata: Metadata = pageMeta({
-  title: `${LAUNCH_CITY} market events`,
+  title: `${LAUNCH_CITY} market calendar`,
   path: "/events",
   description: "Click on a day, find your market, and start planning your trip.",
 });
@@ -36,7 +36,7 @@ export default async function EventsPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <h1>Events</h1>
+      <h1>Calendar</h1>
       <p className="type-lede mt-2 mb-8 max-w-2xl text-muted-foreground">
         Click on a day, find your market, and start planning your trip.
       </p>

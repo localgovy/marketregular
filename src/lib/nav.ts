@@ -1,6 +1,6 @@
 export const SITE_NAV = [
   { href: "/", label: "Home" },
-  { href: "/events", label: "Events" },
+  { href: "/events", label: "Calendar" },
   { href: "/markets", label: "Markets" },
   { href: "/products", label: "Products" },
   { href: "/blog", label: "Blog" },
