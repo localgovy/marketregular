@@ -53,20 +53,61 @@ function seasonBound(value: string | null) {
   return value && MONTH_DAY.test(value) ? value : null;
 }
 
-export function inSeason(now: Date, start: string | null, end: string | null, tz: string) {
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function dateFormatter(tz: string, kind: "ymd" | "clock") {
+  const key = `${kind}:${tz}`;
+  const cached = dateFormatters.get(key);
+  if (cached) return cached;
+  const formatter =
+    kind === "ymd"
+      ? new Intl.DateTimeFormat("en-CA", {
+          timeZone: tz,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        })
+      : new Intl.DateTimeFormat("en-CA", {
+          timeZone: tz,
+          weekday: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+          hourCycle: "h23",
+        });
+  dateFormatters.set(key, formatter);
+  return formatter;
+}
+
+function civilYmd(now: Date, tz: string) {
+  const parts = dateFormatter(tz, "ymd").formatToParts(now);
+  return {
+    year: Number(parts.find((part) => part.type === "year")?.value ?? 2026),
+    month: Number(parts.find((part) => part.type === "month")?.value ?? 1),
+    day: Number(parts.find((part) => part.type === "day")?.value ?? 1),
+  };
+}
+
+function pad2(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+/** Month-day at 16:00 UTC, `offset` days after a civil date. Matches `civilDateAtOffset`. */
+function monthDayFromCivil(year: number, month: number, day: number, offset: number) {
+  const when = new Date(Date.UTC(year, month - 1, day + offset, 16, 0, 0));
+  return `${pad2(when.getUTCMonth() + 1)}-${pad2(when.getUTCDate())}`;
+}
+
+function inSeasonMonthDay(md: string, start: string | null, end: string | null) {
   const from = seasonBound(start);
   const to = seasonBound(end);
   if (!from || !to) return true;
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const month = parts.find((p) => p.type === "month")?.value ?? "01";
-  const day = parts.find((p) => p.type === "day")?.value ?? "01";
-  const md = `${month}-${day}`;
   if (from <= to) return md >= from && md <= to;
   return md >= from || md <= to;
+}
+
+export function inSeason(now: Date, start: string | null, end: string | null, tz: string) {
+  const { month, day } = civilYmd(now, tz);
+  return inSeasonMonthDay(`${pad2(month)}-${pad2(day)}`, start, end);
 }
 
 /** Days from today to the next time this weekday comes around. 0 means today. */
@@ -113,26 +154,12 @@ export function currentWeekSessions(
 
 /** Noon-ish UTC for a civil date in `tz`, shifted by whole days from `now`. */
 export function civilDateAtOffset(now: Date, offset: number, tz: string) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const year = Number(parts.find((p) => p.type === "year")?.value ?? 2026);
-  const month = Number(parts.find((p) => p.type === "month")?.value ?? 1);
-  const day = Number(parts.find((p) => p.type === "day")?.value ?? 1);
+  const { year, month, day } = civilYmd(now, tz);
   return new Date(Date.UTC(year, month - 1, day + offset, 16, 0, 0));
 }
 
 export function zonedParts(now: Date, tz: string) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    weekday: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(now);
+  const parts = dateFormatter(tz, "clock").formatToParts(now);
   const weekdayName = parts.find((p) => p.type === "weekday")?.value ?? "Sun";
   const map: Record<string, number> = {
     Sun: 0,
@@ -333,15 +360,22 @@ export function nextOpenSlot(
   const tz = provinceTz(province);
   const { weekday, minutes } = zonedParts(now, tz);
   const horizon = opts?.horizonDays ?? NEXT_OPEN_HORIZON;
+  const civil = civilYmd(now, tz);
+  const byDay: ScheduleRow[][] = [[], [], [], [], [], [], []];
+  for (const row of schedules) {
+    const day = Number(row.weekday);
+    if (day >= 0 && day <= 6) byDay[day].push(row);
+  }
   for (let offset = 0; offset <= horizon; offset += 1) {
     const day = (weekday + offset) % 7;
-    const when = civilDateAtOffset(now, offset, tz);
+    const rows = byDay[day];
+    if (!rows.length) continue;
+    const md = opts?.ignoreSeason
+      ? ""
+      : monthDayFromCivil(civil.year, civil.month, civil.day, offset);
     let best: NextOpenSlot | null = null;
-    for (const row of schedules) {
-      if (Number(row.weekday) !== day) continue;
-      if (!opts?.ignoreSeason && !inSeason(when, row.season_start, row.season_end, tz)) {
-        continue;
-      }
+    for (const row of rows) {
+      if (!opts?.ignoreSeason && !inSeasonMonthDay(md, row.season_start, row.season_end)) continue;
       const opens = parseHm(row.opens_at);
       const closes = parseHm(row.closes_at);
       let waitMinutes: number;

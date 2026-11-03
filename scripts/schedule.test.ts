@@ -6,6 +6,7 @@ import {
   formatSchedule,
   formatSeasonRange,
   inSeason,
+  nextOpenSlot,
   orderWeekdays,
   sortScheduleRows,
 } from "../src/lib/schedule.ts";
@@ -135,6 +136,29 @@ test("current week sessions keep in-season days and skip the rest", () => {
       { day: "Sat", hours: "8 AM–2 PM" },
     ],
   );
+});
+
+test("next open slot waits until the same weekday is in season again", () => {
+  const mondayMorning = new Date("2026-11-02T15:00:00Z");
+  const slot = nextOpenSlot(
+    [row(5, "05-01", "10-31", "08:00")],
+    "ON",
+    mondayMorning,
+  );
+  assert.ok(slot);
+  assert.equal(slot.offset, 186);
+  assert.equal(slot.weekday, 5);
+  assert.equal(slot.opensAt, "08:00");
+  assert.equal(slot.closesAt, "14:00");
+  assert.equal(slot.waitMinutes, 186 * 24 * 60 - 10 * 60 + 8 * 60);
+});
+
+test("next open slot is zero while that session is underway", () => {
+  const fridayMorning = new Date("2026-10-23T14:00:00Z");
+  const slot = nextOpenSlot([row(5, "05-01", "10-31", "08:00")], "ON", fridayMorning);
+  assert.ok(slot);
+  assert.equal(slot.offset, 0);
+  assert.equal(slot.waitMinutes, 0);
 });
 
 function row(weekday: number, season_start: string | null, season_end: string | null, opens_at: string) {

@@ -51,15 +51,21 @@ export function sortDirectoryMarkets(
   }
   if (sort === "score") return list.sort(byScore);
   if (sort === "next") {
-    return list.sort((a, b) => {
-      const waitA =
-        nextOpenSlot(options.schedulesFor(a.id), a.province, now)?.waitMinutes ??
-        Number.POSITIVE_INFINITY;
-      const waitB =
-        nextOpenSlot(options.schedulesFor(b.id), b.province, now)?.waitMinutes ??
-        Number.POSITIVE_INFINITY;
-      return waitA - waitB || byName(a, b);
-    });
+    // One slot per hall. Calling this inside the comparator rebuilds a year of
+    // timezone dates on every comparison and holds the markets page past its limit.
+    const wait = new Map<string, number>();
+    for (const market of list) {
+      wait.set(
+        market.id,
+        nextOpenSlot(options.schedulesFor(market.id), market.province, now)?.waitMinutes ??
+          Number.POSITIVE_INFINITY,
+      );
+    }
+    return list.sort(
+      (a, b) =>
+        (wait.get(a.id) ?? Number.POSITIVE_INFINITY) -
+          (wait.get(b.id) ?? Number.POSITIVE_INFINITY) || byName(a, b),
+    );
   }
   return list.sort(byName);
 }

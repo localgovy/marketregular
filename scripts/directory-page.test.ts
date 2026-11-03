@@ -102,6 +102,37 @@ test("next-open sort uses the clock it is given, not the moment the schedules we
   assert.deepEqual(orderAt("2026-10-24T00:30:00.000Z"), ["saturday", "friday"]);
 });
 
+test("next-open sort stays cheap when halls are out of season", () => {
+  const markets = Array.from({ length: 150 }, (_, index) => ({
+    id: `m${index}`,
+    name: `Market ${String(index).padStart(3, "0")}`,
+    province: "ON",
+  })) as Market[];
+  const schedules = new Map<string, ScheduleRow[]>(
+    markets.map((market, index) => [
+      market.id,
+      [
+        {
+          weekday: index % 7,
+          opens_at: "08:00",
+          closes_at: "13:00",
+          season_start: "05-01",
+          season_end: "10-31",
+        },
+      ],
+    ]),
+  );
+  const started = Date.now();
+  const ordered = sortDirectoryMarkets(markets, "next", {
+    now: new Date("2026-11-02T15:00:00Z"),
+    schedulesFor: (id) => schedules.get(id) ?? [],
+  });
+  const elapsed = Date.now() - started;
+  assert.equal(ordered.length, 150);
+  assert.equal(ordered[0]?.id, "m6");
+  assert.ok(elapsed < 250, `next-open sort took ${elapsed}ms`);
+});
+
 test("next page reports more when unseen rows remain past the page", () => {
   const rows = ["new-1", "new-2", "new-3", "shown-1"].map((id) => ({ id }));
   const { page, done } = nextDirectoryPage(rows, new Set(["shown-1"]), 2);
