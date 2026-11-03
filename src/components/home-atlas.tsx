@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type {
@@ -17,6 +17,8 @@ import { ListingScore } from "@/components/listing-score";
 import {
   AsteriskMark,
   BlocksMark,
+  CaretLeftMark,
+  CaretRightMark,
   CrateMark,
   MapleMark,
   PlateMark,
@@ -49,6 +51,23 @@ function formatCensus(n: number) {
 const AISLE_GUIDE_CHIP_INITIAL = 6;
 const PLACE_CARD_INITIAL = 6;
 const PLACE_CARD_MARKETS = 4;
+const FILTER_PAGE_SIZE = 4;
+
+function pagedItems<T>(items: readonly T[], start: number, size: number): T[] {
+  if (items.length <= size) return [...items];
+  const length = items.length;
+  const origin = ((start % length) + length) % length;
+  return Array.from({ length: size }, (_, offset) => items[(origin + offset) % length]);
+}
+
+function pageIncludes(start: number, length: number, index: number, size: number) {
+  if (index < 0 || length <= size) return true;
+  const origin = ((start % length) + length) % length;
+  for (let offset = 0; offset < size; offset += 1) {
+    if ((origin + offset) % length === index) return true;
+  }
+  return false;
+}
 
 function AisleProductGuides({ terms }: { terms: HomeAtlasAisleCard["sampleTerms"] }) {
   const [expanded, setExpanded] = useState(false);
@@ -961,6 +980,72 @@ function MastheadLiveFloorStrip({
   );
 }
 
+function FilterCycleRow({
+  label,
+  allLabel,
+  allActive,
+  activeClass,
+  onAll,
+  onPrev,
+  onNext,
+  canPage,
+  children,
+}: {
+  label: string;
+  allLabel: string;
+  allActive: boolean;
+  activeClass: string;
+  onAll: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  canPage: boolean;
+  children: ReactNode;
+}) {
+  const idle = "bg-card text-foreground ring-1 ring-border hover:bg-secondary";
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="type-kicker w-32 shrink-0 font-medium whitespace-nowrap text-foreground">
+        {label}
+      </span>
+      <button
+        type="button"
+        onClick={onAll}
+        className={cn(
+          "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+          allActive ? activeClass : idle,
+        )}
+      >
+        {allLabel}
+      </button>
+      <button
+        type="button"
+        aria-label={`Previous ${label.toLowerCase()}`}
+        onClick={onPrev}
+        disabled={!canPage}
+        className={cn(
+          "stall-chip-sm inline-flex size-8 shrink-0 items-center justify-center bg-card text-foreground ring-1 ring-border",
+          canPage ? "cursor-pointer hover:bg-secondary" : "cursor-default opacity-40",
+        )}
+      >
+        <CaretLeftMark className="size-4" />
+      </button>
+      {children}
+      <button
+        type="button"
+        aria-label={`Next ${label.toLowerCase()}`}
+        onClick={onNext}
+        disabled={!canPage}
+        className={cn(
+          "stall-chip-sm inline-flex size-8 shrink-0 items-center justify-center bg-card text-foreground ring-1 ring-border",
+          canPage ? "cursor-pointer hover:bg-secondary" : "cursor-default opacity-40",
+        )}
+      >
+        <CaretRightMark className="size-4" />
+      </button>
+    </div>
+  );
+}
+
 export function HomeAtlas({ data }: { data: HomeAtlasData }) {
   const router = useRouter();
   const { coords, requestAsync } = useGeo();
@@ -972,6 +1057,8 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
   const [vendorAisleFilter, setVendorAisleFilter] = useState<string>("all");
   const [vendorAreaFilter, setVendorAreaFilter] = useState<string>("all");
   const [vendorWhenFilter, setVendorWhenFilter] = useState<"all" | "today" | "weekend">("all");
+  const [aisleWindowStart, setAisleWindowStart] = useState(0);
+  const [areaWindowStart, setAreaWindowStart] = useState(0);
 
   // Synchronized Craving Crate & Neighbourhood Atlas State
   const [selectedAisleId, setSelectedAisleId] = useState<string>(
@@ -1001,10 +1088,35 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
     [data.vendorSpotlights],
   );
 
+  function revealWindow(
+    index: number,
+    length: number,
+    setStart: (value: number | ((current: number) => number)) => void,
+  ) {
+    if (index < 0 || length <= FILTER_PAGE_SIZE) return;
+    setStart((current) =>
+      pageIncludes(current, length, index, FILTER_PAGE_SIZE) ? current : index,
+    );
+  }
+
+  function stepWindow(
+    delta: 1 | -1,
+    length: number,
+    setStart: (value: number | ((current: number) => number)) => void,
+  ) {
+    if (length <= FILTER_PAGE_SIZE) return;
+    setStart((current) => (current + delta + length) % length);
+  }
+
   function syncAisleSelection(aisleId: string) {
     setVendorAisleFilter(aisleId);
     if (aisleId !== "all" && data.aisles.some((a) => a.id === aisleId)) {
       setSelectedAisleId(aisleId);
+      revealWindow(
+        data.aisles.findIndex((aisle) => aisle.id === aisleId),
+        data.aisles.length,
+        setAisleWindowStart,
+      );
     }
   }
 
@@ -1014,7 +1126,10 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
       const idx = data.neighbourhoodCircuits.findIndex(
         (c) => c.label.toLowerCase() === areaLabel.toLowerCase(),
       );
-      if (idx >= 0) setSelectedCircuitIndex(idx);
+      if (idx >= 0) {
+        setSelectedCircuitIndex(idx);
+        revealWindow(idx, data.neighbourhoodCircuits.length, setAreaWindowStart);
+      }
     }
   }
 
@@ -1063,7 +1178,12 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
     (circuit) => circuit.kind === "neighbourhood",
   );
   const cityCircuits = data.neighbourhoodCircuits.filter((circuit) => circuit.kind === "city");
-  const topDistrictFilters = torontoCircuits.slice(0, 6);
+  const visibleAisles = pagedItems(data.aisles, aisleWindowStart, FILTER_PAGE_SIZE);
+  const visibleAreas = pagedItems(
+    data.neighbourhoodCircuits,
+    areaWindowStart,
+    FILTER_PAGE_SIZE,
+  );
   const stallLabels = useMemo(() => {
     const labels = new Set<string>();
     for (const vendor of data.vendorSpotlights) {
@@ -1309,116 +1429,101 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
             </div>
           </div>
 
-          {/* 3-Dimension Filter Bar: Pivot by Category, Neighbourhood, or Schedule Window */}
-          <div className="grid gap-3 border-b border-border bg-secondary/40 px-4 py-3.5 sm:px-5 lg:grid-cols-12 lg:items-center">
-            {/* 1. Filter by Product Category (with Visual Thumbnails) */}
-            <div className="lg:col-span-6">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="type-kicker mr-1 font-medium text-foreground">
-                  1. Category:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => syncAisleSelection("all")}
-                  className={cn(
-                    "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
-                    vendorAisleFilter === "all"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-                  )}
-                >
-                  All stalls
-                </button>
-                {data.aisles.slice(0, 6).map((aisle) => {
-                  const active = vendorAisleFilter === aisle.id;
-                  return (
-                    <button
-                      key={aisle.id}
-                      type="button"
-                      onClick={() => syncAisleSelection(active ? "all" : aisle.id)}
-                      className={cn(
-                        "stall-chip-sm inline-flex cursor-pointer items-center gap-1.5 py-1 pr-2.5 pl-1.5 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-                      )}
-                    >
-                      <ProductThumb src={aisle.photoUrl} size="xs" />
-                      <span>{aisle.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="grid gap-3 border-b border-border bg-secondary/40 px-4 py-3.5 sm:px-5">
+            <FilterCycleRow
+              label="Category"
+              allLabel="All stalls"
+              allActive={vendorAisleFilter === "all"}
+              activeClass="bg-primary text-primary-foreground"
+              onAll={() => syncAisleSelection("all")}
+              onPrev={() => stepWindow(-1, data.aisles.length, setAisleWindowStart)}
+              onNext={() => stepWindow(1, data.aisles.length, setAisleWindowStart)}
+              canPage={data.aisles.length > FILTER_PAGE_SIZE}
+            >
+              {visibleAisles.map((aisle) => {
+                const active = vendorAisleFilter === aisle.id;
+                return (
+                  <button
+                    key={aisle.id}
+                    type="button"
+                    onClick={() => syncAisleSelection(active ? "all" : aisle.id)}
+                    className={cn(
+                      "stall-chip-sm inline-flex cursor-pointer items-center gap-1.5 py-1 pr-2.5 pl-1.5 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+                    )}
+                  >
+                    <ProductThumb src={aisle.photoUrl} size="xs" />
+                    <span>{aisle.label}</span>
+                  </button>
+                );
+              })}
+            </FilterCycleRow>
 
-            {/* 2. Filter by Market Neighbourhood */}
-            <div className="lg:col-span-4">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="type-kicker mr-1 font-medium text-foreground">
-                  2. Neighbourhood:
-                </span>
-                <button
-                  type="button"
-                  onClick={() => syncAreaSelection("all")}
-                  className={cn(
-                    "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
-                    vendorAreaFilter === "all"
-                      ? "bg-board text-chalk"
-                      : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-                  )}
-                >
-                  All areas
-                </button>
-                {topDistrictFilters.slice(0, 4).map((circuit) => {
-                  const active =
-                    vendorAreaFilter.toLowerCase() === circuit.label.toLowerCase();
-                  return (
-                    <button
-                      key={circuit.label}
-                      type="button"
-                      onClick={() => syncAreaSelection(active ? "all" : circuit.label)}
-                      className={cn(
-                        "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-board text-chalk"
-                          : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-                      )}
-                    >
-                      {circuit.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <FilterCycleRow
+              label="Neighbourhood"
+              allLabel="All areas"
+              allActive={vendorAreaFilter === "all"}
+              activeClass="bg-board text-chalk"
+              onAll={() => syncAreaSelection("all")}
+              onPrev={() =>
+                stepWindow(-1, data.neighbourhoodCircuits.length, setAreaWindowStart)
+              }
+              onNext={() =>
+                stepWindow(1, data.neighbourhoodCircuits.length, setAreaWindowStart)
+              }
+              canPage={data.neighbourhoodCircuits.length > FILTER_PAGE_SIZE}
+            >
+              {visibleAreas.map((circuit) => {
+                const active =
+                  vendorAreaFilter.toLowerCase() === circuit.label.toLowerCase();
+                return (
+                  <button
+                    key={circuit.q}
+                    type="button"
+                    onClick={() => syncAreaSelection(active ? "all" : circuit.label)}
+                    className={cn(
+                      "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-board text-chalk"
+                        : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+                    )}
+                  >
+                    {circuit.label}
+                  </button>
+                );
+              })}
+            </FilterCycleRow>
 
-            {/* 3. Filter by Selling Window */}
-            <div className="lg:col-span-2 lg:justify-self-end">
-              <div className="inline-flex flex-wrap gap-1">
-                {(
-                  [
-                    { id: "all", label: "Any day" },
-                    { id: "today", label: "Today" },
-                    { id: "weekend", label: "Weekend" },
-                  ] as const
-                ).map((tab) => {
-                  const active = vendorWhenFilter === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setVendorWhenFilter(tab.id)}
-                      className={cn(
-                        "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
-                        active
-                          ? "bg-stamp text-receipt"
-                          : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
-                      )}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="type-kicker w-32 shrink-0 font-medium whitespace-nowrap text-foreground">
+                When
+              </span>
+              {(
+                [
+                  { id: "all", label: "Any day" },
+                  { id: "today", label: "Today" },
+                  { id: "weekend", label: "Weekend" },
+                ] as const
+              ).map((tab) => {
+                const active = vendorWhenFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setVendorWhenFilter(tab.id)}
+                    className={cn(
+                      "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+                      active
+                        ? "bg-stamp text-receipt"
+                        : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
