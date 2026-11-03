@@ -169,6 +169,12 @@ export function MarketsPreviewWorkbench({
                 {currentSpec.standaloneHref} →
               </Link>
               <Link
+                href="/preview/markets-floor"
+                className="text-sm font-medium text-chalk underline decoration-chalk/50 underline-offset-4 hover:decoration-chalk"
+              >
+                Markets floor mockup →
+              </Link>
+              <Link
                 href="/markets"
                 className="text-sm text-chalk/80 hover:text-chalk hover:underline"
               >

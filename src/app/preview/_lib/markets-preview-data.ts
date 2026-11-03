@@ -10,10 +10,13 @@ import {
   type PreviewNeighbourhoodCircuit,
   type PreviewVendorSpotlight,
 } from "@/app/preview/_lib/home-preview-data";
+import { FIND_PAGES } from "@/data/find-pages";
 import { listStalls } from "@/lib/data/catalog";
 import { EMPTY_PRODUCT_PHOTOS, listProductPhotos } from "@/lib/data/product-photos";
 import { sortTagsForDisplay, tagLabel } from "@/lib/find-paths";
 import { listingMarkSrc } from "@/lib/format";
+import { productsBrowsePath } from "@/lib/product-browse-href";
+import { createServiceClient } from "@/lib/supabase/admin";
 import { vendorProductTags } from "@/lib/vendor-tags";
 
 export type {
@@ -51,10 +54,21 @@ export type EnrichedMarketRow = PreviewMarketRow & {
   topStalls: EnrichedMarketStall[];
 };
 
+export type FloorRosterEntry = {
+  marketSlug: string;
+  vendorSlug: string;
+  name: string;
+  logoUrl: string | null;
+  ratingAvg: number | null;
+  reviewCount: number;
+  tags: string[];
+};
+
 export type MarketsPreviewData = HomePreviewData & {
   enrichedMarkets: EnrichedMarketRow[];
   saturdayOpenCount: number;
   saturdayStallCount: number;
+  roster: FloorRosterEntry[];
 };
 
 const TAG_TO_CATEGORY: Record<string, { id: string; label: string; item: string; href: string; price: number }> = {
@@ -180,10 +194,234 @@ export async function loadMarketsPreviewData(): Promise<MarketsPreviewData> {
     };
   });
 
+  const roster: FloorRosterEntry[] = [];
+  for (const stall of stalls) {
+    const market = rawMarketById.get(stall.market_id);
+    if (!market) continue;
+    const vendor = rawVendorById.get(stall.id);
+    roster.push({
+      marketSlug: market.slug,
+      vendorSlug: stall.slug,
+      name: stall.name,
+      logoUrl: listingMarkSrc(vendor?.logo_url),
+      ratingAvg: vendor?.rating_avg ?? null,
+      reviewCount: vendor?.review_count ?? 0,
+      tags: vendorProductTags(stall.name, vendor?.tags),
+    });
+  }
+
   return {
     ...base,
     enrichedMarkets,
     saturdayOpenCount,
     saturdayStallCount,
+    roster,
   };
+}
+
+export type VendorTaxonomySample = {
+  name: string;
+  href: string;
+  priceCents: number | null;
+  category: string;
+};
+
+/** Real menu categories and classifier facets for one published vendor. */
+export type VendorTaxonomy = {
+  categories: string[];
+  origins: string[];
+  diets: string[];
+  production: string[];
+  samples: VendorTaxonomySample[];
+};
+
+export type MarketsFloorData = MarketsPreviewData & {
+  taxonomyBySlug: Record<string, VendorTaxonomy>;
+};
+
+const TAXONOMY_PAGE = 1000;
+const TAXONOMY_PAGE_CAP = 20;
+
+type MenuTaxRow = {
+  id: string;
+  vendor_id: string;
+  name: string;
+  price_cents: number | null;
+  product_category: string | null;
+  product_slug: string | null;
+};
+
+type AssignRow = {
+  menu_id: string;
+  classifier_slug: string;
+};
+
+function sampleHref(productSlug: string | null, category: string) {
+  if (productSlug) {
+    const page = FIND_PAGES.find((entry) => entry.matchSlugs.includes(productSlug));
+    if (page) return `/find/${page.slug}`;
+  }
+  const byCategory = FIND_PAGES.find((entry) => entry.category === category);
+  if (byCategory) return `/find/${byCategory.slug}`;
+  return productsBrowsePath(category, "featured");
+}
+
+function rememberSample(
+  samples: VendorTaxonomySample[],
+  row: MenuTaxRow,
+) {
+  const category = row.product_category;
+  const name = row.name?.trim();
+  if (!category || category === "other" || !name) return;
+  if (samples.some((sample) => sample.name === name)) return;
+  const next: VendorTaxonomySample = {
+    name,
+    href: sampleHref(row.product_slug, category),
+    priceCents: row.price_cents,
+    category,
+  };
+  if (samples.length < 2) {
+    samples.push(next);
+    return;
+  }
+  if (next.priceCents == null) return;
+  const replace = samples.findIndex((sample) => sample.priceCents == null);
+  if (replace >= 0) samples[replace] = next;
+}
+
+async function readPublishedMenus(
+  supabase: NonNullable<ReturnType<typeof createServiceClient>>,
+) {
+  const rows: MenuTaxRow[] = [];
+  for (let page = 0; page < TAXONOMY_PAGE_CAP; page += 1) {
+    const from = page * TAXONOMY_PAGE;
+    const { data, error } = await supabase
+      .from("published_menus")
+      .select("id, vendor_id, name, price_cents, product_category, product_slug")
+      .order("id")
+      .range(from, from + TAXONOMY_PAGE - 1);
+    if (error || !data?.length) break;
+    rows.push(...(data as MenuTaxRow[]));
+    if (data.length < TAXONOMY_PAGE) break;
+  }
+  return rows;
+}
+
+async function readFacetAssignments(
+  supabase: NonNullable<ReturnType<typeof createServiceClient>>,
+) {
+  const rows: AssignRow[] = [];
+  for (let page = 0; page < TAXONOMY_PAGE_CAP; page += 1) {
+    const from = page * TAXONOMY_PAGE;
+    const { data, error } = await supabase
+      .from("vendor_menu_classifier_assignments")
+      .select("menu_id, classifier_slug")
+      .or(
+        "classifier_slug.like.origin.*,classifier_slug.like.diet.*,classifier_slug.like.production.*",
+      )
+      .order("menu_id")
+      .order("classifier_slug")
+      .range(from, from + TAXONOMY_PAGE - 1);
+    if (error || !data?.length) break;
+    rows.push(...(data as AssignRow[]));
+    if (data.length < TAXONOMY_PAGE) break;
+  }
+  return rows;
+}
+
+async function loadTaxonomyBySlug(): Promise<Record<string, VendorTaxonomy>> {
+  const supabase = createServiceClient();
+  if (!supabase) return {};
+  try {
+    const [{ data: vendorRows, error: vendorError }, menus, assignments] = await Promise.all([
+      supabase.from("vendors").select("id, slug").eq("status", "published"),
+      readPublishedMenus(supabase),
+      readFacetAssignments(supabase),
+    ]);
+    if (vendorError || !vendorRows) return {};
+
+    const slugById = new Map<string, string>();
+    for (const row of vendorRows as Array<{ id: string; slug: string }>) {
+      if (row.id && row.slug) slugById.set(row.id, row.slug);
+    }
+
+    const buckets = new Map<
+      string,
+      {
+        categories: Set<string>;
+        origins: Set<string>;
+        diets: Set<string>;
+        production: Set<string>;
+        samples: VendorTaxonomySample[];
+      }
+    >();
+
+    function bucketFor(slug: string) {
+      const existing = buckets.get(slug);
+      if (existing) return existing;
+      const created = {
+        categories: new Set<string>(),
+        origins: new Set<string>(),
+        diets: new Set<string>(),
+        production: new Set<string>(),
+        samples: [] as VendorTaxonomySample[],
+      };
+      buckets.set(slug, created);
+      return created;
+    }
+
+    const vendorByMenu = new Map<string, string>();
+    for (const row of menus) {
+      const slug = slugById.get(row.vendor_id);
+      if (!slug) continue;
+      vendorByMenu.set(row.id, slug);
+      const bucket = bucketFor(slug);
+      if (row.product_category && row.product_category !== "other") {
+        bucket.categories.add(row.product_category);
+      }
+      rememberSample(bucket.samples, row);
+    }
+
+    for (const row of assignments) {
+      const slug = vendorByMenu.get(row.menu_id);
+      const classifier = row.classifier_slug;
+      if (!slug || !classifier) continue;
+      const bucket = bucketFor(slug);
+      if (classifier.startsWith("origin.")) bucket.origins.add(classifier.slice("origin.".length));
+      else if (classifier.startsWith("diet.")) bucket.diets.add(classifier.slice("diet.".length));
+      else if (classifier.startsWith("production.")) {
+        bucket.production.add(classifier.slice("production.".length));
+      }
+    }
+
+    const taxonomy: Record<string, VendorTaxonomy> = {};
+    for (const [slug, bucket] of buckets) {
+      if (
+        bucket.categories.size === 0 &&
+        bucket.origins.size === 0 &&
+        bucket.diets.size === 0 &&
+        bucket.production.size === 0
+      ) {
+        continue;
+      }
+      taxonomy[slug] = {
+        categories: [...bucket.categories],
+        origins: [...bucket.origins],
+        diets: [...bucket.diets],
+        production: [...bucket.production],
+        samples: bucket.samples,
+      };
+    }
+    return taxonomy;
+  } catch {
+    return {};
+  }
+}
+
+export async function loadMarketsFloorData(): Promise<MarketsFloorData> {
+  const [preview, taxonomyBySlug] = await Promise.all([
+    loadMarketsPreviewData(),
+    loadTaxonomyBySlug(),
+  ]);
+  return { ...preview, taxonomyBySlug };
 }
