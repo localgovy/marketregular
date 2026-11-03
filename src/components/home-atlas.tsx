@@ -886,7 +886,11 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
               <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-3 max-w-2xl text-muted-foreground">
                 Find everything from the products you enjoy every weekend to the markets and
-                vendors that sell them, all in one place.
+                vendors that sell them,{" "}
+                <span className="font-medium text-foreground underline decoration-board decoration-[0.2em] underline-offset-[0.22em] [text-decoration-skip-ink:none]">
+                  all in one place
+                </span>
+                .
               </p>
             </div>
 
@@ -1019,16 +1023,11 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
         >
           {/* Section Header + Cohesive Stall Emblem Ribbon */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-board bg-secondary px-4 py-3.5 sm:px-5">
-            <div className="flex items-center gap-3">
-              <span className="stall-chip-sm flex size-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
-                <CrateMark className="size-5" />
+            <div className="flex items-center gap-2.5">
+              <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
+                <CrateMark className="size-4" />
               </span>
-              <div>
-                <p className="type-kicker text-muted-foreground">
-                  Vendors in priority · Paired with their signature products &amp; markets
-                </p>
-                <h2>Featured Stalls, Products &amp; Markets</h2>
-              </div>
+              <h2>Featured vendors, products &amp; markets</h2>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -1231,12 +1230,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                 <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
                   <TagMark className="size-4" />
                 </span>
-                <div>
-                  <p className="type-kicker text-muted-foreground">
-                    Browse {formatCensus(data.census.menus)} items &amp; the stalls that grow or bake them
-                  </p>
-                  <h2>Products &amp; Categories</h2>
-                </div>
+                <h2>Products &amp; categories</h2>
               </div>
               <Link
                 href="/products"
@@ -1434,12 +1428,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                 <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-board text-chalk">
                   <BlocksMark className="size-4" />
                 </span>
-                <div>
-                  <p className="type-kicker text-muted-foreground">
-                    {formatCensus(data.census.markets)} halls pinned across {LAUNCH_CITY}
-                  </p>
-                  <h2>Markets &amp; Neighbourhood Atlas</h2>
-                </div>
+                <h2>Markets &amp; neighbourhood atlas</h2>
               </div>
               <Link
                 href="/markets"
@@ -1606,17 +1595,12 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
           aria-label="Neighbourhood markets"
           className="mt-10 scroll-mt-24 border-t-2 border-board pt-8"
         >
-          <div className="flex flex-wrap items-end justify-between gap-3 pb-5">
-            <div className="flex items-start gap-3">
-              <span className="stall-chip-sm mt-0.5 flex size-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
-                <PlateMark className="size-5" />
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-5">
+            <div className="flex items-center gap-2.5">
+              <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
+                <PlateMark className="size-4" />
               </span>
-              <div>
-                <p className="type-kicker text-muted-foreground">
-                  Every major market district in {LAUNCH_CITY} — paired with its halls &amp; anchor stalls
-                </p>
-                <h2>Neighbourhood Markets</h2>
-              </div>
+              <h2>Neighbourhood markets</h2>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -1823,12 +1807,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                     <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-board text-chalk">
                       <AsteriskMark className="size-4" />
                     </span>
-                    <div>
-                      <p className="type-kicker text-muted-foreground">
-                        Live from the group chat at the stalls
-                      </p>
-                      <h3>Recent shopper notes &amp; finds</h3>
-                    </div>
+                    <h3>Recent shopper notes &amp; finds</h3>
                   </div>
                   <Link href="/feed" className="text-sm font-medium text-primary hover:underline">
                     View all posts
@@ -1863,10 +1842,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                     <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
                       <WeekMark className="size-4" />
                     </span>
-                    <div>
-                      <p className="type-kicker text-muted-foreground">Next on the calendar</p>
-                      <h2 className="type-column">Upcoming sessions</h2>
-                    </div>
+                    <h2 className="type-column">Upcoming sessions</h2>
                   </div>
                   <Link href="/events" className="text-sm font-medium text-primary hover:underline">
                     Calendar
