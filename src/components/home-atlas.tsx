@@ -1768,7 +1768,7 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
                 {/* Secondary 4-Card Aisle Strip */}
                 <div className="mt-4 border-t border-border pt-3.5">
                   <p className="type-kicker mb-2 text-muted-foreground">
-                    More crates on the market floor
+                    More product categories:
                   </p>
                   <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {data.aisles
