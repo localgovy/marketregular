@@ -3,6 +3,7 @@ import { cache } from "react";
 import { isSupabaseConfigured, provinceTz } from "@/lib/constants";
 import {
   DIRECTORY_CACHE_BUDGET,
+  DIRECTORY_DATA_REVALIDATE_SECONDS,
   DIRECTORY_FETCH_CAP,
   DIRECTORY_REVALIDATE_SECONDS,
   DIRECTORY_TAG,
@@ -325,7 +326,8 @@ function marketFromStall(row: StallRow) {
  * Each list is split into ranges under DIRECTORY_CACHE_BUDGET, still tagged `directory`.
  * A range that does not fit is not stored; the halves are cached instead.
  */
-const DIRECTORY_CACHE = { revalidate: DIRECTORY_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] };
+const DIRECTORY_CACHE = { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] };
+const DIRECTORY_VIEW_CACHE = { revalidate: DIRECTORY_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] };
 const DIRECTORY_SAMPLE_ROWS = 50;
 
 function requirePublicDb() {
@@ -425,13 +427,6 @@ function publishedDirectoryRows<T>(options: {
       const supabase = requirePublicDb();
       const rows = await options.fetchRange(supabase, from, to);
       const result = budgetRangeResult(rows, from, to);
-      if (!result.over) {
-        console.info("directory cache store", options.name, {
-          from,
-          to,
-          bytes: serializedBytes(rows),
-        });
-      }
       return result;
     },
     [`published-directory-${options.name}-range-v3`],
@@ -551,8 +546,6 @@ const loadCachedMenuPart = unstable_cache(
     if (bytes > DIRECTORY_CACHE_BUDGET) {
       console.warn("directory cache window over budget", { label: "menu-ids", part, bytes });
       if (chunk.length > 1) throw new Error("directory cache menu ids exceeded budget");
-    } else {
-      console.info("directory cache store", "menu-ids", { part, bytes });
     }
     return chunk;
   },
@@ -1132,20 +1125,15 @@ async function buildBareMarketsDirectory(): Promise<BareMarketsDirectory> {
 
 const loadCachedBareMarketsDirectory = unstable_cache(
   buildBareMarketsDirectory,
-  ["markets-page-bare-v4"],
-  DIRECTORY_CACHE,
+  ["markets-page-bare-v5"],
+  DIRECTORY_VIEW_CACHE,
 );
 
 export async function getBareMarketsDirectory(): Promise<BareMarketsDirectory> {
   if (!publicDb()) return buildBareMarketsDirectory();
-  const cached = await loadCachedBareMarketsDirectory();
-  const age = Date.now() - Date.parse(cached.sortedAt);
-  // The data cache can hand back a list ranked before today's sessions closed.
-  // Rebuild against the current clock instead of labeling that order as now.
-  if (Number.isFinite(age) && age >= 0 && age <= DIRECTORY_REVALIDATE_SECONDS * 1000) {
-    return cached;
-  }
-  return buildBareMarketsDirectory();
+  // Trust the cache. Rebuilding here skipped the cache and ran the full
+  // directory on every request once the window elapsed.
+  return loadCachedBareMarketsDirectory();
 }
 
 const EMPTY_CONTACT: ListingContactFields = { phone: null, email: null };

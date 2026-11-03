@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import {
   getDirectoryCensus,
   listMarkets,
@@ -20,6 +21,7 @@ import {
   type FindVendor,
 } from "@/lib/data/product-search";
 import { FIND_CATEGORIES, type FindPage } from "@/data/find-pages";
+import { DIRECTORY_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
 import { weekdayInToronto } from "@/lib/find-paths";
 import { listingMarkSrc } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";
@@ -210,7 +212,7 @@ const TAG_TO_AISLE_PREVIEW: Record<
   },
 };
 
-export async function loadProductsHubContext(activeAisle: string | null) {
+async function buildProductsHubContext(activeAisle: string | null) {
   const [markets, vendors, stalls, schedules, photos, census] = await Promise.all([
     listMarkets(),
     listVendors(),
@@ -389,6 +391,17 @@ export async function loadProductsHubContext(activeAisle: string | null) {
     stallsByAisle,
     featuredStalls: allPreviews.slice(0, 6),
   };
+}
+
+const loadCachedProductsHub = unstable_cache(
+  async (activeAisle: string) => buildProductsHubContext(activeAisle || null),
+  ["products-hub-v1"],
+  { revalidate: DIRECTORY_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] },
+);
+
+/** Aisle shells are shared. Search queries must not rebuild this on every hit. */
+export async function loadProductsHubContext(activeAisle: string | null) {
+  return loadCachedProductsHub(activeAisle ?? "");
 }
 
 export async function loadFindProductAtlasData(

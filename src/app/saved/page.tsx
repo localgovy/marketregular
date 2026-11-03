@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { SavedList } from "@/components/saved-rail";
 import { listBlogPosts } from "@/lib/blog";
 import { readMySaves } from "@/lib/data/account";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
+import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 import { EMPTY_SAVES } from "@/lib/saves";
 import { buttonVariants } from "@/components/ui/button";
+
+export const maxDuration = 60;
 
 export const metadata: Metadata = pageMeta({
   title: "Saved markets, vendors, products, and notes",
@@ -18,10 +22,12 @@ export const metadata: Metadata = pageMeta({
 
 export default async function SavedPage() {
   const notes = listBlogPosts();
-  const [markets, vendors, profile] = await Promise.all([
+  const jar = await cookies();
+  const authed = jar.getAll().some((cookie) => cookieLooksLikeSupabaseAuth(cookie.name));
+  const profile = authed ? await getCurrentProfile() : null;
+  const [markets, vendors] = await Promise.all([
     listMarkets(),
-    listVendors(),
-    getCurrentProfile(),
+    profile ? listVendors() : Promise.resolve([]),
   ]);
   const loaded = profile ? await readMySaves() : { saves: EMPTY_SAVES, failed: false };
   const saves = loaded.saves;

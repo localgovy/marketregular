@@ -10,6 +10,7 @@ import { loadFindProductAtlasData } from "@/lib/products-atlas-data";
 import { itemListJsonLd, pageMeta } from "@/lib/seo";
 
 export const revalidate = 3600;
+export const maxDuration = 60;
 export const dynamic = "force-static";
 export const dynamicParams = false;
 

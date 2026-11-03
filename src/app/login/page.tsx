@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { BackButton } from "@/components/back-button";
 import { LoginForm } from "@/components/login-form";
 import { safePath } from "@/lib/auth-redirect";
@@ -10,10 +11,13 @@ import {
   onboardingHref,
   skipsShopperOnboarding,
 } from "@/lib/onboarding";
+import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+
+export const maxDuration = 30;
 
 export const metadata: Metadata = pageMeta({
   title: "Sign in",
@@ -27,19 +31,23 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
-  const [{ next: raw, error: oauthError }, profile, session] = await Promise.all([
-    searchParams,
-    getCurrentProfile(),
-    createAuthedServerClient(),
-  ]);
+  const { next: raw, error: oauthError } = await searchParams;
   const next = safePath(raw);
-  if (profile) {
-    const skip =
-      isVendorPortalPath(next) ||
-      isMarketPortalPath(next) ||
-      isStallCheckoutPath(next) ||
-      (session.supabase ? await skipsShopperOnboarding(session.supabase, profile) : false);
-    redirect(skip ? next : onboardingHref(next));
+  const jar = await cookies();
+  const authed = jar.getAll().some((cookie) => cookieLooksLikeSupabaseAuth(cookie.name));
+  if (authed) {
+    const [profile, session] = await Promise.all([
+      getCurrentProfile(),
+      createAuthedServerClient(),
+    ]);
+    if (profile) {
+      const skip =
+        isVendorPortalPath(next) ||
+        isMarketPortalPath(next) ||
+        isStallCheckoutPath(next) ||
+        (session.supabase ? await skipsShopperOnboarding(session.supabase, profile) : false);
+      redirect(skip ? next : onboardingHref(next));
+    }
   }
 
   return (

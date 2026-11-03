@@ -20,6 +20,7 @@ export const ROBOTS_DISALLOW = [
   ...privateRoot("/onboarding"),
   ...privateRoot("/saved"),
   ...privateRoot("/kept"),
+  ...privateRoot("/preview"),
 ] as const;
 
 function escapeRegex(value: string) {

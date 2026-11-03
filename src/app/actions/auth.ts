@@ -129,6 +129,13 @@ async function clearPortalIntent(userId: string) {
   if (error) console.error("auth.portalSignup", error.message);
 }
 
+/** Account pages only. The public shell reads the session in the browser. */
+function revalidateSignedInPages() {
+  revalidatePath("/account");
+  revalidatePath("/saved");
+  revalidatePath("/onboarding");
+}
+
 async function rememberAuthNext(next: unknown) {
   const path = safePath(next);
   const jar = await cookies();
@@ -153,7 +160,7 @@ export async function signInWithPassword(formData: FormData) {
   if (error) return { error: signInPublicError(error) };
   const jar = await cookies();
   jar.set(PASSWORD_RECOVERY_COOKIE, "", passwordRecoveryCookie(0));
-  revalidatePath("/", "layout");
+  revalidateSignedInPages();
   redirect(next);
 }
 
@@ -181,7 +188,7 @@ export async function signUpWithPassword(formData: FormData) {
   if (data.session) {
     const jar = await cookies();
     jar.set(PASSWORD_RECOVERY_COOKIE, "", passwordRecoveryCookie(0));
-    revalidatePath("/", "layout");
+    revalidateSignedInPages();
     redirect(next);
   }
   return { error: null, message: "Check your email to confirm your account." };
@@ -237,7 +244,7 @@ export async function signUpForPortal(formData: FormData) {
     if (filed.error) return { error: filed.error };
     const jar = await cookies();
     jar.set(PASSWORD_RECOVERY_COOKIE, "", passwordRecoveryCookie(0));
-    revalidatePath("/", "layout");
+    revalidateSignedInPages();
     redirect(next);
   }
   if (data.user) await rememberPortalIntent(data.user, kind, requestId, organization);
@@ -276,7 +283,7 @@ export async function verifyEmailOtp(formData: FormData) {
         : "/login?error=session";
     redirect(dest);
   }
-  revalidatePath("/", "layout");
+  revalidateSignedInPages();
   if (type === "recovery") {
     const userId = data.user?.id;
     if (userId) {

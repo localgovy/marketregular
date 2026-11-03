@@ -1,7 +1,17 @@
 /** Data-cache tag for the published markets, vendors, stalls, schedules, and menu ids. */
 export const DIRECTORY_TAG = "directory";
 
-/** Shared lifetime for directory snapshots, including filtered first pages. */
+/**
+ * Published rows change on an edit, which drops this tag.
+ * An hourly lifetime keeps a quiet day from rewriting the same rows.
+ */
+export const DIRECTORY_DATA_REVALIDATE_SECONDS = 60 * 60;
+
+/**
+ * Clock-baked pages ("open now", today's sort). Short on purpose.
+ * The render has to finish well inside this window. If it runs longer,
+ * the next request starts another one and the function never goes idle.
+ */
 export const DIRECTORY_REVALIDATE_SECONDS = 120;
 
 /**

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { after } from "next/server";
 import Link from "next/link";
 import { BrowseLinks } from "@/components/browse-links";
 import { JsonLd } from "@/components/json-ld";
 import { MarketsBrowser } from "@/components/markets-browser";
 import { getBareMarketsDirectory, getDirectoryCensus, listMarkets, searchDirectory } from "@/lib/data/catalog";
 import { directoryInitialProps, filtersFromSearch, type DirectoryView } from "@/lib/directory-page";
-import { getDirectoryView, warmChipDirectoryViews } from "@/lib/directory-view";
+import { getDirectoryView } from "@/lib/directory-view";
 import {
   boundedDirectoryKey,
   marketsSearchFromQuery,
@@ -45,6 +44,9 @@ function isBareMarketsVisit(params: {
  * Canonical is always bare `/markets`, so every filter combination consolidates here
  * instead of competing. Day and category intent gets its own indexable pages.
  */
+/** Cold directory reads can be slow. Past this, kill the function instead of holding it. */
+export const maxDuration = 60;
+
 export async function generateMetadata(): Promise<Metadata> {
   const census = await getDirectoryCensus();
   return pageMeta({
@@ -81,7 +83,6 @@ export default async function MarketsPage({
   let places;
   if (bare) {
     const page = await getBareMarketsDirectory();
-    after(() => warmChipDirectoryViews());
     view = { sortedAt: page.sortedAt, ...page.directory };
     places = page.places;
   } else if (boundedDirectoryKey(search)) {

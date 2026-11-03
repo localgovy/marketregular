@@ -12,6 +12,8 @@ export const metadata: Metadata = pageMeta({
 });
 
 export const revalidate = 120;
+/** Cold menu sample is hourly. Past two minutes, stop holding the function open. */
+export const maxDuration = 120;
 
 export default async function HomePage() {
   const data = await loadHomeAtlasData();

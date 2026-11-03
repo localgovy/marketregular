@@ -1,5 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
+import { DIRECTORY_DATA_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
 import {
   getDirectoryCensus,
   getFloorTape,
@@ -386,7 +387,8 @@ type CachedVendorMenuEntry = {
 
 /**
  * Cached server-side lookup of sample vendor menu items across curated find pages.
- * Revalidates every 120s so homepage requests never re-run 24 find queries per hit.
+ * Menus change on an edit, which drops the directory tag. The homepage
+ * itself still refreshes on its own clock so "open now" stays current.
  */
 const loadCachedVendorMenuSample = unstable_cache(
   async (): Promise<Record<string, CachedVendorMenuEntry>> => {
@@ -445,8 +447,8 @@ const loadCachedVendorMenuSample = unstable_cache(
     }
     return out;
   },
-  ["home-atlas-vendor-menu-sample-v2"],
-  { revalidate: 120 },
+  ["home-atlas-vendor-menu-sample-v3"],
+  { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] },
 );
 
 export async function loadHomeAtlasData(): Promise<HomeAtlasData> {

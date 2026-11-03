@@ -1,4 +1,5 @@
 import { listingRedirectDestination } from "@/data/listing-redirects";
+import { isAbusiveCrawler } from "@/lib/abusive-crawler";
 import { parseListingPath } from "@/lib/listing-alias-lookup";
 import { updateSession } from "@/lib/supabase/middleware";
 import { NextResponse, type NextRequest } from "next/server";
@@ -21,6 +22,13 @@ function templatedParams(searchParams: URLSearchParams) {
 }
 
 export function proxy(request: NextRequest) {
+  if (isAbusiveCrawler(request.headers.get("user-agent"))) {
+    return new NextResponse("Forbidden", {
+      status: 403,
+      headers: { "cache-control": "no-store" },
+    });
+  }
+
   const { pathname, searchParams } = request.nextUrl;
 
   if (request.method === "GET" || request.method === "HEAD") {

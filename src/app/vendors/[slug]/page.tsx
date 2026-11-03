@@ -14,6 +14,7 @@ import { buildVendorAtlasData } from "@/lib/vendor-atlas-data";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta, vendorJsonLd } from "@/lib/seo";
 
 export const revalidate = 3600;
+export const maxDuration = 60;
 // A dynamic segment stays uncached until this is set. The hour window is revalidate.
 export const dynamic = "force-static";
 // Unknown slugs 404 in the layout, the same way a missing post does. On-demand

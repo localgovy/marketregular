@@ -21,6 +21,9 @@ import { torontoWeekday } from "@/lib/product-sort";
 import { loadProductsHubContext } from "@/lib/products-atlas-data";
 import { pageMeta } from "@/lib/seo";
 
+/** Search stays dynamic. The hub behind it is cached, and this caps a runaway render. */
+export const maxDuration = 60;
+
 function textParam(value: string | string[] | undefined) {
   const raw = Array.isArray(value) ? value[0] : value;
   return raw?.trim() ?? "";
