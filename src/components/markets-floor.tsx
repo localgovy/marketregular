@@ -44,12 +44,21 @@ import {
   type FloorQuery,
 } from "@/lib/markets-floor-query";
 import { pushAppUrl, replaceAppUrl } from "@/lib/native-history";
+import {
+  bestFieldRank,
+  bigramCandidates,
+  buildBigramIndex,
+  fieldRank,
+  searchBlob,
+  type BigramIndex,
+} from "@/lib/markets-floor-search";
 import { productsBrowseHref } from "@/lib/product-browse-href";
 import { cn } from "@/lib/utils";
 
 type FacetId = "sell" | "cuisine" | "diet" | "made";
 type FloorItem = {
   name: string;
+  nameLower: string;
   href: string;
   priceCents: number | null;
 };
@@ -67,12 +76,28 @@ type FloorStall = {
   tags: string[];
   categoryLabel: string;
   items: FloorItem[];
+  nameLower: string;
+  categoryFields: string[];
+  facetFields: string[];
+  itemFields: string[];
   blob: string;
+  searchId: number;
+};
+
+type DirectoryIndex = {
+  markets: IndexedMarket[];
+  stallAt: Array<{ marketIndex: number; stallIndex: number }>;
+  stallBigrams: BigramIndex;
+  marketBigrams: BigramIndex;
 };
 
 type IndexedMarket = {
   market: FloorMarket;
   blob: string;
+  placeBlob: string;
+  nameLower: string;
+  neighbourhoodLower: string;
+  cityLower: string;
   stalls: FloorStall[];
 };
 
@@ -267,6 +292,7 @@ function toStall(entry: FloorRosterEntry, tax: FloorTaxonomy | undefined): Floor
   ]);
   const items: FloorItem[] = (tax?.samples ?? []).slice(0, 2).map((sample) => ({
     name: sample.name,
+    nameLower: sample.name.toLowerCase(),
     href: sample.href,
     priceCents: sample.priceCents,
   }));
@@ -275,9 +301,10 @@ function toStall(entry: FloorRosterEntry, tax: FloorTaxonomy | undefined): Floor
     : tagSpecialty
       ? tagLabel(tagSpecialty)
       : "Vendor";
-  const blob = [entry.name, label, ...aisleIds.map(categoryLabel), ...origins, ...diets, ...production, ...items.map((item) => item.name)]
-    .join(" ")
-    .toLowerCase();
+  const nameLower = entry.name.toLowerCase();
+  const categoryFields = [label, ...aisleIds.map((id) => categoryLabel(id))].map((value) => value.toLowerCase());
+  const facetFields = [...origins, ...diets, ...production].map((tag) => tagLabel(tag).toLowerCase());
+  const itemFields = items.map((item) => item.nameLower);
   return {
     slug: entry.vendorSlug,
     name: entry.name,
@@ -291,7 +318,33 @@ function toStall(entry: FloorRosterEntry, tax: FloorTaxonomy | undefined): Floor
     tags: entry.tags,
     categoryLabel: label,
     items,
-    blob,
+    nameLower,
+    categoryFields,
+    facetFields,
+    itemFields,
+    blob: searchBlob([nameLower, ...categoryFields, ...facetFields, ...itemFields]),
+    searchId: 0,
+  };
+}
+
+function buildDirectory(data: MarketsFloorView): DirectoryIndex {
+  const markets = buildIndex(data);
+  const docs: string[][] = [];
+  const stallAt: Array<{ marketIndex: number; stallIndex: number }> = [];
+  markets.forEach((entry, marketIndex) => {
+    entry.stalls.forEach((stall, stallIndex) => {
+      stall.searchId = docs.length;
+      stallAt.push({ marketIndex, stallIndex });
+      docs.push([stall.nameLower, ...stall.categoryFields, ...stall.facetFields, ...stall.itemFields]);
+    });
+  });
+  return {
+    markets,
+    stallAt,
+    stallBigrams: buildBigramIndex(docs),
+    marketBigrams: buildBigramIndex(
+      markets.map((entry) => [entry.nameLower, entry.neighbourhoodLower, entry.cityLower]),
+    ),
   };
 }
 
@@ -312,13 +365,20 @@ function buildIndex(data: MarketsFloorView): IndexedMarket[] {
       (a, b) => b.reviewCount - a.reviewCount || a.name.localeCompare(b.name),
     );
   }
-  return data.enrichedMarkets.map((market) => ({
-    market,
-    blob: [market.name, market.neighbourhood, market.city, market.address, ...market.tags]
-      .join(" ")
-      .toLowerCase(),
-    stalls: byMarket.get(market.slug) ?? [],
-  }));
+  return data.enrichedMarkets.map((market) => {
+    const nameLower = market.name.toLowerCase();
+    const neighbourhoodLower = market.neighbourhood.toLowerCase();
+    const cityLower = market.city.toLowerCase();
+    return {
+      market,
+      nameLower,
+      neighbourhoodLower,
+      cityLower,
+      placeBlob: searchBlob([nameLower, neighbourhoodLower, cityLower]),
+      blob: [nameLower, neighbourhoodLower, cityLower, market.address, ...market.tags].join(" ").toLowerCase(),
+      stalls: byMarket.get(market.slug) ?? [],
+    };
+  });
 }
 
 function hasSetup(market: FloorMarket, setup: string) {
@@ -471,18 +531,20 @@ function visibleStalls(
   entry: IndexedMarket,
   filters: FloorFilters,
   mode: "browse" | "strict" = "browse",
+  proven: Set<number> | null = null,
 ) {
   const needle = filters.q.trim().toLowerCase();
   const marketHit = mode === "browse" && (!needle || entry.blob.includes(needle));
   return entry.stalls.filter((stall) => {
     if (!stallMatches(stall, filters)) return false;
-    if (needle && !marketHit && !stallMatchesQuery(stall, needle)) return false;
-    return true;
+    if (!needle || marketHit) return true;
+    if (proven) return proven.has(stall.searchId);
+    return stallMatchesQuery(stall, needle);
   });
 }
 
 function stallMatchesQuery(stall: FloorStall, needle: string) {
-  return vendorRank(stall, needle) != null;
+  return stall.blob.includes(needle);
 }
 
 function marketMatches(
@@ -541,63 +603,43 @@ function focusedItems(stall: FloorStall, focus: string | null) {
   );
 }
 
-function textRank(value: string, needle: string) {
-  const text = value.toLowerCase();
-  if (text === needle) return 0;
-  if (text.startsWith(needle)) return 1;
-  if (text.includes(needle)) return 2;
-  return null;
-}
-
-function bestRank(values: string[], needle: string) {
-  let best: number | null = null;
-  for (const value of values) {
-    const rank = textRank(value, needle);
-    if (rank == null) continue;
-    if (best == null || rank < best) best = rank;
-  }
-  return best;
-}
-
 function vendorRank(stall: FloorStall, needle: string) {
-  const name = textRank(stall.name, needle);
+  const name = fieldRank(stall.nameLower, needle);
   if (name != null) return name;
-  const category = bestRank(
-    [stall.categoryLabel, ...stall.aisleIds.map((id) => categoryLabel(id))],
-    needle,
-  );
+  const category = bestFieldRank(stall.categoryFields, needle);
   if (category != null) return 3 + category;
-  const facet = bestRank(
-    [
-      ...stall.origins.map((tag) => tagLabel(tag)),
-      ...stall.diets.map((tag) => tagLabel(tag)),
-      ...stall.production.map((tag) => tagLabel(tag)),
-    ],
-    needle,
-  );
+  const facet = bestFieldRank(stall.facetFields, needle);
   if (facet != null) return 6 + facet;
-  const item = bestRank(
-    stall.items.map((entry) => entry.name),
-    needle,
-  );
+  const item = bestFieldRank(stall.itemFields, needle);
   if (item != null) return 9 + item;
   return null;
 }
 
-function marketTextRank(market: FloorMarket, needle: string) {
-  const name = textRank(market.name, needle);
+function marketTextRank(entry: IndexedMarket, needle: string) {
+  const name = fieldRank(entry.nameLower, needle);
   if (name != null) return name;
-  const place = textRank(market.neighbourhood, needle);
+  const place = fieldRank(entry.neighbourhoodLower, needle);
   if (place != null) return 3 + place;
-  const city = textRank(market.city, needle);
+  const city = fieldRank(entry.cityLower, needle);
   if (city != null) return 6 + city;
   return null;
 }
 
+const GUIDE_TERMS = FIND_PAGES.map((page) => ({
+  term: page.term,
+  slug: page.slug,
+  lower: page.term.toLowerCase(),
+}));
+const guideBigrams = buildBigramIndex(GUIDE_TERMS.map((page) => [page.lower]));
+
 function matchingGuides(needle: string) {
   const guides: SearchGuide[] = [];
-  for (const page of FIND_PAGES) {
-    const rank = textRank(page.term, needle);
+  const ids = bigramCandidates(guideBigrams, needle);
+  if (!ids) return guides;
+  for (const id of ids) {
+    const page = GUIDE_TERMS[id];
+    if (!page) continue;
+    const rank = fieldRank(page.lower, needle);
     if (rank == null) continue;
     guides.push({ term: page.term, slug: page.slug, rank });
   }
@@ -621,13 +663,28 @@ function marketWhen(
   return { hours, open: slot ? slot.open : market.open };
 }
 
+function proveStalls(directory: DirectoryIndex, needle: string) {
+  const ids = bigramCandidates(directory.stallBigrams, needle);
+  const proven = new Set<number>();
+  if (!ids) return proven;
+  for (const id of ids) {
+    const at = directory.stallAt[id];
+    if (!at) continue;
+    const stall = directory.markets[at.marketIndex]?.stalls[at.stallIndex];
+    if (stall && vendorRank(stall, needle) != null) proven.add(stall.searchId);
+  }
+  return proven;
+}
+
 function buildSearchAnswer(
-  index: IndexedMarket[],
+  directory: DirectoryIndex,
   filters: FloorFilters,
   daySlugs: Set<string> | null,
   slotBySlug: Map<string, { hours: string; open: boolean }> | null,
   data: MarketsFloorView,
+  proven: Set<number>,
 ): SearchAnswer {
+  const index = directory.markets;
   const needle = filters.q.trim().toLowerCase();
   if (needle.length < SEARCH_MIN) {
     return { guides: [], products: [], vendors: [], markets: [] };
@@ -635,88 +692,104 @@ function buildSearchAnswer(
   const guides = matchingGuides(needle);
   const productOffers = new Map<string, SearchOffer & { productName: string }>();
   const vendors = new Map<string, SearchVendor>();
-  const markets: SearchMarket[] = [];
+  const matchingStalls = new Map<number, number>();
+  const whenByMarket = new Map<number, { hours: string; open: boolean }>();
 
-  for (const entry of index) {
-    if (!entryInContext(entry, daySlugs, filters)) continue;
-    const when = marketWhen(
-      entry.market,
-      slotBySlug?.get(entry.market.slug),
-      data.todayWeekday,
-    );
-    let matchingStalls = 0;
-    for (const stall of entry.stalls) {
-      if (!stallMatches(stall, filters)) continue;
-      const rank = vendorRank(stall, needle);
-      if (rank == null) continue;
-      matchingStalls += 1;
-      const item = stall.items.find((entryItem) => textRank(entryItem.name, needle) != null) ?? null;
-      const existingVendor = vendors.get(stall.slug);
-      const vendor: SearchVendor = {
-        slug: stall.slug,
-        name: stall.name,
+  function whenFor(marketIndex: number) {
+    const cached = whenByMarket.get(marketIndex);
+    if (cached) return cached;
+    const entry = index[marketIndex]!;
+    const when = marketWhen(entry.market, slotBySlug?.get(entry.market.slug), data.todayWeekday);
+    whenByMarket.set(marketIndex, when);
+    return when;
+  }
+
+  for (const searchId of proven) {
+    const at = directory.stallAt[searchId];
+    if (!at) continue;
+    const entry = index[at.marketIndex];
+    const stall = entry?.stalls[at.stallIndex];
+    if (!entry || !stall) continue;
+    if (!entryInContext(entry, daySlugs, filters) || !stallMatches(stall, filters)) continue;
+    const rank = vendorRank(stall, needle);
+    if (rank == null) continue;
+    matchingStalls.set(at.marketIndex, (matchingStalls.get(at.marketIndex) ?? 0) + 1);
+    const when = whenFor(at.marketIndex);
+    const item = stall.items.find((entryItem) => entryItem.nameLower.includes(needle)) ?? null;
+    const existingVendor = vendors.get(stall.slug);
+    const vendor: SearchVendor = {
+      slug: stall.slug,
+      name: stall.name,
+      logoUrl: stall.logoUrl,
+      categoryLabel: stall.categoryLabel,
+      ratingAvg: stall.ratingAvg,
+      reviewCount: stall.reviewCount,
+      item,
+      marketSlug: entry.market.slug,
+      marketName: entry.market.name,
+      hours: when.hours,
+      open: when.open,
+      rank,
+    };
+    if (
+      !existingVendor ||
+      vendor.rank < existingVendor.rank ||
+      (vendor.rank === existingVendor.rank && vendor.open && !existingVendor.open)
+    ) {
+      vendors.set(stall.slug, vendor);
+    }
+    if (item == null) continue;
+    for (let itemIndex = 0; itemIndex < stall.items.length; itemIndex += 1) {
+      const product = stall.items[itemIndex]!;
+      const productRank = fieldRank(product.nameLower, needle);
+      if (productRank == null) continue;
+      const key = `${product.nameLower}|${stall.slug}`;
+      const offer: SearchOffer & { productName: string } = {
+        productName: product.name,
+        vendorSlug: stall.slug,
+        vendorName: stall.name,
         logoUrl: stall.logoUrl,
-        categoryLabel: stall.categoryLabel,
-        ratingAvg: stall.ratingAvg,
-        reviewCount: stall.reviewCount,
-        item,
+        priceCents: product.priceCents,
+        href: product.href,
         marketSlug: entry.market.slug,
         marketName: entry.market.name,
         hours: when.hours,
         open: when.open,
-        rank,
+        reviewCount: stall.reviewCount,
+        rank: productRank,
       };
+      const existingOffer = productOffers.get(key);
       if (
-        !existingVendor ||
-        vendor.rank < existingVendor.rank ||
-        (vendor.rank === existingVendor.rank && vendor.open && !existingVendor.open)
+        !existingOffer ||
+        offer.rank < existingOffer.rank ||
+        (offer.rank === existingOffer.rank && offer.open && !existingOffer.open)
       ) {
-        vendors.set(stall.slug, vendor);
-      }
-      for (const product of stall.items) {
-        const productRank = textRank(product.name, needle);
-        if (productRank == null) continue;
-        const key = `${product.name.toLowerCase()}|${stall.slug}`;
-        const offer: SearchOffer & { productName: string } = {
-          productName: product.name,
-          vendorSlug: stall.slug,
-          vendorName: stall.name,
-          logoUrl: stall.logoUrl,
-          priceCents: product.priceCents,
-          href: product.href,
-          marketSlug: entry.market.slug,
-          marketName: entry.market.name,
-          hours: when.hours,
-          open: when.open,
-          reviewCount: stall.reviewCount,
-          rank: productRank,
-        };
-        const existingOffer = productOffers.get(key);
-        if (
-          !existingOffer ||
-          offer.rank < existingOffer.rank ||
-          (offer.rank === existingOffer.rank && offer.open && !existingOffer.open)
-        ) {
-          productOffers.set(key, offer);
-        }
+        productOffers.set(key, offer);
       }
     }
-    const marketRank = marketTextRank(entry.market, needle);
-    if (marketRank != null) {
-      markets.push({
-        slug: entry.market.slug,
-        name: entry.market.name,
-        neighbourhood: entry.market.neighbourhood,
-        logoUrl: entry.market.logo_url,
-        ratingAvg: entry.market.rating_avg,
-        reviewCount: entry.market.review_count,
-        hours: when.hours,
-        open: when.open,
-        matchingStalls,
-        stallCount: entry.market.vendorCount || entry.stalls.length,
-        rank: marketRank,
-      });
-    }
+  }
+
+  const markets: SearchMarket[] = [];
+  const marketIds = bigramCandidates(directory.marketBigrams, needle) ?? new Uint32Array();
+  for (const marketIndex of marketIds) {
+    const entry = index[marketIndex];
+    if (!entry || !entryInContext(entry, daySlugs, filters)) continue;
+    const marketRank = marketTextRank(entry, needle);
+    if (marketRank == null) continue;
+    const when = whenFor(marketIndex);
+    markets.push({
+      slug: entry.market.slug,
+      name: entry.market.name,
+      neighbourhood: entry.market.neighbourhood,
+      logoUrl: entry.market.logo_url,
+      ratingAvg: entry.market.rating_avg,
+      reviewCount: entry.market.review_count,
+      hours: when.hours,
+      open: when.open,
+      matchingStalls: matchingStalls.get(marketIndex) ?? 0,
+      stallCount: entry.market.vendorCount || entry.stalls.length,
+      rank: marketRank,
+    });
   }
 
   const grouped = new Map<string, SearchProduct>();
@@ -865,7 +938,13 @@ export function MarketsFloor({
     return () => window.removeEventListener("popstate", onPop, true);
   }, [data.fullWeek, syncUrl]);
 
-  const index = useMemo(() => buildIndex(data), [data]);
+  const directory = useMemo(() => buildDirectory(data), [data]);
+  const index = directory.markets;
+  const provenStallIds = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (needle.length < SEARCH_MIN) return null;
+    return proveStalls(directory, needle);
+  }, [directory, q]);
   const filters: FloorFilters = {
     q,
     dayId,
@@ -951,10 +1030,10 @@ export function MarketsFloor({
   }, [index, q, dayId, weekday, area, setup, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, near, data, pin]);
 
   const answer = useMemo(
-    () => buildSearchAnswer(index, filters, daySlugs, slotBySlug, data),
+    () => buildSearchAnswer(directory, filters, daySlugs, slotBySlug, data, provenStallIds ?? new Set()),
     // The answer follows the typed query plus the day, place, and setup already in filters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [index, q, dayId, weekday, area, setup, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, data],
+    [directory, q, dayId, weekday, area, setup, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, data, provenStallIds],
   );
 
   const selected =
@@ -983,7 +1062,7 @@ export function MarketsFloor({
     const slugs = daySlugsFor(openFilters, data);
     for (const entry of index) {
       if (!entryInContext(entry, slugs, openFilters)) continue;
-      if ((filters.q.trim() || specialtyOn(filters)) && visibleStalls(entry, openFilters).length === 0) {
+      if ((filters.q.trim() || specialtyOn(filters)) && visibleStalls(entry, openFilters, "browse", provenStallIds).length === 0) {
         continue;
       }
       if (!area || marketInPlace(entry.market, area)) {
@@ -997,7 +1076,7 @@ export function MarketsFloor({
       }
     }
     return { setups, areas };
-  }, [index, q, dayId, weekday, area, setup, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, data]);
+  }, [index, q, dayId, weekday, area, setup, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, data, provenStallIds]);
 
   function optionCount(next: Partial<FloorFilters>) {
     if (next.setup) return chipCounts.setups.get(next.setup) ?? 0;
