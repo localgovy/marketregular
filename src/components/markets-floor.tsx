@@ -241,6 +241,14 @@ const chipIdle =
   "stall-chip-sm cursor-pointer bg-card px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary";
 const chipOn = "stall-chip-sm cursor-pointer bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground";
 
+function OpenMarketPage({ slug }: { slug: string }) {
+  return (
+    <Link href={`/markets/${slug}`} className={cn(chipIdle, "inline-flex h-8 items-center whitespace-nowrap")}>
+      Open market page
+    </Link>
+  );
+}
+
 function categoryLabel(id: string) {
   const known = CATEGORY_LABEL.get(id);
   if (known) return known;
@@ -887,7 +895,10 @@ function MarketsQuerySync({
   const onSearchRef = useRef(onSearch);
   onSearchRef.current = onSearch;
   useLayoutEffect(() => {
-    onSearchRef.current(search);
+    // `search` only marks that the router moved. Typing updates the address bar
+    // without the router, so a stale router string must not replace it.
+    void search;
+    onSearchRef.current(window.location.search);
   }, [search, week]);
   return null;
 }
@@ -962,6 +973,34 @@ export function MarketsFloor({
     if (id !== "directory-vendors" && id !== "directory-markets") return;
     document.getElementById(id)?.scrollIntoView();
   }, []);
+
+  useEffect(() => {
+    if (!syncUrl) return;
+    function onMarketsLink(event: MouseEvent) {
+      if (event.defaultPrevented || event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const anchor = target.closest("a");
+      if (!anchor || anchor.target === "_blank" || anchor.hasAttribute("download")) return;
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin !== window.location.origin || url.pathname !== "/markets") return;
+      event.preventDefault();
+      event.stopPropagation();
+      applyExternalSearchRef.current(url.searchParams.toString());
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (next !== current) pushAppUrl(next);
+      const id = url.hash.replace("#", "");
+      if (id === "directory-vendors" || id === "directory-markets") {
+        document.getElementById(id)?.scrollIntoView();
+      } else {
+        window.scrollTo(0, 0);
+      }
+    }
+    window.addEventListener("click", onMarketsLink, true);
+    return () => window.removeEventListener("click", onMarketsLink, true);
+  }, [syncUrl]);
 
   useEffect(() => {
     if (!syncUrl) return;
@@ -1773,25 +1812,30 @@ function SearchAnswer({
           <ul>
             {shownMarkets.map((market) => (
               <li key={market.slug} className="border-b border-border">
-                <button
-                  type="button"
-                  onClick={() =>
-                    onMarket(market.slug, market.matchingStalls > 0 ? "match" : "all")
-                  }
-                  className="grid w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-3 text-left hover:bg-secondary"
-                >
+                <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-3">
                   <StallEmblem src={market.logoUrl} name={market.name} kind="market" size="sm" />
-                  <span className="min-w-0">
-                    <span className="block text-base font-medium">{market.name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {market.neighbourhood}
-                      {market.matchingStalls > 0
-                        ? ` · ${market.matchingStalls} matching ${market.matchingStalls === 1 ? "vendor" : "vendors"}`
-                        : ` · ${market.stallCount} ${market.stallCount === 1 ? "vendor" : "vendors"}`}
-                    </span>
-                  </span>
+                  <div className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onMarket(market.slug, market.matchingStalls > 0 ? "match" : "all")
+                      }
+                      className="cursor-pointer text-left hover:underline"
+                    >
+                      <span className="block text-base font-medium">{market.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {market.neighbourhood}
+                        {market.matchingStalls > 0
+                          ? ` · ${market.matchingStalls} matching ${market.matchingStalls === 1 ? "vendor" : "vendors"}`
+                          : ` · ${market.stallCount} ${market.stallCount === 1 ? "vendor" : "vendors"}`}
+                      </span>
+                    </button>
+                    <div className="mt-2">
+                      <OpenMarketPage slug={market.slug} />
+                    </div>
+                  </div>
                   <Hours value={market.hours} />
-                </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -1849,13 +1893,14 @@ function SearchLanding({
             <VerifiedName slug={row.market.slug} name={row.market.name} />
           </Link>
         </h2>
-        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3">
+        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">
           <p className="text-sm text-muted-foreground">
             {narrowed
               ? `Vendors matching “${query}”`
               : `${row.stallCount} ${row.stallCount === 1 ? "vendor" : "vendors"}`}
           </p>
           <Hours value={row.hours} />
+          <OpenMarketPage slug={row.market.slug} />
         </div>
         {narrowed ? (
           <button type="button" onClick={onShowAll} className="mt-2 cursor-pointer text-sm font-medium text-primary hover:underline">
@@ -2021,7 +2066,7 @@ function Spotlight({
           ) : null}
         </div>
       </div>
-      <div className="flex items-center justify-between gap-2 border-t border-border bg-receipt px-5 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-receipt px-5 py-3">
         <button
           type="button"
           onClick={onPrevious}
@@ -2031,9 +2076,7 @@ function Spotlight({
         >
           <CaretLeftMark className="size-4" />
         </button>
-        <Link href={`/markets/${market.slug}`} className="text-sm font-medium text-primary hover:underline">
-          Open market
-        </Link>
+        <OpenMarketPage slug={market.slug} />
         <button
           type="button"
           onClick={onNext}
@@ -2105,7 +2148,7 @@ function MarketColumn({
           <RulesMark className="size-4 text-primary" />
           <h3>Markets</h3>
         </div>
-        <span className="type-nums text-sm text-muted-foreground">{rows.length}</span>
+        <span className="type-nums text-sm text-primary">{rows.length}</span>
       </div>
       <ul>
         {shown.map((row) => {
@@ -2167,6 +2210,9 @@ function MarketColumn({
                   ) : (
                     <p className="mt-0.5 text-sm text-muted-foreground">{row.market.neighbourhood}</p>
                   )}
+                  <div className="mt-2">
+                    <OpenMarketPage slug={row.market.slug} />
+                  </div>
                 </div>
                 <SaveButton kind="market" slug={row.market.slug} name={row.market.name} />
               </div>
@@ -2225,7 +2271,7 @@ function StallColumn({
           <CrateMark className="size-4 text-primary" />
           <h3>Vendors</h3>
         </div>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-primary">
           <span className="type-nums">{stalls.length}</span>
           {stalls.length < row.market.vendorCount ? (
             <>
