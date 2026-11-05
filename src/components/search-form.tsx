@@ -9,6 +9,7 @@ import { SearchField } from "@/components/search-field";
 import { useGeo } from "@/components/geo-provider";
 import { COUNTRY_TAGS, PRODUCT_TAGS, SEARCH_LABEL, SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
 import {
+  FIND_AMENITY_CHIPS,
   FIND_RECORD,
   FIND_SETUP,
   marketsHref,
@@ -201,7 +202,10 @@ export function SearchForm({
   const chipSize = mini ? "sm" : "md";
   const productChips = productChipRow(applied.tags);
   const productOn = new Set<string>(productChips);
-  const extraMiniTags = mini ? applied.tags.filter((tag) => !productOn.has(tag)) : [];
+  const amenityOn = new Set<string>(FIND_AMENITY_CHIPS);
+  const extraMiniTags = mini
+    ? applied.tags.filter((tag) => !productOn.has(tag) && !amenityOn.has(tag))
+    : [];
 
   const daySelect = (
     <select
@@ -447,6 +451,17 @@ export function SearchForm({
                 {tagLabel(tag)}
               </FilterChip>
             ))}
+        {FIND_AMENITY_CHIPS.map((tag) => (
+          <FilterChip
+            key={tag}
+            pressed={applied.tags.includes(tag)}
+            size={chipSize}
+            onClick={() => publishTags(toggleIn(applied.tags, tag))}
+            onIntent={() => intendTags(toggleIn(applied.tags, tag))}
+          >
+            {tagLabel(tag)}
+          </FilterChip>
+        ))}
         {mini ? null : (
           <div className="ml-auto flex items-center gap-3">
             <FilterClearButton
@@ -598,6 +613,12 @@ function AllFilters({
       label: "Year-round",
       checked: state.setup === "year-round" || state.tags.includes("year-round"),
       onChange: (on) => setSetup("year-round", on),
+    },
+    {
+      key: "holiday",
+      label: tagLabel("holiday"),
+      checked: state.tags.includes("holiday"),
+      onChange: (on) => setTag("holiday", on),
     },
   ];
 

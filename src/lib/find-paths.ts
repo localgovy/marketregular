@@ -13,6 +13,7 @@ import type { Market } from "@/types/database";
 const PRODUCT_SET = new Set<string>(PRODUCT_TAGS);
 const COUNTRY_SET = new Set<string>(COUNTRY_TAGS);
 const VENDOR_FILTER_SET = new Set<string>([...PRODUCT_TAGS, ...COUNTRY_TAGS]);
+/** One `setup` value. Year-round and seasonal are alternatives. Holiday is not. */
 const SETUP_SET = new Set(["indoor", "outdoor", "year-round", "seasonal"]);
 const DIRECTORY_CACHE_TAGS = new Set<string>([
   ...PRODUCT_TAGS,
@@ -67,8 +68,14 @@ export function originChipRow(selected: readonly string[] = []) {
   return extras.length ? [...FIND_ORIGINS, ...extras] : FIND_ORIGINS;
 }
 
-/** Weather and season, after time and place. */
+/** Weather and season, after time and place. One `setup` value, so these are alternatives. */
 export const FIND_SETUP = ["indoor", "outdoor", "year-round"] as const;
+
+/**
+ * Amenity chips on the markets directory. Not setup, so a hall can be
+ * seasonal and holiday at the same time.
+ */
+export const FIND_AMENITY_CHIPS = ["holiday"] as const;
 
 export const FIND_AREAS: Array<{ label: string; q: string; slugs: string[] }> = [
   { label: "St. Lawrence", q: "St. Lawrence", slugs: ["st-lawrence-market", "st-lawrence-farmers-market", "sunday-variety-market-st-lawrence"] },
@@ -148,10 +155,12 @@ export function tagsPresent(
   return wanted.filter((tag) => have.has(tag));
 }
 
-/** Identity and access tags for the all-filters “on the record” column. */
+const AMENITY_CHIP_SET = new Set<string>(FIND_AMENITY_CHIPS);
+
+/** Identity and access tags for the all-filters “on the record” column. Season chips stay with When. */
 export const FIND_RECORD = [
   ...RECORD_TAGS,
-  ...AMENITY_TAGS.filter((tag) => !SETUP_SET.has(tag)),
+  ...AMENITY_TAGS.filter((tag) => !SETUP_SET.has(tag) && !AMENITY_CHIP_SET.has(tag)),
 ] as const;
 
 export { tagLabel };

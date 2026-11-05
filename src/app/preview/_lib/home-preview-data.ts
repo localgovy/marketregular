@@ -13,6 +13,7 @@ import {
   FIND_AREAS,
   FIND_ORIGINS,
   FIND_PRODUCTS,
+  FIND_AMENITY_CHIPS,
   FIND_SETUP,
   homeAreas,
   tagsPresent,
@@ -795,7 +796,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
   const areas = homeAreas(markets);
   const sellOptions = tagsPresent([...markets, ...torontoVendors], FIND_PRODUCTS);
   const cuisineOptions = tagsPresent(torontoVendors, FIND_ORIGINS);
-  const setupOptions = [...tagsPresent(markets, FIND_SETUP)];
+  const setupOptions = [...tagsPresent(markets, [...FIND_SETUP, ...FIND_AMENITY_CHIPS])];
 
   const tape = tapeRaw.length > 0 ? tapeRaw : buildFallbackFloorItems(now.getTime());
 
