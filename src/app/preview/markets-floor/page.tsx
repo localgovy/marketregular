@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { MarketsFloorMockup } from "@/app/preview/_components/markets-floor-mockup";
+import { MarketsFloor } from "@/components/markets-floor";
 import { loadMarketsFloorData } from "@/app/preview/_lib/markets-preview-data";
 import { SITE_NAME } from "@/lib/constants";
 
@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 
 export default async function MarketsFloorPreviewPage() {
   const data = await loadMarketsFloorData();
-  return <MarketsFloorMockup data={data} />;
+  return <MarketsFloor data={data} preview />;
 }

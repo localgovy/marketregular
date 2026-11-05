@@ -2,24 +2,32 @@ import { LAUNCH_CITY } from "@/lib/launch";
 
 export default function MarketsLoading() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
-      <div className="type-kicker mt-2 mb-6 h-5 w-72 bg-muted" />
-      <div className="h-11 w-full bg-muted" />
-      <div className="mt-8 border-b border-border pb-2">
-        <div className="h-6 w-36 bg-muted" />
+    <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6">
+      <h1 className="sr-only">{LAUNCH_CITY} farmers&apos; markets</h1>
+      <div className="flex flex-wrap gap-2">
+        <div className="h-8 w-14 bg-muted" />
+        <div className="h-8 w-24 bg-muted" />
+        <div className="h-8 w-28 bg-muted" />
+        <div className="h-8 w-24 bg-muted" />
+        <div className="h-8 w-28 bg-muted" />
       </div>
-      <div className="mt-6 grid items-start gap-10 lg:grid-cols-[minmax(0,2fr)_auto_minmax(0,3fr)] lg:gap-x-4">
-        <div className="grid gap-4">
-          <div className="mb-0 h-8 w-28 bg-muted" />
-          <div className="h-44 bg-muted" />
-          <div className="h-44 bg-muted" />
+      <div className="mt-4 grid gap-5 lg:grid-cols-12">
+        <div className="bg-primary p-6 lg:col-span-7">
+          <div className="h-10 w-2/3 bg-primary-foreground/15" />
+          <div className="mt-3 h-6 w-full max-w-xl bg-primary-foreground/15" />
+          <div className="mt-4 h-11 bg-receipt" />
+          <div className="mt-6 grid grid-cols-3 gap-3 border-t border-primary-foreground/15 pt-4">
+            <div className="h-12 bg-primary-foreground/15" />
+            <div className="h-12 bg-primary-foreground/15" />
+            <div className="h-12 bg-primary-foreground/15" />
+          </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="mb-0 h-8 w-28 bg-muted sm:col-span-2" />
-          <div className="h-36 bg-muted" />
-          <div className="h-36 bg-muted" />
-        </div>
+        <div className="h-72 bg-muted lg:col-span-5" />
+      </div>
+      <div className="mt-5 h-36 bg-muted" />
+      <div className="mt-5 grid items-start gap-5 lg:grid-cols-12">
+        <div className="h-96 bg-muted lg:col-span-5" />
+        <div className="h-96 bg-muted lg:col-span-7" />
       </div>
     </div>
   );

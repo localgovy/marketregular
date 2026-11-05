@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type {
   EnrichedMarketRow,
@@ -29,16 +29,26 @@ import { SearchField } from "@/components/search-field";
 import { VerifiedName } from "@/components/verified-stamp";
 import { FIND_CATEGORIES, FIND_PAGES } from "@/data/find-pages";
 import { COUNTRY_TAGS, SEARCH_LABEL } from "@/lib/constants";
-import { tagLabel } from "@/lib/find-paths";
+import { tagLabel, type MarketsSearch } from "@/lib/find-paths";
 import { formatPrice } from "@/lib/format";
+import { distanceMeters } from "@/lib/geo";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { MapMarket } from "@/lib/directory-page";
+import {
+  areaMatchesMarket,
+  categoryIdForTag,
+  emptyFloorQuery,
+  floorHref,
+  floorQueryFromParams,
+  floorQueryFromSearch,
+  weekdayLabel,
+  type FloorQuery,
+} from "@/lib/markets-floor-query";
+import { pushAppUrl, replaceAppUrl } from "@/lib/native-history";
 import { productsBrowseHref } from "@/lib/product-browse-href";
 import { cn } from "@/lib/utils";
 
 type FacetId = "sell" | "cuisine" | "diet" | "made";
-type SortId = "soonest" | "stalls" | "name";
-
 type FloorItem = {
   name: string;
   href: string;
@@ -55,6 +65,7 @@ type FloorStall = {
   origins: string[];
   diets: string[];
   production: string[];
+  tags: string[];
   categoryLabel: string;
   items: FloorItem[];
   blob: string;
@@ -69,12 +80,17 @@ type IndexedMarket = {
 type FloorFilters = {
   q: string;
   dayId: string | null;
+  weekday: number | null;
   area: string | null;
   setup: string | null;
   category: string | null;
   cuisine: string | null;
   diet: string | null;
   made: string | null;
+  categoryTags: string[];
+  cuisineTags: string[];
+  dietTags: string[];
+  madeTags: string[];
 };
 
 type FloorRow = {
@@ -160,6 +176,7 @@ const SETUPS = [
   { id: "indoor", label: "Indoor" },
   { id: "outdoor", label: "Outdoor" },
   { id: "year-round", label: "Year-round" },
+  { id: "holiday", label: "Holiday market" },
 ] as const;
 
 const DIET_TAGS = new Set(["vegan", "vegetarian", "gluten-free", "dairy-free", "halal", "keto"]);
@@ -267,7 +284,7 @@ function toStall(
     ? categoryLabel(aisleIds[0])
     : tagSpecialty
       ? tagLabel(tagSpecialty)
-      : (spot?.primaryAisleLabel ?? "Market stall");
+      : (spot?.primaryAisleLabel ?? "Vendor");
   const blob = [entry.name, label, ...aisleIds.map(categoryLabel), ...origins, ...diets, ...production, ...items.map((item) => item.name)]
     .join(" ")
     .toLowerCase();
@@ -281,6 +298,7 @@ function toStall(
     origins,
     diets,
     production,
+    tags: entry.tags,
     categoryLabel: label,
     items,
     blob,
@@ -322,30 +340,141 @@ function hasSetup(market: EnrichedMarketRow, setup: string) {
   return false;
 }
 
-function marketInPlace(market: EnrichedMarketRow, area: string, data: MarketsFloorData) {
-  const circuit = data.neighbourhoodCircuits.find((entry) => entry.label === area);
-  if (!circuit) {
-    const needle = area.toLowerCase();
-    return (
-      market.neighbourhood.toLowerCase() === needle || market.city.toLowerCase() === needle
-    );
+const CITY_AREAS: Array<{ label: string; cities: ReadonlySet<string> }> = [
+  { label: "Mississauga and Brampton", cities: new Set(["mississauga", "brampton"]) },
+  { label: "Hamilton", cities: new Set(["hamilton", "dundas", "ancaster", "stoney creek", "waterdown"]) },
+  {
+    label: "Durham",
+    cities: new Set(["oshawa", "whitby", "ajax", "pickering", "clarington", "uxbridge", "brock", "newcastle", "port perry"]),
+  },
+  {
+    label: "York Region",
+    cities: new Set([
+      "markham",
+      "vaughan",
+      "richmond hill",
+      "aurora",
+      "newmarket",
+      "king",
+      "east gwillimbury",
+      "georgina",
+      "whitchurch-stouffville",
+      "stouffville",
+    ]),
+  },
+  { label: "Halton", cities: new Set(["oakville", "burlington", "milton", "halton hills", "georgetown", "acton"]) },
+  { label: "Waterloo Region", cities: new Set(["kitchener", "waterloo", "cambridge", "woolwich"]) },
+  {
+    label: "Niagara",
+    cities: new Set([
+      "st. catharines",
+      "welland",
+      "fort erie",
+      "niagara falls",
+      "niagara-on-the-lake",
+      "grimsby",
+      "lincoln",
+    ]),
+  },
+];
+
+const MIN_PLACE_MARKETS = 4;
+
+function torontoBand(lat: number, lng: number) {
+  if (lng <= -79.47) return "Etobicoke";
+  if (lng >= -79.3 || lat >= 43.79) return "Scarborough";
+  if (lat >= 43.73) return "North York";
+  if (lat < 43.672 && lng > -79.43 && lng < -79.35) return "Downtown";
+  if (lng >= -79.365) return "East end";
+  if (lng <= -79.41) return "West end";
+  return "Midtown";
+}
+
+/** A place chip is a region with several markets, not a single hall. */
+function areaForMarket(market: EnrichedMarketRow) {
+  const city = market.city.trim().toLowerCase();
+  for (const area of CITY_AREAS) {
+    if (area.cities.has(city)) return area.label;
   }
-  if (circuit.topMarkets.some((entry) => entry.slug === market.slug)) return true;
-  if (market.neighbourhood.toLowerCase() === circuit.label.toLowerCase()) return true;
-  if (circuit.label === circuit.q && market.city.toLowerCase() === circuit.q.toLowerCase()) {
-    return true;
+  if (city === "toronto" && market.lat != null && market.lng != null) {
+    const band = torontoBand(market.lat, market.lng);
+    if (band === "Midtown" || band === "North York") return "Midtown and North York";
+    return band;
   }
-  return market.name.toLowerCase().includes(circuit.q.toLowerCase());
+  return null;
+}
+
+function marketInPlace(market: EnrichedMarketRow, area: string) {
+  return areaMatchesMarket(area, {
+    slug: market.slug,
+    city: market.city,
+    neighbourhood: market.neighbourhood,
+    region: areaForMarket(market),
+  });
+}
+
+function tokenHits(stall: FloorStall, id: string, kind: "sell" | "cuisine" | "diet" | "made") {
+  if (kind === "sell") {
+    if (stall.aisleIds.includes(id) || stall.tags.includes(id)) return true;
+    const mapped = categoryIdForTag(id);
+    return Boolean(mapped && mapped !== id && (stall.aisleIds.includes(mapped) || stall.tags.includes(mapped)));
+  }
+  if (kind === "cuisine") return stall.origins.includes(id) || stall.tags.includes(id);
+  if (kind === "diet") return stall.diets.includes(id) || stall.tags.includes(id);
+  return stall.production.includes(id) || stall.tags.includes(id);
+}
+
+function matchesTokens(
+  stall: FloorStall,
+  primary: string | null,
+  tags: string[],
+  kind: "sell" | "cuisine" | "diet" | "made",
+) {
+  const wanted = new Set(tags);
+  if (primary) wanted.add(primary);
+  if (wanted.size === 0) return true;
+  for (const id of wanted) {
+    if (tokenHits(stall, id, kind)) return true;
+  }
+  return false;
+}
+
+const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function marketOnWeekday(market: EnrichedMarketRow, weekday: number) {
+  const short = WEEKDAY_SHORT[weekday];
+  if (!short) return false;
+  const named = (day: string) => day.startsWith(short) || day.toLowerCase().startsWith(weekdayLabel(weekday).toLowerCase());
+  return market.sessions.some((session) => named(session.day)) || market.dayNames.some(named);
+}
+
+function daySlugsFor(filters: FloorFilters, data: MarketsFloorData) {
+  if (filters.dayId) {
+    const group = data.fullWeek.find((item) => item.id === filters.dayId);
+    return new Set(group?.slots.map((slot) => slot.slug) ?? []);
+  }
+  if (filters.weekday == null) return null;
+  const grouped = data.fullWeek.find((item) => item.id === `day-${filters.weekday}`);
+  if (grouped) return new Set(grouped.slots.map((slot) => slot.slug));
+  if (filters.weekday === data.todayWeekday) {
+    const slugs = new Set<string>();
+    for (const group of data.fullWeek) {
+      if (group.id !== "open" && group.id !== "later" && group.id !== "earlier") continue;
+      for (const slot of group.slots) slugs.add(slot.slug);
+    }
+    if (slugs.size > 0) return slugs;
+  }
+  return null;
 }
 
 function stallMatches(
   stall: FloorStall,
   filters: FloorFilters,
 ) {
-  if (filters.category && !stall.aisleIds.includes(filters.category)) return false;
-  if (filters.cuisine && !stall.origins.includes(filters.cuisine)) return false;
-  if (filters.diet && !stall.diets.includes(filters.diet)) return false;
-  if (filters.made && !stall.production.includes(filters.made)) return false;
+  if (!matchesTokens(stall, filters.category, filters.categoryTags, "sell")) return false;
+  if (!matchesTokens(stall, filters.cuisine, filters.cuisineTags, "cuisine")) return false;
+  if (!matchesTokens(stall, filters.diet, filters.dietTags, "diet")) return false;
+  if (!matchesTokens(stall, filters.made, filters.madeTags, "made")) return false;
   return true;
 }
 
@@ -371,26 +500,39 @@ function marketMatches(
   entry: IndexedMarket,
   filters: FloorFilters,
   daySlugs: Set<string> | null,
-  data: MarketsFloorData,
   mode: "browse" | "strict" = "browse",
 ) {
-  if (!entryInContext(entry, daySlugs, filters, data)) return false;
+  if (!entryInContext(entry, daySlugs, filters)) return false;
   const needle = filters.q.trim();
-  const narrowed = Boolean(
-    needle || filters.category || filters.cuisine || filters.diet || filters.made,
-  );
+  const narrowed = Boolean(needle || specialtyOn(filters));
   if (!narrowed) return true;
   return visibleStalls(entry, filters, mode).length > 0;
+}
+
+function specialtyOn(filters: FloorFilters) {
+  return Boolean(
+    filters.category ||
+      filters.cuisine ||
+      filters.diet ||
+      filters.made ||
+      filters.categoryTags.length ||
+      filters.cuisineTags.length ||
+      filters.dietTags.length ||
+      filters.madeTags.length,
+  );
 }
 
 function entryInContext(
   entry: IndexedMarket,
   daySlugs: Set<string> | null,
-  filters: Pick<FloorFilters, "area" | "setup">,
-  data: MarketsFloorData,
+  filters: Pick<FloorFilters, "area" | "setup" | "weekday" | "dayId">,
 ) {
-  if (daySlugs && !daySlugs.has(entry.market.slug)) return false;
-  if (filters.area && !marketInPlace(entry.market, filters.area, data)) return false;
+  if (daySlugs) {
+    if (!daySlugs.has(entry.market.slug)) return false;
+  } else if (filters.weekday != null && !marketOnWeekday(entry.market, filters.weekday)) {
+    return false;
+  }
+  if (filters.area && !marketInPlace(entry.market, filters.area)) return false;
   if (filters.setup && !hasSetup(entry.market, filters.setup)) return false;
   return true;
 }
@@ -507,7 +649,7 @@ function buildSearchAnswer(
   const markets: SearchMarket[] = [];
 
   for (const entry of index) {
-    if (!entryInContext(entry, daySlugs, filters, data)) continue;
+    if (!entryInContext(entry, daySlugs, filters)) continue;
     const when = marketWhen(
       entry.market,
       slotBySlug?.get(entry.market.slug),
@@ -664,25 +806,94 @@ function Count({ value, active }: { value: number; active: boolean }) {
   );
 }
 
-export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
-  const [q, setQ] = useState("");
-  const [dayId, setDayId] = useState<string | null>(null);
-  const [area, setArea] = useState<string | null>(null);
-  const [setup, setSetup] = useState<string | null>(null);
-  const [facet, setFacet] = useState<FacetId>("sell");
-  const [category, setCategory] = useState<string | null>(null);
-  const [cuisine, setCuisine] = useState<string | null>(null);
-  const [diet, setDiet] = useState<string | null>(null);
-  const [made, setMade] = useState<string | null>(null);
-  const [sort, setSort] = useState<SortId>("soonest");
+export function MarketsFloor({
+  data,
+  initial,
+  preview = false,
+  syncUrl = false,
+}: {
+  data: MarketsFloorData;
+  initial?: MarketsSearch & { day?: string };
+  preview?: boolean;
+  syncUrl?: boolean;
+}) {
+  const [query, setQuery] = useState<FloorQuery>(() =>
+    initial ? floorQueryFromSearch(initial, data.fullWeek) : emptyFloorQuery(),
+  );
+  const queryRef = useRef(query);
+  queryRef.current = query;
+  const {
+    q,
+    dayId,
+    weekday,
+    area,
+    setup,
+    facet,
+    category,
+    cuisine,
+    diet,
+    made,
+    categoryTags,
+    cuisineTags,
+    dietTags,
+    madeTags,
+    near,
+  } = query;
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
   const [pin, setPin] = useState<{ slug: string; scope: "match" | "all" } | null>(null);
   const [morePlaces, setMorePlaces] = useState(false);
 
+  function commit(patch: Partial<FloorQuery>, mode: "push" | "replace" | "silent" = "push") {
+    const next = { ...queryRef.current, ...patch };
+    queryRef.current = next;
+    setQuery(next);
+    if (mode === "silent" || !syncUrl || typeof window === "undefined") return;
+    const href = floorHref(next);
+    const current = `${window.location.pathname}${window.location.search}`;
+    if (href === current) return;
+    if (mode === "replace") replaceAppUrl(href);
+    else pushAppUrl(href);
+  }
+
+  useEffect(() => {
+    const id = window.location.hash.replace("#", "");
+    if (id !== "directory-vendors" && id !== "directory-markets") return;
+    document.getElementById(id)?.scrollIntoView();
+  }, []);
+
+  useEffect(() => {
+    if (!syncUrl) return;
+    function onPop(event: PopStateEvent) {
+      const url = new URL(window.location.href);
+      if (url.pathname !== "/markets") return;
+      const nextOwned = !event.state || typeof event.state !== "object" || !("__NA" in event.state);
+      if (nextOwned) event.stopImmediatePropagation();
+      const next = floorQueryFromParams(url.searchParams, data.fullWeek);
+      queryRef.current = next;
+      setQuery(next);
+    }
+    window.addEventListener("popstate", onPop, true);
+    return () => window.removeEventListener("popstate", onPop, true);
+  }, [data.fullWeek, syncUrl]);
+
   const index = useMemo(() => buildIndex(data), [data]);
-  const filters: FloorFilters = { q, dayId, area, setup, category, cuisine, diet, made };
+  const filters: FloorFilters = {
+    q,
+    dayId,
+    weekday,
+    area,
+    setup,
+    category,
+    cuisine,
+    diet,
+    made,
+    categoryTags,
+    cuisineTags,
+    dietTags,
+    madeTags,
+  };
   const dayGroup = dayId ? (data.fullWeek.find((group) => group.id === dayId) ?? null) : null;
-  const daySlugs = dayGroup ? new Set(dayGroup.slots.map((slot) => slot.slug)) : null;
+  const daySlugs = daySlugsFor(filters, data);
   const slotBySlug = dayGroup
     ? new Map(dayGroup.slots.map((slot) => [slot.slug, slot]))
     : null;
@@ -694,18 +905,16 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
 
   const rows = useMemo(() => {
     let matched = index.filter((entry) =>
-      marketMatches(entry, directoryFilters, daySlugs, data, stallMode),
+      marketMatches(entry, directoryFilters, daySlugs, stallMode),
     );
     if (pin && !matched.some((entry) => entry.market.slug === pin.slug)) {
       const pinned = index.find((entry) => entry.market.slug === pin.slug);
-      if (pinned && entryInContext(pinned, daySlugs, directoryFilters, data)) matched = [pinned, ...matched];
+      if (pinned && entryInContext(pinned, daySlugs, directoryFilters)) matched = [pinned, ...matched];
     }
     const built: FloorRow[] = matched.map((entry) => {
       const stalls = visibleStalls(entry, directoryFilters, stallMode);
       const when = marketWhen(entry.market, slotBySlug?.get(entry.market.slug), data.todayWeekday);
-      const narrowed = Boolean(
-        directoryFilters.q.trim() || category || cuisine || diet || made,
-      );
+      const narrowed = Boolean(directoryFilters.q.trim() || specialtyOn(directoryFilters));
       return {
         market: entry.market,
         hours: when.hours,
@@ -722,12 +931,15 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
         if (a.market.slug === pin.slug) return -1;
         if (b.market.slug === pin.slug) return 1;
       }
-      if (sort !== "name" && (a.stallCount > 0) !== (b.stallCount > 0)) {
-        return a.stallCount > 0 ? -1 : 1;
+      if (near) {
+        const from = (market: EnrichedMarketRow) =>
+          market.lat == null || market.lng == null
+            ? Number.POSITIVE_INFINITY
+            : distanceMeters(near, { lat: market.lat, lng: market.lng });
+        return from(a.market) - from(b.market) || a.market.name.localeCompare(b.market.name);
       }
-      if (sort === "name") return a.market.name.localeCompare(b.market.name);
-      if (sort === "stalls") {
-        return b.stallCount - a.stallCount || a.market.name.localeCompare(b.market.name);
+      if ((a.stallCount > 0) !== (b.stallCount > 0)) {
+        return a.stallCount > 0 ? -1 : 1;
       }
       if (slotOrder) {
         return (
@@ -746,71 +958,61 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
     return built;
     // Slot map identity follows dayId. Filters are listed so the memo stays honest.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, q, dayId, area, setup, category, cuisine, diet, made, sort, data, pin]);
+  }, [index, q, dayId, weekday, area, setup, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, near, data, pin]);
 
   const answer = useMemo(
     () => buildSearchAnswer(index, filters, daySlugs, slotBySlug, data),
     // The answer follows the typed query plus the day, place, and setup already in filters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [index, q, dayId, area, setup, category, cuisine, diet, made, data],
+    [index, q, dayId, weekday, area, setup, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, data],
   );
 
   const selected =
     rows.find((row) => row.market.slug === (pin?.slug ?? selectedSlug)) ?? rows[0] ?? null;
-  const guides = q.trim().length >= SEARCH_MIN ? answer.guides : [];
-  const leadSlug = searching
-    ? (answer.markets[0]?.slug ??
-      answer.vendors[0]?.marketSlug ??
-      answer.products[0]?.offers[0]?.marketSlug ??
-      null)
-    : null;
-  const leadEntry = leadSlug ? (index.find((entry) => entry.market.slug === leadSlug) ?? null) : null;
-  const leadRow: FloorRow | null = leadEntry
-    ? (() => {
-        const stalls = visibleStalls(leadEntry, filters, "strict");
-        const when = marketWhen(
-          leadEntry.market,
-          slotBySlug?.get(leadEntry.market.slug),
-          data.todayWeekday,
-        );
-        return {
-          market: leadEntry.market,
-          hours: when.hours,
-          open: when.open,
-          stallCount: stalls.length,
-          stalls,
-        };
-      })()
-    : null;
+  const queryOn = q.trim().length >= SEARCH_MIN;
+  const landed = queryOn && pin != null;
 
-  const placeChoices = data.neighbourhoodCircuits.filter(
-    (circuit) => circuit.label !== "More in Toronto" && circuit.marketCount > 0,
-  );
+  const placeChoices = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const entry of index) {
+      const area = areaForMarket(entry.market);
+      if (!area) continue;
+      counts.set(area, (counts.get(area) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .filter(([, count]) => count >= MIN_PLACE_MARKETS)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([label, count]) => ({ label, count }));
+  }, [index]);
 
   function optionCount(next: Partial<FloorFilters>) {
     const merged = { ...filters, ...next };
-    return index.filter((entry) => marketMatches(entry, merged, daySlugs, data)).length;
+    return index.filter((entry) => marketMatches(entry, merged, daySlugs)).length;
   }
 
   const facetOptions = useMemo(() => {
-    const activeDay = dayId ? (data.fullWeek.find((group) => group.id === dayId) ?? null) : null;
-    const activeDaySlugs = activeDay ? new Set(activeDay.slots.map((slot) => slot.slug)) : null;
+    const activeDaySlugs = daySlugsFor(filters, data);
 
     function tally(kind: FacetId) {
       const counts = new Map<string, number>();
       const narrowed: FloorFilters = {
-        q,
-        dayId,
-        area,
-        setup,
+        ...filters,
         category: kind === "sell" ? null : category,
         cuisine: kind === "cuisine" ? null : cuisine,
         diet: kind === "diet" ? null : diet,
         made: kind === "made" ? null : made,
+        categoryTags: kind === "sell" ? [] : categoryTags,
+        cuisineTags: kind === "cuisine" ? [] : cuisineTags,
+        dietTags: kind === "diet" ? [] : dietTags,
+        madeTags: kind === "made" ? [] : madeTags,
       };
       for (const entry of index) {
-        if (activeDaySlugs && !activeDaySlugs.has(entry.market.slug)) continue;
-        if (area && !marketInPlace(entry.market, area, data)) continue;
+        if (activeDaySlugs) {
+          if (!activeDaySlugs.has(entry.market.slug)) continue;
+        } else if (weekday != null && !marketOnWeekday(entry.market, weekday)) {
+          continue;
+        }
+        if (area && !marketInPlace(entry.market, area)) continue;
         if (setup && !hasSetup(entry.market, setup)) continue;
         const ids = new Set<string>();
         for (const stall of visibleStalls(entry, narrowed)) {
@@ -849,7 +1051,7 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
       diet: optionsFor(tally("diet"), diet, DIET_ORDER, tagLabel),
       made: optionsFor(tally("made"), made, MADE_ORDER, tagLabel),
     };
-  }, [index, q, dayId, area, setup, category, cuisine, diet, made, data]);
+  }, [index, filters, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, data]);
 
   const activeOptions =
     facet === "sell"
@@ -864,10 +1066,10 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
 
   function pickFacetValue(id: string) {
     const next = activeValue === id ? null : id;
-    if (facet === "sell") setCategory(next);
-    else if (facet === "cuisine") setCuisine(next);
-    else if (facet === "diet") setDiet(next);
-    else setMade(next);
+    if (facet === "sell") commit({ category: next, categoryTags: next ? [next] : [] });
+    else if (facet === "cuisine") commit({ cuisine: next, cuisineTags: next ? [next] : [] });
+    else if (facet === "diet") commit({ diet: next, dietTags: next ? [next] : [] });
+    else commit({ made: next, madeTags: next ? [next] : [] });
   }
 
   function step(delta: number) {
@@ -900,15 +1102,60 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
     ];
   });
 
+  const dayStamp = dayGroup?.label ?? (dayId === "open" ? "Open now" : weekday != null ? weekdayLabel(weekday) : null);
   const stamps = [
-    dayGroup ? { key: "day", label: dayGroup.label, clear: () => setDayId(null) } : null,
-    area ? { key: "area", label: area, clear: () => setArea(null) } : null,
-    setup ? { key: "setup", label: tagLabel(setup), clear: () => setSetup(null) } : null,
-    category ? { key: "category", label: categoryLabel(category), clear: () => setCategory(null) } : null,
-    cuisine ? { key: "cuisine", label: tagLabel(cuisine), clear: () => setCuisine(null) } : null,
-    diet ? { key: "diet", label: tagLabel(diet), clear: () => setDiet(null) } : null,
-    made ? { key: "made", label: tagLabel(made), clear: () => setMade(null) } : null,
-    q.trim() ? { key: "q", label: q.trim(), clear: () => setQ("") } : null,
+    dayStamp ? { key: "day", label: dayStamp, clear: () => commit({ dayId: null, weekday: null }) } : null,
+    area ? { key: "area", label: area, clear: () => commit({ area: null }) } : null,
+    setup
+      ? {
+          key: "setup",
+          label: SETUPS.find((option) => option.id === setup)?.label ?? tagLabel(setup),
+          clear: () => commit({ setup: null }),
+        }
+      : null,
+    category || categoryTags.length
+      ? {
+          key: "category",
+          label: category ? categoryLabel(category) : tagLabel(categoryTags[0] ?? ""),
+          clear: () => commit({ category: null, categoryTags: [] }),
+        }
+      : null,
+    ...categoryTags
+      .filter((tag) => tag !== category && categoryIdForTag(tag) !== category)
+      .map((tag) => ({
+        key: `category-${tag}`,
+        label: tagLabel(tag),
+        clear: () => {
+          const categoryTagsNext = categoryTags.filter((item) => item !== tag);
+          commit({
+            categoryTags: categoryTagsNext,
+            category: categoryTagsNext.map(categoryIdForTag).find((id): id is string => Boolean(id)) ?? null,
+          });
+        },
+      })),
+    cuisine || cuisineTags.length
+      ? {
+          key: "cuisine",
+          label: tagLabel(cuisine ?? cuisineTags[0] ?? ""),
+          clear: () => commit({ cuisine: null, cuisineTags: [] }),
+        }
+      : null,
+    diet || dietTags.length
+      ? {
+          key: "diet",
+          label: tagLabel(diet ?? dietTags[0] ?? ""),
+          clear: () => commit({ diet: null, dietTags: [] }),
+        }
+      : null,
+    made || madeTags.length
+      ? {
+          key: "made",
+          label: tagLabel(made ?? madeTags[0] ?? ""),
+          clear: () => commit({ made: null, madeTags: [] }),
+        }
+      : null,
+    near ? { key: "near", label: "Near you", clear: () => commit({ near: null }) } : null,
+    q.trim() ? { key: "q", label: q.trim(), clear: () => commit({ q: "" }, "replace") } : null,
   ].filter((stamp): stamp is { key: string; label: string; clear: () => void } => Boolean(stamp));
 
   const cuisinePage = cuisine ? classifierGuide("origin", cuisine) : null;
@@ -922,7 +1169,7 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
     : [];
 
   function onQueryChange(value: string) {
-    setQ(value);
+    commit({ q: value }, "replace");
     setPin(null);
   }
 
@@ -932,44 +1179,47 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
   }
 
   function clearAll() {
-    setQ("");
     setPin(null);
-    setDayId(null);
-    setArea(null);
-    setSetup(null);
-    setCategory(null);
-    setCuisine(null);
-    setDiet(null);
-    setMade(null);
+    commit(emptyFloorQuery());
   }
 
   return (
     <div className="bg-background text-foreground">
-      <div className="border-b-2 border-board bg-board text-chalk">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-6">
-          <p className="text-sm font-medium">Markets page mockup</p>
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            <Link href="/preview/markets" className="underline decoration-chalk/50 underline-offset-4">
-              Earlier concepts
-            </Link>
-            <Link href="/markets" className="text-chalk/80 hover:text-chalk hover:underline">
-              Live page
-            </Link>
+      {preview ? (
+        <div className="border-b-2 border-board bg-board text-chalk">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-6">
+            <p className="text-sm font-medium">Markets page mockup</p>
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <Link href="/preview/markets" className="underline decoration-chalk/50 underline-offset-4">
+                Earlier concepts
+              </Link>
+              <Link href="/markets" className="text-chalk/80 hover:text-chalk hover:underline">
+                Live page
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium">When</span>
-          <Chip pressed={dayId == null} onClick={() => setDayId(null)}>
+          <Chip
+            pressed={dayId == null && weekday == null}
+            onClick={() => commit({ dayId: null, weekday: null })}
+          >
             All week
           </Chip>
           {data.fullWeek.map((group) => (
             <Chip
               key={group.id}
               pressed={dayId === group.id}
-              onClick={() => setDayId(dayId === group.id ? null : group.id)}
+              onClick={() =>
+                commit({
+                  dayId: dayId === group.id ? null : group.id,
+                  weekday: null,
+                })
+              }
             >
               {group.label}
             </Chip>
@@ -986,7 +1236,7 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
               <Chip
                 key={option.id}
                 pressed={pressed}
-                onClick={() => setSetup(pressed ? null : option.id)}
+                onClick={() => commit({ setup: pressed ? null : option.id })}
               >
                 <span className="inline-flex items-center gap-1.5">
                   {option.label} <Count value={count} active={pressed} />
@@ -996,16 +1246,18 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
           })}
         </div>
 
-        <section className="mt-4 grid gap-5 lg:grid-cols-12">
-          <div className="flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board lg:col-span-7">
+        <section className={cn("mt-4 grid gap-5", !queryOn && "lg:grid-cols-12")}>
+          <div
+            className={cn(
+              "flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board",
+              !queryOn && "lg:col-span-7",
+            )}
+          >
             <div>
-              <p className="type-kicker text-primary-foreground/90">
-                {LAUNCH_CITY} markets and the stalls that set up there
-              </p>
-              <h1 className="mt-1 text-primary-foreground">{LAUNCH_CITY} farmers&apos; markets</h1>
+              <h1 className="text-primary-foreground">{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-2 max-w-2xl text-primary-foreground/95">
-                Choose a day or a place, then stay with the markets and their stalls. A specialty
-                narrows who is selling. Open a product guide when you want every listing of one food.
+                Type a food, a vendor, or a market. A match opens that food, that vendor, or that
+                market&apos;s vendors.
               </p>
               <div className="mt-4">
                 <SearchField
@@ -1013,52 +1265,22 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
                   onChange={onQueryChange}
                   size="panel"
                   aria-label={SEARCH_LABEL}
-                  placeholder="Market, stall, neighbourhood, or honey"
+                  placeholder="Honey, a vendor, or Leslieville"
                 />
               </div>
-              {guides.length > 0 ? (
-                <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                  <span className="text-sm text-primary-foreground/80">Product guides</span>
-                  {guides.slice(0, PAGE).map((page) => (
-                    <Link
-                      key={page.slug}
-                      href={`/find/${page.slug}`}
-                      className="stall-chip-sm bg-primary-foreground/15 px-2.5 py-1 text-sm font-medium text-primary-foreground hover:bg-primary-foreground hover:text-primary"
-                    >
-                      {page.term}
-                    </Link>
-                  ))}
+            </div>
+            {queryOn ? null : (
+              <div className="mt-6 border-t border-primary-foreground/15 pt-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <Census value={rows.length} label="Markets in view" />
+                  <Census value={stallSlugs.size} label="Vendors in view" />
+                  <Census value={placeNames.size} label="Places in view" />
                 </div>
-              ) : null}
-            </div>
-            <div className="mt-6 border-t border-primary-foreground/15 pt-4">
-              <div className="grid grid-cols-3 gap-3">
-                {searching ? (
-                  <>
-                    <Census value={answer.products.length} label="Products" />
-                    <Census value={answer.vendors.length} label="Vendors" />
-                    <Census value={answer.markets.length} label="Markets" />
-                  </>
-                ) : (
-                  <>
-                    <Census value={rows.length} label="Markets in view" />
-                    <Census value={stallSlugs.size} label="Stalls in view" />
-                    <Census value={placeNames.size} label="Places in view" />
-                  </>
-                )}
               </div>
-            </div>
+            )}
           </div>
 
-          {searching && leadRow ? (
-            <Spotlight
-              row={leadRow}
-              focusCategory={category}
-              canStep={false}
-              onPrevious={() => undefined}
-              onNext={() => undefined}
-            />
-          ) : selected ? (
+          {queryOn ? null : selected ? (
             <Spotlight
               row={selected}
               focusCategory={category}
@@ -1080,43 +1302,48 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
         </section>
 
         {searching ? (
-          <SearchAnswer
-            answer={answer}
-            onVendorMarket={(slug) => openMarket(slug, "match")}
-            onMarket={(slug) => openMarket(slug, "all")}
+          <SearchAnswer answer={answer} onMarket={(slug, scope) => openMarket(slug, scope)} />
+        ) : landed && selected ? (
+          <SearchLanding
+            row={selected}
+            query={q.trim()}
+            guides={answer.guides}
+            scope={pin.scope}
+            onBack={() => setPin(null)}
+            onShowAll={() => setPin({ slug: selected.market.slug, scope: "all" })}
           />
         ) : (
           <>
         <section className="mt-5 bg-card p-4 ring-1 ring-board sm:p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium">Places</span>
-            <Chip pressed={area == null} onClick={() => setArea(null)}>
-              All places
+            <span className="text-sm font-medium">Areas</span>
+            <Chip pressed={area == null} onClick={() => commit({ area: null })}>
+              All areas
             </Chip>
-            {shownPlaces.map((circuit) => {
-              const pressed = area === circuit.label;
-              const count = optionCount({ area: circuit.label });
+            {shownPlaces.map((place) => {
+              const pressed = area === place.label;
+              const count = optionCount({ area: place.label });
               if (!pressed && count === 0) return null;
               return (
                 <Chip
-                  key={circuit.label}
+                  key={place.label}
                   pressed={pressed}
-                  onClick={() => setArea(pressed ? null : circuit.label)}
+                  onClick={() => commit({ area: pressed ? null : place.label })}
                 >
                   <span className="inline-flex items-center gap-1.5">
-                    {circuit.label} <Count value={count} active={pressed} />
+                    {place.label} <Count value={count} active={pressed} />
                   </span>
                 </Chip>
               );
             })}
-            {area && !placeChoices.some((circuit) => circuit.label === area) ? (
-              <Chip pressed onClick={() => setArea(null)}>
+            {area && !placeChoices.some((place) => place.label === area) ? (
+              <Chip pressed onClick={() => commit({ area: null })}>
                 {area}
               </Chip>
             ) : null}
             {placeChoices.length > PAGE ? (
               <button type="button" onClick={() => setMorePlaces((value) => !value)} className={chipIdle}>
-                {morePlaces ? "Fewer places" : `More places (${placeChoices.length - PAGE})`}
+                {morePlaces ? "Fewer areas" : `More areas (${placeChoices.length - PAGE})`}
               </button>
             ) : null}
           </div>
@@ -1128,7 +1355,7 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
                 type="button"
                 role="tab"
                 aria-selected={facet === item.id}
-                onClick={() => setFacet(item.id)}
+                onClick={() => commit({ facet: item.id }, "silent")}
                 className={facet === item.id ? chipOn : chipIdle}
               >
                 {item.label}
@@ -1202,28 +1429,7 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
         </section>
 
         <section className="mt-5" aria-live="polite">
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2>Markets and stalls</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {rows.length} {rows.length === 1 ? "market" : "markets"}
-                {selected ? ` · ${selected.market.name}` : ""}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Sort markets">
-              {(
-                [
-                  ["soonest", "Soonest"],
-                  ["stalls", "Most stalls"],
-                  ["name", "Name"],
-                ] as const
-              ).map(([id, label]) => (
-                <Chip key={id} pressed={sort === id} onClick={() => setSort(id)}>
-                  {label}
-                </Chip>
-              ))}
-            </div>
-          </div>
+          <h2>Markets and vendors</h2>
 
           {mapMarkets.length > 0 ? (
             <div className="mt-4 h-64 sm:h-72">
@@ -1241,14 +1447,14 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
           ) : (
             <div className="mt-4 grid items-start gap-5 lg:grid-cols-12">
               <MarketColumn
-                key={[q, dayId, area, setup, category, cuisine, diet, made, sort].join("|")}
+                key={[q, dayId, area, setup, category, cuisine, diet, made].join("|")}
                 rows={rows}
                 selectedSlug={selected?.market.slug ?? ""}
                 onSelect={(slug) => {
                   setSelectedSlug(slug);
                   if (pin) setPin({ slug, scope: pin.scope });
                 }}
-                onPlace={setArea}
+                onPlace={(place) => commit({ area: place })}
               />
               {selected ? (
                 <StallColumn
@@ -1256,8 +1462,7 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
                   row={selected}
                   focusCategory={category}
                   onCategory={(id) => {
-                    setFacet("sell");
-                    setCategory(id);
+                    commit({ facet: "sell", category: id, categoryTags: [id] });
                   }}
                 />
               ) : null}
@@ -1273,28 +1478,31 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
 
 function SearchAnswer({
   answer,
-  onVendorMarket,
   onMarket,
 }: {
   answer: SearchAnswer;
-  onVendorMarket: (slug: string) => void;
-  onMarket: (slug: string) => void;
+  onMarket: (slug: string, scope: "match" | "all") => void;
 }) {
-  const [productLimit, setProductLimit] = useState(PAGE);
-  const [vendorLimit, setVendorLimit] = useState(PAGE);
-  const [marketLimit, setMarketLimit] = useState(PAGE);
-  const empty =
-    answer.products.length === 0 && answer.vendors.length === 0 && answer.markets.length === 0;
-  const shownProducts = answer.products.slice(0, productLimit);
-  const shownVendors = answer.vendors.slice(0, vendorLimit);
-  const shownMarkets = answer.markets.slice(0, marketLimit);
+  const [more, setMore] = useState(false);
+  const shops = answer.vendors.filter((vendor) => vendor.rank < 9);
+  const foods = answer.products.slice(0, more ? 12 : 4);
+  const shownShops = shops.slice(0, more ? 8 : 4);
+  const shownMarkets = answer.markets.slice(0, more ? 8 : 3);
+  const best = answer.guides[0] ?? null;
+  const otherGuides = answer.guides.slice(1, more ? 6 : 3);
+  const empty = !best && foods.length === 0 && shownShops.length === 0 && shownMarkets.length === 0;
+  const hidden =
+    Math.max(0, answer.products.length - foods.length) +
+    Math.max(0, shops.length - shownShops.length) +
+    Math.max(0, answer.markets.length - shownMarkets.length) +
+    Math.max(0, answer.guides.length - 1 - otherGuides.length);
 
   if (empty) {
     return (
-      <section className="mt-5 bg-card p-6 ring-1 ring-board" aria-live="polite">
+      <section className="mt-4 bg-card p-6 ring-1 ring-board" aria-live="polite">
         <h2>Nothing matches that search</h2>
         <p className="mt-2 text-base text-muted-foreground">
-          Try a food, a stall, or a market. A product guide lists one food across every market.
+          Try a food, a vendor, or a market. These guides list one food across every market.
         </p>
         <div className="mt-4 flex flex-wrap gap-1.5">
           {FALLBACK_GUIDES.map((page) => (
@@ -1312,241 +1520,252 @@ function SearchAnswer({
   }
 
   return (
-    <div className="mt-5 flex flex-col gap-5" aria-live="polite">
-      {answer.products.length > 0 ? (
-        <section className="bg-card ring-1 ring-board">
-          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-            <div className="flex items-center gap-2">
-              <TagMark className="size-4 text-primary" />
-              <h2>Products</h2>
-            </div>
-            <span className="type-nums text-sm text-muted-foreground">{answer.products.length}</span>
-          </div>
-          <ul>
-            {shownProducts.map((product) => (
-              <li key={product.name} className="border-b border-border last:border-b-0">
-                <div className="px-4 pt-3">
-                  <Link href={product.href} className="text-base font-medium hover:underline">
-                    {product.name}
-                  </Link>
-                </div>
-                <ul>
-                  {product.offers.map((offer) => {
-                    const price = formatPrice(offer.priceCents);
-                    return (
-                      <li
-                        key={`${offer.vendorSlug}-${offer.marketSlug}`}
-                        className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-2"
-                      >
-                        <StallEmblem
-                          src={offer.logoUrl}
-                          name={offer.vendorName}
-                          kind="vendor"
-                          size="sm"
-                        />
-                        <div className="min-w-0">
-                          <Link
-                            href={`/vendors/${offer.vendorSlug}`}
-                            className="text-sm font-medium hover:underline"
-                          >
-                            {offer.vendorName}
-                          </Link>
-                          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3">
-                            <button
-                              type="button"
-                              onClick={() => onVendorMarket(offer.marketSlug)}
-                              className="cursor-pointer text-left text-sm text-muted-foreground hover:underline"
-                            >
-                              {offer.marketName}
-                              {offer.open ? (
-                                <span className="ml-2">
-                                  <NowLabel>Open</NowLabel>
-                                </span>
-                              ) : null}
-                            </button>
-                            <Hours value={offer.hours} />
-                          </div>
-                        </div>
-                        {price ? <span className="type-nums text-sm">{price}</span> : <span />}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </li>
-            ))}
-          </ul>
-          {answer.products.length > productLimit ? (
-            <div className="px-4 py-3">
-              <button
-                type="button"
-                onClick={() => setProductLimit((value) => value + PAGE)}
-                className={chipIdle}
-              >
-                Show more products ({answer.products.length - productLimit})
-              </button>
-            </div>
-          ) : null}
-        </section>
+    <div className="mt-4 bg-card ring-1 ring-board" aria-live="polite">
+      {best ? (
+        <Link
+          href={`/find/${best.slug}`}
+          className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-border bg-receipt px-4 py-4 hover:bg-secondary"
+        >
+          <TagMark className="size-5 text-primary" />
+          <span className="min-w-0">
+            <span className="block text-base font-medium">{best.term}</span>
+            <span className="text-sm text-muted-foreground">Every vendor that lists it</span>
+          </span>
+          <CaretRightMark className="size-4 text-primary" />
+        </Link>
+      ) : null}
+      {otherGuides.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5 border-b border-border px-4 py-3">
+          {otherGuides.map((page) => (
+            <Link
+              key={page.slug}
+              href={`/find/${page.slug}`}
+              className="stall-chip-sm bg-receipt px-2.5 py-1 text-sm font-medium ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
+            >
+              {page.term}
+            </Link>
+          ))}
+        </div>
       ) : null}
 
-      {answer.vendors.length > 0 ? (
-        <section className="bg-card ring-1 ring-board">
-          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-            <div className="flex items-center gap-2">
-              <CrateMark className="size-4 text-primary" />
-              <h2>Vendors</h2>
-            </div>
-            <span className="type-nums text-sm text-muted-foreground">{answer.vendors.length}</span>
-          </div>
+      {foods.length > 0 ? (
+        <section>
+          <h2 className="border-b border-border px-4 py-3">Products</h2>
           <ul>
-            {shownVendors.map((vendor) => {
-              const price = vendor.item ? formatPrice(vendor.item.priceCents) : null;
+            {foods.map((product) => {
+              const offer = product.offers[0];
+              if (!offer) return null;
+              const price = formatPrice(offer.priceCents);
+              const moreOffers = product.offers.length - 1;
               return (
-                <li key={vendor.slug} className="border-b border-border px-4 py-3 last:border-b-0">
-                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3">
-                    <StallEmblem src={vendor.logoUrl} name={vendor.name} kind="vendor" size="sm" />
+                <li key={product.name} className="border-b border-border px-4 py-3">
+                  <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
                     <div className="min-w-0">
-                      <p>
-                        <Link
-                          href={`/vendors/${vendor.slug}`}
-                          className="text-base font-medium hover:underline"
-                        >
-                          {vendor.name}
+                      <Link href={product.href} className="text-base font-medium hover:underline">
+                        {product.name}
+                      </Link>
+                      <p className="mt-0.5 text-sm text-muted-foreground">
+                        <Link href={`/vendors/${offer.vendorSlug}`} className="hover:underline">
+                          {offer.vendorName}
                         </Link>
-                        <ListingScore
-                          parens
-                          ratingAvg={vendor.ratingAvg}
-                          reviewCount={vendor.reviewCount}
-                          className="ml-1.5"
-                        />
-                      </p>
-                      <p className="text-sm text-muted-foreground">{vendor.categoryLabel}</p>
-                      {vendor.item ? (
-                        <p className="mt-1">
-                          <Link href={vendor.item.href} className="text-sm font-medium hover:underline">
-                            {vendor.item.name}
-                            {price ? <span className="type-nums ml-1.5">{price}</span> : null}
-                          </Link>
-                        </p>
-                      ) : null}
-                      <div className="mt-1 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3">
+                        <span> · </span>
                         <button
                           type="button"
-                          onClick={() => onVendorMarket(vendor.marketSlug)}
-                          className="cursor-pointer text-left text-sm hover:underline"
+                          onClick={() => onMarket(offer.marketSlug, "match")}
+                          className="cursor-pointer hover:underline"
                         >
-                          {vendor.marketName}
-                          {vendor.open ? (
-                            <span className="ml-2">
-                              <NowLabel>Open</NowLabel>
-                            </span>
-                          ) : null}
+                          {offer.marketName}
                         </button>
-                        <Hours value={vendor.hours} />
-                      </div>
+                      </p>
+                      {moreOffers > 0 ? (
+                        <Link href={product.href} className="mt-1 inline-block text-sm font-medium text-primary hover:underline">
+                          {moreOffers} more {moreOffers === 1 ? "vendor" : "vendors"}
+                        </Link>
+                      ) : null}
                     </div>
-                    <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
+                    <div className="text-right">
+                      <Hours value={offer.hours} />
+                      {price ? <p className="type-nums text-sm">{price}</p> : null}
+                    </div>
                   </div>
                 </li>
               );
             })}
           </ul>
-          {answer.vendors.length > vendorLimit ? (
-            <div className="px-4 py-3">
-              <button
-                type="button"
-                onClick={() => setVendorLimit((value) => value + PAGE)}
-                className={chipIdle}
-              >
-                Show more vendors ({answer.vendors.length - vendorLimit})
-              </button>
-            </div>
-          ) : null}
         </section>
       ) : null}
 
-      {answer.markets.length > 0 ? (
-        <section className="bg-card ring-1 ring-board">
-          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-            <div className="flex items-center gap-2">
-              <RulesMark className="size-4 text-primary" />
-              <h2>Markets</h2>
-            </div>
-            <span className="type-nums text-sm text-muted-foreground">{answer.markets.length}</span>
-          </div>
+      {shownShops.length > 0 ? (
+        <section>
+          <h2 className="border-b border-border px-4 py-3">Vendors</h2>
           <ul>
-            {shownMarkets.map((market) => (
-              <li key={market.slug} className="border-b border-border last:border-b-0">
-                <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-3">
-                  <StallEmblem src={market.logoUrl} name={market.name} kind="market" size="sm" />
-                  <div className="min-w-0">
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
-                      <button
-                        type="button"
-                        onClick={() => onMarket(market.slug)}
-                        className="cursor-pointer text-left"
-                      >
-                        <span className="text-base font-medium">{market.name}</span>
-                        <ListingScore
-                          parens
-                          ratingAvg={market.ratingAvg}
-                          reviewCount={market.reviewCount}
-                          className="ml-1.5"
-                        />
-                        {market.open ? (
-                          <span className="mt-0.5 block">
-                            <NowLabel>Open</NowLabel>
-                          </span>
-                        ) : null}
-                        <span className="mt-0.5 block text-sm text-muted-foreground">
-                          {market.neighbourhood}
-                        </span>
-                      </button>
-                      <div className="text-right">
-                        <Hours value={market.hours} />
-                        <p className="text-sm text-muted-foreground">
-                          {market.matchingStalls > 0 && market.matchingStalls < market.stallCount ? (
-                            <>
-                              <span className="type-nums">{market.matchingStalls}</span> matching
-                            </>
-                          ) : (
-                            <>
-                              <span className="type-nums">{market.stallCount}</span>{" "}
-                              {market.stallCount === 1 ? "stall" : "stalls"}
-                            </>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => onMarket(market.slug)}
-                      className="mt-1 cursor-pointer text-sm font-medium text-primary hover:underline"
-                    >
-                      {market.matchingStalls > 0 && market.matchingStalls < market.stallCount
-                        ? "All stalls at this market"
-                        : "Stalls at this market"}
-                    </button>
-                  </div>
-                  <SaveButton kind="market" slug={market.slug} name={market.name} />
-                </div>
+            {shownShops.map((vendor) => (
+              <li key={vendor.slug} className="border-b border-border">
+                <Link
+                  href={`/vendors/${vendor.slug}`}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-3 hover:bg-secondary"
+                >
+                  <StallEmblem src={vendor.logoUrl} name={vendor.name} kind="vendor" size="sm" />
+                  <span className="min-w-0">
+                    <span className="block text-base font-medium">{vendor.name}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {vendor.categoryLabel} · {vendor.marketName}
+                    </span>
+                  </span>
+                  <span className="text-right">
+                    <Hours value={vendor.hours} />
+                    {vendor.open ? (
+                      <span className="mt-0.5 block">
+                        <NowLabel>Open</NowLabel>
+                      </span>
+                    ) : null}
+                  </span>
+                </Link>
               </li>
             ))}
           </ul>
-          {answer.markets.length > marketLimit ? (
-            <div className="px-4 py-3">
-              <button
-                type="button"
-                onClick={() => setMarketLimit((value) => value + PAGE)}
-                className={chipIdle}
-              >
-                Show more markets ({answer.markets.length - marketLimit})
-              </button>
-            </div>
-          ) : null}
         </section>
       ) : null}
+
+      {shownMarkets.length > 0 ? (
+        <section>
+          <h2 className="border-b border-border px-4 py-3">Markets</h2>
+          <ul>
+            {shownMarkets.map((market) => (
+              <li key={market.slug} className="border-b border-border">
+                <button
+                  type="button"
+                  onClick={() =>
+                    onMarket(market.slug, market.matchingStalls > 0 ? "match" : "all")
+                  }
+                  className="grid w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 px-4 py-3 text-left hover:bg-secondary"
+                >
+                  <StallEmblem src={market.logoUrl} name={market.name} kind="market" size="sm" />
+                  <span className="min-w-0">
+                    <span className="block text-base font-medium">{market.name}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {market.neighbourhood}
+                      {market.matchingStalls > 0
+                        ? ` · ${market.matchingStalls} matching ${market.matchingStalls === 1 ? "vendor" : "vendors"}`
+                        : ` · ${market.stallCount} ${market.stallCount === 1 ? "vendor" : "vendors"}`}
+                    </span>
+                  </span>
+                  <Hours value={market.hours} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {hidden > 0 ? (
+        <div className="px-4 py-3">
+          <button type="button" onClick={() => setMore(true)} className={chipIdle}>
+            Show more ({hidden})
+          </button>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function SearchLanding({
+  row,
+  query,
+  guides,
+  scope,
+  onBack,
+  onShowAll,
+}: {
+  row: FloorRow;
+  query: string;
+  guides: SearchGuide[];
+  scope: "match" | "all";
+  onBack: () => void;
+  onShowAll: () => void;
+}) {
+  const [limit, setLimit] = useState(PAGE);
+  const shown = row.stalls.slice(0, limit);
+  const guide = guides[0] ?? null;
+  const narrowed = scope === "match" && row.stalls.length > 0 && row.stalls.length < row.market.vendorCount;
+
+  return (
+    <section className="mt-4 bg-card ring-1 ring-board" aria-live="polite">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <button type="button" onClick={onBack} className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+          <CaretLeftMark className="size-4" />
+          Back to results
+        </button>
+        {guide ? (
+          <Link href={`/find/${guide.slug}`} className="text-sm font-medium text-primary hover:underline">
+            Every vendor that lists {guide.term}
+          </Link>
+        ) : null}
+      </div>
+      <div className="border-b border-border px-4 py-4">
+        <p className="type-kicker">{row.market.neighbourhood}</p>
+        <h2 className="mt-1">
+          <Link href={`/markets/${row.market.slug}`} className="hover:underline">
+            <VerifiedName slug={row.market.slug} name={row.market.name} />
+          </Link>
+        </h2>
+        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3">
+          <p className="text-sm text-muted-foreground">
+            {narrowed
+              ? `Vendors matching “${query}”`
+              : `${row.stallCount} ${row.stallCount === 1 ? "vendor" : "vendors"}`}
+          </p>
+          <Hours value={row.hours} />
+        </div>
+        {narrowed ? (
+          <button type="button" onClick={onShowAll} className="mt-2 cursor-pointer text-sm font-medium text-primary hover:underline">
+            All vendors at this market
+          </button>
+        ) : null}
+      </div>
+      {shown.length === 0 ? (
+        <p className="px-4 py-6 text-base">No vendors at this market match.</p>
+      ) : (
+        <ul>
+          {shown.map((stall) => {
+            const needle = query.toLowerCase();
+            const item =
+              scope === "match"
+                ? (stall.items.find((entry) => entry.name.toLowerCase().includes(needle)) ?? null)
+                : (stall.items[0] ?? null);
+            const price = item ? formatPrice(item.priceCents) : null;
+            return (
+              <li key={stall.slug} className="border-b border-border px-4 py-3 last:border-b-0">
+                <div className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3">
+                  <StallEmblem src={stall.logoUrl} name={stall.name} kind="vendor" size="sm" />
+                  <div className="min-w-0">
+                    <Link href={`/vendors/${stall.slug}`} className="text-base font-medium hover:underline">
+                      {stall.name}
+                    </Link>
+                    <p className="text-sm text-muted-foreground">{stall.categoryLabel}</p>
+                    {item ? (
+                      <p className="mt-1">
+                        <Link href={item.href} className="text-sm font-medium hover:underline">
+                          {item.name}
+                          {price ? <span className="type-nums ml-1.5">{price}</span> : null}
+                        </Link>
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {row.stalls.length > limit ? (
+        <div className="px-4 py-3">
+          <button type="button" onClick={() => setLimit((value) => value + PAGE)} className={chipIdle}>
+            Show more vendors ({row.stalls.length - limit})
+          </button>
+        </div>
+      ) : null}
+    </section>
   );
 }
 
@@ -1740,7 +1959,7 @@ function MarketColumn({
   const [limit, setLimit] = useState(PAGE);
   const shown = rows.slice(0, limit);
   return (
-    <div className="bg-card ring-1 ring-board lg:col-span-5">
+    <div id="directory-markets" className="scroll-mt-header bg-card ring-1 ring-board lg:col-span-5">
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <RulesMark className="size-4 text-primary" />
@@ -1789,18 +2008,25 @@ function MarketColumn({
                       {row.stallCount > 0 ? (
                         <p className="text-sm text-muted-foreground">
                           <span className="type-nums">{row.stallCount}</span>{" "}
-                          {row.stallCount === 1 ? "stall" : "stalls"}
+                          {row.stallCount === 1 ? "vendor" : "vendors"}
                         </p>
                       ) : null}
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => onPlace(row.market.neighbourhood)}
-                    className="mt-0.5 cursor-pointer text-left text-sm text-muted-foreground hover:underline"
-                  >
-                    {row.market.neighbourhood}
-                  </button>
+                  {areaForMarket(row.market) ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const place = areaForMarket(row.market);
+                        if (place) onPlace(place);
+                      }}
+                      className="mt-0.5 cursor-pointer text-left text-sm text-muted-foreground hover:underline"
+                    >
+                      {areaForMarket(row.market)}
+                    </button>
+                  ) : (
+                    <p className="mt-0.5 text-sm text-muted-foreground">{row.market.neighbourhood}</p>
+                  )}
                 </div>
                 <SaveButton kind="market" slug={row.market.slug} name={row.market.name} />
               </div>
@@ -1853,11 +2079,11 @@ function StallColumn({
     : [];
 
   return (
-    <div id="market-stalls" className="bg-card ring-1 ring-board lg:col-span-7">
+    <div id="directory-vendors" className="scroll-mt-header bg-card ring-1 ring-board lg:col-span-7">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <CrateMark className="size-4 text-primary" />
-          <h3>Stalls</h3>
+          <h3>Vendors</h3>
         </div>
         <span className="text-sm text-muted-foreground">
           <span className="type-nums">{stalls.length}</span>
@@ -1867,13 +2093,13 @@ function StallColumn({
               of <span className="type-nums">{row.market.vendorCount}</span>
             </>
           ) : null}{" "}
-          {stalls.length === 1 ? "stall" : "stalls"}
+          {stalls.length === 1 ? "vendor" : "vendors"}
         </span>
       </div>
       {localOptions.length > 1 ? (
         <div className="flex flex-wrap items-center gap-1.5 border-b border-border px-4 py-3">
           <Chip pressed={localCategory == null} onClick={() => setLocalCategory(null)}>
-            All stalls here
+            All vendors here
           </Chip>
           {localVisible.map(([id, label]) => (
             <Chip
@@ -1908,7 +2134,7 @@ function StallColumn({
         </div>
       ) : null}
       {shown.length === 0 ? (
-        <p className="px-4 py-6 text-base">No stalls at this market match.</p>
+        <p className="px-4 py-6 text-base">No vendors at this market match.</p>
       ) : (
         <ul>
           {shown.map((stall) => {
@@ -1966,7 +2192,7 @@ function StallColumn({
       {stalls.length > limit ? (
         <div className="px-4 py-3">
           <button type="button" onClick={() => setLimit((value) => value + PAGE)} className={chipIdle}>
-            Show more stalls ({stalls.length - limit})
+            Show more vendors ({stalls.length - limit})
           </button>
         </div>
       ) : null}
