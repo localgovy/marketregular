@@ -21,6 +21,7 @@ import {
   CrateMark,
   PlateMark,
   RulesMark,
+  TagMark,
 } from "@/components/marks";
 import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
@@ -84,6 +85,70 @@ type FloorRow = {
   stalls: FloorStall[];
 };
 
+type SearchGuide = { term: string; slug: string; rank: number };
+
+type SearchOffer = {
+  vendorSlug: string;
+  vendorName: string;
+  logoUrl: string | null;
+  priceCents: number | null;
+  href: string;
+  marketSlug: string;
+  marketName: string;
+  hours: string;
+  open: boolean;
+  reviewCount: number;
+  rank: number;
+};
+
+type SearchProduct = {
+  name: string;
+  href: string;
+  rank: number;
+  offers: SearchOffer[];
+};
+
+type SearchVendor = {
+  slug: string;
+  name: string;
+  logoUrl: string | null;
+  categoryLabel: string;
+  ratingAvg: number | null;
+  reviewCount: number;
+  item: FloorItem | null;
+  marketSlug: string;
+  marketName: string;
+  hours: string;
+  open: boolean;
+  rank: number;
+};
+
+type SearchMarket = {
+  slug: string;
+  name: string;
+  neighbourhood: string;
+  logoUrl: string | null;
+  ratingAvg: number | null;
+  reviewCount: number;
+  hours: string;
+  open: boolean;
+  matchingStalls: number;
+  stallCount: number;
+  rank: number;
+};
+
+type SearchAnswer = {
+  guides: SearchGuide[];
+  products: SearchProduct[];
+  vendors: SearchVendor[];
+  markets: SearchMarket[];
+};
+
+const FALLBACK_GUIDES: SearchGuide[] = [...FIND_PAGES]
+  .sort((a, b) => b.vendors - a.vendors || a.term.localeCompare(b.term))
+  .slice(0, 6)
+  .map((page) => ({ term: page.term, slug: page.slug, rank: 3 }));
+
 const FACETS: Array<{ id: FacetId; label: string }> = [
   { id: "sell", label: "What they sell" },
   { id: "cuisine", label: "Cuisine" },
@@ -127,6 +192,7 @@ const MADE_ORDER = [
   "zero-waste",
 ];
 const PAGE = 8;
+const SEARCH_MIN = 2;
 
 const chipIdle =
   "stall-chip-sm cursor-pointer bg-card px-3 py-1.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary";
@@ -283,14 +349,22 @@ function stallMatches(
   return true;
 }
 
-function visibleStalls(entry: IndexedMarket, filters: FloorFilters) {
+function visibleStalls(
+  entry: IndexedMarket,
+  filters: FloorFilters,
+  mode: "browse" | "strict" = "browse",
+) {
   const needle = filters.q.trim().toLowerCase();
-  const marketHit = !needle || entry.blob.includes(needle);
+  const marketHit = mode === "browse" && (!needle || entry.blob.includes(needle));
   return entry.stalls.filter((stall) => {
     if (!stallMatches(stall, filters)) return false;
-    if (needle && !marketHit && !stall.blob.includes(needle)) return false;
+    if (needle && !marketHit && !stallMatchesQuery(stall, needle)) return false;
     return true;
   });
+}
+
+function stallMatchesQuery(stall: FloorStall, needle: string) {
+  return vendorRank(stall, needle) != null;
 }
 
 function marketMatches(
@@ -298,16 +372,27 @@ function marketMatches(
   filters: FloorFilters,
   daySlugs: Set<string> | null,
   data: MarketsFloorData,
+  mode: "browse" | "strict" = "browse",
 ) {
-  if (daySlugs && !daySlugs.has(entry.market.slug)) return false;
-  if (filters.area && !marketInPlace(entry.market, filters.area, data)) return false;
-  if (filters.setup && !hasSetup(entry.market, filters.setup)) return false;
+  if (!entryInContext(entry, daySlugs, filters, data)) return false;
   const needle = filters.q.trim();
   const narrowed = Boolean(
     needle || filters.category || filters.cuisine || filters.diet || filters.made,
   );
   if (!narrowed) return true;
-  return visibleStalls(entry, filters).length > 0;
+  return visibleStalls(entry, filters, mode).length > 0;
+}
+
+function entryInContext(
+  entry: IndexedMarket,
+  daySlugs: Set<string> | null,
+  filters: Pick<FloorFilters, "area" | "setup">,
+  data: MarketsFloorData,
+) {
+  if (daySlugs && !daySlugs.has(entry.market.slug)) return false;
+  if (filters.area && !marketInPlace(entry.market, filters.area, data)) return false;
+  if (filters.setup && !hasSetup(entry.market, filters.setup)) return false;
+  return true;
 }
 
 function focusedLabel(stall: FloorStall, focus: string | null) {
@@ -325,16 +410,229 @@ function focusedItems(stall: FloorStall, focus: string | null) {
   );
 }
 
-function closestGuide(q: string) {
-  const needle = q.trim().toLowerCase();
-  if (needle.length < 3) return null;
-  let best: (typeof FIND_PAGES)[number] | null = null;
-  for (const page of FIND_PAGES) {
-    const term = page.term.toLowerCase();
-    if (term !== needle && !term.startsWith(needle)) continue;
-    if (!best || page.term.length < best.term.length) best = page;
+function textRank(value: string, needle: string) {
+  const text = value.toLowerCase();
+  if (text === needle) return 0;
+  if (text.startsWith(needle)) return 1;
+  if (text.includes(needle)) return 2;
+  return null;
+}
+
+function bestRank(values: string[], needle: string) {
+  let best: number | null = null;
+  for (const value of values) {
+    const rank = textRank(value, needle);
+    if (rank == null) continue;
+    if (best == null || rank < best) best = rank;
   }
   return best;
+}
+
+function vendorRank(stall: FloorStall, needle: string) {
+  const name = textRank(stall.name, needle);
+  if (name != null) return name;
+  const category = bestRank(
+    [stall.categoryLabel, ...stall.aisleIds.map((id) => categoryLabel(id))],
+    needle,
+  );
+  if (category != null) return 3 + category;
+  const facet = bestRank(
+    [
+      ...stall.origins.map((tag) => tagLabel(tag)),
+      ...stall.diets.map((tag) => tagLabel(tag)),
+      ...stall.production.map((tag) => tagLabel(tag)),
+    ],
+    needle,
+  );
+  if (facet != null) return 6 + facet;
+  const item = bestRank(
+    stall.items.map((entry) => entry.name),
+    needle,
+  );
+  if (item != null) return 9 + item;
+  return null;
+}
+
+function marketTextRank(market: EnrichedMarketRow, needle: string) {
+  const name = textRank(market.name, needle);
+  if (name != null) return name;
+  const place = textRank(market.neighbourhood, needle);
+  if (place != null) return 3 + place;
+  const city = textRank(market.city, needle);
+  if (city != null) return 6 + city;
+  return null;
+}
+
+function matchingGuides(needle: string) {
+  const guides: SearchGuide[] = [];
+  for (const page of FIND_PAGES) {
+    const rank = textRank(page.term, needle);
+    if (rank == null) continue;
+    guides.push({ term: page.term, slug: page.slug, rank });
+  }
+  guides.sort(
+    (a, b) => a.rank - b.rank || a.term.length - b.term.length || a.term.localeCompare(b.term),
+  );
+  return guides;
+}
+
+function marketWhen(
+  market: EnrichedMarketRow,
+  slot: { hours: string; open: boolean } | undefined,
+  today: number,
+) {
+  const soonest = nextSession(market.sessions, today);
+  const hours = slot
+    ? slot.hours
+    : soonest
+      ? `${soonest.day.slice(0, 3)} ${soonest.hours}`
+      : market.hours || market.nextOpen;
+  return { hours, open: slot ? slot.open : market.open };
+}
+
+function buildSearchAnswer(
+  index: IndexedMarket[],
+  filters: FloorFilters,
+  daySlugs: Set<string> | null,
+  slotBySlug: Map<string, { hours: string; open: boolean }> | null,
+  data: MarketsFloorData,
+): SearchAnswer {
+  const needle = filters.q.trim().toLowerCase();
+  if (needle.length < SEARCH_MIN) {
+    return { guides: [], products: [], vendors: [], markets: [] };
+  }
+  const guides = matchingGuides(needle);
+  const productOffers = new Map<string, SearchOffer & { productName: string }>();
+  const vendors = new Map<string, SearchVendor>();
+  const markets: SearchMarket[] = [];
+
+  for (const entry of index) {
+    if (!entryInContext(entry, daySlugs, filters, data)) continue;
+    const when = marketWhen(
+      entry.market,
+      slotBySlug?.get(entry.market.slug),
+      data.todayWeekday,
+    );
+    let matchingStalls = 0;
+    for (const stall of entry.stalls) {
+      if (!stallMatches(stall, filters)) continue;
+      const rank = vendorRank(stall, needle);
+      if (rank == null) continue;
+      matchingStalls += 1;
+      const item = stall.items.find((entryItem) => textRank(entryItem.name, needle) != null) ?? null;
+      const existingVendor = vendors.get(stall.slug);
+      const vendor: SearchVendor = {
+        slug: stall.slug,
+        name: stall.name,
+        logoUrl: stall.logoUrl,
+        categoryLabel: stall.categoryLabel,
+        ratingAvg: stall.ratingAvg,
+        reviewCount: stall.reviewCount,
+        item,
+        marketSlug: entry.market.slug,
+        marketName: entry.market.name,
+        hours: when.hours,
+        open: when.open,
+        rank,
+      };
+      if (
+        !existingVendor ||
+        vendor.rank < existingVendor.rank ||
+        (vendor.rank === existingVendor.rank && vendor.open && !existingVendor.open)
+      ) {
+        vendors.set(stall.slug, vendor);
+      }
+      for (const product of stall.items) {
+        const productRank = textRank(product.name, needle);
+        if (productRank == null) continue;
+        const key = `${product.name.toLowerCase()}|${stall.slug}`;
+        const offer: SearchOffer & { productName: string } = {
+          productName: product.name,
+          vendorSlug: stall.slug,
+          vendorName: stall.name,
+          logoUrl: stall.logoUrl,
+          priceCents: product.priceCents,
+          href: product.href,
+          marketSlug: entry.market.slug,
+          marketName: entry.market.name,
+          hours: when.hours,
+          open: when.open,
+          reviewCount: stall.reviewCount,
+          rank: productRank,
+        };
+        const existingOffer = productOffers.get(key);
+        if (
+          !existingOffer ||
+          offer.rank < existingOffer.rank ||
+          (offer.rank === existingOffer.rank && offer.open && !existingOffer.open)
+        ) {
+          productOffers.set(key, offer);
+        }
+      }
+    }
+    const marketRank = marketTextRank(entry.market, needle);
+    if (marketRank != null) {
+      markets.push({
+        slug: entry.market.slug,
+        name: entry.market.name,
+        neighbourhood: entry.market.neighbourhood,
+        logoUrl: entry.market.logo_url,
+        ratingAvg: entry.market.rating_avg,
+        reviewCount: entry.market.review_count,
+        hours: when.hours,
+        open: when.open,
+        matchingStalls,
+        stallCount: entry.market.vendorCount || entry.stalls.length,
+        rank: marketRank,
+      });
+    }
+  }
+
+  const grouped = new Map<string, SearchProduct>();
+  for (const offer of productOffers.values()) {
+    const key = offer.productName.toLowerCase();
+    const group = grouped.get(key) ?? {
+      name: offer.productName,
+      href: offer.href,
+      rank: offer.rank,
+      offers: [],
+    };
+    if (offer.rank < group.rank) {
+      group.rank = offer.rank;
+      group.href = offer.href;
+      group.name = offer.productName;
+    }
+    group.offers.push(offer);
+    grouped.set(key, group);
+  }
+  const products = [...grouped.values()];
+  for (const product of products) {
+    product.offers.sort(
+      (a, b) =>
+        a.rank - b.rank ||
+        Number(b.open) - Number(a.open) ||
+        b.reviewCount - a.reviewCount ||
+        a.vendorName.localeCompare(b.vendorName),
+    );
+  }
+  products.sort(
+    (a, b) => a.rank - b.rank || b.offers.length - a.offers.length || a.name.localeCompare(b.name),
+  );
+  const vendorList = [...vendors.values()].sort(
+    (a, b) =>
+      a.rank - b.rank ||
+      Number(b.open) - Number(a.open) ||
+      b.reviewCount - a.reviewCount ||
+      a.name.localeCompare(b.name),
+  );
+  markets.sort(
+    (a, b) =>
+      a.rank - b.rank ||
+      b.matchingStalls - a.matchingStalls ||
+      Number(b.open) - Number(a.open) ||
+      a.name.localeCompare(b.name),
+  );
+  return { guides, products, vendors: vendorList, markets };
 }
 
 function classifierGuide(prefix: "origin" | "diet" | "production", value: string) {
@@ -378,6 +676,7 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
   const [made, setMade] = useState<string | null>(null);
   const [sort, setSort] = useState<SortId>("soonest");
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [pin, setPin] = useState<{ slug: string; scope: "match" | "all" } | null>(null);
   const [morePlaces, setMorePlaces] = useState(false);
 
   const index = useMemo(() => buildIndex(data), [data]);
@@ -388,22 +687,29 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
     ? new Map(dayGroup.slots.map((slot) => [slot.slug, slot]))
     : null;
 
+  const directoryFilters: FloorFilters =
+    pin?.scope === "all" ? { ...filters, q: "" } : filters;
+  const stallMode = pin?.scope === "match" ? "strict" : "browse";
+  const searching = q.trim().length >= SEARCH_MIN && pin == null;
+
   const rows = useMemo(() => {
-    const matched = index.filter((entry) => marketMatches(entry, filters, daySlugs, data));
+    let matched = index.filter((entry) =>
+      marketMatches(entry, directoryFilters, daySlugs, data, stallMode),
+    );
+    if (pin && !matched.some((entry) => entry.market.slug === pin.slug)) {
+      const pinned = index.find((entry) => entry.market.slug === pin.slug);
+      if (pinned && entryInContext(pinned, daySlugs, directoryFilters, data)) matched = [pinned, ...matched];
+    }
     const built: FloorRow[] = matched.map((entry) => {
-      const stalls = visibleStalls(entry, filters);
-      const slot = slotBySlug?.get(entry.market.slug);
-      const soonest = nextSession(entry.market.sessions, data.todayWeekday);
-      const hours = slot
-        ? slot.hours
-        : soonest
-          ? `${soonest.day.slice(0, 3)} ${soonest.hours}`
-          : entry.market.hours || entry.market.nextOpen;
-      const narrowed = Boolean(q.trim() || category || cuisine || diet || made);
+      const stalls = visibleStalls(entry, directoryFilters, stallMode);
+      const when = marketWhen(entry.market, slotBySlug?.get(entry.market.slug), data.todayWeekday);
+      const narrowed = Boolean(
+        directoryFilters.q.trim() || category || cuisine || diet || made,
+      );
       return {
         market: entry.market,
-        hours,
-        open: slot ? slot.open : entry.market.open,
+        hours: when.hours,
+        open: when.open,
         stallCount: narrowed ? stalls.length : entry.market.vendorCount || stalls.length,
         stalls,
       };
@@ -412,6 +718,10 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
       ? new Map([...slotBySlug.keys()].map((slug, position) => [slug, position]))
       : null;
     built.sort((a, b) => {
+      if (pin && a.market.slug !== b.market.slug) {
+        if (a.market.slug === pin.slug) return -1;
+        if (b.market.slug === pin.slug) return 1;
+      }
       if (sort !== "name" && (a.stallCount > 0) !== (b.stallCount > 0)) {
         return a.stallCount > 0 ? -1 : 1;
       }
@@ -436,10 +746,42 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
     return built;
     // Slot map identity follows dayId. Filters are listed so the memo stays honest.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index, q, dayId, area, setup, category, cuisine, diet, made, sort, data]);
+  }, [index, q, dayId, area, setup, category, cuisine, diet, made, sort, data, pin]);
 
-  const selected = rows.find((row) => row.market.slug === selectedSlug) ?? rows[0] ?? null;
-  const guide = closestGuide(q);
+  const answer = useMemo(
+    () => buildSearchAnswer(index, filters, daySlugs, slotBySlug, data),
+    // The answer follows the typed query plus the day, place, and setup already in filters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [index, q, dayId, area, setup, category, cuisine, diet, made, data],
+  );
+
+  const selected =
+    rows.find((row) => row.market.slug === (pin?.slug ?? selectedSlug)) ?? rows[0] ?? null;
+  const guides = q.trim().length >= SEARCH_MIN ? answer.guides : [];
+  const leadSlug = searching
+    ? (answer.markets[0]?.slug ??
+      answer.vendors[0]?.marketSlug ??
+      answer.products[0]?.offers[0]?.marketSlug ??
+      null)
+    : null;
+  const leadEntry = leadSlug ? (index.find((entry) => entry.market.slug === leadSlug) ?? null) : null;
+  const leadRow: FloorRow | null = leadEntry
+    ? (() => {
+        const stalls = visibleStalls(leadEntry, filters, "strict");
+        const when = marketWhen(
+          leadEntry.market,
+          slotBySlug?.get(leadEntry.market.slug),
+          data.todayWeekday,
+        );
+        return {
+          market: leadEntry.market,
+          hours: when.hours,
+          open: when.open,
+          stallCount: stalls.length,
+          stalls,
+        };
+      })()
+    : null;
 
   const placeChoices = data.neighbourhoodCircuits.filter(
     (circuit) => circuit.label !== "More in Toronto" && circuit.marketCount > 0,
@@ -579,8 +921,19 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
         .slice(0, 6)
     : [];
 
+  function onQueryChange(value: string) {
+    setQ(value);
+    setPin(null);
+  }
+
+  function openMarket(slug: string, scope: "match" | "all") {
+    setSelectedSlug(slug);
+    setPin({ slug, scope });
+  }
+
   function clearAll() {
     setQ("");
+    setPin(null);
     setDayId(null);
     setArea(null);
     setSetup(null);
@@ -657,31 +1010,55 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
               <div className="mt-4">
                 <SearchField
                   value={q}
-                  onChange={setQ}
+                  onChange={onQueryChange}
                   size="panel"
                   aria-label={SEARCH_LABEL}
                   placeholder="Market, stall, neighbourhood, or honey"
                 />
               </div>
-              {guide ? (
-                <p className="mt-3 text-sm text-primary-foreground">
-                  <Link href={`/find/${guide.slug}`} className="font-medium underline">
-                    Open the {guide.term} guide
-                  </Link>
-                  <span className="text-primary-foreground/80"> · every stall that lists it</span>
-                </p>
+              {guides.length > 0 ? (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                  <span className="text-sm text-primary-foreground/80">Product guides</span>
+                  {guides.slice(0, PAGE).map((page) => (
+                    <Link
+                      key={page.slug}
+                      href={`/find/${page.slug}`}
+                      className="stall-chip-sm bg-primary-foreground/15 px-2.5 py-1 text-sm font-medium text-primary-foreground hover:bg-primary-foreground hover:text-primary"
+                    >
+                      {page.term}
+                    </Link>
+                  ))}
+                </div>
               ) : null}
             </div>
             <div className="mt-6 border-t border-primary-foreground/15 pt-4">
               <div className="grid grid-cols-3 gap-3">
-                <Census value={rows.length} label="Markets in view" />
-                <Census value={stallSlugs.size} label="Stalls in view" />
-                <Census value={placeNames.size} label="Places in view" />
+                {searching ? (
+                  <>
+                    <Census value={answer.products.length} label="Products" />
+                    <Census value={answer.vendors.length} label="Vendors" />
+                    <Census value={answer.markets.length} label="Markets" />
+                  </>
+                ) : (
+                  <>
+                    <Census value={rows.length} label="Markets in view" />
+                    <Census value={stallSlugs.size} label="Stalls in view" />
+                    <Census value={placeNames.size} label="Places in view" />
+                  </>
+                )}
               </div>
             </div>
           </div>
 
-          {selected ? (
+          {searching && leadRow ? (
+            <Spotlight
+              row={leadRow}
+              focusCategory={category}
+              canStep={false}
+              onPrevious={() => undefined}
+              onNext={() => undefined}
+            />
+          ) : selected ? (
             <Spotlight
               row={selected}
               focusCategory={category}
@@ -702,6 +1079,14 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
           )}
         </section>
 
+        {searching ? (
+          <SearchAnswer
+            answer={answer}
+            onVendorMarket={(slug) => openMarket(slug, "match")}
+            onMarket={(slug) => openMarket(slug, "all")}
+          />
+        ) : (
+          <>
         <section className="mt-5 bg-card p-4 ring-1 ring-board sm:p-5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium">Places</span>
@@ -859,7 +1244,10 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
                 key={[q, dayId, area, setup, category, cuisine, diet, made, sort].join("|")}
                 rows={rows}
                 selectedSlug={selected?.market.slug ?? ""}
-                onSelect={setSelectedSlug}
+                onSelect={(slug) => {
+                  setSelectedSlug(slug);
+                  if (pin) setPin({ slug, scope: pin.scope });
+                }}
                 onPlace={setArea}
               />
               {selected ? (
@@ -876,7 +1264,288 @@ export function MarketsFloorMockup({ data }: { data: MarketsFloorData }) {
             </div>
           )}
         </section>
+          </>
+        )}
       </div>
+    </div>
+  );
+}
+
+function SearchAnswer({
+  answer,
+  onVendorMarket,
+  onMarket,
+}: {
+  answer: SearchAnswer;
+  onVendorMarket: (slug: string) => void;
+  onMarket: (slug: string) => void;
+}) {
+  const [productLimit, setProductLimit] = useState(PAGE);
+  const [vendorLimit, setVendorLimit] = useState(PAGE);
+  const [marketLimit, setMarketLimit] = useState(PAGE);
+  const empty =
+    answer.products.length === 0 && answer.vendors.length === 0 && answer.markets.length === 0;
+  const shownProducts = answer.products.slice(0, productLimit);
+  const shownVendors = answer.vendors.slice(0, vendorLimit);
+  const shownMarkets = answer.markets.slice(0, marketLimit);
+
+  if (empty) {
+    return (
+      <section className="mt-5 bg-card p-6 ring-1 ring-board" aria-live="polite">
+        <h2>Nothing matches that search</h2>
+        <p className="mt-2 text-base text-muted-foreground">
+          Try a food, a stall, or a market. A product guide lists one food across every market.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {FALLBACK_GUIDES.map((page) => (
+            <Link
+              key={page.slug}
+              href={`/find/${page.slug}`}
+              className="stall-chip-sm bg-receipt px-2.5 py-1 text-sm font-medium ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
+            >
+              {page.term}
+            </Link>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <div className="mt-5 flex flex-col gap-5" aria-live="polite">
+      {answer.products.length > 0 ? (
+        <section className="bg-card ring-1 ring-board">
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+            <div className="flex items-center gap-2">
+              <TagMark className="size-4 text-primary" />
+              <h2>Products</h2>
+            </div>
+            <span className="type-nums text-sm text-muted-foreground">{answer.products.length}</span>
+          </div>
+          <ul>
+            {shownProducts.map((product) => (
+              <li key={product.name} className="border-b border-border last:border-b-0">
+                <div className="px-4 pt-3">
+                  <Link href={product.href} className="text-base font-medium hover:underline">
+                    {product.name}
+                  </Link>
+                </div>
+                <ul>
+                  {product.offers.map((offer) => {
+                    const price = formatPrice(offer.priceCents);
+                    return (
+                      <li
+                        key={`${offer.vendorSlug}-${offer.marketSlug}`}
+                        className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-2"
+                      >
+                        <StallEmblem
+                          src={offer.logoUrl}
+                          name={offer.vendorName}
+                          kind="vendor"
+                          size="sm"
+                        />
+                        <div className="min-w-0">
+                          <Link
+                            href={`/vendors/${offer.vendorSlug}`}
+                            className="text-sm font-medium hover:underline"
+                          >
+                            {offer.vendorName}
+                          </Link>
+                          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3">
+                            <button
+                              type="button"
+                              onClick={() => onVendorMarket(offer.marketSlug)}
+                              className="cursor-pointer text-left text-sm text-muted-foreground hover:underline"
+                            >
+                              {offer.marketName}
+                              {offer.open ? (
+                                <span className="ml-2">
+                                  <NowLabel>Open</NowLabel>
+                                </span>
+                              ) : null}
+                            </button>
+                            <Hours value={offer.hours} />
+                          </div>
+                        </div>
+                        {price ? <span className="type-nums text-sm">{price}</span> : <span />}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </li>
+            ))}
+          </ul>
+          {answer.products.length > productLimit ? (
+            <div className="px-4 py-3">
+              <button
+                type="button"
+                onClick={() => setProductLimit((value) => value + PAGE)}
+                className={chipIdle}
+              >
+                Show more products ({answer.products.length - productLimit})
+              </button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {answer.vendors.length > 0 ? (
+        <section className="bg-card ring-1 ring-board">
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+            <div className="flex items-center gap-2">
+              <CrateMark className="size-4 text-primary" />
+              <h2>Vendors</h2>
+            </div>
+            <span className="type-nums text-sm text-muted-foreground">{answer.vendors.length}</span>
+          </div>
+          <ul>
+            {shownVendors.map((vendor) => {
+              const price = vendor.item ? formatPrice(vendor.item.priceCents) : null;
+              return (
+                <li key={vendor.slug} className="border-b border-border px-4 py-3 last:border-b-0">
+                  <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3">
+                    <StallEmblem src={vendor.logoUrl} name={vendor.name} kind="vendor" size="sm" />
+                    <div className="min-w-0">
+                      <p>
+                        <Link
+                          href={`/vendors/${vendor.slug}`}
+                          className="text-base font-medium hover:underline"
+                        >
+                          {vendor.name}
+                        </Link>
+                        <ListingScore
+                          parens
+                          ratingAvg={vendor.ratingAvg}
+                          reviewCount={vendor.reviewCount}
+                          className="ml-1.5"
+                        />
+                      </p>
+                      <p className="text-sm text-muted-foreground">{vendor.categoryLabel}</p>
+                      {vendor.item ? (
+                        <p className="mt-1">
+                          <Link href={vendor.item.href} className="text-sm font-medium hover:underline">
+                            {vendor.item.name}
+                            {price ? <span className="type-nums ml-1.5">{price}</span> : null}
+                          </Link>
+                        </p>
+                      ) : null}
+                      <div className="mt-1 grid grid-cols-[minmax(0,1fr)_auto] gap-x-3">
+                        <button
+                          type="button"
+                          onClick={() => onVendorMarket(vendor.marketSlug)}
+                          className="cursor-pointer text-left text-sm hover:underline"
+                        >
+                          {vendor.marketName}
+                          {vendor.open ? (
+                            <span className="ml-2">
+                              <NowLabel>Open</NowLabel>
+                            </span>
+                          ) : null}
+                        </button>
+                        <Hours value={vendor.hours} />
+                      </div>
+                    </div>
+                    <SaveButton kind="vendor" slug={vendor.slug} name={vendor.name} />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {answer.vendors.length > vendorLimit ? (
+            <div className="px-4 py-3">
+              <button
+                type="button"
+                onClick={() => setVendorLimit((value) => value + PAGE)}
+                className={chipIdle}
+              >
+                Show more vendors ({answer.vendors.length - vendorLimit})
+              </button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {answer.markets.length > 0 ? (
+        <section className="bg-card ring-1 ring-board">
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+            <div className="flex items-center gap-2">
+              <RulesMark className="size-4 text-primary" />
+              <h2>Markets</h2>
+            </div>
+            <span className="type-nums text-sm text-muted-foreground">{answer.markets.length}</span>
+          </div>
+          <ul>
+            {shownMarkets.map((market) => (
+              <li key={market.slug} className="border-b border-border last:border-b-0">
+                <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 px-4 py-3">
+                  <StallEmblem src={market.logoUrl} name={market.name} kind="market" size="sm" />
+                  <div className="min-w-0">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3">
+                      <button
+                        type="button"
+                        onClick={() => onMarket(market.slug)}
+                        className="cursor-pointer text-left"
+                      >
+                        <span className="text-base font-medium">{market.name}</span>
+                        <ListingScore
+                          parens
+                          ratingAvg={market.ratingAvg}
+                          reviewCount={market.reviewCount}
+                          className="ml-1.5"
+                        />
+                        {market.open ? (
+                          <span className="mt-0.5 block">
+                            <NowLabel>Open</NowLabel>
+                          </span>
+                        ) : null}
+                        <span className="mt-0.5 block text-sm text-muted-foreground">
+                          {market.neighbourhood}
+                        </span>
+                      </button>
+                      <div className="text-right">
+                        <Hours value={market.hours} />
+                        <p className="text-sm text-muted-foreground">
+                          {market.matchingStalls > 0 && market.matchingStalls < market.stallCount ? (
+                            <>
+                              <span className="type-nums">{market.matchingStalls}</span> matching
+                            </>
+                          ) : (
+                            <>
+                              <span className="type-nums">{market.stallCount}</span>{" "}
+                              {market.stallCount === 1 ? "stall" : "stalls"}
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onMarket(market.slug)}
+                      className="mt-1 cursor-pointer text-sm font-medium text-primary hover:underline"
+                    >
+                      {market.matchingStalls > 0 && market.matchingStalls < market.stallCount
+                        ? "All stalls at this market"
+                        : "Stalls at this market"}
+                    </button>
+                  </div>
+                  <SaveButton kind="market" slug={market.slug} name={market.name} />
+                </div>
+              </li>
+            ))}
+          </ul>
+          {answer.markets.length > marketLimit ? (
+            <div className="px-4 py-3">
+              <button
+                type="button"
+                onClick={() => setMarketLimit((value) => value + PAGE)}
+                className={chipIdle}
+              >
+                Show more markets ({answer.markets.length - marketLimit})
+              </button>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
     </div>
   );
 }
