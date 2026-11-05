@@ -2189,7 +2189,7 @@ function MarketColumn({
                     <div className="text-right">
                       <Hours value={row.hours} />
                       {row.stallCount > 0 ? (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-primary">
                           <span className="type-nums">{row.stallCount}</span>{" "}
                           {row.stallCount === 1 ? "vendor" : "vendors"}
                         </p>
