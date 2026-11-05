@@ -11,6 +11,7 @@ import type {
   HomeAtlasVendorSpotlight,
 } from "@/lib/home-atlas-data";
 import { AddressLink } from "@/components/address-link";
+import { CyclingPhrase } from "@/components/cycling-phrase";
 import { useGeo } from "@/components/geo-provider";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
@@ -43,6 +44,8 @@ import { marketsHref, tagLabel } from "@/lib/find-paths";
 import { formatPrice, listingMarkSrc } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { cn } from "@/lib/utils";
+
+const HOME_TITLE_PHRASES = ["farmers' markets", "vendors", "local products"] as const;
 
 function formatCensus(n: number) {
   return n.toLocaleString("en-CA");
@@ -1330,7 +1333,9 @@ export function HomeAtlas({ data }: { data: HomeAtlasData }) {
         <header id="find" className="scroll-mt-24 border-b-2 border-board pb-6">
           <div className="grid gap-6 lg:grid-cols-12 lg:items-center">
             <div className="lg:col-span-7">
-              <h1>{LAUNCH_CITY} farmers&apos; markets</h1>
+              <h1>
+                {LAUNCH_CITY} <CyclingPhrase phrases={HOME_TITLE_PHRASES} />
+              </h1>
               <p className="type-lede mt-3 max-w-2xl text-muted-foreground">
                 Find everything from the products you enjoy every weekend to the markets and
                 vendors that sell them,{" "}
