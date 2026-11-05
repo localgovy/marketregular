@@ -161,10 +161,7 @@ export function ProductsAtlas({
         {/* Left 7 Cols: Forest-Green Product Search & Census Plate */}
         <div className="flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board lg:col-span-7">
           <div>
-            <p className="type-kicker text-primary-foreground/90">
-              {LAUNCH_CITY} market catalogue · Stalls, prices &amp; weekly hours
-            </p>
-            <h1 className="mt-1 text-primary-foreground">
+            <h1 className="text-primary-foreground">
               {q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Products"}
             </h1>
             <p className="type-lede mt-2 max-w-2xl text-primary-foreground/95">
@@ -447,10 +444,7 @@ export function ProductsAtlas({
               className="mt-8 bg-card p-5 ring-1 ring-board sm:p-6"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
-                <div>
-                  <p className="type-kicker text-primary">Stalls &amp; signature items</p>
-                  <h2 className="mt-0.5">Stalls with published menus &amp; prices</h2>
-                </div>
+                <h2 className="min-w-0">Stalls with published menus &amp; prices</h2>
                 <Link
                   href="/markets#directory-vendors"
                   className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"

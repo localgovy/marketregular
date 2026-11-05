@@ -87,16 +87,11 @@ export function ProductAisles({
     >
       {/* Section Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-board bg-secondary px-4 py-3.5 sm:px-5">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <span className="stall-chip-sm flex size-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
             <CrateMark className="size-5" />
           </span>
-          <div>
-            <p className="type-kicker text-muted-foreground">
-              Shop farmers&apos; markets by product crate — fuelled by your cravings
-            </p>
-            <h2>Market Aisles &amp; Crates</h2>
-          </div>
+          <h2 className="min-w-0">Market Aisles &amp; Crates</h2>
         </div>
 
         {aisle != null ? (

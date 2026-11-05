@@ -226,7 +226,7 @@ export function catalogueHeading(aisle: string | null) {
   if (!aisle) {
     return {
       title: "Find a product",
-      blurb: "A short list to start from. The full directory is below.",
+      blurb: "",
     };
   }
   const label = aisleLabel(aisle) ?? "Products";

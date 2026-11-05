@@ -90,7 +90,9 @@ export function ProductCatalogue({
               </label>
             </form>
           </div>
-          <p className="mt-2 max-w-2xl text-base text-muted-foreground">{blurb}</p>
+          {blurb ? (
+            <p className="mt-2 max-w-2xl text-base text-muted-foreground">{blurb}</p>
+          ) : null}
           {shown.length ? (
             <ul className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-3">
               {shown.map((page) => (
