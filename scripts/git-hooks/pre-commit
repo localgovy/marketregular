@@ -3,4 +3,5 @@
 
 root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
-exec sh scripts/check-conflict-markers.sh --staged
+sh scripts/check-conflict-markers.sh --staged || exit 1
+exec node scripts/check-segment-config.mjs

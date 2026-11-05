@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { DIRECTORY_CACHE_BUDGET, serializedBytes } from "../src/lib/directory-cache.ts";
+import { DIRECTORY_CACHE_BUDGET, DIRECTORY_REVALIDATE_SECONDS, serializedBytes } from "../src/lib/directory-cache.ts";
 import { FLOOR_TAXONOMY_PAGE_CAP, fitFloorTaxonomy } from "../src/lib/markets-floor-budget.ts";
 import { floorQueryFromSearch } from "../src/lib/markets-floor-query.ts";
 import type { FloorTaxonomy } from "../src/lib/markets-floor-types.ts";
@@ -64,7 +64,10 @@ test("a markets search URL does not get its own server render", () => {
   assert.equal(page.includes("formKey"), false);
   assert.equal(page.includes("documentElement"), false);
   assert.equal(page.includes("unstable_cache"), false);
-  assert.match(page, /export const revalidate = DIRECTORY_REVALIDATE_SECONDS/);
+  const revalidate = page.match(/export const revalidate = (\d+)/);
+  assert.ok(revalidate);
+  assert.equal(Number(revalidate[1]), DIRECTORY_REVALIDATE_SECONDS);
+  assert.equal(page.includes("revalidate = DIRECTORY_REVALIDATE_SECONDS"), false);
   assert.match(page, /parentElement/);
   assert.match(page, /suppressHydrationWarning/);
   assert.equal(assembled.includes("unstable_cache"), false);

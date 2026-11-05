@@ -4,15 +4,17 @@ import { BrowseLinks } from "@/components/browse-links";
 import { JsonLd } from "@/components/json-ld";
 import { MarketsFloor } from "@/components/markets-floor";
 import { getDirectoryCensus } from "@/lib/data/catalog";
-import { DIRECTORY_REVALIDATE_SECONDS } from "@/lib/directory-cache";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
 /** Cold directory reads can be slow. Past this, kill the function instead of holding it. */
 export const maxDuration = 60;
 
-/** One cached directory. Search and filters stay in the browser, so a query does not start another render. */
-export const revalidate = DIRECTORY_REVALIDATE_SECONDS;
+/**
+ * One cached directory. Search and filters stay in the browser, so a query does not start another render.
+ * This has to be a number literal equal to DIRECTORY_REVALIDATE_SECONDS. Next.js does not read an imported constant.
+ */
+export const revalidate = 120;
 
 export async function generateMetadata(): Promise<Metadata> {
   const census = await getDirectoryCensus();
