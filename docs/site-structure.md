@@ -309,6 +309,8 @@ Home (`src/app/page.tsx`) loads the published directory, groups the week with `u
 
 `QuickFind` and the directory `SearchForm` build `/markets?…`. Filters: text, weekdays, tags (product, amenity, record, cuisine), areas, setup (`indoor`, `outdoor`, `year-round`, `seasonal`), open now, Near me (`lat`/`lng` from the browser, stored in the URL, not on the account). Sorts (`DIRECTORY_SORTS`): name, next open (default), closest (only with a location), score. Results page in slices of 10 markets and 15 vendors (`getDirectorySlice`). Typeahead is `suggestListings` (min 2 characters, up to 6 markets and 6 vendors).
 
+`holiday` is an amenity tag (label Holiday), not a setup value. The markets directory shows it as a chip and in the When filters (`?tag=holiday`). A market can carry both `seasonal` and `holiday`. Year-round and seasonal still share the single `setup` parameter, so those two stay alternatives. Holiday does not get a tag landing page. Do not infer the tag from a December weekend on a year-round hall; only a stored `holiday` tag matches.
+
 Tag pages (`/markets/tag/…`): produce, organic, vegan, bakery, prepared-food, crafts, meat, cheese, flowers, honey, coffee, caribbean (markets and vendors); indoor and year-round (markets only).
 
 Open now / later today / selling this weekend follow the rules in “How a public listing is computed”. Nobody toggles them. Listing pages also link out through `ListingAlsoLinks`: the weekdays this hall or stall works, and up to six tags that have a category page. Blog posts pull a three-stall peek and the external score for markets they mention (`src/lib/blog-market-peeks.ts`).

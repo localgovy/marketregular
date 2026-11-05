@@ -39,6 +39,50 @@ test("next page is done when every remaining row is already shown", () => {
   assert.equal(done, true);
 });
 
+test("holiday is an amenity chip and can combine with seasonal", async () => {
+  const { AMENITY_TAGS } = await import("../src/lib/constants.ts");
+  const {
+    FIND_AMENITY_CHIPS,
+    FIND_RECORD,
+    FIND_SETUP,
+    applyDirectoryTags,
+    boundedDirectoryKey,
+    marketsHref,
+    sortTagsForDisplay,
+    tagLabel,
+  } = await import("../src/lib/find-paths.ts");
+
+  assert.equal(AMENITY_TAGS.includes("holiday"), true);
+  assert.deepEqual([...FIND_AMENITY_CHIPS], ["holiday"]);
+  assert.equal((FIND_SETUP as readonly string[]).includes("holiday"), false);
+  assert.equal((FIND_RECORD as readonly string[]).includes("holiday"), false);
+  assert.equal(tagLabel("holiday"), "Holiday");
+  assert.deepEqual(sortTagsForDisplay(["holiday", "produce", "seasonal"]), [
+    "produce",
+    "holiday",
+    "seasonal",
+  ]);
+
+  assert.notEqual(boundedDirectoryKey({ tags: ["holiday"] }), null);
+  assert.notEqual(boundedDirectoryKey({ setup: "seasonal" }), null);
+  assert.equal(boundedDirectoryKey({ setup: "holiday" }), null);
+  assert.equal(
+    marketsHref({ setup: "seasonal", tags: ["holiday"] }),
+    "/markets?setup=seasonal&tag=holiday",
+  );
+
+  const markets = [
+    { id: "both", tags: ["seasonal", "holiday"] },
+    { id: "season", tags: ["seasonal"] },
+    { id: "year", tags: ["year-round"] },
+  ];
+  const holiday = applyDirectoryTags(markets, [], [], ["holiday"]);
+  assert.deepEqual(
+    holiday.markets.map((market) => market.id),
+    ["both"],
+  );
+});
+
 test("bounded directory keys ignore tag order and skip free text", async () => {
   const { boundedDirectoryKey, directoryViewHref, marketsHref, marketsSearchFromSearchParams } =
     await import("../src/lib/find-paths.ts");

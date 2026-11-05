@@ -93,7 +93,7 @@ function scheduleGroupCount(schedules: MarketSchedule[]) {
 
 /**
  * “produce, bakery and prepared food”. Only what a shopper can buy — `indoor`,
- * `seasonal` and the rest of the amenity tags are not answers to “what do they sell”.
+ * `seasonal`, `holiday` and the rest of the amenity tags are not answers to “what do they sell”.
  */
 export function sellsLine(tags: string[], limit = 3) {
   const labels = tags
