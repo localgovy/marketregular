@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-const ROLL_MS = 480;
+const ROLL_MS = 700;
 const HOLD_MS = 4200;
+const ROLL_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 type Roll = {
   from: string;
@@ -11,12 +12,61 @@ type Roll = {
   token: number;
 };
 
+function RollingPhrase({ from, to, onDone }: { from: string; to: string; onDone: () => void }) {
+  const clipRef = useRef<HTMLSpanElement>(null);
+  const trackRef = useRef<HTMLSpanElement>(null);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
+  useLayoutEffect(() => {
+    const clip = clipRef.current;
+    const track = trackRef.current;
+    if (!clip || !track) return;
+
+    const line = clip.getBoundingClientRect().height;
+    track.querySelectorAll<HTMLElement>("[data-roll-line]").forEach((row) => {
+      row.style.height = `${line}px`;
+      row.style.lineHeight = `${line}px`;
+    });
+
+    const animation = track.animate(
+      [{ transform: "translate3d(0, 0, 0)" }, { transform: `translate3d(0, ${-line}px, 0)` }],
+      { duration: ROLL_MS, easing: ROLL_EASE, fill: "forwards" },
+    );
+    animation.onfinish = () => onDoneRef.current();
+    return () => {
+      animation.onfinish = null;
+      if (animation.playState !== "finished") animation.cancel();
+    };
+  }, [from, to]);
+
+  return (
+    <span className="relative inline-block align-baseline whitespace-nowrap">
+      <span className="invisible inline-grid">
+        <span className="col-start-1 row-start-1 whitespace-nowrap">{from}</span>
+        <span className="col-start-1 row-start-1 whitespace-nowrap">{to}</span>
+      </span>
+      <span ref={clipRef} className="phrase-roll-window">
+        <span ref={trackRef} className="phrase-roll-track">
+          <span data-roll-line className="phrase-roll-line">
+            {from}
+          </span>
+          <span data-roll-line className="phrase-roll-line">
+            {to}
+          </span>
+        </span>
+      </span>
+    </span>
+  );
+}
+
 export function CyclingPhrase({ phrases }: { phrases: readonly string[] }) {
   const [current, setCurrent] = useState(phrases[0] ?? "");
   const [roll, setRoll] = useState<Roll | null>(null);
   const rootRef = useRef<HTMLSpanElement>(null);
   const currentRef = useRef(current);
   const phrasesRef = useRef(phrases);
+  const finishRef = useRef<() => void>(() => {});
   currentRef.current = current;
   phrasesRef.current = phrases;
 
@@ -68,14 +118,19 @@ export function CyclingPhrase({ phrases }: { phrases: readonly string[] }) {
       }
       rolling = true;
       token += 1;
-      setRoll({ from, to, token });
-      rollTimer = window.setTimeout(() => {
+      let settled = false;
+      const finish = () => {
+        if (settled || cancelled) return;
+        settled = true;
+        window.clearTimeout(rollTimer);
         rolling = false;
-        if (cancelled) return;
         setCurrent(to);
         setRoll(null);
         scheduleHold();
-      }, ROLL_MS + 40);
+      };
+      finishRef.current = finish;
+      setRoll({ from, to, token });
+      rollTimer = window.setTimeout(finish, ROLL_MS + 180);
     };
 
     const onPointerEnter = () => {
@@ -144,18 +199,12 @@ export function CyclingPhrase({ phrases }: { phrases: readonly string[] }) {
       <span className="sr-only">{current}</span>
       <span ref={rootRef} aria-hidden className="whitespace-nowrap">
         {roll ? (
-          <span className="relative inline-block align-baseline">
-            <span className="invisible inline-grid">
-              <span className="col-start-1 row-start-1 whitespace-nowrap">{roll.from}</span>
-              <span className="col-start-1 row-start-1 whitespace-nowrap">{roll.to}</span>
-            </span>
-            <span className="phrase-roll-window">
-              <span key={roll.token} className="phrase-roll-track">
-                <span className="block h-[1lh] whitespace-nowrap">{roll.from}</span>
-                <span className="block h-[1lh] whitespace-nowrap">{roll.to}</span>
-              </span>
-            </span>
-          </span>
+          <RollingPhrase
+            key={roll.token}
+            from={roll.from}
+            to={roll.to}
+            onDone={() => finishRef.current()}
+          />
         ) : (
           current
         )}

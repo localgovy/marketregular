@@ -176,49 +176,21 @@
   }
 }
 
-/* One phrase moves up into the next. Only transform runs, and only while rolling. */
-@keyframes phrase-roll {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-1lh);
-  }
-}
-
+/* The clip is one line. Two equal lines sit in the track and move up together. */
 .phrase-roll-window {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: -0.14em;
-  height: calc(1lh + 0.28em);
+  inset: 0;
   overflow: hidden;
   pointer-events: none;
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 0.05em,
-    #000 calc(100% - 0.05em),
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    #000 0.05em,
-    #000 calc(100% - 0.05em),
-    transparent 100%
-  );
 }
 
 .phrase-roll-track {
-  padding-top: 0.14em;
-  animation: phrase-roll 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  display: block;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .phrase-roll-track {
-    animation: none;
-  }
+.phrase-roll-line {
+  display: block;
+  white-space: nowrap;
 }
 
 /* Page title when it isn’t an h1 — e.g. a big stat. */
