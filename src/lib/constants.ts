@@ -119,6 +119,7 @@ export const AMENITY_TAGS = [
   "outdoor",
   "year-round",
   "seasonal",
+  "holiday",
   "parking",
   "transit",
   "accessible",

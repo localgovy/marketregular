@@ -16,6 +16,7 @@ import { FIND_PAGES } from "@/data/find-pages";
 import { featuredBlogPost, plainBlogText } from "@/lib/blog";
 import {
   FIND_AREAS,
+  FIND_AMENITY_CHIPS,
   FIND_SETUP,
   tagsPresent,
   weekdayInToronto,
@@ -852,7 +853,7 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
     };
   });
 
-  const setupOptions = [...tagsPresent(markets, FIND_SETUP)];
+  const setupOptions = [...tagsPresent(markets, [...FIND_SETUP, ...FIND_AMENITY_CHIPS])];
 
   const fullWeek = fullWeekAll
     .filter((g) => g.id !== "earlier" && g.slots.length > 0)
