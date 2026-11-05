@@ -1403,8 +1403,8 @@ export function MarketsFloor({
               {group.label}
             </Chip>
           ))}
-          <span aria-hidden className="mx-1 text-muted-foreground">
-            ·
+          <span aria-hidden className="text-muted-foreground">
+            –
           </span>
           <span className="text-sm font-medium">Setup</span>
           {SETUPS.map((option) => {
