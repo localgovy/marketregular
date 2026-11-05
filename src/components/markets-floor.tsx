@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import type {
   FloorMarket,
   FloorRosterEntry,
   FloorTaxonomy,
+  FloorWeekGroup,
   MarketsFloorView,
 } from "@/lib/markets-floor-types";
 import { StallEmblem, formatCensus } from "@/app/preview/_components/markets-concept-shared";
@@ -868,6 +870,28 @@ function Count({ value, active }: { value: number; active: boolean }) {
   );
 }
 
+function revealMarketsFloor() {
+  document.querySelector("[data-mr-search]")?.removeAttribute("data-mr-search");
+}
+
+/** Follows a Next navigation to another /markets query. The floor itself does not read the URL, so the cached page stays one document. */
+function MarketsQuerySync({
+  week,
+  onSearch,
+}: {
+  week: readonly FloorWeekGroup[];
+  onSearch: (search: string) => void;
+}) {
+  const params = useSearchParams();
+  const search = params.toString();
+  const onSearchRef = useRef(onSearch);
+  onSearchRef.current = onSearch;
+  useLayoutEffect(() => {
+    onSearchRef.current(search);
+  }, [search, week]);
+  return null;
+}
+
 export function MarketsFloor({
   data,
   initial,
@@ -917,15 +941,20 @@ export function MarketsFloor({
     else pushAppUrl(href);
   }
 
+  function applyExternalSearch(search: string) {
+    const next = floorQueryFromParams(new URLSearchParams(search), data.fullWeek);
+    revealMarketsFloor();
+    if (floorHref(next) === floorHref(queryRef.current)) return;
+    queryRef.current = next;
+    setQuery(next);
+    setPin(null);
+  }
+  const applyExternalSearchRef = useRef(applyExternalSearch);
+  applyExternalSearchRef.current = applyExternalSearch;
+
   useLayoutEffect(() => {
     if (!syncUrl) return;
-    const params = new URLSearchParams(window.location.search);
-    if ([...params.keys()].length > 0) {
-      const next = floorQueryFromParams(params, data.fullWeek);
-      queryRef.current = next;
-      setQuery(next);
-    }
-    document.documentElement.removeAttribute("data-mr-search");
+    applyExternalSearchRef.current(window.location.search);
   }, [data.fullWeek, syncUrl]);
 
   useEffect(() => {
@@ -941,13 +970,11 @@ export function MarketsFloor({
       if (url.pathname !== "/markets") return;
       const nextOwned = !event.state || typeof event.state !== "object" || !("__NA" in event.state);
       if (nextOwned) event.stopImmediatePropagation();
-      const next = floorQueryFromParams(url.searchParams, data.fullWeek);
-      queryRef.current = next;
-      setQuery(next);
+      applyExternalSearchRef.current(url.searchParams.toString());
     }
     window.addEventListener("popstate", onPop, true);
     return () => window.removeEventListener("popstate", onPop, true);
-  }, [data.fullWeek, syncUrl]);
+  }, [syncUrl]);
 
   const directory = useMemo(() => buildDirectory(data), [data]);
   const index = directory.markets;
@@ -1293,6 +1320,11 @@ export function MarketsFloor({
 
   return (
     <div data-markets-floor="" className="bg-background text-foreground">
+      {syncUrl ? (
+        <Suspense fallback={null}>
+          <MarketsQuerySync week={data.fullWeek} onSearch={(search) => applyExternalSearchRef.current(search)} />
+        </Suspense>
+      ) : null}
       {preview ? (
         <div className="border-b-2 border-board bg-board text-chalk">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-6">

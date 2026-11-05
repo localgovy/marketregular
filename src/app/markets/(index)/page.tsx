@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-const SEARCH_HIDE = `if(location.pathname==="/markets"&&location.search.length>1)document.documentElement.setAttribute("data-mr-search","")`;
+const SEARCH_HIDE = `if(location.pathname==="/markets"&&location.search.length>1){var root=document.currentScript&&document.currentScript.parentElement;if(root){root.setAttribute("data-mr-search","");addEventListener("load",function(){setTimeout(function(){root.removeAttribute("data-mr-search")},4000)})}}`;
 
 export default async function MarketsPage() {
   const data = await loadMarketsFloorView();
@@ -34,7 +34,6 @@ export default async function MarketsPage() {
 
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: SEARCH_HIDE }} />
       <JsonLd data={breadcrumbJsonLd([MARKETS_CRUMB])} />
       <JsonLd
         data={itemListJsonLd({
@@ -43,7 +42,10 @@ export default async function MarketsPage() {
           items: listItems,
         })}
       />
-      <MarketsFloor data={data} syncUrl />
+      <div suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: SEARCH_HIDE }} />
+        <MarketsFloor data={data} syncUrl />
+      </div>
       <div className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6">
         <BrowseLinks />
       </div>

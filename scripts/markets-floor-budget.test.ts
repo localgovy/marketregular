@@ -56,10 +56,20 @@ test("the live markets page does not load the preview fan-out", () => {
 test("a markets search URL does not get its own server render", () => {
   const page = readFileSync(new URL("../src/app/markets/(index)/page.tsx", import.meta.url), "utf8");
   const view = readFileSync(new URL("../src/lib/markets-floor-data.ts", import.meta.url), "utf8");
+  const floor = readFileSync(new URL("../src/components/markets-floor.tsx", import.meta.url), "utf8");
+  const layout = readFileSync(new URL("../src/app/layout.tsx", import.meta.url), "utf8");
   const assembled = view.slice(view.indexOf("export async function loadMarketsFloorView"));
+  const floorBody = floor.slice(floor.indexOf("export function MarketsFloor"));
   assert.equal(page.includes("searchParams"), false);
   assert.equal(page.includes("formKey"), false);
+  assert.equal(page.includes("documentElement"), false);
   assert.equal(page.includes("unstable_cache"), false);
   assert.match(page, /export const revalidate = DIRECTORY_REVALIDATE_SECONDS/);
+  assert.match(page, /parentElement/);
+  assert.match(page, /suppressHydrationWarning/);
   assert.equal(assembled.includes("unstable_cache"), false);
+  assert.equal(layout.includes("suppressHydrationWarning"), false);
+  assert.equal(floorBody.includes("useSearchParams"), false);
+  assert.match(floor, /function MarketsQuerySync/);
+  assert.match(floor, /<Suspense fallback=\{null\}>\s*<MarketsQuerySync/);
 });
