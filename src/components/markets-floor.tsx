@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type {
   FloorMarket,
@@ -917,6 +917,17 @@ export function MarketsFloor({
     else pushAppUrl(href);
   }
 
+  useLayoutEffect(() => {
+    if (!syncUrl) return;
+    const params = new URLSearchParams(window.location.search);
+    if ([...params.keys()].length > 0) {
+      const next = floorQueryFromParams(params, data.fullWeek);
+      queryRef.current = next;
+      setQuery(next);
+    }
+    document.documentElement.removeAttribute("data-mr-search");
+  }, [data.fullWeek, syncUrl]);
+
   useEffect(() => {
     const id = window.location.hash.replace("#", "");
     if (id !== "directory-vendors" && id !== "directory-markets") return;
@@ -1281,7 +1292,7 @@ export function MarketsFloor({
   }
 
   return (
-    <div className="bg-background text-foreground">
+    <div data-markets-floor="" className="bg-background text-foreground">
       {preview ? (
         <div className="border-b-2 border-board bg-board text-chalk">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 sm:px-6">

@@ -567,6 +567,11 @@
   scroll-margin-top: var(--header-offset);
 }
 
+/* Hide the directory until the browser applies a shared search URL. The header stays visible. */
+html[data-mr-search] [data-markets-floor] {
+  visibility: hidden;
+}
+
 /* Header awning: beige–green–beige on the board, inverse on paper. */
 @utility header-stripe-board {
   box-shadow:

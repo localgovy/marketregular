@@ -67,6 +67,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en-CA"
       className={`${grotesk.variable} ${display.variable} ${nums.variable} h-full antialiased`}
+      // Markets search sets data-mr-search on this element before hydration.
+      suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <SiteGeo>

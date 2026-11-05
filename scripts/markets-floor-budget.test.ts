@@ -52,3 +52,14 @@ test("the live markets page does not load the preview fan-out", () => {
   assert.equal(page.includes("loadMarketsPreviewData"), false);
   assert.equal(page.includes("loadMarketsFloorView"), true);
 });
+
+test("a markets search URL does not get its own server render", () => {
+  const page = readFileSync(new URL("../src/app/markets/(index)/page.tsx", import.meta.url), "utf8");
+  const view = readFileSync(new URL("../src/lib/markets-floor-data.ts", import.meta.url), "utf8");
+  const assembled = view.slice(view.indexOf("export async function loadMarketsFloorView"));
+  assert.equal(page.includes("searchParams"), false);
+  assert.equal(page.includes("formKey"), false);
+  assert.equal(page.includes("unstable_cache"), false);
+  assert.match(page, /export const revalidate = DIRECTORY_REVALIDATE_SECONDS/);
+  assert.equal(assembled.includes("unstable_cache"), false);
+});

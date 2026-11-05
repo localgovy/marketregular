@@ -4,12 +4,15 @@ import { BrowseLinks } from "@/components/browse-links";
 import { JsonLd } from "@/components/json-ld";
 import { MarketsFloor } from "@/components/markets-floor";
 import { getDirectoryCensus } from "@/lib/data/catalog";
-import { marketsSearchFromQuery, queryList } from "@/lib/find-paths";
+import { DIRECTORY_REVALIDATE_SECONDS } from "@/lib/directory-cache";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
 /** Cold directory reads can be slow. Past this, kill the function instead of holding it. */
 export const maxDuration = 60;
+
+/** One cached directory. Search and filters stay in the browser, so a query does not start another render. */
+export const revalidate = DIRECTORY_REVALIDATE_SECONDS;
 
 export async function generateMetadata(): Promise<Metadata> {
   const census = await getDirectoryCensus();
@@ -20,46 +23,18 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function MarketsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    q?: string;
-    province?: string;
-    city?: string;
-    weekday?: string | string[];
-    tag?: string | string[];
-    area?: string | string[];
-    setup?: string;
-    openNow?: string;
-    lat?: string;
-    lng?: string;
-    sort?: string;
-    day?: string;
-  }>;
-}) {
-  const params = await searchParams;
-  const search = marketsSearchFromQuery(params);
-  const day = queryList(params.day)[0];
+const SEARCH_HIDE = `if(location.pathname==="/markets"&&location.search.length>1)document.documentElement.setAttribute("data-mr-search","")`;
+
+export default async function MarketsPage() {
   const data = await loadMarketsFloorView();
   const listItems = data.enrichedMarkets.map((market) => ({
     name: market.name,
     path: `/markets/${market.slug}`,
   }));
-  const formKey = [
-    search.q,
-    (search.weekdays ?? []).join(","),
-    (search.tags ?? []).join(","),
-    (search.areas ?? []).join(","),
-    search.setup,
-    search.openNow ? "1" : "",
-    search.lat,
-    search.lng,
-    day,
-  ].join("|");
 
   return (
     <>
+      <script dangerouslySetInnerHTML={{ __html: SEARCH_HIDE }} />
       <JsonLd data={breadcrumbJsonLd([MARKETS_CRUMB])} />
       <JsonLd
         data={itemListJsonLd({
@@ -68,7 +43,7 @@ export default async function MarketsPage({
           items: listItems,
         })}
       />
-      <MarketsFloor key={formKey} data={data} initial={{ ...search, day }} syncUrl />
+      <MarketsFloor data={data} syncUrl />
       <div className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6">
         <BrowseLinks />
       </div>
