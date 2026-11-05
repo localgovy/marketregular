@@ -1444,7 +1444,7 @@ export function MarketsFloor({
                   onChange={onQueryChange}
                   size="panel"
                   aria-label={SEARCH_LABEL}
-                  placeholder="Honey, a vendor, or Leslieville"
+                  placeholder="Search products, markets, vendors"
                 />
               </div>
             </div>
