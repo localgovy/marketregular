@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { loadMarketsFloorData } from "@/app/preview/_lib/markets-preview-data";
+import { loadMarketsFloorView } from "@/lib/markets-floor-data";
 import { BrowseLinks } from "@/components/browse-links";
 import { JsonLd } from "@/components/json-ld";
 import { MarketsFloor } from "@/components/markets-floor";
@@ -41,7 +41,7 @@ export default async function MarketsPage({
   const params = await searchParams;
   const search = marketsSearchFromQuery(params);
   const day = queryList(params.day)[0];
-  const data = await loadMarketsFloorData();
+  const data = await loadMarketsFloorView();
   const listItems = data.enrichedMarkets.map((market) => ({
     name: market.name,
     path: `/markets/${market.slug}`,

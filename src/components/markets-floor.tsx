@@ -3,12 +3,11 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import type {
-  EnrichedMarketRow,
+  FloorMarket,
   FloorRosterEntry,
-  MarketsFloorData,
-  PreviewVendorSpotlight,
-  VendorTaxonomy,
-} from "@/app/preview/_lib/markets-preview-data";
+  FloorTaxonomy,
+  MarketsFloorView,
+} from "@/lib/markets-floor-types";
 import { StallEmblem, formatCensus } from "@/app/preview/_components/markets-concept-shared";
 import { AddressLink } from "@/components/address-link";
 import { Hours } from "@/components/hours";
@@ -72,7 +71,7 @@ type FloorStall = {
 };
 
 type IndexedMarket = {
-  market: EnrichedMarketRow;
+  market: FloorMarket;
   blob: string;
   stalls: FloorStall[];
 };
@@ -94,7 +93,7 @@ type FloorFilters = {
 };
 
 type FloorRow = {
-  market: EnrichedMarketRow;
+  market: FloorMarket;
   hours: string;
   open: boolean;
   stallCount: number;
@@ -254,12 +253,8 @@ function orderOf(order: readonly string[], id: string) {
   return index === -1 ? order.length : index;
 }
 
-function toStall(
-  entry: FloorRosterEntry,
-  spot: PreviewVendorSpotlight | undefined,
-  tax: VendorTaxonomy | undefined,
-): FloorStall {
-  const aisleIds = unique([...(tax?.categories ?? []), ...(spot?.aisleIds ?? [])]);
+function toStall(entry: FloorRosterEntry, tax: FloorTaxonomy | undefined): FloorStall {
+  const aisleIds = unique(tax?.categories ?? []);
   const tagSpecialty = entry.tags.find((tag) => !COUNTRY_SET.has(tag) && !DIET_TAGS.has(tag) && tag !== "organic");
   const origins = unique([
     ...(tax?.origins ?? []),
@@ -270,30 +265,25 @@ function toStall(
     ...(tax?.production ?? []),
     ...(entry.tags.includes("organic") ? ["organic"] : []),
   ]);
-  const items: FloorItem[] = [];
-  for (const item of spot?.items ?? []) {
-    if (items.length >= 2) break;
-    items.push({ name: item.name, href: item.href, priceCents: item.priceCents });
-  }
-  for (const sample of tax?.samples ?? []) {
-    if (items.length >= 2) break;
-    if (items.some((item) => item.name === sample.name)) continue;
-    items.push({ name: sample.name, href: sample.href, priceCents: sample.priceCents });
-  }
+  const items: FloorItem[] = (tax?.samples ?? []).slice(0, 2).map((sample) => ({
+    name: sample.name,
+    href: sample.href,
+    priceCents: sample.priceCents,
+  }));
   const label = aisleIds[0]
     ? categoryLabel(aisleIds[0])
     : tagSpecialty
       ? tagLabel(tagSpecialty)
-      : (spot?.primaryAisleLabel ?? "Vendor");
+      : "Vendor";
   const blob = [entry.name, label, ...aisleIds.map(categoryLabel), ...origins, ...diets, ...production, ...items.map((item) => item.name)]
     .join(" ")
     .toLowerCase();
   return {
     slug: entry.vendorSlug,
     name: entry.name,
-    logoUrl: entry.logoUrl ?? spot?.logoUrl ?? null,
-    ratingAvg: entry.ratingAvg ?? spot?.ratingAvg ?? null,
-    reviewCount: entry.reviewCount || spot?.reviewCount || 0,
+    logoUrl: entry.logoUrl,
+    ratingAvg: entry.ratingAvg,
+    reviewCount: entry.reviewCount,
     aisleIds,
     origins,
     diets,
@@ -305,8 +295,7 @@ function toStall(
   };
 }
 
-function buildIndex(data: MarketsFloorData): IndexedMarket[] {
-  const spotBySlug = new Map(data.vendorSpotlights.map((vendor) => [vendor.slug, vendor]));
+function buildIndex(data: MarketsFloorView): IndexedMarket[] {
   const byMarket = new Map<string, FloorStall[]>();
   const seen = new Map<string, Set<string>>();
   for (const entry of data.roster) {
@@ -315,7 +304,7 @@ function buildIndex(data: MarketsFloorData): IndexedMarket[] {
     have.add(entry.vendorSlug);
     seen.set(entry.marketSlug, have);
     const list = byMarket.get(entry.marketSlug) ?? [];
-    list.push(toStall(entry, spotBySlug.get(entry.vendorSlug), data.taxonomyBySlug[entry.vendorSlug]));
+    list.push(toStall(entry, data.taxonomyBySlug[entry.vendorSlug]));
     byMarket.set(entry.marketSlug, list);
   }
   for (const list of byMarket.values()) {
@@ -325,14 +314,14 @@ function buildIndex(data: MarketsFloorData): IndexedMarket[] {
   }
   return data.enrichedMarkets.map((market) => ({
     market,
-    blob: [market.name, market.neighbourhood, market.city, market.address, ...market.tags, ...market.displayTags]
+    blob: [market.name, market.neighbourhood, market.city, market.address, ...market.tags]
       .join(" ")
       .toLowerCase(),
     stalls: byMarket.get(market.slug) ?? [],
   }));
 }
 
-function hasSetup(market: EnrichedMarketRow, setup: string) {
+function hasSetup(market: FloorMarket, setup: string) {
   const tags = market.tags.map((tag) => tag.toLowerCase());
   if (tags.includes(setup)) return true;
   if (setup === "indoor" && market.indoor_outdoor === "Indoor") return true;
@@ -391,7 +380,7 @@ function torontoBand(lat: number, lng: number) {
 }
 
 /** A place chip is a region with several markets, not a single hall. */
-function areaForMarket(market: EnrichedMarketRow) {
+function areaForMarket(market: FloorMarket) {
   const city = market.city.trim().toLowerCase();
   for (const area of CITY_AREAS) {
     if (area.cities.has(city)) return area.label;
@@ -404,7 +393,7 @@ function areaForMarket(market: EnrichedMarketRow) {
   return null;
 }
 
-function marketInPlace(market: EnrichedMarketRow, area: string) {
+function marketInPlace(market: FloorMarket, area: string) {
   return areaMatchesMarket(area, {
     slug: market.slug,
     city: market.city,
@@ -441,14 +430,14 @@ function matchesTokens(
 
 const WEEKDAY_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function marketOnWeekday(market: EnrichedMarketRow, weekday: number) {
+function marketOnWeekday(market: FloorMarket, weekday: number) {
   const short = WEEKDAY_SHORT[weekday];
   if (!short) return false;
   const named = (day: string) => day.startsWith(short) || day.toLowerCase().startsWith(weekdayLabel(weekday).toLowerCase());
   return market.sessions.some((session) => named(session.day)) || market.dayNames.some(named);
 }
 
-function daySlugsFor(filters: FloorFilters, data: MarketsFloorData) {
+function daySlugsFor(filters: FloorFilters, data: MarketsFloorView) {
   if (filters.dayId) {
     const group = data.fullWeek.find((item) => item.id === filters.dayId);
     return new Set(group?.slots.map((slot) => slot.slug) ?? []);
@@ -595,7 +584,7 @@ function vendorRank(stall: FloorStall, needle: string) {
   return null;
 }
 
-function marketTextRank(market: EnrichedMarketRow, needle: string) {
+function marketTextRank(market: FloorMarket, needle: string) {
   const name = textRank(market.name, needle);
   if (name != null) return name;
   const place = textRank(market.neighbourhood, needle);
@@ -619,7 +608,7 @@ function matchingGuides(needle: string) {
 }
 
 function marketWhen(
-  market: EnrichedMarketRow,
+  market: FloorMarket,
   slot: { hours: string; open: boolean } | undefined,
   today: number,
 ) {
@@ -637,7 +626,7 @@ function buildSearchAnswer(
   filters: FloorFilters,
   daySlugs: Set<string> | null,
   slotBySlug: Map<string, { hours: string; open: boolean }> | null,
-  data: MarketsFloorData,
+  data: MarketsFloorView,
 ): SearchAnswer {
   const needle = filters.q.trim().toLowerCase();
   if (needle.length < SEARCH_MIN) {
@@ -812,7 +801,7 @@ export function MarketsFloor({
   preview = false,
   syncUrl = false,
 }: {
-  data: MarketsFloorData;
+  data: MarketsFloorView;
   initial?: MarketsSearch & { day?: string };
   preview?: boolean;
   syncUrl?: boolean;
@@ -904,6 +893,7 @@ export function MarketsFloor({
   const searching = q.trim().length >= SEARCH_MIN && pin == null;
 
   const rows = useMemo(() => {
+    if (q.trim().length >= SEARCH_MIN && pin == null) return [];
     let matched = index.filter((entry) =>
       marketMatches(entry, directoryFilters, daySlugs, stallMode),
     );
@@ -932,7 +922,7 @@ export function MarketsFloor({
         if (b.market.slug === pin.slug) return 1;
       }
       if (near) {
-        const from = (market: EnrichedMarketRow) =>
+        const from = (market: FloorMarket) =>
           market.lat == null || market.lng == null
             ? Number.POSITIVE_INFINITY
             : distanceMeters(near, { lat: market.lat, lng: market.lng });
@@ -985,12 +975,40 @@ export function MarketsFloor({
       .map(([label, count]) => ({ label, count }));
   }, [index]);
 
+  const chipCounts = useMemo(() => {
+    const setups = new Map<string, number>();
+    const areas = new Map<string, number>();
+    for (const option of SETUPS) setups.set(option.id, 0);
+    const openFilters: FloorFilters = { ...filters, area: null, setup: null };
+    const slugs = daySlugsFor(openFilters, data);
+    for (const entry of index) {
+      if (!entryInContext(entry, slugs, openFilters)) continue;
+      if ((filters.q.trim() || specialtyOn(filters)) && visibleStalls(entry, openFilters).length === 0) {
+        continue;
+      }
+      if (!area || marketInPlace(entry.market, area)) {
+        for (const option of SETUPS) {
+          if (hasSetup(entry.market, option.id)) setups.set(option.id, (setups.get(option.id) ?? 0) + 1);
+        }
+      }
+      const region = areaForMarket(entry.market);
+      if (region && (!setup || hasSetup(entry.market, setup))) {
+        areas.set(region, (areas.get(region) ?? 0) + 1);
+      }
+    }
+    return { setups, areas };
+  }, [index, q, dayId, weekday, area, setup, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, data]);
+
   function optionCount(next: Partial<FloorFilters>) {
-    const merged = { ...filters, ...next };
-    return index.filter((entry) => marketMatches(entry, merged, daySlugs)).length;
+    if (next.setup) return chipCounts.setups.get(next.setup) ?? 0;
+    if (next.area) return chipCounts.areas.get(next.area) ?? 0;
+    return 0;
   }
 
   const facetOptions = useMemo(() => {
+    if (q.trim().length >= SEARCH_MIN) {
+      return { sell: [], cuisine: [], diet: [], made: [] };
+    }
     const activeDaySlugs = daySlugsFor(filters, data);
 
     function tally(kind: FacetId) {
@@ -1051,7 +1069,7 @@ export function MarketsFloor({
       diet: optionsFor(tally("diet"), diet, DIET_ORDER, tagLabel),
       made: optionsFor(tally("made"), made, MADE_ORDER, tagLabel),
     };
-  }, [index, filters, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, data]);
+  }, [index, q, dayId, weekday, area, setup, category, cuisine, diet, made, categoryTags, cuisineTags, dietTags, madeTags, data]);
 
   const activeOptions =
     facet === "sell"
@@ -1169,7 +1187,7 @@ export function MarketsFloor({
     : [];
 
   function onQueryChange(value: string) {
-    commit({ q: value }, "replace");
+    commit({ q: value.slice(0, 80) }, "replace");
     setPin(null);
   }
 

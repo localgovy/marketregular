@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { MarketsFloor } from "@/components/markets-floor";
-import { loadMarketsFloorData } from "@/app/preview/_lib/markets-preview-data";
+import { loadMarketsFloorView } from "@/lib/markets-floor-data";
 import { SITE_NAME } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +12,6 @@ export const metadata: Metadata = {
 };
 
 export default async function MarketsFloorPreviewPage() {
-  const data = await loadMarketsFloorData();
+  const data = await loadMarketsFloorView();
   return <MarketsFloor data={data} preview />;
 }

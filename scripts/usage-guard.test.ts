@@ -43,6 +43,9 @@ test("request-path warmups and full-site login invalidation stay out", () => {
   const directory = readFileSync(new URL("../src/lib/revalidate-directory.ts", import.meta.url), "utf8");
   assert.equal(markets.includes("warmChip"), false);
   assert.equal(markets.includes("after("), false);
+  assert.equal(markets.includes("loadMarketsFloorView"), true);
+  assert.equal(markets.includes("loadMarketsFloorData"), false);
+  assert.equal(markets.includes("loadHomePreviewData"), false);
   assert.equal(auth.includes('revalidatePath("/", "layout")'), false);
   assert.equal(directory.includes('"layout"'), false);
 });

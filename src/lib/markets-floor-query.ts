@@ -27,6 +27,10 @@ export type FloorQuery = {
   facet: FloorFacet;
 };
 
+const QUERY_CAP = 80;
+const TAG_CAP = 8;
+const AREA_CAP = 80;
+
 const REGION_LABELS = [
   "Downtown",
   "East end",
@@ -172,7 +176,7 @@ export function floorQueryFromSearch(
   const cuisineTags: string[] = [];
   const dietTags: string[] = [];
   const madeTags: string[] = [];
-  for (const tag of search.tags ?? []) {
+  for (const tag of (search.tags ?? []).slice(0, TAG_CAP)) {
     if (SETUP_TAGS.has(tag)) {
       if (!setup) setup = tag;
       continue;
@@ -208,13 +212,17 @@ export function floorQueryFromSearch(
 
   const lat = Number(search.lat);
   const lng = Number(search.lng);
-  const near = Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  const near =
+    Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+      ? { lat, lng }
+      : null;
+  const areaRaw = search.areas?.[0]?.trim() ?? "";
 
   return {
-    q: search.q?.trim() ?? "",
+    q: (search.q ?? "").trim().slice(0, QUERY_CAP),
     dayId,
     weekday,
-    area: search.areas?.[0] ? canonicalArea(search.areas[0]) : null,
+    area: areaRaw && areaRaw.length <= AREA_CAP ? canonicalArea(areaRaw) : null,
     setup,
     category,
     cuisine,
