@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-const ROLL_MS = 700;
+const ROLL_MS = 400;
 const HOLD_MS = 4200;
 const ROLL_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 
