@@ -18,6 +18,7 @@ import { ScheduleList } from "@/components/schedule-list";
 import { ListingContact, ListingWebsite, ListingInstagram, ListingTiktok, ListingFacebook } from "@/components/listing-contact";
 import { TagList } from "@/components/tag-list";
 import { VerifiedName } from "@/components/verified-stamp";
+import { requireBuildSnapshot } from "@/lib/data/build-snapshot";
 import { getListingContact, getMarketBySlug, listMarkets } from "@/lib/data/catalog";
 import { listingIsClaimed } from "@/lib/listing-claimed";
 import { retiredMarketTarget } from "@/lib/data/retired-listings";
@@ -41,6 +42,7 @@ export const dynamic = "force-static";
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
+  await requireBuildSnapshot();
   const markets = await listMarkets();
   return markets.map((market) => ({ slug: market.slug }));
 }

@@ -54,7 +54,8 @@ const nextConfig: NextConfig = {
     // Tailwind + next/font CSS is ~21 KiB gzipped. Inlining it removes the
     // render-blocking stylesheet round-trips PageSpeed flags on mobile.
     inlineCss: true,
-    // Each worker prerenders one page at a time so find pages do not stampede Supabase.
+    // One page at a time on each worker. The build reads the directory once;
+    // extra in-flight pages would only hold more trees on the same cores.
     staticGenerationMaxConcurrency: 1,
     serverActions: {
       bodySizeLimit: "6mb",

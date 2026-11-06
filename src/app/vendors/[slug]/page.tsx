@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { JsonLd } from "@/components/json-ld";
 import { VendorAtlas } from "@/components/vendor-atlas";
+import { requireBuildSnapshot } from "@/lib/data/build-snapshot";
 import { getListingContact, getVendorBySlug, listVendors } from "@/lib/data/catalog";
 import { listingIsClaimed } from "@/lib/listing-claimed";
 import { retiredVendorTarget } from "@/lib/data/retired-listings";
@@ -22,6 +23,7 @@ export const dynamic = "force-static";
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
+  await requireBuildSnapshot();
   const vendors = await listVendors();
   return vendors.map((vendor) => ({ slug: vendor.slug }));
 }

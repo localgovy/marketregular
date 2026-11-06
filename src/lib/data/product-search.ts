@@ -1,6 +1,12 @@
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/catalog";
+import { requireBuildSnapshot } from "@/lib/data/build-snapshot";
+import {
+  FIND_MENU_PAGE,
+  FIND_MENU_PAGE_CAP,
+  FIND_SLUG_SLICE,
+} from "@/lib/data/snapshot-select";
 import {
   assertPublicSearchPayload,
   isAlcoholCategory,
@@ -125,8 +131,6 @@ function inFindScope(
  * function was killed, so the page cache never stored.
  */
 const FIND_MENU_TTL_MS = 120_000;
-const FIND_MENU_PAGE = 1000;
-const FIND_MENU_PAGE_CAP = 4;
 const FIND_MENU_MEMORY_CAP = 48;
 
 const loadCachedFindMenus = unstable_cache(
@@ -165,6 +169,12 @@ async function loadFindMenus(page: FindPageQuery): Promise<MenuRow[]> {
   const memoryKey = `${slugKey}\0${classifierKey}`;
   const hit = findMenuMemory.get(memoryKey);
   if (hit && Date.now() - hit.at < FIND_MENU_TTL_MS) return hit.rows;
+  const snap = await requireBuildSnapshot();
+  if (snap) {
+    const rows = snap.findMenus(slugs, classifiers) as MenuRow[];
+    rememberFindMenus(memoryKey, rows);
+    return rows;
+  }
   const rows = await loadCachedFindMenus(slugKey, classifierKey);
   rememberFindMenus(memoryKey, rows);
   return rows;
@@ -198,8 +208,8 @@ async function readFindMenus(slugs: string[], classifiers: string[]): Promise<Me
   const findColumns = { current: MENU_FIND_PHOTO_SELECT };
   const rows: MenuRow[] = [];
 
-  for (let index = 0; index < slugs.length; index += 40) {
-    const slice = slugs.slice(index, index + 40);
+  for (let index = 0; index < slugs.length; index += FIND_SLUG_SLICE) {
+    const slice = slugs.slice(index, index + FIND_SLUG_SLICE);
     let previousHead = "";
     for (let page = 0; page < FIND_MENU_PAGE_CAP; page++) {
       const from = page * FIND_MENU_PAGE;

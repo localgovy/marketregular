@@ -1,10 +1,15 @@
 import "server-only";
 
+import { isProductionBuild, requireBuildSnapshot } from "@/lib/data/build-snapshot";
 import { createServiceClient } from "@/lib/supabase/admin";
 import type { ClaimTarget } from "@/types/database";
 
 /** True when another account already runs this published listing. */
 export async function listingIsClaimed(kind: ClaimTarget, id: string) {
+  if (isProductionBuild()) {
+    const snap = await requireBuildSnapshot();
+    if (snap) return snap.isClaimed(kind, id);
+  }
   const service = createServiceClient();
   if (!service) return false;
   const table = kind === "vendor" ? "vendors" : "markets";
