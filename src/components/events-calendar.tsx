@@ -89,7 +89,6 @@ export function EventsCalendar({
     [year, month, markets, schedules, now],
   );
   const selectedCell = cells.find((cell) => cell.iso === selected) ?? cells.find((cell) => cell.inMonth);
-  const monthEvents = cells.filter((cell) => cell.inMonth && cell.events.length).length;
 
   function eventsHref(nextYear: number, nextMonth: number, iso: string) {
     const day = Number(iso.slice(8, 10));
@@ -205,14 +204,9 @@ export function EventsCalendar({
               <CaretRightMark />
             </Button>
           </div>
-          <div className="flex items-center gap-3">
-            <p className="type-kicker text-muted-foreground">
-              {monthEvents} {monthEvents === 1 ? "day with a market" : "days with a market"}
-            </p>
-            <Button type="button" variant="outline" onClick={goToday}>
-              Today
-            </Button>
-          </div>
+          <Button type="button" variant="outline" onClick={goToday}>
+            Today
+          </Button>
         </div>
 
         <div
@@ -329,9 +323,6 @@ export function EventsCalendar({
             ))}
           </div>
         </div>
-        <p className="type-kicker mt-3 text-muted-foreground">
-          Number at the end of the dots marks the amount of markets on that day.
-        </p>
       </div>
 
       <aside
