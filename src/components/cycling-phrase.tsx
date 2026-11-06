@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const ROLL_MS = 400;
+const ROLL_MS = 320;
 const HOLD_MS = 4200;
-const ROLL_EASE = "cubic-bezier(0.4, 0, 0.2, 1)";
 
 type Roll = {
   from: string;
@@ -13,32 +12,9 @@ type Roll = {
 };
 
 function RollingPhrase({ from, to, onDone }: { from: string; to: string; onDone: () => void }) {
-  const clipRef = useRef<HTMLSpanElement>(null);
-  const trackRef = useRef<HTMLSpanElement>(null);
   const onDoneRef = useRef(onDone);
+  const finishedRef = useRef(false);
   onDoneRef.current = onDone;
-
-  useLayoutEffect(() => {
-    const clip = clipRef.current;
-    const track = trackRef.current;
-    if (!clip || !track) return;
-
-    const line = clip.getBoundingClientRect().height;
-    track.querySelectorAll<HTMLElement>("[data-roll-line]").forEach((row) => {
-      row.style.height = `${line}px`;
-      row.style.lineHeight = `${line}px`;
-    });
-
-    const animation = track.animate(
-      [{ transform: "translate3d(0, 0, 0)" }, { transform: `translate3d(0, ${-line}px, 0)` }],
-      { duration: ROLL_MS, easing: ROLL_EASE, fill: "forwards" },
-    );
-    animation.onfinish = () => onDoneRef.current();
-    return () => {
-      animation.onfinish = null;
-      if (animation.playState !== "finished") animation.cancel();
-    };
-  }, [from, to]);
 
   return (
     <span className="relative inline-block align-baseline whitespace-nowrap">
@@ -46,14 +22,17 @@ function RollingPhrase({ from, to, onDone }: { from: string; to: string; onDone:
         <span className="col-start-1 row-start-1 whitespace-nowrap">{from}</span>
         <span className="col-start-1 row-start-1 whitespace-nowrap">{to}</span>
       </span>
-      <span ref={clipRef} className="phrase-roll-window">
-        <span ref={trackRef} className="phrase-roll-track">
-          <span data-roll-line className="phrase-roll-line">
-            {from}
-          </span>
-          <span data-roll-line className="phrase-roll-line">
-            {to}
-          </span>
+      <span className="phrase-roll-window">
+        <span
+          className="phrase-roll-track"
+          onAnimationEnd={(event) => {
+            if (event.target !== event.currentTarget || finishedRef.current) return;
+            finishedRef.current = true;
+            onDoneRef.current();
+          }}
+        >
+          <span className="phrase-roll-line">{from}</span>
+          <span className="phrase-roll-line">{to}</span>
         </span>
       </span>
     </span>

@@ -176,21 +176,41 @@
   }
 }
 
-/* The clip is one line. Two equal lines sit in the track and move up together. */
+/* One line high. The track is two lines and moves up by half, so the next phrase lands in place. */
+@keyframes phrase-roll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
 .phrase-roll-window {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
 }
 
 .phrase-roll-track {
   display: block;
+  height: 200%;
+  animation: phrase-roll 320ms cubic-bezier(0.33, 1, 0.68, 1) both;
 }
 
 .phrase-roll-line {
   display: block;
+  height: 50%;
   white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phrase-roll-track {
+    animation: none;
+  }
 }
 
 /* Page title when it isn’t an h1 — e.g. a big stat. */
