@@ -534,9 +534,6 @@ function CravingCycle({ aisles }: { aisles: HomeAtlasAisleCard[] }) {
         <button type="button" aria-label="Next craving" onClick={() => step(1)} className={cycleButtonClass}>
           <CaretRightMark className="size-4" />
         </button>
-        <span className="type-nums text-sm text-chalk">
-          {index + 1} / {count}
-        </span>
         <span className="sr-only" aria-live="polite">
           {current.label}, {index + 1} of {count}
         </span>
