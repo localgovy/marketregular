@@ -61,6 +61,43 @@ export type FloorTaxonomy = {
   samples: FloorTaxonomySample[];
 };
 
+/** Schedule rows the browser needs to decide what is open. No server clock. */
+export type FloorSchedule = {
+  weekday: number;
+  opens_at: string;
+  closes_at: string;
+  season_start: string | null;
+  season_end: string | null;
+  notes: string | null;
+};
+
+/** A market before the clock is applied. Hours and open state are derived in the browser. */
+export type FloorMarketStatic = {
+  id: string;
+  slug: string;
+  name: string;
+  city: string;
+  address: string;
+  province: string;
+  lat: number | null;
+  lng: number | null;
+  logo_url: string | null;
+  rating_avg: number | null;
+  review_count: number;
+  tags: string[];
+  vendorCount: number;
+  neighbourhood: string;
+  indoor_outdoor: string | null;
+  schedules: FloorSchedule[];
+};
+
+export type MarketsFloorBase = {
+  renderedAt: number;
+  markets: FloorMarketStatic[];
+  roster: FloorRosterEntry[];
+  taxonomyBySlug: Record<string, FloorTaxonomy>;
+};
+
 export type MarketsFloorView = {
   todayWeekday: number;
   fullWeek: FloorWeekGroup[];

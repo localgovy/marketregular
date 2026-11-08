@@ -51,9 +51,6 @@ async function liveListingRedirects() {
 
 const nextConfig: NextConfig = {
   experimental: {
-    // Tailwind + next/font CSS is ~21 KiB gzipped. Inlining it removes the
-    // render-blocking stylesheet round-trips PageSpeed flags on mobile.
-    inlineCss: true,
     // One page at a time on each worker. The build reads the directory once;
     // extra in-flight pages would only hold more trees on the same cores.
     staticGenerationMaxConcurrency: 1,

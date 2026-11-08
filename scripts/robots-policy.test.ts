@@ -56,6 +56,15 @@ const privatePaths = [
   "/kept",
 ];
 
+test("product search urls are not crawlable and the catalogue is", () => {
+  assert.equal(isRobotsDisallowed("/products"), false);
+  assert.equal(isRobotsDisallowed("/products?q=honey"), true);
+  assert.equal(isRobotsDisallowed("/products?aisle=vegetables"), true);
+  assert.equal(isRobotsDisallowed("/products/browse/all/featured"), true);
+  assert.equal(isRobotsDisallowed("/products/search"), true);
+  assert.equal(isRobotsDisallowed("/products/search?q=honey"), true);
+});
+
 test("public market and stall paths are crawlable", () => {
   for (const path of publicPaths) {
     assert.equal(isRobotsDisallowed(path), false, path);

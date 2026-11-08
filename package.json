@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/check-segment-config.mjs && node scripts/check-build-snapshot.mjs && next build",
+    "build": "node scripts/check-segment-config.mjs && node scripts/check-build-snapshot.mjs && next build && node scripts/check-build-output.mjs",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

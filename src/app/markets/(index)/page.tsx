@@ -11,10 +11,10 @@ import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib
 export const maxDuration = 60;
 
 /**
- * One cached directory. Search and filters stay in the browser, so a query does not start another render.
+ * One cached directory. Search, filters, and open-now stay in the browser, so a query does not start another render.
  * This has to be a number literal equal to DIRECTORY_REVALIDATE_SECONDS. Next.js does not read an imported constant.
  */
-export const revalidate = 120;
+export const revalidate = 3600;
 
 export async function generateMetadata(): Promise<Metadata> {
   const census = await getDirectoryCensus();
@@ -29,7 +29,7 @@ const SEARCH_HIDE = `if(location.pathname==="/markets"&&location.search.length>1
 
 export default async function MarketsPage() {
   const data = await loadMarketsFloorView();
-  const listItems = data.enrichedMarkets.map((market) => ({
+  const listItems = data.markets.map((market) => ({
     name: market.name,
     path: `/markets/${market.slug}`,
   }));

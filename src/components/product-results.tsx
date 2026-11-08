@@ -320,6 +320,7 @@ export function ProductListing({
                         {item.href ? (
                           <Link
                             href={item.href}
+                            rel={item.href.startsWith("/products?q=") ? "nofollow" : undefined}
                             className="hover:text-primary hover:underline"
                           >
                             {item.name}

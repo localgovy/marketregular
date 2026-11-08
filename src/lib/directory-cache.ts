@@ -8,11 +8,10 @@ export const DIRECTORY_TAG = "directory";
 export const DIRECTORY_DATA_REVALIDATE_SECONDS = 60 * 60;
 
 /**
- * Clock-baked pages ("open now", today's sort). Short on purpose.
- * The render has to finish well inside this window. If it runs longer,
- * the next request starts another one and the function never goes idle.
+ * Cached directory pages. Open-now is computed in the browser, so the HTML
+ * refreshes hourly with the published rows instead of every couple of minutes.
  */
-export const DIRECTORY_REVALIDATE_SECONDS = 120;
+export const DIRECTORY_REVALIDATE_SECONDS = 60 * 60;
 
 /**
  * Next refuses to store one data-cache entry over 2MB.

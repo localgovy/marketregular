@@ -4,7 +4,7 @@
  * `/vendor/` and `/vendor?` cover the portal without touching `/vendors`.
  * `/market` vs `/markets` uses the same split.
  */
-export const ROBOTS_ALLOW = ["/", "/markets", "/vendors"] as const;
+export const ROBOTS_ALLOW = ["/", "/markets", "/vendors", "/products$"] as const;
 
 function privateRoot(path: string) {
   const root = path.endsWith("/") ? path.slice(0, -1) : path;
@@ -21,6 +21,9 @@ export const ROBOTS_DISALLOW = [
   ...privateRoot("/saved"),
   ...privateRoot("/kept"),
   ...privateRoot("/preview"),
+  "/products?",
+  "/products/browse",
+  "/products/search",
 ] as const;
 
 function escapeRegex(value: string) {

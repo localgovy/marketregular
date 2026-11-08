@@ -1,5 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
+import { DIRECTORY_DATA_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export type ProductPhoto = {
@@ -69,8 +70,8 @@ const loadCachedProductPhotos = unstable_cache(
       return EMPTY_PRODUCT_PHOTOS;
     }
   },
-  ["product-photos-v1"],
-  { revalidate: 120, tags: ["product-photos"] },
+  ["product-photos-v2"],
+  { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG, "product-photos"] },
 );
 
 export async function listProductPhotos() {

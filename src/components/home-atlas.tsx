@@ -3,13 +3,16 @@
 import { useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { applyHomeClock } from "@/lib/home-atlas-clock";
 import type {
   HomeAtlasAisleCard,
   HomeAtlasData,
   HomeAtlasMarketSlot,
   HomeAtlasNeighbourhoodCircuit,
+  HomeAtlasSource,
   HomeAtlasVendorSpotlight,
 } from "@/lib/home-atlas-data";
+import { useNow } from "@/lib/use-now";
 import { AddressLink } from "@/components/address-link";
 import { CyclingPhrase } from "@/components/cycling-phrase";
 import { useGeo } from "@/components/geo-provider";
@@ -1148,7 +1151,9 @@ function FilterCycleRow({
   );
 }
 
-export function HomeAtlas({ data }: { data: HomeAtlasData }) {
+export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
+  const nowMs = useNow(source.renderedAt);
+  const data = useMemo(() => applyHomeClock(source, new Date(nowMs)), [source, nowMs]);
   const router = useRouter();
   const { coords, requestAsync } = useGeo();
 

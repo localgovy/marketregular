@@ -11,7 +11,7 @@ export const metadata: Metadata = pageMeta({
   description: SITE_DESCRIPTION,
 });
 
-export const revalidate = 120;
+export const revalidate = 3600;
 /** Cold menu sample is hourly. Past two minutes, stop holding the function open. */
 export const maxDuration = 120;
 

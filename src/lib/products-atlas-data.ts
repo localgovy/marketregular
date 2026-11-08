@@ -21,7 +21,7 @@ import {
   type FindVendor,
 } from "@/lib/data/product-search";
 import { FIND_CATEGORIES, type FindPage } from "@/data/find-pages";
-import { DIRECTORY_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
+import { DIRECTORY_DATA_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
 import { weekdayInToronto } from "@/lib/find-paths";
 import { listingMarkSrc } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";
@@ -50,6 +50,20 @@ export type ProductsAtlasStallPreview = {
   itemName: string;
   priceCents: number | null;
   itemHref: string;
+  sellDays: number[];
+};
+
+export type ProductMarketClock = {
+  slug: string;
+  province: string;
+  schedules: Array<{
+    weekday: number;
+    opens_at: string;
+    closes_at: string;
+    season_start: string | null;
+    season_end: string | null;
+  }>;
+  stallsByWeekday: number[];
 };
 
 export type ProductsAtlasSpotlight = {
@@ -298,6 +312,7 @@ async function buildProductsHubContext(activeAisle: string | null) {
       itemName: lead.itemName,
       priceCents: null,
       itemHref: lead.itemHref,
+      sellDays: [...new Set(vStalls.flatMap((stall) => stall.days))].filter((day) => day >= 0 && day <= 6),
       aisleIds: [...new Set(matchedPreviews.map((m) => m.aisleId))],
       openNow,
       sellingToday,
@@ -381,6 +396,27 @@ async function buildProductsHubContext(activeAisle: string | null) {
     featuredStalls: featuredStallsForSpotlight,
   };
 
+  const stallsByMarketWeekday = new Map<string, number[]>();
+  for (const stall of stalls) {
+    const counts = stallsByMarketWeekday.get(stall.market_id) ?? [0, 0, 0, 0, 0, 0, 0];
+    for (const day of stall.days) {
+      if (day >= 0 && day <= 6) counts[day] += 1;
+    }
+    stallsByMarketWeekday.set(stall.market_id, counts);
+  }
+  const marketClocks: ProductMarketClock[] = markets.map((market) => ({
+    slug: market.slug,
+    province: market.province,
+    schedules: (scheduleMap.get(market.id) ?? []).map((row) => ({
+      weekday: Number(row.weekday),
+      opens_at: row.opens_at,
+      closes_at: row.closes_at,
+      season_start: row.season_start,
+      season_end: row.season_end,
+    })),
+    stallsByWeekday: stallsByMarketWeekday.get(market.id) ?? [0, 0, 0, 0, 0, 0, 0],
+  }));
+
   return {
     markets,
     census,
@@ -390,13 +426,15 @@ async function buildProductsHubContext(activeAisle: string | null) {
     spotlight,
     stallsByAisle,
     featuredStalls: allPreviews.slice(0, 6),
+    renderedAt: Date.now(),
+    marketClocks,
   };
 }
 
 const loadCachedProductsHub = unstable_cache(
   async (activeAisle: string) => buildProductsHubContext(activeAisle || null),
-  ["products-hub-v1"],
-  { revalidate: DIRECTORY_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] },
+  ["products-hub-v2"],
+  { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] },
 );
 
 /** Aisle shells are shared. Search queries must not rebuild this on every hit. */

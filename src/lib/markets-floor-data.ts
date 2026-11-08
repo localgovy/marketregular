@@ -2,28 +2,20 @@ import { unstable_cache } from "next/cache";
 import { FIND_PAGES } from "@/data/find-pages";
 import { DIRECTORY_DATA_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
 import { FLOOR_TAXONOMY_PAGE, FLOOR_TAXONOMY_PAGE_CAP, fitFloorTaxonomy } from "@/lib/markets-floor-budget";
-import { FIND_AREAS, weekdayInToronto } from "@/lib/find-paths";
+import { floorSchedules } from "@/lib/markets-floor-clock";
+import { FIND_AREAS } from "@/lib/find-paths";
 import { listingMarkSrc } from "@/lib/format";
-import { hallHours } from "@/lib/day-plan";
 import { productsBrowsePath } from "@/lib/product-browse-href";
-import {
-  currentWeekSessions,
-  nextOpenLabel,
-  nextOpenSlot,
-  sortScheduleRows,
-  formatSchedule,
-} from "@/lib/schedule";
 import { createServiceClient } from "@/lib/supabase/admin";
-import { upcomingByDay } from "@/lib/upcoming";
 import { vendorProductTags } from "@/lib/vendor-tags";
 import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/catalog";
 import { isSupabaseConfigured } from "@/lib/constants";
 import type {
-  FloorMarket,
+  FloorMarketStatic,
   FloorRosterEntry,
   FloorTaxonomy,
   FloorTaxonomySample,
-  MarketsFloorView,
+  MarketsFloorBase,
 } from "@/lib/markets-floor-types";
 import type { Market, MarketSchedule } from "@/types/database";
 
@@ -243,54 +235,18 @@ function neighbourhoodFor(market: Market) {
   return market.city || "Toronto";
 }
 
-function toFloorMarket(
-  market: Market,
-  schedules: MarketSchedule[],
-  vendorCount: number,
-  openIds: Set<string>,
-  now: Date,
-): FloorMarket {
-  const open = openIds.has(market.id);
-  const nextSlot = nextOpenSlot(schedules, market.province, now);
-  const sessions = currentWeekSessions(schedules, market.province, now);
-  const hours = hallHours(market, schedules, undefined, now);
-  const tags = (market.tags ?? []).map((tag) => tag.toLowerCase());
-  const indoor_outdoor = tags.includes("indoor") ? "Indoor" : tags.includes("outdoor") ? "Outdoor" : null;
-  return {
-    id: market.id,
-    slug: market.slug,
-    name: market.name,
-    city: market.city,
-    address: market.address,
-    province: market.province,
-    lat: market.lat,
-    lng: market.lng,
-    logo_url: listingMarkSrc(market.logo_url),
-    rating_avg: market.rating_avg ?? null,
-    review_count: market.review_count ?? 0,
-    tags: market.tags ?? [],
-    open,
-    hours: hours || sessions[0]?.hours || "",
-    nextOpen: schedules.length
-      ? nextOpenLabel(schedules, market.province, now)
-      : open
-        ? "Open now"
-        : "Hours",
-    sessions,
-    vendorCount,
-    neighbourhood: neighbourhoodFor(market),
-    waitMinutes: open ? 0 : nextSlot && Number.isFinite(nextSlot.waitMinutes) ? nextSlot.waitMinutes : null,
-    dayNames: [...new Set(sortScheduleRows(schedules).map((row) => formatSchedule(row).day))],
-    indoor_outdoor,
-  };
+function indoorOutdoor(tags: string[]) {
+  const lower = tags.map((tag) => tag.toLowerCase());
+  if (lower.includes("indoor")) return "Indoor";
+  if (lower.includes("outdoor")) return "Outdoor";
+  return null;
 }
 
 /**
  * The directory the markets page renders.
- * Menu rows are aggregated once an hour. A page view does not scan them again.
+ * Menu rows are aggregated once an hour. Open and hours are applied in the browser.
  */
-export async function loadMarketsFloorView(): Promise<MarketsFloorView> {
-  const now = new Date();
+export async function loadMarketsFloorView(): Promise<MarketsFloorBase> {
   const [markets, vendors, stalls, schedules, taxonomyBySlug] = await Promise.all([
     listMarkets(),
     listVendors(),
@@ -310,28 +266,27 @@ export async function loadMarketsFloorView(): Promise<MarketsFloorView> {
     vendorCountByMarket.set(stall.market_id, (vendorCountByMarket.get(stall.market_id) ?? 0) + 1);
   }
 
-  const week = upcomingByDay(markets, scheduleMap, now, { includeClosedToday: true });
-  const openIds = new Set((week.find((group) => group.open)?.slots ?? []).map((slot) => slot.market.id));
   const marketById = new Map(markets.map((market) => [market.id, market]));
   const vendorById = new Map(vendors.map((vendor) => [vendor.id, vendor]));
 
-  const enrichedMarkets = markets
-    .map((market) =>
-      toFloorMarket(
-        market,
-        scheduleMap.get(market.id) ?? [],
-        vendorCountByMarket.get(market.id) ?? 0,
-        openIds,
-        now,
-      ),
-    )
-    .sort(
-      (a, b) =>
-        Number(b.open) - Number(a.open) ||
-        (a.waitMinutes ?? Number.POSITIVE_INFINITY) - (b.waitMinutes ?? Number.POSITIVE_INFINITY) ||
-        b.review_count - a.review_count ||
-        a.name.localeCompare(b.name),
-    );
+  const floorMarkets: FloorMarketStatic[] = markets.map((market) => ({
+    id: market.id,
+    slug: market.slug,
+    name: market.name,
+    city: market.city,
+    address: market.address,
+    province: market.province,
+    lat: market.lat,
+    lng: market.lng,
+    logo_url: listingMarkSrc(market.logo_url),
+    rating_avg: market.rating_avg ?? null,
+    review_count: market.review_count ?? 0,
+    tags: market.tags ?? [],
+    vendorCount: vendorCountByMarket.get(market.id) ?? 0,
+    neighbourhood: neighbourhoodFor(market),
+    indoor_outdoor: indoorOutdoor(market.tags ?? []),
+    schedules: floorSchedules(scheduleMap.get(market.id) ?? []),
+  }));
 
   const roster: FloorRosterEntry[] = [];
   const seen = new Set<string>();
@@ -360,17 +315,8 @@ export async function loadMarketsFloorView(): Promise<MarketsFloorView> {
   }
 
   return {
-    todayWeekday: weekdayInToronto(now),
-    fullWeek: week.map((group) => ({
-      id: group.id,
-      label: group.label,
-      slots: group.slots.map((slot) => ({
-        slug: slot.market.slug,
-        hours: slot.hours,
-        open: slot.open,
-      })),
-    })),
-    enrichedMarkets,
+    renderedAt: Date.now(),
+    markets: floorMarkets,
     roster,
     taxonomyBySlug: usedTaxonomy,
   };

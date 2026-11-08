@@ -6,7 +6,6 @@ import {
   PlateMark,
   RulesMark,
   TagMark,
-  WeekMark,
 } from "@/components/marks";
 import { ProductAisles } from "@/components/product-aisles";
 import {
@@ -19,7 +18,7 @@ import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { StallEmblem, VendorHitList } from "@/components/product-results";
 import { ProductSearchForm } from "@/components/product-search-form";
 import { SortableProductHits } from "@/components/product-sort-list";
-import { NowLabel } from "@/components/now-label";
+import { LiveStallBadge, ProductsLiveStatus } from "@/components/products-live";
 import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
 import type { DirectoryCensus } from "@/lib/data/catalog";
@@ -30,6 +29,7 @@ import { productsBrowseHref, type CatalogueSort } from "@/lib/product-browse-hre
 import type { CatalogueAisle } from "@/lib/product-catalogue";
 import type { ProductHit, VendorHit } from "@/lib/product-hits";
 import type {
+  ProductMarketClock,
   ProductsAtlasSpotlight,
   ProductsAtlasStallPreview,
 } from "@/lib/products-atlas-data";
@@ -57,8 +57,8 @@ export function ProductsAtlas({
   heading,
   aislePhotos,
   census,
-  openNowCount,
-  sellingTodayCount,
+  renderedAt,
+  marketClocks,
   spotlight,
   stallsByAisle,
   featuredStalls,
@@ -80,8 +80,8 @@ export function ProductsAtlas({
   heading: { title: string; blurb: string };
   aislePhotos: Record<string, ProductPhoto>;
   census: DirectoryCensus;
-  openNowCount: number;
-  sellingTodayCount: number;
+  renderedAt: number;
+  marketClocks: ProductMarketClock[];
   spotlight: ProductsAtlasSpotlight;
   stallsByAisle: Record<string, ProductsAtlasStallPreview[]>;
   featuredStalls: ProductsAtlasStallPreview[];
@@ -127,33 +127,7 @@ export function ProductsAtlas({
           })}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {openNowCount > 0 ? (
-            <Link href="/markets/open-today" className="inline-flex items-center hover:underline">
-              <NowLabel>
-                <span>
-                  <span className="type-nums">{openNowCount}</span>{" "}
-                  {openNowCount === 1 ? "market open now" : "markets open now"}
-                </span>
-              </NowLabel>
-            </Link>
-          ) : sellingTodayCount > 0 ? (
-            <Link
-              href="/markets/open-today"
-              className="stall-chip-sm inline-flex items-center gap-1.5 bg-card px-3 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
-            >
-              <WeekMark className="size-3.5 text-primary" />
-              <span>{sellingTodayCount} stalls active today</span>
-            </Link>
-          ) : null}
-          <Link
-            href="/markets"
-            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-          >
-            <span>See this week&apos;s markets</span>
-            <CaretRightMark className="size-3.5" />
-          </Link>
-        </div>
+        <ProductsLiveStatus renderedAt={renderedAt} marketClocks={marketClocks} />
       </div>
 
       {/* Above-the-Fold Dual-Plate Masthead */}
@@ -479,9 +453,13 @@ export function ProductsAtlas({
                               >
                                 <VerifiedName slug={stall.slug} name={stall.name} />
                               </Link>
-                              <p className="mt-0.5 text-sm text-muted-foreground">
-                                {stall.badge}
-                              </p>
+                              <LiveStallBadge
+                                renderedAt={renderedAt}
+                                marketClocks={marketClocks}
+                                sellDays={stall.sellDays}
+                                marketSlug={stall.marketSlug}
+                                fallback={stall.badge}
+                              />
                             </div>
                           </div>
                           <SaveButton

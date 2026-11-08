@@ -1,3 +1,4 @@
 {
-  "regions": ["yul1"]
+  "regions": ["yul1"],
+  "ignoreCommand": "node scripts/vercel-ignore-build.mjs"
 }

@@ -1,6 +1,8 @@
 import { listingRedirectDestination } from "@/data/listing-redirects";
 import { isAbusiveCrawler } from "@/lib/abusive-crawler";
 import { parseListingPath } from "@/lib/listing-alias-lookup";
+import { parseCatalogueSort } from "@/lib/product-browse-href";
+import { canonicalProductPath, parseAisle } from "@/lib/product-catalogue";
 import { updateSession } from "@/lib/supabase/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -21,7 +23,59 @@ function templatedParams(searchParams: URLSearchParams) {
   return named;
 }
 
-export function proxy(request: NextRequest) {
+function dayParam(value: string) {
+  if (!value) return null;
+  const day = Number(value);
+  if (!Number.isInteger(day) || day < 0 || day > 6) return null;
+  return day;
+}
+
+/**
+ * /products stays one cached catalogue. A query or a filter is either a
+ * redirect to the canonical URL or a rewrite onto the search or browse route.
+ * Unknown markets are resolved on the search route, before it loads results.
+ */
+function productHop(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname !== "/products") return null;
+  if (request.method !== "GET" && request.method !== "HEAD") return null;
+  const q = searchParams.get("q")?.trim() ?? "";
+  const openRaw = searchParams.get("open")?.trim() ?? "";
+  const market = searchParams.get("market")?.trim() ?? "";
+  const dayRaw = searchParams.get("day")?.trim() ?? "";
+  const aisleRaw = searchParams.get("aisle")?.trim() ?? "";
+  const sortRaw = searchParams.get("sort")?.trim() ?? "";
+  const day = dayParam(dayRaw);
+  const canonical = canonicalProductPath({
+    q,
+    openRaw,
+    openToday: openRaw === "1",
+    market,
+    marketRaw: market,
+    dayRaw,
+    day,
+    aisleRaw,
+    sortRaw,
+  });
+  if (canonical) {
+    const url = request.nextUrl.clone();
+    const dest = new URL(canonical, request.nextUrl.origin);
+    url.pathname = dest.pathname;
+    url.search = dest.search;
+    return NextResponse.redirect(url, 308);
+  }
+  if (!q && !openRaw && !market && !dayRaw && !aisleRaw && !sortRaw) return null;
+  const url = request.nextUrl.clone();
+  if (q || openRaw || market || dayRaw) {
+    url.pathname = "/products/search";
+    return NextResponse.rewrite(url);
+  }
+  const aisle = parseAisle(aisleRaw) ?? "all";
+  url.pathname = `/products/browse/${aisle}/${parseCatalogueSort(sortRaw)}`;
+  return NextResponse.rewrite(url);
+}
+
+export async function proxy(request: NextRequest) {
   if (isAbusiveCrawler(request.headers.get("user-agent"))) {
     return new NextResponse("Forbidden", {
       status: 403,
@@ -65,7 +119,12 @@ export function proxy(request: NextRequest) {
       return NextResponse.rewrite(url);
     }
   }
-  return updateSession(request);
+  const product = productHop(request);
+  if (product?.status === 308) return product;
+  const session = await updateSession(request);
+  if (!product || session.headers.get("location")) return session;
+  for (const cookie of session.headers.getSetCookie()) product.headers.append("set-cookie", cookie);
+  return product;
 }
 
 export const config = {

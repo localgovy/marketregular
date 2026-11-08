@@ -17,6 +17,9 @@ export type VendorTodayRow = {
   stall: string | null;
   hours: string;
   open: boolean;
+  /** Minutes from midnight, so the browser can drop a stall after it closes. */
+  opensMinutes: number;
+  closesMinutes: number;
   ratingAvg: number | null;
   reviewCount: number;
 };
@@ -78,6 +81,7 @@ export function vendorsSellingToday(
   vendors: Vendor[],
   scheduleMap: Map<string, MarketSchedule[]>,
   now = new Date(),
+  options?: { includeClosed?: boolean },
 ): VendorTodayRow[] {
   const tz = LAUNCH_TZ;
   const { weekday, minutes } = zonedParts(now, tz);
@@ -95,7 +99,7 @@ export function vendorsSellingToday(
     const vendor = byId.get(stall.id);
     const opens = parseHm(row.opens_at);
     const closes = parseHm(row.closes_at);
-    if (minutes > closes) continue;
+    if (!options?.includeClosed && minutes > closes) continue;
     const open = minutes >= opens && minutes <= closes;
     rows.push({
       vendorName: stall.name,
@@ -106,6 +110,8 @@ export function vendorsSellingToday(
       stall: stall.stall,
       hours: formatHours(row.opens_at, row.closes_at),
       open,
+      opensMinutes: opens,
+      closesMinutes: closes,
       ratingAvg: vendor?.rating_avg ?? null,
       reviewCount: vendor?.review_count ?? 0,
     });

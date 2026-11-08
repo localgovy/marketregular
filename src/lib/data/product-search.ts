@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { DIRECTORY_DATA_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
 import { cache } from "react";
 import { listMarkets, listSchedules, listStalls, listVendors } from "@/lib/data/catalog";
 import { requireBuildSnapshot } from "@/lib/data/build-snapshot";
@@ -21,7 +22,6 @@ import { visitBadge, soonestWait, type VisitHall } from "@/lib/product-visit";
 import { hallDayHours } from "@/lib/schedule";
 import { stallHall } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
-import { DIRECTORY_TAG } from "@/lib/directory-cache";
 import { foldSearchText } from "@/lib/search-text";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { menuItemPhotoUrl, publishedMenuSelectMissingPhoto } from "@/lib/menu-item-photo-url";
@@ -140,8 +140,8 @@ const loadCachedFindMenus = unstable_cache(
       classifierKey ? classifierKey.split("\n") : [],
     );
   },
-  ["find-page-menus-v1"],
-  { revalidate: 120, tags: [DIRECTORY_TAG] },
+  ["find-page-menus-v2"],
+  { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] },
 );
 
 const findMenuMemory = new Map<string, { at: number; rows: MenuRow[] }>();
@@ -382,15 +382,25 @@ const loadCachedSearchRows = unstable_cache(
   ): Promise<RpcRow[]> => {
     const supabase = createServiceClient();
     if (!supabase) return [];
-    const { data, error } = await supabase.rpc("search_products", {
-      q,
-      open_today: openToday,
-      market_slug: marketSlug || null,
-      day: day >= 0 && day <= 6 ? day : null,
-      lim: PRODUCT_PAGE,
-      off: offset,
-    });
-    if (error) throw new Error("Could not search products");
+    const { data, error } = await supabase
+      .rpc("search_products", {
+        q,
+        open_today: openToday,
+        market_slug: marketSlug || null,
+        day: day >= 0 && day <= 6 ? day : null,
+        lim: PRODUCT_PAGE,
+        off: offset,
+      })
+      .abortSignal(AbortSignal.timeout(8000));
+    if (error) {
+      const message = error.message ?? "";
+      if (error.code === "20" || /abort|timeout/i.test(message)) {
+        const timeout = new Error("search timed out");
+        timeout.name = "SearchTimeout";
+        throw timeout;
+      }
+      throw new Error("Could not search products");
+    }
     assertPublicSearchPayload(data);
     return (data ?? []) as RpcRow[];
   },
@@ -416,12 +426,24 @@ export async function searchProducts(args: {
     ? Math.max(0, Math.min(Math.trunc(rawOffset), 4000))
     : 0;
   const openToday = Boolean(args.openToday);
-  const [data, markets, schedules, vendors] = await Promise.all([
-    loadCachedSearchRows(q, openToday, marketSlug, day, offset),
-    listMarkets(),
-    listSchedules(),
-    listVendors(),
-  ]);
+  let data: RpcRow[] = [];
+  let markets: Awaited<ReturnType<typeof listMarkets>> = [];
+  let schedules: Awaited<ReturnType<typeof listSchedules>> = [];
+  let vendors: Awaited<ReturnType<typeof listVendors>> = [];
+  try {
+    [data, markets, schedules, vendors] = await Promise.all([
+      loadCachedSearchRows(q, openToday, marketSlug, day, offset),
+      listMarkets(),
+      listSchedules(),
+      listVendors(),
+    ]);
+  } catch (error) {
+    const timedOut =
+      error instanceof Error &&
+      (error.name === "SearchTimeout" || error.name === "AbortError" || /timed out|abort/i.test(error.message));
+    if (!timedOut) throw error;
+    return [];
+  }
   const marketBySlug = new Map(markets.map((market) => [market.slug, market]));
   const vendorBySlug = new Map(vendors.map((vendor) => [vendor.slug, vendor]));
   const schedulesByMarket = new Map<string, MarketSchedule[]>();

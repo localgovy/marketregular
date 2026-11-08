@@ -27,6 +27,7 @@ import { LAUNCH_CITY, LAUNCH_TZ } from "@/lib/launch";
 import { isSeasonAlias } from "@/lib/listing-siblings";
 import { catalogueAisles, liveFindPages } from "@/lib/product-catalogue";
 import {
+  civilDateAtOffset,
   currentWeekSessions,
   formatSchedule,
   hallDayHours,
@@ -195,6 +196,29 @@ export type HomeAtlasBlogNote = {
   date: string;
 };
 
+/** One market plus its schedules, so the browser can move it between open, later, and closed. */
+export type HomeClockMarket = {
+  id: string;
+  slug: string;
+  name: string;
+  city: string;
+  address: string;
+  province: string;
+  lat: number | null;
+  lng: number | null;
+  logo_url: string | null;
+  rating_avg: number | null;
+  review_count: number;
+  tags: string[];
+  vendorCount: number;
+  neighbourhood: string;
+  indoorOutdoor: string | null;
+  sampleVendors: Array<{ name: string; slug: string; logoUrl: string | null }>;
+  schedules: MarketSchedule[];
+  /** Stalls whose days include that weekday. Index 0 is Sunday. */
+  stallsByWeekday: number[];
+};
+
 export type HomeAtlasData = {
   nowIso: string;
   todayWeekday: number;
@@ -214,6 +238,13 @@ export type HomeAtlasData = {
   neighbourhoodCircuits: HomeAtlasNeighbourhoodCircuit[];
   aisles: HomeAtlasAisleCard[];
   setupOptions: string[];
+};
+
+export type HomeAtlasSource = HomeAtlasData & {
+  renderedAt: number;
+  clockMarkets: HomeClockMarket[];
+  /** Everyone selling each weekday this week, including stalls that have already closed. */
+  sellingByWeekday: VendorTodayRow[][];
 };
 
 const SAMPLE_FIND_SLUGS = [
@@ -452,7 +483,7 @@ const loadCachedVendorMenuSample = unstable_cache(
   { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] },
 );
 
-export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
+export async function loadHomeAtlasData(): Promise<HomeAtlasSource> {
   const [tapeRaw, markets, vendors, stalls, schedules, census, photos, menuSample] =
     await Promise.all([
       getFloorTape(8),
@@ -557,12 +588,6 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
   }));
 
   const openNowSlots = fullWeekAll.find((g) => g.open)?.slots ?? [];
-  const laterTodaySlots = fullWeekAll.find((g) => g.id === "later")?.slots ?? [];
-  const earlierTodaySlots = fullWeekAll.find((g) => g.id === "earlier")?.slots ?? [];
-  const nextDayGroup =
-    fullWeekAll.find(
-      (g) => !g.open && g.id !== "later" && g.id !== "earlier" && g.slots.length > 0,
-    ) ?? null;
   const openIds = new Set(openNowSlots.map((s) => s.id));
 
   const allMarketRows: HomeAtlasMarketRow[] = markets.map((market) => {
@@ -855,26 +880,64 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
 
   const setupOptions = [...tagsPresent(markets, [...FIND_SETUP, ...FIND_AMENITY_CHIPS])];
 
-  const fullWeek = fullWeekAll
-    .filter((g) => g.id !== "earlier" && g.slots.length > 0)
-    .slice(0, 4)
-    .map((g) => ({
-      ...g,
-      slots: g.slots.slice(0, 4),
-    }));
+  const stallsByMarketWeekday = new Map<string, number[]>();
+  for (const stall of stalls) {
+    const counts = stallsByMarketWeekday.get(stall.market_id) ?? [0, 0, 0, 0, 0, 0, 0];
+    for (const day of stall.days) {
+      if (day >= 0 && day <= 6) counts[day] += 1;
+    }
+    stallsByMarketWeekday.set(stall.market_id, counts);
+  }
+
+  const clockMarkets: HomeClockMarket[] = markets.map((market) => {
+    const tagsLower = (market.tags ?? []).map((tag) => tag.toLowerCase());
+    return {
+      id: market.id,
+      slug: market.slug,
+      name: market.name,
+      city: market.city,
+      address: market.address,
+      province: market.province,
+      lat: market.lat,
+      lng: market.lng,
+      logo_url: listingMarkSrc(market.logo_url),
+      rating_avg: market.rating_avg ?? null,
+      review_count: market.review_count ?? 0,
+      tags: market.tags ?? [],
+      vendorCount: vendorCountByMarket.get(market.id) ?? 0,
+      neighbourhood: inferNeighbourhood(market),
+      indoorOutdoor: tagsLower.includes("indoor")
+        ? "Indoor"
+        : tagsLower.includes("outdoor")
+          ? "Outdoor"
+          : null,
+      sampleVendors: sampleVendorsByMarketId.get(market.id) ?? [],
+      schedules: scheduleMap.get(market.id) ?? [],
+      stallsByWeekday: stallsByMarketWeekday.get(market.id) ?? [0, 0, 0, 0, 0, 0, 0],
+    };
+  });
+
+  const todayWeekdayForPool = weekdayInToronto(now);
+  const sellingByWeekday = [0, 1, 2, 3, 4, 5, 6].map((weekday) => {
+    const offset = (weekday - todayWeekdayForPool + 7) % 7;
+    const when = civilDateAtOffset(now, offset, LAUNCH_TZ);
+    return vendorsSellingToday(stalls, markets, vendors, scheduleMap, when, {
+      includeClosed: true,
+    }).slice(0, 30);
+  });
 
   return {
     nowIso,
     todayWeekday,
     todayFormatted,
     census,
-    fullWeek,
-    openNowSlots,
-    laterTodaySlots,
-    earlierTodaySlots,
-    nextDayGroup,
-    sellingTodayCount: sellingTodayRaw.length,
-    sellingToday: sellingTodayRaw.slice(0, 5),
+    fullWeek: [],
+    openNowSlots: [],
+    laterTodaySlots: [],
+    earlierTodaySlots: [],
+    nextDayGroup: null,
+    sellingTodayCount: 0,
+    sellingToday: [],
     weekVendors: weekVendors.slice(0, 5),
     vendorSpotlights,
     tape: tapeRaw.slice(0, 4),
@@ -890,5 +953,8 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasData> {
     neighbourhoodCircuits,
     aisles,
     setupOptions,
+    renderedAt: now.getTime(),
+    clockMarkets,
+    sellingByWeekday,
   };
 }

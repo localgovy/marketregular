@@ -1762,8 +1762,8 @@ async function loadFloorTape(limit: number): Promise<FloorItem[]> {
 
 const loadCachedFloorTape = unstable_cache(
   async (limit: number) => loadFloorTape(limit),
-  ["floor-tape-v1"],
-  { revalidate: 120 },
+  ["floor-tape-v2"],
+  { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] },
 );
 
 export async function getFloorTape(limit = 24): Promise<FloorItem[]> {

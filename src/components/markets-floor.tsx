@@ -3,13 +3,16 @@
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { applyFloorClock } from "@/lib/markets-floor-clock";
 import type {
   FloorMarket,
   FloorRosterEntry,
   FloorTaxonomy,
   FloorWeekGroup,
+  MarketsFloorBase,
   MarketsFloorView,
 } from "@/lib/markets-floor-types";
+import { useNow } from "@/lib/use-now";
 import { StallEmblem, formatCensus } from "@/app/preview/_components/markets-concept-shared";
 import { AddressLink } from "@/components/address-link";
 import { Hours } from "@/components/hours";
@@ -904,16 +907,22 @@ function MarketsQuerySync({
 }
 
 export function MarketsFloor({
-  data,
+  data: base,
   initial,
   preview = false,
   syncUrl = false,
 }: {
-  data: MarketsFloorView;
+  data: MarketsFloorBase;
   initial?: MarketsSearch & { day?: string };
   preview?: boolean;
   syncUrl?: boolean;
 }) {
+  const nowMs = useNow(base.renderedAt);
+  const data = useMemo(() => applyFloorClock(base, new Date(nowMs)), [base, nowMs]);
+  const indexed = useMemo(
+    () => buildDirectory(applyFloorClock(base, new Date(base.renderedAt))),
+    [base],
+  );
   const [query, setQuery] = useState<FloorQuery>(() =>
     initial ? floorQueryFromSearch(initial, data.fullWeek) : emptyFloorQuery(),
   );
@@ -1015,7 +1024,16 @@ export function MarketsFloor({
     return () => window.removeEventListener("popstate", onPop, true);
   }, [syncUrl]);
 
-  const directory = useMemo(() => buildDirectory(data), [data]);
+  const directory = useMemo(() => {
+    const live = new Map(data.enrichedMarkets.map((market) => [market.slug, market]));
+    return {
+      ...indexed,
+      markets: indexed.markets.map((entry) => {
+        const market = live.get(entry.market.slug);
+        return market ? { ...entry, market } : entry;
+      }),
+    };
+  }, [indexed, data]);
   const index = directory.markets;
   const provenStallIds = useMemo(() => {
     const needle = q.trim().toLowerCase();
