@@ -51,6 +51,8 @@ export type ProductsAtlasStallPreview = {
   priceCents: number | null;
   itemHref: string;
   sellDays: number[];
+  /** Every hall this stall works, so live status is not stuck on the first one. */
+  halls: Array<{ slug: string; days: number[] }>;
 };
 
 export type ProductMarketClock = {
@@ -284,6 +286,17 @@ async function buildProductsHubContext(activeAisle: string | null) {
       .filter((x): x is NonNullable<typeof x> => Boolean(x));
     if (!matchedPreviews.length) continue;
 
+    const hallsBySlug = new Map<string, Set<number>>();
+    for (const stall of vStalls) {
+      const hall = stallHall(markets, scheduleMap, stall.market_id);
+      if (!hall) continue;
+      const days = hallsBySlug.get(hall.market.slug) ?? new Set<number>();
+      for (const day of stall.days) {
+        if (day >= 0 && day <= 6) days.add(day);
+      }
+      hallsBySlug.set(hall.market.slug, days);
+    }
+    const halls = [...hallsBySlug].map(([slug, days]) => ({ slug, days: [...days] }));
     const primaryHall = stallHall(markets, scheduleMap, vStalls[0]!.market_id);
     const todayRow = sellingTodayBySlug.get(vendor.slug);
     const openNow = Boolean(todayRow?.open);
@@ -313,6 +326,7 @@ async function buildProductsHubContext(activeAisle: string | null) {
       priceCents: null,
       itemHref: lead.itemHref,
       sellDays: [...new Set(vStalls.flatMap((stall) => stall.days))].filter((day) => day >= 0 && day <= 6),
+      halls,
       aisleIds: [...new Set(matchedPreviews.map((m) => m.aisleId))],
       openNow,
       sellingToday,
@@ -425,7 +439,7 @@ async function buildProductsHubContext(activeAisle: string | null) {
     photos,
     spotlight,
     stallsByAisle,
-    featuredStalls: allPreviews.slice(0, 6),
+    featuredStalls: allPreviews.slice(0, 18),
     renderedAt: Date.now(),
     marketClocks,
   };
@@ -433,7 +447,7 @@ async function buildProductsHubContext(activeAisle: string | null) {
 
 const loadCachedProductsHub = unstable_cache(
   async (activeAisle: string) => buildProductsHubContext(activeAisle || null),
-  ["products-hub-v2"],
+  ["products-hub-v3"],
   { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] },
 );
 

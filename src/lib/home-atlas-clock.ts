@@ -8,13 +8,11 @@ import type {
   HomeClockMarket,
 } from "@/lib/home-atlas-data";
 import { LAUNCH_TZ } from "@/lib/launch";
-import { provinceTz } from "@/lib/constants";
 import {
   currentWeekSessions,
   formatSchedule,
   hallDayHours,
   inSeason,
-  isMarketOpen,
   nextOpenLabel,
   nextOpenSlot,
   parseHm,
@@ -80,13 +78,12 @@ function rowFor(market: HomeClockMarket, schedules: MarketSchedule[], openIds: S
   };
 }
 
-function sessionNotOver(schedules: MarketSchedule[], province: string, now: Date) {
-  const tz = provinceTz(province);
-  const { weekday, minutes } = zonedParts(now, tz);
+function sessionNotOver(schedules: MarketSchedule[], now: Date) {
+  const { weekday, minutes } = zonedParts(now, LAUNCH_TZ);
   return schedules.some(
     (row) =>
       Number(row.weekday) === weekday &&
-      inSeason(now, row.season_start, row.season_end, tz) &&
+      inSeason(now, row.season_start, row.season_end, LAUNCH_TZ) &&
       minutes <= parseHm(row.closes_at),
   );
 }
@@ -163,10 +160,10 @@ export function applyHomeClock(source: HomeAtlasSource, now: Date): HomeAtlasDat
   const sellingToday = sellingPool.slice(0, 5);
   let sellingTodayCount = 0;
   for (const market of source.clockMarkets) {
-    if (!sessionNotOver(market.schedules, market.province, now)) continue;
+    if (!sessionNotOver(market.schedules, now)) continue;
     sellingTodayCount += market.stallsByWeekday[today] ?? 0;
   }
-  const sellingSlugs = new Set(sellingToday.map((row) => row.vendorSlug));
+  const sellingSlugs = new Set(sellingPool.map((row) => row.vendorSlug));
 
   const clockBySlug = new Map(source.clockMarkets.map((market) => [market.slug, market]));
   const vendorSpotlights = source.vendorSpotlights
@@ -174,7 +171,7 @@ export function applyHomeClock(source: HomeAtlasSource, now: Date): HomeAtlasDat
       const markets = vendor.markets.map((market) => {
         const clock = clockBySlug.get(market.slug);
         if (!clock) return market;
-        const openNow = market.days.includes(today) && isMarketOpen(clock.schedules, clock.province, now);
+        const openNow = market.days.includes(today) && openIds.has(clock.id);
         return {
           ...market,
           hours: hallDayHours(market.days, clock.schedules, clock.province, now),
@@ -189,7 +186,7 @@ export function applyHomeClock(source: HomeAtlasSource, now: Date): HomeAtlasDat
           return Boolean(
             clock &&
               market.days.includes(today) &&
-              sessionNotOver(clock.schedules, clock.province, now),
+              sessionNotOver(clock.schedules, now),
           );
         });
       const badge = openNow

@@ -8,7 +8,6 @@ import type {
   FloorMarket,
   FloorRosterEntry,
   FloorTaxonomy,
-  FloorWeekGroup,
   MarketsFloorBase,
   MarketsFloorView,
 } from "@/lib/markets-floor-types";
@@ -887,10 +886,10 @@ function revealMarketsFloor() {
 
 /** Follows a Next navigation to another /markets query. The floor itself does not read the URL, so the cached page stays one document. */
 function MarketsQuerySync({
-  week,
+  weekKey,
   onSearch,
 }: {
-  week: readonly FloorWeekGroup[];
+  weekKey: string;
   onSearch: (search: string) => void;
 }) {
   const params = useSearchParams();
@@ -902,7 +901,7 @@ function MarketsQuerySync({
     // without the router, so a stale router string must not replace it.
     void search;
     onSearchRef.current(window.location.search);
-  }, [search, week]);
+  }, [search, weekKey]);
   return null;
 }
 
@@ -972,10 +971,11 @@ export function MarketsFloor({
   const applyExternalSearchRef = useRef(applyExternalSearch);
   applyExternalSearchRef.current = applyExternalSearch;
 
+  const weekKey = data.fullWeek.map((group) => group.id).join(",");
   useLayoutEffect(() => {
     if (!syncUrl) return;
     applyExternalSearchRef.current(window.location.search);
-  }, [data.fullWeek, syncUrl]);
+  }, [weekKey, syncUrl]);
 
   useEffect(() => {
     const id = window.location.hash.replace("#", "");
@@ -1379,7 +1379,7 @@ export function MarketsFloor({
     <div data-markets-floor="" className="bg-background text-foreground">
       {syncUrl ? (
         <Suspense fallback={null}>
-          <MarketsQuerySync week={data.fullWeek} onSearch={(search) => applyExternalSearchRef.current(search)} />
+          <MarketsQuerySync weekKey={weekKey} onSearch={(search) => applyExternalSearchRef.current(search)} />
         </Suspense>
       ) : null}
       {preview ? (

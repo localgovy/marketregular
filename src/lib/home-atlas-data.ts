@@ -719,7 +719,7 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasSource> {
 
     const aisleIds = [...aisleSet];
     const primaryAisleId = aisleIds[0] ?? "vegetables";
-    const primaryAisleLabel = AISLE_LABEL_BY_ID[primaryAisleId] ?? "Market stall";
+    const primaryAisleLabel = AISLE_LABEL_BY_ID[primaryAisleId] ?? "Market vendor";
 
     // Resolve the single general product/category photo for this vendor card
     const generalPhoto = primaryProductSlug
@@ -861,7 +861,7 @@ export async function loadHomeAtlasData(): Promise<HomeAtlasSource> {
     return {
       id: aisle.id,
       label: aisle.label,
-      line: aisle.line || `${aisle.pages.length} items across Toronto stalls`,
+      line: aisle.line || `${aisle.pages.length} items across Toronto vendors`,
       count: aisle.pages.length,
       photoUrl: photo?.url ?? null,
       photoAlt: photo?.alt ?? null,

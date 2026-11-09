@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  BlocksMark,
   CaretRightMark,
   CrateMark,
   PlateMark,
@@ -18,9 +17,7 @@ import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { StallEmblem, VendorHitList } from "@/components/product-results";
 import { ProductSearchForm } from "@/components/product-search-form";
 import { SortableProductHits } from "@/components/product-sort-list";
-import { LiveStallBadge, ProductsLiveStatus } from "@/components/products-live";
-import { SaveButton } from "@/components/save-button";
-import { VerifiedName } from "@/components/verified-stamp";
+import { FeaturedStallList, ProductsLiveStatus } from "@/components/products-live";
 import type { DirectoryCensus } from "@/lib/data/catalog";
 import type { ProductPhoto } from "@/lib/data/product-photos";
 import { formatPrice } from "@/lib/format";
@@ -428,84 +425,11 @@ export function ProductsAtlas({
                 </Link>
               </div>
 
-              <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {featuredStalls.slice(0, 6).map((stall) => {
-                  const price = formatPrice(stall.priceCents);
-                  return (
-                    <li
-                      key={stall.slug}
-                      className="flex flex-col justify-between bg-receipt p-4 ring-1 ring-board shadow-[inset_3px_0_0_var(--primary)]"
-                    >
-                      <div>
-                        <div className="flex items-start justify-between gap-2.5">
-                          <div className="flex min-w-0 items-start gap-3">
-                            <StallEmblem
-                              src={stall.logoUrl}
-                              name={stall.name}
-                              kind="vendor"
-                              size="md"
-                              tone="paper"
-                            />
-                            <div className="min-w-0">
-                              <Link
-                                href={`/vendors/${stall.slug}`}
-                                className="block text-base font-medium text-foreground hover:text-primary hover:underline"
-                              >
-                                <VerifiedName slug={stall.slug} name={stall.name} />
-                              </Link>
-                              <LiveStallBadge
-                                renderedAt={renderedAt}
-                                marketClocks={marketClocks}
-                                sellDays={stall.sellDays}
-                                marketSlug={stall.marketSlug}
-                                fallback={stall.badge}
-                              />
-                            </div>
-                          </div>
-                          <SaveButton
-                            kind="vendor"
-                            slug={stall.slug}
-                            name={stall.name}
-                            size="sm"
-                          />
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between gap-2 border-t border-dashed border-border pt-3">
-                          <Link
-                            href={stall.itemHref}
-                            className="text-sm font-medium text-foreground hover:text-primary hover:underline"
-                          >
-                            {stall.itemName}
-                          </Link>
-                          {price ? (
-                            <span className="stall-chip-sm type-nums bg-stamp px-2.5 py-0.5 text-sm font-medium text-chalk">
-                              {price}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-
-                      {stall.marketName && stall.marketSlug ? (
-                        <div className="mt-3 flex items-center justify-between border-t border-border pt-2.5 text-sm">
-                          <Link
-                            href={`/markets/${stall.marketSlug}`}
-                            className="inline-flex items-center gap-1.5 font-medium text-muted-foreground hover:text-primary hover:underline"
-                          >
-                            <BlocksMark className="size-3.5 text-primary" />
-                            <span>{stall.marketName}</span>
-                          </Link>
-                          <Link
-                            href={`/vendors/${stall.slug}#menu`}
-                            className="font-medium text-primary hover:underline"
-                          >
-                            Stall menu →
-                          </Link>
-                        </div>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
+              <FeaturedStallList
+                stalls={featuredStalls}
+                renderedAt={renderedAt}
+                marketClocks={marketClocks}
+              />
             </section>
           ) : null}
 

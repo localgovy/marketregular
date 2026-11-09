@@ -145,7 +145,7 @@ function NeighbourhoodCircuitCard({
           </div>
           <span className="type-nums text-sm font-medium text-primary">
             {circuit.vendorCount > 0
-              ? `${circuit.vendorCount} stalls`
+              ? `${circuit.vendorCount} vendors`
               : `${circuit.marketCount} ${circuit.marketCount === 1 ? "market" : "markets"}`}
           </span>
         </div>
@@ -203,7 +203,7 @@ function NeighbourhoodCircuitCard({
 
         {circuit.topVendors.length > 0 ? (
           <div className="border-t border-dashed border-border bg-secondary/30 px-4 py-2.5">
-            <p className="text-sm font-medium text-foreground">Stalls here</p>
+            <p className="text-sm font-medium text-foreground">Vendors here</p>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               {circuit.topVendors.slice(0, 3).map((v) => (
                 <Link
@@ -232,7 +232,7 @@ function NeighbourhoodCircuitCard({
             onClick={() => onShowStalls(circuit.label)}
             className="cursor-pointer font-medium text-stamp hover:underline"
           >
-            Show {circuit.label} stalls above
+            Show {circuit.label} vendors above
           </button>
         ) : null}
         <Link
@@ -524,7 +524,7 @@ function CravingCycle({ aisles }: { aisles: HomeAtlasAisleCard[] }) {
                   <>
                     {" · "}
                     <span className="type-nums">{formatCensus(term.vendors)}</span>{" "}
-                    {term.vendors === 1 ? "stall" : "stalls"}
+                    {term.vendors === 1 ? "vendor" : "vendors"}
                   </>
                 ) : null}
               </span>
@@ -670,7 +670,7 @@ function VendorTableCard({
                 href={`/vendors/${vendor.slug}`}
                 className="shrink-0 text-sm font-medium text-primary hover:underline"
               >
-                Stall menu
+                Vendor menu
               </Link>
             </div>
           </div>
@@ -707,7 +707,7 @@ function VendorTableCard({
             </ul>
           ) : (
             <p className="px-3.5 py-2 text-base text-foreground">
-              {vendor.about?.trim() || `${vendor.primaryAisleLabel} from this stall.`}
+              {vendor.about?.trim() || `${vendor.primaryAisleLabel} from this vendor.`}
             </p>
           )}
         </div>
@@ -842,7 +842,7 @@ function LiveMarketHallCard({
                       <span className="type-nums font-medium text-foreground">
                         {slot.vendorCount}
                       </span>{" "}
-                      stalls
+                      vendors
                     </span>
                   </>
                 ) : null}
@@ -877,7 +877,7 @@ function LiveMarketHallCard({
       {slot.sampleVendors.length > 0 ? (
         <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-dashed border-border pt-2 pl-10">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-sm text-muted-foreground">Stalls here:</span>
+            <span className="text-sm text-muted-foreground">Vendors here:</span>
             {slot.sampleVendors.slice(0, 2).map((v) => (
               <Link
                 key={v.slug}
@@ -986,7 +986,7 @@ function MastheadLiveFloorStrip({
                 onClick={onFilterTodayStalls}
                 className="cursor-pointer text-sm font-medium text-primary hover:underline"
               >
-                <span className="type-nums">{data.sellingTodayCount}</span> stalls active today
+                <span className="type-nums">{data.sellingTodayCount}</span> vendors active today
               </button>
             </>
           ) : null}
@@ -1318,7 +1318,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
               href="/markets#directory-vendors"
               className="font-medium text-primary hover:underline"
             >
-              <span className="type-nums">{data.sellingTodayCount}</span> stalls active today
+              <span className="type-nums">{data.sellingTodayCount}</span> vendors active today
             </Link>
             <span aria-hidden className="text-muted-foreground">
               –
@@ -1359,7 +1359,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   className="flex flex-col justify-between bg-secondary/45 p-3.5 transition-colors hover:bg-secondary"
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker font-medium text-primary">Priority stalls</span>
+                    <span className="type-kicker font-medium text-primary">Priority vendors</span>
                     <CrateMark className="size-4 shrink-0 text-primary" />
                   </div>
                   <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
@@ -1464,8 +1464,8 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
             <div className="flex flex-wrap items-center gap-3">
               {/* Cohesive Stall Emblem Strip */}
               {logoVendors.length > 0 ? (
-                <div className="hidden items-center gap-1.5 xl:flex" aria-label="Featured stall emblems">
-                  <span className="type-kicker mr-1 text-muted-foreground">Stall marks:</span>
+                <div className="hidden items-center gap-1.5 xl:flex" aria-label="Featured vendor emblems">
+                  <span className="type-kicker mr-1 text-muted-foreground">Vendor marks:</span>
                   {logoVendors.slice(0, 6).map((v) => (
                     <Link
                       key={v.slug}
@@ -1506,7 +1506,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
           <div className="grid gap-3 border-b border-border bg-secondary/40 px-4 py-3.5 sm:px-5">
             <FilterCycleRow
               label="Category"
-              allLabel="All stalls"
+              allLabel="All vendors"
               allActive={vendorAisleFilter === "all"}
               activeClass="bg-primary text-primary-foreground"
               onAll={() => syncAisleSelection("all")}
@@ -1617,7 +1617,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
               </ul>
             ) : (
               <p className="text-base text-muted-foreground">
-                No stalls match these filters.{" "}
+                No vendors match these filters.{" "}
                 <button
                   type="button"
                   onClick={() => {
@@ -1736,13 +1736,13 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   <div className="mt-4 border-t border-border pt-3.5">
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="type-kicker font-medium text-foreground">
-                        Stalls known for {activeAisle.label.toLowerCase()}:
+                        Vendors known for {activeAisle.label.toLowerCase()}:
                       </p>
                       <Link
                         href={`/products?aisle=${activeAisle.id}`}
                         className="text-sm font-medium text-primary hover:underline"
                       >
-                        Compare all stalls &amp; prices
+                        Compare all vendors &amp; prices
                       </Link>
                     </div>
                     <ul className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -1876,7 +1876,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                     <h3>{activeCircuit.label}</h3>
                     <span className="type-nums text-sm text-muted-foreground">
                       {activeCircuit.vendorCount > 0
-                        ? `${activeCircuit.vendorCount} stalls registered`
+                        ? `${activeCircuit.vendorCount} vendors registered`
                         : `${activeCircuit.marketCount} hall`}
                     </span>
                   </div>
@@ -1952,7 +1952,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                 {activeCircuit.topVendors.length > 0 ? (
                   <div className="border-t border-border bg-secondary/35 px-4 py-3">
                     <p className="type-kicker text-muted-foreground">
-                      Anchor stalls setting up in {activeCircuit.label}:
+                      Anchor vendors setting up in {activeCircuit.label}:
                     </p>
                     <div className="mt-2 grid gap-2 sm:grid-cols-2">
                       {activeCircuit.topVendors.slice(0, 4).map((v) => (
@@ -2021,7 +2021,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
 
         {/* Bottom 12-Col Spread: 8-Col Live Stalls & Regulars Roster + 4-Col Timetable & Saved Rail */}
         <section
-          aria-label="Stalls, notes, and upcoming timetable"
+          aria-label="Vendors, notes, and upcoming timetable"
           className="mt-10 border-t-2 border-board pt-8 pb-4"
         >
           <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
@@ -2037,7 +2037,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                       </span>
                       <div>
                         <p className="type-kicker text-muted-foreground">Selling today</p>
-                        <h3>Stalls on the floor</h3>
+                        <h3>Vendors on the floor</h3>
                       </div>
                     </div>
                     <span className="type-nums text-sm font-medium text-primary">
@@ -2055,11 +2055,11 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                     </ul>
                   ) : (
                     <p className="px-4 py-4 text-sm text-muted-foreground">
-                      No stalls remain open at this hour today. Browse the{" "}
+                      No vendors remain open at this hour today. Browse the{" "}
                       <Link href="/events" className="font-medium text-primary hover:underline">
                         upcoming week schedule
                       </Link>{" "}
-                      or explore featured stalls above.
+                      or explore featured vendors above.
                     </p>
                   )}
                 </div>
@@ -2073,14 +2073,14 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                       </span>
                       <div>
                         <p className="type-kicker text-muted-foreground">Regulars&apos; picks</p>
-                        <h3>Top 5 stalls this week</h3>
+                        <h3>Top 5 vendors this week</h3>
                       </div>
                     </div>
                     <Link
                       href="/markets#directory-vendors"
                       className="text-sm font-medium text-primary hover:underline"
                     >
-                      All stalls
+                      All vendors
                     </Link>
                   </div>
                   <ol>
@@ -2116,7 +2116,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                     <Link href="/feed" className="font-medium text-primary hover:underline">
                       the live feed
                     </Link>{" "}
-                    to share what is fresh at the stalls.
+                    to share what is fresh from vendors.
                   </p>
                 )}
               </div>
