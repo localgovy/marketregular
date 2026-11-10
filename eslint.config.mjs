@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored MapLibre worker. It matches maplibre-gl 6.4.1 and is not our code.
+    "public/maplibre/**",
   ]),
 ]);
 
