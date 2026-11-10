@@ -85,13 +85,13 @@ function Wordmark({ className }: { className?: string }) {
 function Sections() {
   return (
     <>
-      {SITE_NAV.map((item) => (
+      {SITE_NAV.filter((item) => item.href !== "/saved").map((item) => (
         <NavLink
           key={item.href}
           href={item.href}
           variant="slab"
           prefetch={item.href === "/markets"}
-          className="max-sm:justify-self-center"
+          className="max-sm:flex-1 max-sm:justify-center max-sm:px-0.5 max-sm:min-[360px]:px-1.5"
         >
           {item.label}
         </NavLink>
@@ -166,7 +166,7 @@ function HeaderBody({ q, search }: { q: string; search: string }) {
       </div>
       <nav
         aria-label="Primary"
-        className="order-4 grid grid-cols-3 gap-x-1 gap-y-1 sm:flex sm:min-w-0 sm:flex-nowrap sm:items-center sm:justify-start sm:gap-1 lg:order-none lg:col-start-1 lg:row-start-2"
+        className="order-4 flex min-w-0 flex-nowrap items-center justify-between sm:justify-start sm:gap-1 lg:order-none lg:col-start-1 lg:row-start-2"
       >
         <Sections />
       </nav>
