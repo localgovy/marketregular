@@ -505,17 +505,17 @@ function CravingCycle({ aisles }: { aisles: HomeAtlasAisleCard[] }) {
       tabIndex={0}
       onKeyDown={onKeyDown}
     >
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span className="type-kicker text-chalk">Cravings</span>
+      <div className="flex items-center gap-2">
+        <span className="type-kicker shrink-0 text-chalk">Cravings</span>
         <button type="button" aria-label="Previous craving" onClick={() => step(-1)} className={cycleButtonClass}>
           <CaretLeftMark className="size-4" />
         </button>
         <Link
           href={`/find/${current.slug}`}
-          className="inline-flex max-w-full items-center gap-2.5 bg-card px-2 py-1.5 text-primary outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
+          className="flex min-w-0 flex-1 items-center gap-2.5 bg-card px-2 py-1.5 text-primary outline-none hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
         >
           <ProductThumb src={term?.photoUrl} size="sm" />
-          <span>
+          <span className="min-w-0">
             <span className="block text-base font-medium">{current.label}</span>
             {categoryLabel ? (
               <span className="block text-sm text-primary/80">
@@ -1104,46 +1104,48 @@ function FilterCycleRow({
   children: ReactNode;
 }) {
   const idle = "bg-card text-foreground ring-1 ring-border hover:bg-secondary";
+  const nudge = cn(
+    "stall-chip-sm inline-flex size-8 shrink-0 items-center justify-center bg-card text-foreground ring-1 ring-border",
+    canPage ? "cursor-pointer hover:bg-secondary" : "cursor-default opacity-40",
+  );
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="type-kicker w-32 shrink-0 font-medium whitespace-nowrap text-foreground">
+    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1.5">
+      <span className="type-kicker shrink-0 font-medium whitespace-nowrap text-foreground sm:w-32">
         {label}
       </span>
-      <button
-        type="button"
-        onClick={onAll}
-        className={cn(
-          "stall-chip-sm cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
-          allActive ? activeClass : idle,
-        )}
-      >
-        {allLabel}
-      </button>
-      <button
-        type="button"
-        aria-label={`Previous ${label.toLowerCase()}`}
-        onClick={onPrev}
-        disabled={!canPage}
-        className={cn(
-          "stall-chip-sm inline-flex size-8 shrink-0 items-center justify-center bg-card text-foreground ring-1 ring-border",
-          canPage ? "cursor-pointer hover:bg-secondary" : "cursor-default opacity-40",
-        )}
-      >
-        <CaretLeftMark className="size-4" />
-      </button>
-      {children}
-      <button
-        type="button"
-        aria-label={`Next ${label.toLowerCase()}`}
-        onClick={onNext}
-        disabled={!canPage}
-        className={cn(
-          "stall-chip-sm inline-flex size-8 shrink-0 items-center justify-center bg-card text-foreground ring-1 ring-border",
-          canPage ? "cursor-pointer hover:bg-secondary" : "cursor-default opacity-40",
-        )}
-      >
-        <CaretRightMark className="size-4" />
-      </button>
+      <div className="flex min-w-0 basis-full flex-wrap items-center gap-1.5 sm:flex-1 sm:basis-auto sm:flex-nowrap">
+        <button
+          type="button"
+          onClick={onAll}
+          className={cn(
+            "stall-chip-sm shrink-0 cursor-pointer px-2.5 py-1 text-sm font-medium transition-colors",
+            allActive ? activeClass : idle,
+          )}
+        >
+          {allLabel}
+        </button>
+        <button
+          type="button"
+          aria-label={`Previous ${label.toLowerCase()}`}
+          onClick={onPrev}
+          disabled={!canPage}
+          className={nudge}
+        >
+          <CaretLeftMark className="size-4" />
+        </button>
+        <div className="order-3 flex min-w-0 basis-full flex-wrap items-center gap-1.5 sm:order-none sm:flex-1 sm:basis-auto">
+          {children}
+        </div>
+        <button
+          type="button"
+          aria-label={`Next ${label.toLowerCase()}`}
+          onClick={onNext}
+          disabled={!canPage}
+          className={cn(nudge, "order-2 sm:order-none")}
+        >
+          <CaretRightMark className="size-4" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -1571,7 +1573,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
             </FilterCycleRow>
 
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="type-kicker w-32 shrink-0 font-medium whitespace-nowrap text-foreground">
+              <span className="type-kicker shrink-0 font-medium whitespace-nowrap text-foreground sm:w-32">
                 When
               </span>
               {(
