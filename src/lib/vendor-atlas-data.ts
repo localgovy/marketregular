@@ -16,21 +16,17 @@ import {
 import { menuCategoryLabel } from "@/lib/data/product-search";
 import { FIND_CATEGORIES, FIND_PAGES } from "@/data/find-pages";
 import { DIRECTORY_REVALIDATE_SECONDS } from "@/lib/directory-cache";
-import { FIND_AREAS, sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
+import { FIND_AREAS, sortTagsForDisplay } from "@/lib/find-paths";
 import { listingMarkSrc } from "@/lib/format";
 import { toGeoMarket, type GeoMarket } from "@/lib/geo";
 import { listingIsClaimed } from "@/lib/listing-claimed";
 import type { ListingContactFields } from "@/lib/listing-substance";
 import { visiblePriceCents } from "@/lib/product-hits";
-import {
-  hallDayHours,
-  isMarketOpen,
-  nextOpenLabel,
-  sessionOnWeekday,
-} from "@/lib/schedule";
+import type { ScheduleRow } from "@/lib/schedule";
 import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeChargesConfigured } from "@/lib/stripe";
-import { rankVendorMarkets, vendorMarketInSeason } from "@/lib/vendor-markets";
+import { applyVendorClock, clockScheduleRow } from "@/lib/vendor-atlas-clock";
+import { rankVendorMarkets } from "@/lib/vendor-markets";
 import {
   matchFindPageByName,
   orderedSectionNames,
@@ -141,9 +137,20 @@ export type VendorAtlasCategoryGuide = {
   }>;
 };
 
+export type VendorAtlasClockHall = { province: string; schedules: ScheduleRow[] };
+
+/** Schedules the browser needs to keep hours and badges current on a cached stall page. */
+export type VendorAtlasClock = {
+  renderedAt: number;
+  halls: Record<string, VendorAtlasClockHall>;
+  peerHalls: Record<string, VendorAtlasClockHall>;
+  peerStalls: Record<string, Array<{ marketId: string; days: number[] }>>;
+};
+
 export type VendorAtlasData = {
   nowMs: number;
   todayWeekday: number;
+  clock: VendorAtlasClock;
   vendor: {
     id: string;
     slug: string;
@@ -244,37 +251,6 @@ function categoryFromTags(name: string, tags: string[] | undefined) {
   return null;
 }
 
-function sellingBadge(
-  stalls: StallRef[],
-  marketsById: Map<string, Market>,
-  schedulesByMarketId: Map<string, MarketSchedule[]>,
-  now: Date,
-  todayWeekday: number,
-): VendorAtlasPeer["badge"] {
-  let openNow = false;
-  let sellingToday = false;
-  let onWeekend = false;
-  for (const stall of stalls) {
-    const market = marketsById.get(stall.market_id);
-    if (!market) continue;
-    const schedules = schedulesByMarketId.get(market.id) ?? [];
-    if (stall.days.includes(todayWeekday) && isMarketOpen(schedules, market.province, now)) {
-      openNow = true;
-    }
-    if (
-      stall.days.includes(todayWeekday) &&
-      sessionOnWeekday(schedules, todayWeekday, market.province, now) != null
-    ) {
-      sellingToday = true;
-    }
-    if (stall.days.includes(0) || stall.days.includes(6)) onWeekend = true;
-  }
-  if (openNow) return "Selling now";
-  if (sellingToday) return "Later today";
-  if (onWeekend) return "Selling this weekend";
-  return "On the schedule";
-}
-
 /**
  * Directory rows the stall page already needs.
  * The homepage atlas and a full menu-table scan do not belong on this path:
@@ -358,7 +334,6 @@ export async function buildVendorAtlasData({
     photos,
   } = ctx;
   const now = new Date(nowMs);
-  const todayWeekday = weekdayInToronto(now);
 
   // Determine fallback categories from vendor tags and name
   const vendorTags = vendorProductTags(resolvedVendor.name, resolvedVendor.tags);
@@ -516,20 +491,16 @@ export async function buildVendorAtlasData({
     },
   );
 
-  // Build ranked markets with fellow stalls at each market location
+  // Ranked at render time. The browser refreshes hours and open state, not the order.
   const rankedMarkets = rankVendorMarkets(resolvedVendor.markets, now);
+  const halls: VendorAtlasClock["halls"] = {};
+  for (const market of resolvedVendor.markets) {
+    halls[market.id] = {
+      province: market.province,
+      schedules: market.schedules.map(clockScheduleRow),
+    };
+  }
   const markets: VendorAtlasMarket[] = rankedMarkets.map((market) => {
-    const hours = hallDayHours(market.days, market.schedules, market.province, now);
-    const openNow =
-      market.days.includes(todayWeekday) &&
-      isMarketOpen(market.schedules, market.province, now);
-    const inSeason = vendorMarketInSeason(market, now);
-    const nextOpen = market.schedules.length
-      ? nextOpenLabel(market.schedules, market.province, now)
-      : openNow
-        ? "Open now"
-        : "Schedule posted";
-
     const rawFellows = (stallsByMarketId.get(market.id) ?? []).filter(
       (st) => st.id !== resolvedVendor.id,
     );
@@ -573,42 +544,13 @@ export async function buildVendorAtlasData({
       ratingAvg: market.rating_avg ?? null,
       reviewCount: market.review_count ?? 0,
       days: market.days,
-      hours,
-      openNow,
-      inSeason,
-      nextOpen,
+      hours: [],
+      openNow: false,
+      inSeason: false,
+      nextOpen: "",
       fellowVendors,
     };
   });
-
-  const openNow = markets.some((m) => m.openNow);
-  const sellingToday = markets.some(
-    (m) =>
-      m.days.includes(todayWeekday) &&
-      sessionOnWeekday(
-        resolvedVendor.markets.find((rm) => rm.id === m.id)?.schedules ?? [],
-        todayWeekday,
-        m.province,
-        now,
-      ) != null,
-  );
-  const onWeekend = markets.some((m) =>
-    m.hours.some((h) => h.day === "Sat" || h.day === "Sun"),
-  );
-  const badge: VendorAtlasData["vendor"]["badge"] = openNow
-    ? "Selling now"
-    : sellingToday
-      ? "Later today"
-      : onWeekend
-        ? "Selling this weekend"
-        : "On the schedule";
-
-  const firstActiveMarket = markets.find((m) => m.hours.length > 0) ?? markets[0];
-  const nextSessionSummary = firstActiveMarket
-    ? firstActiveMarket.hours[0]
-      ? `${firstActiveMarket.name} · ${firstActiveMarket.hours[0].day} ${firstActiveMarket.hours[0].hours}`
-      : `${firstActiveMarket.name} · ${firstActiveMarket.nextOpen}`
-    : null;
 
   // Similar stalls in the same product category
   const vendorMarketSlugSet = new Set(markets.map((m) => m.slug));
@@ -634,27 +576,29 @@ export async function buildVendorAtlasData({
         a.vendor.name.localeCompare(b.vendor.name, "en-CA"),
     )
     .slice(0, 6);
+  const peerHalls: VendorAtlasClock["peerHalls"] = {};
+  const peerStalls: VendorAtlasClock["peerStalls"] = {};
   const similarVendors: VendorAtlasPeer[] = rankedPeers.map(({ vendor, stalls }) => {
     const sharedStall = stalls.find((stall) => {
       const market = marketsById.get(stall.market_id);
       return market ? vendorMarketSlugSet.has(market.slug) : false;
     });
     const sharedMarket = sharedStall ? marketsById.get(sharedStall.market_id) : undefined;
-    const peerMarkets = stalls.flatMap((stall) => {
-      const market = marketsById.get(stall.market_id);
-      if (!market) return [];
-      return [
-        {
-          name: market.name,
-          slug: market.slug,
-          hours: hallDayHours(
-            stall.days,
-            schedulesByMarketId.get(market.id) ?? [],
-            market.province,
-            now,
-          ),
-        },
-      ];
+    const knownStalls = stalls.filter((stall) => marketsById.has(stall.market_id));
+    for (const stall of knownStalls) {
+      const market = marketsById.get(stall.market_id)!;
+      peerHalls[market.id] ??= {
+        province: market.province,
+        schedules: (schedulesByMarketId.get(market.id) ?? []).map(clockScheduleRow),
+      };
+    }
+    peerStalls[vendor.id] = knownStalls.map((stall) => ({
+      marketId: stall.market_id,
+      days: stall.days,
+    }));
+    const peerMarkets = knownStalls.map((stall) => {
+      const market = marketsById.get(stall.market_id)!;
+      return { name: market.name, slug: market.slug, hours: [] };
     });
     return {
       id: vendor.id,
@@ -663,7 +607,7 @@ export async function buildVendorAtlasData({
       logoUrl: listingMarkSrc(vendor.logo_url),
       ratingAvg: vendor.rating_avg ?? null,
       reviewCount: vendor.review_count ?? 0,
-      badge: sellingBadge(stalls, marketsById, schedulesByMarketId, now, todayWeekday),
+      badge: "On the schedule",
       primaryCategoryId,
       primaryCategoryLabel: peerLabel,
       photoUrl: peerPhoto?.url ?? null,
@@ -684,9 +628,10 @@ export async function buildVendorAtlasData({
           .join(" and ")}${markets.length > 2 ? `, and ${markets.length - 2} other Ontario farmers' ${markets.length - 2 === 1 ? "market" : "markets"}` : ""}.`
       : `${resolvedVendor.name} is a Toronto & Ontario farmers' market stall known for ${primaryCategoryLabel.toLowerCase()}.`);
 
-  return {
+  return applyVendorClock({
     nowMs,
-    todayWeekday,
+    todayWeekday: 0,
+    clock: { renderedAt: nowMs, halls, peerHalls, peerStalls },
     vendor: {
       id: resolvedVendor.id,
       slug: resolvedVendor.slug,
@@ -698,10 +643,10 @@ export async function buildVendorAtlasData({
       reviewCount: resolvedVendor.review_count ?? 0,
       tags: sortTagsForDisplay(resolvedVendor.tags),
       claimed,
-      badge,
-      openNow,
-      sellingToday,
-      nextSessionSummary,
+      badge: "On the schedule",
+      openNow: false,
+      sellingToday: false,
+      nextSessionSummary: null,
       primaryCategoryId,
       primaryCategoryLabel,
       secondaryCategoryLabel,
@@ -732,7 +677,7 @@ export async function buildVendorAtlasData({
       market_id: market.id,
       stall: market.stall,
     })),
-  };
+  }, now);
 }
 
 export async function loadVendorAtlasData(slug: string, nowMs = Date.now()): Promise<VendorAtlasData | null> {

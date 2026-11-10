@@ -1,6 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
-import { DIRECTORY_DATA_REVALIDATE_SECONDS, DIRECTORY_TAG } from "@/lib/directory-cache";
+import { DIRECTORY_TAG, PUBLISHED_ROWS_REVALIDATE_SECONDS } from "@/lib/directory-cache";
 import { createServiceClient } from "@/lib/supabase/admin";
 
 export type ProductPhoto = {
@@ -58,24 +58,25 @@ function indexPhotos(rows: PhotoRow[]): ProductPhotoIndex {
 
 const loadCachedProductPhotos = unstable_cache(
   async () => {
-    try {
-      const supabase = createServiceClient();
-      if (!supabase) return EMPTY_PRODUCT_PHOTOS;
-      const { data, error } = await supabase.from("product_photos").select("subject, slug, image_url, alt");
-      if (error) throw new Error("Could not load product photos");
-      return indexPhotos((data ?? []) as PhotoRow[]);
-    } catch (error) {
-      // Plates are the page. A photo outage must not take the directory down.
-      console.error("product photos", error instanceof Error ? error.message : "failed");
-      return EMPTY_PRODUCT_PHOTOS;
-    }
+    const supabase = createServiceClient();
+    if (!supabase) return EMPTY_PRODUCT_PHOTOS;
+    const { data, error } = await supabase.from("product_photos").select("subject, slug, image_url, alt");
+    if (error) throw new Error("Could not load product photos");
+    return indexPhotos((data ?? []) as PhotoRow[]);
   },
   ["product-photos-v2"],
-  { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG, "product-photos"] },
+  { revalidate: PUBLISHED_ROWS_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG, "product-photos"] },
 );
 
 export async function listProductPhotos() {
-  return loadCachedProductPhotos();
+  try {
+    return await loadCachedProductPhotos();
+  } catch (error) {
+    // Plates are the page. A photo outage must not take the directory down, and
+    // must not be stored for the day either.
+    console.error("product photos", error instanceof Error ? error.message : "failed");
+    return EMPTY_PRODUCT_PHOTOS;
+  }
 }
 
 /** Product shot, otherwise the aisle shot. Null until a row is seeded. */

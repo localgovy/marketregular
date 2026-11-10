@@ -172,7 +172,7 @@ export async function deleteOwnPost(formData: FormData) {
   if (demo || !supabase || !user) return { error: "Sign in first." };
   const { data: existing, error: readError } = await supabase
     .from("posts")
-    .select("id, photos")
+    .select("id, photos, body, market_id")
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -200,6 +200,20 @@ export async function deleteOwnPost(formData: FormData) {
   revalidatePath("/account");
   revalidatePath("/");
   revalidatePath("/feed");
+  const catalog = createServiceClient();
+  const market =
+    catalog && existing.market_id
+      ? (
+          await catalog
+            .from("published_markets")
+            .select("slug")
+            .eq("id", existing.market_id)
+            .maybeSingle()
+        ).data
+      : null;
+  if (market?.slug) revalidatePath(`/markets/${market.slug}`);
+  const vendorSlug = decodeFloorBody(String(existing.body ?? "")).vendorSlug;
+  if (vendorSlug) revalidatePath(`/vendors/${vendorSlug}`);
   return { error: null };
 }
 

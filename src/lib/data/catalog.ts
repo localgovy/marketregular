@@ -7,6 +7,7 @@ import {
   DIRECTORY_FETCH_CAP,
   DIRECTORY_REVALIDATE_SECONDS,
   DIRECTORY_TAG,
+  PUBLISHED_ROWS_REVALIDATE_SECONDS,
   budgetRangeResult,
   chunkBySerializedSize,
   joinDirectoryPages,
@@ -336,6 +337,7 @@ function marketFromStall(row: StallRow) {
  * A range that does not fit is not stored; the halves are cached instead.
  */
 const DIRECTORY_CACHE = { revalidate: DIRECTORY_DATA_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] };
+const PUBLISHED_ROWS_CACHE = { revalidate: PUBLISHED_ROWS_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] };
 const DIRECTORY_VIEW_CACHE = { revalidate: DIRECTORY_REVALIDATE_SECONDS, tags: [DIRECTORY_TAG] };
 const DIRECTORY_SAMPLE_ROWS = 50;
 
@@ -428,7 +430,7 @@ function publishedDirectoryRows<T>(options: {
       return { count, window: windowFromSample(sample) };
     },
     [`published-directory-${options.name}-manifest-v3`],
-    DIRECTORY_CACHE,
+    PUBLISHED_ROWS_CACHE,
   );
 
   const loadRange = unstable_cache(
@@ -439,7 +441,7 @@ function publishedDirectoryRows<T>(options: {
       return result;
     },
     [`published-directory-${options.name}-range-v3`],
-    DIRECTORY_CACHE,
+    PUBLISHED_ROWS_CACHE,
   );
 
   async function readFresh() {
@@ -574,7 +576,7 @@ const loadCachedMenuManifest = unstable_cache(
     return { parts: chunkBySerializedSize(ids).length };
   },
   ["published-directory-menu-ids-manifest-v3"],
-  DIRECTORY_CACHE,
+  PUBLISHED_ROWS_CACHE,
 );
 
 const loadCachedMenuPart = unstable_cache(
@@ -589,7 +591,7 @@ const loadCachedMenuPart = unstable_cache(
     return chunk;
   },
   ["published-directory-menu-ids-part-v3"],
-  DIRECTORY_CACHE,
+  PUBLISHED_ROWS_CACHE,
 );
 
 const loadCachedMenuVendorIds = cache(async function loadCachedMenuVendorIds() {

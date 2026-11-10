@@ -8,6 +8,13 @@ export const DIRECTORY_TAG = "directory";
 export const DIRECTORY_DATA_REVALIDATE_SECONDS = 60 * 60;
 
 /**
+ * Published rows and product photos. A route rebuilds on the shortest lifetime it
+ * reads, so this must not be shorter than the stall page's revalidate.
+ * Site edits drop the tag at once; this only bounds rows changed in the database directly.
+ */
+export const PUBLISHED_ROWS_REVALIDATE_SECONDS = 24 * 60 * 60;
+
+/**
  * Cached directory pages. Open-now is computed in the browser, so the HTML
  * refreshes hourly with the published rows instead of every couple of minutes.
  */

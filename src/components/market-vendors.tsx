@@ -15,8 +15,10 @@ import {
   originChipRow,
   tagLabel,
   tagsPresent,
+  weekdayInToronto,
 } from "@/lib/find-paths";
-import { orderWeekdays, type ScheduleRow } from "@/lib/schedule";
+import { orderWeekdays, sessionToday, type ScheduleRow } from "@/lib/schedule";
+import { useNow } from "@/lib/use-now";
 import { productTagsFromQuery, vendorFilterTags } from "@/lib/vendor-tags";
 import { cn } from "@/lib/utils";
 import type { MarketDetail } from "@/types/database";
@@ -107,21 +109,24 @@ function browseActive(find: StallBrowse) {
 export function MarketVendors({
   vendors,
   schedules,
-  todayWeekday,
-  todayStill = true,
+  province,
+  renderedAt,
 }: {
   vendors: MarketStall[];
   schedules: ScheduleRow[];
-  todayWeekday: number;
-  /** False after today's session has closed, or when the hall is not open today. */
-  todayStill?: boolean;
+  province: string;
+  renderedAt: number;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const [applied, setApplied] = useState<StallBrowse>(EMPTY_BROWSE);
   const [draft, setDraft] = useState<StallBrowse>(EMPTY_BROWSE);
   const live = panelOpen ? draft : applied;
-  const today = todayWeekday;
+  const nowMs = useNow(renderedAt);
+  const today = weekdayInToronto(new Date(nowMs));
+  // False after today's session has closed, or when the hall is not open today.
+  const session = sessionToday(schedules, province, new Date(nowMs));
+  const todayStill = session === "open" || session === "later";
   const stallDays = useMemo(() => {
     const days = new Set<number>();
     for (const vendor of vendors) {

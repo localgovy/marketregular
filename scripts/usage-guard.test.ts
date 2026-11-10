@@ -6,6 +6,7 @@ import { isAbusiveCrawler } from "../src/lib/abusive-crawler.ts";
 import {
   DIRECTORY_DATA_REVALIDATE_SECONDS,
   DIRECTORY_REVALIDATE_SECONDS,
+  PUBLISHED_ROWS_REVALIDATE_SECONDS,
 } from "../src/lib/directory-cache.ts";
 
 function routeFiles(dir: string, out: string[] = []) {
@@ -49,6 +50,33 @@ test("cached directory reads stay on the hourly clock", () => {
       assert.ok(searchCache || value >= 900, `${file} revalidates in ${value}s`);
     }
   }
+});
+
+test("stall pages rebuild once a day and keep their hours on the browser clock", () => {
+  const page = readFileSync(new URL("../src/app/vendors/[slug]/page.tsx", import.meta.url), "utf8");
+  const revalidate = Number(page.match(/export const revalidate = (\d+)/)?.[1]);
+  assert.ok(revalidate >= 24 * 60 * 60, "stall page revalidate");
+  assert.ok(PUBLISHED_ROWS_REVALIDATE_SECONDS >= revalidate, "a shorter row lifetime would rebuild every stall page sooner");
+  const photos = readFileSync(new URL("../src/lib/data/product-photos.ts", import.meta.url), "utf8");
+  assert.match(photos, /revalidate: PUBLISHED_ROWS_REVALIDATE_SECONDS/);
+  const atlas = readFileSync(new URL("../src/components/vendor-atlas.tsx", import.meta.url), "utf8");
+  assert.match(atlas, /useNow\(source\.clock\.renderedAt\)/);
+  assert.match(atlas, /applyVendorClock\(/);
+  const data = readFileSync(new URL("../src/lib/vendor-atlas-data.ts", import.meta.url), "utf8");
+  for (const clock of ["isMarketOpen(", "nextOpenLabel(", "hallDayHours(", "sessionOnWeekday("]) {
+    assert.equal(data.includes(clock), false, `${clock} belongs in vendor-atlas-clock`);
+  }
+});
+
+test("market pages rebuild once a day and read today's session in the browser", () => {
+  const page = readFileSync(new URL("../src/app/markets/[slug]/page.tsx", import.meta.url), "utf8");
+  const revalidate = Number(page.match(/export const revalidate = (\d+)/)?.[1]);
+  assert.ok(revalidate >= 24 * 60 * 60, "market page revalidate");
+  assert.ok(PUBLISHED_ROWS_REVALIDATE_SECONDS >= revalidate);
+  assert.equal(page.includes("sessionToday("), false);
+  assert.equal(page.includes("todayWeekday="), false);
+  const roster = readFileSync(new URL("../src/components/market-vendors.tsx", import.meta.url), "utf8");
+  assert.match(roster, /useNow\(renderedAt\)/);
 });
 
 test("the stylesheet is a cached file, not copied into every page", () => {

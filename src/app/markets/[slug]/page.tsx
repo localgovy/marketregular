@@ -25,17 +25,19 @@ import { retiredMarketTarget } from "@/lib/data/retired-listings";
 import { listingScore } from "@/lib/listing-score";
 import { listingNote, listingQualifier, seasonAliasTarget, seasonPlace, siblingLead, siblingSlugs } from "@/lib/listing-siblings";
 import { toGeoMarket } from "@/lib/geo";
-import { sortTagsForDisplay, weekdayInToronto } from "@/lib/find-paths";
+import { sortTagsForDisplay } from "@/lib/find-paths";
 import { marketPageDescription, marketPageTitle, directionsHref } from "@/lib/listing-copy";
-import { orderWeekdays, sessionToday } from "@/lib/schedule";
+import { orderWeekdays } from "@/lib/schedule";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { serverNowMs } from "@/lib/clock";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 import { countLabel } from "@/lib/format";
 
-export const revalidate = 3600;
+// Open state and today's roster run on the browser clock, and edits made in the
+// site revalidate this path. The day bounds rows changed directly in the database.
+export const revalidate = 86400;
 export const maxDuration = 60;
-// A dynamic segment stays uncached until this is set. The hour window is revalidate.
+// A dynamic segment stays uncached until this is set.
 export const dynamic = "force-static";
 // Unknown slugs 404 in the layout. On-demand rendering of a missing hall cached
 // the directory skeleton with a 404 digest, and the client kept filling that hole.
@@ -94,8 +96,6 @@ export default async function MarketPage({
 
   const nowMs = serverNowMs();
   const now = new Date(nowMs);
-  const todaySession = sessionToday(market.schedules, market.province, now);
-  const todayStill = todaySession === "open" || todaySession === "later";
   const [contact, taken] = await Promise.all([
     getListingContact("market", market.slug),
     listingIsClaimed("market", market.id),
@@ -308,8 +308,8 @@ export default async function MarketPage({
             <MarketVendors
               vendors={market.vendors}
               schedules={market.schedules}
-              todayWeekday={weekdayInToronto(now)}
-              todayStill={todayStill}
+              province={market.province}
+              renderedAt={nowMs}
             />
           </div>
         ) : (

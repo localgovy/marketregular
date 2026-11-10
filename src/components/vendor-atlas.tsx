@@ -38,7 +38,9 @@ import { formatPrice, listingMarkSrc } from "@/lib/format";
 import { tagLabel } from "@/lib/find-paths";
 import { formatRatingAvg, formatReviewCountShort, listingScore } from "@/lib/listing-score";
 import { productFromInput } from "@/lib/product-saves";
+import { useNow } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
+import { applyVendorClock } from "@/lib/vendor-atlas-clock";
 import type {
   VendorAtlasData,
   VendorAtlasMarket,
@@ -278,7 +280,9 @@ function buildSavedProduct(
   });
 }
 
-export function VendorAtlas({ data }: { data: VendorAtlasData }) {
+export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
+  const nowMs = useNow(source.clock.renderedAt);
+  const data = useMemo(() => applyVendorClock(source, new Date(nowMs)), [source, nowMs]);
   const {
     vendor,
     menus,
