@@ -14,7 +14,9 @@ type Roll = {
 function RollingPhrase({ from, to, onDone }: { from: string; to: string; onDone: () => void }) {
   const onDoneRef = useRef(onDone);
   const finishedRef = useRef(false);
-  onDoneRef.current = onDone;
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   return (
     <span className="relative inline-block align-baseline whitespace-nowrap">
@@ -46,8 +48,10 @@ export function CyclingPhrase({ phrases }: { phrases: readonly string[] }) {
   const currentRef = useRef(current);
   const phrasesRef = useRef(phrases);
   const finishRef = useRef<() => void>(() => {});
-  currentRef.current = current;
-  phrasesRef.current = phrases;
+  useEffect(() => {
+    currentRef.current = current;
+    phrasesRef.current = phrases;
+  });
 
   const phraseKey = phrases.join("\u0000");
 

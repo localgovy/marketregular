@@ -894,13 +894,13 @@ function MarketsQuerySync({
 }) {
   const params = useSearchParams();
   const search = params.toString();
-  const onSearchRef = useRef(onSearch);
-  onSearchRef.current = onSearch;
   useLayoutEffect(() => {
     // `search` only marks that the router moved. Typing updates the address bar
     // without the router, so a stale router string must not replace it.
     void search;
-    onSearchRef.current(window.location.search);
+    const current = window.location.search;
+    queueMicrotask(() => onSearch(current));
+    // `onSearch` stays off the deps so a silent filter change does not reapply the URL.
   }, [search, weekKey]);
   return null;
 }
@@ -925,8 +925,6 @@ export function MarketsFloor({
   const [query, setQuery] = useState<FloorQuery>(() =>
     initial ? floorQueryFromSearch(initial, data.fullWeek) : emptyFloorQuery(),
   );
-  const queryRef = useRef(query);
-  queryRef.current = query;
   const {
     q,
     dayId,
@@ -949,8 +947,7 @@ export function MarketsFloor({
   const [morePlaces, setMorePlaces] = useState(false);
 
   function commit(patch: Partial<FloorQuery>, mode: "push" | "replace" | "silent" = "push") {
-    const next = { ...queryRef.current, ...patch };
-    queryRef.current = next;
+    const next = { ...query, ...patch };
     setQuery(next);
     if (mode === "silent" || !syncUrl || typeof window === "undefined") return;
     const href = floorHref(next);
@@ -963,18 +960,28 @@ export function MarketsFloor({
   function applyExternalSearch(search: string) {
     const next = floorQueryFromParams(new URLSearchParams(search), data.fullWeek);
     revealMarketsFloor();
-    if (floorHref(next) === floorHref(queryRef.current)) return;
-    queryRef.current = next;
+    if (floorHref(next) === floorHref(query)) return;
     setQuery(next);
     setPin(null);
   }
   const applyExternalSearchRef = useRef(applyExternalSearch);
-  applyExternalSearchRef.current = applyExternalSearch;
+  useEffect(() => {
+    applyExternalSearchRef.current = applyExternalSearch;
+  });
 
   const weekKey = data.fullWeek.map((group) => group.id).join(",");
   useLayoutEffect(() => {
     if (!syncUrl) return;
-    applyExternalSearchRef.current(window.location.search);
+    const week = data.fullWeek;
+    const currentQuery = query;
+    const current = window.location.search;
+    queueMicrotask(() => {
+      const next = floorQueryFromParams(new URLSearchParams(current), week);
+      revealMarketsFloor();
+      if (floorHref(next) === floorHref(currentQuery)) return;
+      setQuery(next);
+      setPin(null);
+    });
   }, [weekKey, syncUrl]);
 
   useEffect(() => {
@@ -1379,7 +1386,7 @@ export function MarketsFloor({
     <div data-markets-floor="" className="bg-background text-foreground">
       {syncUrl ? (
         <Suspense fallback={null}>
-          <MarketsQuerySync weekKey={weekKey} onSearch={(search) => applyExternalSearchRef.current(search)} />
+          <MarketsQuerySync weekKey={weekKey} onSearch={applyExternalSearch} />
         </Suspense>
       ) : null}
       {preview ? (

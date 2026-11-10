@@ -130,9 +130,12 @@ function useTorontoNow() {
         hour: "numeric",
         minute: "2-digit",
       }).format(new Date());
-    setNow(format());
     const timer = window.setInterval(() => setNow(format()), 20_000);
-    return () => window.clearInterval(timer);
+    const first = window.setTimeout(() => setNow(format()), 0);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(timer);
+    };
   }, []);
 
   return now;

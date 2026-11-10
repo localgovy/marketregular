@@ -59,6 +59,40 @@ test("a client error is not retried", async () => {
   assert.equal(calls, 1);
 });
 
+test("a stalled read is aborted and tried again", async () => {
+  let calls = 0;
+  const fetchImpl: typeof fetch = (_input, init) =>
+    new Promise((resolve, reject) => {
+      calls += 1;
+      const signal = init?.signal;
+      if (!signal) {
+        reject(new Error("missing timeout signal"));
+        return;
+      }
+      if (calls === 1) {
+        signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+        return;
+      }
+      resolve(jsonResponse(200));
+    });
+  const response = await fetchWithGatewayRetry(fetchImpl, noWait, 30)("https://example.test/vendors");
+  assert.equal(response.status, 200);
+  assert.equal(calls, 2);
+});
+
+test("a caller abort is not tried again", async () => {
+  let calls = 0;
+  const caller = AbortSignal.abort();
+  const fetchImpl: typeof fetch = () => {
+    calls += 1;
+    return Promise.reject(new DOMException("aborted", "AbortError"));
+  };
+  await assert.rejects(
+    () => fetchWithGatewayRetry(fetchImpl, noWait, 30)("https://example.test/vendors", { signal: caller }),
+  );
+  assert.equal(calls, 1);
+});
+
 test("a read stops after the last gateway failure", async () => {
   let calls = 0;
   const fetchImpl: typeof fetch = async () => {

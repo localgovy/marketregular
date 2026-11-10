@@ -41,9 +41,13 @@ export function StallConnect({
           return payload.client_secret;
         },
       });
-      if (!cancelled) setInstance(connect);
+      queueMicrotask(() => {
+        if (!cancelled) setInstance(connect);
+      });
     } catch {
-      if (!cancelled) setFailed(true);
+      queueMicrotask(() => {
+        if (!cancelled) setFailed(true);
+      });
     }
     return () => {
       cancelled = true;
