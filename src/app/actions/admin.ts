@@ -445,8 +445,14 @@ export async function deleteSchedule(id: string, marketId: string, formData?: Fo
   if (opted.includes("hours")) {
     refuseSections([{ labels: labelsFor("market", ["hours"]), noun: "market" }], formData);
   }
-  const { error } = await supabase.from("market_schedules").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("market_schedules")
+    .delete()
+    .eq("id", id)
+    .eq("market_id", marketId)
+    .select("id");
   if (error) failDb(error, "Could not delete that schedule.");
+  if (!data?.length) fail("Could not delete that schedule.");
   const path = await listingPath(supabase, "markets", marketId);
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/markets/${marketId}`);

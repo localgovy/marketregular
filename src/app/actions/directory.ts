@@ -111,8 +111,12 @@ export async function getDirectorySlice(input: {
   };
 }
 
+const suggestQuery = z.string().max(80);
+
 export async function suggestListings(q: string) {
-  const query = q.trim().slice(0, 80);
+  const parsed = suggestQuery.safeParse(q);
+  if (!parsed.success) return { markets: [] as { href: string; name: string }[], vendors: [] as { href: string; name: string }[] };
+  const query = parsed.data.trim();
   if (query.length < 2) return { markets: [] as { href: string; name: string }[], vendors: [] as { href: string; name: string }[] };
   if (!(await takeCatalogSlot())) {
     return { markets: [], vendors: [] };

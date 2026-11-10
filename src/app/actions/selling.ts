@@ -10,7 +10,7 @@ import {
   startStallCheckout as openStallCheckout,
   loadSellable,
 } from "@/lib/stall-payments";
-import { stripeChargesConfigured, stripeConnectConfigured } from "@/lib/stripe";
+import { stripeChargesConfigured, stripeCheckoutRedirect, stripeConnectConfigured } from "@/lib/stripe";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { isUuid, parseVendorPortal } from "@/lib/vendor-portal";
@@ -95,7 +95,9 @@ export async function payStallFee(formData: FormData) {
     gate.user.id,
   );
   if (opened.error || !opened.url) return { error: opened.error ?? "Could not start that payment." };
-  redirect(opened.url);
+  const checkout = stripeCheckoutRedirect(opened.url);
+  if (!checkout) return { error: "Could not start that payment." };
+  redirect(checkout);
 }
 
 export async function settleStallFeeReturn(vendorId: string, sessionId: string) {
@@ -158,7 +160,9 @@ export async function placeStallOrder(formData: FormData): Promise<{ error: stri
   if (opened.error || !("url" in opened) || !opened.url) {
     return { error: opened.error ?? "Could not start that payment." };
   }
-  redirect(opened.url);
+  const checkout = stripeCheckoutRedirect(opened.url);
+  if (!checkout) return { error: "Could not start that payment." };
+  redirect(checkout);
 }
 
 export async function loadBuyerOrders(userId: string) {

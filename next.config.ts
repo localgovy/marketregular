@@ -174,6 +174,8 @@ const nextConfig: NextConfig = {
       { source: "/auth/:path*", headers: noindex },
       { source: "/saved", headers: noindex },
       { source: "/kept", headers: noindex },
+      { source: "/preview", headers: noindex },
+      { source: "/preview/:path*", headers: noindex },
     ];
   },
 };

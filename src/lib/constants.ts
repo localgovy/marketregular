@@ -24,8 +24,9 @@ function canonicalSiteUrl() {
   try {
     const url = new URL(raw);
     // Live Vercel sends apex → www. Sitemap and canonicals must match the final host.
+    if (!isTrustedSiteHost(url.hostname)) return "https://www.marketregular.com";
     if (url.hostname === "marketregular.com") url.hostname = "www.marketregular.com";
-    if (isTrustedSiteHost(url.hostname) && url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
+    if (url.hostname !== "localhost" && url.hostname !== "127.0.0.1") {
       url.protocol = "https:";
     }
     return url.origin;

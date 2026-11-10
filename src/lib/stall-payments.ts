@@ -228,14 +228,15 @@ export async function createStallAccount(input: {
   return { error: null, accountId: account.id };
 }
 
-export async function createAccountSession(vendorId: string) {
+export async function createAccountSession(vendorId: string, userId: string) {
   const stripe = getStripe();
   const db = service();
   if (!stripe || !db) return null;
   const { data } = await db
     .from("vendor_stripe_accounts")
-    .select("stripe_account_id")
+    .select("stripe_account_id, owner_user_id")
     .eq("vendor_id", vendorId)
+    .eq("owner_user_id", userId)
     .maybeSingle();
   const accountId = data?.stripe_account_id;
   if (typeof accountId !== "string") return null;

@@ -1,0 +1,178 @@
+import "server-only";
+
+import { CLAIM_INBOX, SITE_URL } from "@/lib/constants";
+import {
+  clientIp,
+  hashMailKey,
+  releaseMailSlot,
+  releaseSiteMailSlot,
+  takeMailSlot,
+  takeSiteMailSlot,
+} from "@/lib/mail-limit";
+import { PORTAL_ORG_COOKIE, portalOrgCookieOptions } from "@/lib/portal-application";
+import { sendPortalApplicationNotice } from "@/lib/portal-application-mail";
+import { dbPublicError } from "@/lib/public-error";
+import { createServiceClient } from "@/lib/supabase/admin";
+import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export type PortalApplicationResult = { error: string | null; message?: string };
+
+async function openListing(
+  kind: "vendor" | "market",
+  id: string,
+  userId: string,
+): Promise<{ error: string } | { listing: { id: string; name: string; path: string } }> {
+  const service = createServiceClient();
+  if (!service) return { error: "Could not save that request." };
+  const table = kind === "vendor" ? "vendors" : "markets";
+  const { data } = await service
+    .from(table)
+    .select("id, name, slug, status, claimed_by")
+    .eq("id", id)
+    .eq("status", "published")
+    .maybeSingle();
+  if (!data?.slug || !data.name) return { error: "That listing is missing." };
+  if (data.claimed_by && data.claimed_by !== userId) {
+    return {
+      error:
+        kind === "vendor"
+          ? "Someone else already runs this stall."
+          : "Someone else already runs this market.",
+    };
+  }
+  return {
+    listing: {
+      id: data.id as string,
+      name: data.name as string,
+      path: kind === "vendor" ? `/vendors/${data.slug}` : `/markets/${data.slug}`,
+    },
+  };
+}
+
+async function alreadyOwns(supabase: SupabaseClient, kind: "vendor" | "market", listingId: string) {
+  const { data, error } = await supabase.rpc(kind === "vendor" ? "owns_vendor" : "owns_market", {
+    p_id: listingId,
+  });
+  return !error && data === true;
+}
+
+export async function filePortalApplication(input: {
+  supabase: SupabaseClient;
+  kind: "vendor" | "market";
+  requestId: string | null;
+  organizationName: string | null;
+}): Promise<PortalApplicationResult> {
+  const { supabase, kind } = input;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sign in first so we can assign the listing to this account." };
+  if (!user.email_confirmed_at) return { error: "Confirm your email, then send the request." };
+
+  const requestId = input.requestId;
+  const organizationName = requestId ? null : input.organizationName;
+  if (requestId && input.organizationName) {
+    return { error: "Send the listing or the organization name, not both." };
+  }
+  if (!requestId && !organizationName) {
+    return { error: kind === "vendor" ? "Add the stall or the organization name." : "Add the market or the organization name." };
+  }
+
+  const opened = requestId ? await openListing(kind, requestId, user.id) : null;
+  if (opened && "error" in opened) return { error: opened.error };
+  const listing = opened && "listing" in opened ? opened.listing : null;
+
+  if (listing && (await alreadyOwns(supabase, kind, listing.id))) {
+    return {
+      error: null,
+      message: kind === "vendor" ? "You already edit this stall." : "You already edit this market.",
+    };
+  }
+
+  const service = createServiceClient();
+  if (!service) return { error: "Could not save that request." };
+
+  const ip = await clientIp();
+  const ipKey = hashMailKey(`ip:${ip}`);
+  const keys = [hashMailKey(`ip:${ip}|user:${user.id}`), hashMailKey(`user:${user.id}`)];
+  const ipAllowed = await takeMailSlot(service, "claim_ip", [ipKey]);
+  if (!ipAllowed) return { error: "Wait a bit before sending another request." };
+  const allowed = await takeMailSlot(service, "claim", keys);
+  if (!allowed) {
+    await releaseMailSlot(service, "claim_ip", [ipKey]);
+    return { error: "Wait a bit before sending another request." };
+  }
+
+  const release = async () => {
+    await releaseMailSlot(service, "claim_ip", [ipKey]);
+    await releaseMailSlot(service, "claim", keys);
+  };
+
+  const { data: pending, error: pendingError } = await supabase
+    .from("portal_applications")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("kind", kind)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (pendingError) {
+    await release();
+    return { error: dbPublicError(pendingError, "Could not save that request.") };
+  }
+
+  const fields = listing
+    ? { organization_name: null, requested_target_id: listing.id }
+    : { organization_name: organizationName, requested_target_id: null };
+
+  const write = pending
+    ? await supabase.from("portal_applications").update(fields).eq("id", pending.id).eq("user_id", user.id)
+    : await supabase.from("portal_applications").insert({
+        user_id: user.id,
+        kind,
+        ...fields,
+      });
+  if (write.error?.code === "23505" && !pending) {
+    const retry = await supabase
+      .from("portal_applications")
+      .update(fields)
+      .eq("user_id", user.id)
+      .eq("kind", kind)
+      .eq("status", "pending");
+    if (retry.error) {
+      await release();
+      return { error: dbPublicError(retry.error, "Could not save that request.") };
+    }
+  } else if (write.error) {
+    await release();
+    return { error: dbPublicError(write.error, "Could not save that request.") };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+  const name = profile?.display_name?.trim() || user.email || "Account";
+  if (user.email && (await takeSiteMailSlot())) {
+    const notice = await sendPortalApplicationNotice({
+      to: CLAIM_INBOX,
+      replyTo: user.email,
+      kind,
+      name,
+      email: user.email,
+      organizationName: listing ? null : organizationName,
+      listingName: listing?.name ?? null,
+      listingUrl: listing ? `${SITE_URL}${listing.path}` : null,
+    });
+    if (!notice.sent) await releaseSiteMailSlot();
+  }
+
+  const jar = await cookies();
+  jar.set(PORTAL_ORG_COOKIE, "", { ...portalOrgCookieOptions(), maxAge: 0 });
+  revalidatePath(kind === "vendor" ? "/vendor" : "/market");
+  revalidatePath("/account");
+  revalidatePath("/admin/applications");
+  return { error: null, message: "Thanks. We'll email you when the listing is assigned." };
+}

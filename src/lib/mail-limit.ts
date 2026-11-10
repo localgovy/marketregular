@@ -4,7 +4,16 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { VISIT_PLAN_DAY_LIMIT, VISIT_PLAN_HOUR_LIMIT } from "@/lib/visit-plan-limit";
 
-export type MailKind = "claim" | "claim_ip" | "visit" | "catalog" | "signin" | "signin_ip";
+export type MailKind =
+  | "claim"
+  | "claim_ip"
+  | "visit"
+  | "catalog"
+  | "signin"
+  | "signin_ip"
+  | "mail_site"
+  | "reset"
+  | "owner_save";
 
 export const MAIL_LIMITS: Record<MailKind, { hour: number; day: number }> = {
   claim: { hour: 3, day: 10 },
@@ -17,6 +26,12 @@ export const MAIL_LIMITS: Record<MailKind, { hour: number; day: number }> = {
   signin: { hour: 15, day: 40 },
   /** One address, whatever email they type. */
   signin_ip: { hour: 60, day: 300 },
+  /** Every user-triggered email on the site, so one day cannot exhaust the mail quota. */
+  mail_site: { hour: 40, day: 80 },
+  /** Password reset, per inbox and per address. */
+  reset: { hour: 5, day: 10 },
+  /** Owner edits refresh the public directory cache. */
+  owner_save: { hour: 30, day: 150 },
 };
 
 export function hashMailKey(value: string) {
@@ -81,13 +96,50 @@ export async function takeCatalogSlot() {
   return takeMailSlot(service, "catalog", [hashMailKey(`catalog:${ip}`)]);
 }
 
-/** Count one password sign-in. Closed when the counter is missing or full. */
+/** Count one password sign-in. The address is charged first, so one client cannot lock many inboxes. */
 export async function takeSignInSlot(email: string) {
   const service = createServiceClient();
   if (!service) return false;
   const ip = await clientIp();
-  const normalized = email.trim().toLowerCase();
-  const emailOk = await takeMailSlot(service, "signin", [hashMailKey(`signin:${normalized}`)]);
-  if (!emailOk) return false;
-  return takeMailSlot(service, "signin_ip", [hashMailKey(`signin-ip:${ip}`)]);
+  const ipKey = hashMailKey(`signin-ip:${ip}`);
+  const ipOk = await takeMailSlot(service, "signin_ip", [ipKey]);
+  if (!ipOk) return false;
+  const emailKey = hashMailKey(`signin:${email.trim().toLowerCase()}`);
+  const emailOk = await takeMailSlot(service, "signin", [emailKey]);
+  if (!emailOk) {
+    await releaseMailSlot(service, "signin_ip", [ipKey]);
+    return false;
+  }
+  return true;
+}
+
+/** One site-wide slot for a message a visitor asked us to send. */
+export async function takeSiteMailSlot() {
+  const service = createServiceClient();
+  if (!service) return false;
+  return takeMailSlot(service, "mail_site", ["site"]);
+}
+
+export async function releaseSiteMailSlot() {
+  const service = createServiceClient();
+  if (!service) return;
+  await releaseMailSlot(service, "mail_site", ["site"]);
+}
+
+/** Password-reset mail, limited per inbox and per address. */
+export async function takeResetSlot(email: string) {
+  const service = createServiceClient();
+  if (!service) return false;
+  const ip = await clientIp();
+  return takeMailSlot(service, "reset", [
+    hashMailKey(`reset:${email.trim().toLowerCase()}`),
+    hashMailKey(`reset-ip:${ip}`),
+  ]);
+}
+
+/** One owner edit. Closed when the counter is missing or full. */
+export async function takeOwnerSaveSlot(userId: string) {
+  const service = createServiceClient();
+  if (!service) return false;
+  return takeMailSlot(service, "owner_save", [hashMailKey(`owner:${userId}`)]);
 }

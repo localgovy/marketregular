@@ -37,6 +37,25 @@ export function getStripe() {
   return client;
 }
 
+export function stripeEventModeMatches(livemode: boolean) {
+  const key = stripeSecretKey();
+  const live = key.startsWith("sk_live") || key.startsWith("rk_live");
+  const test = key.startsWith("sk_test") || key.startsWith("rk_test");
+  if (!live && !test) return false;
+  return livemode === live;
+}
+
+/** Checkout hops only. Success and cancel URLs are built by this app. */
+export function stripeCheckoutRedirect(url: string) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "https:" && parsed.hostname === "checkout.stripe.com") return parsed.href;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 export function constructWebhookEvent(stripe: Stripe, body: string, signature: string) {
   const secrets = stripeWebhookSecrets();
   if (!secrets.length) return null;

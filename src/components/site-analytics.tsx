@@ -5,7 +5,7 @@ import Script from "next/script";
 import { usePathname } from "next/navigation";
 import type { AnalyticsProps, BeforeSendEvent } from "@vercel/analytics/next";
 import { GA_MEASUREMENT_ID } from "@/lib/constants";
-import { isAuthAnalyticsPath, sanitizeAnalyticsUrl } from "@/lib/analytics";
+import { ANALYTICS_REDACT_PARAMS, isAuthAnalyticsPath, sanitizeAnalyticsUrl } from "@/lib/analytics";
 
 const FALLBACK_MS = 4000;
 
@@ -76,7 +76,10 @@ export function SiteAnalytics() {
 window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
 gtag('js',new Date());
-gtag('config','${GA_MEASUREMENT_ID}');
+var page=new URL(location.href);
+${JSON.stringify(ANALYTICS_REDACT_PARAMS)}.forEach(function(key){page.searchParams.delete(key);});
+page.hash='';
+gtag('config','${GA_MEASUREMENT_ID}',{page_location:page.origin+page.pathname+page.search});
 `}</Script>
     </>
   );

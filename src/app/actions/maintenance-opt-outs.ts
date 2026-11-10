@@ -2,6 +2,7 @@
 
 import { parseMarketPortal } from "@/lib/market-portal";
 import { optOutsFromForm, type MaintenanceKind } from "@/lib/maintenance-sections";
+import { takeOwnerSaveSlot } from "@/lib/mail-limit";
 import { mustSetPassword } from "@/lib/password-gate";
 import { dbPublicError } from "@/lib/public-error";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
@@ -18,6 +19,7 @@ export async function saveOwnedMaintenanceOptOuts(formData: FormData): Promise<P
   const { supabase, user } = await createAuthedServerClient();
   if (!supabase || !user) return { error: "Sign in first." };
   if (mustSetPassword(user.app_metadata)) return { error: "Set a password first." };
+  if (!(await takeOwnerSaveSlot(user.id))) return { error: "Wait a bit, then try again." };
 
   const sections = optOutsFromForm(
     kind,

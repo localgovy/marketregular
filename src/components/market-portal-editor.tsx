@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { shrinkLogoInput } from "@/lib/shrink-logo";
 import { useRouter } from "next/navigation";
 import {
   clearMarketVendorLogo,
@@ -345,7 +346,16 @@ function LogoForm({ listing }: { listing: MarketPortalListing }) {
         <input type="hidden" name="market_id" value={listing.id} />
         <div className="grid gap-1.5">
           <Label htmlFor={`${listing.id}-logo`}>Logo</Label>
-          <Input id={`${listing.id}-logo`} name="logo" type="file" accept="image/jpeg,image/png,image/webp" required />
+          <Input
+            id={`${listing.id}-logo`}
+            name="logo"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            required
+            onChange={(event) => {
+              void shrinkLogoInput(event.currentTarget);
+            }}
+          />
         </div>
         <p className="text-sm text-muted-foreground">JPEG, PNG, or WebP, under 5 MB. Use a logo you have the right to show.</p>
         <div className="flex flex-wrap items-center gap-3">
@@ -380,11 +390,14 @@ function HoursForm({
   const [state, action, pending] = useActionState(saveHours, undefined);
   const [removeState, remove, removePending] = useActionState(removeHours, undefined);
   const [formKey, setFormKey] = useState(0);
+  const [seen, setSeen] = useState(state);
+  if (!schedule && state !== seen) {
+    setSeen(state);
+    if (state?.message) setFormKey((key) => key + 1);
+  }
+  if (schedule && state !== seen) setSeen(state);
   usePortalRefresh(state);
   usePortalRefresh(removeState);
-  useEffect(() => {
-    if (!schedule && state?.message) setFormKey((key) => key + 1);
-  }, [schedule, state]);
   const field = schedule?.id ?? `${marketId}-new-hours`;
 
   return (
@@ -596,7 +609,16 @@ function EditableStall({
           <input type="hidden" name="vendor_id" value={id} />
           <div className="grid gap-1.5">
             <Label htmlFor={`${id}-logo`}>Logo</Label>
-            <Input id={`${id}-logo`} name="logo" type="file" accept="image/jpeg,image/png,image/webp" required />
+            <Input
+              id={`${id}-logo`}
+              name="logo"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              required
+              onChange={(event) => {
+                void shrinkLogoInput(event.currentTarget);
+              }}
+            />
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={uploadPending}>
@@ -744,10 +766,12 @@ function NewStall({
 }) {
   const [state, action, pending] = useActionState(addStall, undefined);
   const [formKey, setFormKey] = useState(0);
-  usePortalRefresh(state);
-  useEffect(() => {
+  const [seen, setSeen] = useState(state);
+  if (state !== seen) {
+    setSeen(state);
     if (state?.message) setFormKey((key) => key + 1);
-  }, [state]);
+  }
+  usePortalRefresh(state);
 
   return (
     <div className="mt-8 grid gap-3">

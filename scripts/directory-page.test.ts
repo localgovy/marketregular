@@ -84,7 +84,7 @@ test("holiday is an amenity chip and can combine with seasonal", async () => {
 });
 
 test("bounded directory keys ignore tag order and skip free text", async () => {
-  const { boundedDirectoryKey, directoryViewHref, marketsHref, marketsSearchFromSearchParams } =
+  const { boundedDirectoryKey, marketsHref, marketsSearchFromSearchParams } =
     await import("../src/lib/find-paths.ts");
   const produce = boundedDirectoryKey({ tags: ["produce"] });
   const reversed = boundedDirectoryKey({ tags: ["bakery", "produce"] });
@@ -97,9 +97,7 @@ test("bounded directory keys ignore tag order and skip free text", async () => {
   assert.equal(boundedDirectoryKey({ tags: ["produce"], sort: "next" }), produce);
   const search = marketsSearchFromSearchParams(new URLSearchParams("tag=bakery&tag=produce"));
   const page = marketsHref(search);
-  const view = directoryViewHref(search);
   assert.equal(page, "/markets?tag=bakery&tag=produce");
-  assert.equal(view, "/api/directory?tag=bakery&tag=produce");
   assert.equal(boundedDirectoryKey(search), same);
 });
 

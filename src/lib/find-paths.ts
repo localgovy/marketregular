@@ -315,11 +315,6 @@ export function marketsHref(search: MarketsSearch) {
   return hrefWithQuery("/markets", directoryQuery(search));
 }
 
-/** Same query string as {@link marketsHref}, for the cached first-page JSON. */
-export function directoryViewHref(search: MarketsSearch) {
-  return hrefWithQuery("/api/directory", directoryQuery(search));
-}
-
 function firstQueryValue(value: string | string[] | undefined) {
   if (Array.isArray(value)) return value[0];
   return value;

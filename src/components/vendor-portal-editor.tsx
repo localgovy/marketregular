@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import { shrinkLogoInput } from "@/lib/shrink-logo";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { beginStallPayments, payStallFee } from "@/app/actions/selling";
@@ -333,6 +334,9 @@ function LogoForm({ listing }: { listing: PortalListing }) {
             id={`${listing.id}-logo`}
             name="logo"
             type="file"
+            onChange={(event) => {
+              void shrinkLogoInput(event.currentTarget);
+            }}
             accept="image/jpeg,image/png,image/webp"
             required
           />
@@ -498,10 +502,12 @@ function MenuItemForm({
 function AddMenuItem({ vendorId, sections }: { vendorId: string; sections: MenuSectionRef[] }) {
   const [state, action, pending] = useActionState(saveItem, undefined);
   const [formKey, setFormKey] = useState(0);
-  usePortalRefresh(state);
-  useEffect(() => {
+  const [seen, setSeen] = useState(state);
+  if (state !== seen) {
+    setSeen(state);
     if (state?.message) setFormKey((key) => key + 1);
-  }, [state]);
+  }
+  usePortalRefresh(state);
 
   return (
     <div className="mt-4 grid gap-3">
@@ -618,26 +624,24 @@ function AddStall({ vendorId, takenIds }: { vendorId: string; takenIds: string[]
   const [searchError, setSearchError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const [state, action, pending] = useActionState(saveStall, undefined);
-  const takenKey = takenIds.join(",");
-  usePortalRefresh(state);
-
-  useEffect(() => {
+  const [seen, setSeen] = useState(state);
+  if (state !== seen) {
+    setSeen(state);
     if (state?.message) {
       setPicked(null);
       setQuery("");
       setHits([]);
-    }
-  }, [state]);
-
-  useEffect(() => {
-    const q = query.trim();
-    if (q.length < 2) {
-      setHits([]);
       setSearchError(null);
       setSearching(false);
-      return;
     }
-    setSearching(true);
+  }
+  const takenKey = takenIds.join(",");
+  const q = query.trim();
+  const short = q.length < 2;
+  usePortalRefresh(state);
+
+  useEffect(() => {
+    if (short) return;
     let cancelled = false;
     const timer = window.setTimeout(() => {
       void searchPortalMarkets(q).then((result) => {
@@ -652,7 +656,7 @@ function AddStall({ vendorId, takenIds }: { vendorId: string; takenIds: string[]
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [query, takenKey]);
+  }, [q, short, takenKey]);
 
   return (
     <div className="mt-4 grid gap-3">
@@ -663,15 +667,17 @@ function AddStall({ vendorId, takenIds }: { vendorId: string; takenIds: string[]
           id={`${vendorId}-market-q`}
           value={query}
           onChange={(event) => {
-            setQuery(event.target.value);
+            const next = event.target.value;
+            setQuery(next);
             setPicked(null);
+            setSearching(next.trim().length >= 2);
           }}
           placeholder="Market name"
           autoComplete="off"
         />
       </div>
-      {searchError ? <p className="text-sm text-destructive">{searchError}</p> : null}
-      {hits.length ? (
+      {short || !searchError ? null : <p className="text-sm text-destructive">{searchError}</p>}
+      {!short && hits.length ? (
         <ul className="grid gap-1">
           {hits.map((market) => (
             <li key={market.id}>
@@ -688,7 +694,7 @@ function AddStall({ vendorId, takenIds }: { vendorId: string; takenIds: string[]
             </li>
           ))}
         </ul>
-      ) : query.trim().length >= 2 && !searchError && !searching ? (
+      ) : !short && !searchError && !searching ? (
         <p className="text-sm text-muted-foreground">No markets match that name.</p>
       ) : null}
       {picked ? (

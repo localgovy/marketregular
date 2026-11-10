@@ -8,14 +8,17 @@ const REDACT_PARAMS = [
   "id_token",
   "access_token",
   "refresh_token",
+  "session_id",
 ] as const;
+
+export const ANALYTICS_REDACT_PARAMS = REDACT_PARAMS;
 
 export function isAuthAnalyticsPath(pathname: string) {
   return pathname === "/auth" || pathname.startsWith("/auth/");
 }
 
 /** Runs before hydration so the OAuth fragment is gone before analytics scripts. */
-export const OAUTH_HASH_SCRUB_SCRIPT = `(function(){var p=location.pathname;if(p!=="/auth"&&p.indexOf("/auth/")!==0)return;var h=location.hash;if(!h||h==="#")return;try{sessionStorage.setItem(${JSON.stringify(OAUTH_HASH_STORAGE_KEY)},h);}catch(e){}history.replaceState(null,"",p+location.search);})();`;
+export const OAUTH_HASH_SCRUB_SCRIPT = `(function(){var p=location.pathname;if(p!=="/auth"&&p.indexOf("/auth/")!==0)return;var h=location.hash;if(!h||h==="#")return;history.replaceState(null,"",p+location.search);})();`;
 
 export function sanitizeAnalyticsUrl(raw: string) {
   try {

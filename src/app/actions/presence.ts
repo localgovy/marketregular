@@ -2,7 +2,7 @@
 
 import { isHumanRequest } from "@/lib/bot-check";
 import { decodeFloorBody, encodeFloorBody } from "@/lib/floor-note";
-import { allowedPostPhotos } from "@/lib/post-photos";
+import { allowedPostPhotos, postPhotoObjectPath } from "@/lib/post-photos";
 import { dbPublicError } from "@/lib/public-error";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -170,6 +170,25 @@ export async function deleteOwnPost(formData: FormData) {
   if (!id || !UUID.test(id)) return { error: "Missing post." };
   const { supabase, user, demo } = await requireUser();
   if (demo || !supabase || !user) return { error: "Sign in first." };
+  const { data: existing, error: readError } = await supabase
+    .from("posts")
+    .select("id, photos")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (readError) return { error: dbPublicError(readError, "Could not remove that review.") };
+  if (!existing) return { error: "That review cannot be removed." };
+  const paths = (Array.isArray(existing.photos) ? existing.photos : []).flatMap((item) => {
+    if (typeof item !== "string") return [];
+    const path = postPhotoObjectPath(user.id, item);
+    return path ? [path] : [];
+  });
+  if (paths.length) {
+    const admin = createServiceClient();
+    if (!admin) return { error: "Could not remove that review." };
+    const removed = await admin.storage.from("post-photos").remove(paths);
+    if (removed.error) return { error: "Could not remove that review." };
+  }
   const { data, error } = await supabase
     .from("posts")
     .delete()

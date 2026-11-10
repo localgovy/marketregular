@@ -3,7 +3,14 @@
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
 import { SITE_NAME } from "@/lib/constants";
 import { sanitizeMailHeader } from "@/lib/mail-header";
-import { clientIp, hashMailKey, releaseMailSlot, takeMailSlot } from "@/lib/mail-limit";
+import {
+  clientIp,
+  hashMailKey,
+  releaseMailSlot,
+  releaseSiteMailSlot,
+  takeMailSlot,
+  takeSiteMailSlot,
+} from "@/lib/mail-limit";
 import { fetchMyProfile } from "@/lib/my-profile";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -55,7 +62,8 @@ export async function emailVisitPlan(slugs: string[]) {
   const ip = await clientIp();
   const keys = [hashMailKey(`ip:${ip}|email:${user.email}`), hashMailKey(`user:${user.id}`)];
   const allowed = await takeMailSlot(service, "visit", keys);
-  if (!allowed) {
+  if (!allowed || !(await takeSiteMailSlot())) {
+    if (allowed) await releaseMailSlot(service, "visit", keys);
     return {
       error: null,
       wait: true,
@@ -82,6 +90,7 @@ export async function emailVisitPlan(slugs: string[]) {
   });
   if (error) {
     await releaseMailSlot(service, "visit", keys);
+    await releaseSiteMailSlot();
     return { error: "Could not send right now." };
   }
 

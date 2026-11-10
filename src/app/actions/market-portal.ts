@@ -1,6 +1,7 @@
 "use server";
 
 import { dbPublicError } from "@/lib/public-error";
+import { takeOwnerSaveSlot } from "@/lib/mail-limit";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
@@ -68,6 +69,9 @@ async function requireOwned(id: string) {
   if (!supabase || !user) return { error: "Sign in first." as const, supabase: null, user: null };
   if (mustSetPassword(user.app_metadata)) {
     return { error: "Set a password first." as const, supabase: null, user: null };
+  }
+  if (!(await takeOwnerSaveSlot(user.id))) {
+    return { error: "Wait a bit, then try again." as const, supabase: null, user: null };
   }
   if (!isUuid(id)) return { error: "That market is missing." as const, supabase: null, user: null };
   const { data, error } = await supabase.rpc("owns_market", { p_id: id });
@@ -215,7 +219,8 @@ export async function saveMarketRoster(formData: FormData): Promise<PortalResult
   });
   if (error) return portalError(error, "Could not save that stall.");
   const loaded = await loadOwned(gate.supabase, marketId);
-  const vendorSlug = text(formData, "vendor_slug");
+  const stall = loaded.listing?.stalls.find((row) => row.vendor_id === vendorId);
+  const vendorSlug = stall && /^[a-z0-9-]+$/.test(stall.vendor_slug) ? stall.vendor_slug : "";
   if (loaded.listing) {
     revalidateListing(loaded.listing, vendorSlug ? [`/vendors/${vendorSlug}`] : []);
   }

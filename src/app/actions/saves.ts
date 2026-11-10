@@ -218,25 +218,27 @@ export async function persistListingSave(
 const MAX_SAVES = 200;
 
 const localSavesSchema = z.object({
-  markets: z.array(z.string()).optional(),
-  vendors: z.array(z.string()).optional(),
-  blogs: z.array(z.string()).optional(),
+  markets: z.array(z.string().max(200)).max(MAX_SAVES).optional(),
+  vendors: z.array(z.string().max(200)).max(MAX_SAVES).optional(),
+  blogs: z.array(z.string().max(200)).max(MAX_SAVES).optional(),
   listings: z
     .array(
       z.object({
-        blog: z.string(),
-        heading: z.string(),
-        hours: z.string(),
-        marketSlug: z.string(),
-        marketName: z.string(),
+        blog: z.string().max(500),
+        heading: z.string().max(500),
+        hours: z.string().max(500),
+        marketSlug: z.string().max(200),
+        marketName: z.string().max(200),
         ratingAvg: z.number().nullable().optional(),
         reviewCount: z.number().nullable().optional(),
         vendors: z
-          .array(z.object({ name: z.string(), slug: z.string() }).passthrough())
+          .array(z.object({ name: z.string().max(200), slug: z.string().max(200) }).passthrough())
+          .max(40)
           .optional(),
         order: z.number().optional(),
       }),
     )
+    .max(MAX_SAVES)
     .optional(),
   products: z.array(z.unknown()).max(MAX_SAVES).optional(),
 });

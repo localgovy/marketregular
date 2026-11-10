@@ -8,7 +8,7 @@ import {
   safePath,
 } from "@/lib/auth-redirect";
 import { isBlockedBot, isHumanRequest } from "@/lib/bot-check";
-import { takeSignInSlot } from "@/lib/mail-limit";
+import { takeResetSlot, takeSignInSlot } from "@/lib/mail-limit";
 import { emailOtpType } from "@/lib/auth-callback";
 import {
   dbPublicError,
@@ -17,7 +17,7 @@ import {
   signInPublicError,
   signUpPublicError,
 } from "@/lib/public-error";
-import { filePortalApplication } from "@/app/actions/portal-application";
+import { filePortalApplication } from "@/lib/file-portal-application";
 import {
   markChosenVendorPassword,
   saveChosenVendorPassword,
@@ -74,23 +74,55 @@ async function confirmCurrentPassword(user: User, current: string) {
   return true;
 }
 
+const MAX_EMAIL = 320;
+const MAX_PASSWORD = 72;
+
+function credentialSizeOk(email: string, password = "") {
+  return email.length <= MAX_EMAIL && password.length <= MAX_PASSWORD;
+}
+
+async function purgePrefix(
+  bucket: ReturnType<NonNullable<ReturnType<typeof createServiceClient>>["storage"]["from"]>,
+  prefix: string,
+  depth = 0,
+): Promise<boolean> {
+  if (depth > 4) return false;
+  for (let page = 0; page < 20; page += 1) {
+    const { data, error } = await bucket.list(prefix, { limit: 100 });
+    if (error) {
+      console.error("auth.purgePhotos", error.message);
+      return false;
+    }
+    if (!data?.length) return true;
+    const files: string[] = [];
+    const folders: string[] = [];
+    for (const entry of data) {
+      if (!entry.name || entry.name.includes("..") || entry.name.includes("/")) continue;
+      const path = `${prefix}/${entry.name}`;
+      if (entry.id == null) folders.push(path);
+      else files.push(path);
+    }
+    if (files.length) {
+      const removed = await bucket.remove(files);
+      if (removed.error) {
+        console.error("auth.purgePhotos", removed.error.message);
+        return false;
+      }
+    }
+    for (const folder of folders) {
+      if (!(await purgePrefix(bucket, folder, depth + 1))) return false;
+    }
+    if (!files.length) return true;
+  }
+  return false;
+}
+
 async function purgePostPhotos(
   admin: NonNullable<ReturnType<typeof createServiceClient>>,
   userId: string,
 ) {
-  const bucket = admin.storage.from("post-photos");
-  for (;;) {
-    const { data, error } = await bucket.list(userId, { limit: 100 });
-    if (error || !data?.length) return;
-    const paths = data.filter((file) => file.name && file.id).map((file) => `${userId}/${file.name}`);
-    if (!paths.length) return;
-    const removed = await bucket.remove(paths);
-    if (removed.error) {
-      console.error("auth.purgePhotos", removed.error.message);
-      return;
-    }
-    if (data.length < 100) return;
-  }
+  if (!/^[0-9a-f-]{36}$/i.test(userId)) return false;
+  return purgePrefix(admin.storage.from("post-photos"), userId);
 }
 
 function callbackUrl() {
@@ -154,6 +186,7 @@ export async function signInWithPassword(formData: FormData) {
   if (!supabase) return { error: "Supabase is not configured yet." };
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  if (!credentialSizeOk(email, password)) return { error: "Email or password is not right." };
   if (!(await takeSignInSlot(email))) return { error: "Wait a bit, then try again." };
   const next = safePath(formData.get("next"));
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -173,6 +206,9 @@ export async function signUpWithPassword(formData: FormData) {
   const confirm = String(formData.get("confirm") ?? "");
   const displayName = String(formData.get("display_name") ?? "").trim().slice(0, 60);
   const next = safePath(formData.get("next"));
+  if (!credentialSizeOk(email, password) || !credentialSizeOk(email, confirm)) {
+    return { error: "Could not create that account." };
+  }
   if (password.length < 8) return { error: "Use at least 8 characters." };
   if (password !== confirm) return { error: "Those passwords do not match." };
   await rememberAuthNext(next);
@@ -207,6 +243,9 @@ export async function signUpForPortal(formData: FormData) {
   const password = String(formData.get("password") ?? "");
   const confirm = String(formData.get("confirm") ?? "");
   const displayName = String(formData.get("display_name") ?? "").trim().slice(0, 60);
+  if (!credentialSizeOk(email, password) || !credentialSizeOk(email, confirm)) {
+    return { error: "Could not create that account." };
+  }
   const requestId = portalRequestId(formData.get("request_id"));
   const organization = requestId ? null : clipOrganizationName(formData.get("organization_name"));
   const next = portalHomePath(kind, requestId);
@@ -236,7 +275,6 @@ export async function signUpForPortal(formData: FormData) {
     }
     const filed = await filePortalApplication({
       supabase,
-      user: data.user,
       kind,
       requestId,
       organizationName: organization,
@@ -257,6 +295,10 @@ export async function requestPasswordReset(formData: FormData) {
   if (!supabase) return { error: "Supabase is not configured yet." };
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: "Enter the email on the account." };
+  if (!credentialSizeOk(email)) {
+    return { error: null, message: "Check your email for a reset link." };
+  }
+  if (!(await takeResetSlot(email))) return { error: "Wait a bit, then try again." };
   await rememberAuthNext("/account/password");
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: callbackUrl(),
@@ -301,7 +343,6 @@ export async function verifyEmailOtp(formData: FormData) {
     }
     const filed = await filePortalApplication({
       supabase,
-      user: data.user,
       kind: intent.kind,
       requestId: intent.requestId,
       organizationName: intent.organizationName,
@@ -423,7 +464,8 @@ export async function deleteAccount(formData: FormData) {
   }
   const admin = createServiceClient();
   if (!admin) return { error: "Account deletion is not configured." };
-  await purgePostPhotos(admin, user.id);
+  const purged = await purgePostPhotos(admin, user.id);
+  if (!purged) return { error: "Could not delete the account." };
   const { error } = await admin.auth.admin.deleteUser(user.id);
   if (error) return { error: "Could not delete the account." };
   await supabase.auth.signOut({ scope: "global" });

@@ -8,7 +8,7 @@ import {
   recordStallCheckout,
   syncAccountEvent,
 } from "@/lib/stall-payments";
-import { constructWebhookEvent, getStripe, stripeWebhookSecrets } from "@/lib/stripe";
+import { constructWebhookEvent, getStripe, stripeEventModeMatches, stripeWebhookSecrets } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +26,9 @@ export async function POST(request: Request) {
     if (!constructed) return NextResponse.json({ error: "Not configured." }, { status: 500 });
     event = constructed;
   } catch {
+    return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
+  }
+  if (!stripeEventModeMatches(event.livemode)) {
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 

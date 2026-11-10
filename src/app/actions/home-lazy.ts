@@ -84,7 +84,7 @@ export async function getSavedRailMarkets(slugs: string[]): Promise<SavedRailMar
 }
 
 export async function getVendorsTodaySlice(offset: number, limit: number, nowIso: string) {
-  const start = Math.max(0, Math.floor(offset));
+  const start = Math.min(4000, Math.max(0, Number.isFinite(offset) ? Math.floor(offset) : 0));
   const take = Math.min(20, Math.max(0, Math.floor(limit)));
   if (!take) return [];
   const clock = new Date(nowIso);

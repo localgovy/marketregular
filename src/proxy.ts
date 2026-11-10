@@ -68,6 +68,13 @@ function productHop(request: NextRequest) {
   const url = request.nextUrl.clone();
   if (q || openRaw || market || dayRaw) {
     url.pathname = "/products/search";
+    url.search = "";
+    if (q) url.searchParams.set("q", q);
+    if (openRaw) url.searchParams.set("open", openRaw);
+    if (market) url.searchParams.set("market", market);
+    if (dayRaw) url.searchParams.set("day", dayRaw);
+    if (aisleRaw) url.searchParams.set("aisle", aisleRaw);
+    if (sortRaw) url.searchParams.set("sort", sortRaw);
     return NextResponse.rewrite(url);
   }
   const aisle = parseAisle(aisleRaw) ?? "all";
@@ -84,6 +91,15 @@ export async function proxy(request: NextRequest) {
   }
 
   const { pathname, searchParams } = request.nextUrl;
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    (pathname === "/preview" || pathname.startsWith("/preview/"))
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/preview-unavailable";
+    return NextResponse.rewrite(url);
+  }
 
   if (request.method === "GET" || request.method === "HEAD") {
     const templated = templatedParams(searchParams);
@@ -129,6 +145,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|json|webmanifest|avif|mp4|mjs|js|css|map|woff2?|ttf|otf)$).*)",
   ],
 };
