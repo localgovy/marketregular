@@ -24,6 +24,7 @@ import { visitBadge, soonestWait, type VisitHall } from "@/lib/product-visit";
 import { hallDayHours } from "@/lib/schedule";
 import { stallHall } from "@/lib/season-fold";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
+import { isInjectionProbe } from "@/lib/injection-probe";
 import { foldSearchText } from "@/lib/search-text";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { menuItemPhotoUrl, publishedMenuSelectMissingPhoto } from "@/lib/menu-item-photo-url";
@@ -452,10 +453,18 @@ export async function searchProducts(args: {
   now?: Date;
 }): Promise<ProductHit[]> {
   const q = normalizeSearchQuery(args.q);
+  const marketSlug = args.marketSlug?.trim().slice(0, 160) ?? "";
+  if (
+    isInjectionProbe(args.q) ||
+    isInjectionProbe(q) ||
+    isInjectionProbe(args.marketSlug) ||
+    isInjectionProbe(marketSlug)
+  ) {
+    return [];
+  }
   if (foldSearchText(q).length < MIN_PRODUCT_SEARCH_CHARS) return [];
   const now = args.now ?? new Date();
   const day = args.day != null && args.day >= 0 && args.day <= 6 ? args.day : -1;
-  const marketSlug = args.marketSlug?.trim().slice(0, 160) ?? "";
   const rawOffset = args.offset ?? 0;
   const offset = Number.isFinite(rawOffset)
     ? Math.max(0, Math.min(Math.trunc(rawOffset), MAX_PRODUCT_SEARCH_OFFSET))
@@ -672,7 +681,9 @@ const loadCachedVendorsByName = unstable_cache(
 );
 
 export async function searchVendorsByName(q: string, limit = 20): Promise<VendorHit[]> {
-  const needle = foldSearchText(normalizeSearchQuery(q));
+  const normalized = normalizeSearchQuery(q);
+  if (isInjectionProbe(q) || isInjectionProbe(normalized)) return [];
+  const needle = foldSearchText(normalized);
   if (needle.length < MIN_PRODUCT_SEARCH_CHARS) return [];
   const cappedLimit = Math.max(1, Math.min(Math.trunc(limit), 20));
   const key = `${needle}\0${cappedLimit}`;

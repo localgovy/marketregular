@@ -6,6 +6,7 @@ import {
   normalizeSearchQuery,
   searchProducts,
 } from "@/lib/data/product-search";
+import { isInjectionProbe } from "@/lib/injection-probe";
 import { takeCatalogSlot } from "@/lib/mail-limit";
 import type { ProductHit } from "@/lib/product-hits";
 import { foldSearchText } from "@/lib/search-text";
@@ -26,8 +27,10 @@ export async function moreProducts(input: {
   day?: number | null;
   offset: number;
 }): Promise<ProductHit[]> {
+  if (isInjectionProbe(input.q) || isInjectionProbe(input.marketSlug)) return [];
   const parsed = moreSchema.safeParse({ ...input, q: normalizeSearchQuery(input.q) });
   if (!parsed.success) return [];
+  if (isInjectionProbe(parsed.data.q) || isInjectionProbe(parsed.data.marketSlug)) return [];
   if (foldSearchText(parsed.data.q).length < MIN_PRODUCT_SEARCH_CHARS) return [];
   if (!(await takeCatalogSlot())) return [];
   return searchProducts({

@@ -19,6 +19,7 @@ import {
   DIRECTORY_REVALIDATE_SECONDS,
   PUBLISHED_ROWS_REVALIDATE_SECONDS,
 } from "../src/lib/directory-cache.ts";
+import { isInjectionProbe } from "../src/lib/injection-probe.ts";
 
 function routeFiles(dir: string, out: string[] = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -295,6 +296,47 @@ test("bulk extraction surfaces stay closed and bounded", () => {
   assert.match(proxySource, /exceedsSpoofedSearchBurst\(/);
   assert.match(proxySource, /hasEmptyUserAgent\(/);
   assert.match(proxySource, /isProductSearchRequest\(request\)/);
+  assert.match(searchLib, /isInjectionProbe\(/);
+  assert.match(productsAction, /isInjectionProbe\(/);
+  assert.match(proxySource, /isInjectionProbe\(/);
+  assert.match(proxySource, /token_hash/);
+  assert.match(proxySource, /error_description/);
+});
+
+test("sql-shaped searches are probes and ordinary product text is not", () => {
+  for (const probe of [
+    "' OR 1=1",
+    "union select",
+    "UNION SELECT name FROM vendor_menus",
+    "pg_sleep(10)",
+    "information_schema.tables",
+    "pg_catalog.pg_tables",
+    "bread /*",
+    "honey--",
+    "a; drop table vendor_menus",
+    "x;select 1",
+    "or 1 = 1",
+    "\0honey",
+    "%00",
+  ]) {
+    assert.equal(isInjectionProbe(probe), true, probe);
+  }
+  for (const ordinary of [
+    "mom's",
+    "gluten-free",
+    "mac & cheese",
+    "jalapeño",
+    "honey",
+    "sourdough",
+    "100% rye",
+    "co-op",
+    "oranges",
+    "bread/toronto",
+    "",
+    "or 2",
+  ]) {
+    assert.equal(isInjectionProbe(ordinary), false, ordinary);
+  }
 });
 
 test("request-path warmups and full-site login invalidation stay out", () => {

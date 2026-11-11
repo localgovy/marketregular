@@ -70,5 +70,23 @@ await expectDenied(
   "/rest/v1/rpc/search_products",
   { method: "POST", body: JSON.stringify({ q: "sourdough" }) },
 );
+await expectDenied(
+  "search_products injection",
+  "/rest/v1/rpc/search_products",
+  { method: "POST", body: JSON.stringify({ q: "' OR 1=1" }) },
+);
+await expectDenied(
+  "dropgeometrytable",
+  "/rest/v1/rpc/dropgeometrytable",
+  { method: "POST", body: JSON.stringify({ table_name: "vendor_menus" }) },
+);
+await expectDenied("unknown table", "/rest/v1/not_a_real_table?select=id&limit=1");
+
+const posts = await fetch(`${url}/rest/v1/posts?select=id&limit=1`, { headers });
+const postsText = await posts.text();
+if (!posts.ok) {
+  throw new Error(`posts was closed (${posts.status}): ${postsText.slice(0, 180)}`);
+}
+console.log(`posts still readable ${posts.status}`);
 
 console.log("anon lock ok");

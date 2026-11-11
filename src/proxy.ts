@@ -5,6 +5,7 @@ import {
   isAbusiveCrawler,
   isSpoofedBrowserSearch,
 } from "@/lib/abusive-crawler";
+import { isInjectionProbe } from "@/lib/injection-probe";
 import { parseListingPath } from "@/lib/listing-alias-lookup";
 import { parseCatalogueSort } from "@/lib/product-browse-href";
 import { canonicalProductPath, parseAisle } from "@/lib/product-catalogue";
@@ -102,6 +103,18 @@ function isProductSearchRequest(request: NextRequest) {
   );
 }
 
+const AUTH_CALLBACK_PARAMS = new Set(["code", "token_hash", "error_description"]);
+
+function hasRequestProbe(request: NextRequest) {
+  const { pathname, searchParams } = request.nextUrl;
+  if (isInjectionProbe(pathname)) return true;
+  for (const [key, value] of searchParams) {
+    if (AUTH_CALLBACK_PARAMS.has(key)) continue;
+    if (isInjectionProbe(key) || isInjectionProbe(value)) return true;
+  }
+  return false;
+}
+
 function requestIp(request: NextRequest) {
   const vercel = request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
   if (vercel) return vercel;
@@ -109,6 +122,13 @@ function requestIp(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
+  if (hasRequestProbe(request)) {
+    return new NextResponse("Forbidden", {
+      status: 403,
+      headers: { "cache-control": "no-store" },
+    });
+  }
+
   const userAgent = request.headers.get("user-agent");
   if (isAbusiveCrawler(userAgent)) {
     return new NextResponse("Forbidden", {
