@@ -1,11 +1,13 @@
 "use server";
 
 import { listMenuItemPhotoNames } from "@/lib/data/menu-item-photos";
+import { takeCatalogSlot } from "@/lib/mail-limit";
 import { menuItemPhotoPairKey, photoUrlsForPairs } from "@/lib/menu-item-photo-match";
 import { validSaveSlug } from "@/lib/listing-saves";
 import { savedItemName } from "@/lib/product-saves";
+import { createAuthedServerClient } from "@/lib/supabase/server";
 
-const MAX_PAIRS = 480;
+const MAX_PAIRS = 200;
 
 function cleanPairs(value: unknown): Array<{ vendorSlug: string; name: string }> {
   if (!Array.isArray(value)) return [];
@@ -30,6 +32,9 @@ function cleanPairs(value: unknown): Array<{ vendorSlug: string; name: string }>
 export async function menuItemPhotoUrls(pairs: unknown): Promise<Record<string, string>> {
   const clean = cleanPairs(pairs);
   if (!clean.length) return {};
+  const { user } = await createAuthedServerClient();
+  if (!user) return {};
+  if (!(await takeCatalogSlot())) return {};
   try {
     const photos = await listMenuItemPhotoNames();
     return photoUrlsForPairs(photos, clean);

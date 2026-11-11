@@ -375,6 +375,23 @@ export const listFindVendors = cache(async function listFindVendors(
     .sort((a, b) => a.waitDays - b.waitDays || a.name.localeCompare(b.name, "en-CA"));
 });
 
+const SEARCH_MEMORY_TTL_MS = 60_000;
+const SEARCH_MEMORY_CAP = 64;
+
+const searchRowMemory = new Map<string, { at: number; rows: RpcRow[] }>();
+const vendorSearchMemory = new Map<string, { at: number; rows: VendorHit[] }>();
+
+function rememberMapEntry<T>(
+  map: Map<string, { at: number; rows: T }>,
+  key: string,
+  rows: T,
+) {
+  map.set(key, { at: Date.now(), rows });
+  if (map.size <= SEARCH_MEMORY_CAP) return;
+  const oldestKey = map.keys().next().value;
+  if (oldestKey !== undefined) map.delete(oldestKey);
+}
+
 const loadCachedSearchRows = unstable_cache(
   async (
     q: string,
@@ -411,6 +428,21 @@ const loadCachedSearchRows = unstable_cache(
   { revalidate: 60 },
 );
 
+async function readSearchRows(
+  q: string,
+  openToday: boolean,
+  marketSlug: string,
+  day: number,
+  offset: number,
+): Promise<RpcRow[]> {
+  const key = `${q}\0${openToday ? 1 : 0}\0${marketSlug}\0${day}\0${offset}`;
+  const hit = searchRowMemory.get(key);
+  if (hit && Date.now() - hit.at < SEARCH_MEMORY_TTL_MS) return hit.rows;
+  const rows = await loadCachedSearchRows(q, openToday, marketSlug, day, offset);
+  rememberMapEntry(searchRowMemory, key, rows);
+  return rows;
+}
+
 export async function searchProducts(args: {
   q: string;
   openToday?: boolean;
@@ -435,7 +467,7 @@ export async function searchProducts(args: {
   let vendors: Awaited<ReturnType<typeof listVendors>> = [];
   try {
     [data, markets, schedules, vendors] = await Promise.all([
-      loadCachedSearchRows(q, openToday, marketSlug, day, offset),
+      readSearchRows(q, openToday, marketSlug, day, offset),
       listMarkets(),
       listSchedules(),
       listVendors(),
@@ -533,94 +565,130 @@ function vendorStaysInSearch(vendor: { id: string; slug: string }, linked: Set<s
 
 const VENDOR_NAME_COLUMNS = "id, slug, name, logo_url, rating_avg, review_count";
 
-export async function searchVendorsByName(q: string, limit = 20): Promise<VendorHit[]> {
-  const needle = foldSearchText(normalizeSearchQuery(q));
-  if (needle.length < MIN_PRODUCT_SEARCH_CHARS) return [];
-  const supabase = createServiceClient();
-  if (!supabase) {
-    const [vendors, stalls] = await Promise.all([listVendors(), listStalls()]);
-    const linked = new Set(stalls.map((stall) => stall.id));
-    return vendors
-      .filter(
-        (vendor) => vendorStaysInSearch(vendor, linked) && foldSearchText(vendor.name).includes(needle),
-      )
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .slice(0, limit)
-      .map((vendor) => namedVendorHit(vendor));
+function throwIfAborted(error: { code?: string; message?: string }) {
+  const message = error.message ?? "";
+  if (error.code === "20" || /abort|timeout/i.test(message)) {
+    const timeout = new Error("vendor search timed out");
+    timeout.name = "SearchTimeout";
+    throw timeout;
   }
-  // Phrase ilike stays on the name trigram index. A slash between the words
-  // ("Author/Illustrator") is not a phrase hit, so those few names are read
-  // beside it and folded in memory.
-  const pattern = `%${needle.replace(/[%_\\]/g, "\\$&")}%`;
-  const page = Math.max(limit * 4, limit);
-  const matches: NamedVendor[] = [];
-  const seen = new Set<string>();
-  const slashNames = needle.includes(" ")
-    ? supabase
+  throw new Error("Could not search vendors");
+}
+
+const loadCachedVendorsByName = unstable_cache(
+  async (needle: string, limit: number): Promise<VendorHit[]> => {
+    const supabase = createServiceClient();
+    if (!supabase) {
+      const [vendors, stalls] = await Promise.all([listVendors(), listStalls()]);
+      const linked = new Set(stalls.map((stall) => stall.id));
+      return vendors
+        .filter(
+          (vendor) => vendorStaysInSearch(vendor, linked) && foldSearchText(vendor.name).includes(needle),
+        )
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .slice(0, limit)
+        .map((vendor) => namedVendorHit(vendor));
+    }
+    // Phrase ilike stays on the name trigram index. A slash between the words
+    // ("Author/Illustrator") is not a phrase hit, so those few names are read
+    // beside it and folded in memory.
+    const pattern = `%${needle.replace(/[%_\\]/g, "\\$&")}%`;
+    const page = Math.max(limit * 4, limit);
+    const matches: NamedVendor[] = [];
+    const seen = new Set<string>();
+    const slashNames = needle.includes(" ")
+      ? supabase
+          .from("published_vendors")
+          .select(VENDOR_NAME_COLUMNS)
+          .eq("status", "published")
+          .like("name", "%/%")
+          .limit(100)
+          .abortSignal(AbortSignal.timeout(8000))
+          .then((result) => result)
+      : null;
+    for (let from = 0; matches.length < limit && from < 1000; from += page) {
+      const { data, error } = await supabase
         .from("published_vendors")
         .select(VENDOR_NAME_COLUMNS)
         .eq("status", "published")
-        .like("name", "%/%")
-        .limit(100)
-        .then((result) => result)
-    : null;
-  for (let from = 0; matches.length < limit && from < 1000; from += page) {
-    const { data, error } = await supabase
-      .from("published_vendors")
-      .select(VENDOR_NAME_COLUMNS)
-      .eq("status", "published")
-      .ilike("name", pattern)
-      .order("name")
-      .range(from, from + page - 1);
-    if (error) throw new Error("Could not search vendors");
-    assertPublicSearchPayload(data);
-    const rows = (data ?? []) as NamedVendor[];
-    if (!rows.length) break;
-    const { data: links, error: linkError } = await supabase
-      .from("published_stalls")
-      .select("vendor_id")
-      .in(
-        "vendor_id",
-        rows.map((row) => row.id),
-      );
-    if (linkError) throw new Error("Could not search vendors");
-    const linked = new Set((links ?? []).map((link) => link.vendor_id as string));
-    for (const vendor of rows) {
-      if (seen.has(vendor.id) || !vendorStaysInSearch(vendor, linked)) continue;
-      seen.add(vendor.id);
-      matches.push(vendor);
-      if (matches.length >= limit) break;
-    }
-    if (rows.length < page) break;
-  }
-  if (slashNames) {
-    const { data, error } = await slashNames;
-    if (error) throw new Error("Could not search vendors");
-    assertPublicSearchPayload(data);
-    const extra = ((data ?? []) as NamedVendor[]).filter(
-      (vendor) => !seen.has(vendor.id) && foldSearchText(vendor.name).includes(needle),
-    );
-    if (extra.length) {
+        .ilike("name", pattern)
+        .order("name")
+        .range(from, from + page - 1)
+        .abortSignal(AbortSignal.timeout(8000));
+      if (error) throwIfAborted(error);
+      assertPublicSearchPayload(data);
+      const rows = (data ?? []) as NamedVendor[];
+      if (!rows.length) break;
       const { data: links, error: linkError } = await supabase
         .from("published_stalls")
         .select("vendor_id")
         .in(
           "vendor_id",
-          extra.map((vendor) => vendor.id),
-        );
-      if (linkError) throw new Error("Could not search vendors");
+          rows.map((row) => row.id),
+        )
+        .abortSignal(AbortSignal.timeout(8000));
+      if (linkError) throwIfAborted(linkError);
       const linked = new Set((links ?? []).map((link) => link.vendor_id as string));
-      let added = false;
-      for (const vendor of extra) {
+      for (const vendor of rows) {
         if (seen.has(vendor.id) || !vendorStaysInSearch(vendor, linked)) continue;
         seen.add(vendor.id);
         matches.push(vendor);
-        added = true;
+        if (matches.length >= limit) break;
       }
-      if (added) matches.sort((a, b) => a.name.localeCompare(b.name));
+      if (rows.length < page) break;
     }
+    if (slashNames) {
+      const { data, error } = await slashNames;
+      if (error) throwIfAborted(error);
+      assertPublicSearchPayload(data);
+      const extra = ((data ?? []) as NamedVendor[]).filter(
+        (vendor) => !seen.has(vendor.id) && foldSearchText(vendor.name).includes(needle),
+      );
+      if (extra.length) {
+        const { data: links, error: linkError } = await supabase
+          .from("published_stalls")
+          .select("vendor_id")
+          .in(
+            "vendor_id",
+            extra.map((vendor) => vendor.id),
+          )
+          .abortSignal(AbortSignal.timeout(8000));
+        if (linkError) throwIfAborted(linkError);
+        const linked = new Set((links ?? []).map((link) => link.vendor_id as string));
+        let added = false;
+        for (const vendor of extra) {
+          if (seen.has(vendor.id) || !vendorStaysInSearch(vendor, linked)) continue;
+          seen.add(vendor.id);
+          matches.push(vendor);
+          added = true;
+        }
+        if (added) matches.sort((a, b) => a.name.localeCompare(b.name));
+      }
+    }
+    return matches.slice(0, limit).map((vendor) => namedVendorHit(vendor));
+  },
+  ["search-vendors-v1"],
+  { revalidate: 60, tags: [DIRECTORY_TAG] },
+);
+
+export async function searchVendorsByName(q: string, limit = 20): Promise<VendorHit[]> {
+  const needle = foldSearchText(normalizeSearchQuery(q));
+  if (needle.length < MIN_PRODUCT_SEARCH_CHARS) return [];
+  const cappedLimit = Math.max(1, Math.min(Math.trunc(limit), 20));
+  const key = `${needle}\0${cappedLimit}`;
+  const hit = vendorSearchMemory.get(key);
+  if (hit && Date.now() - hit.at < SEARCH_MEMORY_TTL_MS) return hit.rows;
+  try {
+    const rows = await loadCachedVendorsByName(needle, cappedLimit);
+    rememberMapEntry(vendorSearchMemory, key, rows);
+    return rows;
+  } catch (error) {
+    const timedOut =
+      error instanceof Error &&
+      (error.name === "SearchTimeout" || error.name === "AbortError" || /timed out|abort/i.test(error.message));
+    if (!timedOut) throw error;
+    return [];
   }
-  return matches.slice(0, limit).map((vendor) => namedVendorHit(vendor));
 }
 
 export function findTitle(term: string, city: string) {

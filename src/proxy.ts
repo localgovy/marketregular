@@ -1,5 +1,10 @@
 import { listingRedirectDestination } from "@/data/listing-redirects";
-import { isAbusiveCrawler, isSpoofedBrowserSearch } from "@/lib/abusive-crawler";
+import {
+  exceedsSpoofedSearchBurst,
+  hasEmptyUserAgent,
+  isAbusiveCrawler,
+  isSpoofedBrowserSearch,
+} from "@/lib/abusive-crawler";
 import { parseListingPath } from "@/lib/listing-alias-lookup";
 import { parseCatalogueSort } from "@/lib/product-browse-href";
 import { canonicalProductPath, parseAisle } from "@/lib/product-catalogue";
@@ -97,8 +102,15 @@ function isProductSearchRequest(request: NextRequest) {
   );
 }
 
+function requestIp(request: NextRequest) {
+  const vercel = request.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (vercel) return vercel;
+  return request.headers.get("x-real-ip")?.trim() || "unknown";
+}
+
 export async function proxy(request: NextRequest) {
-  if (isAbusiveCrawler(request.headers.get("user-agent"))) {
+  const userAgent = request.headers.get("user-agent");
+  if (isAbusiveCrawler(userAgent)) {
     return new NextResponse("Forbidden", {
       status: 403,
       headers: { "cache-control": "no-store" },
@@ -152,11 +164,22 @@ export async function proxy(request: NextRequest) {
   }
   const product = productHop(request);
   if (product?.status === 308) return product;
-  if (isProductSearchRequest(request) && isSpoofedBrowserSearch(request.headers)) {
-    return new NextResponse("Forbidden", {
-      status: 403,
-      headers: { "cache-control": "no-store" },
-    });
+  if (isProductSearchRequest(request)) {
+    if (hasEmptyUserAgent(userAgent)) {
+      return new NextResponse("Forbidden", {
+        status: 403,
+        headers: { "cache-control": "no-store" },
+      });
+    }
+    if (
+      isSpoofedBrowserSearch(request.headers) &&
+      exceedsSpoofedSearchBurst(requestIp(request))
+    ) {
+      return new NextResponse("Too Many Requests", {
+        status: 429,
+        headers: { "cache-control": "no-store", "retry-after": "60" },
+      });
+    }
   }
   const session = await updateSession(request);
   if (!product || session.headers.get("location")) return session;

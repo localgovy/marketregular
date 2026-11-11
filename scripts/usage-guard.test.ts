@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 import { test } from "node:test";
-import { isAbusiveCrawler, isSpoofedBrowserSearch } from "../src/lib/abusive-crawler.ts";
+import {
+  exceedsSpoofedSearchBurst,
+  hasEmptyUserAgent,
+  isAbusiveCrawler,
+  isSpoofedBrowserSearch,
+  resetSpoofedSearchBursts,
+} from "../src/lib/abusive-crawler.ts";
 import {
   MAX_PRODUCT_SEARCH_OFFSET,
   MIN_PRODUCT_SEARCH_CHARS,
@@ -213,6 +219,27 @@ test("spoofed browser headers on dynamic search are caught without blocking brow
       botUa,
     );
   }
+
+  assert.equal(hasEmptyUserAgent(null), true);
+  assert.equal(hasEmptyUserAgent("   "), true);
+  assert.equal(hasEmptyUserAgent("GrokBot/1.0"), false);
+
+  // Single lookups from undocumented AI fetchers or link previewers pass;
+  // single-IP (>8/min) and rotating-proxy (>30/min) scraping bursts are stopped.
+  resetSpoofedSearchBursts();
+  const baseNow = 1_700_000_000_000;
+  for (let i = 1; i <= 8; i += 1) {
+    assert.equal(exceedsSpoofedSearchBurst("198.51.100.1", baseNow + i), false);
+  }
+  assert.equal(exceedsSpoofedSearchBurst("198.51.100.1", baseNow + 9), true);
+
+  resetSpoofedSearchBursts();
+  for (let i = 1; i <= 30; i += 1) {
+    assert.equal(exceedsSpoofedSearchBurst(`203.0.113.${i}`, baseNow + i), false);
+  }
+  assert.equal(exceedsSpoofedSearchBurst("203.0.113.31", baseNow + 31), true);
+  assert.equal(exceedsSpoofedSearchBurst("203.0.113.31", baseNow + 61_000), false);
+  resetSpoofedSearchBursts();
 });
 
 test("bulk extraction surfaces stay closed and bounded", () => {
@@ -230,6 +257,7 @@ test("bulk extraction surfaces stay closed and bounded", () => {
   );
   assert.match(searchLib, /MIN_PRODUCT_SEARCH_CHARS/);
   assert.match(searchLib, /MAX_PRODUCT_SEARCH_OFFSET/);
+  assert.match(searchLib, /search-vendors-v1/);
   assert.equal(searchLib.includes("4000"), false);
 
   const productsAction = readFileSync(
@@ -255,8 +283,17 @@ test("bulk extraction surfaces stay closed and bounded", () => {
   assert.match(homeLazy, /takeCatalogSlot\(\)/);
   assert.equal(homeLazy.includes("4000"), false);
 
+  const menuPhotosAction = readFileSync(
+    new URL("../src/app/actions/menu-item-photos.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(menuPhotosAction, /createAuthedServerClient\(\)/);
+  assert.match(menuPhotosAction, /takeCatalogSlot\(\)/);
+
   const proxySource = readFileSync(new URL("../src/proxy.ts", import.meta.url), "utf8");
   assert.match(proxySource, /isSpoofedBrowserSearch\(request\.headers\)/);
+  assert.match(proxySource, /exceedsSpoofedSearchBurst\(/);
+  assert.match(proxySource, /hasEmptyUserAgent\(/);
   assert.match(proxySource, /isProductSearchRequest\(request\)/);
 });
 
