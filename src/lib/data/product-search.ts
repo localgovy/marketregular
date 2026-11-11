@@ -11,6 +11,8 @@ import {
 import {
   assertPublicSearchPayload,
   isAlcoholCategory,
+  MAX_PRODUCT_SEARCH_OFFSET,
+  MIN_PRODUCT_SEARCH_CHARS,
   PRODUCT_PAGE,
   productHref,
   visiblePriceCents,
@@ -41,6 +43,7 @@ export {
   menuCategoryLabel,
   menuInProductSearch,
 } from "@/lib/product-categories";
+export { MAX_PRODUCT_SEARCH_OFFSET, MIN_PRODUCT_SEARCH_CHARS } from "@/lib/product-hits";
 
 export type FindMarket = {
   name: string;
@@ -106,7 +109,7 @@ function asDays(value: unknown): number[] {
   return value.filter((day): day is number => typeof day === "number");
 }
 
-/** Shared by the products page, `/api/search`, and paging. */
+/** Shared by the products page and paging. */
 export const SEARCH_QUERY_MAX = 80;
 
 export function normalizeSearchQuery(q: string) {
@@ -417,13 +420,13 @@ export async function searchProducts(args: {
   now?: Date;
 }): Promise<ProductHit[]> {
   const q = normalizeSearchQuery(args.q);
-  if (!q) return [];
+  if (foldSearchText(q).length < MIN_PRODUCT_SEARCH_CHARS) return [];
   const now = args.now ?? new Date();
   const day = args.day != null && args.day >= 0 && args.day <= 6 ? args.day : -1;
   const marketSlug = args.marketSlug?.trim().slice(0, 160) ?? "";
   const rawOffset = args.offset ?? 0;
   const offset = Number.isFinite(rawOffset)
-    ? Math.max(0, Math.min(Math.trunc(rawOffset), 4000))
+    ? Math.max(0, Math.min(Math.trunc(rawOffset), MAX_PRODUCT_SEARCH_OFFSET))
     : 0;
   const openToday = Boolean(args.openToday);
   let data: RpcRow[] = [];
@@ -532,7 +535,7 @@ const VENDOR_NAME_COLUMNS = "id, slug, name, logo_url, rating_avg, review_count"
 
 export async function searchVendorsByName(q: string, limit = 20): Promise<VendorHit[]> {
   const needle = foldSearchText(normalizeSearchQuery(q));
-  if (needle.length < 2) return [];
+  if (needle.length < MIN_PRODUCT_SEARCH_CHARS) return [];
   const supabase = createServiceClient();
   if (!supabase) {
     const [vendors, stalls] = await Promise.all([listVendors(), listStalls()]);
@@ -561,7 +564,7 @@ export async function searchVendorsByName(q: string, limit = 20): Promise<Vendor
         .limit(100)
         .then((result) => result)
     : null;
-  for (let from = 0; matches.length < limit && from < 4000; from += page) {
+  for (let from = 0; matches.length < limit && from < 1000; from += page) {
     const { data, error } = await supabase
       .from("published_vendors")
       .select(VENDOR_NAME_COLUMNS)

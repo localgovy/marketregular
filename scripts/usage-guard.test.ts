@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
 import { test } from "node:test";
-import { isAbusiveCrawler } from "../src/lib/abusive-crawler.ts";
+import { isAbusiveCrawler, isSpoofedBrowserSearch } from "../src/lib/abusive-crawler.ts";
+import {
+  MAX_PRODUCT_SEARCH_OFFSET,
+  MIN_PRODUCT_SEARCH_CHARS,
+  PRODUCT_PAGE,
+} from "../src/lib/product-hits.ts";
 import {
   DIRECTORY_DATA_REVALIDATE_SECONDS,
   DIRECTORY_REVALIDATE_SECONDS,
@@ -106,29 +111,153 @@ test("a docs-only commit can skip a build and a blog commit cannot", () => {
   assert.match(ignore, /content\//);
 });
 
-test("known scrapers are refused and browsers are not", () => {
-  assert.equal(isAbusiveCrawler("Lightpanda/1.0"), true);
+test("known scrapers are refused and browsers and good chatbots are not", () => {
+  for (const scraper of [
+    "Lightpanda/1.0",
+    "Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (KHTML, like Gecko) Mobile Safari/537.36 (compatible; Bytespider; spider-feedback@bytedance.com)",
+    "Mozilla/5.0 (compatible; DotBot/1.2; +https://opensiteexplorer.org/dotbot)",
+    "CCBot/2.0 (https://commoncrawl.org/faq/)",
+    "Scrapy/2.11.2 (+https://scrapy.org)",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Unknown; Linux x86_64) AppleWebKit/538.1 (KHTML, like Gecko) PhantomJS/2.1.1 Safari/538.1",
+  ]) {
+    assert.equal(isAbusiveCrawler(scraper), true, scraper);
+  }
+
+  for (const allowed of [
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36; compatible; OAI-SearchBot/1.4; +https://openai.com/searchbot",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-User/1.0; +https://support.anthropic.com)",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-SearchBot/1.0; +https://support.anthropic.com)",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/1.0; +claudebot@anthropic.com)",
+    "Mozilla/5.0 (compatible; meta-webindexer/1.1; +https://developers.facebook.com/docs/sharing/webmasters/crawler)",
+    "Mozilla/5.0 (compatible; Meta-ExternalFetcher/1.1; +https://developers.facebook.com/docs/sharing/webmasters/crawler)",
+    "Muse/1.0",
+    "GrokBot/1.0",
+    "Mozilla/5.0 (compatible; xAI-SearchBot/1.0; +https://x.ai)",
+    "GrokAgent/1.0",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user)",
+    "Mozilla/5.0 (compatible; DuckAssistBot/1.0; +https://duckduckgo.com/duckassistbot)",
+  ]) {
+    assert.equal(isAbusiveCrawler(allowed), false, allowed);
+  }
+  assert.equal(isAbusiveCrawler(null), false);
+  assert.equal(isAbusiveCrawler(""), false);
+});
+
+test("spoofed browser headers on dynamic search are caught without blocking browsers or chatbots", () => {
   assert.equal(
-    isAbusiveCrawler(
-      "Mozilla/5.0 (Linux; Android 5.0) AppleWebKit/537.36 (KHTML, like Gecko) Mobile Safari/537.36 (compatible; Bytespider; spider-feedback@bytedance.com)",
+    isSpoofedBrowserSearch(
+      new Headers({
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+        accept: "*/*",
+      }),
     ),
     true,
   );
-  assert.equal(isAbusiveCrawler("Mozilla/5.0 (compatible; DotBot/1.2; +https://opensiteexplorer.org/dotbot)"), true);
   assert.equal(
-    isAbusiveCrawler(
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    isSpoofedBrowserSearch(
+      new Headers({
+        "user-agent":
+          "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/147.0.0.0 Mobile/15E148 Safari/604.1",
+      }),
+    ),
+    true,
+  );
+
+  // Real browser document navigation and RSC client fetch both pass.
+  assert.equal(
+    isSpoofedBrowserSearch(
+      new Headers({
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "sec-fetch-mode": "navigate",
+      }),
     ),
     false,
   );
   assert.equal(
-    isAbusiveCrawler(
-      "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+    isSpoofedBrowserSearch(
+      new Headers({
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+        accept: "*/*",
+        "sec-fetch-mode": "cors",
+      }),
     ),
     false,
   );
-  assert.equal(isAbusiveCrawler(null), false);
-  assert.equal(isAbusiveCrawler(""), false);
+
+  // Declared chatbots (including Chrome-based OAI-SearchBot) and plain HTTP tools pass.
+  for (const botUa of [
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36; compatible; OAI-SearchBot/1.4; +https://openai.com/searchbot",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot",
+    "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Claude-User/1.0; +https://support.anthropic.com)",
+    "Mozilla/5.0 (compatible; meta-webindexer/1.1; +https://developers.facebook.com/docs/sharing/webmasters/crawler)",
+    "Muse/1.0",
+    "GrokBot/1.0",
+    "Mozilla/5.0 (compatible; xAI-SearchBot/1.0; +https://x.ai)",
+    "curl/8.7.1",
+  ]) {
+    assert.equal(
+      isSpoofedBrowserSearch(new Headers({ "user-agent": botUa, accept: "*/*" })),
+      false,
+      botUa,
+    );
+  }
+});
+
+test("bulk extraction surfaces stay closed and bounded", () => {
+  assert.equal(
+    existsSync(new URL("../src/app/api/search/route.ts", import.meta.url)),
+    false,
+    "unused /api/search JSON endpoint must stay removed",
+  );
+  assert.ok(MIN_PRODUCT_SEARCH_CHARS >= 2);
+  assert.ok(MAX_PRODUCT_SEARCH_OFFSET + PRODUCT_PAGE <= 200);
+
+  const searchLib = readFileSync(
+    new URL("../src/lib/data/product-search.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(searchLib, /MIN_PRODUCT_SEARCH_CHARS/);
+  assert.match(searchLib, /MAX_PRODUCT_SEARCH_OFFSET/);
+  assert.equal(searchLib.includes("4000"), false);
+
+  const productsAction = readFileSync(
+    new URL("../src/app/actions/products.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(productsAction, /MIN_PRODUCT_SEARCH_CHARS/);
+  assert.match(productsAction, /MAX_PRODUCT_SEARCH_OFFSET/);
+  assert.match(productsAction, /takeCatalogSlot\(\)/);
+  assert.equal(productsAction.includes("4_000"), false);
+
+  const productsScreen = readFileSync(
+    new URL("../src/app/products/screen.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(productsScreen, /takeCatalogSlot\(\)/);
+
+  const homeLazy = readFileSync(
+    new URL("../src/app/actions/home-lazy.ts", import.meta.url),
+    "utf8",
+  );
+  assert.match(homeLazy, /auth\.getUser\(\)/);
+  assert.match(homeLazy, /takeCatalogSlot\(\)/);
+  assert.equal(homeLazy.includes("4000"), false);
+
+  const proxySource = readFileSync(new URL("../src/proxy.ts", import.meta.url), "utf8");
+  assert.match(proxySource, /isSpoofedBrowserSearch\(request\.headers\)/);
+  assert.match(proxySource, /isProductSearchRequest\(request\)/);
 });
 
 test("request-path warmups and full-site login invalidation stay out", () => {

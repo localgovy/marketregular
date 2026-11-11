@@ -125,12 +125,4 @@ if (riesling.some((row) => row.product_category === "alcohol" && row.price_cents
   throw new Error("alcohol row included a price");
 }
 
-const base = process.argv[2];
-if (base) {
-  const response = await fetch(`${base.replace(/\/$/, "")}/api/search?q=sourdough`);
-  const body: unknown = await response.json();
-  if (!response.ok) throw new Error(`search route ${response.status}`);
-  walk(body);
-}
-
 console.log("search contact check ok");

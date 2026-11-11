@@ -1,6 +1,8 @@
 import { findPageForProductSlug } from "@/data/find-pages";
 
 export const PRODUCT_PAGE = 40;
+export const MIN_PRODUCT_SEARCH_CHARS = 2;
+export const MAX_PRODUCT_SEARCH_OFFSET = 160;
 
 export type ProductMarketHit = {
   name: string;

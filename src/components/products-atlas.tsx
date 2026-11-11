@@ -59,6 +59,7 @@ export function ProductsAtlas({
   spotlight,
   stallsByAisle,
   featuredStalls,
+  rateLimited = false,
 }: {
   q: string;
   openToday: boolean;
@@ -82,6 +83,7 @@ export function ProductsAtlas({
   spotlight: ProductsAtlasSpotlight;
   stallsByAisle: Record<string, ProductsAtlasStallPreview[]>;
   featuredStalls: ProductsAtlasStallPreview[];
+  rateLimited?: boolean;
 }) {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6">
@@ -318,11 +320,15 @@ export function ProductsAtlas({
             ) : (
               <div className="bg-card p-6 ring-1 ring-board">
                 <p className="text-base font-medium text-foreground">
-                  No products match that search.
+                  {rateLimited
+                    ? "Too many searches from this connection right now. Try again in a few minutes, or browse product categories below."
+                    : "No products match that search."}
                 </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Try a broader term or jump directly to one of our popular product guides below.
-                </p>
+                {!rateLimited ? (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Try a broader term or jump directly to one of our popular product guides below.
+                  </p>
+                ) : null}
                 <div className="mt-4 flex flex-wrap gap-2">
                   {spotlight.topGuides.map((g) => (
                     <Link

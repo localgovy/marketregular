@@ -6,7 +6,7 @@ import { SearchMark } from "@/components/marks";
 import { FindVendorList, ProductHitList } from "@/components/product-results";
 import { countLabel } from "@/lib/format";
 import type { FindVendor } from "@/lib/data/product-search";
-import { PRODUCT_PAGE, type ProductHit } from "@/lib/product-hits";
+import { MAX_PRODUCT_SEARCH_OFFSET, PRODUCT_PAGE, type ProductHit } from "@/lib/product-hits";
 import {
   FIND_SORTS,
   SEARCH_SORTS,
@@ -367,7 +367,9 @@ export function SortableProductHits({
   const [sort, setSort] = useState<SearchSort>("match");
   const [extra, setExtra] = useState<ProductHit[]>([]);
   const [offset, setOffset] = useState(hits.length);
-  const [done, setDone] = useState(hits.length < PRODUCT_PAGE);
+  const [done, setDone] = useState(
+    hits.length < PRODUCT_PAGE || hits.length > MAX_PRODUCT_SEARCH_OFFSET,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pricedOnly, setPricedOnly] = useState(false);
@@ -456,13 +458,16 @@ export function SortableProductHits({
   const hasActiveFilter = pricedOnly || whenFilter !== "all" || Boolean(marketFilter);
 
   async function loadMore() {
-    if (!page || busy || done) return;
+    if (!page || busy || done || offset > MAX_PRODUCT_SEARCH_OFFSET) return;
     setBusy(true);
     try {
       const next = await moreProducts({ ...page, offset });
+      const nextOffset = offset + PRODUCT_PAGE;
       setExtra((current) => [...current, ...next]);
-      setOffset((current) => current + PRODUCT_PAGE);
-      if (next.length < PRODUCT_PAGE) setDone(true);
+      setOffset(nextOffset);
+      if (next.length < PRODUCT_PAGE || nextOffset > MAX_PRODUCT_SEARCH_OFFSET) {
+        setDone(true);
+      }
       setError(null);
     } catch {
       setError("Couldn't load more products. Try again.");

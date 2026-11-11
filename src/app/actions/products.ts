@@ -1,16 +1,22 @@
 "use server";
 
-import { normalizeSearchQuery, searchProducts } from "@/lib/data/product-search";
+import {
+  MAX_PRODUCT_SEARCH_OFFSET,
+  MIN_PRODUCT_SEARCH_CHARS,
+  normalizeSearchQuery,
+  searchProducts,
+} from "@/lib/data/product-search";
 import { takeCatalogSlot } from "@/lib/mail-limit";
 import type { ProductHit } from "@/lib/product-hits";
+import { foldSearchText } from "@/lib/search-text";
 import { z } from "zod";
 
 const moreSchema = z.object({
-  q: z.string().trim().min(1).max(80),
+  q: z.string().trim().min(MIN_PRODUCT_SEARCH_CHARS).max(80),
   openToday: z.boolean().optional(),
   marketSlug: z.string().max(160).nullable().optional(),
   day: z.number().int().min(0).max(6).nullable().optional(),
-  offset: z.number().int().min(0).max(4_000),
+  offset: z.number().int().min(0).max(MAX_PRODUCT_SEARCH_OFFSET),
 });
 
 export async function moreProducts(input: {
@@ -22,6 +28,7 @@ export async function moreProducts(input: {
 }): Promise<ProductHit[]> {
   const parsed = moreSchema.safeParse({ ...input, q: normalizeSearchQuery(input.q) });
   if (!parsed.success) return [];
+  if (foldSearchText(parsed.data.q).length < MIN_PRODUCT_SEARCH_CHARS) return [];
   if (!(await takeCatalogSlot())) return [];
   return searchProducts({
     q: parsed.data.q,

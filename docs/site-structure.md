@@ -128,7 +128,6 @@ Status words used below: **live**, **paused** (built, switched off), **redirect*
 | `/admin/moderation` | live | Admin | Flag and restore posts and reviews |
 | `/admin/applications` | live | Admin | Assign or reject portal applications and legacy claims |
 | `/admin/saves` | live | Admin | Read-only saves by person |
-| `GET /api/search` | live | Public | `?q=` returns up to 8 products and 8 vendors. 429 when the catalog slot is spent |
 | `POST /api/stripe/account-session` | paused | Stall owner | 403 while sales are closed |
 | `POST /api/stripe/webhook` | paused | Stripe | Order pay, expire, refund, dispute, Connect `account.updated` |
 
@@ -246,7 +245,7 @@ A market has many schedules and many roster rows. A vendor has many menu rows an
 
 ### What the public select omits
 
-`src/lib/data/catalog.ts` reads published views and then drops private columns again. Phone, email, `claimed_by`, `selling_approved`, `created_by_market_id`, `maintenance_opt_outs`, and schedule `research_notes` are not in `MARKET_PUBLIC` / `VENDOR_PUBLIC` / `SCHEDULE_PUBLIC`. Contact is `get_listing_contact` (service role). `GET /api/search` throws if a payload contains `email`, `phone`, `claimed_by`, `claim_note`, `claim_source`, or `product_category_source` (`assertPublicSearchPayload`).
+`src/lib/data/catalog.ts` reads published views and then drops private columns again. Phone, email, `claimed_by`, `selling_approved`, `created_by_market_id`, `maintenance_opt_outs`, and schedule `research_notes` are not in `MARKET_PUBLIC` / `VENDOR_PUBLIC` / `SCHEDULE_PUBLIC`. Contact is `get_listing_contact` (service role). Product search throws if a payload contains `email`, `phone`, `claimed_by`, `claim_note`, `claim_source`, or `product_category_source` (`assertPublicSearchPayload`).
 
 Auth and database failures shown to people go through `src/lib/public-error.ts`. Provider `error.message` is not returned. Wrong password, unconfirmed email, and a leaked password each have their own sentence.
 
@@ -325,7 +324,7 @@ When the query is a `search_terms` row, that term is used whole (`sweet corn` st
 
 Each find page matches exact `vendor_menus.product_slug` values on `published_menus`.
 
-Three search layers: directory text (`searchDirectory`, name bands in `src/lib/search-rank.ts`, product and cuisine nouns expand to tags), product search (`/products` and `GET /api/search`), and find pages. JSON-LD `SearchAction` points at `/products?q={search_term_string}`.
+Three search layers: directory text (`searchDirectory`, name bands in `src/lib/search-rank.ts`, product and cuisine nouns expand to tags), product search (`/products`), and find pages. JSON-LD `SearchAction` points at `/products?q={search_term_string}`.
 
 ### Feed
 
@@ -521,7 +520,7 @@ Resend uses `RESEND_API_KEY` and `RESEND_FROM`. A failed portal email is reporte
 | `claim` | 3 | 10 | Portal application, per key |
 | `claim_ip` | 20 | 40 | Portal application, per IP |
 | `visit` | 1 | 3 | Week email |
-| `catalog` | 60 | 400 | Directory slices, product pages, `GET /api/search` |
+| `catalog` | 60 | 400 | Directory slices, product search, and paging |
 | `signin` | 15 | 40 | One email |
 | `signin_ip` | 60 | 300 | One address |
 
@@ -589,7 +588,7 @@ Directory data path: live reads go through `published_*`. `scripts/import-toront
 | --- | --- |
 | Request and session | `src/proxy.ts`, `src/lib/supabase/middleware.ts`, `next.config.ts` |
 | Directory reads | `src/lib/data/catalog.ts`, `src/lib/data/local.ts`, `src/lib/directory-page.ts`, `src/lib/directory-cache.ts`, `src/lib/revalidate-directory.ts`, `src/lib/find-paths.ts`, `src/lib/landing.ts`, `src/lib/schedule.ts`, `src/lib/open-state.ts`, `src/lib/product-visit.ts`, `src/lib/vendor-week.ts`, `src/lib/vendor-tags.ts`, `src/lib/listing-siblings.ts`, `src/lib/season-fold.ts` |
-| Product search | `src/lib/data/product-search.ts`, `src/data/find-pages.ts`, `src/app/api/search/route.ts` |
+| Product search | `src/lib/data/product-search.ts`, `src/data/find-pages.ts`, `src/app/products/screen.tsx` |
 | Saves | `src/app/actions/saves.ts`, `src/lib/saves.ts`, `src/components/save-button.tsx` |
 | Posts | `src/app/actions/presence.ts`, `src/lib/floor-note.ts`, `src/lib/feed-filter.ts` |
 | Auth and onboarding | `src/app/actions/auth.ts`, `src/app/actions/onboarding.ts`, `src/lib/onboarding.ts`, `src/lib/password-gate.ts`, `src/lib/username.ts` |

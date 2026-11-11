@@ -18,7 +18,7 @@ import {
 import { parseDirectorySort, type MarketsSearch } from "@/lib/find-paths";
 import { z } from "zod";
 
-const seenSchema = z.array(z.string().trim().min(1).max(80)).max(4_000);
+const seenSchema = z.array(z.string().trim().min(1).max(80)).max(2_000);
 
 const searchSchema = z.object({
   q: z.string().max(200).optional(),

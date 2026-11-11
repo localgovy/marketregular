@@ -8,6 +8,8 @@ import {
   listVendors,
 } from "@/lib/data/catalog";
 import { toGeoMarket } from "@/lib/geo";
+import { takeCatalogSlot } from "@/lib/mail-limit";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { vendorsSellingToday } from "@/lib/vendor-week";
 import type { Market, MarketSchedule } from "@/types/database";
 import { z } from "zod";
@@ -23,6 +25,15 @@ function schedulesByMarket(schedules: MarketSchedule[]) {
 }
 
 export async function getComposerDirectory() {
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return { markets: [], stalls: [], initialMarketId: undefined };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { markets: [], stalls: [], initialMarketId: undefined };
+  if (!(await takeCatalogSlot())) {
+    return { markets: [], stalls: [], initialMarketId: undefined };
+  }
   const [markets, stalls, openNow] = await Promise.all([
     listMarkets(),
     listStalls(),
@@ -42,6 +53,7 @@ export async function getComposerDirectory() {
 }
 
 export async function getHomeMapMarkets() {
+  if (!(await takeCatalogSlot())) return [];
   const markets = await listMarkets();
   return markets.map((market) => ({
     id: market.id,
@@ -67,6 +79,7 @@ export async function getSavedRailMarkets(slugs: string[]): Promise<SavedRailMar
       .slice(0, 80),
   );
   if (!wanted.size) return [];
+  if (!(await takeCatalogSlot())) return [];
   const markets = await listMarkets();
   return markets
     .filter((market) => wanted.has(market.slug))
@@ -84,9 +97,10 @@ export async function getSavedRailMarkets(slugs: string[]): Promise<SavedRailMar
 }
 
 export async function getVendorsTodaySlice(offset: number, limit: number, nowIso: string) {
-  const start = Math.min(4000, Math.max(0, Number.isFinite(offset) ? Math.floor(offset) : 0));
+  const start = Math.min(600, Math.max(0, Number.isFinite(offset) ? Math.floor(offset) : 0));
   const take = Math.min(20, Math.max(0, Math.floor(limit)));
   if (!take) return [];
+  if (!(await takeCatalogSlot())) return [];
   const clock = new Date(nowIso);
   const now = Number.isNaN(clock.getTime()) ? new Date() : clock;
   const [markets, vendors, stalls, schedules] = await Promise.all([

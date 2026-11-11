@@ -4,8 +4,14 @@ import type { CatalogueCard } from "@/components/product-catalogue";
 import { ProductsAtlas } from "@/components/products-atlas";
 import { productPhoto } from "@/lib/data/product-photos";
 import { listMarkets } from "@/lib/data/catalog";
-import { searchProducts, searchVendorsByName } from "@/lib/data/product-search";
+import {
+  MIN_PRODUCT_SEARCH_CHARS,
+  normalizeSearchQuery,
+  searchProducts,
+  searchVendorsByName,
+} from "@/lib/data/product-search";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { takeCatalogSlot } from "@/lib/mail-limit";
 import { parseCatalogueSort, type CatalogueSort } from "@/lib/product-browse-href";
 import {
   BREAKFAST_ID,
@@ -20,6 +26,7 @@ import {
 } from "@/lib/product-catalogue";
 import { torontoWeekday } from "@/lib/product-sort";
 import { loadProductsHubContext } from "@/lib/products-atlas-data";
+import { foldSearchText } from "@/lib/search-text";
 import { pageMeta } from "@/lib/seo";
 
 export type ProductQuery = {
@@ -117,9 +124,15 @@ export async function ProductsScreen({
   const catalogueSort = parsed ? parseCatalogueSort(sortRaw) : sort;
   const marketSlug = marketKnown ? market || null : null;
 
+  const canSearch = foldSearchText(normalizeSearchQuery(q)).length >= MIN_PRODUCT_SEARCH_CHARS;
+  const searchAllowed = canSearch ? await takeCatalogSlot() : true;
+  const rateLimited = canSearch && !searchAllowed;
+
   const [products, vendors, hubContext] = await Promise.all([
-    q ? searchProducts({ q, openToday, marketSlug, day }) : Promise.resolve([]),
-    q ? searchVendorsByName(q) : Promise.resolve([]),
+    canSearch && searchAllowed
+      ? searchProducts({ q, openToday, marketSlug, day })
+      : Promise.resolve([]),
+    canSearch && searchAllowed ? searchVendorsByName(q) : Promise.resolve([]),
     loadProductsHubContext(aisleId),
   ]);
 
@@ -190,6 +203,7 @@ export async function ProductsScreen({
       spotlight={spotlight}
       stallsByAisle={stallsByAisle}
       featuredStalls={featuredStalls}
+      rateLimited={rateLimited}
     />
   );
 }

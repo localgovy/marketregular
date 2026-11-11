@@ -1,5 +1,5 @@
 import { listingRedirectDestination } from "@/data/listing-redirects";
-import { isAbusiveCrawler } from "@/lib/abusive-crawler";
+import { isAbusiveCrawler, isSpoofedBrowserSearch } from "@/lib/abusive-crawler";
 import { parseListingPath } from "@/lib/listing-alias-lookup";
 import { parseCatalogueSort } from "@/lib/product-browse-href";
 import { canonicalProductPath, parseAisle } from "@/lib/product-catalogue";
@@ -82,6 +82,21 @@ function productHop(request: NextRequest) {
   return NextResponse.rewrite(url);
 }
 
+function isProductSearchRequest(request: NextRequest) {
+  if (request.method !== "GET" && request.method !== "HEAD") return false;
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname === "/products/search" || pathname.startsWith("/products/search/")) {
+    return true;
+  }
+  if (pathname !== "/products") return false;
+  return Boolean(
+    searchParams.get("q")?.trim() ||
+      searchParams.get("open")?.trim() ||
+      searchParams.get("market")?.trim() ||
+      searchParams.get("day")?.trim(),
+  );
+}
+
 export async function proxy(request: NextRequest) {
   if (isAbusiveCrawler(request.headers.get("user-agent"))) {
     return new NextResponse("Forbidden", {
@@ -137,6 +152,12 @@ export async function proxy(request: NextRequest) {
   }
   const product = productHop(request);
   if (product?.status === 308) return product;
+  if (isProductSearchRequest(request) && isSpoofedBrowserSearch(request.headers)) {
+    return new NextResponse("Forbidden", {
+      status: 403,
+      headers: { "cache-control": "no-store" },
+    });
+  }
   const session = await updateSession(request);
   if (!product || session.headers.get("location")) return session;
   for (const cookie of session.headers.getSetCookie()) product.headers.append("set-cookie", cookie);
