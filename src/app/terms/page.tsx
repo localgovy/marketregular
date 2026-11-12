@@ -32,8 +32,8 @@ export default function TermsPage() {
         <p className={body}>
           These terms are between you and {LEGAL_ENTITY}, a corporation in {LEGAL_JURISDICTION},
           for the {SITE_NAME} website. If you open a stall or market account, you are agreeing for
-          that business as well as for yourself. The stall fee below is billed by LOCALGOVY, an
-          Ontario sole proprietorship. How we handle personal information is in the{" "}
+          that business as well as for yourself. The stall fee below is billed by {LEGAL_ENTITY}. How
+          we handle personal information is in the{" "}
           <Link href="/privacy" className="font-medium text-foreground hover:underline">
             Privacy policy
           </Link>
@@ -120,25 +120,24 @@ export default function TermsPage() {
         <h2>Orders</h2>
         <p className={body}>
           A stall sells its own items. {SITE_NAME} hosts the page and is not the seller. When
-          selling is open and we have approved that stall, the card payment runs on the stall&apos;s
+          selling is open and we have approved that stall, a card payment runs on the stall&apos;s
           Stripe account, in the stall&apos;s name. We do not hold that money, and card numbers stay
           with Stripe. The stall accepts Stripe&apos;s terms when it sets up payments. You need an
-          account to buy. The price on the item is the amount charged, before any tax the payment
-          adds. The stall sets delivery, pickup, or preorder, and any terms shown before you pay.
-          Refunds, chargebacks, and handing the item over are the stall&apos;s. The stall sees the
-          order details it needs. We do not have to resolve a dispute between a buyer and a stall.
+          account to buy. The stall offers pickup or preorder, and any terms shown before you pay.
+          Delivery is not offered. Alcohol is reserved on the site, then paid at the stall when you
+          show ID. There is no card charge for that reservation. Refunds, chargebacks, and handing
+          the item over are the stall&apos;s. The stall sees the order details it needs. We do not
+          have to resolve a dispute between a buyer and a stall.
         </p>
         <p className={body}>
-          LOCALGOVY, an Ontario sole proprietorship, bills the stall 3.5% of the amount still
-          charged, plus $0.25 CAD, on each paid checkout. That fee is not added to the buyer&apos;s
-          payment. A full refund removes the fee. A partial refund reduces the percentage and
-          leaves the $0.25. Money returned to the buyer, including a lost chargeback, reduces or
-          removes the fee the same way. The stall can pay what it owes at any time once the balance
-          is at least $0.50. A smaller balance stays due until it reaches that. What is still
-          unpaid is due on 31 December of the year of the oldest unpaid fee. An overpayment sits as
-          a credit on the next stall fee. If tax applies to the stall fee, it is charged to the
-          stall, not added to the buyer&apos;s payment. We can turn selling off on a stall that
-          leaves the fee unpaid.
+          {LEGAL_ENTITY} keeps 4% of the item subtotal on each paid order. The shopper also pays a
+          service fee of $0.50 CAD when that subtotal is under $15, or $0.99 CAD when it is $15 or
+          more. The service fee is its own line at checkout. The 4% is not charged on the service
+          fee. The stall pays Stripe&apos;s card processing fee. A shopper who cancels before the
+          stall marks the order ready, or before the pickup window starts, is refunded in full,
+          including the service fee. After the stall has marked the order ready and the pickup
+          window has started, there is no automatic refund. Stripe usually keeps its card processing
+          fee on a refund, and that cost stays with the stall.
         </p>
       </section>
 
@@ -201,7 +200,7 @@ export default function TermsPage() {
           The stall and market accounts are free to open. We are not responsible to that business
           for lost sales, lost visitors, or other indirect loss from the site or a listing. Our
           total responsibility to that business for the account is limited to the greater of $100
-          CAD and the stall fees that account paid LOCALGOVY in the 12 months before the claim.
+          CAD and the stall fees that account paid {LEGAL_ENTITY} in the 12 months before the claim.
           This limit does not apply to fraud, or to anything the law does not allow us to limit.
         </p>
         <p className={body}>

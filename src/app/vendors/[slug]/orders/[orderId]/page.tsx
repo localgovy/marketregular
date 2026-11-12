@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { confirmStallCheckout } from "@/lib/stall-payments";
 import { BackButton } from "@/components/back-button";
+import { OrderCancel } from "@/components/order-cancel";
 import { formatPrice } from "@/lib/format";
-import { fulfillmentLabel, orderStatusLabel } from "@/lib/selling";
+import { fulfillmentLabel, orderStatusLabel, shopperCancelAllowed } from "@/lib/selling";
 import { pageMeta } from "@/lib/seo";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
@@ -57,11 +58,21 @@ export default async function StallOrderPage({
   if (vendor && vendor.slug !== slug) redirect(`/vendors/${vendor.slug}/orders/${orderId}`);
 
   const waiting = order.status === "pending" || order.status === "expired";
+  const reserved = order.status === "reserved";
+  const serviceFee = "service_fee_cents" in order && typeof order.service_fee_cents === "number" ? order.service_fee_cents : 0;
+  const readyAt = "ready_at" in order && typeof order.ready_at === "string" ? order.ready_at : null;
+  const pickupStarts =
+    "pickup_starts_at" in order && typeof order.pickup_starts_at === "string" ? order.pickup_starts_at : null;
+  const canCancel = shopperCancelAllowed({
+    status: String(order.status),
+    readyAt,
+    pickupStartsAt: pickupStarts,
+  });
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <BackButton href={`/vendors/${slug}`} />
-      <h1>{waiting ? "Payment not finished" : "Order placed"}</h1>
+      <h1>{waiting ? "Payment not finished" : reserved ? "Reservation" : readyAt ? "Ready for pickup" : "Order placed"}</h1>
       <p className="type-lede mt-2 text-muted-foreground">
         {vendor?.name ? (
           <Link href={`/vendors/${vendor.slug}`} className="font-medium text-foreground hover:underline">
@@ -72,13 +83,17 @@ export default async function StallOrderPage({
         )}{" "}
         {waiting
           ? "has not been paid yet."
-          : "has this order and will follow the terms you agreed to."}{" "}
-        {orderStatusLabel(order.status)}.
+          : reserved
+            ? "is holding this reservation. Pay at the stall and show ID."
+            : "has this order and will follow the terms you agreed to."}{" "}
+        {orderStatusLabel(String(order.status), readyAt)}.
       </p>
       <p className="mt-6 text-base font-medium">{order.item_name}</p>
       <p className="type-nums mt-1 text-base">
-        {order.quantity} · {formatPrice(order.charge_cents)} · {fulfillmentLabel(order.fulfillment)}
+        {order.quantity} · {formatPrice(order.charge_cents)}
+        {serviceFee > 0 ? ` plus ${formatPrice(serviceFee)} service fee` : ""} · {fulfillmentLabel(order.fulfillment)}
       </p>
+      {canCancel ? <OrderCancel orderId={String(order.id)} reserved={reserved} /> : null}
       {order.fulfillment_note ? (
         <p className="mt-3 whitespace-pre-wrap text-base text-muted-foreground">{order.fulfillment_note}</p>
       ) : null}

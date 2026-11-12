@@ -3,8 +3,10 @@ import { test } from "node:test";
 import { isStallCheckoutPath, onboardingExemptPath } from "../src/lib/onboarding.ts";
 import { checkoutSiteOrigin, originFromHost } from "../src/lib/site-host.ts";
 import {
+  applicationFeeCents,
   checkoutAmountMatches,
-  checkoutFeeCents,
+  checkoutTotalCents,
+  commissionCents,
   platformFeeBinds,
   stallCheckoutBinds,
   stallExpireBinds,
@@ -14,23 +16,48 @@ import {
   feeBalanceCents,
   feeDueLabel,
   feeDueOn,
+  itemRefundedCents,
   parseCheckoutDetails,
-  percentFeeCents,
   returnedCents,
   saleReady,
+  scheduleForOverride,
+  serviceFeeCents,
+  shopperCancelAllowed,
+  torontoInstant,
   VENDOR_SALES_OPEN,
+  SERVICE_FEE_FALLBACK_CENTS,
 } from "../src/lib/selling.ts";
 
-test("listing an item for sale stays closed", () => {
-  assert.equal(VENDOR_SALES_OPEN, false);
+test("listing an item for sale is open", () => {
+  assert.equal(VENDOR_SALES_OPEN, true);
 });
 
-test("a checkout fee is 3.5 percent plus 25 cents", () => {
-  assert.equal(percentFeeCents(1000), 35);
-  assert.equal(checkoutFeeCents(1000), 60);
-  assert.equal(checkoutFeeCents(50), 27);
-  assert.equal(percentFeeCents(1), 0);
-  assert.equal(checkoutFeeCents(333), 12 + 25);
+test("a new stall pays 4 percent of the item subtotal plus the shopper service fee", () => {
+  assert.equal(serviceFeeCents(1499), 50);
+  assert.equal(serviceFeeCents(1500), 99);
+  assert.equal(commissionCents(1000), 40);
+  assert.equal(applicationFeeCents(1000), 40 + 50);
+  assert.equal(checkoutTotalCents(1000), 1050);
+  assert.equal(commissionCents(50), 2);
+  assert.equal(applicationFeeCents(50), 52);
+  assert.equal(checkoutTotalCents(50), 100);
+  assert.equal(SERVICE_FEE_FALLBACK_CENTS, 70);
+  assert.notEqual(serviceFeeCents(50), SERVICE_FEE_FALLBACK_CENTS);
+});
+
+test("I'd Tap That keeps 3.5 percent plus 25 cents during year one", () => {
+  const now = new Date("2026-11-12T15:00:00Z");
+  const intro = scheduleForOverride(
+    { introBps: 350, standardBps: 400, flatCents: 25, introUntil: null },
+    now,
+  );
+  assert.equal(commissionCents(50, intro), 2 + 25);
+  assert.equal(applicationFeeCents(50, intro), 77);
+  const later = scheduleForOverride(
+    { introBps: 350, standardBps: 400, flatCents: 25, introUntil: "2026-11-01T00:00:00Z" },
+    now,
+  );
+  assert.equal(commissionCents(1000, later), 40 + 25);
 });
 
 test("a checkout counts when the cad subtotal matches the menu price", () => {
@@ -78,19 +105,27 @@ test("a platform fee counts only for the session and amount we opened", () => {
   assert.equal(platformFeeBinds({ ...paid, expectedVendorId: null, expectedAmountCents: null }), false);
 });
 
-test("a reversal the size of the charge voids the fee and a smaller one keeps the 25 cents", () => {
-  assert.equal(returnedCents(1000, 0, 1000), 1000);
-  assert.deepEqual(feeAfterRefund(1000, returnedCents(1000, 0, 1000)), {
-    percentCents: 0,
-    flatCents: 0,
-    voided: true,
-  });
-  assert.equal(returnedCents(1000, 0, 400), 400);
-  assert.deepEqual(feeAfterRefund(1000, returnedCents(1000, 0, 400)), {
-    percentCents: 21,
-    flatCents: 25,
-    voided: false,
-  });
+test("a full refund voids the commission and the service fee", () => {
+  const schedule = { commissionBps: 400, flatCents: 0 };
+  assert.equal(itemRefundedCents(1000, 50, 1050), 1000);
+  assert.deepEqual(
+    feeAfterRefund({
+      subtotalCents: 1000,
+      refundedSubtotalCents: itemRefundedCents(1000, 50, 1050),
+      schedule,
+      serviceFeeCents: 50,
+    }),
+    { commissionCents: 0, flatCents: 0, serviceFeeCents: 0, voided: true },
+  );
+  assert.deepEqual(
+    feeAfterRefund({
+      subtotalCents: 1000,
+      refundedSubtotalCents: 400,
+      schedule,
+      serviceFeeCents: 50,
+    }),
+    { commissionCents: 24, flatCents: 0, serviceFeeCents: 50, voided: false },
+  );
   assert.equal(returnedCents(1000, 400, 200), 400);
   assert.equal(returnedCents(1000, 200, 1500), 1000);
 });
@@ -103,28 +138,32 @@ test("a smaller fee refund does not restore credit", () => {
   assert.deepEqual(feeCreditAfterReturn(40, 1000, 960), { action: "keep" });
 });
 
-test("a full refund voids the fee and a partial refund keeps the 25 cents", () => {
-  assert.deepEqual(feeAfterRefund(1000, 1000), {
-    percentCents: 0,
-    flatCents: 0,
-    voided: true,
-  });
-  assert.deepEqual(feeAfterRefund(1000, 400), {
-    percentCents: 21,
-    flatCents: 25,
-    voided: false,
-  });
-  assert.deepEqual(feeAfterRefund(1000, 0), {
-    percentCents: 35,
-    flatCents: 25,
-    voided: false,
-  });
+test("a partial refund keeps the flat amount until the item is fully refunded", () => {
+  const schedule = { commissionBps: 350, flatCents: 25 };
+  assert.deepEqual(
+    feeAfterRefund({
+      subtotalCents: 1000,
+      refundedSubtotalCents: 0,
+      schedule,
+      serviceFeeCents: 50,
+    }),
+    { commissionCents: 35, flatCents: 25, serviceFeeCents: 50, voided: false },
+  );
+  assert.deepEqual(
+    feeAfterRefund({
+      subtotalCents: 1000,
+      refundedSubtotalCents: 1000,
+      schedule,
+      serviceFeeCents: 50,
+    }),
+    { commissionCents: 0, flatCents: 0, serviceFeeCents: 0, voided: true },
+  );
 });
 
 test("payments cover the oldest fees first and the rest is due 31 December", () => {
   const fees = [
-    { earnedOn: "2026-03-02", percentCents: 35, flatCents: 25, voided: false },
-    { earnedOn: "2026-11-01", percentCents: 10, flatCents: 25, voided: false },
+    { earnedOn: "2026-03-02", commissionCents: 35, flatCents: 25, serviceFeeCents: 0, voided: false },
+    { earnedOn: "2026-11-01", commissionCents: 10, flatCents: 25, serviceFeeCents: 0, voided: false },
   ];
   assert.equal(feeBalanceCents(fees, []), 95);
   assert.equal(feeBalanceCents(fees, [95]), 0);
@@ -137,8 +176,22 @@ test("payments cover the oldest fees first and the rest is due 31 December", () 
   assert.equal(feeDueLabel("2026-03-02"), null);
 });
 
-test("checkout details follow the methods the stall turned on", () => {
+test("checkout details are pickup or preorder", () => {
   const offers = { delivery: true, pickup: true, preorder: false };
+  assert.equal(
+    parseCheckoutDetails({
+      fulfillment: "delivery",
+      quantity: "1",
+      note: "Leave it",
+      deliveryName: "Ada",
+      line1: "1 Market St",
+      city: "Toronto",
+      region: "ON",
+      postal: "M5V 2T6",
+      offers,
+    }).error,
+    "Delivery is not available.",
+  );
   const pickup = parseCheckoutDetails({
     fulfillment: "pickup",
     quantity: "2",
@@ -169,21 +222,6 @@ test("checkout details follow the methods the stall turned on", () => {
   });
   assert.equal(missingNote.error, "This item is not offered for preorder.");
 
-  const delivery = parseCheckoutDetails({
-    fulfillment: "delivery",
-    quantity: "1",
-    note: "",
-    deliveryName: "Ada",
-    line1: "1 Market St",
-    city: "Toronto",
-    region: "ON",
-    postal: "m5v 2t6",
-    offers,
-  });
-  assert.equal(delivery.error, null);
-  if (delivery.error) return;
-  assert.equal(delivery.details.delivery?.postal, "M5V 2T6");
-
   const badPostal = parseCheckoutDetails({
     fulfillment: "delivery",
     quantity: "1",
@@ -195,7 +233,7 @@ test("checkout details follow the methods the stall turned on", () => {
     postal: "12345",
     offers,
   });
-  assert.equal(badPostal.error, "That postal code is not allowed.");
+  assert.equal(badPostal.error, "Delivery is not available.");
   assert.equal(
     saleReady({ forSale: true, priceCents: 40, offers }),
     "A sale needs a price of at least $0.50.",
@@ -236,6 +274,11 @@ test("checkout stays on this host and does not require the shopper profile", () 
 
 test("checkout returns use the public site, not the request host", () => {
   const site = "https://www.marketregular.com";
+  assert.equal(shopperCancelAllowed({ status: "paid", readyAt: null, pickupStartsAt: "2026-11-12T19:00:00Z", now: new Date("2026-11-12T15:00:00Z") }), true);
+  assert.equal(shopperCancelAllowed({ status: "paid", readyAt: "2026-11-12T14:00:00Z", pickupStartsAt: "2026-11-12T19:00:00Z", now: new Date("2026-11-12T15:00:00Z") }), true);
+  assert.equal(shopperCancelAllowed({ status: "paid", readyAt: "2026-11-12T14:00:00Z", pickupStartsAt: "2026-11-12T19:00:00Z", now: new Date("2026-11-12T20:00:00Z") }), false);
+  assert.equal(shopperCancelAllowed({ status: "paid", readyAt: "2026-11-12T14:00:00Z", pickupStartsAt: null, now: new Date("2026-11-12T20:00:00Z") }), false);
+  assert.equal(torontoInstant("2026-11-12", "09:00"), "2026-11-12T14:00:00.000Z");
   assert.equal(checkoutSiteOrigin(site), site);
   assert.notEqual(
     checkoutSiteOrigin(site),

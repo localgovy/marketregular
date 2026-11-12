@@ -136,7 +136,7 @@ export async function saveOwnedMenuItem(formData: FormData): Promise<PortalResul
   const cents = priceCents(text(formData, "price"));
   if (cents === "bad") return { error: "That price is not allowed." };
   const forSale = VENDOR_SALES_OPEN && formData.get("for_sale") === "on";
-  const offerDelivery = VENDOR_SALES_OPEN && formData.get("offer_delivery") === "on";
+  const offerDelivery = false;
   const offerPickup = VENDOR_SALES_OPEN && formData.get("offer_pickup") === "on";
   const offerPreorder = VENDOR_SALES_OPEN && formData.get("offer_preorder") === "on";
   const terms = VENDOR_SALES_OPEN ? text(formData, "offer_terms") : "";

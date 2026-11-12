@@ -903,12 +903,12 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                                       ) : null}
                                     </div>
 
-                                    {item.canBuy ? (
+                                    {item.canBuy || item.canReserve ? (
                                       <Link
                                         href={`/vendors/${vendor.slug}/buy/${item.id}`}
                                         className="stall-chip-sm inline-flex items-center gap-1.5 bg-primary px-3 py-1 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                                       >
-                                        <span>Buy now</span>
+                                        <span>{item.canReserve ? "Reserve" : "Buy now"}</span>
                                         <CaretRightMark className="size-3" />
                                       </Link>
                                     ) : null}

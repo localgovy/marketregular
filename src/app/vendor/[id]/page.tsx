@@ -72,7 +72,7 @@ export default async function VendorEditorPage({
     query.fee === "cancelled"
       ? "Payment was not finished."
       : query.fee === "paid"
-        ? "If the payment went through, the balance updates here."
+        ? "The stall fee is taken on each paid order."
         : null;
 
   return (

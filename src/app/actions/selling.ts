@@ -4,8 +4,12 @@ import { requireAdmin } from "@/lib/admin";
 import { mustSetPassword } from "@/lib/password-gate";
 import { parseCheckoutDetails, saleReady, VENDOR_SALES_OPEN } from "@/lib/selling";
 import {
+  cancelShopperOrder,
   confirmFeeCheckout,
   createStallAccount,
+  createStallDashboardLink,
+  markOrderReady,
+  setOrderPickupStart,
   startFeeCheckout,
   startStallCheckout as openStallCheckout,
   loadSellable,
@@ -51,8 +55,8 @@ export async function setVendorSelling(formData: FormData) {
   return {
     error: null,
     message: approved
-      ? "Saved. Checkout stays closed."
-      : "Saved. Selling stays off. Checkout stays closed.",
+      ? "Saved. This stall can sell once card payments are on."
+      : "Saved. Selling stays off.",
   };
 }
 
@@ -87,17 +91,64 @@ export async function payStallFee(formData: FormData) {
   const vendorId = String(formData.get("vendor_id") ?? "");
   const gate = await ownedListing(vendorId);
   if (!gate.listing || !gate.user) return { error: gate.error ?? "That stall is not yours." };
-  if (!stripeChargesConfigured()) return { error: "Payments are not available yet." };
   const opened = await startFeeCheckout(
     vendorId,
     gate.listing.fee_balance_cents,
     gate.user.email ?? null,
     gate.user.id,
   );
-  if (opened.error || !opened.url) return { error: opened.error ?? "Could not start that payment." };
-  const checkout = stripeCheckoutRedirect(opened.url);
-  if (!checkout) return { error: "Could not start that payment." };
-  redirect(checkout);
+  return { error: opened.error };
+}
+
+export async function openStallDashboard(formData: FormData) {
+  if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
+  const vendorId = String(formData.get("vendor_id") ?? "");
+  const gate = await ownedListing(vendorId);
+  if (!gate.listing || !gate.user) return { error: gate.error ?? "That stall is not yours." };
+  const opened = await createStallDashboardLink(vendorId, gate.user.id);
+  if (opened.error || !opened.url) return { error: opened.error ?? "Could not open the stall dashboard." };
+  redirect(opened.url);
+}
+
+export async function markStallOrderReady(formData: FormData) {
+  if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
+  const vendorId = String(formData.get("vendor_id") ?? "");
+  const orderId = String(formData.get("order_id") ?? "");
+  const gate = await ownedListing(vendorId);
+  if (!gate.user) return { error: gate.error ?? "That stall is not yours." };
+  if (!isUuid(orderId)) return { error: "That order is missing." };
+  const saved = await markOrderReady(vendorId, orderId, gate.user.id);
+  if (saved.error) return { error: saved.error };
+  revalidatePublishedDirectory([`/vendor/${vendorId}`]);
+  return { error: null, message: "Marked ready for pickup." };
+}
+
+export async function saveStallPickupStart(formData: FormData) {
+  if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
+  const vendorId = String(formData.get("vendor_id") ?? "");
+  const orderId = String(formData.get("order_id") ?? "");
+  const gate = await ownedListing(vendorId);
+  if (!gate.user) return { error: gate.error ?? "That stall is not yours." };
+  if (!isUuid(orderId)) return { error: "That order is missing." };
+  const saved = await setOrderPickupStart(
+    vendorId,
+    orderId,
+    gate.user.id,
+    String(formData.get("pickup_starts") ?? ""),
+  );
+  if (saved.error) return { error: saved.error };
+  revalidatePublishedDirectory([`/vendor/${vendorId}`]);
+  return { error: null, message: "Pickup time saved." };
+}
+
+export async function cancelBuyerOrder(formData: FormData) {
+  const { user } = await createAuthedServerClient();
+  if (!user) return { error: "Sign in first." };
+  const orderId = String(formData.get("order_id") ?? "");
+  if (!isUuid(orderId)) return { error: "That order is missing." };
+  const saved = await cancelShopperOrder(orderId, user.id);
+  if (saved.error) return { error: saved.error };
+  return { error: null, message: "Cancelled." };
 }
 
 export async function settleStallFeeReturn(vendorId: string, sessionId: string) {
@@ -115,7 +166,6 @@ export async function placeStallOrder(formData: FormData): Promise<{ error: stri
   if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
   const { user } = await createAuthedServerClient();
   if (!user) return { error: "Sign in first." };
-  if (!stripeChargesConfigured()) return { error: "Payments are not available yet." };
   const slug = String(formData.get("vendor_slug") ?? "");
   const itemId = String(formData.get("item_id") ?? "");
   if (!isUuid(itemId) || !/^[a-z0-9-]+$/.test(slug)) return { error: "That item is missing." };
@@ -151,6 +201,7 @@ export async function placeStallOrder(formData: FormData): Promise<{ error: stri
     },
   });
   if (ready) return { error: ready };
+  if (!sellable.reserve && !stripeChargesConfigured()) return { error: "Payments are not available yet." };
   const opened = await openStallCheckout({
     sellable,
     buyerId: user.id,
@@ -160,6 +211,7 @@ export async function placeStallOrder(formData: FormData): Promise<{ error: stri
   if (opened.error || !("url" in opened) || !opened.url) {
     return { error: opened.error ?? "Could not start that payment." };
   }
+  if ("reserved" in opened && opened.reserved) redirect(opened.url);
   const checkout = stripeCheckoutRedirect(opened.url);
   if (!checkout) return { error: "Could not start that payment." };
   redirect(checkout);
@@ -174,7 +226,7 @@ export async function loadBuyerOrders(userId: string) {
     .from("orders")
     .select("id, item_name, quantity, charge_cents, fulfillment, status, paid_at, vendor_id, vendors(name, slug)")
     .eq("buyer_id", userId)
-    .in("status", ["paid", "partially_refunded", "refunded"])
+    .in("status", ["paid", "partially_refunded", "refunded", "reserved", "cancelled"])
     .order("paid_at", { ascending: false })
     .limit(40);
   if (error || !data) return [];

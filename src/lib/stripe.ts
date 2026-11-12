@@ -5,6 +5,9 @@ import Stripe from "stripe";
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz";
 
+/** Express accounts with Stripe-managed negative balances need this preview version. */
+export const CONNECT_PREVIEW_API_VERSION = "2026-10-28.preview";
+
 let client: Stripe | null = null;
 
 export function stripeSecretKey() {

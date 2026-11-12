@@ -34,9 +34,9 @@ export default async function BuyItemPage({
   if (!isUuid(itemId) || !VENDOR_SALES_OPEN) notFound();
   const { user } = await createAuthedServerClient();
   if (!user) redirect(`/login?next=${encodeURIComponent(`/vendors/${slug}/buy/${itemId}`)}`);
-  if (!stripeChargesConfigured()) notFound();
   const item = await loadSellable(slug, itemId);
   if (!item) notFound();
+  if (!item.reserve && !stripeChargesConfigured()) notFound();
   const price = formatPrice(item.price_cents);
 
   const photo = menuItemPhotoUrl(item.image_url, item.id);
@@ -50,14 +50,22 @@ export default async function BuyItemPage({
           <div className="min-w-0">
             <h1>{item.name}</h1>
             <p className="type-lede mt-2 text-muted-foreground">{item.vendor_name}</p>
-            {price ? <p className="type-nums mt-3 text-base">{price}</p> : null}
+            {item.reserve ? (
+            <p className="mt-3 text-base text-muted-foreground">Pay at the stall</p>
+          ) : price ? (
+            <p className="type-nums mt-3 text-base">{price}</p>
+          ) : null}
           </div>
         </div>
       ) : (
         <>
           <h1>{item.name}</h1>
           <p className="type-lede mt-2 text-muted-foreground">{item.vendor_name}</p>
-          {price ? <p className="type-nums mt-3 text-base">{price}</p> : null}
+          {item.reserve ? (
+            <p className="mt-3 text-base text-muted-foreground">Pay at the stall</p>
+          ) : price ? (
+            <p className="type-nums mt-3 text-base">{price}</p>
+          ) : null}
         </>
       )}
       <BuyForm
@@ -65,12 +73,13 @@ export default async function BuyItemPage({
         itemId={item.id}
         priceCents={item.price_cents}
         offers={{
-          delivery: item.offer_delivery,
+          delivery: false,
           pickup: item.offer_pickup,
           preorder: item.offer_preorder,
         }}
         terms={item.offer_terms}
         cancelled={query.cancelled === "1"}
+        reserve={item.reserve}
       />
     </div>
   );

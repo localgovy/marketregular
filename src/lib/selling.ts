@@ -1,35 +1,40 @@
-/** Stall fee: 3.5% of the amount still charged, plus $0.25 once per checkout. */
+import { inSeason } from "@/lib/schedule";
 
 /**
- * Vendors can edit a stall profile while this is false. Listing an item for sale,
- * payment setup, and public Buy stay closed. Restore with
- * supabase/migrations/20261003161240_pause_vendor_item_sales.sql: that function must
- * write sale fields again, and published_menus.can_buy must use the sale expression
- * instead of false.
+ * New stalls: 4% of the item subtotal. Shoppers also pay a service fee of $0.50
+ * under $15, or $0.99 at $15 and up. A per-vendor override can change the
+ * commission. The $0.70 fallback is reserved and is not charged.
+ *
+ * Public Buy also needs published_menus.can_buy, admin approval, and an active
+ * card account. Alcohol reservations do not charge a card.
  */
-export const VENDOR_SALES_OPEN = false;
+export const VENDOR_SALES_OPEN = true;
 
-export const PLATFORM_FLAT_CENTS = 25;
+export const DEFAULT_COMMISSION_BPS = 400;
+export const SERVICE_FEE_THRESHOLD_CENTS = 1500;
+export const SERVICE_FEE_UNDER_CENTS = 50;
+export const SERVICE_FEE_AT_LEAST_CENTS = 99;
+/** Reserved if small orders dominate. Not charged. */
+export const SERVICE_FEE_FALLBACK_CENTS = 70;
 export const MIN_CHARGE_CENTS = 50;
-export const MIN_FEE_PAYMENT_CENTS = 50;
 export const MAX_QUANTITY = 20;
 export const MAX_TERMS = 4000;
 export const MAX_NOTE = 500;
 
-const POSTAL = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/;
-
 export type Fulfillment = "delivery" | "pickup" | "preorder";
 
 export type FeeParts = {
-  percentCents: number;
+  commissionCents: number;
   flatCents: number;
+  serviceFeeCents: number;
   voided: boolean;
 };
 
 export type OpenFee = {
   earnedOn: string;
-  percentCents: number;
+  commissionCents: number;
   flatCents: number;
+  serviceFeeCents: number;
   voided: boolean;
 };
 
@@ -60,13 +65,68 @@ function wholeCents(value: number, label: string) {
   }
 }
 
-export function percentFeeCents(chargeCents: number) {
-  wholeCents(chargeCents, "Charge");
-  return Math.round((chargeCents * 35) / 1000);
+export type FeeSchedule = {
+  commissionBps: number;
+  flatCents: number;
+};
+
+export const DEFAULT_FEE_SCHEDULE: FeeSchedule = {
+  commissionBps: DEFAULT_COMMISSION_BPS,
+  flatCents: 0,
+};
+
+export type FeeOverride = {
+  introBps: number;
+  standardBps: number;
+  flatCents: number;
+  introUntil: string | null;
+};
+
+function commissionBps(value: number) {
+  if (!Number.isInteger(value) || value < 0 || value > 10_000) {
+    throw new Error("Commission rate is not allowed.");
+  }
 }
 
-export function checkoutFeeCents(chargeCents: number) {
-  return percentFeeCents(chargeCents) + PLATFORM_FLAT_CENTS;
+/** 4% of the item subtotal, or the stall's override. The service fee is not in the base. */
+export function commissionCents(subtotalCents: number, schedule: FeeSchedule = DEFAULT_FEE_SCHEDULE) {
+  wholeCents(subtotalCents, "Subtotal");
+  wholeCents(schedule.flatCents, "Flat fee");
+  commissionBps(schedule.commissionBps);
+  return Math.round((subtotalCents * schedule.commissionBps) / 10_000) + schedule.flatCents;
+}
+
+/** $0.50 under $15, $0.99 at $15 and up. Compared to the item subtotal. */
+export function serviceFeeCents(subtotalCents: number) {
+  wholeCents(subtotalCents, "Subtotal");
+  if (subtotalCents < SERVICE_FEE_THRESHOLD_CENTS) return SERVICE_FEE_UNDER_CENTS;
+  return SERVICE_FEE_AT_LEAST_CENTS;
+}
+
+export function checkoutTotalCents(subtotalCents: number) {
+  return subtotalCents + serviceFeeCents(subtotalCents);
+}
+
+/** Commission plus the shopper service fee. Stripe's processing fee is not included. */
+export function applicationFeeCents(subtotalCents: number, schedule: FeeSchedule = DEFAULT_FEE_SCHEDULE) {
+  return commissionCents(subtotalCents, schedule) + serviceFeeCents(subtotalCents);
+}
+
+export function scheduleForOverride(override: FeeOverride | null, now = new Date()): FeeSchedule {
+  if (!override) return DEFAULT_FEE_SCHEDULE;
+  const until = override.introUntil ? Date.parse(override.introUntil) : Number.NaN;
+  const inIntro = !override.introUntil || (Number.isFinite(until) && now.getTime() < until);
+  return {
+    commissionBps: inIntro ? override.introBps : override.standardBps,
+    flatCents: override.flatCents,
+  };
+}
+
+/** Year one ends 12 calendar months after the first paid order. */
+export function introUntilFromFirstPaid(paidAt: Date) {
+  const next = new Date(paidAt.getTime());
+  next.setUTCMonth(next.getUTCMonth() + 12);
+  return next.toISOString();
 }
 
 /** The menu price in CAD, ignoring tax Stripe may add on top. */
@@ -138,28 +198,51 @@ export function feeCreditAfterReturn(storedCents: number, chargeCents: number, r
   return { action: "drop" as const };
 }
 
-export function feeAfterRefund(chargeCents: number, refundedCents: number): FeeParts {
-  wholeCents(chargeCents, "Charge");
-  wholeCents(refundedCents, "Refund");
-  if (refundedCents > chargeCents) throw new Error("Refund is outside the charge.");
-  if (refundedCents === chargeCents && chargeCents > 0) {
-    return { percentCents: 0, flatCents: 0, voided: true };
+export function itemRefundedCents(subtotalCents: number, serviceCents: number, stripeRefundedCents: number) {
+  wholeCents(subtotalCents, "Subtotal");
+  wholeCents(serviceCents, "Service fee");
+  wholeCents(stripeRefundedCents, "Refund");
+  const checkout = subtotalCents + serviceCents;
+  if (checkout > 0 && stripeRefundedCents >= checkout) return subtotalCents;
+  return Math.min(subtotalCents, stripeRefundedCents);
+}
+
+/** A full refund voids the commission, the flat amount, and the service fee. */
+export function feeAfterRefund(input: {
+  subtotalCents: number;
+  refundedSubtotalCents: number;
+  schedule: FeeSchedule;
+  serviceFeeCents: number;
+}): FeeParts {
+  wholeCents(input.subtotalCents, "Subtotal");
+  wholeCents(input.refundedSubtotalCents, "Refund");
+  wholeCents(input.serviceFeeCents, "Service fee");
+  if (input.refundedSubtotalCents > input.subtotalCents) {
+    throw new Error("Refund is outside the charge.");
   }
+  if (input.refundedSubtotalCents === input.subtotalCents && input.subtotalCents > 0) {
+    return { commissionCents: 0, flatCents: 0, serviceFeeCents: 0, voided: true };
+  }
+  const remaining = input.subtotalCents - input.refundedSubtotalCents;
+  commissionBps(input.schedule.commissionBps);
   return {
-    percentCents: percentFeeCents(chargeCents - refundedCents),
-    flatCents: PLATFORM_FLAT_CENTS,
+    commissionCents: Math.round((remaining * input.schedule.commissionBps) / 10_000),
+    flatCents: input.schedule.flatCents,
+    serviceFeeCents: input.serviceFeeCents,
     voided: false,
   };
 }
 
+function openFeeAmount(fee: Pick<FeeParts, "commissionCents" | "flatCents" | "serviceFeeCents" | "voided">) {
+  if (fee.voided) return 0;
+  return fee.commissionCents + fee.flatCents + fee.serviceFeeCents;
+}
+
 export function feeBalanceCents(
-  fees: Array<Pick<FeeParts, "percentCents" | "flatCents" | "voided">>,
+  fees: Array<Pick<FeeParts, "commissionCents" | "flatCents" | "serviceFeeCents" | "voided">>,
   paymentsCents: number[],
 ) {
-  const owed = fees.reduce((sum, fee) => {
-    if (fee.voided) return sum;
-    return sum + fee.percentCents + fee.flatCents;
-  }, 0);
+  const owed = fees.reduce((sum, fee) => sum + openFeeAmount(fee), 0);
   const paid = paymentsCents.reduce((sum, amount) => sum + amount, 0);
   return owed - paid;
 }
@@ -172,7 +255,7 @@ export function earliestUncoveredEarnedOn(fees: OpenFee[], paidCents: number) {
     .sort((a, b) => a.earnedOn.localeCompare(b.earnedOn));
   let covered = paidCents;
   for (const fee of open) {
-    const amount = fee.percentCents + fee.flatCents;
+    const amount = openFeeAmount(fee);
     if (covered < amount) return fee.earnedOn;
     covered -= amount;
   }
@@ -206,13 +289,103 @@ export function fulfillmentLabel(value: string) {
   return value;
 }
 
-export function orderStatusLabel(value: string) {
+export function orderStatusLabel(value: string, readyAt?: string | null) {
+  if (value === "paid" && readyAt) return "Ready for pickup";
   if (value === "paid") return "Paid";
   if (value === "partially_refunded") return "Partly refunded";
   if (value === "refunded") return "Refunded";
+  if (value === "reserved") return "Reserved";
+  if (value === "cancelled") return "Cancelled";
   if (value === "pending") return "Waiting for payment";
   if (value === "expired") return "Not paid";
   return value;
+}
+
+const TORONTO = "America/Toronto";
+const WEEKDAY_SHORT: Record<string, number> = {
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
+export function torontoWeekday(now = new Date()) {
+  const short = new Intl.DateTimeFormat("en-US", { timeZone: TORONTO, weekday: "short" }).format(now);
+  return WEEKDAY_SHORT[short] ?? 0;
+}
+
+/** A Toronto wall-clock time as a UTC instant. */
+export function torontoInstant(date: string, opensAt: string) {
+  const hm = opensAt.slice(0, 5);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(hm)) return null;
+  const utcGuess = new Date(`${date}T${hm}:00Z`);
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TORONTO,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(utcGuess);
+  const read = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
+  const shown = Date.UTC(
+    Number(read("year")),
+    Number(read("month")) - 1,
+    Number(read("day")),
+    Number(read("hour")),
+    Number(read("minute")),
+  );
+  const wanted = Date.UTC(
+    Number(date.slice(0, 4)),
+    Number(date.slice(5, 7)) - 1,
+    Number(date.slice(8, 10)),
+    Number(hm.slice(0, 2)),
+    Number(hm.slice(3, 5)),
+  );
+  return new Date(utcGuess.getTime() + (wanted - shown)).toISOString();
+}
+
+export function sameDayPickupStart(
+  now: Date,
+  sessions: Array<{
+    weekday: number;
+    opensAt: string;
+    seasonStart: string | null;
+    seasonEnd: string | null;
+  }>,
+) {
+  const weekday = torontoWeekday(now);
+  const opens = sessions
+    .filter(
+      (session) =>
+        session.weekday === weekday && inSeason(now, session.seasonStart, session.seasonEnd, TORONTO),
+    )
+    .map((session) => session.opensAt.slice(0, 5))
+    .filter((value) => /^\d{2}:\d{2}$/.test(value))
+    .sort();
+  const earliest = opens[0];
+  if (!earliest) return null;
+  return torontoInstant(torontoDate(now), earliest);
+}
+
+/** Full refund while the stall has not marked it ready, or the pickup window has not started. */
+export function shopperCancelAllowed(input: {
+  status: string;
+  readyAt: string | null;
+  pickupStartsAt: string | null;
+  now?: Date;
+}) {
+  if (input.status !== "paid" && input.status !== "reserved") return false;
+  if (input.status === "reserved") return !input.readyAt;
+  if (!input.readyAt) return true;
+  if (!input.pickupStartsAt) return false;
+  const starts = Date.parse(input.pickupStartsAt);
+  if (!Number.isFinite(starts)) return false;
+  return (input.now ?? new Date()).getTime() < starts;
 }
 
 function clip(raw: string, max: number) {
@@ -234,11 +407,9 @@ export function parseCheckoutDetails(input: {
   offers: CheckoutOffers;
 }): { error: string } | { error: null; details: CheckoutDetails } {
   const fulfillment = input.fulfillment;
-  if (fulfillment !== "delivery" && fulfillment !== "pickup" && fulfillment !== "preorder") {
-    return { error: "Pick delivery, pickup, or preorder." };
-  }
-  if (fulfillment === "delivery" && !input.offers.delivery) {
-    return { error: "This item is not offered for delivery." };
+  if (fulfillment === "delivery") return { error: "Delivery is not available." };
+  if (fulfillment !== "pickup" && fulfillment !== "preorder") {
+    return { error: "Pick pickup or preorder." };
   }
   if (fulfillment === "pickup" && !input.offers.pickup) {
     return { error: "This item is not offered for pickup." };
@@ -256,31 +427,8 @@ export function parseCheckoutDetails(input: {
 
   const note = clip(input.note, MAX_NOTE);
   if (note === "long") return { error: "Keep the note shorter." };
-
-  if (fulfillment !== "delivery") {
-    if (!note) return { error: "Add a note for the stall." };
-    return { error: null, details: { fulfillment, quantity, note, delivery: null } };
-  }
-
-  const name = clip(input.deliveryName, 120);
-  const line1 = clip(input.line1, 200);
-  const city = clip(input.city, 80);
-  const region = clip(input.region, 40);
-  const postalRaw = input.postal.trim().toUpperCase();
-  if (name === "long" || line1 === "long" || city === "long" || region === "long") {
-    return { error: "Keep the address shorter." };
-  }
-  if (!name || !line1 || !city || !region) return { error: "Add the delivery address." };
-  if (!POSTAL.test(postalRaw)) return { error: "That postal code is not allowed." };
-  return {
-    error: null,
-    details: {
-      fulfillment,
-      quantity,
-      note,
-      delivery: { name, line1, city, region, postal: postalRaw },
-    },
-  };
+  if (!note) return { error: "Add a note for the stall." };
+  return { error: null, details: { fulfillment, quantity, note, delivery: null } };
 }
 
 export function saleReady(input: {
@@ -292,8 +440,8 @@ export function saleReady(input: {
   if (input.priceCents == null || input.priceCents < MIN_CHARGE_CENTS) {
     return "A sale needs a price of at least $0.50.";
   }
-  if (!input.offers.delivery && !input.offers.pickup && !input.offers.preorder) {
-    return "Pick delivery, pickup, or preorder.";
+  if (!input.offers.pickup && !input.offers.preorder) {
+    return "Pick pickup or preorder.";
   }
   return null;
 }

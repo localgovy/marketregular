@@ -4,7 +4,12 @@ import { useActionState, useEffect, useState } from "react";
 import { shrinkLogoInput } from "@/lib/shrink-logo";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { beginStallPayments, payStallFee } from "@/app/actions/selling";
+import {
+  beginStallPayments,
+  markStallOrderReady,
+  openStallDashboard,
+  saveStallPickupStart,
+} from "@/app/actions/selling";
 import {
   clearOwnedLogo,
   deleteOwnedMenuItem,
@@ -42,7 +47,7 @@ import {
   type PortalStall,
 } from "@/lib/vendor-portal";
 import { SITE_NAME } from "@/lib/constants";
-import { feeDueLabel, fulfillmentLabel, orderStatusLabel, VENDOR_SALES_OPEN } from "@/lib/selling";
+import { fulfillmentLabel, orderStatusLabel, VENDOR_SALES_OPEN } from "@/lib/selling";
 import { formatPrice } from "@/lib/format";
 
 const PRODUCT_TAG_SET = new Set<string>(PRODUCT_TAGS);
@@ -362,17 +367,76 @@ function LogoForm({ listing }: { listing: PortalListing }) {
   );
 }
 
+function StallOrderControls({
+  vendorId,
+  orderId,
+  readyAt,
+  pickupStartsAt,
+}: {
+  vendorId: string;
+  orderId: string;
+  readyAt: string | null;
+  pickupStartsAt: string | null;
+}) {
+  const [readyState, markReady, readyPending] = useActionState(
+    (_prev: PortalResult | undefined, formData: FormData) => markStallOrderReady(formData),
+    undefined,
+  );
+  const [timeState, saveTime, timePending] = useActionState(
+    (_prev: PortalResult | undefined, formData: FormData) => saveStallPickupStart(formData),
+    undefined,
+  );
+  usePortalRefresh(readyState);
+  usePortalRefresh(timeState);
+  return (
+    <div className="mt-2 flex flex-wrap items-end gap-3">
+      {readyAt ? null : (
+        <form action={markReady} className="flex flex-wrap items-center gap-2">
+          <input type="hidden" name="vendor_id" value={vendorId} />
+          <input type="hidden" name="order_id" value={orderId} />
+          <Button type="submit" variant="outline" disabled={readyPending}>
+            {readyPending ? "Saving…" : "Ready for pickup"}
+          </Button>
+          {readyState?.error ? <p className="text-sm text-destructive">{readyState.error}</p> : null}
+          {readyState?.message ? <p className="text-sm text-muted-foreground">{readyState.message}</p> : null}
+        </form>
+      )}
+      <form action={saveTime} className="flex flex-wrap items-end gap-2">
+        <input type="hidden" name="vendor_id" value={vendorId} />
+        <input type="hidden" name="order_id" value={orderId} />
+        <div className="grid gap-1">
+          <Label htmlFor={`${orderId}-pickup`}>Pickup starts</Label>
+          <Input id={`${orderId}-pickup`} name="pickup_starts" type="datetime-local" required />
+          {pickupStartsAt ? (
+            <p className="text-sm text-muted-foreground">
+              Saved for{" "}
+              {new Intl.DateTimeFormat("en-CA", {
+                timeZone: "America/Toronto",
+                dateStyle: "medium",
+                timeStyle: "short",
+              }).format(new Date(pickupStartsAt))}
+              .
+            </p>
+          ) : null}
+        </div>
+        <Button type="submit" variant="outline" disabled={timePending}>
+          {timePending ? "Saving…" : "Save time"}
+        </Button>
+        {timeState?.error ? <p className="text-sm text-destructive">{timeState.error}</p> : null}
+      </form>
+    </div>
+  );
+}
+
 function SaleFields({
   id,
   forSale,
-  delivery,
   pickup,
   preorder,
   terms,
 }: {
   id: string;
   forSale: boolean;
-  delivery: boolean;
   pickup: boolean;
   preorder: boolean;
   terms: string;
@@ -386,10 +450,6 @@ function SaleFields({
       </label>
       <div className="flex flex-wrap gap-4">
         <label className="flex items-baseline gap-2 text-sm">
-          <input type="checkbox" name="offer_delivery" defaultChecked={delivery} className="accent-primary" />
-          <span>Delivery</span>
-        </label>
-        <label className="flex items-baseline gap-2 text-sm">
           <input type="checkbox" name="offer_pickup" defaultChecked={pickup} className="accent-primary" />
           <span>Pickup</span>
         </label>
@@ -402,11 +462,13 @@ function SaleFields({
         <Label htmlFor={`${id}-terms`}>Terms</Label>
         <Textarea id={`${id}-terms`} name="offer_terms" rows={4} maxLength={4000} defaultValue={terms} />
         <p className="text-sm text-muted-foreground">
-          Buyers see this before they pay. Refunds and handing the item over stay with this stall.
+          Buyers see this before they pay. Refunds and handing the item over stay with this stall. Stripe
+          usually keeps its card processing fee on a refund, and that cost stays with this stall.
         </p>
       </div>
       <p className="text-sm text-muted-foreground">
-        A sale needs a price of at least $0.50 and one way to hand it over. Buyers pay you. The stall fee is separate.
+        A sale needs a price of at least $0.50, and pickup or preorder. Buyers pay you. Alcohol is reserved
+        and paid at the stall.
       </p>
     </fieldset>
   );
@@ -474,7 +536,6 @@ function MenuItemForm({
           <SaleFields
             id={field}
             forSale={item.for_sale}
-            delivery={item.offer_delivery}
             pickup={item.offer_pickup}
             preorder={item.offer_preorder}
             terms={item.offer_terms ?? ""}
@@ -537,7 +598,7 @@ function AddMenuItem({ vendorId, sections }: { vendorId: string; sections: MenuS
         </div>
         <MenuSectionFields id={`${vendorId}-new`} sections={sections} />
         {VENDOR_SALES_OPEN ? (
-          <SaleFields id={`${vendorId}-new`} forSale={false} delivery={false} pickup={false} preorder={false} terms="" />
+          <SaleFields id={`${vendorId}-new`} forSale={false} pickup={false} preorder={false} terms="" />
         ) : null}
         <div className="sm:col-span-2">
           <Button type="submit" disabled={pending}>
@@ -735,13 +796,11 @@ export function VendorPortalEditor({
 }) {
   const menuSections = menuSectionsFromItems(listing.menus);
   const full = listing.stalls.length >= 40;
-  const balance = formatPrice(listing.fee_balance_cents);
-  const due = feeDueLabel(listing.fee_due_on);
-  const [payState, pay, payPending] = useActionState(
-    (_prev: { error: string | null } | undefined, formData: FormData) => payStallFee(formData),
+  const [setupState, setup, setupPending] = useActionState(startPayments, undefined);
+  const [dashboardState, dashboard, dashboardPending] = useActionState(
+    (_prev: { error: string | null } | undefined, formData: FormData) => openStallDashboard(formData),
     undefined,
   );
-  const [setupState, setup, setupPending] = useActionState(startPayments, undefined);
   usePortalRefresh(setupState);
 
   return (
@@ -759,38 +818,16 @@ export function VendorPortalEditor({
         {listing.selling_approved ? (
           <div className="mt-4 grid gap-4">
             <p className="text-sm text-muted-foreground">
-              Buyers pay this stall. A separate fee of 3.5% plus $0.25 is kept on each paid checkout.
-              It is not added to the buyer&apos;s payment.
-              {due && listing.fee_balance_cents > 0 ? ` Unpaid fees are due ${due}.` : ""}
+              Buyers pay this stall. MarketRegular keeps {listing.commission_bps / 100}% of the item
+              subtotal
+              {listing.commission_flat_cents > 0
+                ? ` plus ${formatPrice(listing.commission_flat_cents)} on each order`
+                : ""}
+              . The shopper also pays a service fee of $0.50 when the order is under $15, or $0.99 when it
+              is $15 or more. That fee is its own line, and the percentage is not charged on it. Stripe&apos;s
+              card processing fee comes out of this stall. On a refund, Stripe usually keeps that processing
+              fee.
             </p>
-            <p className="text-base">
-              {listing.fee_balance_cents > 0 ? (
-                <>
-                  Balance due <span className="type-nums">{balance}</span>
-                </>
-              ) : listing.fee_balance_cents < 0 ? (
-                <>
-                  Credit <span className="type-nums">{formatPrice(Math.abs(listing.fee_balance_cents))}</span>. It
-                  comes off the next stall fee.
-                </>
-              ) : (
-                "No stall fee is waiting."
-              )}
-            </p>
-            {listing.fee_balance_cents > 0 && listing.fee_balance_cents < 50 ? (
-              <p className="text-sm text-muted-foreground">
-                This balance is under $0.50. It stays due, and you can pay it here once it reaches $0.50.
-              </p>
-            ) : null}
-            {listing.fee_balance_cents >= 50 ? (
-              <form action={pay} className="flex flex-wrap items-center gap-3">
-                <input type="hidden" name="vendor_id" value={listing.id} />
-                <Button type="submit" disabled={payPending}>
-                  {payPending ? "Starting payment…" : "Pay balance"}
-                </Button>
-                {payState?.error ? <p className="text-sm text-destructive">{payState.error}</p> : null}
-              </form>
-            ) : null}
             {paymentsConfigured ? (
               listing.payments_started ? (
                 <div className="grid gap-3">
@@ -798,9 +835,17 @@ export function VendorPortalEditor({
                     {listing.card_payments_active
                       ? "Card payments are on."
                       : "Finish the payment setup before a Buy button can show."}
-                    {listing.payouts_active ? " Payouts are on." : " Payouts are not on yet."} The full dashboard is at
-                    dashboard.stripe.com.
+                    {listing.payouts_active ? " Payouts are on." : " Payouts are not on yet."}
                   </p>
+                  <form action={dashboard} className="flex flex-wrap items-center gap-3">
+                    <input type="hidden" name="vendor_id" value={listing.id} />
+                    <Button type="submit" variant="outline" disabled={dashboardPending}>
+                      {dashboardPending ? "Opening…" : "Open stall dashboard"}
+                    </Button>
+                    {dashboardState?.error ? (
+                      <p className="text-sm text-destructive">{dashboardState.error}</p>
+                    ) : null}
+                  </form>
                   <StallConnect vendorId={listing.id} cardPaymentsActive={listing.card_payments_active} />
                 </div>
               ) : (
@@ -821,9 +866,20 @@ export function VendorPortalEditor({
                   <li key={order.id} className="grid gap-1 py-3">
                     <p className="text-base font-medium">{order.item_name}</p>
                     <p className="type-nums text-sm text-muted-foreground">
-                      {order.quantity} · {formatPrice(order.charge_cents)} · {fulfillmentLabel(order.fulfillment)} ·{" "}
-                      {orderStatusLabel(order.status)}
+                      {order.quantity} · {formatPrice(order.charge_cents)}
+                      {order.service_fee_cents > 0
+                        ? ` plus ${formatPrice(order.service_fee_cents)} service fee`
+                        : ""}{" "}
+                      · {fulfillmentLabel(order.fulfillment)} · {orderStatusLabel(order.status, order.ready_at)}
                     </p>
+                    {order.status === "paid" || order.status === "reserved" ? (
+                      <StallOrderControls
+                        vendorId={listing.id}
+                        orderId={order.id}
+                        readyAt={order.ready_at}
+                        pickupStartsAt={order.pickup_starts_at}
+                      />
+                    ) : null}
                     {order.buyer_email ? (
                       <p className="text-sm text-muted-foreground">{order.buyer_email}</p>
                     ) : null}
@@ -846,7 +902,7 @@ export function VendorPortalEditor({
           </div>
         ) : (
           <p className="mt-2 text-sm text-muted-foreground">
-            Selling is off until {SITE_NAME} turns it on. You can still set delivery, pickup, or preorder on an item.
+            Selling is off until {SITE_NAME} turns it on. You can still set pickup or preorder on an item.
           </p>
         )}
       </section>

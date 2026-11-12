@@ -52,6 +52,9 @@ export type PortalOrder = {
   delivery_postal: string | null;
   buyer_email: string | null;
   paid_at: string | null;
+  service_fee_cents: number;
+  ready_at: string | null;
+  pickup_starts_at: string | null;
 };
 
 export type PortalStall = {
@@ -84,6 +87,8 @@ export type PortalListing = {
   card_payments_active: boolean;
   payouts_active: boolean;
   payments_started: boolean;
+  commission_bps: number;
+  commission_flat_cents: number;
   fee_balance_cents: number;
   fee_due_on: string | null;
   menus: PortalMenuItem[];
@@ -314,6 +319,12 @@ function parseOrder(value: unknown): PortalOrder | null {
     delivery_postal: textOrNull(row.delivery_postal),
     buyer_email: textOrNull(row.buyer_email),
     paid_at: textOrNull(row.paid_at),
+    service_fee_cents:
+      typeof row.service_fee_cents === "number" && Number.isInteger(row.service_fee_cents)
+        ? row.service_fee_cents
+        : 0,
+    ready_at: textOrNull(row.ready_at),
+    pickup_starts_at: textOrNull(row.pickup_starts_at),
   };
 }
 
@@ -358,6 +369,14 @@ function parseListing(value: unknown): PortalListing | null {
     card_payments_active: flag(row.card_payments_active),
     payouts_active: flag(row.payouts_active),
     payments_started: flag(row.payments_started),
+    commission_bps:
+      typeof row.commission_bps === "number" && Number.isInteger(row.commission_bps)
+        ? row.commission_bps
+        : 400,
+    commission_flat_cents:
+      typeof row.commission_flat_cents === "number" && Number.isInteger(row.commission_flat_cents)
+        ? row.commission_flat_cents
+        : 0,
     fee_balance_cents:
       typeof row.fee_balance_cents === "number" && Number.isInteger(row.fee_balance_cents)
         ? row.fee_balance_cents
