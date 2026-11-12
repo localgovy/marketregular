@@ -8,6 +8,7 @@ import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import {
   applicationFeeCents,
   applicationFeeRefundCents,
+  cardStatementDescriptor,
   checkoutAmountMatches,
   checkoutTotalCents,
   feeAfterRefund,
@@ -125,9 +126,11 @@ export async function refreshStallCapabilities(vendorId: string) {
     .maybeSingle();
   if (!row || typeof row.stripe_account_id !== "string") return null;
   const accountId = row.stripe_account_id;
-  const account = await stripe.v2.core.accounts.retrieve(accountId, {
-    include: ["configuration.merchant"],
-  });
+  const account = await stripe.v2.core.accounts.retrieve(
+    accountId,
+    { include: ["configuration.merchant"] },
+    { apiVersion: CONNECT_PREVIEW_API_VERSION },
+  );
   const flags = capabilityFlags(account);
   const changed =
     flags.cardPaymentsActive !== row.card_payments_active ||
@@ -181,6 +184,7 @@ export async function createStallAccount(input: {
   userId: string;
   displayName: string;
   email: string;
+  supportEmail?: string | null;
 }) {
   const stripe = getStripe();
   const db = service();
@@ -218,32 +222,60 @@ export async function createStallAccount(input: {
 
   // The idempotency key retries the account this owner created. Ownership lives
   // on vendor_stripe_accounts, not on metadata the stall could edit.
-  const account = await stripe.v2.core.accounts.create({
+  const descriptor = cardStatementDescriptor(input.displayName);
+  const publishedSupport = input.supportEmail?.trim() ?? "";
+  const support = publishedSupport.includes("@") ? { email: publishedSupport } : null;
+  const accountParams = {
     display_name: input.displayName.slice(0, 200),
     contact_email: input.email,
-    dashboard: "express",
-    identity: { country: "ca" },
+    dashboard: "express" as const,
+    identity: { country: "ca" as const },
     configuration: {
       merchant: {
         capabilities: {
-          card_payments: { requested: true },
+          card_payments: { requested: true as const },
         },
+        ...(descriptor ? { statement_descriptor: { descriptor } } : {}),
+        ...(support ? { support } : {}),
       },
     },
     defaults: {
-      currency: "cad",
-      locales: ["en-CA"],
+      currency: "cad" as const,
+      locales: ["en-CA" as const],
       responsibilities: {
-        fees_collector: "stripe",
-        losses_collector: "stripe",
+        fees_collector: "stripe" as const,
+        losses_collector: "stripe" as const,
       },
     },
     metadata: { vendor_id: input.vendorId, owner_user_id: input.userId },
-    include: ["configuration.merchant"],
-  }, {
+    include: ["configuration.merchant" as const],
+  };
+  const accountOptions = {
     idempotencyKey: `stall-account-${input.vendorId}-${input.userId}`,
     apiVersion: CONNECT_PREVIEW_API_VERSION,
-  });
+  };
+  let account;
+  try {
+    account = await stripe.v2.core.accounts.create(accountParams, accountOptions);
+  } catch (err) {
+    const status =
+      err && typeof err === "object" && "statusCode" in err ? Number(err.statusCode) : 0;
+    if (status < 400 || status >= 500) throw err;
+    account = await stripe.v2.core.accounts.create(
+      {
+        ...accountParams,
+        configuration: {
+          merchant: {
+            capabilities: { card_payments: { requested: true } },
+          },
+        },
+      },
+      {
+        idempotencyKey: `stall-account-${input.vendorId}-${input.userId}-plain`,
+        apiVersion: CONNECT_PREVIEW_API_VERSION,
+      },
+    );
+  }
   const flags = capabilityFlags(account);
   const saved = await saveStallAccount(input.vendorId, account.id, input.userId, flags);
   if (saved.error) return { error: saved.error, accountId: null };
@@ -262,16 +294,19 @@ export async function createAccountSession(vendorId: string, userId: string) {
     .maybeSingle();
   const accountId = data?.stripe_account_id;
   if (typeof accountId !== "string") return null;
-  const session = await stripe.accountSessions.create({
-    account: accountId,
-    components: {
-      account_onboarding: { enabled: true },
-      notification_banner: { enabled: true },
-      account_management: { enabled: true },
-      payments: { enabled: true },
-      payouts: { enabled: true },
+  const session = await stripe.accountSessions.create(
+    {
+      account: accountId,
+      components: {
+        account_onboarding: { enabled: true },
+        notification_banner: { enabled: true },
+        account_management: { enabled: true },
+        payments: { enabled: true },
+        payouts: { enabled: true },
+      },
     },
-  });
+    { apiVersion: CONNECT_PREVIEW_API_VERSION },
+  );
   return session.client_secret;
 }
 
@@ -332,9 +367,9 @@ async function chargeAccountId(order: OrderRow) {
 }
 
 async function syncFee(order: OrderRow, actualApplicationFeeCents?: number | null) {
-  const db = service();
-  if (!db) return;
   if (order.status === "pending" || order.status === "expired" || order.status === "reserved") return;
+  const db = service();
+  if (!db) throw new Error("stall fee was not recorded");
   const parts = feeAfterRefund({
     subtotalCents: order.charge_cents,
     refundedSubtotalCents: order.refunded_cents,
@@ -374,11 +409,12 @@ async function syncFee(order: OrderRow, actualApplicationFeeCents?: number | nul
     earned_on: earnedOn,
   };
   if (existing) {
-    await db.from("platform_fees").update(row).eq("order_id", order.id);
+    const { error } = await db.from("platform_fees").update(row).eq("order_id", order.id);
+    if (error) throw new Error("stall fee was not recorded");
     return;
   }
   const { error } = await db.from("platform_fees").insert(row);
-  if (error && error.code !== "23505") console.error("stall fee", error.code);
+  if (error && error.code !== "23505") throw new Error("stall fee was not recorded");
 }
 
 export async function recordStallCheckout(
@@ -435,9 +471,9 @@ export async function recordStallCheckout(
     if (wasUnpaid && updated?.length) {
       const paid = await loadOrder(order.id);
       if (!paid) throw new Error("stall checkout was not recorded");
+      await sendPaidOrderMail(paid);
       await syncFee(paid, actualFee);
       await stampIntroWindow(paid);
-      await sendPaidOrderMail(paid);
       const slug = await vendorSlug(order.vendor_id);
       refreshDirectoryLater([slug ? `/vendors/${slug}` : ""]);
       return;
@@ -694,7 +730,10 @@ async function refundApplicationFee(
 
 async function applyChargeReturn(charge: Stripe.Charge, returned: number, stripeAccount: string | null) {
   if (returned <= 0) return;
-  if (charge.currency?.toLowerCase() !== "cad") return;
+  if (charge.currency?.toLowerCase() !== "cad") {
+    if (stripeAccount) throw new Error("stall refund was not recorded");
+    return;
+  }
   const order = await findOrderForCharge(charge, stripeAccount);
   if (order) {
     order.charge_cents = Number(order.charge_cents ?? 0);
@@ -706,11 +745,27 @@ async function applyChargeReturn(charge: Stripe.Charge, returned: number, stripe
     await refundApplicationFee(charge, stripeAccount, order, returned);
     return;
   }
-  if (!stripeAccount) await applyPlatformFeeReturn(charge, returned);
+  if (!stripeAccount) {
+    await applyPlatformFeeReturn(charge, returned);
+    return;
+  }
+  throw new Error("stall refund was not recorded");
 }
 
 export async function applyStallRefund(charge: Stripe.Charge, stripeAccount: string | null) {
   await applyChargeReturn(charge, charge.amount_refunded, stripeAccount);
+}
+
+export async function applyRefundUpdate(refund: Stripe.Refund, stripeAccount: string | null) {
+  if (refund.status !== "succeeded") return;
+  const stripe = getStripe();
+  if (!stripe) throw new Error("stall refund was not recorded");
+  const chargeId = typeof refund.charge === "string" ? refund.charge : refund.charge?.id;
+  if (!chargeId) throw new Error("stall refund was not recorded");
+  const charge = stripeAccount
+    ? await stripe.charges.retrieve(chargeId, {}, { stripeAccount })
+    : await stripe.charges.retrieve(chargeId);
+  await applyStallRefund(charge, stripeAccount);
 }
 
 async function disputeCharge(dispute: Stripe.Dispute, stripeAccount: string | null) {
@@ -1042,7 +1097,20 @@ export async function startStallCheckout(input: {
         integration_identifier: integrationIdentifier("stall_checkout"),
         customer_email: input.email ?? undefined,
         client_reference_id: orderId,
+        // The order, fee, and refund are recorded in CAD. A converted charge would not match.
+        adaptive_pricing: { enabled: false },
+        // A bank debit or pay-later plan cannot be returned before the pickup window.
+        excluded_payment_method_types: [
+          "acss_debit",
+          "affirm",
+          "afterpay_clearpay",
+          "klarna",
+          "customer_balance",
+        ],
         automatic_tax: { enabled: false },
+        custom_text: {
+          submit: { message: `This pays ${sellable.vendor_name.slice(0, 80)}.` },
+        },
         metadata: {
           kind: "stall_order",
           order_id: orderId,
@@ -1225,8 +1293,19 @@ export async function markOrderReady(vendorId: string, orderId: string, userId: 
   }
   if (!order.ready_at) {
     const readyAt = new Date().toISOString();
-    const { error } = await db.from("orders").update({ ready_at: readyAt }).eq("id", order.id).is("ready_at", null);
+    const { data: ready, error } = await db
+      .from("orders")
+      .update({ ready_at: readyAt })
+      .eq("id", order.id)
+      .is("ready_at", null)
+      .is("disputed_at", null)
+      .select("id");
     if (error) return { error: "Could not mark that order ready." as const };
+    if (!ready?.length) {
+      const current = await loadOrder(order.id);
+      if (current?.disputed_at) return { error: "This order has a dispute. Wait until it closes." as const };
+      return { error: null };
+    }
     const fresh = await loadOrder(order.id);
     if (fresh?.buyer_email) {
       const context = await orderMailContext(fresh);
@@ -1289,6 +1368,7 @@ export async function cancelShopperOrder(orderId: string, buyerId: string) {
       status: loaded.status,
       readyAt: loaded.ready_at,
       pickupStartsAt: loaded.pickup_starts_at,
+      disputedAt: loaded.disputed_at,
     })
   ) {
     return { error: "This order can no longer be cancelled here." as const };

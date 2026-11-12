@@ -76,6 +76,7 @@ export async function beginStallPayments(formData: FormData) {
       userId: gate.user.id,
       displayName: gate.listing.name,
       email: gate.user.email,
+      supportEmail: gate.listing.email,
     });
     if (created.error) return { error: created.error };
   } catch (err) {

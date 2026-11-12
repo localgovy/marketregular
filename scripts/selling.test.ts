@@ -27,6 +27,7 @@ import {
   serviceFeeCents,
   serviceFeeRefunded,
   applicationFeeRefundCents,
+  cardStatementDescriptor,
   futurePickupStart,
   shopperCancelAllowed,
   torontoInstant,
@@ -349,6 +350,10 @@ test("checkout returns use the public site, not the request host", () => {
     }),
     false,
   );
+  assert.equal(cardStatementDescriptor("River Fruit"), "River Fruit");
+  assert.equal(cardStatementDescriptor("I'd Tap That"), "Id Tap That");
+  assert.equal(cardStatementDescriptor("Pie"), null);
+  assert.equal(cardStatementDescriptor("12345"), null);
   assert.equal(reservesAtStall("alcohol"), true);
   assert.equal(reservesAtStall("bread-and-bakery", true), true);
   assert.equal(reservesAtStall("bread-and-bakery"), false);

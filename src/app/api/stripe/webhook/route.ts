@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import {
   applyClosedDispute,
   applyOpenDispute,
+  applyRefundUpdate,
   applyStallRefund,
   expireStallCheckout,
   recordPlatformFee,
@@ -50,9 +51,21 @@ export async function POST(request: Request) {
       case "charge.refunded":
         await applyStallRefund(event.data.object as Stripe.Charge, event.account ?? null);
         break;
+      case "charge.refund.updated":
+        await applyRefundUpdate(event.data.object as Stripe.Refund, event.account ?? null);
+        break;
       case "charge.dispute.created":
+      case "charge.dispute.funds_withdrawn":
         await applyOpenDispute(event.data.object as Stripe.Dispute, event.account ?? null);
         break;
+      case "capability.updated": {
+        const capability = event.data.object as Stripe.Capability;
+        const accountId =
+          event.account ||
+          (typeof capability.account === "string" ? capability.account : capability.account.id);
+        if (accountId) await syncAccountEvent(accountId);
+        break;
+      }
       case "charge.dispute.closed":
         await applyClosedDispute(event.data.object as Stripe.Dispute, event.account ?? null);
         break;

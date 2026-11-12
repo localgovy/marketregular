@@ -122,6 +122,25 @@ export function scheduleForOverride(override: FeeOverride | null, now = new Date
   };
 }
 
+/**
+ * Text Stripe can print on a card statement. A name that is too short, or has
+ * no letter left after the special characters are removed, is left for the
+ * stall to enter during setup.
+ */
+export function cardStatementDescriptor(name: string) {
+  const cleaned = name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['’]/g, "")
+    .replace(/[^A-Za-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!/[A-Za-z]/.test(cleaned)) return null;
+  const clipped = cleaned.slice(0, 22).trim();
+  if (clipped.length < 5) return null;
+  return clipped;
+}
+
 /** Year one ends 12 calendar months after the first paid order. */
 export function introUntilFromFirstPaid(paidAt: Date) {
   const next = new Date(paidAt.getTime());
