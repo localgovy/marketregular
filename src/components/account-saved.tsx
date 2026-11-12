@@ -91,7 +91,7 @@ export function AccountSavedLists({
                     </span>
                   </div>
                   {hours ? (
-                    <span className="shrink-0 whitespace-nowrap py-2.5 text-sm text-muted-foreground">
+                    <span className="type-nums shrink-0 whitespace-nowrap py-2.5 text-sm text-muted-foreground">
                       {hours}
                     </span>
                   ) : (

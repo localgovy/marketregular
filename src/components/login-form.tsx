@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { requestPasswordReset, signInWithPassword } from "@/app/actions/auth";
 import { GoogleSignIn } from "@/components/google-sign-in";
+import { CaretLeftMark } from "@/components/marks";
 import { AuthLegalNote } from "@/components/auth-legal-note";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,10 +78,11 @@ export function LoginForm({
         </Button>
         <button
           type="button"
-          className="text-sm font-medium hover:underline"
+          aria-label="Back"
+          className="-ml-1 inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06] active:bg-foreground/[0.1]"
           onClick={() => setForgot(false)}
         >
-          Back to sign in
+          <CaretLeftMark className="size-5" />
         </button>
         {resetState && "error" in resetState && resetState.error ? (
           <p className="text-sm text-destructive">{resetState.error}</p>

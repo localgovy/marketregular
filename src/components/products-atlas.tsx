@@ -14,7 +14,8 @@ import {
 } from "@/components/product-catalogue";
 import { ProductDirectory } from "@/components/product-directory";
 import { ProductPhotoFrame } from "@/components/product-photo-frame";
-import { StallEmblem, VendorHitList } from "@/components/product-results";
+import { VendorHitList } from "@/components/product-results";
+import { StallEmblem } from "@/components/stall-emblem";
 import { ProductSearchForm } from "@/components/product-search-form";
 import { SortableProductHits } from "@/components/product-sort-list";
 import { FeaturedStallList, ProductsLiveStatus } from "@/components/products-live";
@@ -30,11 +31,8 @@ import type {
   ProductsAtlasSpotlight,
   ProductsAtlasStallPreview,
 } from "@/lib/products-atlas-data";
+import { formatCensus } from "@/lib/stall-plate";
 import { cn } from "@/lib/utils";
-
-function formatCensus(n: number) {
-  return n.toLocaleString("en-CA");
-}
 
 export function ProductsAtlas({
   q,

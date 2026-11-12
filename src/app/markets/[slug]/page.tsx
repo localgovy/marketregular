@@ -31,8 +31,6 @@ import { orderWeekdays } from "@/lib/schedule";
 import { publishesVendorRoster } from "@/lib/vendor-roster";
 import { serverNowMs } from "@/lib/clock";
 import { breadcrumbJsonLd, marketJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
-import { countLabel } from "@/lib/format";
-
 // Open state and today's roster run on the browser clock, and edits made in the
 // site revalidate this path. The day bounds rows changed directly in the database.
 export const revalidate = 86400;
@@ -188,7 +186,7 @@ export default async function MarketPage({
         </div>
       ) : null}
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(16rem,20rem)]">
+      <div className="mt-6">
         <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
           <h2>Hours</h2>
           {showSeasons ? (
@@ -225,36 +223,6 @@ export default async function MarketPage({
             </>
           )}
         </div>
-        {publishesVendorRoster(market.slug) && market.vendors.length ? (
-          <div>
-            <h2>Vendors</h2>
-            <ul className="mt-3 divide-y divide-border border-y border-border">
-              {market.vendors.slice(0, 3).map((vendor) => (
-                <li key={vendor.id}>
-                  <Link
-                    href={`/vendors/${vendor.slug}`}
-                    className="flex items-baseline justify-between gap-3 py-2 hover:underline"
-                  >
-                    <span className="min-w-0 font-medium">{vendor.name}</span>
-                    {vendor.stall ? (
-                      <span className="type-nums shrink-0 text-sm text-muted-foreground">
-                        {vendor.stall}
-                      </span>
-                    ) : null}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            {market.vendors.length > 3 ? (
-              <a
-                href="#vendors"
-                className="stall-chip mt-3 flex min-h-11 w-full items-center justify-center bg-primary px-4 py-3 text-center text-sm font-medium text-primary-foreground outline-none hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-foreground"
-              >
-                See all {countLabel(market.vendors.length, "vendor", "vendors")} for this market
-              </a>
-            ) : null}
-          </div>
-        ) : null}
       </div>
       {listingNote(market.slug) && !showSeasons ? (
         <p className="mt-2 max-w-2xl text-base text-muted-foreground">

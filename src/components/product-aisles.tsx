@@ -4,19 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { CaretRightMark, CrateMark, TagMark } from "@/components/marks";
 import { ProductPhotoFrame } from "@/components/product-photo-frame";
+import { directPublicImageSrc } from "@/components/stall-emblem";
 import type { ProductPhoto } from "@/lib/data/product-photos";
 import { productsBrowseHref, type CatalogueSort } from "@/lib/product-browse-href";
 import { BREAKFAST_ID, splitAisles, type CatalogueAisle } from "@/lib/product-catalogue";
 import type { ProductsAtlasStallPreview } from "@/lib/products-atlas-data";
 import { cn } from "@/lib/utils";
-
-function directPublicImageSrc(src: string | null | undefined): string | null {
-  if (!src) return null;
-  if (src.includes("/storage/v1/render/image/") || src.startsWith("/_next/image")) {
-    return null;
-  }
-  return src;
-}
 
 function ProductThumb({
   src,
@@ -82,7 +75,7 @@ export function ProductAisles({
   return (
     <section
       id="aisles"
-      aria-label="Market aisles and categories"
+      aria-label="Categories"
       className="scroll-mt-header mt-8 bg-card ring-1 ring-board"
     >
       {/* Section Header */}
@@ -91,7 +84,7 @@ export function ProductAisles({
           <span className="stall-chip-sm flex size-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
             <CrateMark className="size-5" />
           </span>
-          <h2 className="min-w-0">Market Aisles &amp; Crates</h2>
+          <h2 className="min-w-0">Categories</h2>
         </div>
 
         {aisle != null ? (
@@ -99,7 +92,7 @@ export function ProductAisles({
             href={productsBrowseHref(null, sort)}
             className="stall-chip-sm inline-flex items-center bg-card px-3 py-1.5 text-sm font-medium text-stamp ring-1 ring-border hover:bg-secondary"
           >
-            Show all aisles
+            Show all categories
           </Link>
         ) : null}
       </div>
@@ -212,7 +205,7 @@ export function ProductAisles({
         {/* Full Category & Aisle Filter Strip */}
         <div className="mt-5 border-t border-border pt-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="type-kicker mr-1 font-medium text-foreground">All aisles:</span>
+            <span className="type-kicker mr-1 font-medium text-foreground">All categories:</span>
             <Link
               href={productsBrowseHref(null, sort)}
               aria-current={aisle == null ? "true" : undefined}

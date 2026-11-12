@@ -180,6 +180,7 @@ export async function saveOwnedMenuItem(formData: FormData): Promise<PortalResul
           p_offer_terms: terms,
           p_menu_section: section.section,
           p_menu_section_order: section.order,
+          p_contains_alcohol: formData.get("contains_alcohol") === "on",
         }
       : {
           p_vendor_id: vendorId,

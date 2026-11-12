@@ -32,7 +32,8 @@ import {
 } from "@/app/preview/_components/live-markets-shared-imports";
 import { SEARCH_LABEL, SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
 import { marketsHref } from "@/lib/find-paths";
-import { formatPrice, listingMarkSrc } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
+import { directPublicImageSrc, formatCensus, StallEmblem } from "@/components/stall-emblem";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { cn } from "@/lib/utils";
 
@@ -89,81 +90,6 @@ const VARIANTS: Array<{
     ],
   },
 ];
-
-function formatCensus(n: number) {
-  return n.toLocaleString("en-CA");
-}
-
-function directPublicImageSrc(src: string | null | undefined): string | null {
-  if (!src) return null;
-  if (src.includes("/storage/v1/render/image/") || src.startsWith("/_next/image")) {
-    return null;
-  }
-  return src;
-}
-
-function StallEmblem({
-  src,
-  name,
-  kind = "vendor",
-  size = "md",
-  tone = "paper",
-  className,
-}: {
-  src: string | null | undefined;
-  name: string;
-  kind?: "vendor" | "market";
-  size?: "xs" | "sm" | "md" | "lg";
-  tone?: "paper" | "chalk" | "board";
-  className?: string;
-}) {
-  const url = directPublicImageSrc(listingMarkSrc(src));
-  const [failed, setFailed] = useState(false);
-  const showLogo = Boolean(url && !failed);
-
-  const sizeSpec = {
-    xs: { box: "size-6 p-0.5", px: 24, icon: "size-3.5" },
-    sm: { box: "size-8 p-1", px: 32, icon: "size-4" },
-    md: { box: "size-10 p-1", px: 40, icon: "size-5" },
-    lg: { box: "size-11 p-1", px: 44, icon: "size-5" },
-  }[size];
-
-  const toneClasses = {
-    paper: "bg-card text-board ring-1 ring-border",
-    chalk: "bg-primary-foreground text-primary ring-1 ring-black/15",
-    board: "bg-board text-chalk ring-1 ring-board",
-  }[tone];
-
-  return (
-    <span
-      aria-hidden
-      title={name}
-      className={cn(
-        "stall-chip-sm inline-flex shrink-0 items-center justify-center overflow-hidden select-none",
-        sizeSpec.box,
-        showLogo ? "bg-primary-foreground ring-1 ring-border" : toneClasses,
-        className,
-      )}
-    >
-      {showLogo && url ? (
-        <img
-          src={url}
-          alt=""
-          width={sizeSpec.px}
-          height={sizeSpec.px}
-          loading="lazy"
-          decoding="async"
-          className="block max-h-full max-w-full object-contain object-center"
-          onError={() => setFailed(true)}
-        />
-      ) : kind === "market" ? (
-        <RulesMark className={sizeSpec.icon} />
-      ) : (
-        <CrateMark className={sizeSpec.icon} />
-      )}
-    </span>
-  );
-}
 
 function ProductThumb({
   src,

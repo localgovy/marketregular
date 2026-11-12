@@ -4,101 +4,19 @@ import { useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
-import {
-  CaretRightMark,
-  CrateMark,
-  RulesMark,
-  WeekMark,
-} from "@/components/marks";
+import { CaretRightMark, WeekMark } from "@/components/marks";
+import { StallEmblem } from "@/components/stall-emblem";
 import { MenuItemPhoto } from "@/components/menu-item-photo";
 import { NowLabel } from "@/components/now-label";
 import { ProductSaveButton, SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
 import { WEEKDAYS } from "@/lib/constants";
 import type { FindVendor } from "@/lib/data/product-search";
-import { formatPrice, listingMarkSrc } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import { formatRatingAvg, formatReviewCountShort, listingScore } from "@/lib/listing-score";
 import type { ProductHit, VendorHit } from "@/lib/product-hits";
 import { productFromInput } from "@/lib/product-saves";
 import { cn } from "@/lib/utils";
-
-/**
- * Guard that guarantees an image URL never routes through Supabase's paid
- * `/storage/v1/render/image/` transform endpoint or Vercel's `/_next/image` optimizer.
- */
-function directPublicImageSrc(src: string | null | undefined): string | null {
-  if (!src) return null;
-  if (src.includes("/storage/v1/render/image/") || src.startsWith("/_next/image")) {
-    return null;
-  }
-  return src;
-}
-
-/**
- * Cohesive Stall / Market Emblem Plate (`StallEmblem`), matching `HomeAtlas` and `VendorAtlas`.
- */
-export function StallEmblem({
-  src,
-  name,
-  kind = "vendor",
-  size = "md",
-  tone = "paper",
-  className,
-}: {
-  src: string | null | undefined;
-  name: string;
-  kind?: "vendor" | "market";
-  size?: "xs" | "sm" | "md" | "lg";
-  tone?: "paper" | "chalk" | "board";
-  className?: string;
-}) {
-  const url = directPublicImageSrc(listingMarkSrc(src));
-  const [failed, setFailed] = useState(false);
-  const showLogo = Boolean(url && !failed);
-
-  const sizeSpec = {
-    xs: { box: "size-7 p-0.5", px: 28, icon: "size-3.5" },
-    sm: { box: "size-9 p-1", px: 36, icon: "size-4" },
-    md: { box: "size-11 p-1", px: 44, icon: "size-5" },
-    lg: { box: "size-14 p-1.5", px: 56, icon: "size-6" },
-  }[size];
-
-  const toneClasses = {
-    paper: "bg-card text-board ring-1 ring-border",
-    chalk: "bg-primary-foreground text-primary ring-1 ring-black/15",
-    board: "bg-board text-chalk ring-1 ring-board",
-  }[tone];
-
-  return (
-    <span
-      aria-hidden
-      title={name}
-      className={cn(
-        "stall-chip-sm inline-flex shrink-0 items-center justify-center overflow-hidden select-none",
-        sizeSpec.box,
-        showLogo ? "bg-primary-foreground ring-1 ring-border" : toneClasses,
-        className,
-      )}
-    >
-      {showLogo && url ? (
-        <img
-          src={url}
-          alt=""
-          width={sizeSpec.px}
-          height={sizeSpec.px}
-          loading="lazy"
-          decoding="async"
-          className="block max-h-full max-w-full object-contain object-center"
-          onError={() => setFailed(true)}
-        />
-      ) : kind === "market" ? (
-        <RulesMark className={sizeSpec.icon} />
-      ) : (
-        <CrateMark className={sizeSpec.icon} />
-      )}
-    </span>
-  );
-}
 
 /**
  * High-contrast score badge for dark forest-green (`bg-primary`) plate headers.

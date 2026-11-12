@@ -14,21 +14,13 @@ import {
   WeekMark,
 } from "@/components/marks";
 import { ProductPhotoFrame } from "@/components/product-photo-frame";
-import { StallEmblem } from "@/components/product-results";
+import { directPublicImageSrc, StallEmblem } from "@/components/stall-emblem";
 import { SortableFindVendors } from "@/components/product-sort-list";
 import { SaveButton } from "@/components/save-button";
 import { formatPrice } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { FindProductAtlasData } from "@/lib/products-atlas-data";
 import { cn } from "@/lib/utils";
-
-function directPublicImageSrc(src: string | null | undefined): string | null {
-  if (!src) return null;
-  if (src.includes("/storage/v1/render/image/") || src.startsWith("/_next/image")) {
-    return null;
-  }
-  return src;
-}
 
 function ProductThumb({
   src,
@@ -333,7 +325,7 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-receipt px-5 py-3 text-sm">
-            <span className="font-medium text-muted-foreground">Category aisle:</span>
+            <span className="font-medium text-muted-foreground">Category:</span>
             <Link
               href={aisleHref}
               className="inline-flex items-center gap-1 font-medium text-primary hover:underline"

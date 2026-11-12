@@ -274,7 +274,7 @@ export function FeedBoard({
         </p>
         {mentions.markets.length ? (
           <section className="mt-5">
-            <h3 className="text-sm font-medium">Markets</h3>
+            <p className="text-sm font-medium">Markets</p>
             <ul className="mt-1">
               {mentions.markets.map((place) => (
                 <li key={place.slug}>
@@ -300,7 +300,7 @@ export function FeedBoard({
         ) : null}
         {mentions.vendors.length ? (
           <section className="mt-5">
-            <h3 className="text-sm font-medium">Vendors</h3>
+            <p className="text-sm font-medium">Vendors</p>
             <ul className="mt-1">
               {mentions.vendors.map((place) => (
                 <li key={place.slug}>
@@ -321,7 +321,7 @@ export function FeedBoard({
         ) : null}
         {openMentions.length ? (
           <section className="mt-5">
-            <h3 className="text-sm font-medium">Open now</h3>
+            <p className="text-sm font-medium">Open now</p>
             <ul className="mt-1">
               {openMentions.map((place) => (
                 <li key={place.slug}>

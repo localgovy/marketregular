@@ -42,11 +42,11 @@ export default async function MarketOgImage({
   const { slug } = await params;
   const card = await loadMarketOg(slug);
   if (!card) {
-    return ogCard({
+    return await ogCard({
       kicker: `${LAUNCH_CITY} farmers' markets`,
       title: "Market",
       lines: [],
     });
   }
-  return ogCard(card);
+  return await ogCard(card);
 }

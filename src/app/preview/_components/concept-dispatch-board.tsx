@@ -32,11 +32,8 @@ import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item"
 import { SEARCH_LABEL } from "@/lib/constants";
 import { marketsHref, tagLabel } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { formatCensus } from "@/components/stall-emblem";
 import { cn } from "@/lib/utils";
-
-function formatCensus(n: number) {
-  return n.toLocaleString("en-CA");
-}
 
 type WindowFilter =
   | "all"

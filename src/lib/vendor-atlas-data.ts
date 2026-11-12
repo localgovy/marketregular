@@ -21,7 +21,7 @@ import { listingMarkSrc } from "@/lib/format";
 import { toGeoMarket, type GeoMarket } from "@/lib/geo";
 import { listingIsClaimed } from "@/lib/listing-claimed";
 import type { ListingContactFields } from "@/lib/listing-substance";
-import { isAlcoholCategory, visiblePriceCents } from "@/lib/product-hits";
+import { reservesAtStall, visiblePriceCents } from "@/lib/product-hits";
 import type { ScheduleRow } from "@/lib/schedule";
 import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeChargesConfigured } from "@/lib/stripe";
@@ -367,13 +367,13 @@ export async function buildVendorAtlasData({
       : `Compare in ${productCategoryLabel.toLowerCase()}`;
     const compareVendorsCount = matchedFindPage?.vendors ?? null;
 
-    const priceCents = visiblePriceCents(productCategory, item.price_cents);
-    const alcohol = isAlcoholCategory(rawCategory);
+    const alcohol = reservesAtStall(rawCategory, item.contains_alcohol === true);
+    const priceCents = visiblePriceCents(alcohol ? "alcohol" : productCategory, item.price_cents);
     const canReserve = Boolean(VENDOR_SALES_OPEN && item.can_buy && alcohol);
     const canBuy = Boolean(liveSalesEnabled && item.can_buy && priceCents != null && !alcohol);
     const pickup = Boolean(item.offer_pickup);
     const preorder = Boolean(item.offer_preorder);
-    const delivery = Boolean(item.offer_delivery);
+    const delivery = false;
 
     const namedSection = item.menu_section?.trim() || null;
     const section = namedSection || productCategoryLabel;

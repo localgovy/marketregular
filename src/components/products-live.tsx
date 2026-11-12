@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { BlocksMark, CaretRightMark, WeekMark } from "@/components/marks";
 import { NowLabel } from "@/components/now-label";
-import { StallEmblem } from "@/components/product-results";
+import { StallEmblem } from "@/components/stall-emblem";
 import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
 import { formatPrice } from "@/lib/format";

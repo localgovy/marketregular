@@ -34,13 +34,10 @@ import { VerifiedName } from "@/components/verified-stamp";
 import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item";
 import { SEARCH_LABEL, SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
 import { marketsHref, tagLabel } from "@/lib/find-paths";
-import { formatPrice, listingMarkSrc } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
+import { formatCensus, StallEmblem } from "@/components/stall-emblem";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { cn } from "@/lib/utils";
-
-function formatCensus(n: number) {
-  return n.toLocaleString("en-CA");
-}
 
 function SessionLines({
   sessions,
@@ -74,80 +71,6 @@ function SessionLines({
         </li>
       ))}
     </ul>
-  );
-}
-
-/**
- * Cohesive Stall / Hall Emblem Plate (`StallEmblem`).
- * Renders the listing's real logo inside a framed paper plate, or falls back to a tactile
- * woodcut stamp / monogram plate so every single vendor and market row has a uniform visual anchor.
- */
-function StallEmblem({
-  src,
-  name,
-  kind = "vendor",
-  size = "md",
-  tone = "paper",
-  className,
-}: {
-  src: string | null | undefined;
-  name: string;
-  kind?: "vendor" | "market";
-  size?: "xs" | "sm" | "md" | "lg";
-  tone?: "paper" | "chalk" | "board";
-  className?: string;
-}) {
-  const url = listingMarkSrc(src);
-  const [failed, setFailed] = useState(false);
-  const showLogo = Boolean(url && !failed);
-
-  const sizeClasses = {
-    xs: "size-6 p-0.5",
-    sm: "size-8 p-1",
-    md: "size-10 p-1",
-    lg: "size-11 p-1",
-  }[size];
-
-  const iconClasses = {
-    xs: "size-3.5",
-    sm: "size-4",
-    md: "size-5",
-    lg: "size-5",
-  }[size];
-
-  const toneClasses = {
-    paper: "bg-card text-board ring-1 ring-border",
-    chalk: "bg-primary-foreground text-primary ring-1 ring-black/15",
-    board: "bg-board text-chalk ring-1 ring-board",
-  }[tone];
-
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "stall-chip-sm inline-flex shrink-0 items-center justify-center overflow-hidden select-none",
-        sizeClasses,
-        showLogo ? "bg-primary-foreground ring-1 ring-border" : toneClasses,
-        className,
-      )}
-    >
-      {showLogo && url ? (
-        <img
-          src={url}
-          alt=""
-          width={36}
-          height={36}
-          loading="lazy"
-          decoding="async"
-          className="block max-h-full max-w-full object-contain object-center"
-          onError={() => setFailed(true)}
-        />
-      ) : kind === "market" ? (
-        <RulesMark className={iconClasses} />
-      ) : (
-        <CrateMark className={iconClasses} />
-      )}
-    </span>
   );
 }
 

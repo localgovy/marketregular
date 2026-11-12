@@ -26,6 +26,7 @@ export type OrderMailInput = {
     service_fee_cents: number;
     fulfillment: string;
     buyer_email: string | null;
+    status?: string;
   };
   vendorName: string;
   vendorSlug: string;
@@ -43,11 +44,19 @@ export function orderLetter(input: OrderMailInput, audience: "shopper" | "stall"
   const url = orderUrl(input.vendorSlug, input.order.id);
   const lines =
     input.kind === "ready"
-      ? [
-          `${input.order.item_name} is ready for pickup at ${input.vendorName}.`,
-          `${input.order.quantity} · ${price} · ${how}`,
-          url,
-        ]
+      ? input.order.status === "reserved"
+        ? [
+            `${input.order.item_name} is ready for pickup at ${input.vendorName}. Pay at the stall and show ID.`,
+            `${input.order.quantity} · ${price} · ${how}`,
+            url,
+          ]
+        : [
+            `${input.order.item_name} is ready for pickup at ${input.vendorName}.`,
+            service
+              ? `${input.order.quantity} · ${price} plus ${service} service fee · ${how}`
+              : `${input.order.quantity} · ${price} · ${how}`,
+            url,
+          ]
       : input.kind === "cancelled"
         ? [
             audience === "stall"

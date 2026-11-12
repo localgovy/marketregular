@@ -21,94 +21,16 @@ import { NowLabel } from "@/components/now-label";
 import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
-import { formatPrice, listingMarkSrc } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import { formatRatingAvg, formatReviewCountShort, listingScore } from "@/lib/listing-score";
+import {
+  directPublicImageSrc,
+  formatCensus,
+  StallEmblem,
+} from "@/components/stall-emblem";
 import { cn } from "@/lib/utils";
 
-export function formatCensus(n: number) {
-  return n.toLocaleString("en-CA");
-}
-
-/**
- * Guard that guarantees an image URL never routes through Supabase's paid
- * `/storage/v1/render/image/` transform endpoint or Vercel's `/_next/image` optimizer.
- */
-export function directPublicImageSrc(src: string | null | undefined): string | null {
-  if (!src) return null;
-  if (src.includes("/storage/v1/render/image/") || src.startsWith("/_next/image")) {
-    return null;
-  }
-  return src;
-}
-
-/**
- * Cohesive Stall / Market Emblem Plate (`StallEmblem`), matching `HomeAtlas`, `VendorAtlas`, and `ProductsAtlas`.
- */
-export function StallEmblem({
-  src,
-  name,
-  kind = "market",
-  size = "md",
-  tone = "paper",
-  className,
-}: {
-  src: string | null | undefined;
-  name: string;
-  kind?: "vendor" | "market";
-  size?: "xs" | "sm" | "md" | "lg";
-  tone?: "paper" | "chalk" | "board";
-  className?: string;
-}) {
-  const url = directPublicImageSrc(listingMarkSrc(src));
-  const [failed, setFailed] = useState(false);
-  const showLogo = Boolean(url && !failed);
-
-  const sizeSpec = {
-    xs: { box: "size-6 p-0.5", px: 24, icon: "size-3.5" },
-    sm: { box: "size-8 p-1", px: 32, icon: "size-4" },
-    md: { box: "size-11 p-1", px: 44, icon: "size-5" },
-    lg: { box: "size-14 p-1.5", px: 56, icon: "size-6" },
-  }[size];
-
-  const toneClasses = {
-    paper: "bg-card text-board ring-1 ring-border",
-    chalk: "bg-primary-foreground text-primary ring-1 ring-black/15",
-    board: "bg-board text-chalk ring-1 ring-board",
-  }[tone];
-
-  return (
-    <span
-      aria-hidden
-      title={name}
-      className={cn(
-        "stall-chip-sm inline-flex shrink-0 items-center justify-center overflow-hidden select-none",
-        sizeSpec.box,
-        showLogo ? "bg-primary-foreground ring-1 ring-border" : toneClasses,
-        className,
-      )}
-    >
-      {showLogo && url ? (
-        <img
-          src={url}
-          alt=""
-          width={sizeSpec.px}
-          height={sizeSpec.px}
-          loading="lazy"
-          decoding="async"
-          className="block max-h-full max-w-full object-contain object-center"
-          onError={() => setFailed(true)}
-        />
-      ) : kind === "market" ? (
-        <RulesMark className={sizeSpec.icon} />
-      ) : (
-        <CrateMark className={sizeSpec.icon} />
-      )}
-    </span>
-  );
-}
-
-/** Same plate as a stall emblem. Market concept pages ask for it by this name. */
-export const MarketEmblem = StallEmblem;
+export { directPublicImageSrc, formatCensus, StallEmblem };
 
 export function CensusStrip({ data }: { data: MarketsPreviewData }) {
   return (

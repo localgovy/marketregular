@@ -33,11 +33,8 @@ import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item"
 import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/lib/constants";
 import { marketsHref, tagLabel, whenOptions } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
+import { formatCensus } from "@/components/stall-emblem";
 import { cn } from "@/lib/utils";
-
-function formatCensus(n: number) {
-  return n.toLocaleString("en-CA");
-}
 
 export function ConceptBroadsheet({
   data,

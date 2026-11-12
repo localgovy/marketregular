@@ -187,6 +187,7 @@ export type MenuItem = {
   offer_preorder?: boolean;
   offer_terms?: string | null;
   can_buy?: boolean;
+  contains_alcohol?: boolean;
   image_url?: string | null;
 };
 

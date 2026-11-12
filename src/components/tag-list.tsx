@@ -14,7 +14,7 @@ export function TagList({
     <ul className={cn("flex flex-wrap gap-1.5", className)}>
       {tags.map((tag) => (
         <li key={tag}>
-          <Badge variant="secondary" className="font-normal">
+          <Badge variant="secondary" className="h-auto px-2.5 py-1 text-sm font-normal">
             {tagLabel(tag)}
           </Badge>
         </li>

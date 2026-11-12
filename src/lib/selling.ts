@@ -216,6 +216,71 @@ export function serviceFeeRefunded(subtotalCents: number, serviceCents: number, 
   return checkout > 0 && stripeRefundedCents >= checkout;
 }
 
+export type LedgerFee = {
+  percentCents: number;
+  flatCents: number;
+  serviceFeeCents: number;
+  voided: boolean;
+};
+
+/**
+ * Amounts written to platform_fees. The flat amount is whatever the stall's
+ * schedule charged. When Stripe's application fee does not match, the charged
+ * total is kept in percent_cents so the ledger still balances.
+ */
+export function ledgerFee(parts: FeeParts, actualApplicationFeeCents?: number | null): LedgerFee {
+  const expected = parts.voided
+    ? 0
+    : parts.commissionCents + parts.flatCents + parts.serviceFeeCents;
+  const mismatch =
+    !parts.voided &&
+    typeof actualApplicationFeeCents === "number" &&
+    actualApplicationFeeCents !== expected;
+  if (mismatch) {
+    return {
+      percentCents: actualApplicationFeeCents,
+      flatCents: 0,
+      serviceFeeCents: 0,
+      voided: false,
+    };
+  }
+  if (parts.voided) {
+    return { percentCents: 0, flatCents: 0, serviceFeeCents: 0, voided: true };
+  }
+  return {
+    percentCents: parts.commissionCents,
+    flatCents: parts.flatCents,
+    serviceFeeCents: parts.serviceFeeCents,
+    voided: false,
+  };
+}
+
+/** Cents of the application fee to return so Stripe still holds the fee on what remains. */
+export function applicationFeeRefundCents(input: {
+  applicationFeeCents: number;
+  alreadyRefundedCents: number;
+  subtotalCents: number;
+  refundedSubtotalCents: number;
+  schedule: FeeSchedule;
+  serviceFeeCents: number;
+  serviceFeeReturned: boolean;
+}) {
+  wholeCents(input.applicationFeeCents, "Application fee");
+  wholeCents(input.alreadyRefundedCents, "Refunded fee");
+  if (input.alreadyRefundedCents > input.applicationFeeCents) {
+    throw new Error("Refund is outside the charge.");
+  }
+  const parts = feeAfterRefund({
+    subtotalCents: input.subtotalCents,
+    refundedSubtotalCents: input.refundedSubtotalCents,
+    schedule: input.schedule,
+    serviceFeeCents: input.serviceFeeCents,
+    serviceFeeReturned: input.serviceFeeReturned,
+  });
+  const stillDue = parts.voided ? 0 : parts.commissionCents + parts.flatCents + parts.serviceFeeCents;
+  return Math.max(0, input.applicationFeeCents - input.alreadyRefundedCents - stillDue);
+}
+
 /** A full refund voids the commission, the flat amount, and the service fee. */
 export function feeAfterRefund(input: {
   subtotalCents: number;
@@ -392,20 +457,40 @@ export function sameDayPickupStart(
   return torontoInstant(torontoDate(now), earliest);
 }
 
-/** Full refund while the stall has not marked it ready, or the pickup window has not started. */
+/** Full refund until the order is ready and a real pickup time has started. */
 export function shopperCancelAllowed(input: {
   status: string;
   readyAt: string | null;
   pickupStartsAt: string | null;
+  disputedAt?: string | null;
   now?: Date;
 }) {
+  if (input.disputedAt) return false;
   if (input.status !== "paid" && input.status !== "reserved") return false;
   if (input.status === "reserved") return !input.readyAt;
   if (!input.readyAt) return true;
-  if (!input.pickupStartsAt) return false;
+  if (!input.pickupStartsAt) return true;
   const starts = Date.parse(input.pickupStartsAt);
-  if (!Number.isFinite(starts)) return false;
+  if (!Number.isFinite(starts)) return true;
   return (input.now ?? new Date()).getTime() < starts;
+}
+
+/** A later pickup time. A time that has started, or one earlier than the saved time, is refused. */
+export function futurePickupStart(raw: string, now: Date, existing: string | null) {
+  const match = raw.trim().match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+  const starts = match ? torontoInstant(match[1], match[2]) : null;
+  if (!starts) return { error: "That pickup time is not allowed." as const, starts: null };
+  const instant = Date.parse(starts);
+  if (!Number.isFinite(instant) || instant <= now.getTime()) {
+    return { error: "Pick a pickup time that has not started." as const, starts: null };
+  }
+  if (existing) {
+    const current = Date.parse(existing);
+    if (Number.isFinite(current) && instant < current) {
+      return { error: "That pickup time is earlier than the one already set." as const, starts: null };
+    }
+  }
+  return { error: null, starts };
 }
 
 function clip(raw: string, max: number) {

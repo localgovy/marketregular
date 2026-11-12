@@ -8,7 +8,7 @@ Launch copy uses Toronto / GTA and timezone `America/Toronto` (`src/lib/launch.t
 
 ## Facts models usually get wrong
 
-- Sales are off. `VENDOR_SALES_OPEN` is `false` in `src/lib/selling.ts`. The view `published_menus.can_buy` is hardcoded `false` (`supabase/migrations/20261003161240_pause_vendor_item_sales.sql`). Checkout, Stripe Connect, orders, and the platform-fee ledger exist and are closed.
+- Sales are on. `VENDOR_SALES_OPEN` is `true` in `src/lib/selling.ts`. `published_menus.can_buy` is computed in `supabase/migrations/20261112180454_stall_connect_fees.sql`: approved stall, for sale, price at least 50 cents, pickup or preorder, and either alcohol or an active card account. Alcohol is reserved, not charged. Delivery is not offered. The platform fee (commission, any flat amount, and the shopper service fee) is taken on the charge. `platform_fees.flat_cents` may be any whole amount from 0 to 10000 cents. The older pause migration hardcoded `can_buy` false and is no longer the view.
 - There is no day planner and no live “selling now” toggle. Open state is computed from `market_schedules` plus roster days. Save is the only keep action.
 - There is no `market` role. A market operator is `markets.claimed_by`. Assigning a stall sets `profiles.role` to `vendor` unless the person is already `admin`.
 - One owner per listing (`claimed_by`). No staff table, no invites.
@@ -18,7 +18,7 @@ Launch copy uses Toronto / GTA and timezone `America/Toronto` (`src/lib/launch.t
 - The “Verified” mark is a hardcoded stamp on `the-leslieville-farmers-market` (`src/components/verified-stamp.tsx`). It is not `posts.verified_on_site`. That column is always inserted `false` and the app never reads it.
 - `geofence_radius_m` (default 250) only suggests the nearest hall in the review composer when the browser is inside that radius. It does not prove a visit, and it does not gate posting.
 - Directory “score” is the external `rating_avg` / `review_count` stored on the listing. It is not computed from on-site posts.
-- `posts` is on the `supabase_realtime` publication. The app does not subscribe. The tape refreshes on the 120s directory cache and on `revalidatePublishedDirectory`.
+- `posts` is on the `supabase_realtime` publication. `LiveFeed` subscribes to inserts (`src/components/live-feed.tsx`). The directory cache is one hour (`DIRECTORY_REVALIDATE_SECONDS` in `src/lib/directory-cache.ts`). Home and `/markets` set `revalidate = 3600`. Writes still call `revalidatePublishedDirectory`.
 - Product search is food, the newer goods categories, and any classified item. Pet-food rows match only on a pet query. Unclassified rows in the older craft buckets still need a non-food word in the query.
 - A season alias is a second database row that 308s onto a host. A sibling is a separate page with a cross-link. Only Leslieville’s indoor hall is an alias. The other pairs stay as two URLs.
 
@@ -84,7 +84,7 @@ Status words used below: **live**, **paused** (built, switched off), **redirect*
 
 | Path | Status | Who | What | Data |
 | --- | --- | --- | --- | --- |
-| `/` | live | Everyone | Home: census, week, map, vendors today and this week, review tape, featured blog, saved rail | Published directory. Revalidate 120s |
+| `/` | live | Everyone | Home: census, week, map, vendors today and this week, review tape, featured blog, saved rail | Published directory. Revalidate 1 hour |
 | `/markets` | live | Everyone | Directory. Query `q`, `weekday`, `tag`, `area`, `setup`, `openNow`, `lat`, `lng`, `sort`, plus `province` / `city`. Canonical is always `/markets` | Bare visit: `getBareMarketsDirectory`. Any filter: `searchDirectory` |
 | `/markets/[slug]` | live | Everyone | Hours, map, vendors, tags, contact, reviews, save, claim CTA. Static params, revalidate 1h | `getMarketBySlug`, `getListingContact` |
 | `/markets/day` | live | Everyone | Seven weekday cards | Schedules |
@@ -119,8 +119,8 @@ Status words used below: **live**, **paused** (built, switched off), **redirect*
 | --- | --- | --- | --- |
 | `/vendor`, `/vendor/[id]` | live | Stall owner or applicant. `force-dynamic`, noindex | Portal home and editor. Unsigned editor redirects to login |
 | `/market`, `/market/[id]` | live | Market owner or applicant. `force-dynamic`, noindex | Portal home and editor |
-| `/vendors/[slug]/buy/[itemId]` | paused | Would be signed-in | 404 while sales are closed |
-| `/vendors/[slug]/orders/[orderId]` | paused | Buyer | Receipt. Confirm path exists. Buy page does not |
+| `/vendors/[slug]/buy/[itemId]` | live | Signed-in | Checkout when the item `can_buy`. Alcohol reserves instead of charging |
+| `/vendors/[slug]/orders/[orderId]` | live | Buyer | Receipt |
 | `/admin` | live | `is_admin()` | Counts |
 | `/admin/markets`, `/admin/markets/new`, `/admin/markets/[id]` | live | Admin | List, create, edit, hours, roster, owner, delete |
 | `/admin/vendors`, `/admin/vendors/new`, `/admin/vendors/[id]` | live | Admin | List, create, edit, menu, selling switch, owner, delete |
@@ -128,8 +128,8 @@ Status words used below: **live**, **paused** (built, switched off), **redirect*
 | `/admin/moderation` | live | Admin | Flag and restore posts and reviews |
 | `/admin/applications` | live | Admin | Assign or reject portal applications and legacy claims |
 | `/admin/saves` | live | Admin | Read-only saves by person |
-| `POST /api/stripe/account-session` | paused | Stall owner | 403 while sales are closed |
-| `POST /api/stripe/webhook` | paused | Stripe | Order pay, expire, refund, dispute, Connect `account.updated` |
+| `POST /api/stripe/account-session` | live | Stall owner | Connect onboarding |
+| `POST /api/stripe/webhook` | live | Stripe | Order pay, expire, refund, dispute, Connect `account.updated` |
 
 ### Redirect only
 
@@ -288,9 +288,9 @@ Siblings are real second pages, with a qualifier and a cross-link (`MarketSeason
 
 ### Cache and revalidation
 
-Next’s data cache rejects one entry over 2 MB. Published vendors no longer fit in one entry, so markets, vendors, stalls, schedules, and menu ids are stored as separate ranges under 1.25 MB (`DIRECTORY_CACHE_BUDGET` in `src/lib/directory-cache.ts`), still tagged `directory`, revalidate 120s. A range that does not fit is not stored; its halves are. Census, the bare directory page, and the floor tape stay one entry each. Portal and admin writes call `revalidatePublishedDirectory`: drop the tag, then `/`, `/markets` (layout), `/vendors` (layout), `/events`, `/feed`, `/sitemap.xml`, plus the edited path.
+Next’s data cache rejects one entry over 2 MB. Published vendors no longer fit in one entry, so markets, vendors, stalls, schedules, and menu ids are stored as separate ranges under 1.25 MB (`DIRECTORY_CACHE_BUDGET` in `src/lib/directory-cache.ts`), still tagged `directory`, revalidate 1 hour. A range that does not fit is not stored; its halves are. Census, the bare directory page, and the floor tape stay one entry each. Portal and admin writes call `revalidatePublishedDirectory`: drop the tag, then `/`, `/markets` (layout), `/vendors` (layout), `/events`, `/feed`, `/sitemap.xml`, plus the edited path.
 
-Page ISR on top of that: home 120s; day hub, day pages, and open-today 900s; market, vendor, tag, find, and blog 3600s. `dynamicParams = false` on market, vendor, day, tag, find, and blog slugs. Portals, account, auth, and admin are `force-dynamic` or session-gated. A slug that is not generated 404s. `not-found.tsx` offers search. `error.tsx` only offers retry. Retired slugs 308 before the page (`listing-redirects` plus `listing_slug_aliases`).
+Page ISR on top of that: home and the markets index 1 hour; day hub, day pages, and open-today 900s; market, vendor, tag, find, and blog 3600s. A market page itself is 86400s. `dynamicParams = false` on market, vendor, day, tag, find, and blog slugs. Portals, account, auth, and admin are `force-dynamic` or session-gated. A slug that is not generated 404s. `not-found.tsx` offers search. `error.tsx` only offers retry. Retired slugs 308 before the page (`listing-redirects` plus `listing_slug_aliases`).
 
 ### Product search gate
 
@@ -314,7 +314,7 @@ Tag pages (`/markets/tag/…`): produce, organic, vegan, bakery, prepared-food, 
 
 Open now / later today / selling this weekend follow the rules in “How a public listing is computed”. Nobody toggles them. Listing pages also link out through `ListingAlsoLinks`: the weekdays this hall or stall works, and up to six tags that have a category page. Blog posts pull a three-stall peek and the external score for markets they mention (`src/lib/blog-market-peeks.ts`).
 
-Market detail joins schedules, stalls, vendors, posts, and reviews. Contact phone and email come from `get_listing_contact`, not the public row. Sibling halls cross-link. The Leslieville indoor slug redirects onto the outdoor host. Vendor detail joins menus, halls, schedules, reviews, and posts that mention the stall. Halls are ranked by `rankVendorMarkets`. The stall menu groups by `menu_section` when any item has one. A menu item with a picture shows that square beside the name. Buy links render only when `VENDOR_SALES_OPEN && stripeChargesConfigured()`. Today they do not.
+Market detail joins schedules, stalls, vendors, posts, and reviews. Contact phone and email come from `get_listing_contact`, not the public row. Sibling halls cross-link. The Leslieville indoor slug redirects onto the outdoor host. Vendor detail joins menus, halls, schedules, reviews, and posts that mention the stall. Halls are ranked by `rankVendorMarkets`. The stall menu groups by `menu_section` when any item has one. A menu item with a picture shows that square beside the name. Buy links render when `VENDOR_SALES_OPEN`, Stripe is configured, and `can_buy` is true. Alcohol rows offer Reserve instead of Buy.
 
 ### Products and find pages
 
@@ -370,9 +370,9 @@ BotID: signup, posts, and portal forms require `isHumanRequest` (production also
 | `mr-portal-org` | cookie | Organization name for a portal signup, 1 hour |
 | `mr-auth-cookie`, `mr-signin-slip` | window events | Header and the guest slip react without a reload |
 
-### Buy path (paused)
+### Buy path
 
-When `VENDOR_SALES_OPEN` is turned back on, the shopper path is: signed-in `/vendors/{slug}/buy/{itemId}` → `placeStallOrder` checks the shown price and `parseCheckoutDetails` (fulfillment, quantity 1–20, note ≤ 500, Canadian postal code if delivery) → `startStallCheckout` inserts `orders` status `pending` and redirects to Stripe Checkout on the stall’s connected account → success lands on `/vendors/{slug}/orders/{orderId}?session_id=cs_…`, where `confirmStallCheckout` marks it paid. The webhook is the durable path. Cancel returns `?cancelled=1`. The app does not email a receipt. Buyer email is snapshotted on the order for the stall. Today the buy page 404s and the action returns sales closed.
+The shopper path is: signed-in `/vendors/{slug}/buy/{itemId}` → `placeStallOrder` checks the shown price and `parseCheckoutDetails` (pickup or preorder, quantity 1–20, note ≤ 500) → `startStallCheckout` inserts `orders` status `pending` and redirects to Stripe Checkout on the stall’s connected account → success lands on `/vendors/{slug}/orders/{orderId}?session_id=cs_…`, where `confirmStallCheckout` marks it paid. The webhook is the durable path. Cancel returns `?cancelled=1`. Alcohol skips the card and inserts `reserved`. Delivery is refused. Buyer email is snapshotted on the order for the stall.
 
 ```mermaid
 flowchart LR
@@ -408,22 +408,22 @@ Shown only when `my_vendor_portal()` includes that id. Otherwise 404.
 | Updates | `saveOwnedMaintenanceOptOuts` | Opt-out keys. Checked means directory upkeep leaves that section alone | Vendor keys listed above |
 | Profile | `saveOwnedVendor` | Name (1–200, unique case-insensitive), about ≤ 4000, phone, public email, website, Instagram, TikTok, Facebook, tags | Tags cap 24, pattern `[a-z0-9]+(-[a-z0-9]+)*`, each ≤ 40. Slug stays |
 | Logo | `uploadOwnedLogo` / `clearOwnedLogo` | `listing-marks` | JPEG/PNG/WebP, ≤ 5 MB, magic-byte check |
-| Menu | `saveOwnedMenuItem` / `deleteOwnedMenuItem` / `renameOwnedMenuSection` / `moveOwnedMenuSection` | Name ≤ 160, description ≤ 2000, price 0–$10,000 or empty, season ≤ 120, dietary cap 12, section (existing name, new name ≤ 40, or none). Rename and reorder call `set_owned_menu_sections` | Cap 80 items. At most 5 named sections. While sales are paused, sale columns are not written and new rows are `for_sale` false |
+| Menu | `saveOwnedMenuItem` / `deleteOwnedMenuItem` / `renameOwnedMenuSection` / `moveOwnedMenuSection` | Name ≤ 160, description ≤ 2000, price 0–$10,000 or empty, season ≤ 120, dietary cap 12, section (existing name, new name ≤ 40, or none). Rename and reorder call `set_owned_menu_sections` | Cap 80 items. At most 5 named sections. Sale columns are written while `VENDOR_SALES_OPEN` is true. Delivery is stored false |
 | Markets | `saveOwnedStall` / `deleteOwnedStall` / `searchPortalMarkets` | Stall label ≤ 80 and days the market is actually open | Cap 40 halls. Removing the last hall hides the public page unless the slug is in `UNAFFILIATED_VENDOR_SLUGS` |
 
 The owner cannot publish, unpublish, change the slug, or set `selling_approved`.
 
-### Selling (paused)
+### Selling
 
-The selling block renders only when `VENDOR_SALES_OPEN` is true. The page shows “Listing for sale is closed for now.” The hidden block would show admin approval, Connect onboarding, fee balance, and the last 40 paid orders. There is no action to accept, fulfill, or refund an order. Statuses the stall would see: paid, partially refunded, refunded, plus note, email, and address.
+The selling block renders because `VENDOR_SALES_OPEN` is true. It shows admin approval, Connect onboarding, the fee taken on each order, and recent orders.
 
-When sales are open again:
+The live gate:
 
 1. Admin sets `selling_approved`. Owners cannot.
-2. `beginStallPayments` → `createStallAccount`. Stripe v2 account, country CA, currency CAD, dashboard `full`, card payments requested. Fees and losses are collected by Stripe. Row in `vendor_stripe_accounts`.
+2. `beginStallPayments` → `createStallAccount`. Stripe v2 account, country CA, currency CAD, dashboard `express`, card payments requested. Stripe collects card-processing fees and losses. The platform takes its fee as `application_fee_amount` on the direct charge. Row in `vendor_stripe_accounts`.
 3. Embedded Connect (`StallConnect`) uses `POST /api/stripe/account-session`. Capabilities refresh via `refreshStallCapabilities` and webhook `account.updated`.
-4. The real `can_buy` expression (replaced by `false` in the pause migration) was: published vendor, `selling_approved`, `card_payments_active`, `for_sale`, price ≥ 50 cents, and at least one of delivery, pickup, or preorder.
-5. Platform fee is not taken from the charge. See Money pipeline.
+4. `can_buy` is: published vendor, `selling_approved`, `for_sale`, price ≥ 50 cents, pickup or preorder, and either an alcohol item or `card_payments_active`.
+5. The platform fee is the application fee on that charge. See Money pipeline.
 
 ## Market pipeline
 
@@ -454,7 +454,7 @@ Nav: Overview, Markets, Vendors, Updates, Moderation, Applications, Saves.
 | --- | --- | --- |
 | `/admin` | Read | Counts published markets (season aliases excluded), published vendors, unflagged posts, pending applications plus pending claims |
 | Markets | `saveMarket`, `deleteMarket`, `saveSchedule`, `deleteSchedule`, `linkVendorToMarket`, `unlinkVendorFromMarket`, `assignMarketOwner` | Full listing including address, pin, geofence, featured, status, slug, external rating. Slug edits record aliases |
-| Vendors | `saveVendor`, `deleteVendor`, `saveMenuItem`, `assignMenuItemSection`, `renameMenuSection`, `moveMenuSection`, `deleteMenuItem`, `assignVendorOwner`, `setVendorSelling` | Same without place and featured. Menu items can be grouped into at most 5 named sections (`set_menu_sections`, service role). Selling checkbox writes `selling_approved` and does not reopen checkout while sales are paused |
+| Vendors | `saveVendor`, `deleteVendor`, `saveMenuItem`, `assignMenuItemSection`, `renameMenuSection`, `moveMenuSection`, `deleteMenuItem`, `assignVendorOwner`, `setVendorSelling` | Same without place and featured. Menu items can be grouped into at most 5 named sections (`set_menu_sections`, service role). Selling checkbox writes `selling_approved`. Checkout still needs `can_buy` |
 | Updates | Read, grouped by `src/lib/maintenance-sections.ts` | “Left this section alone” means directory upkeep must not overwrite it. Admin saves refuse an opted-out section unless the form checks a maintenance override |
 | Moderation | `flagItem` / `unflagItem` | Latest 50 posts and reviews plus every flagged row |
 | Applications | `decideApplication`, `decideClaim` | Assign or reject. Failed claim mail used to redirect to `/admin/claims`, which now redirects to this page |
@@ -464,9 +464,7 @@ Owner assignment looks up `auth_user_id_for_email`. The person must already have
 
 ## Money pipeline
 
-Closed until both of these are restored, as the comment at the top of `src/lib/selling.ts` says: `VENDOR_SALES_OPEN = true`, and `published_menus.can_buy` plus `save_owned_menu_item` must write sale fields again (`supabase/migrations/20261003161240_pause_vendor_item_sales.sql`).
-
-Platform fee: 3.5% of the amount still charged (`percentFeeCents`) plus `PLATFORM_FLAT_CENTS` = 25, per order, `earned_on` in `America/Toronto`. Full refund voids the fee. Balance is due **31 December of the year of the oldest uncovered fee** (`feeDueOn`). The owner pays it with a separate platform Checkout (`payStallFee` / `startFeeCheckout`, minimum 50 cents) back to `/vendor/{id}?fee=paid`. A fee under 50 cents cannot be paid until it reaches 50 cents. `platform_fee_sessions` binds that session so a connected-account event cannot credit it.
+Sales are open. The default commission is 4% of the item subtotal (`DEFAULT_COMMISSION_BPS`). A stall override can change the basis points and add a flat amount from 0 to 10000 cents. The shopper also pays a service fee of 50 cents under $15, or 99 cents at $15 and up. Those three amounts are the Stripe application fee on a direct charge, and `ledgerFee` writes them to `platform_fees` with `collected_on_charge`. A full refund voids the fee. `startFeeCheckout` does not open a second Checkout. `earned_on` is the Toronto date.
 
 Webhook `POST /api/stripe/webhook` tries `STRIPE_WEBHOOK_SECRET` and `STRIPE_CONNECT_WEBHOOK_SECRET`.
 
@@ -478,7 +476,7 @@ Webhook `POST /api/stripe/webhook` tries `STRIPE_WEBHOOK_SECRET` and `STRIPE_CON
 | `charge.dispute.closed` when lost | `applyLostDispute` |
 | `account.updated` | `syncAccountEvent` refreshes `card_payments_active` and `payouts_active` |
 
-A connected-account event cannot pay, expire, or refund an order it does not already own. Currency must be CAD. Admin `setVendorSelling` can still flip `selling_approved` and tells the admin that checkout stays closed.
+A connected-account event cannot pay, expire, or refund an order it does not already own. Currency must be CAD. Admin `setVendorSelling` flips `selling_approved`. Checkout still needs `can_buy`.
 
 ## Content, SEO, mail, and services
 
@@ -530,7 +528,7 @@ Resend uses `RESEND_API_KEY` and `RESEND_FROM`. A failed portal email is reporte
 | --- | --- |
 | Supabase | Auth, Postgres, storage, Realtime, `pg_cron`. `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, server `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
 | Vercel | Host, region `yul1` only (`vercel.json`). Analytics. IP header `x-vercel-forwarded-for` for rate limits. No Vercel cron |
-| Stripe | Connect and Checkout. Optional. Sales paused in code |
+| Stripe | Connect and Checkout. Sales are on when the stall `can_buy` |
 | Resend | Transactional mail |
 | Google | OAuth through Supabase at `https://auth.marketregular.com/auth/v1/callback`. Search Console verification. Analytics. Directions are Google Maps URLs. No Maps API key. `GOOGLE_OAUTH_CLIENT_ID` is documented and not read by app code |
 | BotID | Signup and portal forms (`src/lib/bot-check.ts`). Sign-in only blocks a positive bot verdict |
@@ -559,8 +557,9 @@ Directory data path: live reads go through `published_*`. `scripts/import-toront
 | Portal applications | live | `portal_applications` |
 | Legacy claims | legacy | `claim_requests`. Admin can still decide them |
 | Maintenance opt-outs | live | Portal checkbox, admin Updates |
-| Menu and roster editing | live | Sale flags paused |
-| Public Buy, Connect onboarding, fee checkout | paused | `VENDOR_SALES_OPEN`, `can_buy` false |
+| Menu and roster editing | live | Sale flags follow `VENDOR_SALES_OPEN` |
+| Public Buy, Connect onboarding | live | `can_buy` and an active card account. Alcohol reserves |
+| Separate fee checkout | absent | The fee is taken on the paid order |
 | Order fulfillment states beyond paid/refunded | absent | No packed or ready status |
 | Order email from this app | absent | Stripe may receipt the buyer |
 | Live “selling now” toggle | absent | Computed from schedules |
@@ -578,7 +577,7 @@ Directory data path: live reads go through `published_*`. `scripts/import-toront
 | iOS app | absent | README says the same Supabase backend is meant to serve one later. No app in this repo |
 | On-site verified posts | absent | `verified_on_site` is always false. The Leslieville stamp is separate |
 | Geofence as a visit proof | absent | Composer suggestion only. Default radius 250 m, admin-editable |
-| Realtime tape | absent | Table is on the publication. The UI does not subscribe |
+| Realtime tape | live | `LiveFeed` subscribes to `posts` inserts. Directory cache is 1 hour |
 | Product search outside food categories | live | Classified items of any category. Pet-food needs a pet query |
 | Sibling halls merged into one URL | absent | Only the Leslieville indoor slug is a season alias |
 

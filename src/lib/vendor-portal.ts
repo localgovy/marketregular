@@ -35,6 +35,8 @@ export type PortalMenuItem = {
   offer_pickup: boolean;
   offer_preorder: boolean;
   offer_terms: string | null;
+  contains_alcohol: boolean;
+  product_category: string | null;
 };
 
 export type PortalOrder = {
@@ -55,6 +57,7 @@ export type PortalOrder = {
   service_fee_cents: number;
   ready_at: string | null;
   pickup_starts_at: string | null;
+  disputed_at: string | null;
 };
 
 export type PortalStall = {
@@ -295,6 +298,8 @@ function parseMenu(value: unknown): PortalMenuItem | null {
     offer_pickup: flag(row.offer_pickup),
     offer_preorder: flag(row.offer_preorder),
     offer_terms: textOrNull(row.offer_terms),
+    contains_alcohol: flag(row.contains_alcohol) || row.product_category === "alcohol",
+    product_category: textOrNull(row.product_category),
   };
 }
 
@@ -325,6 +330,7 @@ function parseOrder(value: unknown): PortalOrder | null {
         : 0,
     ready_at: textOrNull(row.ready_at),
     pickup_starts_at: textOrNull(row.pickup_starts_at),
+    disputed_at: textOrNull(row.disputed_at),
   };
 }
 

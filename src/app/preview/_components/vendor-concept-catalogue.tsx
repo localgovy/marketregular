@@ -33,6 +33,7 @@ import { ReviewCard } from "@/components/review-card";
 import { ProductSaveButton, SaveButton } from "@/components/save-button";
 import { TagList } from "@/components/tag-list";
 import { VerifiedName } from "@/components/verified-stamp";
+import { StallEmblem } from "@/components/stall-emblem";
 import { formatPrice } from "@/lib/format";
 import { productFromInput } from "@/lib/product-saves";
 import { cn } from "@/lib/utils";
@@ -77,60 +78,6 @@ function ProductThumb({
       )}
     >
       <CrateMark className="size-5" />
-    </span>
-  );
-}
-
-function StallEmblem({
-  name,
-  logoUrl,
-  size = "md",
-}: {
-  name: string;
-  logoUrl: string | null;
-  size?: "sm" | "md" | "lg";
-}) {
-  const box =
-    size === "lg" ? "size-16" : size === "md" ? "size-12" : "size-10";
-  const px = size === "lg" ? 64 : size === "md" ? 48 : 40;
-  const initials = name
-    .split(/[\s&-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("");
-
-  if (logoUrl) {
-    return (
-      <span
-        className={cn(
-          "inline-flex shrink-0 items-center justify-center rounded-lg bg-receipt p-1 ring-1 ring-foreground/15",
-          box,
-        )}
-      >
-        <img
-          src={logoUrl}
-          alt={name}
-          width={px}
-          height={px}
-          loading="lazy"
-          decoding="async"
-          className="size-full object-contain"
-        />
-      </span>
-    );
-  }
-
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "inline-flex shrink-0 flex-col items-center justify-center rounded-lg bg-stamp text-chalk ring-1 ring-foreground/15",
-        box,
-      )}
-    >
-      <CrateMark className="size-4 text-ticket" />
-      <span className="type-nums text-xs leading-none">{initials || "MR"}</span>
     </span>
   );
 }
@@ -332,7 +279,7 @@ export function VendorConceptCatalogue({
             </div>
 
             <div className="mt-4 flex items-start gap-4">
-              <StallEmblem name={vendor.name} logoUrl={vendor.logoUrl} size="lg" />
+              <StallEmblem src={vendor.logoUrl} name={vendor.name} size="lg" />
               <div className="min-w-0 flex-1">
                 <h1>
                   <VerifiedName slug={vendor.slug} name={vendor.name} />
@@ -846,7 +793,7 @@ export function VendorConceptCatalogue({
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex min-w-0 items-start gap-3">
-                    <StallEmblem name={peer.name} logoUrl={peer.logoUrl} size="sm" />
+                    <StallEmblem src={peer.logoUrl} name={peer.name} size="sm" />
                     <div className="min-w-0">
                       <Link
                         href={`/vendors/${peer.slug}`}
@@ -984,7 +931,7 @@ export function VendorConceptCatalogue({
                     className="flex items-start justify-between gap-3 rounded-xl bg-receipt p-3.5 ring-1 ring-border"
                   >
                     <div className="flex min-w-0 items-start gap-2.5">
-                      <StallEmblem name={peer.name} logoUrl={peer.logoUrl} size="sm" />
+                      <StallEmblem src={peer.logoUrl} name={peer.name} size="sm" />
                       <div className="min-w-0">
                         <Link
                           href={`/vendors/${peer.slug}`}

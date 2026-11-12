@@ -63,10 +63,12 @@ export default async function StallOrderPage({
   const readyAt = "ready_at" in order && typeof order.ready_at === "string" ? order.ready_at : null;
   const pickupStarts =
     "pickup_starts_at" in order && typeof order.pickup_starts_at === "string" ? order.pickup_starts_at : null;
+  const disputedAt = "disputed_at" in order && typeof order.disputed_at === "string" ? order.disputed_at : null;
   const canCancel = shopperCancelAllowed({
     status: String(order.status),
     readyAt,
     pickupStartsAt: pickupStarts,
+    disputedAt,
   });
 
   return (
@@ -87,6 +89,7 @@ export default async function StallOrderPage({
             ? "is holding this reservation. Pay at the stall and show ID."
             : "has this order and will follow the terms you agreed to."}{" "}
         {orderStatusLabel(String(order.status), readyAt)}.
+        {disputedAt ? " This payment is being reviewed, so it cannot be cancelled here." : ""}
       </p>
       <p className="mt-6 text-base font-medium">{order.item_name}</p>
       <p className="type-nums mt-1 text-base">

@@ -42,17 +42,14 @@ import { SavedRail } from "@/components/saved-rail";
 import { SearchField } from "@/components/search-field";
 import { VerifiedName } from "@/components/verified-stamp";
 import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item";
+import { directPublicImageSrc, formatCensus, StallEmblem } from "@/components/stall-emblem";
 import { SEARCH_LABEL, SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
 import { marketsHref, tagLabel } from "@/lib/find-paths";
-import { formatPrice, listingMarkSrc } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { cn } from "@/lib/utils";
 
 const HOME_TITLE_PHRASES = ["farmers' markets", "vendors", "local products"] as const;
-
-function formatCensus(n: number) {
-  return n.toLocaleString("en-CA");
-}
 
 const AISLE_GUIDE_CHIP_INITIAL = 6;
 const PLACE_CARD_INITIAL = 6;
@@ -328,87 +325,7 @@ function SessionLines({
 }
 
 /**
- * Guard that guarantees an image URL never routes through Supabase's paid
- * `/storage/v1/render/image/` transform endpoint or Vercel's `/_next/image` optimizer.
- */
-function directPublicImageSrc(src: string | null | undefined): string | null {
-  if (!src) return null;
-  if (src.includes("/storage/v1/render/image/") || src.startsWith("/_next/image")) {
-    return null;
-  }
-  return src;
-}
-
-/**
- * Cohesive Stall / Hall Emblem Plate (`StallEmblem`).
- * Renders the listing's direct public logo inside a framed paper plate, or falls back to a
- * tactile woodcut stamp so every vendor and market row has a uniform visual anchor.
- */
-function StallEmblem({
-  src,
-  name,
-  kind = "vendor",
-  size = "md",
-  tone = "paper",
-  className,
-}: {
-  src: string | null | undefined;
-  name: string;
-  kind?: "vendor" | "market";
-  size?: "xs" | "sm" | "md" | "lg";
-  tone?: "paper" | "chalk" | "board";
-  className?: string;
-}) {
-  const url = directPublicImageSrc(listingMarkSrc(src));
-  const [failed, setFailed] = useState(false);
-  const showLogo = Boolean(url && !failed);
-
-  const sizeSpec = {
-    xs: { box: "size-6 p-0.5", px: 24, icon: "size-3.5" },
-    sm: { box: "size-8 p-1", px: 32, icon: "size-4" },
-    md: { box: "size-10 p-1", px: 40, icon: "size-5" },
-    lg: { box: "size-11 p-1", px: 44, icon: "size-5" },
-  }[size];
-
-  const toneClasses = {
-    paper: "bg-card text-board ring-1 ring-border",
-    chalk: "bg-primary-foreground text-primary ring-1 ring-black/15",
-    board: "bg-board text-chalk ring-1 ring-board",
-  }[tone];
-
-  return (
-    <span
-      aria-hidden
-      title={name}
-      className={cn(
-        "stall-chip-sm inline-flex shrink-0 items-center justify-center overflow-hidden select-none",
-        sizeSpec.box,
-        showLogo ? "bg-primary-foreground ring-1 ring-border" : toneClasses,
-        className,
-      )}
-    >
-      {showLogo && url ? (
-        <img
-          src={url}
-          alt=""
-          width={sizeSpec.px}
-          height={sizeSpec.px}
-          loading="lazy"
-          decoding="async"
-          className="block max-h-full max-w-full object-contain object-center"
-          onError={() => setFailed(true)}
-        />
-      ) : kind === "market" ? (
-        <RulesMark className={sizeSpec.icon} />
-      ) : (
-        <CrateMark className={sizeSpec.icon} />
-      )}
-    </span>
-  );
-}
-
-/**
- * Cohesive square category/aisle thumbnail (`ProductThumb`).
+ * Cohesive square category thumbnail (`ProductThumb`).
  * Used on aisle filter chips and craving shortcuts (never on individual menu rows).
  */
 function ProductThumb({
@@ -1439,7 +1356,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   type="submit"
                   className="find-go stall-chip inline-flex h-12 shrink-0 cursor-pointer items-center justify-between gap-4 px-5 text-receipt hover:brightness-110"
                 >
-                  <span className="type-column text-receipt">Search directory</span>
+                  <span className="text-base font-medium text-receipt">Search directory</span>
                   <span className="text-base font-medium text-receipt">Go</span>
                 </button>
               </form>

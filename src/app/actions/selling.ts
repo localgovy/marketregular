@@ -148,7 +148,7 @@ export async function cancelBuyerOrder(formData: FormData) {
   if (!isUuid(orderId)) return { error: "That order is missing." };
   const saved = await cancelShopperOrder(orderId, user.id);
   if (saved.error) return { error: saved.error };
-  return { error: null, message: "Cancelled." };
+  return { error: null, message: saved.message ?? "Cancelled." };
 }
 
 export async function settleStallFeeReturn(vendorId: string, sessionId: string) {

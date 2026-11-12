@@ -23,7 +23,7 @@ export function LiveOpenState({
   const when = schedules.length ? nextOpenLabel(schedules, province, new Date(now)) : null;
   if (!when) return null;
   if (when === "Open now") return <NowLabel>{when}</NowLabel>;
-  return <span className="text-base font-medium text-primary">{when}</span>;
+  return <span className="type-nums text-base text-primary">{when}</span>;
 }
 
 type Hall = {

@@ -7,17 +7,19 @@ import { checkoutSiteOrigin } from "@/lib/site-host";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import {
   applicationFeeCents,
+  applicationFeeRefundCents,
   checkoutAmountMatches,
   checkoutTotalCents,
   feeAfterRefund,
   feeCreditAfterReturn,
+  futurePickupStart,
+  ledgerFee,
   introUntilFromFirstPaid,
   itemRefundedCents,
   platformFeeBinds,
   returnedCents,
   sameDayPickupStart,
   serviceFeeRefunded,
-  torontoInstant,
   scheduleForOverride,
   serviceFeeCents,
   shopperCancelAllowed,
@@ -33,7 +35,7 @@ import { capabilityFlags, CONNECT_PREVIEW_API_VERSION, getStripe, integrationIde
 import { createServiceClient } from "@/lib/supabase/admin";
 import { menuItemPhotoUrl, publishedMenuSelectMissingPhoto } from "@/lib/menu-item-photo-url";
 import { sendOrderMail } from "@/lib/order-mail";
-import { isAlcoholCategory } from "@/lib/product-hits";
+import { reservesAtStall } from "@/lib/product-hits";
 
 type OrderRow = {
   id: string;
@@ -64,6 +66,8 @@ type OrderRow = {
   flat_fee_cents: number;
   ready_at: string | null;
   pickup_starts_at: string | null;
+  disputed_at: string | null;
+  stripe_account_id: string | null;
 };
 
 function checkoutOrigin() {
@@ -201,6 +205,14 @@ export async function createStallAccount(input: {
     return { error: null, accountId: existing.stripe_account_id };
   }
   if (existing) {
+    const { count, error } = await db
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("vendor_id", input.vendorId)
+      .in("status", ["paid", "reserved", "partially_refunded"]);
+    if (error || (count ?? 0) > 0) {
+      return { error: "This stall already has orders on its payment account." as const, accountId: null };
+    }
     await db.from("vendor_stripe_accounts").delete().eq("vendor_id", input.vendorId);
   }
 
@@ -309,7 +321,14 @@ async function loadOrder(id: string) {
   order.flat_fee_cents = Number(order.flat_fee_cents ?? 0);
   order.ready_at = order.ready_at ?? null;
   order.pickup_starts_at = order.pickup_starts_at ?? null;
+  order.disputed_at = typeof order.disputed_at === "string" ? order.disputed_at : null;
+  order.stripe_account_id = typeof order.stripe_account_id === "string" ? order.stripe_account_id : null;
   return order;
+}
+
+async function chargeAccountId(order: OrderRow) {
+  if (order.stripe_account_id) return order.stripe_account_id;
+  return stallAccountId(order.vendor_id);
 }
 
 async function syncFee(order: OrderRow, actualApplicationFeeCents?: number | null) {
@@ -326,15 +345,15 @@ async function syncFee(order: OrderRow, actualApplicationFeeCents?: number | nul
     serviceFeeCents: order.service_fee_cents,
     serviceFeeReturned: order.service_fee_refunded,
   });
-  const expectedFee =
-    (parts.voided ? 0 : parts.commissionCents) +
-    (parts.flatCents === 25 ? 25 : 0) +
-    (parts.voided ? 0 : parts.serviceFeeCents);
-  const feeMismatch =
+  const recorded = ledgerFee(parts, actualApplicationFeeCents);
+  const expectedFee = parts.voided
+    ? 0
+    : parts.commissionCents + parts.flatCents + parts.serviceFeeCents;
+  if (
     !parts.voided &&
     typeof actualApplicationFeeCents === "number" &&
-    actualApplicationFeeCents !== expectedFee;
-  if (feeMismatch) {
+    actualApplicationFeeCents !== expectedFee
+  ) {
     console.error("stall application fee mismatch", order.id, expectedFee, actualApplicationFeeCents);
   }
   const { data: existing } = await db
@@ -344,18 +363,13 @@ async function syncFee(order: OrderRow, actualApplicationFeeCents?: number | nul
     .maybeSingle();
   const earnedOn =
     typeof existing?.earned_on === "string" ? existing.earned_on : torontoDate();
-  const recordedPercent = feeMismatch
-    ? (actualApplicationFeeCents as number)
-    : parts.voided
-      ? 0
-      : parts.commissionCents;
   const row = {
     vendor_id: order.vendor_id,
     order_id: order.id,
-    percent_cents: recordedPercent,
-    flat_cents: feeMismatch ? 0 : parts.flatCents === 25 ? 25 : 0,
-    service_fee_cents: feeMismatch || parts.voided ? 0 : parts.serviceFeeCents,
-    voided: parts.voided,
+    percent_cents: recorded.percentCents,
+    flat_cents: recorded.flatCents,
+    service_fee_cents: recorded.serviceFeeCents,
+    voided: recorded.voided,
     collected_on_charge: true,
     earned_on: earnedOn,
   };
@@ -374,9 +388,9 @@ export async function recordStallCheckout(
   if (session.metadata?.kind !== "stall_order") return;
   if (session.payment_status !== "paid") return;
   const orderId = session.metadata.order_id;
-  if (!orderId) return;
+  if (!orderId) throw new Error("stall checkout was not recorded");
   const order = await loadOrder(orderId);
-  if (!order) return;
+  if (!order) throw new Error("stall checkout was not recorded");
   if (
     !checkoutAmountMatches(
       session.currency,
@@ -385,11 +399,10 @@ export async function recordStallCheckout(
       order.charge_cents + order.service_fee_cents,
     )
   ) {
-    console.error("stall checkout amount mismatch", session.id);
-    return;
+    throw new Error("stall checkout amount mismatch");
   }
   const actualFee = await applicationFeeOnCharge(session, stripeAccount);
-  const vendorAccount = await stallAccountId(order.vendor_id);
+  const vendorAccount = order.stripe_account_id ?? (await stallAccountId(order.vendor_id));
   if (
     !stallCheckoutBinds({
       storedSessionId: order.stripe_checkout_session_id,
@@ -398,11 +411,10 @@ export async function recordStallCheckout(
       vendorAccount,
     })
   ) {
-    console.error("stall checkout session mismatch", session.id);
-    return;
+    throw new Error("stall checkout session mismatch");
   }
   const db = service();
-  if (!db) return;
+  if (!db) throw new Error("stall checkout was not recorded");
   const buyerEmail = order.buyer_email ?? checkoutEmail(session);
   const next = paidStatus(order.charge_cents, order.refunded_cents);
   const wasUnpaid = order.status === "pending" || order.status === "expired";
@@ -422,18 +434,20 @@ export async function recordStallCheckout(
     if (error) throw new Error("stall checkout was not recorded");
     if (wasUnpaid && updated?.length) {
       const paid = await loadOrder(order.id);
-      if (paid) {
-        await syncFee(paid, actualFee);
-        await stampIntroWindow(paid);
-        await sendPaidOrderMail(paid);
-      }
+      if (!paid) throw new Error("stall checkout was not recorded");
+      await syncFee(paid, actualFee);
+      await stampIntroWindow(paid);
+      await sendPaidOrderMail(paid);
       const slug = await vendorSlug(order.vendor_id);
       refreshDirectoryLater([slug ? `/vendors/${slug}` : ""]);
       return;
     }
   }
   const fresh = await loadOrder(order.id);
-  if (fresh) await syncFee(fresh, actualFee);
+  if (fresh?.paid_at) {
+    await syncFee(fresh, actualFee);
+    await stampIntroWindow(fresh);
+  }
   const slug = await vendorSlug(order.vendor_id);
   refreshDirectoryLater([slug ? `/vendors/${slug}` : ""]);
 }
@@ -512,8 +526,9 @@ async function findOrderForCharge(charge: Stripe.Charge, stripeAccount: string |
     .maybeSingle();
   if (data) {
     const order = data as OrderRow;
+    order.stripe_account_id = typeof order.stripe_account_id === "string" ? order.stripe_account_id : null;
     if (!stripeAccount) return order;
-    const accountId = await stallAccountId(order.vendor_id);
+    const accountId = order.stripe_account_id ?? (await stallAccountId(order.vendor_id));
     return accountId === stripeAccount ? order : null;
   }
   if (!stripeAccount) return null;
@@ -530,7 +545,8 @@ async function findOrderForCharge(charge: Stripe.Charge, stripeAccount: string |
     .maybeSingle();
   if (!bySession) return null;
   const order = bySession as OrderRow;
-  const accountId = await stallAccountId(order.vendor_id);
+  order.stripe_account_id = typeof order.stripe_account_id === "string" ? order.stripe_account_id : null;
+  const accountId = order.stripe_account_id ?? (await stallAccountId(order.vendor_id));
   return accountId === stripeAccount ? order : null;
 }
 
@@ -629,9 +645,19 @@ function applicationFeeId(charge: Stripe.Charge) {
   return typeof charge.application_fee === "string" ? charge.application_fee : charge.application_fee.id;
 }
 
-async function refundRemainingApplicationFee(charge: Stripe.Charge, stripeAccount: string | null) {
+function stripeErrorCode(err: unknown) {
+  if (err && typeof err === "object" && "code" in err) return String((err as { code?: string }).code);
+  return "";
+}
+
+async function refundApplicationFee(
+  charge: Stripe.Charge,
+  stripeAccount: string | null,
+  order: OrderRow,
+  returned: number,
+) {
   const stripe = getStripe();
-  if (!stripe) return;
+  if (!stripe) throw new Error("application fee was not refunded");
   let current = charge;
   if (!applicationFeeId(current)) {
     current = stripeAccount
@@ -640,15 +666,29 @@ async function refundRemainingApplicationFee(charge: Stripe.Charge, stripeAccoun
   }
   const feeId = applicationFeeId(current);
   if (!feeId) return;
+  const fee = await stripe.applicationFees.retrieve(feeId);
+  const refundedSubtotal = itemRefundedCents(order.charge_cents, order.service_fee_cents, returned);
+  const serviceReturned =
+    order.service_fee_refunded || serviceFeeRefunded(order.charge_cents, order.service_fee_cents, returned);
+  const refundCents = applicationFeeRefundCents({
+    applicationFeeCents: fee.amount,
+    alreadyRefundedCents: fee.amount_refunded,
+    subtotalCents: order.charge_cents,
+    refundedSubtotalCents: refundedSubtotal,
+    schedule: { commissionBps: order.commission_bps, flatCents: order.flat_fee_cents },
+    serviceFeeCents: order.service_fee_cents,
+    serviceFeeReturned: serviceReturned,
+  });
+  if (refundCents <= 0) return;
   try {
-    const fee = await stripe.applicationFees.retrieve(feeId);
-    const remaining = fee.amount - fee.amount_refunded;
-    if (remaining <= 0) return;
-    await stripe.applicationFees.createRefund(feeId, { amount: remaining });
+    await stripe.applicationFees.createRefund(
+      feeId,
+      { amount: refundCents },
+      { idempotencyKey: `app-fee-${charge.id}-${returned}` },
+    );
   } catch (err) {
-    const code = err && typeof err === "object" && "code" in err ? String((err as { code?: string }).code) : "";
-    if (code === "charge_already_refunded") return;
-    console.error("application fee refund", err instanceof Error ? err.message : "stripe");
+    if (stripeErrorCode(err) === "charge_already_refunded") return;
+    throw new Error("application fee was not refunded");
   }
 }
 
@@ -657,11 +697,13 @@ async function applyChargeReturn(charge: Stripe.Charge, returned: number, stripe
   if (charge.currency?.toLowerCase() !== "cad") return;
   const order = await findOrderForCharge(charge, stripeAccount);
   if (order) {
+    order.charge_cents = Number(order.charge_cents ?? 0);
     order.service_fee_cents = Number(order.service_fee_cents ?? 0);
+    order.commission_bps = Number(order.commission_bps ?? 400);
+    order.flat_fee_cents = Number(order.flat_fee_cents ?? 0);
+    order.service_fee_refunded = order.service_fee_refunded === true;
     await applyReturnedAmount(order, returned, paymentIntentId(charge.payment_intent));
-    if (serviceFeeRefunded(order.charge_cents, order.service_fee_cents, returned)) {
-      await refundRemainingApplicationFee(charge, stripeAccount);
-    }
+    await refundApplicationFee(charge, stripeAccount, order, returned);
     return;
   }
   if (!stripeAccount) await applyPlatformFeeReturn(charge, returned);
@@ -671,17 +713,53 @@ export async function applyStallRefund(charge: Stripe.Charge, stripeAccount: str
   await applyChargeReturn(charge, charge.amount_refunded, stripeAccount);
 }
 
+async function disputeCharge(dispute: Stripe.Dispute, stripeAccount: string | null) {
+  const stripe = getStripe();
+  if (!stripe) throw new Error("dispute was not recorded");
+  const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+  if (!chargeId) throw new Error("dispute was not recorded");
+  return stripeAccount
+    ? stripe.charges.retrieve(chargeId, {}, { stripeAccount })
+    : stripe.charges.retrieve(chargeId);
+}
+
+export async function applyOpenDispute(dispute: Stripe.Dispute, stripeAccount: string | null) {
+  const db = service();
+  if (!db) throw new Error("dispute was not recorded");
+  const charge = await disputeCharge(dispute, stripeAccount);
+  const order = await findOrderForCharge(charge, stripeAccount);
+  if (!order) {
+    if (stripeAccount) throw new Error("disputed order was not recorded");
+    return;
+  }
+  const { error } = await db
+    .from("orders")
+    .update({ disputed_at: dispute.created ? new Date(dispute.created * 1000).toISOString() : new Date().toISOString() })
+    .eq("id", order.id)
+    .is("disputed_at", null);
+  if (error) throw new Error("dispute was not recorded");
+}
+
 export async function applyLostDispute(dispute: Stripe.Dispute, stripeAccount: string | null) {
   if (dispute.status !== "lost") return;
-  const stripe = getStripe();
-  if (!stripe) return;
-  const chargeId = typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
-  if (!chargeId) return;
-  const charge = stripeAccount
-    ? await stripe.charges.retrieve(chargeId, {}, { stripeAccount })
-    : await stripe.charges.retrieve(chargeId);
+  const charge = await disputeCharge(dispute, stripeAccount);
   const returned = Math.min(charge.amount, charge.amount_refunded + dispute.amount);
   await applyChargeReturn(charge, returned, stripeAccount);
+}
+
+export async function applyClosedDispute(dispute: Stripe.Dispute, stripeAccount: string | null) {
+  if (dispute.status === "lost") {
+    await applyLostDispute(dispute, stripeAccount);
+    return;
+  }
+  if (dispute.status !== "won" && dispute.status !== "warning_closed") return;
+  const db = service();
+  if (!db) throw new Error("dispute was not recorded");
+  const charge = await disputeCharge(dispute, stripeAccount);
+  const order = await findOrderForCharge(charge, stripeAccount);
+  if (!order) return;
+  const { error } = await db.from("orders").update({ disputed_at: null }).eq("id", order.id);
+  if (error) throw new Error("dispute was not recorded");
 }
 
 export async function syncAccountEvent(accountId: string) {
@@ -735,12 +813,13 @@ async function feeScheduleFor(vendorId: string): Promise<FeeSchedule> {
 
 async function stampIntroWindow(order: OrderRow) {
   const db = service();
-  if (!db || !order.paid_at) return;
-  await db
+  if (!db || !order.paid_at) throw new Error("intro window was not recorded");
+  const { error } = await db
     .from("vendor_fee_overrides")
     .update({ intro_until: introUntilFromFirstPaid(new Date(order.paid_at)) })
     .eq("vendor_id", order.vendor_id)
     .is("intro_until", null);
+  if (error) throw new Error("intro window was not recorded");
 }
 
 async function pickupStartFor(vendorId: string, fulfillment: string) {
@@ -819,7 +898,7 @@ export async function loadSellable(slug: string, itemId: string): Promise<Sellab
     .maybeSingle();
   if (!vendor || vendor.slug !== slug) return null;
   const menuColumns =
-    "id, vendor_id, name, price_cents, product_category, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
+    "id, vendor_id, name, price_cents, product_category, contains_alcohol, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
   let itemResult = await db
     .from("published_menus")
     .select(`${menuColumns}, image_url`)
@@ -834,11 +913,33 @@ export async function loadSellable(slug: string, itemId: string): Promise<Sellab
       .eq("vendor_id", vendor.id)
       .maybeSingle();
   }
+  if (
+    itemResult.error &&
+    (itemResult.error.message ?? "").toLowerCase().includes("contains_alcohol")
+  ) {
+    const bare =
+      "id, vendor_id, name, price_cents, product_category, offer_delivery, offer_pickup, offer_preorder, offer_terms, can_buy";
+    itemResult = await db
+      .from("published_menus")
+      .select(`${bare}, image_url`)
+      .eq("id", itemId)
+      .eq("vendor_id", vendor.id)
+      .maybeSingle();
+    if (itemResult.error && publishedMenuSelectMissingPhoto(itemResult.error)) {
+      itemResult = await db
+        .from("published_menus")
+        .select(bare)
+        .eq("id", itemId)
+        .eq("vendor_id", vendor.id)
+        .maybeSingle();
+    }
+  }
   const item = itemResult.data;
   if (!item?.can_buy || typeof item.price_cents !== "number") return null;
-  const reserve = isAlcoholCategory(
-    "product_category" in item && typeof item.product_category === "string" ? item.product_category : null,
-  );
+  const category =
+    "product_category" in item && typeof item.product_category === "string" ? item.product_category : null;
+  const containsAlcohol = "contains_alcohol" in item && item.contains_alcohol === true;
+  const reserve = reservesAtStall(category, containsAlcohol);
   const { data: account } = await db
     .from("vendor_stripe_accounts")
     .select("stripe_account_id, card_payments_active")
@@ -862,8 +963,7 @@ export async function loadSellable(slug: string, itemId: string): Promise<Sellab
       "image_url" in item ? item.image_url : null,
       item.id,
     ),
-    product_category:
-      "product_category" in item && typeof item.product_category === "string" ? item.product_category : null,
+    product_category: category,
     reserve,
   };
 }
@@ -927,6 +1027,7 @@ export async function startStallCheckout(input: {
       commission_bps: schedule.commissionBps,
       flat_fee_cents: schedule.flatCents,
       pickup_starts_at: await pickupStartFor(sellable.vendor_id, details.fulfillment),
+      stripe_account_id: sellable.stripe_account_id,
     })
     .select("id")
     .single();
@@ -1014,13 +1115,8 @@ export async function confirmStallCheckout(input: {
   if (!stripe || !db) return null;
   const order = await loadOrder(input.orderId);
   if (!order || order.buyer_id !== input.buyerId) return null;
-  const { data: account } = await db
-    .from("vendor_stripe_accounts")
-    .select("stripe_account_id")
-    .eq("vendor_id", order.vendor_id)
-    .maybeSingle();
-  const accountId = account?.stripe_account_id;
-  if (typeof accountId !== "string") return order;
+  const accountId = order.stripe_account_id ?? (await stallAccountId(order.vendor_id));
+  if (!accountId) return order;
   try {
     const session = await stripe.checkout.sessions.retrieve(input.sessionId, {}, {
       stripeAccount: accountId,
@@ -1094,6 +1190,7 @@ async function startReservation(input: {
       commission_bps: 0,
       flat_fee_cents: 0,
       pickup_starts_at: await pickupStartFor(sellable.vendor_id, details.fulfillment),
+      stripe_account_id: sellable.stripe_account_id || null,
     })
     .select("id")
     .single();
@@ -1122,6 +1219,7 @@ export async function markOrderReady(vendorId: string, orderId: string, userId: 
   const db = service();
   const order = await ownedOrder(vendorId, orderId, userId);
   if (!db || !order) return { error: "That order is not yours." as const };
+  if (order.disputed_at) return { error: "This order has a dispute. Wait until it closes." as const };
   if (order.status !== "paid" && order.status !== "reserved") {
     return { error: "That order is not ready to hand over." as const };
   }
@@ -1147,9 +1245,9 @@ export async function setOrderPickupStart(
   const db = service();
   const order = await ownedOrder(vendorId, orderId, userId);
   if (!db || !order) return { error: "That order is not yours." as const };
-  const match = raw.trim().match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
-  const starts = match ? torontoInstant(match[1], match[2]) : null;
-  if (!starts) return { error: "That pickup time is not allowed." as const };
+  const next = futurePickupStart(raw, new Date(), order.pickup_starts_at);
+  if (next.error || !next.starts) return { error: next.error ?? "That pickup time is not allowed." };
+  const starts = next.starts;
   const { error } = await db
     .from("orders")
     .update({ pickup_starts_at: starts })
@@ -1163,7 +1261,7 @@ async function ensurePaymentIntent(order: OrderRow) {
   const stripe = getStripe();
   const db = service();
   if (!stripe || !db || !order.stripe_checkout_session_id) return order;
-  const accountId = await stallAccountId(order.vendor_id);
+  const accountId = await chargeAccountId(order);
   if (!accountId) return order;
   const session = await stripe.checkout.sessions.retrieve(
     order.stripe_checkout_session_id,
@@ -1195,38 +1293,82 @@ export async function cancelShopperOrder(orderId: string, buyerId: string) {
   ) {
     return { error: "This order can no longer be cancelled here." as const };
   }
-  if (loaded.status === "reserved") {
+  const current = await loadOrder(loaded.id);
+  if (
+    !current ||
+    !shopperCancelAllowed({
+      status: current.status,
+      readyAt: current.ready_at,
+      pickupStartsAt: current.pickup_starts_at,
+      disputedAt: current.disputed_at,
+    })
+  ) {
+    return { error: "This order can no longer be cancelled here." as const };
+  }
+  if (current.status === "reserved") {
     const { error } = await db
       .from("orders")
       .update({ status: "cancelled" })
-      .eq("id", loaded.id)
-      .eq("status", "reserved");
+    .eq("id", current.id)
+    .eq("status", "reserved");
     if (error) return { error: "Could not cancel that reservation." as const };
-    await sendCancelledOrderMail(loaded);
+    await sendCancelledOrderMail(current);
     return { error: null };
   }
-  const order = await ensurePaymentIntent(loaded);
+  const prepared = await ensurePaymentIntent(current);
   const stripe = getStripe();
-  const accountId = await stallAccountId(order.vendor_id);
-  if (!stripe || !accountId || !order.stripe_payment_intent_id) {
+  const accountId = await chargeAccountId(prepared);
+  if (!stripe || !accountId || !prepared.stripe_payment_intent_id) {
     return { error: "That payment is not ready to refund." as const };
   }
+  const order = await loadOrder(prepared.id);
+  if (
+    !order ||
+    !shopperCancelAllowed({
+      status: order.status,
+      readyAt: order.ready_at,
+      pickupStartsAt: order.pickup_starts_at,
+      disputedAt: order.disputed_at,
+    })
+  ) {
+    return { error: "This order can no longer be cancelled here." as const };
+  }
+  const paymentIntentId = order.stripe_payment_intent_id ?? prepared.stripe_payment_intent_id;
+  if (!paymentIntentId) return { error: "That payment is not ready to refund." as const };
   try {
-    await stripe.refunds.create(
+    const refund = await stripe.refunds.create(
       {
-        payment_intent: order.stripe_payment_intent_id,
+        payment_intent: paymentIntentId,
         refund_application_fee: true,
       },
-      { stripeAccount: accountId },
+      { stripeAccount: accountId, idempotencyKey: `stall-refund-${order.id}` },
     );
+    if (refund.status === "pending" || refund.status === "requires_action") {
+      return { error: null, message: "The refund is on its way." as const };
+    }
+    if (refund.status !== "succeeded") return { error: "Could not refund that order." as const };
   } catch (err) {
+    if (stripeErrorCode(err) === "charge_already_refunded") {
+      const intent = await stripe.paymentIntents.retrieve(
+        paymentIntentId,
+        { expand: ["latest_charge"] },
+        { stripeAccount: accountId },
+      );
+      const latestCharge = intent.latest_charge;
+      const returned = latestCharge && typeof latestCharge === "object" ? latestCharge.amount_refunded : 0;
+      if (returned > 0) {
+        await applyReturnedAmount(order, returned, paymentIntentId);
+        await sendCancelledOrderMail(order);
+        return { error: null };
+      }
+    }
     console.error("stall cancel", err instanceof Error ? err.message : "stripe");
     return { error: "Could not refund that order." as const };
   }
   await applyReturnedAmount(
     order,
     order.charge_cents + order.service_fee_cents,
-    order.stripe_payment_intent_id,
+    paymentIntentId,
   );
   await sendCancelledOrderMail(order);
   return { error: null };

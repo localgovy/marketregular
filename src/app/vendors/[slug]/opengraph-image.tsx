@@ -47,11 +47,11 @@ export default async function VendorOgImage({
   const { slug } = await params;
   const card = await loadVendorOg(slug);
   if (!card) {
-    return ogCard({
+    return await ogCard({
       kicker: `${LAUNCH_CITY} market vendors`,
       title: "Vendor",
       lines: [],
     });
   }
-  return ogCard(card);
+  return await ogCard(card);
 }

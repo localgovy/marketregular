@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import {
-  applyLostDispute,
+  applyClosedDispute,
+  applyOpenDispute,
   applyStallRefund,
   expireStallCheckout,
   recordPlatformFee,
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
   if (!stripeEventModeMatches(event.livemode)) {
-    return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
+    return NextResponse.json({ received: true });
   }
 
   try {
@@ -49,8 +50,11 @@ export async function POST(request: Request) {
       case "charge.refunded":
         await applyStallRefund(event.data.object as Stripe.Charge, event.account ?? null);
         break;
+      case "charge.dispute.created":
+        await applyOpenDispute(event.data.object as Stripe.Dispute, event.account ?? null);
+        break;
       case "charge.dispute.closed":
-        await applyLostDispute(event.data.object as Stripe.Dispute, event.account ?? null);
+        await applyClosedDispute(event.data.object as Stripe.Dispute, event.account ?? null);
         break;
       case "account.updated": {
         const account = event.data.object as Stripe.Account;

@@ -22,6 +22,7 @@ import {
   MENU_PUBLIC,
   MENU_PUBLIC_FLAT,
   MENU_PUBLIC_PHOTO,
+  stripContainsAlcohol,
   stripMenuCategory,
 } from "@/lib/data/published-menu-select";
 import type {
@@ -510,6 +511,10 @@ async function readMenus(service: NonNullable<ReturnType<typeof createServiceCli
       }
       if (columns === MENU_PUBLIC && publishedMenuSelectMissingSections(probe)) {
         columns = MENU_PUBLIC_FLAT;
+        continue;
+      }
+      if (message.toLowerCase().includes("contains_alcohol")) {
+        columns = stripContainsAlcohol(columns);
         continue;
       }
       if (menuSelectMissingCategory(probe)) {

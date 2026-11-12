@@ -372,11 +372,13 @@ function StallOrderControls({
   orderId,
   readyAt,
   pickupStartsAt,
+  disputedAt,
 }: {
   vendorId: string;
   orderId: string;
   readyAt: string | null;
   pickupStartsAt: string | null;
+  disputedAt: string | null;
 }) {
   const [readyState, markReady, readyPending] = useActionState(
     (_prev: PortalResult | undefined, formData: FormData) => markStallOrderReady(formData),
@@ -390,7 +392,8 @@ function StallOrderControls({
   usePortalRefresh(timeState);
   return (
     <div className="mt-2 flex flex-wrap items-end gap-3">
-      {readyAt ? null : (
+      {disputedAt ? <p className="text-sm text-muted-foreground">This order has a dispute. Wait until it closes.</p> : null}
+      {readyAt || disputedAt ? null : (
         <form action={markReady} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="vendor_id" value={vendorId} />
           <input type="hidden" name="order_id" value={orderId} />
@@ -434,12 +437,14 @@ function SaleFields({
   pickup,
   preorder,
   terms,
+  containsAlcohol,
 }: {
   id: string;
   forSale: boolean;
   pickup: boolean;
   preorder: boolean;
   terms: string;
+  containsAlcohol: boolean;
 }) {
   return (
     <fieldset className="grid gap-3 sm:col-span-2">
@@ -466,6 +471,10 @@ function SaleFields({
           usually keeps its card processing fee on a refund, and that cost stays with this stall.
         </p>
       </div>
+      <label className="flex items-baseline gap-2 text-sm">
+        <input type="checkbox" name="contains_alcohol" defaultChecked={containsAlcohol} className="accent-primary" />
+        <span>Alcohol. The shopper reserves it and pays at the stall.</span>
+      </label>
       <p className="text-sm text-muted-foreground">
         A sale needs a price of at least $0.50, and pickup or preorder. Buyers pay you. Alcohol is reserved
         and paid at the stall.
@@ -539,6 +548,7 @@ function MenuItemForm({
             pickup={item.offer_pickup}
             preorder={item.offer_preorder}
             terms={item.offer_terms ?? ""}
+            containsAlcohol={item.contains_alcohol}
           />
         ) : null}
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
@@ -598,7 +608,14 @@ function AddMenuItem({ vendorId, sections }: { vendorId: string; sections: MenuS
         </div>
         <MenuSectionFields id={`${vendorId}-new`} sections={sections} />
         {VENDOR_SALES_OPEN ? (
-          <SaleFields id={`${vendorId}-new`} forSale={false} pickup={false} preorder={false} terms="" />
+          <SaleFields
+            id={`${vendorId}-new`}
+            forSale={false}
+            pickup={false}
+            preorder={false}
+            terms=""
+            containsAlcohol={false}
+          />
         ) : null}
         <div className="sm:col-span-2">
           <Button type="submit" disabled={pending}>
@@ -837,15 +854,17 @@ export function VendorPortalEditor({
                       : "Finish the payment setup before a Buy button can show."}
                     {listing.payouts_active ? " Payouts are on." : " Payouts are not on yet."}
                   </p>
-                  <form action={dashboard} className="flex flex-wrap items-center gap-3">
-                    <input type="hidden" name="vendor_id" value={listing.id} />
-                    <Button type="submit" variant="outline" disabled={dashboardPending}>
-                      {dashboardPending ? "Opening…" : "Open stall dashboard"}
-                    </Button>
-                    {dashboardState?.error ? (
-                      <p className="text-sm text-destructive">{dashboardState.error}</p>
-                    ) : null}
-                  </form>
+                  {listing.card_payments_active ? (
+                    <form action={dashboard} className="flex flex-wrap items-center gap-3">
+                      <input type="hidden" name="vendor_id" value={listing.id} />
+                      <Button type="submit" variant="outline" disabled={dashboardPending}>
+                        {dashboardPending ? "Opening…" : "Open stall dashboard"}
+                      </Button>
+                      {dashboardState?.error ? (
+                        <p className="text-sm text-destructive">{dashboardState.error}</p>
+                      ) : null}
+                    </form>
+                  ) : null}
                   <StallConnect vendorId={listing.id} cardPaymentsActive={listing.card_payments_active} />
                 </div>
               ) : (
@@ -860,51 +879,52 @@ export function VendorPortalEditor({
             ) : (
               <p className="text-sm text-muted-foreground">Payments are not available yet.</p>
             )}
-            {listing.orders.length ? (
-              <ul className="divide-y divide-border">
-                {listing.orders.map((order) => (
-                  <li key={order.id} className="grid gap-1 py-3">
-                    <p className="text-base font-medium">{order.item_name}</p>
-                    <p className="type-nums text-sm text-muted-foreground">
-                      {order.quantity} · {formatPrice(order.charge_cents)}
-                      {order.service_fee_cents > 0
-                        ? ` plus ${formatPrice(order.service_fee_cents)} service fee`
-                        : ""}{" "}
-                      · {fulfillmentLabel(order.fulfillment)} · {orderStatusLabel(order.status, order.ready_at)}
-                    </p>
-                    {order.status === "paid" || order.status === "reserved" ? (
-                      <StallOrderControls
-                        vendorId={listing.id}
-                        orderId={order.id}
-                        readyAt={order.ready_at}
-                        pickupStartsAt={order.pickup_starts_at}
-                      />
-                    ) : null}
-                    {order.buyer_email ? (
-                      <p className="text-sm text-muted-foreground">{order.buyer_email}</p>
-                    ) : null}
-                    {order.fulfillment_note ? (
-                      <p className="whitespace-pre-wrap text-sm text-muted-foreground">{order.fulfillment_note}</p>
-                    ) : null}
-                    {order.delivery_line1 ? (
-                      <p className="text-sm text-muted-foreground">
-                        {[order.delivery_name, order.delivery_line1, order.delivery_city, order.delivery_region, order.delivery_postal]
-                          .filter(Boolean)
-                          .join(", ")}
-                      </p>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">No paid orders yet.</p>
-            )}
           </div>
         ) : (
           <p className="mt-2 text-sm text-muted-foreground">
             Selling is off until {SITE_NAME} turns it on. You can still set pickup or preorder on an item.
           </p>
         )}
+        {listing.orders.length ? (
+          <ul className="mt-4 divide-y divide-border">
+            {listing.orders.map((order) => (
+              <li key={order.id} className="grid gap-1 py-3">
+                <p className="text-base font-medium">{order.item_name}</p>
+                <p className="type-nums text-sm text-muted-foreground">
+                  {order.quantity} · {formatPrice(order.charge_cents)}
+                  {order.service_fee_cents > 0
+                    ? ` plus ${formatPrice(order.service_fee_cents)} service fee`
+                    : ""}{" "}
+                  · {fulfillmentLabel(order.fulfillment)} · {orderStatusLabel(order.status, order.ready_at)}
+                </p>
+                {order.status === "paid" || order.status === "reserved" ? (
+                  <StallOrderControls
+                    vendorId={listing.id}
+                    orderId={order.id}
+                    readyAt={order.ready_at}
+                    pickupStartsAt={order.pickup_starts_at}
+                    disputedAt={order.disputed_at}
+                  />
+                ) : null}
+                {order.buyer_email ? (
+                  <p className="text-sm text-muted-foreground">{order.buyer_email}</p>
+                ) : null}
+                {order.fulfillment_note ? (
+                  <p className="whitespace-pre-wrap text-sm text-muted-foreground">{order.fulfillment_note}</p>
+                ) : null}
+                {order.delivery_line1 ? (
+                  <p className="text-sm text-muted-foreground">
+                    {[order.delivery_name, order.delivery_line1, order.delivery_city, order.delivery_region, order.delivery_postal]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        ) : listing.selling_approved ? (
+          <p className="mt-4 text-sm text-muted-foreground">No paid orders yet.</p>
+        ) : null}
       </section>
       ) : (
         <p className="text-sm text-muted-foreground">Listing for sale is closed for now.</p>
@@ -956,6 +976,7 @@ export function VendorPortalEditor({
                   item.offer_pickup ? "1" : "0",
                   item.offer_preorder ? "1" : "0",
                   item.offer_terms ?? "",
+                  item.contains_alcohol ? "1" : "0",
                 ].join("\n")}
                 vendorId={listing.id}
                 item={item}

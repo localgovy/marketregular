@@ -1,5 +1,10 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { SITE_NAME } from "@/lib/constants";
+
+const WORDMARK = readFile(join(process.cwd(), "public/brand/marketregular-wordmark.png"));
+const WORDMARK_WIDTH = 324;
+const WORDMARK_HEIGHT = 48;
 
 export const OG_SIZE = { width: 1200, height: 630 };
 export const OG_CONTENT_TYPE = "image/png";
@@ -15,7 +20,7 @@ const MUTED = "#5d574e";
  * Rendered by satori, so this is deliberately flexbox-only with explicit sizes and no
  * custom fonts — a font fetch that fails would take the whole card down.
  */
-export function ogCard({
+export async function ogCard({
   kicker,
   title,
   lines,
@@ -26,6 +31,7 @@ export function ogCard({
   lines: string[];
   plate?: string;
 }) {
+  const wordmark = await WORDMARK;
   return new ImageResponse(
     (
       <div
@@ -88,7 +94,12 @@ export function ogCard({
               paddingTop: 22,
             }}
           >
-            <div style={{ fontSize: 34, fontWeight: 700 }}>{SITE_NAME}</div>
+            <img
+              src={`data:image/png;base64,${wordmark.toString("base64")}`}
+              width={WORDMARK_WIDTH}
+              height={WORDMARK_HEIGHT}
+              alt=""
+            />
             <div style={{ fontSize: 28, color: MUTED, marginLeft: 16 }}>
               marketregular.com
             </div>

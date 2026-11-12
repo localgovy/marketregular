@@ -35,6 +35,7 @@ import {
   MENU_PUBLIC,
   MENU_PUBLIC_FLAT,
   MENU_PUBLIC_PHOTO,
+  stripContainsAlcohol,
   stripMenuCategory,
 } from "@/lib/data/published-menu-select";
 import { DIRECTORY_CENSUS_ID } from "@/lib/launch";
@@ -192,6 +193,10 @@ async function selectPublishedMenusForVendor(supabase: DirectoryClient, vendorId
     publishedMenuSelectMissingSections(result.error)
   ) {
     publishedMenuSelect = MENU_PUBLIC_FLAT;
+    return selectPublishedMenusForVendor(supabase, vendorId);
+  }
+  if (result.error && (result.error.message ?? "").toLowerCase().includes("contains_alcohol")) {
+    publishedMenuSelect = stripContainsAlcohol(columns);
     return selectPublishedMenusForVendor(supabase, vendorId);
   }
   if (result.error && menuSelectMissingCategory(result.error)) {

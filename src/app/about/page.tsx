@@ -26,7 +26,7 @@ export default function AboutPage() {
           Buy Canadian
         </h2>
         <p className="mt-2 text-base leading-relaxed">
-          Grocery aisles fill with whatever is cheapest to ship. Buying Canadian keeps the next
+          Grocery stores fill with whatever is cheapest to ship. Buying Canadian keeps the next
           season in Canadian dirt, paid in Canadian wages. That is more important now than it has
           been in a long time: trade is a fight, grocery bills already are, and Canadians deserve
           a simple way to purchase goods grown on our own soil.

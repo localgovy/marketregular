@@ -12,7 +12,7 @@ import type {
   MarketsFloorView,
 } from "@/lib/markets-floor-types";
 import { useNow } from "@/lib/use-now";
-import { StallEmblem, formatCensus } from "@/app/preview/_components/markets-concept-shared";
+import { StallEmblem, formatCensus } from "@/components/stall-emblem";
 import { AddressLink } from "@/components/address-link";
 import { Hours } from "@/components/hours";
 import { ListingScore } from "@/components/listing-score";
@@ -1632,6 +1632,7 @@ export function MarketsFloor({
           ) : null}
         </section>
 
+        {rows.length === 0 ? null : (
         <section className="mt-5" aria-live="polite">
           <h2>Markets and vendors</h2>
 
@@ -1641,15 +1642,7 @@ export function MarketsFloor({
             </div>
           ) : null}
 
-          {rows.length === 0 ? (
-            <div className="mt-4 bg-card p-6 ring-1 ring-board">
-              <p className="text-base font-medium">No markets match.</p>
-              <button type="button" onClick={clearAll} className={cn(chipIdle, "mt-3")}>
-                Clear filters
-              </button>
-            </div>
-          ) : (
-            <div className="mt-4 grid items-start gap-5 lg:grid-cols-12">
+          <div className="mt-4 grid items-start gap-5 lg:grid-cols-12">
               <MarketColumn
                 key={[q, dayId, area, setup, category, cuisine, diet, made].join("|")}
                 rows={rows}
@@ -1671,8 +1664,8 @@ export function MarketsFloor({
                 />
               ) : null}
             </div>
-          )}
         </section>
+        )}
           </>
         )}
       </div>
@@ -1901,9 +1894,13 @@ function SearchLanding({
   return (
     <section className="mt-4 bg-card ring-1 ring-board" aria-live="polite">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
-        <button type="button" onClick={onBack} className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-primary hover:underline">
-          <CaretLeftMark className="size-4" />
-          Back to results
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Back"
+          className="-ml-1 inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06] active:bg-foreground/[0.1]"
+        >
+          <CaretLeftMark className="size-5" />
         </button>
         {guide ? (
           <Link href={`/find/${guide.slug}`} className="text-sm font-medium text-primary hover:underline">

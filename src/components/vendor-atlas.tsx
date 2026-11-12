@@ -22,7 +22,6 @@ import {
   CheckMark,
   CrateMark,
   PlateMark,
-  RulesMark,
   SearchMark,
   SlatsMark,
   TagMark,
@@ -32,9 +31,10 @@ import { MenuItemPhoto } from "@/components/menu-item-photo";
 import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { ReviewCard } from "@/components/review-card";
 import { ProductSaveButton, SaveButton } from "@/components/save-button";
+import { directPublicImageSrc, StallEmblem } from "@/components/stall-emblem";
 import { TagList } from "@/components/tag-list";
 import { VerifiedName } from "@/components/verified-stamp";
-import { formatPrice, listingMarkSrc } from "@/lib/format";
+import { formatPrice } from "@/lib/format";
 import { tagLabel } from "@/lib/find-paths";
 import { formatRatingAvg, formatReviewCountShort, listingScore } from "@/lib/listing-score";
 import { productFromInput } from "@/lib/product-saves";
@@ -46,86 +46,6 @@ import type {
   VendorAtlasMarket,
   VendorAtlasMenuItem,
 } from "@/lib/vendor-atlas-data";
-
-/**
- * Guard that guarantees an image URL never routes through Supabase's paid
- * `/storage/v1/render/image/` transform endpoint or Vercel's `/_next/image` optimizer.
- */
-function directPublicImageSrc(src: string | null | undefined): string | null {
-  if (!src) return null;
-  if (src.includes("/storage/v1/render/image/") || src.startsWith("/_next/image")) {
-    return null;
-  }
-  return src;
-}
-
-/**
- * Cohesive Stall / Market Emblem Plate (`StallEmblem`), matching `HomeAtlas`.
- * Renders the listing's direct public logo inside a framed paper plate, or falls back to a
- * tactile woodcut stamp so every vendor and market row has a uniform visual anchor.
- */
-function StallEmblem({
-  src,
-  name,
-  kind = "vendor",
-  size = "md",
-  tone = "paper",
-  className,
-}: {
-  src: string | null | undefined;
-  name: string;
-  kind?: "vendor" | "market";
-  size?: "xs" | "sm" | "md" | "lg";
-  tone?: "paper" | "chalk" | "board";
-  className?: string;
-}) {
-  const url = directPublicImageSrc(listingMarkSrc(src));
-  const [failed, setFailed] = useState(false);
-  const showLogo = Boolean(url && !failed);
-
-  const sizeSpec = {
-    xs: { box: "size-7 p-0.5", px: 28, icon: "size-3.5" },
-    sm: { box: "size-9 p-1", px: 36, icon: "size-4" },
-    md: { box: "size-11 p-1", px: 44, icon: "size-5" },
-    lg: { box: "size-14 p-1.5", px: 56, icon: "size-6" },
-  }[size];
-
-  const toneClasses = {
-    paper: "bg-card text-board ring-1 ring-border",
-    chalk: "bg-primary-foreground text-primary ring-1 ring-black/15",
-    board: "bg-board text-chalk ring-1 ring-board",
-  }[tone];
-
-  return (
-    <span
-      aria-hidden
-      title={name}
-      className={cn(
-        "stall-chip-sm inline-flex shrink-0 items-center justify-center overflow-hidden select-none",
-        sizeSpec.box,
-        showLogo ? "bg-primary-foreground ring-1 ring-border" : toneClasses,
-        className,
-      )}
-    >
-      {showLogo && url ? (
-        <img
-          src={url}
-          alt=""
-          width={sizeSpec.px}
-          height={sizeSpec.px}
-          loading="lazy"
-          decoding="async"
-          className="block max-h-full max-w-full object-contain object-center"
-          onError={() => setFailed(true)}
-        />
-      ) : kind === "market" ? (
-        <RulesMark className={sizeSpec.icon} />
-      ) : (
-        <CrateMark className={sizeSpec.icon} />
-      )}
-    </span>
-  );
-}
 
 /**
  * Cohesive square category thumbnail (`ProductThumb`).
@@ -297,9 +217,9 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
   const [selectedSection, setSelectedSection] = useState<string>("all");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("all");
   const [selectedDietary, setSelectedDietary] = useState<string>("all");
-  const [fulfillmentFilter, setFulfillmentFilter] = useState<
-    "all" | "pickup" | "preorder" | "delivery"
-  >("all");
+  const [fulfillmentFilter, setFulfillmentFilter] = useState<"all" | "pickup" | "preorder">(
+    "all",
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [activeMarketSlug, setActiveMarketSlug] = useState<string>(homeMarket?.slug ?? "");
 
@@ -310,10 +230,9 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
   }, [menuSections, categoryGuides]);
 
   const availableFulfillmentModes = useMemo(() => {
-    const modes: Array<{ id: "pickup" | "preorder" | "delivery"; label: string }> = [];
+    const modes: Array<{ id: "pickup" | "preorder"; label: string }> = [];
     if (menus.some((item) => item.pickup)) modes.push({ id: "pickup", label: "Pickup" });
     if (menus.some((item) => item.preorder)) modes.push({ id: "preorder", label: "Pre-order" });
-    if (menus.some((item) => item.delivery)) modes.push({ id: "delivery", label: "Delivery" });
     return modes;
   }, [menus]);
 
@@ -327,7 +246,6 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
       if (selectedDietary !== "all" && !item.dietary.includes(selectedDietary)) return false;
       if (fulfillmentFilter === "pickup" && !item.pickup) return false;
       if (fulfillmentFilter === "preorder" && !item.preorder) return false;
-      if (fulfillmentFilter === "delivery" && !item.delivery) return false;
       if (q) {
         const hay = `${item.name} ${item.description ?? ""} ${item.productCategoryLabel} ${item.section}`.toLowerCase();
         if (!hay.includes(q)) return false;
@@ -871,11 +789,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                                             <CheckMark className="size-3.5" />
                                             <span>
                                               Market pickup
-                                              {item.delivery
-                                                ? " & delivery"
-                                                : item.preorder
-                                                  ? " & pre-order"
-                                                  : ""}
+                                              {item.preorder ? " & pre-order" : ""}
                                             </span>
                                           </span>
                                         ) : null}

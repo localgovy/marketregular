@@ -89,7 +89,7 @@ On the roster (lineup can shift Saturday to Saturday):
 - **After the farm stalls:** Continue to [South](https://www.marketregular.com/markets/st-lawrence-market) for permanent merchants if you still have energy; South is **7 AM–5 PM** Saturdays.
 - **MarketRegular Tip:** St. Lawrence can feel like one destination, but it’s two buildings sharing Front Street. North is where the Saturday farmers’ market lives — farm vendors from 5 AM in the Market Hall, year-round, back in the new North building since April 2025. South is the year-round hall of butchers, cheese counters, and the classic market crowd, open from 7 AM Saturdays and closed Mondays. For a first visit, start at North while it’s early, then wander to South when you’re ready — or save South for a weekday when North isn’t running. Pair this with our [year-round halls guide](https://www.marketregular.com/blog/year-round-toronto-farmers-markets) if you also want Allan Gardens and Dufferin Grove.
 
-Filter by Saturday on the [homepage](https://www.marketregular.com). Year-round circuit: [Year-round Toronto farmers’ markets](https://www.marketregular.com/blog/year-round-toronto-farmers-markets). West-end Saturday: [West-end Saturday farmers’ markets](https://www.marketregular.com/blog/west-end-saturday-farmers-markets).
+Filter by Saturday on the [homepage](https://www.marketregular.com). Year-round markets: [Year-round Toronto farmers’ markets](https://www.marketregular.com/blog/year-round-toronto-farmers-markets). West-end Saturday: [West-end Saturday farmers’ markets](https://www.marketregular.com/blog/west-end-saturday-farmers-markets).
 
 Made by Canadians, for Canadians, to shop Canadian. Pickup, pre-order, and a mobile app coming soon.
 
