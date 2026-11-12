@@ -405,8 +405,8 @@ test("checkout returns use the public site, not the request host", () => {
       readyAt: "2026-11-12T14:00:00Z",
       pickupStartsAt: "2026-11-12T19:00:00Z",
       now: new Date("2026-11-12T20:00:00Z"),
-    })?.includes("payments panel"),
-    true,
+    }),
+    "A refund from here is closed.",
   );
   assert.equal(
     stallCardStatusCopy({

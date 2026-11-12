@@ -5,7 +5,6 @@ import { placeStallOrder } from "@/app/actions/selling";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { formatPrice } from "@/lib/format";
 import { checkoutTotalCents, MAX_QUANTITY, serviceFeeCents } from "@/lib/selling";
 
@@ -53,22 +52,6 @@ export function BuyForm({
           This is a reservation. Pay at the stall and show ID. There is no card charge.
         </p>
       ) : null}
-      {markets.length === 1 ? (
-        <>
-          <p className="text-base text-muted-foreground">This order is for {markets[0].name}.</p>
-          <input type="hidden" name="market_id" value={markets[0].id} />
-        </>
-      ) : markets.length > 1 ? (
-        <fieldset className="grid gap-2">
-          <legend className="text-sm font-medium">Which market</legend>
-          {markets.map((market) => (
-            <label key={market.id} className="flex items-baseline gap-2 text-sm">
-              <input type="radio" name="market_id" value={market.id} className="accent-primary" required />
-              <span>{market.name}</span>
-            </label>
-          ))}
-        </fieldset>
-      ) : null}
       <div className="grid gap-1.5">
         <Label htmlFor="pickup_name">Your name</Label>
         <Input id="pickup_name" name="pickup_name" autoComplete="name" maxLength={80} required />
@@ -89,26 +72,47 @@ export function BuyForm({
           required
         />
       </div>
-      <fieldset className="grid gap-2">
-        <legend className="text-sm font-medium">How you want it</legend>
-        {methods.map((method) => (
-          <label key={method} className="flex items-baseline gap-2 text-sm">
-            <input
-              type="radio"
-              name="fulfillment"
-              value={method}
-              checked={fulfillment === method}
-              onChange={() => setFulfillment(method)}
-              className="accent-primary"
-              required
-            />
-            <span>{method === "pickup" ? "Pickup" : "Preorder"}</span>
-          </label>
-        ))}
-      </fieldset>
+      {markets.length === 1 ? <input type="hidden" name="market_id" value={markets[0].id} /> : null}
+      {markets.length > 1 ? (
+        <fieldset className="grid gap-2">
+          <legend className="text-sm font-medium">Market</legend>
+          {markets.map((market) => (
+            <label key={market.id} className="flex items-baseline gap-2 text-sm">
+              <input type="radio" name="market_id" value={market.id} className="accent-primary" required />
+              <span>{market.name}</span>
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
+      {methods.length === 1 ? (
+        <>
+          <p className="text-base text-muted-foreground">
+            {methods[0] === "pickup" ? "This is for pickup." : "This is a preorder."}
+          </p>
+          <input type="hidden" name="fulfillment" value={methods[0]} />
+        </>
+      ) : (
+        <fieldset className="grid gap-2">
+          <legend className="text-sm font-medium">Pickup or preorder</legend>
+          {methods.map((method) => (
+            <label key={method} className="flex items-baseline gap-2 text-sm">
+              <input
+                type="radio"
+                name="fulfillment"
+                value={method}
+                checked={fulfillment === method}
+                onChange={() => setFulfillment(method)}
+                className="accent-primary"
+                required
+              />
+              <span>{method === "pickup" ? "Pickup" : "Preorder"}</span>
+            </label>
+          ))}
+        </fieldset>
+      )}
       <div className="grid gap-1.5">
         <Label htmlFor="note">Note for the stall</Label>
-        <Textarea id="note" name="note" rows={3} maxLength={500} />
+        <Input id="note" name="note" maxLength={500} />
       </div>
       {terms ? (
         <div>

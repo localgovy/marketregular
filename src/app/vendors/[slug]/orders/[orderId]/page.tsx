@@ -6,6 +6,7 @@ import { BackButton } from "@/components/back-button";
 import { OrderCancel } from "@/components/order-cancel";
 import { formatPrice } from "@/lib/format";
 import {
+  formatTorontoStamp,
   fulfillmentLabel,
   orderIsReady,
   orderStatusLabel,
@@ -82,6 +83,7 @@ export default async function StallOrderPage({
   const readyAt = "ready_at" in order && typeof order.ready_at === "string" ? order.ready_at : null;
   const pickupStarts =
     "pickup_starts_at" in order && typeof order.pickup_starts_at === "string" ? order.pickup_starts_at : null;
+  const pickupStamp = pickupStarts ? formatTorontoStamp(pickupStarts) : null;
   const disputedAt = "disputed_at" in order && typeof order.disputed_at === "string" ? order.disputed_at : null;
   const pickupName = "pickup_name" in order && typeof order.pickup_name === "string" ? order.pickup_name : null;
   const marketName = "market_name" in order && typeof order.market_name === "string" ? order.market_name : null;
@@ -128,9 +130,9 @@ export default async function StallOrderPage({
             )}{" "}
             {waiting
               ? "has not been paid yet."
-              : reserved && !ready
+              : reserved
                 ? "is holding this reservation. Pay at the stall and show ID."
-                : "has this order and will follow the terms you agreed to."}{" "}
+                : "has this order."}{" "}
             {orderStatusLabel(status, readyAt)}.
           </>
         )}
@@ -140,10 +142,11 @@ export default async function StallOrderPage({
       <p className="type-nums mt-1 text-base">
         {order.quantity} · {formatPrice(order.charge_cents)}
         {serviceFee > 0 ? ` plus ${formatPrice(serviceFee)} service fee` : ""} · {fulfillmentLabel(order.fulfillment)}
+        {marketName ? ` · ${marketName}` : ""}
+        {pickupStamp ? ` · ${pickupStamp}` : ""}
       </p>
       {pickupName ? <p className="mt-3 text-base">{pickupName}</p> : null}
-      {marketName ? <p className="mt-1 text-base text-muted-foreground">{marketName}</p> : null}
-      {canCancel ? <OrderCancel orderId={String(order.id)} reserved={reserved} /> : null}
+      {canCancel ? <OrderCancel orderId={String(order.id)} /> : null}
       {order.fulfillment_note ? (
         <p className="mt-3 whitespace-pre-wrap text-base text-muted-foreground">{order.fulfillment_note}</p>
       ) : null}

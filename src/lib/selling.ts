@@ -613,7 +613,7 @@ export function shopperCancelAllowed(input: {
   return (input.now ?? new Date()).getTime() < starts;
 }
 
-/** What a shopper should read about pickup and the refund window. */
+/** One sentence for the buyer. The pickup time itself stays on the price line. */
 export function shopperRefundWindowCopy(input: {
   status: string;
   readyAt: string | null;
@@ -623,26 +623,18 @@ export function shopperRefundWindowCopy(input: {
 }) {
   if (input.disputedAt) return "This payment is being reviewed, so it cannot be cancelled here.";
   if (input.status !== "paid" && input.status !== "reserved") return null;
-  const time = input.pickupStartsAt ? formatTorontoStamp(input.pickupStartsAt) : null;
   if (input.status === "reserved") {
-    if (input.readyAt) {
-      return time ? `Pickup starts ${time}. Pay at the stall and show ID.` : "Pay at the stall and show ID.";
-    }
-    return time
-      ? `You can cancel this reservation until the stall marks it ready. Pickup starts ${time}.`
-      : "You can cancel this reservation until the stall marks it ready.";
+    if (input.readyAt) return null;
+    return "You can cancel until the stall marks this ready.";
   }
-  const open = shopperCancelAllowed(input);
-  if (open && !input.readyAt) {
-    return time
-      ? `A full refund of the item and the service fee stays open until the stall marks this ready and pickup starts ${time}.`
-      : "A full refund of the item and the service fee stays open until the stall marks this ready and a pickup time has started.";
+  if (!shopperCancelAllowed(input)) return "A refund from here is closed.";
+  if (!input.readyAt) {
+    return "A full refund stays open until the stall marks this ready and the pickup time has started.";
   }
-  if (open && input.readyAt && time) return `Pickup starts ${time}. A full refund stays open until then.`;
-  if (open) return "A full refund stays open until a pickup time is set and that time has started.";
-  return time
-    ? `Pickup started ${time}. A refund from here is closed. The stall can still refund from its payments panel.`
-    : "A refund from here is closed. The stall can still refund from its payments panel.";
+  if (!input.pickupStartsAt) {
+    return "A full refund stays open until a pickup time is set and that time has started.";
+  }
+  return "A full refund stays open until the pickup time.";
 }
 
 /** A later pickup time. A time that has started, or one earlier than the saved time, is refused. */

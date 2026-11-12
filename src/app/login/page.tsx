@@ -55,7 +55,9 @@ export default async function LoginPage({
       <BackButton href="/" />
       <h1>Sign in</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        Saved markets and reviews follow this account. Browsing stays open.
+        {isStallCheckoutPath(next)
+          ? "The order and the receipt stay with this account."
+          : "Saved markets and reviews follow this account. Browsing stays open."}
       </p>
       <LoginForm
         next={next}

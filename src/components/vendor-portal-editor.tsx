@@ -48,6 +48,7 @@ import {
 } from "@/lib/vendor-portal";
 import { SITE_NAME } from "@/lib/constants";
 import {
+  formatTorontoStamp,
   fulfillmentLabel,
   orderStatusLabel,
   stallCardStatusCopy,
@@ -379,14 +380,12 @@ function StallOrderControls({
   readyAt,
   pickupStartsAt,
   disputedAt,
-  cardPaymentsActive,
 }: {
   vendorId: string;
   orderId: string;
   readyAt: string | null;
   pickupStartsAt: string | null;
   disputedAt: string | null;
-  cardPaymentsActive: boolean;
 }) {
   const [readyState, markReady, readyPending] = useActionState(
     (_prev: PortalResult | undefined, formData: FormData) => markStallOrderReady(formData),
@@ -398,21 +397,15 @@ function StallOrderControls({
   );
   usePortalRefresh(readyState);
   usePortalRefresh(timeState);
+  const pickupStamp = pickupStartsAt ? formatTorontoStamp(pickupStartsAt) : null;
   return (
     <div className="mt-2 flex flex-wrap items-end gap-3">
       {disputedAt ? (
         <p className="basis-full text-sm text-muted-foreground">
-          {cardPaymentsActive
-            ? "This payment is being reviewed. Respond in the payments panel above. Ready stays off until that review closes."
-            : "This payment is being reviewed. Ready stays off until that review closes."}
+          This payment is being reviewed. Respond in the payments panel above. Ready stays off until that
+          review closes.
         </p>
-      ) : (
-        <p className="basis-full text-sm text-muted-foreground">
-          A shopper can cancel for a full refund until this order is marked ready and the pickup time has
-          started.
-          {cardPaymentsActive ? " After that, a refund is in the payments panel above." : ""}
-        </p>
-      )}
+      ) : null}
       {readyAt || disputedAt ? null : (
         <form action={markReady} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="vendor_id" value={vendorId} />
@@ -428,7 +421,10 @@ function StallOrderControls({
         <input type="hidden" name="vendor_id" value={vendorId} />
         <input type="hidden" name="order_id" value={orderId} />
         <div className="grid gap-1">
-          <Label htmlFor={`${orderId}-pickup`}>Pickup starts (Toronto time)</Label>
+          {pickupStamp ? <p className="type-nums text-sm">{pickupStamp}</p> : null}
+          <Label htmlFor={`${orderId}-pickup`}>
+            {pickupStartsAt ? "Change pickup time" : "Pickup starts (Toronto time)"}
+          </Label>
           <Input
             id={`${orderId}-pickup`}
             name="pickup_starts"
@@ -437,17 +433,6 @@ function StallOrderControls({
             key={pickupStartsAt ?? "open"}
             defaultValue={pickupStartsAt ? torontoDateTimeLocal(pickupStartsAt) : undefined}
           />
-          {pickupStartsAt ? (
-            <p className="text-sm text-muted-foreground">
-              Saved for{" "}
-              {new Intl.DateTimeFormat("en-CA", {
-                timeZone: "America/Toronto",
-                dateStyle: "medium",
-                timeStyle: "short",
-              }).format(new Date(pickupStartsAt))}
-              .
-            </p>
-          ) : null}
         </div>
         <Button type="submit" variant="outline" disabled={timePending}>
           {timePending ? "Saving…" : "Save time"}
@@ -494,9 +479,8 @@ function SaleFields({
         <Label htmlFor={`${id}-terms`}>Terms</Label>
         <Textarea id={`${id}-terms`} name="offer_terms" rows={4} maxLength={4000} defaultValue={terms} />
         <p className="text-sm text-muted-foreground">
-          Buyers see this before they pay. A shopper can cancel for a full refund until the order is marked
-          ready and the pickup time has started. After that, a refund is in the payments panel. Stripe
-          usually keeps its card processing fee on a refund, and that cost stays with this stall.
+          Buyers see this before they pay. Stripe usually keeps its card processing fee on a refund, and that
+          cost stays with this stall.
         </p>
       </div>
       <label className="flex items-baseline gap-2 text-sm">
@@ -885,7 +869,9 @@ export function VendorPortalEditor({
                         alcohol: item.contains_alcohol,
                       })),
                     })}
-                    {listing.payouts_active ? " Payouts are on." : " Payouts are not on yet."}
+                  </p>
+                  <p className="text-base text-muted-foreground">
+                    {listing.payouts_active ? "Payouts are on." : "Payouts are not on yet."}
                   </p>
                   {listing.card_payments_active ? (
                     <form action={dashboard} className="flex flex-wrap items-center gap-3">
@@ -931,7 +917,13 @@ export function VendorPortalEditor({
           </p>
         )}
         {listing.orders.length ? (
-          <ul className="mt-4 divide-y divide-border">
+          <>
+          <p className="mt-4 text-base text-muted-foreground">
+            A shopper can cancel for a full refund until the order is marked ready and the pickup time has
+            started.
+            {listing.card_payments_active ? " After that, a refund is in the payments panel." : ""}
+          </p>
+          <ul className="divide-y divide-border">
             {listing.orders.map((order) => (
               <li key={order.id} className="grid gap-1 py-3">
                 <p className="text-base font-medium">{order.item_name}</p>
@@ -949,7 +941,6 @@ export function VendorPortalEditor({
                     readyAt={order.ready_at}
                     pickupStartsAt={order.pickup_starts_at}
                     disputedAt={order.disputed_at}
-                    cardPaymentsActive={listing.card_payments_active}
                   />
                 ) : null}
                 {order.pickup_name ? <p className="text-sm">{order.pickup_name}</p> : null}
@@ -970,6 +961,7 @@ export function VendorPortalEditor({
               </li>
             ))}
           </ul>
+          </>
         ) : listing.selling_approved ? (
           <p className="mt-4 text-sm text-muted-foreground">No paid orders yet.</p>
         ) : null}
