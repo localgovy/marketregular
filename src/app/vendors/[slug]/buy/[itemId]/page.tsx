@@ -6,7 +6,7 @@ import { MenuItemPhoto } from "@/components/menu-item-photo";
 import { formatPrice } from "@/lib/format";
 import { menuItemPhotoUrl } from "@/lib/menu-item-photo-url";
 import { VENDOR_SALES_OPEN } from "@/lib/selling";
-import { loadSellable } from "@/lib/stall-payments";
+import { loadSellable, loadStallMarkets } from "@/lib/stall-payments";
 import { stripeChargesConfigured } from "@/lib/stripe";
 import { pageMeta } from "@/lib/seo";
 import { createAuthedServerClient } from "@/lib/supabase/server";
@@ -37,6 +37,7 @@ export default async function BuyItemPage({
   const item = await loadSellable(slug, itemId);
   if (!item) notFound();
   if (!item.reserve && !stripeChargesConfigured()) notFound();
+  const markets = await loadStallMarkets(item.vendor_id);
   const price = formatPrice(item.price_cents);
 
   const photo = menuItemPhotoUrl(item.image_url, item.id);
@@ -79,6 +80,7 @@ export default async function BuyItemPage({
         }}
         terms={item.offer_terms}
         cancelled={query.cancelled === "1"}
+        markets={markets}
         reserve={item.reserve}
       />
     </div>

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { safePath } from "../src/lib/auth-redirect.ts";
 import { orderLetter } from "../src/lib/order-mail.ts";
 import { isStallCheckoutPath, onboardingExemptPath } from "../src/lib/onboarding.ts";
 import { reservesAtStall } from "../src/lib/product-hits.ts";
@@ -29,6 +30,12 @@ import {
   applicationFeeRefundCents,
   canadianPhone,
   cardStatementDescriptor,
+  cardStatementParts,
+  chosenMarket,
+  orderStatusLabel,
+  shopperRefundWindowCopy,
+  stallCardStatusCopy,
+  torontoDateTimeLocal,
   futurePickupStart,
   shopperCancelAllowed,
   torontoInstant,
@@ -247,6 +254,7 @@ test("checkout details are pickup or preorder", () => {
       fulfillment: "delivery",
       quantity: "1",
       note: "Leave it",
+      pickupName: "Ada",
       deliveryName: "Ada",
       line1: "1 Market St",
       city: "Toronto",
@@ -260,6 +268,7 @@ test("checkout details are pickup or preorder", () => {
     fulfillment: "pickup",
     quantity: "2",
     note: "Saturday morning",
+    pickupName: "Ada",
     deliveryName: "",
     line1: "",
     city: "",
@@ -271,12 +280,28 @@ test("checkout details are pickup or preorder", () => {
   if (pickup.error) return;
   assert.equal(pickup.details.quantity, 2);
   assert.equal(pickup.details.note, "Saturday morning");
+  assert.equal(pickup.details.pickupName, "Ada");
   assert.equal(pickup.details.delivery, null);
+
+  const missingName = parseCheckoutDetails({
+    fulfillment: "pickup",
+    quantity: "1",
+    note: "",
+    pickupName: " ",
+    deliveryName: "",
+    line1: "",
+    city: "",
+    region: "",
+    postal: "",
+    offers,
+  });
+  assert.equal(missingName.error, "Add your name.");
 
   const missingNote = parseCheckoutDetails({
     fulfillment: "preorder",
     quantity: "1",
     note: "",
+    pickupName: "Ada",
     deliveryName: "",
     line1: "",
     city: "",
@@ -286,11 +311,12 @@ test("checkout details are pickup or preorder", () => {
   });
   assert.equal(missingNote.error, "This item is not offered for preorder.");
 
-  const badPostal = parseCheckoutDetails({
-    fulfillment: "delivery",
-    quantity: "1",
-    note: "",
-    deliveryName: "Ada",
+  const badPostal =     parseCheckoutDetails({
+      fulfillment: "delivery",
+      quantity: "1",
+      note: "",
+      pickupName: "",
+      deliveryName: "Ada",
     line1: "1 Market St",
     city: "Toronto",
     region: "ON",
@@ -358,6 +384,49 @@ test("checkout returns use the public site, not the request host", () => {
   assert.equal(cardStatementDescriptor("I'd Tap That"), "Id Tap That");
   assert.equal(cardStatementDescriptor("Pie"), null);
   assert.equal(cardStatementDescriptor("12345"), null);
+  assert.deepEqual(cardStatementParts("River Fruit"), {
+    descriptor: "River",
+    prefix: "River",
+    suffix: "Fruit",
+  });
+  assert.deepEqual(cardStatementParts("Wychwood Barns Pie Co"), {
+    descriptor: "Wychwood",
+    prefix: "Wychwood",
+    suffix: "Barns Pie Co",
+  });
+  assert.equal(cardStatementParts("Pie"), null);
+  assert.equal(cardStatementParts("River")?.suffix, null);
+  assert.equal(orderStatusLabel("reserved", "2026-11-12T14:00:00.000Z"), "Ready for pickup");
+  assert.equal(orderStatusLabel("reserved", null), "Reserved");
+  assert.equal(torontoDateTimeLocal("2026-11-12T14:00:00.000Z"), "2026-11-12T09:00");
+  assert.equal(
+    shopperRefundWindowCopy({
+      status: "paid",
+      readyAt: "2026-11-12T14:00:00Z",
+      pickupStartsAt: "2026-11-12T19:00:00Z",
+      now: new Date("2026-11-12T20:00:00Z"),
+    })?.includes("payments panel"),
+    true,
+  );
+  assert.equal(
+    stallCardStatusCopy({
+      published: false,
+      cardPaymentsActive: true,
+      menus: [],
+    }),
+    "Card payments are on. Buyers can pay once this stall is published and an item is offered for sale.",
+  );
+  assert.equal(
+    stallCardStatusCopy({
+      published: true,
+      cardPaymentsActive: false,
+      menus: [{ forSale: true, priceCents: 800, pickup: true, preorder: false, alcohol: true }],
+    }),
+    "Finish the payment setup before a Buy button can show. Alcohol can still be reserved.",
+  );
+  assert.equal(chosenMarket([{ id: "m1", name: "Wychwood" }], "").name, "Wychwood");
+  assert.equal(chosenMarket([{ id: "m1", name: "Wychwood" }, { id: "m2", name: "Evergreen" }], "").error, "Pick a market.");
+  assert.equal(safePath("/vendors/river/orders/abc?session_id=cs_test_123"), "/vendors/river/orders/abc?session_id=cs_test_123");
   assert.equal(reservesAtStall("alcohol"), true);
   assert.equal(reservesAtStall("bread-and-bakery", true), true);
   assert.equal(reservesAtStall("bread-and-bakery"), false);

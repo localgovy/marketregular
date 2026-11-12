@@ -2,6 +2,7 @@
 
 import { dbPublicError } from "@/lib/public-error";
 import { takeOwnerSaveSlot } from "@/lib/mail-limit";
+import { syncStallPublicProfile } from "@/lib/stall-payments";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
@@ -124,7 +125,17 @@ export async function saveOwnedVendor(formData: FormData): Promise<PortalResult>
   });
   if (error) return portalError(error, "Could not save that stall.");
   const loaded = await loadOwned(gate.supabase, id);
-  if (loaded.listing) revalidateListing(loaded.listing);
+  if (loaded.listing && gate.user) {
+    await syncStallPublicProfile({
+      vendorId: id,
+      userId: gate.user.id,
+      displayName: loaded.listing.name,
+      supportEmail: loaded.listing.email,
+      phone: loaded.listing.phone,
+      website: loaded.listing.website,
+    });
+    revalidateListing(loaded.listing);
+  }
   return { error: null, message: "Saved." };
 }
 

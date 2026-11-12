@@ -1,7 +1,7 @@
 import { SITE_URL } from "@/lib/constants";
 import { isTrustedSiteHost } from "@/lib/site-host";
 
-const SAFE_PATH = /^\/[A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%\-]*$/;
+const SAFE_PATH = /^\/[A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%_\-]*$/;
 
 export const AUTH_NEXT_COOKIE = "mr-auth-next";
 export const PASSWORD_RECOVERY_COOKIE = "mr-password-recovery";

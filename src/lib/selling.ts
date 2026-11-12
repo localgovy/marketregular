@@ -20,6 +20,8 @@ export const MIN_CHARGE_CENTS = 50;
 export const MAX_QUANTITY = 20;
 export const MAX_TERMS = 4000;
 export const MAX_NOTE = 500;
+export const MAX_PICKUP_NAME = 80;
+export const MAX_MARKET_NAME = 160;
 
 export type Fulfillment = "delivery" | "pickup" | "preorder";
 
@@ -56,7 +58,18 @@ export type CheckoutDetails = {
   fulfillment: Fulfillment;
   quantity: number;
   note: string | null;
+  pickupName: string;
+  marketId: string | null;
+  marketName: string | null;
   delivery: DeliveryAddress | null;
+};
+
+export type SaleMenu = {
+  forSale: boolean;
+  priceCents: number | null;
+  pickup: boolean;
+  preorder: boolean;
+  alcohol: boolean;
 };
 
 function wholeCents(value: number, label: string) {
@@ -148,6 +161,39 @@ export function cardStatementDescriptor(name: string) {
   const clipped = cleaned.slice(0, 22).trim();
   if (clipped.length < 5) return null;
   return clipped;
+}
+
+export type CardStatement = {
+  descriptor: string;
+  prefix: string;
+  suffix: string | null;
+};
+
+/**
+ * Cards show a short prefix, an asterisk, a space, and a suffix. The whole
+ * line is 22 characters. The account descriptor matches the prefix so a long
+ * name is not cut at 10 characters and then repeated.
+ */
+export function cardStatementParts(name: string): CardStatement | null {
+  const full = cardStatementDescriptor(name);
+  if (!full) return null;
+  if (full.length <= 10) return { descriptor: full, prefix: full, suffix: null };
+  const space = full.lastIndexOf(" ", 10);
+  let prefix = (space >= 5 ? full.slice(0, space) : full.slice(0, 10)).trim();
+  if (prefix.length < 5 || prefix.length > 10 || !/[A-Za-z]/.test(prefix)) {
+    prefix = full.slice(0, 10).trim();
+  }
+  if (prefix.length < 5 || prefix.length > 10 || !/[A-Za-z]/.test(prefix)) return null;
+  const rest = full.slice(prefix.length).trim();
+  const room = 22 - prefix.length - 2;
+  if (!rest || room < 1 || !/[A-Za-z]/.test(rest)) return { descriptor: prefix, prefix, suffix: null };
+  let suffix = rest.slice(0, room).trim();
+  if (rest.length > room) {
+    const word = suffix.lastIndexOf(" ");
+    if (word >= 1 && /[A-Za-z]/.test(suffix.slice(0, word))) suffix = suffix.slice(0, word).trim();
+  }
+  if (!suffix || !/[A-Za-z]/.test(suffix)) return { descriptor: prefix, prefix, suffix: null };
+  return { descriptor: prefix, prefix, suffix };
 }
 
 /** Year one ends 12 calendar months after the first paid order. */
@@ -395,6 +441,66 @@ export function torontoDate(now = new Date()) {
   }).format(now);
 }
 
+export function formatTorontoStamp(iso: string) {
+  const instant = Date.parse(iso);
+  if (!Number.isFinite(instant)) return null;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(instant));
+}
+
+/** Value for a datetime-local control, in Toronto time. */
+export function torontoDateTimeLocal(iso: string) {
+  const instant = Date.parse(iso);
+  if (!Number.isFinite(instant)) return "";
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(instant));
+  const read = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
+  const date = `${read("year")}-${read("month")}-${read("day")}`;
+  const time = `${read("hour")}:${read("minute")}`;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(time)) return "";
+  return `${date}T${time}`;
+}
+
+function menuOffered(item: SaleMenu) {
+  return (
+    item.forSale &&
+    item.priceCents != null &&
+    item.priceCents >= MIN_CHARGE_CENTS &&
+    (item.pickup || item.preorder)
+  );
+}
+
+/** What the stall editor can honestly say about a public Buy or Reserve button. */
+export function stallCardStatusCopy(input: {
+  published: boolean;
+  cardPaymentsActive: boolean;
+  menus: SaleMenu[];
+}) {
+  const cards = input.menus.some((item) => menuOffered(item) && !item.alcohol);
+  const alcohol = input.menus.some((item) => menuOffered(item) && item.alcohol);
+  if (input.cardPaymentsActive) {
+    if (input.published && cards) return "Card payments are on. Buyers can pay this stall.";
+    if (input.published && alcohol) {
+      return "Card payments are on. Alcohol can be reserved. A Buy button shows once another item is offered for sale.";
+    }
+    return "Card payments are on. Buyers can pay once this stall is published and an item is offered for sale.";
+  }
+  if (input.published && alcohol) {
+    return "Finish the payment setup before a Buy button can show. Alcohol can still be reserved.";
+  }
+  return "Finish the payment setup before a Buy button can show.";
+}
+
 export function fulfillmentLabel(value: string) {
   if (value === "delivery") return "Delivery";
   if (value === "pickup") return "Pickup";
@@ -402,8 +508,12 @@ export function fulfillmentLabel(value: string) {
   return value;
 }
 
+export function orderIsReady(status: string, readyAt?: string | null) {
+  return Boolean(readyAt) && (status === "paid" || status === "reserved");
+}
+
 export function orderStatusLabel(value: string, readyAt?: string | null) {
-  if (value === "paid" && readyAt) return "Ready for pickup";
+  if (orderIsReady(value, readyAt)) return "Ready for pickup";
   if (value === "paid") return "Paid";
   if (value === "partially_refunded") return "Partly refunded";
   if (value === "refunded") return "Refunded";
@@ -503,6 +613,38 @@ export function shopperCancelAllowed(input: {
   return (input.now ?? new Date()).getTime() < starts;
 }
 
+/** What a shopper should read about pickup and the refund window. */
+export function shopperRefundWindowCopy(input: {
+  status: string;
+  readyAt: string | null;
+  pickupStartsAt: string | null;
+  disputedAt?: string | null;
+  now?: Date;
+}) {
+  if (input.disputedAt) return "This payment is being reviewed, so it cannot be cancelled here.";
+  if (input.status !== "paid" && input.status !== "reserved") return null;
+  const time = input.pickupStartsAt ? formatTorontoStamp(input.pickupStartsAt) : null;
+  if (input.status === "reserved") {
+    if (input.readyAt) {
+      return time ? `Pickup starts ${time}. Pay at the stall and show ID.` : "Pay at the stall and show ID.";
+    }
+    return time
+      ? `You can cancel this reservation until the stall marks it ready. Pickup starts ${time}.`
+      : "You can cancel this reservation until the stall marks it ready.";
+  }
+  const open = shopperCancelAllowed(input);
+  if (open && !input.readyAt) {
+    return time
+      ? `A full refund of the item and the service fee stays open until the stall marks this ready and pickup starts ${time}.`
+      : "A full refund of the item and the service fee stays open until the stall marks this ready and a pickup time has started.";
+  }
+  if (open && input.readyAt && time) return `Pickup starts ${time}. A full refund stays open until then.`;
+  if (open) return "A full refund stays open until a pickup time is set and that time has started.";
+  return time
+    ? `Pickup started ${time}. A refund from here is closed. The stall can still refund from its payments panel.`
+    : "A refund from here is closed. The stall can still refund from its payments panel.";
+}
+
 /** A later pickup time. A time that has started, or one earlier than the saved time, is refused. */
 export function futurePickupStart(raw: string, now: Date, existing: string | null) {
   const match = raw.trim().match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
@@ -528,10 +670,25 @@ function clip(raw: string, max: number) {
   return trimmed;
 }
 
+export function chosenMarket(
+  markets: { id: string; name: string }[],
+  rawId: string,
+): { error: string } | { error: null; id: string | null; name: string | null } {
+  const unique = markets.filter((market) => market.id && market.name.trim());
+  if (!unique.length) return { error: null, id: null, name: null };
+  if (unique.length === 1) {
+    return { error: null, id: unique[0].id, name: unique[0].name.trim().slice(0, MAX_MARKET_NAME) };
+  }
+  const match = unique.find((market) => market.id === rawId.trim());
+  if (!match) return { error: "Pick a market." };
+  return { error: null, id: match.id, name: match.name.trim().slice(0, MAX_MARKET_NAME) };
+}
+
 export function parseCheckoutDetails(input: {
   fulfillment: string;
   quantity: string;
   note: string;
+  pickupName: string;
   deliveryName: string;
   line1: string;
   city: string;
@@ -558,10 +715,15 @@ export function parseCheckoutDetails(input: {
     return { error: `Pick a quantity from 1 to ${MAX_QUANTITY}.` };
   }
 
+  const pickupName = clip(input.pickupName, MAX_PICKUP_NAME);
+  if (pickupName === "long") return { error: "Keep the name shorter." };
+  if (!pickupName) return { error: "Add your name." };
   const note = clip(input.note, MAX_NOTE);
   if (note === "long") return { error: "Keep the note shorter." };
-  if (!note) return { error: "Add a note for the stall." };
-  return { error: null, details: { fulfillment, quantity, note, delivery: null } };
+  return {
+    error: null,
+    details: { fulfillment, quantity, note, pickupName, marketId: null, marketName: null, delivery: null },
+  };
 }
 
 export function saleReady(input: {

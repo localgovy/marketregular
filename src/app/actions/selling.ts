@@ -2,12 +2,13 @@
 
 import { requireAdmin } from "@/lib/admin";
 import { mustSetPassword } from "@/lib/password-gate";
-import { parseCheckoutDetails, saleReady, VENDOR_SALES_OPEN } from "@/lib/selling";
+import { chosenMarket, parseCheckoutDetails, saleReady, VENDOR_SALES_OPEN } from "@/lib/selling";
 import {
   cancelShopperOrder,
   confirmFeeCheckout,
   createStallAccount,
   createStallDashboardLink,
+  loadStallMarkets,
   markOrderReady,
   setOrderPickupStart,
   startFeeCheckout,
@@ -193,6 +194,7 @@ export async function placeStallOrder(formData: FormData): Promise<{ error: stri
     fulfillment: String(formData.get("fulfillment") ?? ""),
     quantity: String(formData.get("quantity") ?? ""),
     note: String(formData.get("note") ?? ""),
+    pickupName: String(formData.get("pickup_name") ?? ""),
     deliveryName: String(formData.get("delivery_name") ?? ""),
     line1: String(formData.get("line1") ?? ""),
     city: String(formData.get("city") ?? ""),
@@ -205,6 +207,10 @@ export async function placeStallOrder(formData: FormData): Promise<{ error: stri
     },
   });
   if (parsed.error != null) return { error: parsed.error };
+  const market = chosenMarket(await loadStallMarkets(sellable.vendor_id), String(formData.get("market_id") ?? ""));
+  if (market.error !== null) return { error: market.error };
+  parsed.details.marketId = market.id;
+  parsed.details.marketName = market.name;
   const ready = saleReady({
     forSale: true,
     priceCents: sellable.price_cents,

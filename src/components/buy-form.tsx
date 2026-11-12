@@ -16,6 +16,7 @@ export function BuyForm({
   offers,
   terms,
   cancelled,
+  markets,
   reserve = false,
 }: {
   vendorSlug: string;
@@ -24,6 +25,7 @@ export function BuyForm({
   offers: { delivery: boolean; pickup: boolean; preorder: boolean };
   terms: string | null;
   cancelled: boolean;
+  markets: { id: string; name: string }[];
   reserve?: boolean;
 }) {
   const [state, action, pending] = useActionState(
@@ -51,6 +53,26 @@ export function BuyForm({
           This is a reservation. Pay at the stall and show ID. There is no card charge.
         </p>
       ) : null}
+      {markets.length === 1 ? (
+        <>
+          <p className="text-base text-muted-foreground">This order is for {markets[0].name}.</p>
+          <input type="hidden" name="market_id" value={markets[0].id} />
+        </>
+      ) : markets.length > 1 ? (
+        <fieldset className="grid gap-2">
+          <legend className="text-sm font-medium">Which market</legend>
+          {markets.map((market) => (
+            <label key={market.id} className="flex items-baseline gap-2 text-sm">
+              <input type="radio" name="market_id" value={market.id} className="accent-primary" required />
+              <span>{market.name}</span>
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
+      <div className="grid gap-1.5">
+        <Label htmlFor="pickup_name">Your name</Label>
+        <Input id="pickup_name" name="pickup_name" autoComplete="name" maxLength={80} required />
+      </div>
       <div className="grid gap-1.5 max-w-32">
         <Label htmlFor="quantity">Quantity</Label>
         <Input
@@ -86,7 +108,7 @@ export function BuyForm({
       </fieldset>
       <div className="grid gap-1.5">
         <Label htmlFor="note">Note for the stall</Label>
-        <Textarea id="note" name="note" rows={3} maxLength={500} required />
+        <Textarea id="note" name="note" rows={3} maxLength={500} />
       </div>
       {terms ? (
         <div>

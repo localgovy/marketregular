@@ -2,14 +2,14 @@ import "server-only";
 
 import { after } from "next/server";
 import type Stripe from "stripe";
-import { SITE_URL } from "@/lib/constants";
+import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { checkoutSiteOrigin } from "@/lib/site-host";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import {
   applicationFeeCents,
   applicationFeeRefundCents,
   canadianPhone,
-  cardStatementDescriptor,
+  cardStatementParts,
   checkoutAmountMatches,
   checkoutTotalCents,
   feeAfterRefund,
@@ -50,6 +50,8 @@ type OrderRow = {
   charge_cents: number;
   fulfillment: string;
   fulfillment_note: string | null;
+  pickup_name: string | null;
+  market_name: string | null;
   delivery_name: string | null;
   delivery_line1: string | null;
   delivery_city: string | null;
@@ -227,7 +229,7 @@ export async function createStallAccount(input: {
 
   // The idempotency key retries the account this owner created. Ownership lives
   // on vendor_stripe_accounts, not on metadata the stall could edit.
-  const descriptor = cardStatementDescriptor(input.displayName);
+  const statement = cardStatementParts(input.displayName);
   const publishedSupport = input.supportEmail?.trim() ?? "";
   const support = publishedSupport.includes("@") ? { email: publishedSupport } : null;
   const accountParams = {
@@ -240,7 +242,9 @@ export async function createStallAccount(input: {
         capabilities: {
           card_payments: { requested: true as const },
         },
-        ...(descriptor ? { statement_descriptor: { descriptor } } : {}),
+        ...(statement
+          ? { statement_descriptor: { descriptor: statement.descriptor, prefix: statement.prefix } }
+          : {}),
         ...(support ? { support } : {}),
       },
     },
@@ -302,18 +306,22 @@ async function prefillStallAccount(
   const phone = canadianPhone(input.phone);
   const site = input.website ? portalListingHref(input.website) : null;
   const url = typeof site === "string" && site.startsWith("https://") ? site : null;
-  const descriptor = cardStatementDescriptor(input.displayName);
+  const statement = cardStatementParts(input.displayName);
   const publishedSupport = input.supportEmail?.trim() ?? "";
   const supportEmail = publishedSupport.includes("@") ? publishedSupport : null;
-  if (!phone && !url && !descriptor && !supportEmail) return;
+  const displayName = input.displayName.trim().slice(0, 200);
+  if (!phone && !url && !statement && !supportEmail && !displayName) return;
   try {
     await stripe.v2.core.accounts.update(
       accountId,
       {
+        ...(displayName ? { display_name: displayName } : {}),
         ...(phone ? { contact_phone: phone } : {}),
         configuration: {
           merchant: {
-            ...(descriptor ? { statement_descriptor: { descriptor } } : {}),
+            ...(statement
+              ? { statement_descriptor: { descriptor: statement.descriptor, prefix: statement.prefix } }
+              : {}),
             ...(supportEmail || phone || url
               ? {
                   support: {
@@ -331,6 +339,27 @@ async function prefillStallAccount(
   } catch (err) {
     console.error("stall account prefill", err instanceof Error ? err.message : "stripe");
   }
+}
+
+/** Copy the public stall listing onto Stripe after the owner saves the profile. */
+export async function syncStallPublicProfile(input: {
+  vendorId: string;
+  userId: string;
+  displayName: string;
+  supportEmail?: string | null;
+  phone?: string | null;
+  website?: string | null;
+}) {
+  const db = service();
+  if (!db) return;
+  const { data } = await db
+    .from("vendor_stripe_accounts")
+    .select("stripe_account_id, owner_user_id")
+    .eq("vendor_id", input.vendorId)
+    .eq("owner_user_id", input.userId)
+    .maybeSingle();
+  if (typeof data?.stripe_account_id !== "string" || data.owner_user_id !== input.userId) return;
+  await prefillStallAccount(data.stripe_account_id, input);
 }
 
 export async function createAccountSession(vendorId: string, userId: string) {
@@ -407,6 +436,8 @@ async function loadOrder(id: string) {
   order.flat_fee_cents = Number(order.flat_fee_cents ?? 0);
   order.ready_at = order.ready_at ?? null;
   order.pickup_starts_at = order.pickup_starts_at ?? null;
+  order.pickup_name = typeof order.pickup_name === "string" ? order.pickup_name : null;
+  order.market_name = typeof order.market_name === "string" ? order.market_name : null;
   order.disputed_at = typeof order.disputed_at === "string" ? order.disputed_at : null;
   order.stripe_account_id = typeof order.stripe_account_id === "string" ? order.stripe_account_id : null;
   return order;
@@ -752,7 +783,7 @@ async function refundApplicationFee(
       : await stripe.charges.retrieve(charge.id);
   }
   const feeId = applicationFeeId(current);
-  if (!feeId) return;
+  if (!feeId) throw new Error("application fee was not refunded");
   const fee = await stripe.applicationFees.retrieve(feeId);
   const refundedSubtotal = itemRefundedCents(order.charge_cents, order.service_fee_cents, returned);
   const serviceReturned =
@@ -928,19 +959,42 @@ async function stampIntroWindow(order: OrderRow) {
   if (error) throw new Error("intro window was not recorded");
 }
 
-async function pickupStartFor(vendorId: string, fulfillment: string) {
-  if (fulfillment !== "pickup") return null;
+export async function loadStallMarkets(vendorId: string) {
+  const db = service();
+  if (!db) return [];
+  const { data: links } = await db.from("published_stalls").select("market_id").eq("vendor_id", vendorId);
+  const ids = [
+    ...new Set(
+      (links ?? [])
+        .map((row) => row.market_id)
+        .filter((id): id is string => typeof id === "string"),
+    ),
+  ];
+  if (!ids.length) return [];
+  const { data: markets } = await db.from("published_markets").select("id, name").in("id", ids);
+  return (markets ?? [])
+    .flatMap((row) => {
+      if (typeof row.id !== "string" || typeof row.name !== "string" || !row.name.trim()) return [];
+      return [{ id: row.id, name: row.name.trim() }];
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "en"));
+}
+
+async function pickupStartFor(vendorId: string, fulfillment: string, marketId: string | null) {
+  if (fulfillment !== "pickup" || !marketId) return null;
   const db = service();
   if (!db) return null;
-  const { data: links } = await db.from("market_vendors").select("market_id").eq("vendor_id", vendorId);
-  const ids = (links ?? [])
-    .map((row) => row.market_id)
-    .filter((id): id is string => typeof id === "string");
-  if (!ids.length) return null;
+  const { data: linked } = await db
+    .from("market_vendors")
+    .select("market_id")
+    .eq("vendor_id", vendorId)
+    .eq("market_id", marketId)
+    .maybeSingle();
+  if (!linked) return null;
   const { data: sessions } = await db
     .from("market_schedules")
     .select("weekday, opens_at, season_start, season_end")
-    .in("market_id", ids);
+    .eq("market_id", marketId);
   return sameDayPickupStart(
     new Date(),
     (sessions ?? []).flatMap((row) => {
@@ -1120,6 +1174,8 @@ export async function startStallCheckout(input: {
       charge_cents: chargeCents,
       fulfillment: details.fulfillment,
       fulfillment_note: details.note,
+      pickup_name: details.pickupName,
+      market_name: details.marketName,
       delivery_name: details.delivery?.name ?? null,
       delivery_line1: details.delivery?.line1 ?? null,
       delivery_city: details.delivery?.city ?? null,
@@ -1132,7 +1188,7 @@ export async function startStallCheckout(input: {
       commission_cents: percentCents + schedule.flatCents,
       commission_bps: schedule.commissionBps,
       flat_fee_cents: schedule.flatCents,
-      pickup_starts_at: await pickupStartFor(sellable.vendor_id, details.fulfillment),
+      pickup_starts_at: await pickupStartFor(sellable.vendor_id, details.fulfillment, details.marketId),
       stripe_account_id: sellable.stripe_account_id,
     })
     .select("id")
@@ -1141,6 +1197,7 @@ export async function startStallCheckout(input: {
 
   const orderId = inserted.id as string;
   const origin = await checkoutOrigin();
+  const statementSuffix = cardStatementParts(sellable.vendor_name)?.suffix;
   try {
     const session = await stripe.checkout.sessions.create(
       {
@@ -1186,13 +1243,14 @@ export async function startStallCheckout(input: {
               unit_amount: serviceCents,
               product_data: {
                 name: "Service fee",
-                description: "MarketRegular",
+                description: SITE_NAME,
               },
             },
           },
         ],
         payment_intent_data: {
           application_fee_amount: feeCents,
+          ...(statementSuffix ? { statement_descriptor_suffix: statementSuffix } : {}),
         },
         success_url: `${origin}/vendors/${sellable.vendor_slug}/orders/${orderId}?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/vendors/${sellable.vendor_slug}/buy/${sellable.id}?cancelled=1`,
@@ -1231,21 +1289,22 @@ export async function confirmStallCheckout(input: {
 }) {
   const stripe = getStripe();
   const db = service();
-  if (!stripe || !db) return null;
   const order = await loadOrder(input.orderId);
-  if (!order || order.buyer_id !== input.buyerId) return null;
+  if (!order || order.buyer_id !== input.buyerId) return { order: null, confirmFailed: false };
+  if (!stripe || !db) return { order, confirmFailed: true };
   const accountId = order.stripe_account_id ?? (await stallAccountId(order.vendor_id));
-  if (!accountId) return order;
+  if (!accountId) return { order, confirmFailed: true };
   try {
     const session = await stripe.checkout.sessions.retrieve(input.sessionId, {}, {
       stripeAccount: accountId,
     });
-    if (session.metadata?.order_id !== order.id) return order;
+    if (session.metadata?.order_id !== order.id) return { order, confirmFailed: false };
     await recordStallCheckout(session, accountId);
   } catch (err) {
     console.error("stall checkout confirm", err instanceof Error ? err.message : "stripe");
+    return { order: (await loadOrder(order.id)) ?? order, confirmFailed: true };
   }
-  return (await loadOrder(order.id)) ?? order;
+  return { order: (await loadOrder(order.id)) ?? order, confirmFailed: false };
 }
 
 export async function startFeeCheckout(
@@ -1300,6 +1359,8 @@ async function startReservation(input: {
       charge_cents: sellable.price_cents * details.quantity,
       fulfillment: details.fulfillment,
       fulfillment_note: details.note,
+      pickup_name: details.pickupName,
+      market_name: details.marketName,
       terms_snapshot: sellable.offer_terms,
       buyer_email: input.email,
       status: "reserved",
@@ -1308,7 +1369,7 @@ async function startReservation(input: {
       commission_cents: 0,
       commission_bps: 0,
       flat_fee_cents: 0,
-      pickup_starts_at: await pickupStartFor(sellable.vendor_id, details.fulfillment),
+      pickup_starts_at: await pickupStartFor(sellable.vendor_id, details.fulfillment, details.marketId),
       stripe_account_id: sellable.stripe_account_id || null,
     })
     .select("id")
@@ -1338,7 +1399,9 @@ export async function markOrderReady(vendorId: string, orderId: string, userId: 
   const db = service();
   const order = await ownedOrder(vendorId, orderId, userId);
   if (!db || !order) return { error: "That order is not yours." as const };
-  if (order.disputed_at) return { error: "This order has a dispute. Wait until it closes." as const };
+  if (order.disputed_at) {
+    return { error: "This payment is being reviewed. Respond in the payments panel above." as const };
+  }
   if (order.status !== "paid" && order.status !== "reserved") {
     return { error: "That order is not ready to hand over." as const };
   }
@@ -1354,7 +1417,9 @@ export async function markOrderReady(vendorId: string, orderId: string, userId: 
     if (error) return { error: "Could not mark that order ready." as const };
     if (!ready?.length) {
       const current = await loadOrder(order.id);
-      if (current?.disputed_at) return { error: "This order has a dispute. Wait until it closes." as const };
+      if (current?.disputed_at) {
+        return { error: "This payment is being reviewed. Respond in the payments panel above." as const };
+      }
       return { error: null };
     }
     const fresh = await loadOrder(order.id);

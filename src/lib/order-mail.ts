@@ -26,6 +26,8 @@ export type OrderMailInput = {
     service_fee_cents: number;
     fulfillment: string;
     buyer_email: string | null;
+    pickup_name?: string | null;
+    market_name?: string | null;
     status?: string;
   };
   vendorName: string;
@@ -92,12 +94,14 @@ export function orderLetter(input: OrderMailInput, audience: "shopper" | "stall"
         : input.kind === "reserved"
           ? `Reservation for ${input.order.item_name}`
           : `Order for ${input.order.item_name}`;
-  const text = lines.join("\n\n");
+  const who = [input.order.pickup_name?.trim(), input.order.market_name?.trim()].filter(Boolean).join(" · ");
+  const body = who ? [lines[0], who, ...lines.slice(1)] : lines;
+  const text = body.join("\n\n");
   const html = `<!doctype html>
 <html><body style="margin:0;background:#F1EDE3;color:#141414;font-family:ui-sans-serif,system-ui,sans-serif">
 <div style="max-width:32rem;margin:0 auto;padding:24px">
 <p style="margin:0 0 8px;font-size:14px;color:#5e5a53">${escapeHtml(SITE_NAME)}</p>
-${lines
+${body
   .map(
     (line, index) =>
       `<p style="margin:${index === 0 ? "0 0 16px" : "0 0 12px"};font-size:16px;line-height:1.5">${

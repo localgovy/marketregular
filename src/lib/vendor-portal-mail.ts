@@ -51,8 +51,8 @@ export function sellingReadyLetter(vendorId: string) {
   const url = `${SITE_URL}/vendor/${vendorId}#selling`;
   const text = [
     "Selling is on for your stall.",
-    "Stripe, not MarketRegular, asks for your identity and bank account. Stripe needs them so you can be paid, and so a buyer's card statement shows your stall.",
-    "MarketRegular does not see the bank account number or the identity document.",
+    `Stripe, not ${SITE_NAME}, asks for your identity and bank account. Stripe needs them so you can be paid, and so a buyer's card statement shows your stall.`,
+    `${SITE_NAME} does not see the bank account number or the identity document.`,
     "When Stripe finishes checking, buyers can pay this stall on the site.",
     url,
   ].join("\n\n");

@@ -47,6 +47,8 @@ export type PortalOrder = {
   fulfillment: string;
   status: string;
   fulfillment_note: string | null;
+  pickup_name: string | null;
+  market_name: string | null;
   delivery_name: string | null;
   delivery_line1: string | null;
   delivery_city: string | null;
@@ -317,6 +319,8 @@ function parseOrder(value: unknown): PortalOrder | null {
     fulfillment: typeof row.fulfillment === "string" ? row.fulfillment : "",
     status: typeof row.status === "string" ? row.status : "",
     fulfillment_note: textOrNull(row.fulfillment_note),
+    pickup_name: textOrNull(row.pickup_name),
+    market_name: textOrNull(row.market_name),
     delivery_name: textOrNull(row.delivery_name),
     delivery_line1: textOrNull(row.delivery_line1),
     delivery_city: textOrNull(row.delivery_city),
