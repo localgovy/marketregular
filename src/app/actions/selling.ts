@@ -19,6 +19,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { isUuid, parseVendorPortal } from "@/lib/vendor-portal";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
+import { sendSellingReadyMail } from "@/lib/vendor-portal-mail";
 import { redirect } from "next/navigation";
 
 async function ownedListing(vendorId: string) {
@@ -44,6 +45,11 @@ export async function setVendorSelling(formData: FormData) {
   const id = String(formData.get("vendor_id") ?? "");
   if (!isUuid(id)) return { error: "That stall is missing." };
   const approved = formData.get("selling_approved") === "on";
+  const { data: current } = await supabase
+    .from("vendors")
+    .select("selling_approved, claimed_by")
+    .eq("id", id)
+    .maybeSingle();
   const { data, error } = await supabase
     .from("vendors")
     .update({ selling_approved: approved })
@@ -51,6 +57,11 @@ export async function setVendorSelling(formData: FormData) {
     .select("slug")
     .maybeSingle();
   if (error || !data) return { error: "Could not update selling." };
+  if (approved && current?.selling_approved !== true && typeof current?.claimed_by === "string") {
+    const { data: owner } = await supabase.auth.admin.getUserById(current.claimed_by);
+    const email = owner.user?.email;
+    if (email) await sendSellingReadyMail(email, id);
+  }
   revalidatePublishedDirectory([`/vendors/${data.slug}`, `/admin/vendors/${id}`, `/vendor/${id}`]);
   return {
     error: null,
@@ -77,6 +88,8 @@ export async function beginStallPayments(formData: FormData) {
       displayName: gate.listing.name,
       email: gate.user.email,
       supportEmail: gate.listing.email,
+      phone: gate.listing.phone,
+      website: gate.listing.website,
     });
     if (created.error) return { error: created.error };
   } catch (err) {

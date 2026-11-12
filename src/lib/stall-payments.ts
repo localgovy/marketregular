@@ -8,6 +8,7 @@ import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import {
   applicationFeeCents,
   applicationFeeRefundCents,
+  canadianPhone,
   cardStatementDescriptor,
   checkoutAmountMatches,
   checkoutTotalCents,
@@ -37,6 +38,7 @@ import { createServiceClient } from "@/lib/supabase/admin";
 import { menuItemPhotoUrl, publishedMenuSelectMissingPhoto } from "@/lib/menu-item-photo-url";
 import { sendOrderMail } from "@/lib/order-mail";
 import { reservesAtStall } from "@/lib/product-hits";
+import { portalListingHref } from "@/lib/vendor-portal";
 
 type OrderRow = {
   id: string;
@@ -185,6 +187,8 @@ export async function createStallAccount(input: {
   displayName: string;
   email: string;
   supportEmail?: string | null;
+  phone?: string | null;
+  website?: string | null;
 }) {
   const stripe = getStripe();
   const db = service();
@@ -206,6 +210,7 @@ export async function createStallAccount(input: {
     typeof existing?.stripe_account_id === "string" &&
     existing.owner_user_id === input.userId
   ) {
+    await prefillStallAccount(existing.stripe_account_id, input);
     return { error: null, accountId: existing.stripe_account_id };
   }
   if (existing) {
@@ -279,7 +284,53 @@ export async function createStallAccount(input: {
   const flags = capabilityFlags(account);
   const saved = await saveStallAccount(input.vendorId, account.id, input.userId, flags);
   if (saved.error) return { error: saved.error, accountId: null };
+  await prefillStallAccount(account.id, input);
   return { error: null, accountId: account.id };
+}
+
+async function prefillStallAccount(
+  accountId: string,
+  input: {
+    displayName: string;
+    supportEmail?: string | null;
+    phone?: string | null;
+    website?: string | null;
+  },
+) {
+  const stripe = getStripe();
+  if (!stripe) return;
+  const phone = canadianPhone(input.phone);
+  const site = input.website ? portalListingHref(input.website) : null;
+  const url = typeof site === "string" && site.startsWith("https://") ? site : null;
+  const descriptor = cardStatementDescriptor(input.displayName);
+  const publishedSupport = input.supportEmail?.trim() ?? "";
+  const supportEmail = publishedSupport.includes("@") ? publishedSupport : null;
+  if (!phone && !url && !descriptor && !supportEmail) return;
+  try {
+    await stripe.v2.core.accounts.update(
+      accountId,
+      {
+        ...(phone ? { contact_phone: phone } : {}),
+        configuration: {
+          merchant: {
+            ...(descriptor ? { statement_descriptor: { descriptor } } : {}),
+            ...(supportEmail || phone || url
+              ? {
+                  support: {
+                    ...(supportEmail ? { email: supportEmail } : {}),
+                    ...(phone ? { phone } : {}),
+                    ...(url ? { url } : {}),
+                  },
+                }
+              : {}),
+          },
+        },
+      },
+      { apiVersion: CONNECT_PREVIEW_API_VERSION },
+    );
+  } catch (err) {
+    console.error("stall account prefill", err instanceof Error ? err.message : "stripe");
+  }
 }
 
 export async function createAccountSession(vendorId: string, userId: string) {

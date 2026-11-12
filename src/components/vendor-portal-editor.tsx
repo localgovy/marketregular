@@ -805,11 +805,13 @@ export function VendorPortalEditor({
   staysWithoutHall,
   paymentsConfigured,
   feeNote,
+  setupError = null,
 }: {
   listing: PortalListing;
   staysWithoutHall: boolean;
   paymentsConfigured: boolean;
   feeNote: string | null;
+  setupError?: string | null;
 }) {
   const menuSections = menuSectionsFromItems(listing.menus);
   const full = listing.stalls.length >= 40;
@@ -829,28 +831,23 @@ export function VendorPortalEditor({
         selected={listing.maintenance_opt_outs}
       />
       {VENDOR_SALES_OPEN ? (
-      <section>
+      <section id="selling">
         <h2>Selling</h2>
         {feeNote ? <p className="mt-2 text-sm text-muted-foreground">{feeNote}</p> : null}
         {listing.selling_approved ? (
           <div className="mt-4 grid gap-4">
-            <p className="text-sm text-muted-foreground">
-              Buyers pay this stall. MarketRegular keeps {listing.commission_bps / 100}% of the item
-              subtotal
-              {listing.commission_flat_cents > 0
-                ? ` plus ${formatPrice(listing.commission_flat_cents)} on each order`
-                : ""}
-              . The shopper also pays a service fee of $0.50 when the order is under $15, or $0.99 when it
-              is $15 or more. That fee is its own line, and the percentage is not charged on it. Stripe&apos;s
-              card processing fee comes out of this stall. On a refund, Stripe usually keeps that processing
-              fee.
+            <p className="text-base text-muted-foreground">
+              Stripe, not {SITE_NAME}, asks for your identity and bank account. Stripe needs them so this
+              stall can be paid, and so a buyer&apos;s card statement shows the stall. {SITE_NAME} does not
+              see the bank account number or the identity document. When Stripe finishes checking, buyers
+              can pay this stall on the site.
             </p>
             {paymentsConfigured ? (
               listing.payments_started ? (
                 <div className="grid gap-3">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     {listing.card_payments_active
-                      ? "Card payments are on."
+                      ? "Card payments are on. Buyers can pay this stall."
                       : "Finish the payment setup before a Buy button can show."}
                     {listing.payouts_active ? " Payouts are on." : " Payouts are not on yet."}
                   </p>
@@ -873,12 +870,24 @@ export function VendorPortalEditor({
                   <Button type="submit" disabled={setupPending}>
                     {setupPending ? "Starting…" : "Set up payments"}
                   </Button>
+                  {setupError ? <p className="text-sm text-destructive">{setupError}</p> : null}
                   <PortalNote state={setupState} />
                 </form>
               )
             ) : (
               <p className="text-sm text-muted-foreground">Payments are not available yet.</p>
             )}
+            <p className="text-base text-muted-foreground">
+              Buyers pay this stall. {SITE_NAME} keeps {listing.commission_bps / 100}% of the item
+              subtotal
+              {listing.commission_flat_cents > 0
+                ? ` plus ${formatPrice(listing.commission_flat_cents)} on each order`
+                : ""}
+              . The shopper also pays a service fee of $0.50 when the order is under $15, or $0.99 when it
+              is $15 or more. That fee is its own line, and the percentage is not charged on it. Stripe&apos;s
+              card processing fee comes out of this stall. On a refund, Stripe usually keeps that processing
+              fee.
+            </p>
           </div>
         ) : (
           <p className="mt-2 text-sm text-muted-foreground">

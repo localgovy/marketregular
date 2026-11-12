@@ -6,7 +6,7 @@ import { prepareVendorClaimPassword, saveChosenVendorPassword } from "../src/lib
 import { needsOnboarding, onboardingExemptPath, skipsShopperOnboarding } from "../src/lib/onboarding.ts";
 import { CHOSEN_PASSWORD_MARKER, decryptVendorPassword, encryptVendorPassword } from "../src/lib/vendor-password.ts";
 import { marketPortalLetter, sendMarketPortalMail } from "../src/lib/market-portal-mail.ts";
-import { sendVendorPortalMail, vendorPortalLetter } from "../src/lib/vendor-portal-mail.ts";
+import { sellingReadyLetter, sendVendorPortalMail, vendorPortalLetter } from "../src/lib/vendor-portal-mail.ts";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 const CLAIM = "66666666-6666-4666-8666-666666666666";
@@ -731,6 +731,11 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.equal(open.html.includes("Password:"), false);
     assert.equal(open.text.toLowerCase().includes("claim"), false);
     assert.equal(open.text.includes("Your stall is assigned"), true);
+    const selling = sellingReadyLetter("11111111-1111-4111-8111-111111111111");
+    assert.equal(new URL(selling.url).pathname, "/vendor/11111111-1111-4111-8111-111111111111");
+    assert.equal(new URL(selling.url).hash, "#selling");
+    assert.equal(selling.text.includes("Stripe, not MarketRegular"), true);
+    assert.equal(selling.text.includes("does not see the bank account number"), true);
 
     const previousKey = process.env.RESEND_API_KEY;
     const previousFrom = process.env.RESEND_FROM;

@@ -22,6 +22,7 @@ export function StallConnect({
   const router = useRouter();
   const [instance, setInstance] = useState<StripeConnectInstance | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim();
@@ -43,7 +44,10 @@ export function StallConnect({
           });
           const payload = (await response.json()) as { client_secret?: string; error?: string };
           if (!response.ok || !payload.client_secret) {
-            const message = payload.error || "Payments could not be opened.";
+            const message =
+              !payload.error || payload.error === "Could not open payments."
+                ? "Payments could not be opened."
+                : payload.error;
             if (!cancelled) setFailure(message);
             throw new Error(message);
           }
@@ -61,10 +65,27 @@ export function StallConnect({
     return () => {
       cancelled = true;
     };
-  }, [vendorId]);
+  }, [vendorId, attempt]);
 
-  if (failure) return <p className="text-sm text-destructive">{failure}</p>;
-  if (!instance) return <p className="text-sm text-muted-foreground">Opening payments…</p>;
+  if (failure) {
+    return (
+      <div className="grid gap-3">
+        <p className="text-sm text-destructive">{failure}</p>
+        <button
+          type="button"
+          className="w-fit text-base font-medium text-foreground underline"
+          onClick={() => {
+            setFailure(null);
+            setInstance(null);
+            setAttempt((current) => current + 1);
+          }}
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+  if (!instance) return <p className="text-sm text-muted-foreground">Opening Stripe…</p>;
 
   return (
     <ConnectComponentsProvider connectInstance={instance}>

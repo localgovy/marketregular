@@ -47,6 +47,59 @@ export function vendorPortalLetter(password?: string) {
   };
 }
 
+export function sellingReadyLetter(vendorId: string) {
+  const url = `${SITE_URL}/vendor/${vendorId}#selling`;
+  const text = [
+    "Selling is on for your stall.",
+    "Stripe, not MarketRegular, asks for your identity and bank account. Stripe needs them so you can be paid, and so a buyer's card statement shows your stall.",
+    "MarketRegular does not see the bank account number or the identity document.",
+    "When Stripe finishes checking, buyers can pay this stall on the site.",
+    url,
+  ].join("\n\n");
+  const html = `<!doctype html>
+<html><body style="margin:0;background:#F1EDE3;color:#141414;font-family:ui-sans-serif,system-ui,sans-serif">
+<div style="max-width:32rem;margin:0 auto;padding:24px">
+<p style="margin:0 0 8px;font-size:14px;color:#5e5a53">${SITE_NAME}</p>
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:600">Selling is on for your stall</h1>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Stripe, not ${SITE_NAME}, asks for your identity and bank account. Stripe needs them so you can be paid, and so a buyer's card statement shows your stall.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">${SITE_NAME} does not see the bank account number or the identity document.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">When Stripe finishes checking, buyers can pay this stall on the site.</p>
+<p style="margin:0"><a href="${escapeHtml(url)}" style="color:#141414">${escapeHtml(url)}</a></p>
+</div>
+</body></html>`;
+  return {
+    url,
+    text,
+    html,
+    subject: sanitizeMailHeader("Selling is on for your stall"),
+  };
+}
+
+export async function sendSellingReadyMail(email: string, vendorId: string): Promise<{ sent: boolean }> {
+  const key = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.RESEND_FROM?.trim();
+  if (!key || !from || !email.includes("@")) return { sent: false };
+  const letter = sellingReadyLetter(vendorId);
+  try {
+    const resend = new Resend(key);
+    const { error } = await resend.emails.send({
+      from,
+      to: email,
+      subject: letter.subject,
+      text: letter.text,
+      html: letter.html,
+    });
+    if (error) {
+      console.error("selling ready mail", error.name ?? "send");
+      return { sent: false };
+    }
+    return { sent: true };
+  } catch (error) {
+    console.error("selling ready mail", error instanceof Error ? error.message : "send");
+    return { sent: false };
+  }
+}
+
 export async function sendVendorPortalMail(
   email: string,
   password?: string,

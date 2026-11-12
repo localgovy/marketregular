@@ -27,6 +27,7 @@ import {
   serviceFeeCents,
   serviceFeeRefunded,
   applicationFeeRefundCents,
+  canadianPhone,
   cardStatementDescriptor,
   futurePickupStart,
   shopperCancelAllowed,
@@ -350,6 +351,9 @@ test("checkout returns use the public site, not the request host", () => {
     }),
     false,
   );
+  assert.equal(canadianPhone("(416) 555-0199"), "+14165550199");
+  assert.equal(canadianPhone("1 416 555 0199"), "+14165550199");
+  assert.equal(canadianPhone("555"), null);
   assert.equal(cardStatementDescriptor("River Fruit"), "River Fruit");
   assert.equal(cardStatementDescriptor("I'd Tap That"), "Id Tap That");
   assert.equal(cardStatementDescriptor("Pie"), null);

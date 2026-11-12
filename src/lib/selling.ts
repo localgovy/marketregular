@@ -127,6 +127,15 @@ export function scheduleForOverride(override: FeeOverride | null, now = new Date
  * no letter left after the special characters are removed, is left for the
  * stall to enter during setup.
  */
+/** A Canadian number Stripe can store. Anything else is left for the stall to type. */
+export function canadianPhone(raw: string | null | undefined) {
+  if (!raw) return null;
+  const digits = raw.replace(/\D/g, "");
+  const local = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+  if (!/^[2-9]\d{2}[2-9]\d{6}$/.test(local)) return null;
+  return `+1${local}`;
+}
+
 export function cardStatementDescriptor(name: string) {
   const cleaned = name
     .normalize("NFKD")

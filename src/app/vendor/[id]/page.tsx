@@ -5,10 +5,11 @@ import { VendorPortalEditor } from "@/components/vendor-portal-editor";
 import { settleStallFeeReturn } from "@/app/actions/selling";
 import { loadVendorPortal } from "@/app/actions/vendor-portal";
 import { SITE_NAME } from "@/lib/constants";
-import { refreshStallCapabilities } from "@/lib/stall-payments";
+import { createStallAccount, refreshStallCapabilities } from "@/lib/stall-payments";
 import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeChargesConfigured, stripeConnectConfigured } from "@/lib/stripe";
 import { pageMeta } from "@/lib/seo";
+import { createAuthedServerClient } from "@/lib/supabase/server";
 import { UNAFFILIATED_VENDOR_SLUGS } from "@/lib/unaffiliated-vendors";
 import { isUuid, vendorPublicPageExists } from "@/lib/vendor-portal";
 import type { Metadata } from "next";
@@ -53,6 +54,36 @@ export default async function VendorEditorPage({
 
   let listing = portal.listings.find((row) => row.id === id);
   if (!listing) notFound();
+  let setupError: string | null = null;
+  if (
+    VENDOR_SALES_OPEN &&
+    listing.selling_approved &&
+    !listing.payments_started &&
+    stripeConnectConfigured()
+  ) {
+    const { user } = await createAuthedServerClient();
+    if (user?.email) {
+      try {
+        const created = await createStallAccount({
+          vendorId: id,
+          userId: user.id,
+          displayName: listing.name,
+          email: user.email,
+          supportEmail: listing.email,
+          phone: listing.phone,
+          website: listing.website,
+        });
+        if (created.error) setupError = created.error;
+      } catch (err) {
+        console.error("stall account", err instanceof Error ? err.message : "stripe");
+        setupError = "Could not start payments.";
+      }
+      if (!setupError) {
+        portal = await loadVendorPortal();
+        listing = portal.listings.find((row) => row.id === id) ?? listing;
+      }
+    }
+  }
   if (
     VENDOR_SALES_OPEN &&
     listing.selling_approved &&
@@ -100,6 +131,7 @@ export default async function VendorEditorPage({
           staysWithoutHall={UNAFFILIATED_VENDOR_SLUGS.has(listing.slug)}
           paymentsConfigured={stripeConnectConfigured()}
           feeNote={feeNote}
+          setupError={setupError}
         />
       </div>
     </div>
