@@ -136,7 +136,7 @@ export function checkoutAmountMatches(
   amountTotal: number | null | undefined,
   chargeCents: number,
 ) {
-  if (currency !== "cad") return false;
+  if (currency?.toLowerCase() !== "cad") return false;
   const amount = amountSubtotal ?? amountTotal;
   return typeof amount === "number" && amount === chargeCents;
 }
@@ -207,12 +207,22 @@ export function itemRefundedCents(subtotalCents: number, serviceCents: number, s
   return Math.min(subtotalCents, stripeRefundedCents);
 }
 
+/** The service fee comes back only when the refund covers the item and the fee. */
+export function serviceFeeRefunded(subtotalCents: number, serviceCents: number, stripeRefundedCents: number) {
+  wholeCents(subtotalCents, "Subtotal");
+  wholeCents(serviceCents, "Service fee");
+  wholeCents(stripeRefundedCents, "Refund");
+  const checkout = subtotalCents + serviceCents;
+  return checkout > 0 && stripeRefundedCents >= checkout;
+}
+
 /** A full refund voids the commission, the flat amount, and the service fee. */
 export function feeAfterRefund(input: {
   subtotalCents: number;
   refundedSubtotalCents: number;
   schedule: FeeSchedule;
   serviceFeeCents: number;
+  serviceFeeReturned?: boolean;
 }): FeeParts {
   wholeCents(input.subtotalCents, "Subtotal");
   wholeCents(input.refundedSubtotalCents, "Refund");
@@ -220,8 +230,18 @@ export function feeAfterRefund(input: {
   if (input.refundedSubtotalCents > input.subtotalCents) {
     throw new Error("Refund is outside the charge.");
   }
-  if (input.refundedSubtotalCents === input.subtotalCents && input.subtotalCents > 0) {
+  const itemRefunded =
+    input.refundedSubtotalCents === input.subtotalCents && input.subtotalCents > 0;
+  if (itemRefunded && input.serviceFeeReturned) {
     return { commissionCents: 0, flatCents: 0, serviceFeeCents: 0, voided: true };
+  }
+  if (itemRefunded) {
+    return {
+      commissionCents: 0,
+      flatCents: 0,
+      serviceFeeCents: input.serviceFeeCents,
+      voided: false,
+    };
   }
   const remaining = input.subtotalCents - input.refundedSubtotalCents;
   commissionBps(input.schedule.commissionBps);

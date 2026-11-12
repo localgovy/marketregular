@@ -113,8 +113,10 @@ export function AccountHome({
     itemName: string;
     quantity: number;
     chargeCents: number;
+    serviceFeeCents: number;
     fulfillment: string;
     status: string;
+    readyAt: string | null;
     vendorName: string;
     vendorSlug: string;
   }>;
@@ -190,8 +192,9 @@ export function AccountHome({
                       )}
                     </p>
                     <p className="type-nums text-sm text-muted-foreground">
-                      {order.quantity} · {formatPrice(order.chargeCents)} · {fulfillmentLabel(order.fulfillment)} ·{" "}
-                      {orderStatusLabel(order.status)}
+                      {order.quantity} · {formatPrice(order.chargeCents)}
+                      {order.serviceFeeCents > 0 ? ` plus ${formatPrice(order.serviceFeeCents)} service fee` : ""} ·{" "}
+                      {fulfillmentLabel(order.fulfillment)} · {orderStatusLabel(order.status, order.readyAt)}
                     </p>
                   </li>
                 ))}

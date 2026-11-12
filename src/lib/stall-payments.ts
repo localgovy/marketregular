@@ -12,9 +12,11 @@ import {
   feeAfterRefund,
   feeCreditAfterReturn,
   introUntilFromFirstPaid,
+  itemRefundedCents,
   platformFeeBinds,
   returnedCents,
   sameDayPickupStart,
+  serviceFeeRefunded,
   torontoInstant,
   scheduleForOverride,
   serviceFeeCents,
@@ -56,6 +58,7 @@ type OrderRow = {
   stripe_payment_intent_id: string | null;
   paid_at: string | null;
   service_fee_cents: number;
+  service_fee_refunded: boolean;
   commission_cents: number;
   commission_bps: number;
   flat_fee_cents: number;
@@ -300,6 +303,7 @@ async function loadOrder(id: string) {
   if (!data) return null;
   const order = data as OrderRow;
   order.service_fee_cents = Number(order.service_fee_cents ?? 0);
+  order.service_fee_refunded = order.service_fee_refunded === true;
   order.commission_cents = Number(order.commission_cents ?? 0);
   order.commission_bps = Number(order.commission_bps ?? 400);
   order.flat_fee_cents = Number(order.flat_fee_cents ?? 0);
@@ -308,7 +312,7 @@ async function loadOrder(id: string) {
   return order;
 }
 
-async function syncFee(order: OrderRow) {
+async function syncFee(order: OrderRow, actualApplicationFeeCents?: number | null) {
   const db = service();
   if (!db) return;
   if (order.status === "pending" || order.status === "expired" || order.status === "reserved") return;
@@ -320,7 +324,19 @@ async function syncFee(order: OrderRow) {
       flatCents: order.flat_fee_cents,
     },
     serviceFeeCents: order.service_fee_cents,
+    serviceFeeReturned: order.service_fee_refunded,
   });
+  const expectedFee =
+    (parts.voided ? 0 : parts.commissionCents) +
+    (parts.flatCents === 25 ? 25 : 0) +
+    (parts.voided ? 0 : parts.serviceFeeCents);
+  const feeMismatch =
+    !parts.voided &&
+    typeof actualApplicationFeeCents === "number" &&
+    actualApplicationFeeCents !== expectedFee;
+  if (feeMismatch) {
+    console.error("stall application fee mismatch", order.id, expectedFee, actualApplicationFeeCents);
+  }
   const { data: existing } = await db
     .from("platform_fees")
     .select("earned_on")
@@ -328,12 +344,17 @@ async function syncFee(order: OrderRow) {
     .maybeSingle();
   const earnedOn =
     typeof existing?.earned_on === "string" ? existing.earned_on : torontoDate();
+  const recordedPercent = feeMismatch
+    ? (actualApplicationFeeCents as number)
+    : parts.voided
+      ? 0
+      : parts.commissionCents;
   const row = {
     vendor_id: order.vendor_id,
     order_id: order.id,
-    percent_cents: parts.voided ? 0 : parts.commissionCents,
-    flat_cents: parts.flatCents === 25 ? 25 : 0,
-    service_fee_cents: parts.voided ? 0 : parts.serviceFeeCents,
+    percent_cents: recordedPercent,
+    flat_cents: feeMismatch ? 0 : parts.flatCents === 25 ? 25 : 0,
+    service_fee_cents: feeMismatch || parts.voided ? 0 : parts.serviceFeeCents,
     voided: parts.voided,
     collected_on_charge: true,
     earned_on: earnedOn,
@@ -367,6 +388,7 @@ export async function recordStallCheckout(
     console.error("stall checkout amount mismatch", session.id);
     return;
   }
+  const actualFee = await applicationFeeOnCharge(session, stripeAccount);
   const vendorAccount = await stallAccountId(order.vendor_id);
   if (
     !stallCheckoutBinds({
@@ -401,7 +423,7 @@ export async function recordStallCheckout(
     if (wasUnpaid && updated?.length) {
       const paid = await loadOrder(order.id);
       if (paid) {
-        await syncFee(paid);
+        await syncFee(paid, actualFee);
         await stampIntroWindow(paid);
         await sendPaidOrderMail(paid);
       }
@@ -411,7 +433,7 @@ export async function recordStallCheckout(
     }
   }
   const fresh = await loadOrder(order.id);
-  if (fresh) await syncFee(fresh);
+  if (fresh) await syncFee(fresh, actualFee);
   const slug = await vendorSlug(order.vendor_id);
   refreshDirectoryLater([slug ? `/vendors/${slug}` : ""]);
 }
@@ -512,10 +534,24 @@ async function findOrderForCharge(charge: Stripe.Charge, stripeAccount: string |
   return accountId === stripeAccount ? order : null;
 }
 
+async function applicationFeeOnCharge(session: Stripe.Checkout.Session, stripeAccount: string | null) {
+  const stripe = getStripe();
+  const paymentIntent = intentId(session.payment_intent);
+  if (!stripe || !paymentIntent) return null;
+  const intent = await stripe.paymentIntents.retrieve(
+    paymentIntent,
+    {},
+    stripeAccount ? { stripeAccount } : {},
+  );
+  return typeof intent.application_fee_amount === "number" ? intent.application_fee_amount : null;
+}
+
 async function applyReturnedAmount(order: OrderRow, returned: number, paymentIntent: string | null) {
   const db = service();
   if (!db) return;
-  const refunded = returnedCents(order.charge_cents, order.refunded_cents, returned);
+  const itemRefunded = itemRefundedCents(order.charge_cents, order.service_fee_cents, returned);
+  const refunded = returnedCents(order.charge_cents, order.refunded_cents, itemRefunded);
+  const feeReturned = order.service_fee_refunded || serviceFeeRefunded(order.charge_cents, order.service_fee_cents, returned);
   if (
     paymentIntent &&
     order.stripe_payment_intent_id &&
@@ -527,6 +563,7 @@ async function applyReturnedAmount(order: OrderRow, returned: number, paymentInt
   const status = open ? order.status : paidStatus(order.charge_cents, refunded);
   const patch = {
     refunded_cents: refunded,
+    service_fee_refunded: feeReturned,
     status,
     ...(paymentIntent && !order.stripe_payment_intent_id
       ? { stripe_payment_intent_id: paymentIntent }
@@ -587,12 +624,44 @@ async function applyPlatformFeeReturn(charge: Stripe.Charge, returned: number) {
   if (typeof vendorId === "string") refreshDirectoryLater([`/vendor/${vendorId}`]);
 }
 
+function applicationFeeId(charge: Stripe.Charge) {
+  if (!charge.application_fee) return null;
+  return typeof charge.application_fee === "string" ? charge.application_fee : charge.application_fee.id;
+}
+
+async function refundRemainingApplicationFee(charge: Stripe.Charge, stripeAccount: string | null) {
+  const stripe = getStripe();
+  if (!stripe) return;
+  let current = charge;
+  if (!applicationFeeId(current)) {
+    current = stripeAccount
+      ? await stripe.charges.retrieve(charge.id, {}, { stripeAccount })
+      : await stripe.charges.retrieve(charge.id);
+  }
+  const feeId = applicationFeeId(current);
+  if (!feeId) return;
+  try {
+    const fee = await stripe.applicationFees.retrieve(feeId);
+    const remaining = fee.amount - fee.amount_refunded;
+    if (remaining <= 0) return;
+    await stripe.applicationFees.createRefund(feeId, { amount: remaining });
+  } catch (err) {
+    const code = err && typeof err === "object" && "code" in err ? String((err as { code?: string }).code) : "";
+    if (code === "charge_already_refunded") return;
+    console.error("application fee refund", err instanceof Error ? err.message : "stripe");
+  }
+}
+
 async function applyChargeReturn(charge: Stripe.Charge, returned: number, stripeAccount: string | null) {
   if (returned <= 0) return;
   if (charge.currency?.toLowerCase() !== "cad") return;
   const order = await findOrderForCharge(charge, stripeAccount);
   if (order) {
+    order.service_fee_cents = Number(order.service_fee_cents ?? 0);
     await applyReturnedAmount(order, returned, paymentIntentId(charge.payment_intent));
+    if (serviceFeeRefunded(order.charge_cents, order.service_fee_cents, returned)) {
+      await refundRemainingApplicationFee(charge, stripeAccount);
+    }
     return;
   }
   if (!stripeAccount) await applyPlatformFeeReturn(charge, returned);
@@ -1089,28 +1158,54 @@ export async function setOrderPickupStart(
   return { error: null };
 }
 
+async function ensurePaymentIntent(order: OrderRow) {
+  if (order.stripe_payment_intent_id) return order;
+  const stripe = getStripe();
+  const db = service();
+  if (!stripe || !db || !order.stripe_checkout_session_id) return order;
+  const accountId = await stallAccountId(order.vendor_id);
+  if (!accountId) return order;
+  const session = await stripe.checkout.sessions.retrieve(
+    order.stripe_checkout_session_id,
+    {},
+    { stripeAccount: accountId },
+  );
+  const paymentIntent = intentId(session.payment_intent);
+  if (!paymentIntent) return order;
+  await db.from("orders").update({ stripe_payment_intent_id: paymentIntent }).eq("id", order.id);
+  return (await loadOrder(order.id)) ?? { ...order, stripe_payment_intent_id: paymentIntent };
+}
+
+async function sendCancelledOrderMail(order: OrderRow) {
+  const context = await orderMailContext(order);
+  if (!context) return;
+  await sendOrderMail({ kind: "cancelled", order, ...context });
+}
+
 export async function cancelShopperOrder(orderId: string, buyerId: string) {
   const db = service();
-  const order = await loadOrder(orderId);
-  if (!db || !order || order.buyer_id !== buyerId) return { error: "That order is missing." as const };
+  const loaded = await loadOrder(orderId);
+  if (!db || !loaded || loaded.buyer_id !== buyerId) return { error: "That order is missing." as const };
   if (
     !shopperCancelAllowed({
-      status: order.status,
-      readyAt: order.ready_at,
-      pickupStartsAt: order.pickup_starts_at,
+      status: loaded.status,
+      readyAt: loaded.ready_at,
+      pickupStartsAt: loaded.pickup_starts_at,
     })
   ) {
     return { error: "This order can no longer be cancelled here." as const };
   }
-  if (order.status === "reserved") {
+  if (loaded.status === "reserved") {
     const { error } = await db
       .from("orders")
       .update({ status: "cancelled" })
-      .eq("id", order.id)
+      .eq("id", loaded.id)
       .eq("status", "reserved");
     if (error) return { error: "Could not cancel that reservation." as const };
+    await sendCancelledOrderMail(loaded);
     return { error: null };
   }
+  const order = await ensurePaymentIntent(loaded);
   const stripe = getStripe();
   const accountId = await stallAccountId(order.vendor_id);
   if (!stripe || !accountId || !order.stripe_payment_intent_id) {
@@ -1133,5 +1228,6 @@ export async function cancelShopperOrder(orderId: string, buyerId: string) {
     order.charge_cents + order.service_fee_cents,
     order.stripe_payment_intent_id,
   );
+  await sendCancelledOrderMail(order);
   return { error: null };
 }

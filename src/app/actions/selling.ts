@@ -224,7 +224,9 @@ export async function loadBuyerOrders(userId: string) {
   if (!db) return [];
   const { data, error } = await db
     .from("orders")
-    .select("id, item_name, quantity, charge_cents, fulfillment, status, paid_at, vendor_id, vendors(name, slug)")
+    .select(
+      "id, item_name, quantity, charge_cents, service_fee_cents, fulfillment, status, paid_at, ready_at, vendor_id, vendors(name, slug)",
+    )
     .eq("buyer_id", userId)
     .in("status", ["paid", "partially_refunded", "refunded", "reserved", "cancelled"])
     .order("paid_at", { ascending: false })
@@ -246,8 +248,10 @@ export async function loadBuyerOrders(userId: string) {
         itemName: String(row.item_name),
         quantity: Number(row.quantity),
         chargeCents: Number(row.charge_cents),
+        serviceFeeCents: Number(row.service_fee_cents ?? 0),
         fulfillment: String(row.fulfillment),
         status: String(row.status),
+        readyAt: typeof row.ready_at === "string" ? row.ready_at : null,
         paidAt: typeof row.paid_at === "string" ? row.paid_at : null,
         vendorName: name,
         vendorSlug: slug,

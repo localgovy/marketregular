@@ -30,7 +30,7 @@ export function VendorSellingForm({
         <span>This stall can sell to signed-in buyers</span>
       </label>
       <p className="text-sm text-muted-foreground">
-        Buy stays off while listing for sale is paused. This switch is saved, and it does not reopen checkout.
+        Saving this lets the stall sell once card payments are on. Alcohol can be reserved without a card.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending}>

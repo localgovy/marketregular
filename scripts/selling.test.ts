@@ -22,6 +22,7 @@ import {
   saleReady,
   scheduleForOverride,
   serviceFeeCents,
+  serviceFeeRefunded,
   shopperCancelAllowed,
   torontoInstant,
   VENDOR_SALES_OPEN,
@@ -62,6 +63,7 @@ test("I'd Tap That keeps 3.5 percent plus 25 cents during year one", () => {
 
 test("a checkout counts when the cad subtotal matches the menu price", () => {
   assert.equal(checkoutAmountMatches("cad", 1000, 1000, 1000), true);
+  assert.equal(checkoutAmountMatches("CAD", 1050, 1050, 1050), true);
   assert.equal(checkoutAmountMatches("cad", 1000, 1130, 1000), true);
   assert.equal(checkoutAmountMatches("cad", null, 1000, 1000), true);
   assert.equal(checkoutAmountMatches("usd", 1000, 1000, 1000), false);
@@ -105,26 +107,53 @@ test("a platform fee counts only for the session and amount we opened", () => {
   assert.equal(platformFeeBinds({ ...paid, expectedVendorId: null, expectedAmountCents: null }), false);
 });
 
-test("a full refund voids the commission and the service fee", () => {
+test("a refund under the item price keeps the service fee", () => {
+  const schedule = { commissionBps: 400, flatCents: 0 };
+  assert.equal(itemRefundedCents(1000, 50, 400), 400);
+  assert.equal(serviceFeeRefunded(1000, 50, 400), false);
+  assert.deepEqual(
+    feeAfterRefund({
+      subtotalCents: 1000,
+      refundedSubtotalCents: itemRefundedCents(1000, 50, 400),
+      schedule,
+      serviceFeeCents: 50,
+      serviceFeeReturned: false,
+    }),
+    { commissionCents: 24, flatCents: 0, serviceFeeCents: 50, voided: false },
+  );
+});
+
+test("a refund of the item price does not return the service fee", () => {
+  const schedule = { commissionBps: 350, flatCents: 25 };
+  assert.equal(itemRefundedCents(1000, 50, 1000), 1000);
+  assert.equal(serviceFeeRefunded(1000, 50, 1000), false);
+  assert.equal(itemRefundedCents(1000, 50, 1025), 1000);
+  assert.equal(serviceFeeRefunded(1000, 50, 1025), false);
+  assert.deepEqual(
+    feeAfterRefund({
+      subtotalCents: 1000,
+      refundedSubtotalCents: 1000,
+      schedule,
+      serviceFeeCents: 50,
+      serviceFeeReturned: false,
+    }),
+    { commissionCents: 0, flatCents: 0, serviceFeeCents: 50, voided: false },
+  );
+});
+
+test("a refund of the whole checkout voids the commission and the service fee", () => {
   const schedule = { commissionBps: 400, flatCents: 0 };
   assert.equal(itemRefundedCents(1000, 50, 1050), 1000);
+  assert.equal(serviceFeeRefunded(1000, 50, 1050), true);
   assert.deepEqual(
     feeAfterRefund({
       subtotalCents: 1000,
       refundedSubtotalCents: itemRefundedCents(1000, 50, 1050),
       schedule,
       serviceFeeCents: 50,
+      serviceFeeReturned: true,
     }),
     { commissionCents: 0, flatCents: 0, serviceFeeCents: 0, voided: true },
-  );
-  assert.deepEqual(
-    feeAfterRefund({
-      subtotalCents: 1000,
-      refundedSubtotalCents: 400,
-      schedule,
-      serviceFeeCents: 50,
-    }),
-    { commissionCents: 24, flatCents: 0, serviceFeeCents: 50, voided: false },
   );
   assert.equal(returnedCents(1000, 400, 200), 400);
   assert.equal(returnedCents(1000, 200, 1500), 1000);
@@ -155,6 +184,7 @@ test("a partial refund keeps the flat amount until the item is fully refunded", 
       refundedSubtotalCents: 1000,
       schedule,
       serviceFeeCents: 50,
+      serviceFeeReturned: true,
     }),
     { commissionCents: 0, flatCents: 0, serviceFeeCents: 0, voided: true },
   );

@@ -14,7 +14,7 @@ function escapeHtml(value: string) {
     .replaceAll('"', "&quot;");
 }
 
-export type OrderMailKind = "paid" | "reserved" | "ready";
+export type OrderMailKind = "paid" | "reserved" | "ready" | "cancelled";
 
 export type OrderMailInput = {
   kind: OrderMailKind;
@@ -48,6 +48,16 @@ export function orderLetter(input: OrderMailInput, audience: "shopper" | "stall"
           `${input.order.quantity} · ${price} · ${how}`,
           url,
         ]
+      : input.kind === "cancelled"
+        ? [
+            audience === "stall"
+              ? `A shopper cancelled ${input.order.item_name}.`
+              : `Your order at ${input.vendorName} is cancelled.`,
+            service
+              ? `${input.order.quantity} · ${price} plus ${service} service fee · ${how}`
+              : `${input.order.quantity} · ${price} · ${how}`,
+            url,
+          ]
       : input.kind === "reserved"
         ? [
             audience === "stall"
@@ -68,9 +78,11 @@ export function orderLetter(input: OrderMailInput, audience: "shopper" | "stall"
   const subject =
     input.kind === "ready"
       ? `${input.order.item_name} is ready for pickup`
-      : input.kind === "reserved"
-        ? `Reservation for ${input.order.item_name}`
-        : `Order for ${input.order.item_name}`;
+      : input.kind === "cancelled"
+        ? `Cancelled order for ${input.order.item_name}`
+        : input.kind === "reserved"
+          ? `Reservation for ${input.order.item_name}`
+          : `Order for ${input.order.item_name}`;
   const text = lines.join("\n\n");
   const html = `<!doctype html>
 <html><body style="margin:0;background:#F1EDE3;color:#141414;font-family:ui-sans-serif,system-ui,sans-serif">
