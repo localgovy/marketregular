@@ -9,6 +9,7 @@ import {
 import { isInjectionProbe } from "@/lib/injection-probe";
 import { takeCatalogSlot } from "@/lib/mail-limit";
 import type { ProductHit } from "@/lib/product-hits";
+import { tryAcquireSearchSlot } from "@/lib/search-concurrency";
 import { foldSearchText } from "@/lib/search-text";
 import { z } from "zod";
 
@@ -32,12 +33,18 @@ export async function moreProducts(input: {
   if (!parsed.success) return [];
   if (isInjectionProbe(parsed.data.q) || isInjectionProbe(parsed.data.marketSlug)) return [];
   if (foldSearchText(parsed.data.q).length < MIN_PRODUCT_SEARCH_CHARS) return [];
-  if (!(await takeCatalogSlot())) return [];
-  return searchProducts({
-    q: parsed.data.q,
-    openToday: parsed.data.openToday,
-    marketSlug: parsed.data.marketSlug,
-    day: parsed.data.day,
-    offset: parsed.data.offset,
-  });
+  const releaseConcurrency = tryAcquireSearchSlot();
+  if (!releaseConcurrency) return [];
+  try {
+    if (!(await takeCatalogSlot())) return [];
+    return await searchProducts({
+      q: parsed.data.q,
+      openToday: parsed.data.openToday,
+      marketSlug: parsed.data.marketSlug,
+      day: parsed.data.day,
+      offset: parsed.data.offset,
+    });
+  } finally {
+    releaseConcurrency();
+  }
 }

@@ -26,6 +26,7 @@ import {
 } from "@/lib/product-catalogue";
 import { torontoWeekday } from "@/lib/product-sort";
 import { loadProductsHubContext } from "@/lib/products-atlas-data";
+import { tryAcquireSearchSlot } from "@/lib/search-concurrency";
 import { foldSearchText } from "@/lib/search-text";
 import { pageMeta } from "@/lib/seo";
 
@@ -125,16 +126,28 @@ export async function ProductsScreen({
   const marketSlug = marketKnown ? market || null : null;
 
   const canSearch = foldSearchText(normalizeSearchQuery(q)).length >= MIN_PRODUCT_SEARCH_CHARS;
-  const searchAllowed = canSearch ? await takeCatalogSlot() : true;
-  const rateLimited = canSearch && !searchAllowed;
+  const releaseConcurrency = canSearch ? tryAcquireSearchSlot() : null;
+  let rateLimited = false;
+  let products: Awaited<ReturnType<typeof searchProducts>> = [];
+  let vendors: Awaited<ReturnType<typeof searchVendorsByName>> = [];
+  let hubContext: Awaited<ReturnType<typeof loadProductsHubContext>>;
 
-  const [products, vendors, hubContext] = await Promise.all([
-    canSearch && searchAllowed
-      ? searchProducts({ q, openToday, marketSlug, day })
-      : Promise.resolve([]),
-    canSearch && searchAllowed ? searchVendorsByName(q) : Promise.resolve([]),
-    loadProductsHubContext(aisleId),
-  ]);
+  try {
+    const searchAllowed = canSearch
+      ? releaseConcurrency !== null && (await takeCatalogSlot())
+      : true;
+    rateLimited = canSearch && !searchAllowed;
+
+    [products, vendors, hubContext] = await Promise.all([
+      canSearch && searchAllowed
+        ? searchProducts({ q, openToday, marketSlug, day })
+        : Promise.resolve([]),
+      canSearch && searchAllowed ? searchVendorsByName(q) : Promise.resolve([]),
+      loadProductsHubContext(aisleId),
+    ]);
+  } finally {
+    releaseConcurrency?.();
+  }
 
   const {
     markets,

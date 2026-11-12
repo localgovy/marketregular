@@ -20,6 +20,11 @@ import {
   PUBLISHED_ROWS_REVALIDATE_SECONDS,
 } from "../src/lib/directory-cache.ts";
 import { isInjectionProbe } from "../src/lib/injection-probe.ts";
+import {
+  currentSearchInFlight,
+  resetSearchConcurrency,
+  tryAcquireSearchSlot,
+} from "../src/lib/search-concurrency.ts";
 
 function routeFiles(dir: string, out: string[] = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -258,7 +263,8 @@ test("bulk extraction surfaces stay closed and bounded", () => {
   );
   assert.match(searchLib, /MIN_PRODUCT_SEARCH_CHARS/);
   assert.match(searchLib, /MAX_PRODUCT_SEARCH_OFFSET/);
-  assert.match(searchLib, /search-vendors-v1/);
+  assert.match(searchLib, /search-vendors-v2/);
+  assert.equal(searchLib.includes('.from("published_vendors")'), false);
   assert.equal(searchLib.includes("4000"), false);
 
   const productsAction = readFileSync(
@@ -267,6 +273,7 @@ test("bulk extraction surfaces stay closed and bounded", () => {
   );
   assert.match(productsAction, /MIN_PRODUCT_SEARCH_CHARS/);
   assert.match(productsAction, /MAX_PRODUCT_SEARCH_OFFSET/);
+  assert.match(productsAction, /tryAcquireSearchSlot\(\)/);
   assert.match(productsAction, /takeCatalogSlot\(\)/);
   assert.equal(productsAction.includes("4_000"), false);
 
@@ -274,6 +281,7 @@ test("bulk extraction surfaces stay closed and bounded", () => {
     new URL("../src/app/products/screen.tsx", import.meta.url),
     "utf8",
   );
+  assert.match(productsScreen, /tryAcquireSearchSlot\(\)/);
   assert.match(productsScreen, /takeCatalogSlot\(\)/);
 
   const homeLazy = readFileSync(
@@ -337,6 +345,20 @@ test("sql-shaped searches are probes and ordinary product text is not", () => {
   ]) {
     assert.equal(isInjectionProbe(ordinary), false, ordinary);
   }
+
+  resetSearchConcurrency();
+  const releases = Array.from({ length: 4 }, () => tryAcquireSearchSlot(4));
+  assert.equal(releases.every((fn) => typeof fn === "function"), true);
+  assert.equal(currentSearchInFlight(), 4);
+  assert.equal(tryAcquireSearchSlot(4), null);
+  releases[0]?.();
+  releases[0]?.();
+  assert.equal(currentSearchInFlight(), 3);
+  const extra = tryAcquireSearchSlot(4);
+  assert.equal(typeof extra, "function");
+  extra?.();
+  for (const fn of releases) fn?.();
+  assert.equal(currentSearchInFlight(), 0);
 });
 
 test("request-path warmups and full-site login invalidation stay out", () => {
