@@ -509,13 +509,14 @@ export function fulfillmentLabel(value: string) {
 }
 
 export function orderIsReady(status: string, readyAt?: string | null) {
-  return Boolean(readyAt) && (status === "paid" || status === "reserved");
+  return Boolean(readyAt) && (status === "paid" || status === "partially_refunded" || status === "reserved");
 }
 
 export function orderStatusLabel(value: string, readyAt?: string | null) {
   if (orderIsReady(value, readyAt)) return "Ready for pickup";
   if (value === "paid") return "Paid";
   if (value === "partially_refunded") return "Partly refunded";
+  if (value === "refund_pending") return "Refund on the way";
   if (value === "refunded") return "Refunded";
   if (value === "reserved") return "Reserved";
   if (value === "cancelled") return "Cancelled";
@@ -592,7 +593,12 @@ export function sameDayPickupStart(
     .sort();
   const earliest = opens[0];
   if (!earliest) return null;
-  return torontoInstant(torontoDate(now), earliest);
+  const starts = torontoInstant(torontoDate(now), earliest);
+  if (!starts) return null;
+  const instant = Date.parse(starts);
+  // Today's opening is not a pickup time once that opening has passed.
+  if (!Number.isFinite(instant) || instant <= now.getTime()) return null;
+  return starts;
 }
 
 /** Full refund until the order is ready and a real pickup time has started. */
@@ -604,7 +610,8 @@ export function shopperCancelAllowed(input: {
   now?: Date;
 }) {
   if (input.disputedAt) return false;
-  if (input.status !== "paid" && input.status !== "reserved") return false;
+  if (input.status === "refund_pending") return false;
+  if (input.status !== "paid" && input.status !== "partially_refunded" && input.status !== "reserved") return false;
   if (input.status === "reserved") return !input.readyAt;
   if (!input.readyAt) return true;
   if (!input.pickupStartsAt) return true;
@@ -622,7 +629,8 @@ export function shopperRefundWindowCopy(input: {
   now?: Date;
 }) {
   if (input.disputedAt) return "This payment is being reviewed, so it cannot be cancelled here.";
-  if (input.status !== "paid" && input.status !== "reserved") return null;
+  if (input.status === "refund_pending") return "The refund is on its way.";
+  if (input.status !== "paid" && input.status !== "partially_refunded" && input.status !== "reserved") return null;
   if (input.status === "reserved") {
     if (input.readyAt) return null;
     return "You can cancel until the stall marks this ready.";

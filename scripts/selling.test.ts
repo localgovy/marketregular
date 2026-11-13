@@ -41,6 +41,7 @@ import {
   torontoDateTimeLocal,
   futurePickupStart,
   shopperCancelAllowed,
+  sameDayPickupStart,
   torontoInstant,
   VENDOR_SALES_OPEN,
   SERVICE_FEE_FALLBACK_CENTS,
@@ -368,6 +369,14 @@ test("checkout stays on this host and does not require the shopper profile", () 
 test("checkout returns use the public site, not the request host", () => {
   const site = "https://www.marketregular.com";
   assert.equal(shopperCancelAllowed({ status: "paid", readyAt: null, pickupStartsAt: "2026-11-12T19:00:00Z", now: new Date("2026-11-12T15:00:00Z") }), true);
+  assert.equal(shopperCancelAllowed({ status: "partially_refunded", readyAt: null, pickupStartsAt: null, now: new Date("2026-11-12T15:00:00Z") }), true);
+  assert.equal(shopperCancelAllowed({ status: "refund_pending", readyAt: null, pickupStartsAt: null }), false);
+  assert.equal(
+    sameDayPickupStart(new Date("2026-11-12T15:00:00Z"), [
+      { weekday: 4, opensAt: "08:00", seasonStart: null, seasonEnd: null },
+    ]),
+    null,
+  );
   assert.equal(shopperCancelAllowed({ status: "paid", readyAt: "2026-11-12T14:00:00Z", pickupStartsAt: "2026-11-12T19:00:00Z", now: new Date("2026-11-12T15:00:00Z") }), true);
   assert.equal(shopperCancelAllowed({ status: "paid", readyAt: "2026-11-12T14:00:00Z", pickupStartsAt: "2026-11-12T19:00:00Z", now: new Date("2026-11-12T20:00:00Z") }), false);
   assert.equal(shopperCancelAllowed({ status: "paid", readyAt: "2026-11-12T14:00:00Z", pickupStartsAt: null, now: new Date("2026-11-12T20:00:00Z") }), true);
@@ -431,7 +440,7 @@ test("checkout returns use the public site, not the request host", () => {
   assert.equal(chosenMarket([{ id: "m1", name: "Wychwood" }, { id: "m2", name: "Evergreen" }], "").error, "Pick a market.");
   assert.equal(safePath("/vendors/river/orders/abc?session_id=cs_test_123"), "/vendors/river/orders/abc?session_id=cs_test_123");
   assert.equal(reservesAtStall("alcohol"), true);
-  assert.equal(reservesAtStall("bread-and-bakery", true), true);
+  assert.equal(reservesAtStall("bread-and-bakery", true), false);
   assert.equal(reservesAtStall("bread-and-bakery"), false);
   const now = new Date("2026-11-12T15:00:00Z");
   assert.equal(futurePickupStart("2026-11-12T09:00", now, null).error, "Pick a pickup time that has not started.");

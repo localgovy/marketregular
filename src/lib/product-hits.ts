@@ -68,9 +68,9 @@ export function isAlcoholCategory(category: string | null | undefined) {
   return category === "alcohol";
 }
 
-/** A classified alcohol item, or one the stall marked to be paid at the stall. */
-export function reservesAtStall(category: string | null | undefined, containsAlcohol = false) {
-  return containsAlcohol || isAlcoholCategory(category);
+/** Only a classified alcohol item is reserved and paid at the stall. */
+export function reservesAtStall(category: string | null | undefined, _markedAlcohol = false) {
+  return isAlcoholCategory(category);
 }
 
 export function visiblePriceCents(category: string | null | undefined, cents: number | null) {

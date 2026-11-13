@@ -694,6 +694,7 @@ async function applyReturnedAmount(order: OrderRow, returned: number, paymentInt
     return;
   }
   const open = order.status === "pending" || order.status === "expired";
+  const pendingRefund = order.status === "refund_pending";
   const status = open ? order.status : paidStatus(order.charge_cents, refunded);
   const patch = {
     refunded_cents: refunded,
@@ -703,10 +704,10 @@ async function applyReturnedAmount(order: OrderRow, returned: number, paymentInt
       ? { stripe_payment_intent_id: paymentIntent }
       : {}),
   };
-  const write = db.from("orders").update(patch).eq("id", order.id).lte("refunded_cents", refunded);
+  const write = db.from("orders").update(patch).eq("id", order.id).lt("refunded_cents", refunded);
   const { data, error } = await (open
     ? write.in("status", ["pending", "expired"])
-    : write.in("status", ["paid", "partially_refunded", "refunded"])
+    : write.in("status", ["paid", "partially_refunded", "refunded", "refund_pending"])
   ).select("id");
   if (error) throw new Error("stall refund was not recorded");
   if (!data?.length && open) {
@@ -718,6 +719,7 @@ async function applyReturnedAmount(order: OrderRow, returned: number, paymentInt
   }
   const fresh = await loadOrder(order.id);
   if (fresh) await syncFee(fresh);
+  if (data?.length && pendingRefund) await sendCancelledOrderMail(order);
 }
 
 async function applyPlatformFeeReturn(charge: Stripe.Charge, returned: number) {
@@ -766,6 +768,41 @@ function applicationFeeId(charge: Stripe.Charge) {
 function stripeErrorCode(err: unknown) {
   if (err && typeof err === "object" && "code" in err) return String((err as { code?: string }).code);
   return "";
+}
+
+function idempotentReplay(err: unknown) {
+  if (!err || typeof err !== "object" || !("headers" in err)) return false;
+  const headers = (err as { headers?: unknown }).headers;
+  if (!headers) return false;
+  const value =
+    typeof (headers as { get?: (name: string) => string | null }).get === "function"
+      ? (headers as { get: (name: string) => string | null }).get("idempotent-replayed")
+      : (headers as Record<string, string>)["idempotent-replayed"];
+  return String(value ?? "").toLowerCase() === "true";
+}
+
+async function createRemainingRefund(
+  stripe: NonNullable<ReturnType<typeof getStripe>>,
+  paymentIntentId: string,
+  accountId: string,
+  orderId: string,
+) {
+  const keys = [`stall-refund-${orderId}`, `stall-refund-${orderId}-retry`];
+  let last: unknown;
+  for (const [index, idempotencyKey] of keys.entries()) {
+    try {
+      return await stripe.refunds.create(
+        { payment_intent: paymentIntentId, refund_application_fee: true },
+        { stripeAccount: accountId, idempotencyKey },
+      );
+    } catch (err) {
+      last = err;
+      if (stripeErrorCode(err) === "charge_already_refunded" || !idempotentReplay(err) || index === keys.length - 1) {
+        throw err;
+      }
+    }
+  }
+  throw last;
 }
 
 async function refundApplicationFee(
@@ -1402,7 +1439,7 @@ export async function markOrderReady(vendorId: string, orderId: string, userId: 
   if (order.disputed_at) {
     return { error: "This payment is being reviewed. Respond in the payments panel above." as const };
   }
-  if (order.status !== "paid" && order.status !== "reserved") {
+  if (order.status !== "paid" && order.status !== "partially_refunded" && order.status !== "reserved") {
     return { error: "That order is not ready to hand over." as const };
   }
   if (!order.ready_at) {
@@ -1483,10 +1520,87 @@ async function sendCancelledOrderMail(order: OrderRow) {
   await sendOrderMail({ kind: "cancelled", order, ...context });
 }
 
+const OPEN_DISPUTE = new Set([
+  "needs_response",
+  "warning_needs_response",
+  "under_review",
+  "warning_under_review",
+]);
+
+export async function reconcileStallPayment(order: OrderRow) {
+  const stripe = getStripe();
+  const accountId = order.stripe_account_id ?? (await stallAccountId(order.vendor_id));
+  const paymentIntentId = order.stripe_payment_intent_id;
+  if (!stripe || !accountId || !paymentIntentId) return (await loadOrder(order.id)) ?? order;
+  if (!["paid", "partially_refunded", "refund_pending"].includes(order.status)) {
+    return (await loadOrder(order.id)) ?? order;
+  }
+  try {
+    const intent = await stripe.paymentIntents.retrieve(
+      paymentIntentId,
+      { expand: ["latest_charge"] },
+      { stripeAccount: accountId },
+    );
+    const charge = intent.latest_charge;
+    if (!charge || typeof charge === "string") return (await loadOrder(order.id)) ?? order;
+    if (charge.amount_refunded > 0) {
+      await applyReturnedAmount(order, charge.amount_refunded, paymentIntentId);
+    }
+    const disputes = await stripe.disputes.list({ charge: charge.id, limit: 10 }, { stripeAccount: accountId });
+    const open = disputes.data.find((dispute) => OPEN_DISPUTE.has(dispute.status));
+    const db = service();
+    if (db && open) {
+      await db
+        .from("orders")
+        .update({
+          disputed_at: new Date(open.created * 1000).toISOString(),
+        })
+        .eq("id", order.id)
+        .is("disputed_at", null);
+    } else if (db && order.disputed_at && disputes.data.length > 0 && disputes.data.every((dispute) => dispute.status === "won" || dispute.status === "warning_closed")) {
+      await db.from("orders").update({ disputed_at: null }).eq("id", order.id);
+    }
+    for (const dispute of disputes.data) {
+      if (dispute.status === "lost") await applyLostDispute(dispute, accountId);
+    }
+  } catch (err) {
+    console.error("stall payment reconcile", err instanceof Error ? err.message : "stripe");
+  }
+  return (await loadOrder(order.id)) ?? order;
+}
+
+export async function reconcileBuyerOrder(orderId: string, buyerId: string) {
+  const order = await loadOrder(orderId);
+  if (!order || order.buyer_id !== buyerId) return null;
+  return reconcileStallPayment(order);
+}
+
+async function claimShopperRefund(orderId: string) {
+  const db = service();
+  if (!db) return false;
+  const { data, error } = await db
+    .from("orders")
+    .update({ status: "refund_pending" })
+    .eq("id", orderId)
+    .in("status", ["paid", "partially_refunded"])
+    .is("disputed_at", null)
+    .select("id");
+  if (error) throw new Error("stall refund was not recorded");
+  return Boolean(data?.length);
+}
+
+async function releaseShopperRefund(order: OrderRow) {
+  const db = service();
+  if (!db) return;
+  const status = order.refunded_cents > 0 ? "partially_refunded" : "paid";
+  await db.from("orders").update({ status }).eq("id", order.id).eq("status", "refund_pending");
+}
+
 export async function cancelShopperOrder(orderId: string, buyerId: string) {
   const db = service();
-  const loaded = await loadOrder(orderId);
+  const loaded = await reconcileBuyerOrder(orderId, buyerId);
   if (!db || !loaded || loaded.buyer_id !== buyerId) return { error: "That order is missing." as const };
+  if (loaded.status === "refund_pending") return { error: null, message: "The refund is on its way." as const };
   if (
     !shopperCancelAllowed({
       status: loaded.status,
@@ -1522,38 +1636,30 @@ export async function cancelShopperOrder(orderId: string, buyerId: string) {
     await sendCancelledOrderMail(current);
     return { error: null };
   }
+  const claimed = await claimShopperRefund(current.id);
+  if (!claimed) {
+    const again = await loadOrder(current.id);
+    if (again?.status === "refund_pending") return { error: null, message: "The refund is on its way." as const };
+    return { error: "This order can no longer be cancelled here." as const };
+  }
   const prepared = await ensurePaymentIntent(current);
   const stripe = getStripe();
   const accountId = await chargeAccountId(prepared);
-  if (!stripe || !accountId || !prepared.stripe_payment_intent_id) {
+  const paymentIntentId = prepared.stripe_payment_intent_id;
+  if (!stripe || !accountId || !paymentIntentId) {
+    await releaseShopperRefund(current);
     return { error: "That payment is not ready to refund." as const };
   }
-  const order = await loadOrder(prepared.id);
-  if (
-    !order ||
-    !shopperCancelAllowed({
-      status: order.status,
-      readyAt: order.ready_at,
-      pickupStartsAt: order.pickup_starts_at,
-      disputedAt: order.disputed_at,
-    })
-  ) {
-    return { error: "This order can no longer be cancelled here." as const };
-  }
-  const paymentIntentId = order.stripe_payment_intent_id ?? prepared.stripe_payment_intent_id;
-  if (!paymentIntentId) return { error: "That payment is not ready to refund." as const };
+  const order = { ...current, status: "refund_pending" };
   try {
-    const refund = await stripe.refunds.create(
-      {
-        payment_intent: paymentIntentId,
-        refund_application_fee: true,
-      },
-      { stripeAccount: accountId, idempotencyKey: `stall-refund-${order.id}` },
-    );
+    const refund = await createRemainingRefund(stripe, paymentIntentId, accountId, order.id);
     if (refund.status === "pending" || refund.status === "requires_action") {
       return { error: null, message: "The refund is on its way." as const };
     }
-    if (refund.status !== "succeeded") return { error: "Could not refund that order." as const };
+    if (refund.status !== "succeeded") {
+      await releaseShopperRefund(current);
+      return { error: "Could not refund that order." as const };
+    }
   } catch (err) {
     if (stripeErrorCode(err) === "charge_already_refunded") {
       const intent = await stripe.paymentIntents.retrieve(
@@ -1565,18 +1671,13 @@ export async function cancelShopperOrder(orderId: string, buyerId: string) {
       const returned = latestCharge && typeof latestCharge === "object" ? latestCharge.amount_refunded : 0;
       if (returned > 0) {
         await applyReturnedAmount(order, returned, paymentIntentId);
-        await sendCancelledOrderMail(order);
         return { error: null };
       }
     }
+    await releaseShopperRefund(current);
     console.error("stall cancel", err instanceof Error ? err.message : "stripe");
     return { error: "Could not refund that order." as const };
   }
-  await applyReturnedAmount(
-    order,
-    order.charge_cents + order.service_fee_cents,
-    paymentIntentId,
-  );
-  await sendCancelledOrderMail(order);
+  await applyReturnedAmount(order, order.charge_cents + order.service_fee_cents, paymentIntentId);
   return { error: null };
 }

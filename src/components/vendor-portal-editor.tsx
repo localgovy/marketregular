@@ -453,6 +453,7 @@ function SaleFields({
   preorder,
   terms,
   containsAlcohol,
+  classifiedAlcohol = false,
 }: {
   id: string;
   forSale: boolean;
@@ -460,6 +461,7 @@ function SaleFields({
   preorder: boolean;
   terms: string;
   containsAlcohol: boolean;
+  classifiedAlcohol?: boolean;
 }) {
   return (
     <fieldset className="grid gap-3 sm:col-span-2">
@@ -488,11 +490,15 @@ function SaleFields({
       </div>
       <label className="flex items-baseline gap-2 text-sm">
         <input type="checkbox" name="contains_alcohol" defaultChecked={containsAlcohol} className="accent-primary" />
-        <span>Alcohol. The shopper reserves it and pays at the stall.</span>
+        <span>
+          {classifiedAlcohol
+            ? "Alcohol. Buyers reserve it, pay at the stall, and show ID."
+            : "Contains alcohol. Buyers still pay by card."}
+        </span>
       </label>
       <p className="text-sm text-muted-foreground">
-        A sale needs a price of at least $0.50, and pickup or preorder. Buyers pay you. Alcohol is reserved
-        and paid at the stall.
+        A sale needs a price of at least $0.50, and pickup or preorder. Buyers pay this stall.
+        {classifiedAlcohol ? " Alcohol is reserved and paid at the stall." : ""}
       </p>
     </fieldset>
   );
@@ -564,6 +570,7 @@ function MenuItemForm({
             preorder={item.offer_preorder}
             terms={item.offer_terms ?? ""}
             containsAlcohol={item.contains_alcohol}
+            classifiedAlcohol={item.product_category === "alcohol"}
           />
         ) : null}
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
@@ -940,7 +947,10 @@ export function VendorPortalEditor({
                   · {fulfillmentLabel(order.fulfillment)}
                   {pickupStamp ? ` · ${pickupStamp}` : ""} · {orderStatusLabel(order.status, order.ready_at)}
                 </p>
-                {order.status === "paid" || order.status === "reserved" ? (
+                {order.status === "refund_pending" ? (
+                  <p className="text-sm text-muted-foreground">The refund is on its way.</p>
+                ) : null}
+                {order.status === "paid" || order.status === "partially_refunded" || order.status === "reserved" ? (
                   <StallOrderControls
                     vendorId={listing.id}
                     orderId={order.id}

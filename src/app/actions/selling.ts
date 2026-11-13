@@ -248,7 +248,7 @@ export async function loadBuyerOrders(userId: string) {
       "id, item_name, quantity, charge_cents, service_fee_cents, fulfillment, status, paid_at, ready_at, pickup_starts_at, vendor_id, vendors(name, slug)",
     )
     .eq("buyer_id", userId)
-    .in("status", ["paid", "partially_refunded", "refunded", "reserved", "cancelled"])
+    .in("status", ["paid", "partially_refunded", "refunded", "refund_pending", "reserved", "cancelled"])
     .order("paid_at", { ascending: false })
     .limit(40);
   if (error || !data) return [];

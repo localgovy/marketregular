@@ -2,7 +2,7 @@
 
 import { dbPublicError } from "@/lib/public-error";
 import { takeOwnerSaveSlot } from "@/lib/mail-limit";
-import { syncStallPublicProfile } from "@/lib/stall-payments";
+import { refreshStallCapabilities, syncStallPublicProfile } from "@/lib/stall-payments";
 import { revalidatePublishedDirectory } from "@/lib/revalidate-directory";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
@@ -469,5 +469,17 @@ export async function loadVendorPortal() {
   if (!supabase || !user) return { listings: [] as PortalListing[], signedIn: false };
   const { data, error } = await supabase.rpc("my_vendor_portal");
   if (error) return { listings: [] as PortalListing[], signedIn: true, error: true as const };
-  return { listings: parseVendorPortal(data), signedIn: true, error: false as const };
+  const listings = parseVendorPortal(data);
+  for (const listing of listings) {
+    if (!listing.selling_approved || !listing.payments_started || listing.card_payments_active) continue;
+    try {
+      const flags = await refreshStallCapabilities(listing.id);
+      if (!flags) continue;
+      listing.card_payments_active = flags.cardPaymentsActive;
+      listing.payouts_active = flags.payoutsActive;
+    } catch (err) {
+      console.error("stall capabilities", err instanceof Error ? err.message : "stripe");
+    }
+  }
+  return { listings, signedIn: true, error: false as const };
 }

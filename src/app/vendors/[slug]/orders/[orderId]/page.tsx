@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { confirmStallCheckout } from "@/lib/stall-payments";
+import { confirmStallCheckout, reconcileBuyerOrder } from "@/lib/stall-payments";
 import { BackButton } from "@/components/back-button";
 import { OrderCancel } from "@/components/order-cancel";
 import { formatPrice } from "@/lib/format";
@@ -64,6 +64,8 @@ export default async function StallOrderPage({
     order = data;
   }
   if (!order) notFound();
+  const reconciled = await reconcileBuyerOrder(String(order.id), user.id);
+  if (reconciled) order = reconciled;
 
   const db = createServiceClient();
   const vendor = db
