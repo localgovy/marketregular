@@ -270,8 +270,10 @@ const restamp = process.argv.includes("--restamp");
 await mkdir(OUT, { recursive: true });
 
 const vars = await env();
+const gate = (vars.MARKETREGULAR_DATA_API_GATE ?? "").trim();
 const supabase = createClient(vars.NEXT_PUBLIC_SUPABASE_URL, vars.SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
+  global: { headers: gate.length >= 32 ? { "x-marketregular-gate": gate } : {} },
 });
 
 async function download(path) {
