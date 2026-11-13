@@ -20,7 +20,9 @@ create table if not exists private.data_api_gate (
 
 revoke all on table private.data_api_gate from public, anon, authenticated, service_role;
 
-create or replace function public.reject_postgis_data_api()
+drop function if exists public.reject_postgis_data_api();
+
+create function public.reject_postgis_data_api()
 returns void
 language plpgsql
 stable
