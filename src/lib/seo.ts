@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { CLAIM_INBOX, SITE_NAME, SITE_TITLE, SITE_URL, SITE_LOGO, SITE_OG, WEEKDAYS } from "@/lib/constants";
+import { SITE_TITLE } from "@/content/site-copy";
+import { CLAIM_INBOX, SITE_NAME, SITE_URL, SITE_LOGO, SITE_OG, WEEKDAYS } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_REGION_NAME, LAUNCH_TZ } from "@/lib/launch";
 import { listingScore } from "@/lib/listing-score";
 import { externalHref, listingEmail, socialProfileHref } from "@/lib/format";

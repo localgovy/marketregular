@@ -16,6 +16,7 @@ import {
   scheduleMapFrom,
   vendorsWithTag,
 } from "@/lib/landing";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 import { tagLabel } from "@/lib/tag-label";
@@ -169,7 +170,10 @@ export default async function MarketTagPage({
 
       <section className="mt-8">
         <h2>
-          {halls.length} {halls.length === 1 ? "market" : "markets"}
+          {copyText(
+            halls.length === 1 ? siteCopy["/markets/tag/[tag]"].markets : siteCopy["/markets/tag/[tag]"].marketsPlural,
+            { count: halls.length },
+          )}
         </h2>
         {halls.length ? (
           <MarketList

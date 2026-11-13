@@ -7,6 +7,7 @@ import { FilterClearButton } from "@/components/filter-clear";
 import { FilterColumn, FilterRow, type FilterOption } from "@/components/filter-column";
 import { SearchField } from "@/components/search-field";
 import { ShowMore } from "@/components/show-more";
+import { siteCopy } from "@/content/site-copy";
 import { COUNTRY_TAGS, PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import { countryTagsFromQuery } from "@/lib/country-tags";
 import {
@@ -204,7 +205,7 @@ export function MarketVendors({
   return (
     <section id="vendors" className="scroll-mt-header">
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
-        <h2>Vendors</h2>
+        <h2>{siteCopy["/markets/[slug]"].vendors}</h2>
         {vendors.length ? (
           <p className="text-sm text-muted-foreground">
             {filtering ? `${matches.length} of ${vendors.length}` : `${vendors.length} listed`}

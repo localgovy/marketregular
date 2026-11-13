@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Hours } from "@/components/hours";
 import { NowLabel } from "@/components/now-label";
+import { siteCopy } from "@/content/site-copy";
 import { WEEKDAYS } from "@/lib/constants";
 import { sessionIsOpen } from "@/lib/open-state";
 import { formatHours, nextOpenLabel, nextOpenSlot, type ScheduleRow } from "@/lib/schedule";
@@ -22,7 +23,7 @@ export function LiveOpenState({
   const now = useNow(nowMs);
   const when = schedules.length ? nextOpenLabel(schedules, province, new Date(now)) : null;
   if (!when) return null;
-  if (when === "Open now") return <NowLabel>{when}</NowLabel>;
+  if (when === "Open now") return <NowLabel>{siteCopy["every page"].status.openNow}</NowLabel>;
   return <span className="type-nums text-base text-primary">{when}</span>;
 }
 
@@ -55,7 +56,7 @@ export function VendorNextLine({ halls, nowMs }: { halls: Hall[]; nowMs: number 
     <p className="type-lede mt-2 max-w-3xl text-pretty text-muted-foreground">
       {nextSlot.waitMinutes === 0 ? (
         <>
-          <NowLabel>Open now</NowLabel>
+          <NowLabel>{siteCopy["every page"].status.openNow}</NowLabel>
           {" at "}
         </>
       ) : (
@@ -87,7 +88,7 @@ export function DayOpenMark({
 }) {
   const now = useNow(nowMs);
   const open = rows.some((row) => sessionIsOpen(row, new Date(now)));
-  if (open) return <NowLabel>Open now</NowLabel>;
+  if (open) return <NowLabel>{siteCopy["every page"].status.openNow}</NowLabel>;
   return (
     <p className="text-sm text-muted-foreground">
       <span className="type-nums text-foreground">{count}</span>{" "}

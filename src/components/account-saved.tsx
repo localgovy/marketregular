@@ -7,6 +7,7 @@ import { SavedNotesSection, type SavedNote } from "@/components/saved-notes";
 import { SavedProductsSection } from "@/components/saved-products";
 import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
+import { siteCopy } from "@/content/site-copy";
 import { useHydratedSaves } from "@/lib/use-hydrated-saves";
 import type { Saves } from "@/lib/saves";
 import type { Market, Vendor } from "@/types/database";
@@ -59,7 +60,7 @@ export function AccountSavedLists({
   return (
     <div className="grid gap-6">
       <section>
-        <h3>Markets</h3>
+        <h3>{siteCopy["/account"].markets}</h3>
         {savedMarkets.length ? (
           <ul className="mt-2 ring-1 ring-border">
             {savedMarkets.map((market) => {
@@ -105,11 +106,11 @@ export function AccountSavedLists({
             })}
           </ul>
         ) : (
-          <p className="mt-2 text-sm text-muted-foreground">No markets on the list.</p>
+          <p className="mt-2 text-sm text-muted-foreground">{siteCopy["/account"].noMarkets}</p>
         )}
       </section>
       <section>
-        <h3>Stalls</h3>
+        <h3>{siteCopy["/account"].stalls}</h3>
         {savedVendors.length ? (
           <ul className="mt-2 ring-1 ring-border">
             {savedVendors.map((vendor) => (

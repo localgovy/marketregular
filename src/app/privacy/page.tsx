@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { copyText, siteCopy } from "@/content/site-copy";
 import {
   CONTACT_EMAIL,
   LEGAL_EFFECTIVE,
@@ -11,9 +12,9 @@ import {
 import { pageMeta } from "@/lib/seo";
 
 export const metadata: Metadata = pageMeta({
-  title: "Privacy",
+  title: siteCopy["/privacy"].title,
   path: "/privacy",
-  description: `How ${SITE_NAME} collects, uses, and deletes personal information.`,
+  description: copyText(siteCopy["/privacy"].description),
 });
 
 const body = "mt-2 text-base leading-relaxed text-muted-foreground";
@@ -21,13 +22,13 @@ const body = "mt-2 text-base leading-relaxed text-muted-foreground";
 export default function PrivacyPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
-      <h1>Privacy</h1>
+      <h1>{siteCopy["/privacy"].h1}</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        {LEGAL_ENTITY} operates {SITE_NAME}. This policy is current as of {LEGAL_EFFECTIVE}.
+        {copyText(siteCopy["/privacy"].lede, { entity: LEGAL_ENTITY, effective: LEGAL_EFFECTIVE })}
       </p>
 
       <section>
-        <h2>Who we are</h2>
+        <h2>{siteCopy["/privacy"].who}</h2>
         <p className={body}>
           {LEGAL_ENTITY} is a corporation in {LEGAL_JURISDICTION}. We run {SITE_NAME} at{" "}
           {SITE_URL.replace(/^https:\/\//, "")}. There is no public street address. Privacy
@@ -40,7 +41,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Why we use it</h2>
+        <h2>{siteCopy["/privacy"].why}</h2>
         <p className={body}>
           We use personal information to run your account, publish the directory, send mail the
           account needs or that you asked for, complete an order when a stall is selling, keep the
@@ -50,7 +51,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>What we collect</h2>
+        <h2>{siteCopy["/privacy"].collect}</h2>
         <p className={body}>
           You can read the directory without an account. If you create one, we keep the email and
           a password hash. Supabase stores the hash, not the password. If you continue with Google,
@@ -106,7 +107,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Cookies, storage, and analytics</h2>
+        <h2>{siteCopy["/privacy"].cookies}</h2>
         <p className={body}>
           Sign-in needs cookies for the session and to remember where to send you after Google or
           email confirm. Signed-in saves may also sit in this browser so the site feels instant.
@@ -131,7 +132,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Mail</h2>
+        <h2>{siteCopy["/privacy"].mail}</h2>
         <p className={body}>
           Account mail is the note the account needs. Confirming the address and resetting a
           password go through Supabase. Account requests go to us through Resend. When a stall or
@@ -142,7 +143,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Who else sees it</h2>
+        <h2>{siteCopy["/privacy"].whoElse}</h2>
         <p className={body}>
           Vercel hosts the site. Supabase holds accounts, the directory, and logo and post files.
           Stripe handles card numbers for stall checkout and for the stall fee, when those are on.
@@ -160,7 +161,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Keeping it, changing it, deleting it</h2>
+        <h2>{siteCopy["/privacy"].keeping}</h2>
         <p className={body}>
           We keep account data while the account exists. On Account you can edit your display name
           and type delete to close the account. That removes the login, profile, posts, photos on
@@ -184,7 +185,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>A breach</h2>
+        <h2>{siteCopy["/privacy"].breach}</h2>
         <p className={body}>
           If a breach of our safeguards creates a real risk of significant harm, we tell the people
           affected and the Office of the Privacy Commissioner of Canada, as the law requires.
@@ -192,7 +193,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Children</h2>
+        <h2>{siteCopy["/privacy"].children}</h2>
         <p className={body}>
           {SITE_NAME} is not for children under 13. The feed is public. Do not create an account
           for someone younger than that. A stall or market account is for an adult who is allowed
@@ -201,7 +202,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Your rights</h2>
+        <h2>{siteCopy["/privacy"].rights}</h2>
         <p className={body}>
           Under PIPEDA you can ask what we hold, ask us to correct it, and ask us to delete it,
           subject to what the law lets us keep, including a tax record and an order a stall still
@@ -216,7 +217,7 @@ export default function PrivacyPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Changes</h2>
+        <h2>{siteCopy["/privacy"].changes}</h2>
         <p className={body}>
           If this policy changes in a way that matters, we update the date at the top of this page.
           If the change affects a stall or market account, we also email that account.

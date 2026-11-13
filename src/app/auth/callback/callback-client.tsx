@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { siteCopy } from "@/content/site-copy";
 import { useRouter } from "next/navigation";
 import { OAUTH_HASH_STORAGE_KEY } from "@/lib/analytics";
 import { clearAuthNextCookie, readAuthNextCookie, safePath } from "@/lib/auth-redirect";
@@ -35,8 +36,8 @@ export function AuthCallbackClient() {
 
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">
-      <h1>Signing in</h1>
-      <p className="type-lede mt-2 text-muted-foreground">Continuing…</p>
+      <h1>{siteCopy["/auth/callback"].h1}</h1>
+      <p className="type-lede mt-2 text-muted-foreground">{siteCopy["/auth/callback"].lede}</p>
     </div>
   );
 }

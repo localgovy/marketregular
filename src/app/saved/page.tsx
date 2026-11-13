@@ -6,6 +6,7 @@ import { listBlogPosts } from "@/lib/blog";
 import { readMySaves } from "@/lib/data/account";
 import { getCurrentProfile, listMarkets, listVendors } from "@/lib/data/catalog";
 import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { pageMeta } from "@/lib/seo";
 import { EMPTY_SAVES } from "@/lib/saves";
@@ -14,9 +15,9 @@ import { buttonVariants } from "@/components/ui/button";
 export const maxDuration = 60;
 
 export const metadata: Metadata = pageMeta({
-  title: "Saved markets, vendors, products, and notes",
+  title: siteCopy["/saved"].title,
   path: "/saved",
-  description: "Markets, vendors, products, blog posts, and reviews saved to your account.",
+  description: siteCopy["/saved"].description,
   index: false,
 });
 
@@ -38,19 +39,19 @@ export default async function SavedPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
-      <h1>Saved</h1>
+      <h1>{siteCopy["/saved"].h1}</h1>
       {profile ? (
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
-          Markets, vendors, products, blog posts, and reviews on this account.
+          {siteCopy["/saved"].ledeSignedIn}
         </p>
       ) : (
         <>
           <p className="type-lede mt-2 mb-6 text-muted-foreground">
-            Sign in to keep markets, vendors, and products on a list that follows you.
+            {siteCopy["/saved"].ledeSignedOut}
           </p>
           {suggested.length ? (
             <>
-              <p className="mb-2 text-base font-medium">Popular in {LAUNCH_CITY}</p>
+              <p className="mb-2 text-base font-medium">{copyText(siteCopy["/saved"].popular)}</p>
               <ul className="mb-6 divide-y divide-border ring-1 ring-border">
                 {suggested.map((market) => (
                   <li key={market.id} className="px-4 py-3">
@@ -68,13 +69,13 @@ export default async function SavedPage() {
             rel="nofollow"
             className={buttonVariants()}
           >
-            Sign in
+            {siteCopy["/saved"].signIn}
           </Link>
         </>
       )}
       {profile && loaded.failed ? (
         <p className="text-base text-muted-foreground">
-          Couldn&apos;t load your saves. Refresh the page.
+          {siteCopy["/saved"].loadFailed}
         </p>
       ) : null}
       {profile && !loaded.failed ? (

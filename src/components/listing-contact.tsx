@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { FacebookMark, InstagramMark, SignMark, TikTokMark, type MarkProps } from "@/components/marks";
 import { buttonVariants } from "@/components/ui/button";
+import { siteCopy } from "@/content/site-copy";
 import { externalHref, formatPhone, listingEmail, socialProfileHref } from "@/lib/format";
 
 export function ListingPhone({ phone }: { phone: string | null }) {
@@ -38,7 +39,7 @@ export function ListingContact({
   if (!phone && !mail) return null;
   return (
     <div className="mt-4">
-      {heading ? <h3>Find them</h3> : null}
+      {heading ? <h3>{siteCopy["/markets/[slug]"].findThem}</h3> : null}
       <ListingPhone phone={phone} />
       {mail ? (
         <p className="mt-2 text-sm">

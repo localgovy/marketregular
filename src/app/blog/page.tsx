@@ -4,16 +4,16 @@ import { BlogPosted } from "@/components/blog-posted";
 import { JsonLd } from "@/components/json-ld";
 import { SaveButton } from "@/components/save-button";
 import { listPublicBlogPosts, plainBlogText } from "@/lib/blog";
-import { LAUNCH_CITY } from "@/lib/launch";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { BLOG_CRUMB, breadcrumbJsonLd, pageMeta } from "@/lib/seo";
 
 export const dynamic = "force-static";
 export const revalidate = 3600;
 
 export const metadata: Metadata = pageMeta({
-  title: "Blog",
+  title: siteCopy["/blog"].title,
   path: "/blog",
-  description: `Find out the latest schedules, vendors, and tidbits from your favourite farmers' markets in ${LAUNCH_CITY}.`,
+  description: copyText(siteCopy["/blog"].description),
 });
 
 export default function BlogIndexPage() {
@@ -21,10 +21,9 @@ export default function BlogIndexPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
       <JsonLd data={breadcrumbJsonLd([BLOG_CRUMB])} />
-      <h1>Blog</h1>
+      <h1>{siteCopy["/blog"].h1}</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        Find out the latest schedules, vendors, and tidbits from your favourite
-        farmers&apos; markets in {LAUNCH_CITY}.
+        {copyText(siteCopy["/blog"].lede)}
       </p>
       {posts.length ? (
         <ul className="divide-y divide-border border-t border-border">
@@ -48,7 +47,7 @@ export default function BlogIndexPage() {
           ))}
         </ul>
       ) : (
-        <p className="text-base text-muted-foreground">No notes yet.</p>
+        <p className="text-base text-muted-foreground">{siteCopy["/blog"].empty}</p>
       )}
     </div>
   );

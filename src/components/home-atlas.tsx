@@ -43,13 +43,15 @@ import { SearchField } from "@/components/search-field";
 import { VerifiedName } from "@/components/verified-stamp";
 import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item";
 import { directPublicImageSrc, formatCensus, StallEmblem } from "@/components/stall-emblem";
-import { SEARCH_LABEL, SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
+import { SEARCH_LABEL, SEARCH_PLACEHOLDER, copyText, siteCopy } from "@/content/site-copy";
+import { WEEKDAYS } from "@/lib/constants";
 import { marketsHref, tagLabel } from "@/lib/find-paths";
 import { formatPrice } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { cn } from "@/lib/utils";
 
-const HOME_TITLE_PHRASES = ["farmers' markets", "vendors", "local products"] as const;
+const home = siteCopy["/"];
+const HOME_TITLE_PHRASES = home.titlePhrases;
 
 const AISLE_GUIDE_CHIP_INITIAL = 6;
 const PLACE_CARD_INITIAL = 6;
@@ -418,13 +420,13 @@ function CravingCycle({ aisles }: { aisles: HomeAtlasAisleCard[] }) {
     <div
       className="mt-3.5 border-t border-primary-foreground/20 pt-3 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
       role="group"
-      aria-label="Cravings"
+      aria-label={home.cravings}
       tabIndex={0}
       onKeyDown={onKeyDown}
     >
       <div className="flex items-center gap-2">
-        <span className="type-kicker shrink-0 text-chalk">Cravings</span>
-        <button type="button" aria-label="Previous craving" onClick={() => step(-1)} className={cycleButtonClass}>
+        <span className="type-kicker shrink-0 text-chalk">{home.cravings}</span>
+        <button type="button" aria-label={home.previousCraving} onClick={() => step(-1)} className={cycleButtonClass}>
           <CaretLeftMark className="size-4" />
         </button>
         <Link
@@ -448,7 +450,7 @@ function CravingCycle({ aisles }: { aisles: HomeAtlasAisleCard[] }) {
             ) : null}
           </span>
         </Link>
-        <button type="button" aria-label="Next craving" onClick={() => step(1)} className={cycleButtonClass}>
+        <button type="button" aria-label={home.nextCraving} onClick={() => step(1)} className={cycleButtonClass}>
           <CaretRightMark className="size-4" />
         </button>
         <span className="sr-only" aria-live="polite">
@@ -577,7 +579,7 @@ function VendorTableCard({
             </Link>
             <div className="flex items-baseline justify-between gap-2">
               <div>
-                <p className="type-kicker font-medium text-foreground">Menu highlights</p>
+                <p className="type-kicker font-medium text-foreground">{home.menuHighlights}</p>
                 <p className="text-sm text-muted-foreground">
                   {vendor.primaryAisleLabel}
                   {vendor.publishedMenu ? " · Published menu" : ""}
@@ -676,7 +678,7 @@ function VendorTableCard({
                     >
                       {market.neighbourhood}
                     </button>
-                    {market.openNow ? <NowLabel>Hall open</NowLabel> : null}
+                    {market.openNow ? <NowLabel>{siteCopy["every page"].status.hallOpen}</NowLabel> : null}
                   </div>
                 ) : null}
               </li>
@@ -771,7 +773,7 @@ function LiveMarketHallCard({
             <div className="text-right">
               {isOpen ? (
                 <div className="mb-0.5 flex justify-end">
-                  <NowLabel>Open now</NowLabel>
+                  <NowLabel>{siteCopy["every page"].status.openNow}</NowLabel>
                 </div>
               ) : statusBadge === "later" ? (
                 <p className="text-sm font-medium text-primary">Later today</p>
@@ -903,7 +905,7 @@ function MastheadLiveFloorStrip({
                 onClick={onFilterTodayStalls}
                 className="cursor-pointer text-sm font-medium text-primary hover:underline"
               >
-                <span className="type-nums">{data.sellingTodayCount}</span> vendors active today
+                <span className="type-nums">{data.sellingTodayCount}</span> {home.vendorsActiveToday}
               </button>
             </>
           ) : null}
@@ -1217,8 +1219,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
               <span>Made by Canadians, for Canadians, to shop Canadian.</span>
             </span>
             <span className="text-sm text-muted-foreground">
-              Find products, vendors, and markets from all over Toronto, the GTA, and surrounding
-              areas.
+              {home.coverage}
             </span>
           </div>
 
@@ -1228,7 +1229,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                 <NowLabel>
                   <span>
                     <span className="type-nums">{data.openNowSlots.length}</span>{" "}
-                    {data.openNowSlots.length === 1 ? "hall open now" : "halls open now"}
+                    {data.openNowSlots.length === 1 ? home.hallOpenNow : home.hallsOpenNow}
                   </span>
                 </NowLabel>
               </Link>
@@ -1237,13 +1238,13 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
               href="/markets#directory-vendors"
               className="font-medium text-primary hover:underline"
             >
-              <span className="type-nums">{data.sellingTodayCount}</span> vendors active today
+              <span className="type-nums">{data.sellingTodayCount}</span> {home.vendorsActiveToday}
             </Link>
             <span aria-hidden className="text-muted-foreground">
               –
             </span>
             <Link href="/products" className="font-medium text-primary hover:underline">
-              Full product catalogue
+              {home.fullCatalogue}
             </Link>
           </div>
         </div>
@@ -1258,10 +1259,9 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                 {LAUNCH_CITY} <CyclingPhrase phrases={HOME_TITLE_PHRASES} />
               </h1>
               <p className="type-lede mt-3 max-w-2xl text-muted-foreground">
-                Find everything from the products you enjoy every weekend to the markets and
-                vendors that sell them,{" "}
+                {home.ledeBefore}{" "}
                 <span className="font-medium text-foreground underline decoration-board decoration-[0.2em] underline-offset-[0.22em] [text-decoration-skip-ink:none]">
-                  all in one place
+                  {home.ledeEmphasis}
                 </span>
                 .
               </p>
@@ -1270,7 +1270,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
             {/* 3-Stamp Ticket Strip (With Cohesive Woodcut Stamp Marks) */}
             <div className="lg:col-span-5">
               <nav
-                aria-label="On the directory"
+                aria-label={home.censusLabel}
                 className="grid grid-cols-3 divide-x divide-border bg-card ring-1 ring-board"
               >
                 <Link
@@ -1278,39 +1278,39 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   className="flex flex-col justify-between bg-secondary/45 p-3.5 transition-colors hover:bg-secondary"
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker font-medium text-primary">Priority vendors</span>
+                    <span className="type-kicker font-medium text-primary">{home.priorityVendors}</span>
                     <CrateMark className="size-4 shrink-0 text-primary" />
                   </div>
                   <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
                     {formatCensus(data.census.vendors)}
                   </span>
-                  <span className="mt-1 text-sm font-medium text-primary">vendors</span>
+                  <span className="mt-1 text-sm font-medium text-primary">{home.vendors}</span>
                 </Link>
                 <Link
                   href="/products"
                   className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker text-muted-foreground">Products</span>
+                    <span className="type-kicker text-muted-foreground">{home.products}</span>
                     <TagMark className="size-4 shrink-0 text-stamp" />
                   </div>
                   <span className="type-census mt-1 text-3xl leading-none text-stamp sm:text-4xl">
                     {formatCensus(data.census.menus)}
                   </span>
-                  <span className="mt-1 text-sm font-medium text-stamp">menu items</span>
+                  <span className="mt-1 text-sm font-medium text-stamp">{home.menuItems}</span>
                 </Link>
                 <Link
                   href="/markets"
                   className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker text-muted-foreground">Neighbourhoods</span>
+                    <span className="type-kicker text-muted-foreground">{home.neighbourhoods}</span>
                     <RulesMark className="size-4 shrink-0 text-board" />
                   </div>
                   <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
                     {formatCensus(data.census.markets)}
                   </span>
-                  <span className="mt-1 text-sm font-medium text-primary">markets</span>
+                  <span className="mt-1 text-sm font-medium text-primary">{home.markets}</span>
                 </Link>
               </nav>
             </div>
@@ -1349,15 +1349,15 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   onClick={() => void handleNearMe()}
                   className="find-chip inline-flex h-12 cursor-pointer items-center justify-center border border-chalk/65 bg-chalk/10 px-4 text-sm font-medium text-primary-foreground hover:bg-chalk/20"
                 >
-                  {locating ? "Locating…" : "Markets near me"}
+                  {locating ? home.locating : home.nearMe}
                 </button>
 
                 <button
                   type="submit"
                   className="find-go stall-chip inline-flex h-12 shrink-0 cursor-pointer items-center justify-between gap-4 px-5 text-receipt hover:brightness-110"
                 >
-                  <span className="text-base font-medium text-receipt">Search directory</span>
-                  <span className="text-base font-medium text-receipt">Go</span>
+                  <span className="text-base font-medium text-receipt">{home.searchDirectory}</span>
+                  <span className="text-base font-medium text-receipt">{home.go}</span>
                 </button>
               </form>
 
@@ -1377,14 +1377,14 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
               <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
                 <CrateMark className="size-4" />
               </span>
-              <h2>Featured vendors, products &amp; markets</h2>
+              <h2>{home.featured}</h2>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
               {/* Cohesive Stall Emblem Strip */}
               {logoVendors.length > 0 ? (
-                <div className="hidden items-center gap-1.5 xl:flex" aria-label="Featured vendor emblems">
-                  <span className="type-kicker mr-1 text-muted-foreground">Vendor marks:</span>
+                <div className="hidden items-center gap-1.5 xl:flex" aria-label={home.featuredEmblems}>
+                  <span className="type-kicker mr-1 text-muted-foreground">{home.vendorMarks}</span>
                   {logoVendors.slice(0, 6).map((v) => (
                     <Link
                       key={v.slug}
@@ -1410,22 +1410,22 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   }}
                   className="stall-chip-sm cursor-pointer bg-card px-3 py-1.5 text-sm font-medium text-stamp ring-1 ring-border hover:bg-secondary"
                 >
-                  Reset filters
+                  {home.resetFilters}
                 </button>
               )}
               <Link
                 href="/markets#directory-vendors"
                 className="stall-chip-sm inline-flex h-9 items-center bg-board px-3.5 text-sm font-medium text-chalk hover:brightness-110"
               >
-                All {formatCensus(data.census.vendors)} vendors
+                {copyText(home.allVendorsCount, { count: formatCensus(data.census.vendors) })}
               </Link>
             </div>
           </div>
 
           <div className="grid gap-3 border-b border-border bg-secondary/40 px-4 py-3.5 sm:px-5">
             <FilterCycleRow
-              label="Category"
-              allLabel="All vendors"
+              label={home.category}
+              allLabel={home.allVendors}
               allActive={vendorAisleFilter === "all"}
               activeClass="bg-primary text-primary-foreground"
               onAll={() => syncAisleSelection("all")}
@@ -1455,8 +1455,8 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
             </FilterCycleRow>
 
             <FilterCycleRow
-              label="Neighbourhood"
-              allLabel="All areas"
+              label={home.neighbourhood}
+              allLabel={home.allAreas}
               allActive={vendorAreaFilter === "all"}
               activeClass="bg-board text-chalk"
               onAll={() => syncAreaSelection("all")}
@@ -1491,13 +1491,13 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
 
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="type-kicker shrink-0 font-medium whitespace-nowrap text-foreground sm:w-32">
-                When
+                {home.when}
               </span>
               {(
                 [
-                  { id: "all", label: "Any day" },
-                  { id: "today", label: "Today" },
-                  { id: "weekend", label: "Weekend" },
+                  { id: "all", label: home.anyDay },
+                  { id: "today", label: home.today },
+                  { id: "weekend", label: home.weekend },
                 ] as const
               ).map((tab) => {
                 const active = vendorWhenFilter === tab.id;
@@ -1546,7 +1546,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   }}
                   className="cursor-pointer font-medium text-primary hover:underline"
                 >
-                  Reset filters
+                  {home.resetFilters}
                 </button>
               </p>
             )}
@@ -1565,20 +1565,20 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                 <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
                   <TagMark className="size-4" />
                 </span>
-                <h2>Products &amp; categories</h2>
+                <h2>{home.productsAndCategories}</h2>
               </div>
               <Link
                 href="/products"
                 className="text-sm font-medium text-primary underline underline-offset-4"
               >
-                All categories
+                {home.allCategories}
               </Link>
             </div>
 
             {/* Category Selector Tabs (with Visual Thumbnails) */}
             <div
               role="tablist"
-              aria-label="Select product category"
+              aria-label={home.selectCategory}
               className="flex flex-wrap gap-1.5 border-b border-border bg-secondary/35 px-4 py-3"
             >
               {data.aisles.slice(0, 8).map((aisle) => {
@@ -1635,7 +1635,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                           </Link>
                         </h3>
                         <span className="type-nums text-sm font-medium text-stamp">
-                          {activeAisle.count} product guides
+                          {copyText(home.productGuides, { count: activeAisle.count })}
                         </span>
                       </div>
                       <p className="mt-1.5 text-base leading-snug text-muted-foreground">
@@ -1655,13 +1655,13 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   <div className="mt-4 border-t border-border pt-3.5">
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="type-kicker font-medium text-foreground">
-                        Vendors known for {activeAisle.label.toLowerCase()}:
+                        {copyText(home.vendorsKnownFor, { category: activeAisle.label.toLowerCase() })}
                       </p>
                       <Link
                         href={`/products?aisle=${activeAisle.id}`}
                         className="text-sm font-medium text-primary hover:underline"
                       >
-                        Compare all vendors &amp; prices
+                        {home.compareVendors}
                       </Link>
                     </div>
                     <ul className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -1694,7 +1694,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                 {/* Secondary 4-Card Aisle Strip */}
                 <div className="mt-4 border-t border-border pt-3.5">
                   <p className="type-kicker mb-2 text-muted-foreground">
-                    More product categories:
+                    {home.moreCategories}
                   </p>
                   <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {data.aisles
@@ -1741,13 +1741,13 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                 <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-board text-chalk">
                   <BlocksMark className="size-4" />
                 </span>
-                <h2>Markets &amp; neighbourhood atlas</h2>
+                <h2>{home.marketsAtlas}</h2>
               </div>
               <Link
                 href="/markets"
                 className="text-sm font-medium text-primary underline underline-offset-4"
               >
-                Full screen map
+                {home.fullScreenMap}
               </Link>
             </div>
 
@@ -1760,13 +1760,13 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
               <label className="flex min-w-0 items-center gap-3 text-sm font-medium">
                 <span className="shrink-0">Neighbourhood</span>
                 <select
-                  aria-label="Neighbourhood"
+                  aria-label={home.neighbourhood}
                   className="h-9 min-w-0 flex-1 rounded-none border border-input bg-card px-2.5 text-sm font-medium"
                   value={activeCircuit?.label ?? ""}
                   onChange={(event) => syncAreaSelection(event.target.value)}
                 >
                   {torontoCircuits.length ? (
-                    <optgroup label="Toronto">
+                    <optgroup label={home.toronto}>
                       {torontoCircuits.map((circuit) => (
                         <option key={circuit.q} value={circuit.label}>
                           {circuit.label}
@@ -1775,7 +1775,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                     </optgroup>
                   ) : null}
                   {cityCircuits.length ? (
-                    <optgroup label="Around Toronto">
+                    <optgroup label={home.aroundToronto}>
                       {cityCircuits.map((circuit) => (
                         <option key={circuit.q} value={circuit.label}>
                           {circuit.label}
@@ -1851,7 +1851,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                             <div className="flex shrink-0 items-center gap-3">
                               <div className="text-right">
                                 {market.open ? (
-                                  <NowLabel>Open now</NowLabel>
+                                  <NowLabel>{siteCopy["every page"].status.openNow}</NowLabel>
                                 ) : (
                                   <span className="type-nums whitespace-nowrap text-sm font-medium text-foreground">
                                     {market.nextOpen}
@@ -1871,7 +1871,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                 {activeCircuit.topVendors.length > 0 ? (
                   <div className="border-t border-border bg-secondary/35 px-4 py-3">
                     <p className="type-kicker text-muted-foreground">
-                      Anchor vendors setting up in {activeCircuit.label}:
+                      {copyText(home.anchorVendors, { area: activeCircuit.label })}
                     </p>
                     <div className="mt-2 grid gap-2 sm:grid-cols-2">
                       {activeCircuit.topVendors.slice(0, 4).map((v) => (
@@ -1898,7 +1898,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
         {/* Full-Width Section: Toronto Neighbourhood Markets (With Both Hall & Stall Emblems) */}
         <section
           id="directory"
-          aria-label="Neighbourhood markets"
+          aria-label={home.neighbourhoodMarkets}
           className="mt-10 scroll-mt-24 border-t-2 border-board pt-8"
         >
           <div className="flex flex-wrap items-center justify-between gap-3 pb-5">
@@ -1906,7 +1906,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
               <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
                 <PlateMark className="size-4" />
               </span>
-              <h2>Neighbourhood markets</h2>
+              <h2>{home.neighbourhoodMarkets}</h2>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -1924,13 +1924,13 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
 
           <div className="flex flex-col gap-8">
             <PlaceCircuitGroup
-              title="Toronto"
+              title={home.toronto}
               circuits={torontoCircuits}
               onShowStalls={syncAreaSelection}
               stallLabels={stallLabels}
             />
             <PlaceCircuitGroup
-              title="Around Toronto"
+              title={home.aroundToronto}
               circuits={cityCircuits}
               onShowStalls={syncAreaSelection}
               stallLabels={stallLabels}
@@ -1955,12 +1955,12 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                         <CrateMark className="size-4" />
                       </span>
                       <div>
-                        <p className="type-kicker text-muted-foreground">Selling today</p>
-                        <h3>Vendors on the floor</h3>
+                        <p className="type-kicker text-muted-foreground">{home.sellingToday}</p>
+                        <h3>{home.vendorsOnTheFloor}</h3>
                       </div>
                     </div>
                     <span className="type-nums text-sm font-medium text-primary">
-                      {data.sellingTodayCount} active
+                      {copyText(home.activeCount, { count: data.sellingTodayCount })}
                     </span>
                   </div>
                   {data.sellingToday.length > 0 ? (
@@ -1974,11 +1974,11 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                     </ul>
                   ) : (
                     <p className="px-4 py-4 text-sm text-muted-foreground">
-                      No vendors remain open at this hour today. Browse the{" "}
+                      {home.noVendorsOpen.split(home.upcomingWeek)[0]}
                       <Link href="/events" className="font-medium text-primary hover:underline">
-                        upcoming week schedule
-                      </Link>{" "}
-                      or explore featured vendors above.
+                        {home.upcomingWeek}
+                      </Link>
+                      {home.noVendorsOpen.split(home.upcomingWeek)[1]}
                     </p>
                   )}
                 </div>
@@ -1991,15 +1991,15 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                         <TallyMark className="size-4" />
                       </span>
                       <div>
-                        <p className="type-kicker text-muted-foreground">Regulars&apos; picks</p>
-                        <h3>Top 5 vendors this week</h3>
+                        <p className="type-kicker text-muted-foreground">{home.regularsPicks}</p>
+                        <h3>{home.topVendors}</h3>
                       </div>
                     </div>
                     <Link
                       href="/markets#directory-vendors"
                       className="text-sm font-medium text-primary hover:underline"
                     >
-                      All vendors
+                      {home.allVendors}
                     </Link>
                   </div>
                   <ol>
@@ -2017,10 +2017,10 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                     <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-board text-chalk">
                       <AsteriskMark className="size-4" />
                     </span>
-                    <h3>Recent shopper notes &amp; finds</h3>
+                    <h3>{home.shopperNotes}</h3>
                   </div>
                   <Link href="/feed" className="text-sm font-medium text-primary hover:underline">
-                    View all posts
+                    {home.viewAllPosts}
                   </Link>
                 </div>
                 {data.tape.length > 0 ? (
@@ -2031,11 +2031,11 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   </ol>
                 ) : (
                   <p className="px-4 py-4 text-sm text-muted-foreground">
-                    No floor notes posted yet. Visit{" "}
+                    {home.noNotesYet.split(home.liveFeed)[0]}
                     <Link href="/feed" className="font-medium text-primary hover:underline">
-                      the live feed
-                    </Link>{" "}
-                    to share what is fresh from vendors.
+                      {home.liveFeed}
+                    </Link>
+                    {home.noNotesYet.split(home.liveFeed)[1]}
                   </p>
                 )}
               </div>
@@ -2052,7 +2052,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                     <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
                       <WeekMark className="size-4" />
                     </span>
-                    <h2 className="type-column">Upcoming sessions</h2>
+                    <h2 className="type-column">{home.upcomingSessions}</h2>
                   </div>
                   <Link href="/events" className="text-sm font-medium text-primary hover:underline">
                     Calendar
@@ -2101,7 +2101,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   <div className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
                       <SignMark className="size-4" />
-                      <span>{data.weeklyNote.kicker ?? "Field note"}</span>
+                      <span>{data.weeklyNote.kicker ?? home.fieldNote}</span>
                     </span>
                     <SaveButton
                       kind="blog"

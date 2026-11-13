@@ -7,7 +7,7 @@ import {
   HEADER_SEARCH_PLACEHOLDER,
   HEADER_SEARCH_PLACEHOLDER_SHORT,
   SEARCH_LABEL,
-} from "@/lib/constants";
+} from "@/content/site-copy";
 import { cn } from "@/lib/utils";
 
 const HEADER_SEARCH_MQ = "(min-width: 1024px)";

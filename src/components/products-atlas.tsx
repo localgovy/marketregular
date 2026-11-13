@@ -21,8 +21,8 @@ import { SortableProductHits } from "@/components/product-sort-list";
 import { FeaturedStallList, ProductsLiveStatus } from "@/components/products-live";
 import type { DirectoryCensus } from "@/lib/data/catalog";
 import type { ProductPhoto } from "@/lib/data/product-photos";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { formatPrice } from "@/lib/format";
-import { LAUNCH_CITY } from "@/lib/launch";
 import { productsBrowseHref, type CatalogueSort } from "@/lib/product-browse-href";
 import type { CatalogueAisle } from "@/lib/product-catalogue";
 import type { ProductHit, VendorHit } from "@/lib/product-hits";
@@ -33,6 +33,8 @@ import type {
 } from "@/lib/products-atlas-data";
 import { formatCensus } from "@/lib/stall-plate";
 import { cn } from "@/lib/utils";
+
+const productsCopy = siteCopy["/products"];
 
 export function ProductsAtlas({
   q,
@@ -133,11 +135,10 @@ export function ProductsAtlas({
         <div className="flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board lg:col-span-7">
           <div>
             <h1 className="text-primary-foreground">
-              {q ? `${q} at ${LAUNCH_CITY} farmers' markets` : "Products"}
+              {q ? copyText(productsCopy.searchTitle, { query: q }) : productsCopy.h1}
             </h1>
             <p className="type-lede mt-2 max-w-2xl text-primary-foreground/95">
-              Search what the stalls sell, or start from a category. Each product opens the
-              vendors who list it and the markets where they set up.
+              {productsCopy.lede}
             </p>
 
             <ProductSearchForm
@@ -151,7 +152,7 @@ export function ProductsAtlas({
 
             {filtersNeedQuery ? (
               <p className="mt-3 rounded bg-primary-foreground/15 px-3 py-2 text-base text-primary-foreground">
-                Add a product name to use selling today, a market, or a day.
+                {productsCopy.filtersNeedQuery}
               </p>
             ) : null}
           </div>
@@ -224,7 +225,7 @@ export function ProductsAtlas({
               {/* Featured Stalls Preview */}
               {spotlight.featuredStalls.length > 0 ? (
                 <div className="mt-4 bg-receipt p-3.5 ring-1 ring-border shadow-[inset_3px_0_0_var(--primary)]">
-                  <p className="type-kicker text-primary">Stalls selling these items</p>
+                  <p className="type-kicker text-primary">{productsCopy.stallsSelling}</p>
                   <ul className="mt-2 divide-y divide-dashed divide-border">
                     {spotlight.featuredStalls.slice(0, 2).map((stall) => {
                       const price = formatPrice(stall.priceCents);
@@ -281,7 +282,7 @@ export function ProductsAtlas({
               href={q ? "#search-results" : "#products"}
               className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
             >
-              <span>{q ? "Jump to search results" : "Jump to product catalogue"}</span>
+              <span>{q ? productsCopy.jumpToResults : productsCopy.jumpToCatalogue}</span>
               <CaretRightMark className="size-3.5" />
             </a>
           </div>
@@ -299,13 +300,13 @@ export function ProductsAtlas({
             <div className="flex flex-wrap items-center justify-between gap-2 bg-card px-5 py-3.5 ring-1 ring-board">
               <div className="flex items-center gap-2.5">
                 <CrateMark className="size-5 text-primary" />
-                <h2>Products matching &ldquo;{q}&rdquo;</h2>
+                <h2>{copyText(productsCopy.productsMatching, { query: q })}</h2>
               </div>
               <Link
                 href="/products"
                 className="stall-chip-sm inline-flex items-center bg-secondary px-3 py-1.5 text-sm font-medium text-foreground hover:bg-primary hover:text-primary-foreground"
               >
-                Browse categories
+                {productsCopy.browseCategories}
               </Link>
             </div>
 
@@ -349,7 +350,7 @@ export function ProductsAtlas({
               <div className="flex items-center justify-between gap-2 border-b border-black/15 bg-primary px-5 py-3.5 text-primary-foreground">
                 <div className="flex items-center gap-2">
                   <RulesMark className="size-4 text-primary-foreground" />
-                  <h2 className="text-xl text-primary-foreground">Vendors</h2>
+                  <h2 className="text-xl text-primary-foreground">{productsCopy.vendors}</h2>
                 </div>
                 <span className="stall-chip-sm type-nums bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
                   {shops.length}
@@ -361,7 +362,7 @@ export function ProductsAtlas({
                   <VendorHitList vendors={shops} />
                 ) : (
                   <p className="text-base text-muted-foreground">
-                    No other vendors match that name.
+                    {productsCopy.noOtherVendors}
                   </p>
                 )}
               </div>
@@ -369,10 +370,10 @@ export function ProductsAtlas({
 
             {/* Popular Product Guides Card */}
             <div className="bg-card p-5 ring-1 ring-board">
-              <p className="type-kicker text-primary">Curated product guides</p>
-              <h3 className="mt-0.5">Browse by category</h3>
+              <p className="type-kicker text-primary">{productsCopy.curatedGuides}</p>
+              <h3 className="mt-0.5">{productsCopy.browseByCategory}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Compare every stall that lists a staple across {LAUNCH_CITY} farmers&apos; markets.
+                {copyText(productsCopy.compareStalls)}
               </p>
               <div className="mt-3.5 flex flex-wrap gap-1.5">
                 {aisles.slice(0, 8).map((item) => (
@@ -415,16 +416,16 @@ export function ProductsAtlas({
           {/* Featured Stalls With Published Menus Band */}
           {featuredStalls.length > 0 ? (
             <section
-              aria-label="Featured stalls with published menus"
+              aria-label={productsCopy.publishedMenusLabel}
               className="mt-8 bg-card p-5 ring-1 ring-board sm:p-6"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
-                <h2 className="min-w-0">Stalls with published menus &amp; prices</h2>
+                <h2 className="min-w-0">{productsCopy.publishedMenus}</h2>
                 <Link
                   href="/markets#directory-vendors"
                   className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                 >
-                  <span>Browse all {formatCensus(census.vendors)} stalls</span>
+                  <span>{copyText(productsCopy.browseAllStalls, { count: formatCensus(census.vendors) })}</span>
                   <CaretRightMark className="size-3.5" />
                 </Link>
               </div>

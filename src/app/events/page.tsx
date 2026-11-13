@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import { EventsCalendar } from "@/components/events-calendar";
 import { EventsWeekList } from "@/components/events-week-list";
 import { listMarkets, listSchedules } from "@/lib/data/catalog";
-import { LAUNCH_CITY } from "@/lib/launch";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { pageMeta } from "@/lib/seo";
 import { serverNowMs } from "@/lib/clock";
 import { upcomingByDay } from "@/lib/upcoming";
 import type { MarketSchedule } from "@/types/database";
 
 export const metadata: Metadata = pageMeta({
-  title: `${LAUNCH_CITY} market calendar`,
+  title: copyText(siteCopy["/events"].title),
   path: "/events",
-  description: "Click on a day, find your market, and start planning your trip.",
+  description: siteCopy["/events"].description,
 });
 
 export default async function EventsPage({
@@ -36,9 +36,9 @@ export default async function EventsPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-10">
-      <h1>Calendar</h1>
+      <h1>{siteCopy["/events"].h1}</h1>
       <p className="type-lede mt-2 mb-8 max-w-2xl text-muted-foreground">
-        Click on a day, find your market, and start planning your trip.
+        {siteCopy["/events"].lede}
       </p>
       <EventsCalendar
         markets={markets.map((market) => ({

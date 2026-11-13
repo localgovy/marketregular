@@ -6,15 +6,15 @@ import { createAuthedServerClient } from "@/lib/supabase/server";
 import { safePath } from "@/lib/auth-redirect";
 import { nextOpenLabel } from "@/lib/schedule";
 import { pageMeta } from "@/lib/seo";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import type { MarketSchedule } from "@/types/database";
 
 export const metadata: Metadata = pageMeta({
-  title: "Set up your profile",
+  title: siteCopy["/onboarding"].title,
   path: "/onboarding",
-  description: `Pick a handle and three ${SITE_NAME} markets.`,
+  description: copyText(siteCopy["/onboarding"].description),
   index: false,
 });
 

@@ -10,6 +10,7 @@ import { AuthLegalNote } from "@/components/auth-legal-note";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { siteCopy } from "@/content/site-copy";
 import { isSupabaseConfigured } from "@/lib/constants";
 
 type AuthResult = { error: string | null; message?: string } | void;
@@ -57,8 +58,8 @@ export function LoginForm({
   if (!configured) {
     return (
       <div className="rounded-xl bg-card p-6 ring-1 ring-foreground/10">
-        <p className="type-column">Accounts are still connecting</p>
-        <p className="mt-2 text-sm text-muted-foreground">The directory is open.</p>
+        <p className="type-column">{siteCopy["/login"].accountsConnecting}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{siteCopy["/login"].directoryOpen}</p>
       </div>
     );
   }
@@ -67,18 +68,18 @@ export function LoginForm({
     return (
       <form action={resetSubmit} className="grid gap-3">
         <p className="text-sm text-muted-foreground">
-          We&apos;ll email a link to set a new password.
+          {siteCopy["/login"].resetCaption}
         </p>
         <div className="grid gap-1.5">
-          <Label htmlFor="reset-email">Email</Label>
+          <Label htmlFor="reset-email">{siteCopy["/login"].email}</Label>
           <Input id="reset-email" name="email" type="email" required autoComplete="email" />
         </div>
         <Button type="submit" disabled={resetPending}>
-          {resetPending ? "Sending…" : "Send reset link"}
+          {resetPending ? siteCopy["/login"].sending : siteCopy["/login"].sendReset}
         </Button>
         <button
           type="button"
-          aria-label="Back"
+          aria-label={siteCopy["every page"].back}
           className="-ml-1 inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06] active:bg-foreground/[0.1]"
           onClick={() => setForgot(false)}
         >
@@ -101,16 +102,16 @@ export function LoginForm({
         <AuthLegalNote mode="signin" />
       </div>
 
-      <p className="text-sm text-muted-foreground">or use email</p>
+      <p className="text-sm text-muted-foreground">{siteCopy["/login"].orEmail}</p>
 
       <form action={passSubmit} className="grid gap-3">
         {queryError ? <p className="text-sm text-destructive">{queryError}</p> : null}
         <div className="grid gap-1.5">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{siteCopy["/login"].email}</Label>
           <Input id="email" name="email" type="email" required autoComplete="email" />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{siteCopy["/login"].password}</Label>
           <Input
             id="password"
             name="password"
@@ -120,14 +121,14 @@ export function LoginForm({
           />
         </div>
         <Button type="submit" disabled={passPending}>
-          {passPending ? "Signing in…" : "Sign in"}
+          {passPending ? siteCopy["/login"].signingIn : siteCopy["/login"].submit}
         </Button>
         <button
           type="button"
           className="justify-self-start text-sm font-medium hover:underline"
           onClick={() => setForgot(true)}
         >
-          Forgot password
+          {siteCopy["/login"].forgot}
         </button>
         {passState && "error" in passState && passState.error ? (
           <p className="text-sm text-destructive">{passState.error}</p>
@@ -136,13 +137,13 @@ export function LoginForm({
 
       {showCreate ? (
         <p className="text-sm text-muted-foreground">
-          No account?{" "}
+          {siteCopy["/login"].noAccount}{" "}
           <Link
             href={signupHref(next)}
             rel="nofollow"
             className="font-medium text-foreground hover:underline"
           >
-            Create one
+            {siteCopy["/login"].createOne}
           </Link>
         </p>
       ) : null}

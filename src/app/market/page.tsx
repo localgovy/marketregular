@@ -1,14 +1,14 @@
 import { PortalHome } from "@/components/portal-home";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { pageMeta } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
-  title: "Market Portal",
+  title: siteCopy["/market"].title,
   path: "/market",
-  description: `Create an account to update the ${SITE_NAME} market you run.`,
+  description: copyText(siteCopy["/market"].description),
   index: false,
 });
 

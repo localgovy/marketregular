@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SearchField } from "@/components/search-field";
 import { useGeo } from "@/components/geo-provider";
-import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/lib/constants";
+import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/content/site-copy";
 import { marketsHref, tagLabel, whenOptions, type HomeAreas } from "@/lib/find-paths";
 import { cn } from "@/lib/utils";
 

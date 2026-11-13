@@ -10,14 +10,15 @@ import {
   skipsShopperOnboarding,
 } from "@/lib/onboarding";
 import { createAuthedServerClient } from "@/lib/supabase/server";
+import { siteCopy } from "@/content/site-copy";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = pageMeta({
-  title: "Create an account",
+  title: siteCopy["/signup"].title,
   path: "/signup",
-  description: "Create an account to save markets across browsers and post reviews.",
+  description: siteCopy["/signup"].description,
   index: false,
 });
 
@@ -47,9 +48,9 @@ export default async function SignupPage({
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">
       <BackButton href={loginHref} />
-      <h1>Create an account</h1>
+      <h1>{siteCopy["/signup"].h1}</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        A name for posts, then email and a password — or continue with Google.
+        {siteCopy["/signup"].lede}
       </p>
       <SignupForm next={next} />
     </div>

@@ -4,7 +4,7 @@ import { BrowseLinks } from "@/components/browse-links";
 import { JsonLd } from "@/components/json-ld";
 import { MarketsFloor } from "@/components/markets-floor";
 import { getDirectoryCensus } from "@/lib/data/catalog";
-import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
 /** Cold directory reads can be slow. Past this, kill the function instead of holding it. */
@@ -19,9 +19,12 @@ export const revalidate = 3600;
 export async function generateMetadata(): Promise<Metadata> {
   const census = await getDirectoryCensus();
   return pageMeta({
-    title: `Find ${LAUNCH_CITY} farmers' markets`,
+    title: copyText(siteCopy["/markets"].title),
     path: "/markets",
-    description: `All ${census.markets} farmers' markets across ${LAUNCH_CITY} and the ${LAUNCH_REGION}, with this week's hours, addresses, maps and the ${census.vendors.toLocaleString("en-CA")} vendors that work them.`,
+    description: copyText(siteCopy["/markets"].description, {
+      markets: census.markets,
+      vendors: census.vendors.toLocaleString("en-CA"),
+    }),
   });
 }
 
@@ -39,7 +42,7 @@ export default async function MarketsPage() {
       <JsonLd data={breadcrumbJsonLd([MARKETS_CRUMB])} />
       <JsonLd
         data={itemListJsonLd({
-          name: `${LAUNCH_CITY} farmers' markets`,
+          name: copyText(siteCopy["/markets"].h1),
           path: "/markets",
           items: listItems,
         })}

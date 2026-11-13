@@ -9,6 +9,7 @@ import type { ProductPhoto } from "@/lib/data/product-photos";
 import { productsBrowseHref, type CatalogueSort } from "@/lib/product-browse-href";
 import { BREAKFAST_ID, splitAisles, type CatalogueAisle } from "@/lib/product-catalogue";
 import type { ProductsAtlasStallPreview } from "@/lib/products-atlas-data";
+import { siteCopy } from "@/content/site-copy";
 import { cn } from "@/lib/utils";
 
 function ProductThumb({
@@ -84,7 +85,7 @@ export function ProductAisles({
           <span className="stall-chip-sm flex size-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
             <CrateMark className="size-5" />
           </span>
-          <h2 className="min-w-0">Categories</h2>
+          <h2 className="min-w-0">{siteCopy["/products"].categories}</h2>
         </div>
 
         {aisle != null ? (
@@ -205,7 +206,7 @@ export function ProductAisles({
         {/* Full Category & Aisle Filter Strip */}
         <div className="mt-5 border-t border-border pt-4">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="type-kicker mr-1 font-medium text-foreground">All categories:</span>
+            <span className="type-kicker mr-1 font-medium text-foreground">{siteCopy["/products"].allCategories}</span>
             <Link
               href={productsBrowseHref(null, sort)}
               aria-current={aisle == null ? "true" : undefined}

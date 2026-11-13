@@ -1,3 +1,4 @@
+import { copyText, siteCopy } from "@/content/site-copy";
 import { PRODUCT_TAGS, WEEKDAYS } from "@/lib/constants";
 import { LAUNCH_CITY, LAUNCH_REGION, LAUNCH_TZ } from "@/lib/launch";
 import { tagLabel } from "@/lib/tag-label";
@@ -106,10 +107,11 @@ export function sellsLine(tags: string[], limit = 3) {
 export function vendorPageTitle(name: string, marketNames: string[]) {
   const halls = marketNames.filter((market) => market.trim());
   const first = halls[0];
-  if (!first) return `${name} — ${LAUNCH_CITY} farmers' markets`;
-  const at = `${name} at ${first}`;
+  const titles = siteCopy["/vendors/[slug]"];
+  if (!first) return copyText(titles.titleNoMarket, { stall: name });
+  const at = copyText(titles.titleAtMarket, { stall: name, market: first });
   if (halls.length === 1 || at.length <= TITLE_BUDGET) return at;
-  return `${name} — ${halls.length} ${LAUNCH_CITY} farmers' markets`;
+  return copyText(titles.titleManyMarkets, { stall: name, count: halls.length });
 }
 
 /**
@@ -166,11 +168,12 @@ export function marketPlaceLine(address: string | null | undefined, city: string
  * thing that has to be visible in the SERP, and the city is already in the description.
  */
 export function marketPageTitle(name: string, city: string, qualifier?: string | null) {
+  const titles = siteCopy["/markets/[slug]"];
   if (qualifier) {
-    const tagged = `${name} — ${qualifier}`;
+    const tagged = copyText(titles.titleWithQualifier, { market: name, qualifier });
     if (tagged.length <= TITLE_BUDGET) return tagged;
   }
-  const withCity = `${name} in ${city}`;
+  const withCity = copyText(titles.titleInCity, { market: name, city });
   if (withCity.length <= TITLE_BUDGET) return withCity;
   return name;
 }

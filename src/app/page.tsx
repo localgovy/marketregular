@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HomeAtlas } from "@/components/home-atlas";
 import { HomeWalkthrough } from "@/components/home-walkthrough";
-import { SITE_TITLE } from "@/lib/constants";
+import { SITE_TITLE } from "@/content/site-copy";
 import { loadHomeAtlasData } from "@/lib/home-atlas-data";
 import { pageMeta, SITE_DESCRIPTION } from "@/lib/seo";
 

@@ -14,15 +14,15 @@ import {
   scheduleMapFrom,
 } from "@/lib/landing";
 import { serverNowMs } from "@/lib/clock";
-import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { breadcrumbJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
 export const revalidate = 900;
 
 export const metadata: Metadata = pageMeta({
-  title: `${LAUNCH_CITY} farmers' markets by day of the week`,
+  title: copyText(siteCopy["/markets/day"].title),
   path: "/markets/day",
-  description: `Which ${LAUNCH_REGION} farmers' markets run on each day, Sunday through Saturday, with hours and how many vendors work each one.`,
+  description: copyText(siteCopy["/markets/day"].description),
 });
 
 export default async function MarketDayHubPage() {
@@ -50,11 +50,11 @@ export default async function MarketDayHubPage() {
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10">
-      <JsonLd data={breadcrumbJsonLd([MARKETS_CRUMB, { name: "By day", path: "/markets/day" }])} />
+      <JsonLd data={breadcrumbJsonLd([MARKETS_CRUMB, { name: siteCopy["/markets/day"].crumb, path: "/markets/day" }])} />
       <BackButton href="/markets" />
-      <h1>{LAUNCH_CITY} farmers&apos; markets by day of the week</h1>
+      <h1>{copyText(siteCopy["/markets/day"].h1)}</h1>
       <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
-        Most halls run one day a week, so the day decides where you can go.
+        {siteCopy["/markets/day"].lede}
         {busiest && busiest.rows.length
           ? ` ${busiest.name} is the busiest with ${busiest.rows.length} markets.`
           : ""}
@@ -94,7 +94,7 @@ export default async function MarketDayHubPage() {
                 ))}
               </ul>
             ) : (
-              <p className="mt-3 text-sm text-muted-foreground">Nothing scheduled right now.</p>
+              <p className="mt-3 text-sm text-muted-foreground">{siteCopy["/markets/day"].nothingScheduled}</p>
             )}
             {day.rows.length > 4 ? (
               <p className="mt-2 text-sm">
@@ -102,7 +102,10 @@ export default async function MarketDayHubPage() {
                   href={`/markets/day/${day.slug}`}
                   className="font-medium text-primary hover:underline"
                 >
-                  All {day.rows.length} {day.name} markets
+                  {copyText(siteCopy["/markets/day"].allDayMarkets, {
+                    count: day.rows.length,
+                    day: day.name,
+                  })}
                 </Link>
               </p>
             ) : null}

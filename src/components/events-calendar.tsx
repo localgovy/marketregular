@@ -9,6 +9,7 @@ import { NowLabel } from "@/components/now-label";
 import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
 import { Button } from "@/components/ui/button";
+import { siteCopy } from "@/content/site-copy";
 import { WEEKDAYS } from "@/lib/constants";
 import { useNow } from "@/lib/use-now";
 import {
@@ -330,7 +331,7 @@ export function EventsCalendar({
         className="cal-in bg-card/55 p-5 ring-1 ring-border/80 shadow-[0_0_0_1px_color-mix(in_srgb,var(--chalk)_45%,transparent)] backdrop-blur-xl"
         aria-live="polite"
       >
-        <p className="type-kicker text-muted-foreground">That day</p>
+        <p className="type-kicker text-muted-foreground">{siteCopy["/events"].thatDay}</p>
         <h3 className="mt-1">{selectedTitle}</h3>
         {selectedCell?.events.length ? (
           <p className="mt-1 text-base text-muted-foreground">
@@ -353,7 +354,7 @@ export function EventsCalendar({
                   hours={event.hours}
                   extra={
                     <>
-                      {event.open ? <NowLabel>Open</NowLabel> : null}
+                      {event.open ? <NowLabel>{siteCopy["every page"].status.open}</NowLabel> : null}
                       <ListingScore
                         parens
                         ratingAvg={event.ratingAvg}

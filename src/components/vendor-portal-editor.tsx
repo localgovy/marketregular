@@ -55,7 +55,10 @@ import {
   torontoDateTimeLocal,
   VENDOR_SALES_OPEN,
 } from "@/lib/selling";
+import { siteCopy } from "@/content/site-copy";
 import { formatPrice } from "@/lib/format";
+
+const stallEditor = siteCopy["/vendor/[id]"];
 
 const PRODUCT_TAG_SET = new Set<string>(PRODUCT_TAGS);
 
@@ -218,7 +221,7 @@ function TagPicker({ id, tags }: { id: string; tags: string[] }) {
       ) : null}
       <div className="flex flex-wrap items-end gap-2">
         <div className="grid min-w-48 flex-1 gap-1.5">
-          <Label htmlFor={`${id}-extra-tag`}>Another tag</Label>
+          <Label htmlFor={`${id}-extra-tag`}>{stallEditor.anotherTag}</Label>
           <Input
             id={`${id}-extra-tag`}
             value={draft}
@@ -253,12 +256,12 @@ function ListingForm({ listing }: { listing: PortalListing }) {
     <form action={action} className="grid gap-4 sm:grid-cols-2">
       <input type="hidden" name="vendor_id" value={id} />
       <div className="grid gap-1.5 sm:col-span-2">
-        <Label htmlFor={`${id}-name`}>Name</Label>
+        <Label htmlFor={`${id}-name`}>{stallEditor.name}</Label>
         <Input id={`${id}-name`} name="name" required maxLength={200} defaultValue={listing.name} />
         <p className="text-sm text-muted-foreground">{`The page address stays /vendors/${listing.slug}.`}</p>
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
-        <Label htmlFor={`${id}-about`}>About</Label>
+        <Label htmlFor={`${id}-about`}>{stallEditor.about}</Label>
         <Textarea
           id={`${id}-about`}
           name="about"
@@ -269,7 +272,7 @@ function ListingForm({ listing }: { listing: PortalListing }) {
       </div>
       <TagPicker id={id} tags={listing.tags} />
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-phone`}>Phone</Label>
+        <Label htmlFor={`${id}-phone`}>{stallEditor.phone}</Label>
         <Input
           id={`${id}-phone`}
           name="phone"
@@ -280,7 +283,7 @@ function ListingForm({ listing }: { listing: PortalListing }) {
         />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-email`}>Email</Label>
+        <Label htmlFor={`${id}-email`}>{stallEditor.email}</Label>
         <Input
           id={`${id}-email`}
           name="email"
@@ -294,11 +297,11 @@ function ListingForm({ listing }: { listing: PortalListing }) {
         Phone and email show on the public page.
       </p>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-website`}>Website</Label>
+        <Label htmlFor={`${id}-website`}>{stallEditor.website}</Label>
         <Input id={`${id}-website`} name="website" defaultValue={listing.website ?? ""} maxLength={2048} />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-instagram`}>Instagram</Label>
+        <Label htmlFor={`${id}-instagram`}>{stallEditor.instagram}</Label>
         <Input
           id={`${id}-instagram`}
           name="instagram"
@@ -307,11 +310,11 @@ function ListingForm({ listing }: { listing: PortalListing }) {
         />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-tiktok`}>TikTok</Label>
+        <Label htmlFor={`${id}-tiktok`}>{stallEditor.tiktok}</Label>
         <Input id={`${id}-tiktok`} name="tiktok" defaultValue={listing.tiktok ?? ""} maxLength={2048} />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-facebook`}>Facebook</Label>
+        <Label htmlFor={`${id}-facebook`}>{stallEditor.facebook}</Label>
         <Input
           id={`${id}-facebook`}
           name="facebook"
@@ -341,7 +344,7 @@ function LogoForm({ listing }: { listing: PortalListing }) {
       <form action={upload} className="grid gap-3">
         <input type="hidden" name="vendor_id" value={listing.id} />
         <div className="grid gap-1.5">
-          <Label htmlFor={`${listing.id}-logo`}>Logo</Label>
+          <Label htmlFor={`${listing.id}-logo`}>{stallEditor.logo}</Label>
           <Input
             id={`${listing.id}-logo`}
             name="logo"
@@ -476,7 +479,7 @@ function SaleFields({
         </label>
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-terms`}>Terms</Label>
+        <Label htmlFor={`${id}-terms`}>{stallEditor.terms}</Label>
         <Textarea id={`${id}-terms`} name="offer_terms" rows={4} maxLength={4000} defaultValue={terms} />
         <p className="text-sm text-muted-foreground">
           Buyers see this before they pay. Stripe usually keeps its card processing fee on a refund, and that
@@ -516,11 +519,11 @@ function MenuItemForm({
         <input type="hidden" name="vendor_id" value={vendorId} />
         <input type="hidden" name="item_id" value={item.id} />
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${field}-name`}>Item</Label>
+          <Label htmlFor={`${field}-name`}>{stallEditor.item}</Label>
           <Input id={`${field}-name`} name="name" required maxLength={160} defaultValue={item.name} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor={`${field}-price`}>Price CAD</Label>
+          <Label htmlFor={`${field}-price`}>{stallEditor.price}</Label>
           <Input
             id={`${field}-price`}
             name="price"
@@ -530,11 +533,11 @@ function MenuItemForm({
           />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor={`${field}-season`}>Season</Label>
+          <Label htmlFor={`${field}-season`}>{stallEditor.season}</Label>
           <Input id={`${field}-season`} name="season" maxLength={120} defaultValue={item.season ?? ""} />
         </div>
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${field}-description`}>Description</Label>
+          <Label htmlFor={`${field}-description`}>{stallEditor.descriptionField}</Label>
           <Input
             id={`${field}-description`}
             name="description"
@@ -543,7 +546,7 @@ function MenuItemForm({
           />
         </div>
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${field}-dietary`}>Dietary tags</Label>
+          <Label htmlFor={`${field}-dietary`}>{stallEditor.dietary}</Label>
           <Input
             id={`${field}-dietary`}
             name="dietary"
@@ -594,27 +597,27 @@ function AddMenuItem({ vendorId, sections }: { vendorId: string; sections: MenuS
 
   return (
     <div className="mt-4 grid gap-3">
-      <h3>Add an item</h3>
+      <h3>{stallEditor.addItem}</h3>
       <form key={formKey} action={action} className="grid gap-3 sm:grid-cols-2">
         <input type="hidden" name="vendor_id" value={vendorId} />
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${vendorId}-new-name`}>Item</Label>
+          <Label htmlFor={`${vendorId}-new-name`}>{stallEditor.item}</Label>
           <Input id={`${vendorId}-new-name`} name="name" required maxLength={160} />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor={`${vendorId}-new-price`}>Price CAD</Label>
+          <Label htmlFor={`${vendorId}-new-price`}>{stallEditor.price}</Label>
           <Input id={`${vendorId}-new-price`} name="price" inputMode="decimal" placeholder="8.50" />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor={`${vendorId}-new-season`}>Season</Label>
+          <Label htmlFor={`${vendorId}-new-season`}>{stallEditor.season}</Label>
           <Input id={`${vendorId}-new-season`} name="season" maxLength={120} />
         </div>
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${vendorId}-new-description`}>Description</Label>
+          <Label htmlFor={`${vendorId}-new-description`}>{stallEditor.descriptionField}</Label>
           <Input id={`${vendorId}-new-description`} name="description" maxLength={2000} />
         </div>
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${vendorId}-new-dietary`}>Dietary tags</Label>
+          <Label htmlFor={`${vendorId}-new-dietary`}>{stallEditor.dietary}</Label>
           <Input id={`${vendorId}-new-dietary`} name="dietary" placeholder="vegan, gluten-free" />
           <p className="text-sm text-muted-foreground">Shown on the stall page. Use tags that match the food.</p>
         </div>
@@ -669,7 +672,7 @@ function StallForm({
         <input type="hidden" name="market_id" value={stall.market_id} />
         <input type="hidden" name="market_slug" value={stall.market_slug} />
         <div className="grid gap-1.5">
-          <Label htmlFor={`${stall.market_id}-stall`}>Stall label</Label>
+          <Label htmlFor={`${stall.market_id}-stall`}>{stallEditor.stallLabel}</Label>
           <Input
             id={`${stall.market_id}-stall`}
             name="stall"
@@ -750,9 +753,9 @@ function AddStall({ vendorId, takenIds }: { vendorId: string; takenIds: string[]
 
   return (
     <div className="mt-4 grid gap-3">
-      <h3>Add a market</h3>
+      <h3>{stallEditor.addMarket}</h3>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${vendorId}-market-q`}>Find a market</Label>
+        <Label htmlFor={`${vendorId}-market-q`}>{stallEditor.findAMarket}</Label>
         <Input
           id={`${vendorId}-market-q`}
           value={query}
@@ -794,7 +797,7 @@ function AddStall({ vendorId, takenIds }: { vendorId: string; takenIds: string[]
           <input type="hidden" name="market_slug" value={picked.slug} />
           <p className="text-base font-medium">{picked.name}</p>
           <div className="grid gap-1.5">
-            <Label htmlFor={`${picked.id}-new-stall`}>Stall label</Label>
+            <Label htmlFor={`${picked.id}-new-stall`}>{stallEditor.stallLabel}</Label>
             <Input id={`${picked.id}-new-stall`} name="stall" maxLength={80} placeholder="Booth or row" />
           </div>
           <DayChoices openDays={picked.openDays} hours={picked.hours} selected={picked.openDays} />
@@ -844,7 +847,7 @@ export function VendorPortalEditor({
       />
       {VENDOR_SALES_OPEN ? (
       <section id="selling">
-        <h2>Selling</h2>
+        <h2>{stallEditor.selling}</h2>
         {feeNote ? <p className="mt-2 text-sm text-muted-foreground">{feeNote}</p> : null}
         {listing.selling_approved ? (
           <div className="mt-4 grid gap-4">
@@ -970,7 +973,7 @@ export function VendorPortalEditor({
         <p className="text-sm text-muted-foreground">Listing for sale is closed for now.</p>
       )}
       <section>
-        <h2>Profile</h2>
+        <h2>{stallEditor.profile}</h2>
         <div className="mt-4">
           <ListingForm
             key={[
@@ -989,13 +992,13 @@ export function VendorPortalEditor({
         </div>
       </section>
       <section>
-        <h2>Logo</h2>
+        <h2>{stallEditor.logo}</h2>
         <div className="mt-4">
           <LogoForm listing={listing} />
         </div>
       </section>
       <section>
-        <h2>Menu</h2>
+        <h2>{stallEditor.menu}</h2>
         <MenuSectionsBoard
           vendorId={listing.id}
           sections={menuSections}
@@ -1034,7 +1037,7 @@ export function VendorPortalEditor({
         )}
       </section>
       <section>
-        <h2>Markets</h2>
+        <h2>{stallEditor.markets}</h2>
         <p className="mt-2 text-base text-muted-foreground">
           Add a market on the days this stall is there. Those days show on the public page.
         </p>

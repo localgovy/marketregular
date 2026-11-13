@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteWordmark } from "@/components/site-mark";
-import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
+import { SITE_TAGLINE, siteCopy } from "@/content/site-copy";
+import { SITE_NAME } from "@/lib/constants";
 import { SITE_FOOTER_NAV, SITE_LEGAL_NAV } from "@/lib/nav";
 
 export function SiteFooter() {
@@ -17,14 +18,14 @@ export function SiteFooter() {
           <p>© {year} {SITE_NAME}</p>
         </div>
         <div className="flex flex-col gap-2 sm:items-end">
-          <nav aria-label="Footer" className="flex flex-wrap gap-4 sm:justify-end">
+          <nav aria-label={siteCopy["every page"].footerNavLabel} className="flex flex-wrap gap-4 sm:justify-end">
             {SITE_FOOTER_NAV.map((item) => (
               <Link key={item.href} href={item.href} prefetch={false} className="hover:text-foreground">
                 {item.label}
               </Link>
             ))}
           </nav>
-          <nav aria-label="Privacy and terms" className="flex flex-wrap gap-4 sm:justify-end">
+          <nav aria-label={siteCopy["every page"].legalNavLabel} className="flex flex-wrap gap-4 sm:justify-end">
             {SITE_LEGAL_NAV.map((item) => (
               <Link key={item.href} href={item.href} prefetch={false} className="hover:text-foreground">
                 {item.label}

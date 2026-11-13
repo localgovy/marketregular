@@ -30,7 +30,8 @@ import {
   VerifiedName,
   WeekMark,
 } from "@/app/preview/_components/live-markets-shared-imports";
-import { SEARCH_LABEL, SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
+import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/content/site-copy";
+import { WEEKDAYS } from "@/lib/constants";
 import { marketsHref } from "@/lib/find-paths";
 import { formatPrice } from "@/lib/format";
 import { directPublicImageSrc, formatCensus, StallEmblem } from "@/components/stall-emblem";

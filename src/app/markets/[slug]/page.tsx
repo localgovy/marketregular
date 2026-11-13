@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { siteCopy } from "@/content/site-copy";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AddressLink } from "@/components/address-link";
@@ -188,7 +189,7 @@ export default async function MarketPage({
 
       <div className="mt-6">
         <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-          <h2>Hours</h2>
+          <h2>{siteCopy["/markets/[slug]"].hours}</h2>
           {showSeasons ? (
             <div className="mt-4">
               <MarketSeasons places={seasonSources} now={now} />
@@ -217,7 +218,7 @@ export default async function MarketPage({
                   rel="noreferrer"
                   className="mt-3 inline-flex text-sm font-medium text-primary hover:underline"
                 >
-                  Directions
+                  {siteCopy["/markets/[slug]"].directions}
                 </a>
               ) : null}
             </>
@@ -255,14 +256,14 @@ export default async function MarketPage({
           />
           {market.about ? (
             <section>
-              <h2>About</h2>
+              <h2>{siteCopy["/markets/[slug]"].about}</h2>
               <p className="mt-2 leading-relaxed text-muted-foreground">{market.about}</p>
             </section>
           ) : null}
         </div>
         <aside className="flex flex-col gap-6">
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-            <h3>Find them</h3>
+            <h3>{siteCopy["/markets/[slug]"].findThem}</h3>
             <ListingContact phone={contact.phone} email={contact.email} heading={false} />
             <ListingWebsite href={market.website} />
             <ListingInstagram href={market.instagram} />

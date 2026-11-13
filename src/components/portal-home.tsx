@@ -5,7 +5,7 @@ import { loadVendorPortal } from "@/app/actions/vendor-portal";
 import { LoginForm } from "@/components/login-form";
 import { PortalRequestForm } from "@/components/portal-request-form";
 import { PortalSignupForm } from "@/components/portal-signup-form";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { loginQueryError } from "@/lib/public-error";
 import { portalHomePath, portalRequestId } from "@/lib/portal-application";
 import { createServiceClient } from "@/lib/supabase/admin";
@@ -35,19 +35,16 @@ function published(listing: NamedListing | undefined) {
 
 function PortalHowItWorks({ kind }: { kind: ClaimTarget }) {
   const stall = kind === "vendor";
+  const portalCopy = stall ? siteCopy["/vendor"] : siteCopy["/market"];
   const steps = [
-    stall
-      ? "Create an account using the email you use for the business."
-      : "Create an account using your organization email.",
-    `Wait for ${SITE_NAME}'s approval email.`,
-    stall
-      ? "Edit the stall page. Keep the days, menu, and contact details current."
-      : "Edit the market page. Keep the hours and the stall list current.",
+    portalCopy.stepAccount,
+    copyText(portalCopy.stepWait),
+    portalCopy.stepEdit,
   ];
 
   return (
     <section className="mt-10 border-t border-border pt-8">
-      <h2>How this works</h2>
+      <h2>{stall ? siteCopy["/vendor"].how : siteCopy["/market"].how}</h2>
       <ol className="mt-4 grid gap-3">
         {steps.map((step, index) => (
           <li key={step} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 text-base">
@@ -70,7 +67,8 @@ export async function PortalHome({
   const params = await searchParams;
   const requestId = portalRequestId(params.request);
   const stall = kind === "vendor";
-  const title = stall ? "Vendor Portal" : "Market Portal";
+  const portalCopy = stall ? siteCopy["/vendor"] : siteCopy["/market"];
+  const title = portalCopy.h1;
   const [portal, namesForRequest] = await Promise.all([
     stall ? loadVendorPortal() : loadMarketPortal(),
     namedListings(kind, requestId ? [requestId] : []),
@@ -82,19 +80,17 @@ export async function PortalHome({
       <div className="mx-auto w-full max-w-5xl px-4 py-10">
         <h1>{title}</h1>
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
-          {stall
-            ? "Create an account with the email you use for the business, or sign in if you already have one. A Gmail address is fine. Ask only if you run the stall, or the person who does has asked you to. After we assign it, you can edit it here."
-            : "Create an account with the email you use for the organization, or sign in if you already have one. A Gmail address is fine. Ask only if you run the market, or the organization has asked you to. After we assign it, you can edit it here."}
+          {portalCopy.lede}
         </p>
         <div className="grid items-start gap-10 md:grid-cols-2">
           <section>
-            <h2>Create an account</h2>
+            <h2>{portalCopy.createAccount}</h2>
             <div className="mt-4">
               <PortalSignupForm kind={kind} requestId={asked?.id ?? null} listingName={asked?.name ?? null} />
             </div>
           </section>
           <section>
-            <h2>Sign in</h2>
+            <h2>{portalCopy.signIn}</h2>
             <div className="mt-4">
               <LoginForm
                 next={portalHomePath(kind, asked?.id ?? null)}
@@ -114,9 +110,7 @@ export async function PortalHome({
       <div className="mx-auto w-full max-w-3xl px-4 py-10">
         <h1>{title}</h1>
         <p className="type-lede mt-2 text-muted-foreground">
-          {stall
-            ? "The stall editor is not available yet. Try again in a minute."
-            : "The market editor is not available yet. Try again in a minute."}
+          {portalCopy.unavailable}
         </p>
       </div>
     );
@@ -150,9 +144,7 @@ export async function PortalHome({
       <div className="mx-auto w-full max-w-3xl px-4 py-10">
         <h1>{title}</h1>
         <p className="type-lede mt-2 text-muted-foreground">
-          {stall
-            ? "The stall editor is not available yet. Try again in a minute."
-            : "The market editor is not available yet. Try again in a minute."}
+          {portalCopy.unavailable}
         </p>
       </div>
     );
@@ -189,9 +181,7 @@ export async function PortalHome({
       {portal.listings.length ? (
         <>
           <p className="type-lede mt-2 mb-8 text-muted-foreground">
-            {stall
-              ? "Update the name, menu, and the markets you sell at. Changes show on the public page. Keep the days and the menu current."
-              : "Update the hours, contact details, and the stalls. Changes show on the public page. Keep the hours and the stall list current."}
+            {portalCopy.ledeHasListings}
           </p>
           <ul className="divide-y divide-border ring-1 ring-border">
             {portal.listings.map((listing) => (
@@ -202,7 +192,7 @@ export async function PortalHome({
                 >
                   <span className="min-w-0 text-base font-medium">{listing.name}</span>
                   <span className="shrink-0 text-sm text-muted-foreground">
-                    {listing.status === "published" ? "Published" : "Draft"}
+                    {listing.status === "published" ? portalCopy.published : portalCopy.draft}
                   </span>
                 </Link>
               </li>

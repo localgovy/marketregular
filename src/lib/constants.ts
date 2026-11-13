@@ -3,18 +3,11 @@ import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 
 /** One word. Never “Market Regular”. */
 export const SITE_NAME = "MarketRegular";
-export const SITE_TAGLINE = "Toronto farmers' markets, all in one place";
-/** Homepage and default document title. Google uses this for the domain result. */
-export const SITE_TITLE = `${SITE_NAME} - ${SITE_TAGLINE}`;
 
-/** Home finder, the markets directory, and the header search. */
-export const SEARCH_PLACEHOLDER = `Search anything ${SITE_NAME}`;
-/** The header column is narrow from lg up; use the short hint there. */
-export const HEADER_SEARCH_PLACEHOLDER = `Search anything ${SITE_NAME}`;
-export const HEADER_SEARCH_PLACEHOLDER_SHORT = "Search MR";
-export const SEARCH_LABEL = "Search markets and vendors";
-export const PRODUCT_SEARCH_PLACEHOLDER = "Bread, eggs, honey, or a vendor";
-export const PRODUCT_SEARCH_LABEL = "Search products and vendors";
+/**
+ * Tagline, document title, and search labels live in src/content/site-copy.ts.
+ * Edit them there.
+ */
 
 function canonicalSiteUrl() {
   const raw = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.marketregular.com").replace(

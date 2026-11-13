@@ -1,14 +1,14 @@
 import { PortalHome } from "@/components/portal-home";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { pageMeta } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
-  title: "Vendor Portal",
+  title: siteCopy["/vendor"].title,
   path: "/vendor",
-  description: `Create an account to update the ${SITE_NAME} stall you run.`,
+  description: copyText(siteCopy["/vendor"].description),
   index: false,
 });
 

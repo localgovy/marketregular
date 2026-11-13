@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { siteCopy } from "@/content/site-copy";
 import { CaretLeftMark } from "@/components/marks";
 import { goBackInApp } from "@/lib/nav-history";
 import { cn } from "@/lib/utils";
@@ -25,7 +26,7 @@ export function BackButton({
   return (
     <button
       type="button"
-      aria-label="Back"
+      aria-label={siteCopy["every page"].back}
       onClick={go}
       className={cn(
         "-ml-2 inline-flex size-9 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06] active:bg-foreground/[0.1]",

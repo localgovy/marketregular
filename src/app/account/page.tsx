@@ -15,7 +15,7 @@ import { toGeoMarket } from "@/lib/geo";
 import { nextOpenLabel } from "@/lib/schedule";
 import { upcomingByDay } from "@/lib/upcoming";
 import { savedVendorsSellingToday, savedVendorsThisWeek } from "@/lib/vendor-week";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { onboardingHref, skipsShopperOnboarding } from "@/lib/onboarding";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { pageMeta } from "@/lib/seo";
@@ -26,9 +26,9 @@ import type { MarketSchedule } from "@/types/database";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
-  title: "Account",
+  title: siteCopy["/account"].title,
   path: "/account",
-  description: `Your ${SITE_NAME} account — saved markets, notes, this week’s hours, and reviews.`,
+  description: copyText(siteCopy["/account"].description),
   index: false,
 });
 

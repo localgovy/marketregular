@@ -33,7 +33,7 @@ import { NowLabel } from "@/components/now-label";
 import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { SaveButton } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
-import { SEARCH_PLACEHOLDER } from "@/lib/constants";
+import { SEARCH_PLACEHOLDER } from "@/content/site-copy";
 import { marketsHref } from "@/lib/find-paths";
 import { formatPrice } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";

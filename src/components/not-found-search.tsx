@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { suggestListings } from "@/app/actions/directory";
 import { SearchField } from "@/components/search-field";
-import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/lib/constants";
+import { SEARCH_LABEL, SEARCH_PLACEHOLDER, siteCopy } from "@/content/site-copy";
 
 type Hit = { href: string; name: string };
 
@@ -64,7 +64,7 @@ export function NotFoundSearch() {
         <div className="mt-4 grid gap-4">
           {shownMarkets.length ? (
             <section>
-              <h2 className="type-column">Markets</h2>
+              <h2 className="type-column">{siteCopy["/not-found"].markets}</h2>
               <ul className="mt-2 divide-y divide-border border-t border-border">
                 {shownMarkets.map((hit) => (
                   <li key={hit.href}>
@@ -78,7 +78,7 @@ export function NotFoundSearch() {
           ) : null}
           {shownVendors.length ? (
             <section>
-              <h2 className="type-column">Vendors</h2>
+              <h2 className="type-column">{siteCopy["/not-found"].vendors}</h2>
               <ul className="mt-2 divide-y divide-border border-t border-border">
                 {shownVendors.map((hit) => (
                   <li key={hit.href}>

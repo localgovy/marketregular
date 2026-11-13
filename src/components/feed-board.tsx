@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { siteCopy } from "@/content/site-copy";
 import { FloorComposer } from "@/components/floor-composer";
 import { NowLabel } from "@/components/now-label";
 import { ReviewCard } from "@/components/review-card";
@@ -117,7 +118,7 @@ export function FeedBoard({
     <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
       <div className="min-w-0">
         <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b border-border pb-3">
-          <h2 className="type-column">Reviews</h2>
+          <h2 className="type-column">{siteCopy["/feed"].reviews}</h2>
           <p className="flex flex-wrap items-baseline gap-x-1 text-sm">
             <Link
               href={feedSearchString({ ...query, q: "", market: "", vendor: "", tag: "" })}
@@ -126,7 +127,7 @@ export function FeedBoard({
                 filtered ? "text-muted-foreground" : "font-medium text-foreground",
               )}
             >
-              All posts
+              {siteCopy["/feed"].allPosts}
             </Link>
             <span aria-hidden className="text-muted-foreground">
               ·
@@ -256,7 +257,7 @@ export function FeedBoard({
                   rel="nofollow"
                   className="mt-4 inline-flex text-sm font-medium text-primary hover:underline"
                 >
-                  Sign in
+                  {siteCopy["/feed"].signIn}
                 </Link>
               ) : null}
             </div>
@@ -265,7 +266,7 @@ export function FeedBoard({
       </div>
 
       <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
-        <h2 className="type-column">In this feed</h2>
+        <h2 className="type-column">{siteCopy["/feed"].inThisFeed}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Listed are mentions of markets and vendors.
           {!mentions.markets.length && !mentions.vendors.length
@@ -286,7 +287,7 @@ export function FeedBoard({
                     <span className="inline-flex flex-wrap items-center gap-x-2 gap-y-0.5">
                       <span className="font-medium">{place.name}</span>
                       {open.has(place.slug) ? (
-                        <NowLabel>Open</NowLabel>
+                        <NowLabel>{siteCopy["every page"].status.open}</NowLabel>
                       ) : null}
                     </span>
                     <span className="type-nums shrink-0 text-muted-foreground">
@@ -331,7 +332,7 @@ export function FeedBoard({
                     className="flex items-baseline gap-2 py-1.5 text-sm hover:text-primary"
                   >
                     <span className="font-medium">{place.name}</span>
-                    <NowLabel>Open</NowLabel>
+                    <NowLabel>{siteCopy["every page"].status.open}</NowLabel>
                   </Link>
                 </li>
               ))}

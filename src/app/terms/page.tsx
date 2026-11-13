@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { copyText, siteCopy } from "@/content/site-copy";
 import {
   CONTACT_EMAIL,
   LEGAL_EFFECTIVE,
@@ -10,9 +11,9 @@ import {
 import { pageMeta } from "@/lib/seo";
 
 export const metadata: Metadata = pageMeta({
-  title: "Terms",
+  title: siteCopy["/terms"].title,
   path: "/terms",
-  description: `Terms for using ${SITE_NAME}, the Toronto farmers' market directory.`,
+  description: copyText(siteCopy["/terms"].description),
 });
 
 const body = "mt-2 text-base leading-relaxed text-muted-foreground";
@@ -20,29 +21,27 @@ const body = "mt-2 text-base leading-relaxed text-muted-foreground";
 export default function TermsPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-10">
-      <h1>Terms</h1>
+      <h1>{siteCopy["/terms"].h1}</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        Using {SITE_NAME} means you agree to these terms. Current as of {LEGAL_EFFECTIVE}. Creating
-        an account, with email and password or Continue with Google, is acceptance. Reading the
-        directory without an account is still use of the site.
+        {copyText(siteCopy["/terms"].lede, { effective: LEGAL_EFFECTIVE })}
       </p>
 
       <section>
-        <h2>The agreement</h2>
+        <h2>{siteCopy["/terms"].agreement}</h2>
         <p className={body}>
           These terms are between you and {LEGAL_ENTITY}, a corporation in {LEGAL_JURISDICTION},
           for the {SITE_NAME} website. If you open a stall or market account, you are agreeing for
           that business as well as for yourself. The stall fee below is billed by {LEGAL_ENTITY}. How
           we handle personal information is in the{" "}
           <Link href="/privacy" className="font-medium text-foreground hover:underline">
-            Privacy policy
+            {siteCopy["/terms"].privacyPolicy}
           </Link>
           .
         </p>
       </section>
 
       <section className="mt-10">
-        <h2>The directory</h2>
+        <h2>{siteCopy["/terms"].directory}</h2>
         <p className={body}>
           {SITE_NAME} is a compiled guide to markets and vendors. It is not each market&apos;s
           official notice. Hours move, vendors move, weather closes a market. Check with the market
@@ -57,7 +56,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Stall and market accounts</h2>
+        <h2>{siteCopy["/terms"].accounts}</h2>
         <p className={body}>
           Creating a vendor or market account is a request. It does not hand you the listing. We
           look at it and may assign the stall or market, or decline. One account can hold more than
@@ -117,7 +116,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Orders</h2>
+        <h2>{siteCopy["/terms"].orders}</h2>
         <p className={body}>
           A stall sells its own items. {SITE_NAME} hosts the page and is not the seller. When
           selling is open and we have approved that stall, a card payment runs on the stall&apos;s
@@ -142,7 +141,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Posts and reviews</h2>
+        <h2>{siteCopy["/terms"].posts}</h2>
         <p className={body}>
           You own what you write, and the photos you attach. You give {LEGAL_ENTITY} permission to
           show them on {SITE_NAME} while they are up, on the same terms as a listing. Do not post
@@ -153,7 +152,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Your login</h2>
+        <h2>{siteCopy["/terms"].login}</h2>
         <p className={body}>
           One person holds the login. A password you choose stays a hash. A password issued for an
           older stall approval is visible in admin until it is replaced. You are responsible for
@@ -163,7 +162,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Location</h2>
+        <h2>{siteCopy["/terms"].location}</h2>
         <p className={body}>
           Nearby is optional. The browser asks first. You can refuse and still use the rest of the
           site.
@@ -171,7 +170,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Acceptable use</h2>
+        <h2>{siteCopy["/terms"].acceptableUse}</h2>
         <p className={body}>
           Use the site as a person looking up markets, or as the stall or market the account is
           for. Do not attack it, scrape it beyond ordinary browsing, or try to open someone
@@ -189,7 +188,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>If something goes wrong</h2>
+        <h2>{siteCopy["/terms"].goesWrong}</h2>
         <p className={body}>
           We work to keep hours and names right. The directory can still be wrong, and the site can
           be down. We are not responsible if you travel to a market that is closed, if a stall is
@@ -216,7 +215,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Ontario law</h2>
+        <h2>{siteCopy["/terms"].ontarioLaw}</h2>
         <p className={body}>
           The laws of {LEGAL_JURISDICTION}, and the federal laws of Canada that apply, govern these
           terms. The courts of Ontario have jurisdiction over a dispute about a stall or market
@@ -225,7 +224,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Changes</h2>
+        <h2>{siteCopy["/terms"].changes}</h2>
         <p className={body}>
           If these terms change in a way that matters, we update the date at the top of this page.
           If the change affects a stall or market account, we email that account. Using the site
@@ -235,7 +234,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>The rest</h2>
+        <h2>{siteCopy["/terms"].theRest}</h2>
         <p className={body}>
           These terms and the privacy policy are the whole agreement for the site. If a court sets
           one sentence aside, the rest stays. We can assign this agreement if someone else takes
@@ -249,7 +248,7 @@ export default function TermsPage() {
       </section>
 
       <section className="mt-10">
-        <h2>Contact</h2>
+        <h2>{siteCopy["/terms"].contact}</h2>
         <p className={body}>
           Write{" "}
           <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-foreground hover:underline">

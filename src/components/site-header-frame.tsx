@@ -18,7 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { PORTAL_NAV_LABEL, SITE_NAV, SITE_PORTAL_NAV } from "@/lib/nav";
 import type { Saves } from "@/lib/saves";
 import { useMounted } from "@/lib/use-now";
@@ -71,7 +71,7 @@ function Wordmark({ className }: { className?: string }) {
     <Link
       href="/"
       prefetch={false}
-      aria-label={`${SITE_NAME} home`}
+      aria-label={copyText(siteCopy["every page"].wordmark)}
       className={cn(
         "inline-flex shrink-0 items-center self-start text-chalk outline-none hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk",
         className,
@@ -106,11 +106,15 @@ function SavedLink() {
   return (
     <Link
       href="/saved"
-      aria-label={ready ? `Saved, ${count}` : "Saved"}
+      aria-label={
+        ready
+          ? copyText(siteCopy["every page"].savedCount, { count })
+          : siteCopy["every page"].nav.saved
+      }
       className="inline-flex h-10 shrink-0 items-center gap-1.5 px-2.5 text-sm font-medium whitespace-nowrap text-chalk transition-colors hover:bg-chalk/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
     >
       <TicketMark className="size-4 shrink-0" />
-      Saved
+      {siteCopy["every page"].nav.saved}
       <span className="type-nums inline-flex min-w-5 items-center justify-center bg-stamp px-1 text-sm font-semibold text-chalk">
         {ready ? count : "\u00a0"}
       </span>
@@ -131,7 +135,7 @@ function PortalNav() {
           on && "underline decoration-chalk underline-offset-4",
         )}
       >
-        Portal
+        {siteCopy["every page"].portalButton}
         <CaretDownMark className="size-3.5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-44 rounded-sm bg-card p-0 ring-border">
@@ -165,7 +169,7 @@ function HeaderBody({ q, search }: { q: string; search: string }) {
         <HeaderSearch key={q} initialQuery={q} />
       </div>
       <nav
-        aria-label="Primary"
+        aria-label={siteCopy["every page"].navLabel}
         className="order-4 flex min-w-0 flex-nowrap items-center justify-between sm:justify-start sm:gap-1 lg:order-none lg:col-start-1 lg:row-start-2"
       >
         <Sections />

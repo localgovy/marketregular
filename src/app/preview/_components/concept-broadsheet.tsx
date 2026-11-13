@@ -30,7 +30,7 @@ import { SavedRail } from "@/components/saved-rail";
 import { SearchField } from "@/components/search-field";
 import { VerifiedName } from "@/components/verified-stamp";
 import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item";
-import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/lib/constants";
+import { SEARCH_LABEL, SEARCH_PLACEHOLDER } from "@/content/site-copy";
 import { marketsHref, tagLabel, whenOptions } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { formatCensus } from "@/components/stall-emblem";

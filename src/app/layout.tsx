@@ -11,7 +11,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { JsonLd } from "@/components/json-ld";
 import { OAUTH_HASH_SCRUB_SCRIPT } from "@/lib/analytics";
-import { SITE_NAME, SITE_TITLE, SITE_URL, SITE_OG } from "@/lib/constants";
+import { SITE_TITLE } from "@/content/site-copy";
+import { SITE_NAME, SITE_URL, SITE_OG } from "@/lib/constants";
 import { SITE_DESCRIPTION, websiteJsonLd } from "@/lib/seo";
 import "./globals.css";
 

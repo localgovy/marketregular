@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { siteCopy } from "@/content/site-copy";
 import { CATEGORIES, DAY_SLUGS, dayName } from "@/lib/landing";
 import { tagLabel } from "@/lib/tag-label";
 import { cn } from "@/lib/utils";
@@ -26,11 +27,11 @@ export function BrowseLinks({
 
   return (
     <section className={cn("border-t border-border pt-6", className)}>
-      <h2 className="type-column">Browse another way</h2>
-      <p className="type-kicker mt-1 text-muted-foreground">By day</p>
+      <h2 className="type-column">{siteCopy["/markets"].browseAnotherWay}</h2>
+      <p className="type-kicker mt-1 text-muted-foreground">{siteCopy["/markets"].byDay}</p>
       <div className="mt-2 flex flex-wrap gap-1.5">
         <Link href="/markets/open-today" className={chip}>
-          Open today
+          {siteCopy["/markets"].openToday}
         </Link>
         {days.map((day) => (
           <Link key={day.slug} href={`/markets/day/${day.slug}`} className={chip}>
@@ -38,7 +39,7 @@ export function BrowseLinks({
           </Link>
         ))}
       </div>
-      <p className="type-kicker mt-4 text-muted-foreground">By what they sell</p>
+      <p className="type-kicker mt-4 text-muted-foreground">{siteCopy["/markets"].byWhatTheySell}</p>
       <div className="mt-2 flex flex-wrap gap-1.5">
         {categories.map((category) => (
           <Link key={category.tag} href={`/markets/tag/${category.tag}`} className={chip}>

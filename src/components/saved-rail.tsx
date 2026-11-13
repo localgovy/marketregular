@@ -11,6 +11,7 @@ import { SavedProductsSection } from "@/components/saved-products";
 import { TicketMark } from "@/components/marks";
 import { SaveButton, useSaves } from "@/components/save-button";
 import { VerifiedName } from "@/components/verified-stamp";
+import { siteCopy } from "@/content/site-copy";
 import { useHydratedSaves } from "@/lib/use-hydrated-saves";
 import { EMPTY_SAVES, type Saves } from "@/lib/saves";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
@@ -156,13 +157,11 @@ export function SavedList({
     <div className="grid gap-10">
       {empty ? (
         <p className="text-muted-foreground">
-          {followAccount
-            ? "Nothing saved yet. Open a market, a vendor, a product, or a note and press Save. The list follows this account."
-            : "Sign in to save markets, vendors, products, and notes to this account."}
+          {followAccount ? siteCopy["/saved"].emptySignedIn : siteCopy["/saved"].emptySignedOut}
         </p>
       ) : null}
       <section>
-        <h2>Markets</h2>
+        <h2>{siteCopy["/saved"].markets}</h2>
         {savedMarkets.length ? (
           <ul className="mt-3 bg-card ring-1 ring-border">
             {savedMarkets.map((market) => (
@@ -200,11 +199,11 @@ export function SavedList({
             ))}
           </ul>
         ) : (
-          <p className="mt-2 text-sm text-muted-foreground">No markets on the list.</p>
+          <p className="mt-2 text-sm text-muted-foreground">{siteCopy["/saved"].noMarkets}</p>
         )}
       </section>
       <section>
-        <h2>Vendors</h2>
+        <h2>{siteCopy["/saved"].vendors}</h2>
         {savedVendors.length ? (
           <ul className="mt-3 bg-card ring-1 ring-border">
             {savedVendors.map((vendor) => (

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { GetForm } from "@/components/get-form";
 import { SearchField } from "@/components/search-field";
-import { PRODUCT_SEARCH_LABEL, PRODUCT_SEARCH_PLACEHOLDER, WEEKDAYS } from "@/lib/constants";
+import { PRODUCT_SEARCH_LABEL, PRODUCT_SEARCH_PLACEHOLDER } from "@/content/site-copy";
+import { WEEKDAYS } from "@/lib/constants";
 import { PRODUCT_TRIES } from "@/lib/product-catalogue";
 import { cn } from "@/lib/utils";
 

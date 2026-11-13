@@ -12,7 +12,8 @@ import {
   scheduleMapFrom,
 } from "@/lib/landing";
 import { serverNowMs } from "@/lib/clock";
-import { LAUNCH_CITY, LAUNCH_REGION, LAUNCH_TZ } from "@/lib/launch";
+import { copyText, siteCopy } from "@/content/site-copy";
+import { LAUNCH_CITY, LAUNCH_TZ } from "@/lib/launch";
 import { zonedParts } from "@/lib/schedule";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
@@ -20,9 +21,9 @@ import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib
 export const revalidate = 900;
 
 export const metadata: Metadata = pageMeta({
-  title: `Farmers' markets open today in ${LAUNCH_CITY}`,
+  title: copyText(siteCopy["/markets/open-today"].title),
   path: "/markets/open-today",
-  description: `Which ${LAUNCH_REGION} farmers' markets are open today and which are still to come, with hours, addresses and how many vendors are working.`,
+  description: copyText(siteCopy["/markets/open-today"].description),
 });
 
 export default async function OpenTodayPage() {
@@ -52,12 +53,12 @@ export default async function OpenTodayPage() {
       <JsonLd
         data={breadcrumbJsonLd([
           MARKETS_CRUMB,
-          { name: "Open today", path: "/markets/open-today" },
+          { name: siteCopy["/markets/open-today"].crumb, path: "/markets/open-today" },
         ])}
       />
       <JsonLd
         data={itemListJsonLd({
-          name: `${LAUNCH_CITY} farmers' markets open today`,
+          name: copyText(siteCopy["/markets/open-today"].listName),
           path: "/markets/open-today",
           items: today.map((row) => ({
             name: row.market.name,
@@ -66,7 +67,7 @@ export default async function OpenTodayPage() {
         })}
       />
       <BackButton href="/markets" />
-      <h1>Farmers&apos; markets open today in {LAUNCH_CITY}</h1>
+      <h1>{copyText(siteCopy["/markets/open-today"].h1)}</h1>
       <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
         {today.length
           ? `${today.length} ${LAUNCH_CITY} ${today.length === 1 ? "market runs" : "markets run"} on ${dayName(weekday)}. ${openNow.length ? `${openNow.length} ${openNow.length === 1 ? "is" : "are"} open right now.` : "None are open at this hour."}`
@@ -75,28 +76,28 @@ export default async function OpenTodayPage() {
 
       {openNow.length ? (
         <section className="mt-8">
-          <h2>Open right now</h2>
+          <h2>{siteCopy["/markets/open-today"].openRightNow}</h2>
           <MarketDayList rows={openNow} nowMs={now.getTime()} />
         </section>
       ) : null}
 
       {laterToday.length ? (
         <section className="mt-8">
-          <h2>Opening later today</h2>
+          <h2>{siteCopy["/markets/open-today"].openingLater}</h2>
           <MarketDayList rows={laterToday} nowMs={now.getTime()} />
         </section>
       ) : null}
 
       {closed.length ? (
         <section className="mt-8">
-          <h2>Already closed today</h2>
+          <h2>{siteCopy["/markets/open-today"].alreadyClosed}</h2>
           <MarketDayList rows={closed} nowMs={now.getTime()} />
         </section>
       ) : null}
 
       {tomorrow.length ? (
         <section className="mt-8">
-          <h2>Tomorrow</h2>
+          <h2>{siteCopy["/markets/open-today"].tomorrow}</h2>
           <p className="mt-1 text-base text-muted-foreground">
             {tomorrow.length} {tomorrow.length === 1 ? "market" : "markets"} on{" "}
             <Link
@@ -114,7 +115,10 @@ export default async function OpenTodayPage() {
                 href={`/markets/day/${daySlug(weekday + 1)}`}
                 className="font-medium text-primary hover:underline"
               >
-                All {tomorrow.length} {dayName(weekday + 1)} markets
+                {copyText(siteCopy["/markets/open-today"].allDayMarkets, {
+                  count: tomorrow.length,
+                  day: dayName(weekday + 1),
+                })}
               </Link>
             </p>
           ) : null}

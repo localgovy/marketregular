@@ -44,6 +44,9 @@ import {
   type PortalHours,
   type PortalResult,
 } from "@/lib/vendor-portal";
+import { siteCopy } from "@/content/site-copy";
+
+const marketEditor = siteCopy["/market/[id]"];
 
 const MARKET_TAGS = [...PRODUCT_TAGS, ...AMENITY_TAGS, ...RECORD_TAGS];
 
@@ -172,7 +175,7 @@ function TagPicker({
       ) : null}
       <div className="flex flex-wrap items-end gap-2">
         <div className="grid min-w-48 flex-1 gap-1.5">
-          <Label htmlFor={`${id}-extra-tag`}>Another tag</Label>
+          <Label htmlFor={`${id}-extra-tag`}>{marketEditor.anotherTag}</Label>
           <Input
             id={`${id}-extra-tag`}
             value={draft}
@@ -252,11 +255,11 @@ function ContactFields({
   return (
     <>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-phone`}>Phone</Label>
+        <Label htmlFor={`${id}-phone`}>{marketEditor.phone}</Label>
         <Input id={`${id}-phone`} name="phone" type="tel" autoComplete="tel" maxLength={40} defaultValue={phone} />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-email`}>Email</Label>
+        <Label htmlFor={`${id}-email`}>{marketEditor.email}</Label>
         <Input
           id={`${id}-email`}
           name="email"
@@ -268,19 +271,19 @@ function ContactFields({
       </div>
       <p className="text-sm text-muted-foreground sm:col-span-2">Phone and email show on the public page.</p>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-website`}>Website</Label>
+        <Label htmlFor={`${id}-website`}>{marketEditor.website}</Label>
         <Input id={`${id}-website`} name="website" defaultValue={website} maxLength={2048} />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-instagram`}>Instagram</Label>
+        <Label htmlFor={`${id}-instagram`}>{marketEditor.instagram}</Label>
         <Input id={`${id}-instagram`} name="instagram" defaultValue={instagram} maxLength={2048} />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-tiktok`}>TikTok</Label>
+        <Label htmlFor={`${id}-tiktok`}>{marketEditor.tiktok}</Label>
         <Input id={`${id}-tiktok`} name="tiktok" defaultValue={tiktok} maxLength={2048} />
       </div>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${id}-facebook`}>Facebook</Label>
+        <Label htmlFor={`${id}-facebook`}>{marketEditor.facebook}</Label>
         <Input id={`${id}-facebook`} name="facebook" defaultValue={facebook} maxLength={2048} />
       </div>
     </>
@@ -296,12 +299,12 @@ function ListingForm({ listing }: { listing: MarketPortalListing }) {
     <form action={action} className="grid gap-4 sm:grid-cols-2">
       <input type="hidden" name="market_id" value={id} />
       <div className="grid gap-1.5 sm:col-span-2">
-        <Label htmlFor={`${id}-name`}>Name</Label>
+        <Label htmlFor={`${id}-name`}>{marketEditor.name}</Label>
         <Input id={`${id}-name`} name="name" required maxLength={200} defaultValue={listing.name} />
         <p className="text-sm text-muted-foreground">{`The page address stays /markets/${listing.slug}.`}</p>
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
-        <Label htmlFor={`${id}-about`}>About</Label>
+        <Label htmlFor={`${id}-about`}>{marketEditor.about}</Label>
         <Textarea id={`${id}-about`} name="about" rows={5} maxLength={4000} defaultValue={listing.about ?? ""} />
       </div>
       <div className="grid gap-1.5 sm:col-span-2">
@@ -345,7 +348,7 @@ function LogoForm({ listing }: { listing: MarketPortalListing }) {
       <form action={upload} className="grid gap-3">
         <input type="hidden" name="market_id" value={listing.id} />
         <div className="grid gap-1.5">
-          <Label htmlFor={`${listing.id}-logo`}>Logo</Label>
+          <Label htmlFor={`${listing.id}-logo`}>{marketEditor.logo}</Label>
           <Input
             id={`${listing.id}-logo`}
             name="logo"
@@ -407,7 +410,7 @@ function HoursForm({
         <input type="hidden" name="market_id" value={marketId} />
         {schedule ? <input type="hidden" name="schedule_id" value={schedule.id} /> : null}
         <div className="grid gap-1.5">
-          <Label htmlFor={`${field}-weekday`}>Day</Label>
+          <Label htmlFor={`${field}-weekday`}>{marketEditor.day}</Label>
           <select
             id={`${field}-weekday`}
             name="weekday"
@@ -423,7 +426,7 @@ function HoursForm({
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="grid gap-1.5">
-            <Label htmlFor={`${field}-opens`}>Opens</Label>
+            <Label htmlFor={`${field}-opens`}>{marketEditor.opens}</Label>
             <Input
               id={`${field}-opens`}
               name="opens_at"
@@ -433,7 +436,7 @@ function HoursForm({
             />
           </div>
           <div className="grid gap-1.5">
-            <Label htmlFor={`${field}-closes`}>Closes</Label>
+            <Label htmlFor={`${field}-closes`}>{marketEditor.closes}</Label>
             <Input
               id={`${field}-closes`}
               name="closes_at"
@@ -444,7 +447,7 @@ function HoursForm({
           </div>
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor={`${field}-season-start`}>Season start</Label>
+          <Label htmlFor={`${field}-season-start`}>{marketEditor.seasonStart}</Label>
           <Input
             id={`${field}-season-start`}
             name="season_start"
@@ -454,7 +457,7 @@ function HoursForm({
           />
         </div>
         <div className="grid gap-1.5">
-          <Label htmlFor={`${field}-season-end`}>Season end</Label>
+          <Label htmlFor={`${field}-season-end`}>{marketEditor.seasonEnd}</Label>
           <Input
             id={`${field}-season-end`}
             name="season_end"
@@ -464,7 +467,7 @@ function HoursForm({
           />
         </div>
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${field}-notes`}>Note for visitors</Label>
+          <Label htmlFor={`${field}-notes`}>{marketEditor.visitorNote}</Label>
           <Textarea id={`${field}-notes`} name="notes" rows={2} maxLength={500} defaultValue={schedule?.notes ?? ""} />
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
@@ -517,7 +520,7 @@ function StallRosterForm({
         <input type="hidden" name="vendor_id" value={stall.vendor_id} />
         <input type="hidden" name="vendor_slug" value={stall.vendor_slug} />
         <div className="grid gap-1.5">
-          <Label htmlFor={`${stall.vendor_id}-stall`}>Stall label</Label>
+          <Label htmlFor={`${stall.vendor_id}-stall`}>{marketEditor.stallLabel}</Label>
           <Input
             id={`${stall.vendor_id}-stall`}
             name="stall"
@@ -578,11 +581,11 @@ function EditableStall({
         <input type="hidden" name="market_id" value={marketId} />
         <input type="hidden" name="vendor_id" value={id} />
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${id}-name`}>Name</Label>
+          <Label htmlFor={`${id}-name`}>{marketEditor.name}</Label>
           <Input id={`${id}-name`} name="name" required maxLength={200} defaultValue={stall.vendor_name} />
         </div>
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${id}-about`}>About</Label>
+          <Label htmlFor={`${id}-about`}>{marketEditor.about}</Label>
           <Textarea id={`${id}-about`} name="about" rows={3} maxLength={4000} defaultValue={stall.about ?? ""} />
         </div>
         <TagPicker id={`${id}-stall`} tags={stall.tags} choices={PRODUCT_TAGS} />
@@ -608,7 +611,7 @@ function EditableStall({
           <input type="hidden" name="market_id" value={marketId} />
           <input type="hidden" name="vendor_id" value={id} />
           <div className="grid gap-1.5">
-            <Label htmlFor={`${id}-logo`}>Logo</Label>
+            <Label htmlFor={`${id}-logo`}>{marketEditor.logo}</Label>
             <Input
               id={`${id}-logo`}
               name="logo"
@@ -694,10 +697,10 @@ function AddExistingStall({
 
   return (
     <div className="mt-4 grid gap-3">
-      <h3>Add a stall already listed</h3>
+      <h3>{marketEditor.addListed}</h3>
       <p className="text-sm text-muted-foreground">Add a stall that sells here.</p>
       <div className="grid gap-1.5">
-        <Label htmlFor={`${marketId}-vendor-q`}>Find a stall</Label>
+        <Label htmlFor={`${marketId}-vendor-q`}>{marketEditor.findAStall}</Label>
         <Input
           id={`${marketId}-vendor-q`}
           value={query}
@@ -737,7 +740,7 @@ function AddExistingStall({
           <input type="hidden" name="vendor_slug" value={picked.slug} />
           <p className="text-base font-medium">{picked.name}</p>
           <div className="grid gap-1.5">
-            <Label htmlFor={`${picked.id}-new-stall`}>Stall label</Label>
+            <Label htmlFor={`${picked.id}-new-stall`}>{marketEditor.stallLabel}</Label>
             <Input id={`${picked.id}-new-stall`} name="stall" maxLength={80} placeholder="Booth or row" />
           </div>
           <DayChoices openDays={openDays} hours={hours} selected={openDays} />
@@ -775,7 +778,7 @@ function NewStall({
 
   return (
     <div className="mt-8 grid gap-3">
-      <h3>Add a stall that is not listed yet</h3>
+      <h3>{marketEditor.addUnlisted}</h3>
       <p className="text-sm text-muted-foreground">
         It shows on this market with no owner. Add one that sells here. The person who runs it can create a vendor
         account, and then only they edit the listing after we assign it.
@@ -783,17 +786,17 @@ function NewStall({
       <form key={formKey} action={action} className="grid gap-4 sm:grid-cols-2">
         <input type="hidden" name="market_id" value={marketId} />
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${marketId}-new-name`}>Name</Label>
+          <Label htmlFor={`${marketId}-new-name`}>{marketEditor.name}</Label>
           <Input id={`${marketId}-new-name`} name="name" required maxLength={200} />
         </div>
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${marketId}-new-about`}>About</Label>
+          <Label htmlFor={`${marketId}-new-about`}>{marketEditor.about}</Label>
           <Textarea id={`${marketId}-new-about`} name="about" rows={3} maxLength={4000} />
         </div>
         <TagPicker id={`${marketId}-new`} tags={[]} choices={PRODUCT_TAGS} />
         <ContactFields id={`${marketId}-new-contact`} phone="" email="" website="" instagram="" tiktok="" facebook="" />
         <div className="grid gap-1.5 sm:col-span-2">
-          <Label htmlFor={`${marketId}-new-label`}>Stall label</Label>
+          <Label htmlFor={`${marketId}-new-label`}>{marketEditor.stallLabel}</Label>
           <Input id={`${marketId}-new-label`} name="stall" maxLength={80} placeholder="Booth or row" />
         </div>
         <div className="sm:col-span-2">
@@ -833,7 +836,7 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
         selected={listing.maintenance_opt_outs}
       />
       <section>
-        <h2>Profile</h2>
+        <h2>{marketEditor.profile}</h2>
         <div className="mt-4">
           <ListingForm
             key={[
@@ -856,13 +859,13 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
         </div>
       </section>
       <section>
-        <h2>Logo</h2>
+        <h2>{marketEditor.logo}</h2>
         <div className="mt-4">
           <LogoForm listing={listing} />
         </div>
       </section>
       <section>
-        <h2>Hours</h2>
+        <h2>{marketEditor.hours}</h2>
         <p className="mt-2 text-base text-muted-foreground">
           The public page uses these hours. Leave a day off if the market is not open.
         </p>
@@ -884,7 +887,7 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
         )}
       </section>
       <section>
-        <h2>Stalls</h2>
+        <h2>{marketEditor.stalls}</h2>
         <p className="mt-2 text-base text-muted-foreground">List stalls that sell at this market.</p>
         {listing.stalls.length ? (
           <ul className="mt-2">

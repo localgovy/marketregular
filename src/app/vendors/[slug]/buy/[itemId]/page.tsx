@@ -11,14 +11,14 @@ import { stripeChargesConfigured } from "@/lib/stripe";
 import { pageMeta } from "@/lib/seo";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/vendor-portal";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
-  title: "Buy",
+  title: siteCopy["/vendors/[slug]/buy/[itemId]"].title,
   path: "/vendors",
-  description: `Pay a stall on ${SITE_NAME}.`,
+  description: copyText(siteCopy["/vendors/[slug]/buy/[itemId]"].description),
   index: false,
 });
 

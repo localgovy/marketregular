@@ -10,7 +10,7 @@ import {
   searchProducts,
   searchVendorsByName,
 } from "@/lib/data/product-search";
-import { LAUNCH_CITY } from "@/lib/launch";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { takeCatalogSlot } from "@/lib/mail-limit";
 import { parseCatalogueSort, type CatalogueSort } from "@/lib/product-browse-href";
 import {
@@ -76,8 +76,10 @@ export async function productsMetadata(input: {
   path: string;
 }): Promise<Metadata> {
   return pageMeta({
-    title: input.q ? `${input.q} at ${LAUNCH_CITY} farmers' markets` : "Products",
-    description: `Search products and the vendors who sell them at ${LAUNCH_CITY} farmers' markets.`,
+    title: input.q
+      ? copyText(siteCopy["/products"].searchTitle, { query: input.q })
+      : siteCopy["/products"].title,
+    description: copyText(siteCopy["/products"].description),
     path: input.path,
     index: !input.filtered,
   });

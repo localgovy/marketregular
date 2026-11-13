@@ -17,6 +17,7 @@ import { ProductPhotoFrame } from "@/components/product-photo-frame";
 import { directPublicImageSrc, StallEmblem } from "@/components/stall-emblem";
 import { SortableFindVendors } from "@/components/product-sort-list";
 import { SaveButton } from "@/components/save-button";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { formatPrice } from "@/lib/format";
 import { LAUNCH_CITY } from "@/lib/launch";
 import type { FindProductAtlasData } from "@/lib/products-atlas-data";
@@ -357,10 +358,13 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
               <div className="flex items-center justify-between gap-2 border-b border-black/15 bg-primary px-5 py-3.5 text-primary-foreground">
                 <div className="flex items-center gap-2">
                   <SlatsMark className="size-4 text-primary-foreground" />
-                  <h2 className="text-xl text-primary-foreground">Where they set up</h2>
+                  <h2 className="text-xl text-primary-foreground">{siteCopy["/find/[slug]"].where}</h2>
                 </div>
                 <span className="stall-chip-sm type-nums bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
-                  {data.markets.length} {data.markets.length === 1 ? "market" : "markets"}
+                  {data.markets.length}{" "}
+                  {data.markets.length === 1
+                    ? siteCopy["/find/[slug]"].market
+                    : siteCopy["/find/[slug]"].markets}
                 </span>
               </div>
 
@@ -456,18 +460,20 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
           <div className="bg-card p-5 ring-1 ring-board">
             <div className="flex items-baseline justify-between gap-2 border-b border-border pb-3">
               <div>
-                <p className="type-kicker text-primary">More to compare</p>
+                <p className="type-kicker text-primary">{siteCopy["/find/[slug]"].moreToCompare}</p>
                 <h3 className="mt-0.5">
                   {data.siblingGuides.length > 0
-                    ? `More in ${data.categoryLabel.toLowerCase()}`
-                    : "Popular product guides"}
+                    ? copyText(siteCopy["/find/[slug]"].moreInCategory, {
+                        category: data.categoryLabel.toLowerCase(),
+                      })
+                    : siteCopy["/find/[slug]"].popularGuides}
                 </h3>
               </div>
               <Link
                 href={aisleHref}
                 className="text-sm font-medium text-primary hover:underline"
               >
-                All →
+                {siteCopy["/find/[slug]"].all}
               </Link>
             </div>
 

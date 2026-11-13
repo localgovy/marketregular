@@ -25,7 +25,7 @@ import {
 import { NowLabel } from "@/components/now-label";
 import { TorontoWeek } from "@/components/toronto-week";
 import { Button } from "@/components/ui/button";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { externalHref } from "@/lib/format";
 import { TimeAgo } from "@/components/time-ago";
 import { decodeFloorBody } from "@/lib/floor-note";
@@ -159,16 +159,15 @@ export function AccountHome({
       <div className="mx-auto w-full max-w-6xl px-4 py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] lg:items-start lg:gap-5 lg:px-6">
         <div className="grid min-w-0 gap-5">
           <header className="max-w-2xl">
-            <p className="type-kicker text-muted-foreground">Your profile</p>
+            <p className="type-kicker text-muted-foreground">{siteCopy["/account"].profile}</p>
             <h1>{name}</h1>
             <p className="type-lede mt-2 text-muted-foreground">
-              Your {SITE_NAME} identity. Post notes, save markets, and keep this week&apos;s hours
-              in one profile.
+              {copyText(siteCopy["/account"].lede)}
             </p>
           </header>
 
           <section>
-            <h2>Orders</h2>
+            <h2>{siteCopy["/account"].orders}</h2>
             {orders.length ? (
               <ul className="mt-3 divide-y divide-border">
                 {orders.map((order) => (
@@ -229,7 +228,7 @@ export function AccountHome({
                 <>
                   Saved vendors still selling today, or opening later today.
                   <span className="mt-2 flex flex-wrap items-center gap-2">
-                    <NowLabel>Selling now</NowLabel>
+                    <NowLabel>{siteCopy["every page"].status.sellingNow}</NowLabel>
                     <span>Selling this minute.</span>
                   </span>
                 </>

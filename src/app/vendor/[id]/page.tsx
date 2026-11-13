@@ -4,7 +4,7 @@ import { BackButton } from "@/components/back-button";
 import { VendorPortalEditor } from "@/components/vendor-portal-editor";
 import { settleStallFeeReturn } from "@/app/actions/selling";
 import { loadVendorPortal } from "@/app/actions/vendor-portal";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { createStallAccount, refreshStallCapabilities } from "@/lib/stall-payments";
 import { VENDOR_SALES_OPEN } from "@/lib/selling";
 import { stripeChargesConfigured, stripeConnectConfigured } from "@/lib/stripe";
@@ -17,9 +17,9 @@ import type { Metadata } from "next";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
-  title: "Edit your stall",
+  title: siteCopy["/vendor/[id]"].title,
   path: "/vendor",
-  description: `Update a ${SITE_NAME} stall you run.`,
+  description: copyText(siteCopy["/vendor/[id]"].description),
   index: false,
 });
 
@@ -44,9 +44,9 @@ export default async function VendorEditorPage({
     return (
       <div className="mx-auto w-full max-w-3xl px-4 py-10">
         <BackButton href="/vendor" />
-        <h1>Your stall</h1>
+        <h1>{siteCopy["/vendor/[id]"].unavailableTitle}</h1>
         <p className="type-lede mt-2 text-muted-foreground">
-          The stall editor is not available yet. Try again in a minute.
+          {siteCopy["/vendor/[id]"].unavailable}
         </p>
       </div>
     );
@@ -113,16 +113,16 @@ export default async function VendorEditorPage({
       <p className="type-lede mt-2 text-muted-foreground">
         {vendorPublicPageExists(listing.status, listing.stalls.length, UNAFFILIATED_VENDOR_SLUGS.has(listing.slug)) ? (
           <>
-            Published.{" "}
+            {siteCopy["/vendor/[id]"].published}{" "}
             <Link href={`/vendors/${listing.slug}`} className="font-medium text-foreground hover:underline">
-              View the public page
+              {siteCopy["/vendor/[id]"].viewPublic}
             </Link>
             .
           </>
         ) : listing.status === "published" ? (
-          "Published. The public page is hidden until you add a hall."
+          siteCopy["/vendor/[id]"].hiddenUntilHall
         ) : (
-          "Draft. This listing is not on the public site yet."
+          siteCopy["/vendor/[id]"].draft
         )}
       </p>
       <div className="mt-8">

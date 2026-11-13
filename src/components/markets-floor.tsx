@@ -31,7 +31,8 @@ import { SaveButton } from "@/components/save-button";
 import { SearchField } from "@/components/search-field";
 import { VerifiedName } from "@/components/verified-stamp";
 import { FIND_CATEGORIES, FIND_PAGES } from "@/data/find-pages";
-import { COUNTRY_TAGS, SEARCH_LABEL } from "@/lib/constants";
+import { SEARCH_LABEL, copyText, siteCopy } from "@/content/site-copy";
+import { COUNTRY_TAGS } from "@/lib/constants";
 import { tagLabel, type MarketsSearch } from "@/lib/find-paths";
 import { formatPrice } from "@/lib/format";
 import { distanceMeters } from "@/lib/geo";
@@ -193,18 +194,20 @@ const FALLBACK_GUIDES: SearchGuide[] = [...FIND_PAGES]
   .slice(0, 6)
   .map((page) => ({ term: page.term, slug: page.slug, rank: 3 }));
 
+const floor = siteCopy["/markets"];
+
 const FACETS: Array<{ id: FacetId; label: string }> = [
-  { id: "sell", label: "What they sell" },
-  { id: "cuisine", label: "Cuisine" },
-  { id: "diet", label: "Diet" },
-  { id: "made", label: "How it's made" },
+  { id: "sell", label: floor.whatTheySell },
+  { id: "cuisine", label: floor.cuisine },
+  { id: "diet", label: floor.diet },
+  { id: "made", label: floor.howItsMade },
 ];
 
 const SETUPS = [
-  { id: "indoor", label: "Indoor" },
-  { id: "outdoor", label: "Outdoor" },
-  { id: "year-round", label: "Year-round" },
-  { id: "holiday", label: "Holiday market" },
+  { id: "indoor", label: floor.indoor },
+  { id: "outdoor", label: floor.outdoor },
+  { id: "year-round", label: floor.yearRound },
+  { id: "holiday", label: floor.holiday },
 ] as const;
 
 const DIET_TAGS = new Set(["vegan", "vegetarian", "gluten-free", "dairy-free", "halal", "keto"]);
@@ -1407,7 +1410,7 @@ export function MarketsFloor({
 
       <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium">When</span>
+          <span className="text-sm font-medium">{floor.when}</span>
           <Chip
             pressed={dayId == null && weekday == null}
             onClick={() => commit({ dayId: null, weekday: null })}
@@ -1431,7 +1434,7 @@ export function MarketsFloor({
           <span aria-hidden className="text-muted-foreground">
             –
           </span>
-          <span className="text-sm font-medium">Setup</span>
+          <span className="text-sm font-medium">{floor.setup}</span>
           {SETUPS.map((option) => {
             const count = optionCount({ setup: option.id });
             const pressed = setup === option.id;
@@ -1458,10 +1461,9 @@ export function MarketsFloor({
             )}
           >
             <div>
-              <h1 className="text-primary-foreground">{LAUNCH_CITY} farmers&apos; markets</h1>
+              <h1 className="text-primary-foreground">{copyText(floor.h1)}</h1>
               <p className="type-lede mt-2 max-w-2xl text-primary-foreground/95">
-                Type a food, a vendor, or a market. A match opens that food, that vendor, or that
-                market&apos;s vendors.
+                {floor.lede}
               </p>
               <div className="mt-4">
                 <SearchField
@@ -1469,16 +1471,16 @@ export function MarketsFloor({
                   onChange={onQueryChange}
                   size="panel"
                   aria-label={SEARCH_LABEL}
-                  placeholder="Search products, markets, vendors"
+                  placeholder={floor.searchPlaceholder}
                 />
               </div>
             </div>
             {queryOn ? null : (
               <div className="mt-6 border-t border-primary-foreground/15 pt-4">
                 <div className="grid grid-cols-3 gap-3">
-                  <Census value={rows.length} label="Markets in view" />
-                  <Census value={stallSlugs.size} label="Vendors in view" />
-                  <Census value={placeNames.size} label="Places in view" />
+                  <Census value={rows.length} label={floor.marketsInView} />
+                  <Census value={stallSlugs.size} label={floor.vendorsInView} />
+                  <Census value={placeNames.size} label={floor.placesInView} />
                 </div>
               </div>
             )}
@@ -1494,12 +1496,12 @@ export function MarketsFloor({
             />
           ) : (
             <div className="bg-card p-6 ring-1 ring-board lg:col-span-5">
-              <h2>No markets match</h2>
+              <h2>{floor.noMatch}</h2>
               <p className="mt-2 text-base text-muted-foreground">
-                Clear a specialty or a day to bring the directory back.
+                {floor.noMatchCaption}
               </p>
               <button type="button" onClick={clearAll} className={cn(chipIdle, "mt-4")}>
-                Clear filters
+                {floor.clearFilters}
               </button>
             </div>
           )}
@@ -1520,9 +1522,9 @@ export function MarketsFloor({
           <>
         <section className="mt-5 bg-card p-4 ring-1 ring-board sm:p-5">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium">Areas</span>
+            <span className="text-sm font-medium">{floor.areas}</span>
             <Chip pressed={area == null} onClick={() => commit({ area: null })}>
-              All areas
+              {floor.allAreas}
             </Chip>
             {shownPlaces.map((place) => {
               const pressed = area === place.label;
@@ -1547,12 +1549,14 @@ export function MarketsFloor({
             ) : null}
             {placeChoices.length > PAGE ? (
               <button type="button" onClick={() => setMorePlaces((value) => !value)} className={chipIdle}>
-                {morePlaces ? "Fewer areas" : `More areas (${placeChoices.length - PAGE})`}
+                {morePlaces
+                  ? floor.fewerAreas
+                  : copyText(floor.moreAreas, { count: placeChoices.length - PAGE })}
               </button>
             ) : null}
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2" role="tablist" aria-label="Specialty">
+          <div className="mt-4 flex flex-wrap items-center gap-2" role="tablist" aria-label={floor.specialty}>
             {FACETS.map((item) => (
               <button
                 key={item.id}
@@ -1574,7 +1578,7 @@ export function MarketsFloor({
           />
           {category && guidePages.length > 0 ? (
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <span className="text-sm font-medium">Product guides</span>
+              <span className="text-sm font-medium">{floor.productGuides}</span>
               {guidePages.map((page) => (
                 <Link
                   key={page.slug}
@@ -1596,17 +1600,17 @@ export function MarketsFloor({
             <p className="mt-3 text-sm">
               {cuisinePage ? (
                 <Link href={`/find/${cuisinePage.slug}`} className="font-medium text-primary hover:underline">
-                  Open the {cuisinePage.term} guide
+                  {copyText(floor.openTheGuide, { term: cuisinePage.term })}
                 </Link>
               ) : null}
               {dietPage ? (
                 <Link href={`/find/${dietPage.slug}`} className="font-medium text-primary hover:underline">
-                  Open the {dietPage.term} guide
+                  {copyText(floor.openTheGuide, { term: dietPage.term })}
                 </Link>
               ) : null}
               {madePage ? (
                 <Link href={`/find/${madePage.slug}`} className="font-medium text-primary hover:underline">
-                  Open the {madePage.term} guide
+                  {copyText(floor.openTheGuide, { term: madePage.term })}
                 </Link>
               ) : null}
             </p>
@@ -1622,11 +1626,11 @@ export function MarketsFloor({
                 >
                   {stamp.label}
                   <CloseMark className="size-3.5" />
-                  <span className="sr-only">Remove {stamp.label}</span>
+                  <span className="sr-only">{copyText(floor.removeFilter, { label: stamp.label })}</span>
                 </button>
               ))}
               <button type="button" onClick={clearAll} className="text-sm font-medium text-primary hover:underline">
-                Clear filters
+                {floor.clearFilters}
               </button>
             </div>
           ) : null}
@@ -1634,7 +1638,7 @@ export function MarketsFloor({
 
         {rows.length === 0 ? null : (
         <section className="mt-5" aria-live="polite">
-          <h2>Markets and vendors</h2>
+          <h2>{floor.marketsAndVendors}</h2>
 
           {mapMarkets.length > 0 ? (
             <div className="mt-4 h-64 sm:h-72">
@@ -1697,9 +1701,9 @@ function SearchAnswer({
   if (empty) {
     return (
       <section className="mt-4 bg-card p-6 ring-1 ring-board" aria-live="polite">
-        <h2>Nothing matches that search</h2>
+        <h2>{floor.nothingMatches}</h2>
         <p className="mt-2 text-base text-muted-foreground">
-          Try a food, a vendor, or a market. These guides list one food across every market.
+          {floor.nothingMatchesCaption}
         </p>
         <div className="mt-4 flex flex-wrap gap-1.5">
           {FALLBACK_GUIDES.map((page) => (
@@ -1726,7 +1730,7 @@ function SearchAnswer({
           <TagMark className="size-5 text-primary" />
           <span className="min-w-0">
             <span className="block text-base font-medium">{best.term}</span>
-            <span className="text-sm text-muted-foreground">Every vendor that lists it</span>
+            <span className="text-sm text-muted-foreground">{floor.everyVendor}</span>
           </span>
           <CaretRightMark className="size-4 text-primary" />
         </Link>
@@ -1747,7 +1751,7 @@ function SearchAnswer({
 
       {foods.length > 0 ? (
         <section>
-          <h2 className="border-b border-border px-4 py-3">Products</h2>
+          <h2 className="border-b border-border px-4 py-3">{floor.products}</h2>
           <ul>
             {foods.map((product) => {
               const offer = product.offers[0];
@@ -1794,7 +1798,7 @@ function SearchAnswer({
 
       {shownShops.length > 0 ? (
         <section>
-          <h2 className="border-b border-border px-4 py-3">Vendors</h2>
+          <h2 className="border-b border-border px-4 py-3">{floor.vendors}</h2>
           <ul>
             {shownShops.map((vendor) => (
               <li key={vendor.slug} className="border-b border-border">
@@ -1813,7 +1817,7 @@ function SearchAnswer({
                     <Hours value={vendor.hours} />
                     {vendor.open ? (
                       <span className="mt-0.5 block">
-                        <NowLabel>Open</NowLabel>
+                        <NowLabel>{siteCopy["every page"].status.open}</NowLabel>
                       </span>
                     ) : null}
                   </span>
@@ -1826,7 +1830,7 @@ function SearchAnswer({
 
       {shownMarkets.length > 0 ? (
         <section>
-          <h2 className="border-b border-border px-4 py-3">Markets</h2>
+          <h2 className="border-b border-border px-4 py-3">{floor.markets}</h2>
           <ul>
             {shownMarkets.map((market) => (
               <li key={market.slug} className="border-b border-border">
@@ -1897,14 +1901,14 @@ function SearchLanding({
         <button
           type="button"
           onClick={onBack}
-          aria-label="Back"
+          aria-label={siteCopy["every page"].back}
           className="-ml-1 inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-foreground transition-colors hover:bg-foreground/[0.06] active:bg-foreground/[0.1]"
         >
           <CaretLeftMark className="size-5" />
         </button>
         {guide ? (
           <Link href={`/find/${guide.slug}`} className="text-sm font-medium text-primary hover:underline">
-            Every vendor that lists {guide.term}
+            {copyText(floor.everyVendorTerm, { term: guide.term })}
           </Link>
         ) : null}
       </div>
@@ -1918,7 +1922,7 @@ function SearchLanding({
         <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">
           <p className="text-sm text-muted-foreground">
             {narrowed
-              ? `Vendors matching “${query}”`
+              ? copyText(floor.vendorsMatching, { query })
               : `${row.stallCount} ${row.stallCount === 1 ? "vendor" : "vendors"}`}
           </p>
           <Hours value={row.hours} />
@@ -1931,7 +1935,7 @@ function SearchLanding({
         ) : null}
       </div>
       {shown.length === 0 ? (
-        <p className="px-4 py-6 text-base">No vendors at this market match.</p>
+        <p className="px-4 py-6 text-base">{floor.noVendorsMatch}</p>
       ) : (
         <ul>
           {shown.map((stall) => {
@@ -2019,7 +2023,7 @@ function Spotlight({
             <ListingScore parens ratingAvg={market.rating_avg} reviewCount={market.review_count} />
             {row.open ? (
               <span className="ml-2">
-                <NowLabel>Open</NowLabel>
+                <NowLabel>{siteCopy["every page"].status.open}</NowLabel>
               </span>
             ) : null}
           </p>
@@ -2093,7 +2097,7 @@ function Spotlight({
           type="button"
           onClick={onPrevious}
           disabled={!canStep}
-          aria-label="Previous market"
+          aria-label={floor.previousMarket}
           className="stall-chip-sm inline-flex size-9 cursor-pointer items-center justify-center bg-card ring-1 ring-border hover:bg-secondary disabled:cursor-default disabled:opacity-40"
         >
           <CaretLeftMark className="size-4" />
@@ -2103,7 +2107,7 @@ function Spotlight({
           type="button"
           onClick={onNext}
           disabled={!canStep}
-          aria-label="Next market"
+          aria-label={floor.nextMarket}
           className="stall-chip-sm inline-flex size-9 cursor-pointer items-center justify-center bg-card ring-1 ring-border hover:bg-secondary disabled:cursor-default disabled:opacity-40"
         >
           <CaretRightMark className="size-4" />
@@ -2127,7 +2131,7 @@ function FacetChips({
   const pinned = value ? options.find((option) => option.id === value) : undefined;
   const visible = expanded ? options : pinned && !head.some((option) => option.id === pinned.id) ? [pinned, ...head] : head;
   if (options.length === 0) {
-    return <p className="mt-3 text-sm text-muted-foreground">Nothing in view uses this specialty.</p>;
+    return <p className="mt-3 text-sm text-muted-foreground">{floor.nothingInSpecialty}</p>;
   }
   return (
     <div className="mt-3 flex flex-wrap items-center gap-1.5">
@@ -2143,7 +2147,7 @@ function FacetChips({
       })}
       {options.length > PAGE ? (
         <button type="button" onClick={() => setExpanded((open) => !open)} className={chipIdle}>
-          {expanded ? "Fewer" : `More (${options.length - PAGE})`}
+          {expanded ? floor.fewer : copyText(floor.more, { count: options.length - PAGE })}
         </button>
       ) : null}
     </div>
@@ -2168,7 +2172,7 @@ function MarketColumn({
       <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <RulesMark className="size-4 text-primary" />
-          <h3>Markets</h3>
+          <h3>{floor.markets}</h3>
         </div>
         <span className="type-nums text-sm text-primary">{rows.length}</span>
       </div>
@@ -2204,7 +2208,7 @@ function MarketColumn({
                       />
                       {row.open ? (
                         <span className="mt-0.5 block">
-                          <NowLabel>Open</NowLabel>
+                          <NowLabel>{siteCopy["every page"].status.open}</NowLabel>
                         </span>
                       ) : null}
                     </button>
@@ -2291,7 +2295,7 @@ function StallColumn({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <CrateMark className="size-4 text-primary" />
-          <h3>Vendors</h3>
+          <h3>{floor.vendors}</h3>
         </div>
         <span className="text-sm text-primary">
           <span className="type-nums">{stalls.length}</span>
@@ -2320,7 +2324,7 @@ function StallColumn({
           ))}
           {localOptions.length > PAGE ? (
             <button type="button" onClick={() => setMoreLocal((open) => !open)} className={chipIdle}>
-              {moreLocal ? "Fewer" : `More (${localOptions.length - PAGE})`}
+              {moreLocal ? floor.fewer : copyText(floor.more, { count: localOptions.length - PAGE })}
             </button>
           ) : null}
         </div>
@@ -2342,7 +2346,7 @@ function StallColumn({
         </div>
       ) : null}
       {shown.length === 0 ? (
-        <p className="px-4 py-6 text-base">No vendors at this market match.</p>
+        <p className="px-4 py-6 text-base">{floor.noVendorsMatch}</p>
       ) : (
         <ul>
           {shown.map((stall) => {

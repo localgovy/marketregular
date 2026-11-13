@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { moreProducts } from "@/app/actions/products";
 import { SearchMark } from "@/components/marks";
 import { FindVendorList, ProductHitList } from "@/components/product-results";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { countLabel } from "@/lib/format";
 import type { FindVendor } from "@/lib/data/product-search";
 import { MAX_PRODUCT_SEARCH_OFFSET, PRODUCT_PAGE, type ProductHit } from "@/lib/product-hits";
@@ -182,9 +183,11 @@ export function SortableFindVendors({
       <div className="bg-card p-4 ring-1 ring-board sm:p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-3.5">
           <div>
-            <p className="type-kicker text-primary">Stalls &amp; menu comparison</p>
+            <p className="type-kicker text-primary">{siteCopy["/find/[slug]"].stallsAndMenus}</p>
             <h2 className="mt-0.5">
-              {productTerm ? `Where to buy ${productTerm.toLowerCase()}` : "Published stalls"}
+              {productTerm
+                ? copyText(siteCopy["/find/[slug]"].whereToBuy, { product: productTerm.toLowerCase() })
+                : siteCopy["/find/[slug]"].publishedStalls}
             </h2>
           </div>
 

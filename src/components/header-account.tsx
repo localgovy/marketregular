@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { siteCopy } from "@/content/site-copy";
 import { buttonVariants } from "@/components/ui/button";
 import { isSignInSlipAuthPath } from "@/lib/signin-slip";
 import { useAuthCookie } from "@/lib/supabase/use-auth-cookie";
@@ -89,25 +90,25 @@ export function HeaderAccount({
       <>
         {shown.ownsMarket ? (
           <Link href="/market" className={textLink}>
-            Your market
+            {siteCopy["every page"].yourMarket}
           </Link>
         ) : null}
         {shown.ownsVendor ? (
           <Link href="/vendor" className={textLink}>
-            Your stall
+            {siteCopy["every page"].yourStall}
           </Link>
         ) : null}
         {shown.role === "admin" ? (
           <Link href="/admin" className={textLink}>
-            Admin
+            {siteCopy["every page"].admin}
           </Link>
         ) : null}
         <Link
           href="/account"
-          title={shown.display_name ?? "Account"}
+          title={shown.display_name ?? siteCopy["every page"].account}
           className={nameLink}
         >
-          {shown.display_name ?? "Account"}
+          {shown.display_name ?? siteCopy["every page"].account}
         </Link>
       </>
     );
@@ -115,15 +116,15 @@ export function HeaderAccount({
 
   if (ready && hasCookie) {
     return (
-      <Link href="/account" title="Account" className={nameLink}>
-        Account
+      <Link href="/account" title={siteCopy["every page"].account} className={nameLink}>
+        {siteCopy["every page"].account}
       </Link>
     );
   }
 
   return (
     <Link href={loginHref(pathname, query)} rel="nofollow" className={textLink}>
-      Sign in
+      {siteCopy["every page"].signIn}
     </Link>
   );
 }

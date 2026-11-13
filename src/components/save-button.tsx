@@ -3,6 +3,7 @@
 import { useRef, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { persistListingSaves, persistProductSave, persistSave } from "@/app/actions/saves";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { listingDetailJson } from "@/lib/listing-saves";
 import { productDetailJson, productSaveLabel, type SavedProduct } from "@/lib/product-saves";
 import {
@@ -113,15 +114,23 @@ export function SaveButton({
   if (!ready) return <SavePlaceholder size={size} />;
   const label =
     name ??
-    (kind === "market" ? "this market" : kind === "vendor" ? "this vendor" : "this note");
-  const idle = idleLabel ?? (kind === "blog" ? "Save Article" : "Save");
-  const done = savedLabel ?? (kind === "blog" ? "Saved Article" : "Saved");
+    (kind === "market"
+      ? siteCopy["every page"].saveThisMarket
+      : kind === "vendor"
+        ? siteCopy["every page"].saveThisVendor
+        : siteCopy["every page"].saveThisNote);
+  const idle = idleLabel ?? (kind === "blog" ? siteCopy["every page"].saveArticle : siteCopy["every page"].save);
+  const done = savedLabel ?? (kind === "blog" ? siteCopy["every page"].savedArticle : siteCopy["every page"].saved);
 
   return (
     <button
       type="button"
       aria-pressed={saved}
-      aria-label={saved ? `Remove ${label} from saved` : `Save ${label}`}
+      aria-label={
+        saved
+          ? copyText(siteCopy["every page"].unsaveNamed, { item: label })
+          : copyText(siteCopy["every page"].saveNamed, { item: label })
+      }
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -165,8 +174,8 @@ export function ListingSaveButton({
   listings,
   name,
   size = "sm",
-  idleLabel = "Save Info",
-  savedLabel = "Saved Info",
+  idleLabel = siteCopy["every page"].saveInfo,
+  savedLabel = siteCopy["every page"].savedInfo,
 }: {
   listing: SavedListing;
   listings?: SavedListing[];
@@ -189,7 +198,11 @@ export function ListingSaveButton({
     <button
       type="button"
       aria-pressed={saved}
-      aria-label={saved ? `Remove ${label} from saved` : `Save ${label}`}
+      aria-label={
+        saved
+          ? copyText(siteCopy["every page"].unsaveNamed, { item: label })
+          : copyText(siteCopy["every page"].saveNamed, { item: label })
+      }
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -254,7 +267,11 @@ export function ProductSaveButton({
     <button
       type="button"
       aria-pressed={saved}
-      aria-label={saved ? `Remove ${label} from saved` : `Save ${label}`}
+      aria-label={
+        saved
+          ? copyText(siteCopy["every page"].unsaveNamed, { item: label })
+          : copyText(siteCopy["every page"].saveNamed, { item: label })
+      }
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -288,7 +305,7 @@ export function ProductSaveButton({
       className={saveChipClass(size, saved)}
     >
       {saved ? null : <span aria-hidden className="stall-chip-fill" />}
-      <span className="relative">{saved ? "Saved" : "Save"}</span>
+      <span className="relative">{saved ? siteCopy["every page"].saved : siteCopy["every page"].save}</span>
     </button>
   );
 }

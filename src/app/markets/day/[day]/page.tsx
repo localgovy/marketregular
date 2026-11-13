@@ -17,6 +17,7 @@ import {
   whenWord,
 } from "@/lib/landing";
 import { serverNowMs } from "@/lib/clock";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { LAUNCH_CITY, LAUNCH_REGION } from "@/lib/launch";
 import { breadcrumbJsonLd, itemListJsonLd, MARKETS_CRUMB, pageMeta } from "@/lib/seo";
 
@@ -27,12 +28,12 @@ export function generateStaticParams() {
   return DAY_SLUGS.map((day) => ({ day }));
 }
 
-const DAY_CRUMB = { name: "By day", path: "/markets/day" };
+const DAY_CRUMB = { name: siteCopy["/markets/day"].crumb, path: "/markets/day" };
 
 function copy(weekday: number, count: number, stalls: number) {
   const day = dayName(weekday);
   return {
-    title: `${day} farmers' markets in ${LAUNCH_CITY}`,
+    title: copyText(siteCopy["/markets/day/[day]"].title, { day }),
     description:
       count > 0
         ? `${count} ${LAUNCH_REGION} farmers' ${count === 1 ? "market" : "markets"} open on ${day}, with hours, addresses and the ${stalls.toLocaleString("en-CA")} ${stalls === 1 ? "vendor" : "vendors"} working that day.`
@@ -92,12 +93,12 @@ export default async function MarketDayPage({
         data={breadcrumbJsonLd([
           MARKETS_CRUMB,
           DAY_CRUMB,
-          { name: `${name} markets`, path: `/markets/day/${day}` },
+          { name: copyText(siteCopy["/markets/day/[day]"].crumb, { day: name }), path: `/markets/day/${day}` },
         ])}
       />
       <JsonLd
         data={itemListJsonLd({
-          name: `${LAUNCH_CITY} farmers' markets open on ${name}`,
+          name: copyText(siteCopy["/markets/day/[day]"].listName, { day: name }),
           path: `/markets/day/${day}`,
           items: rows.map((row) => ({
             name: row.market.name,
@@ -107,7 +108,7 @@ export default async function MarketDayPage({
       />
       <BackButton href="/markets/day" />
       <h1>
-        {LAUNCH_CITY} farmers&apos; markets open on {name}
+        {copyText(siteCopy["/markets/day/[day]"].h1, { day: name })}
       </h1>
       {rows.length ? (
         <p className="type-lede mt-2 max-w-2xl text-muted-foreground">

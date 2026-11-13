@@ -1,4 +1,5 @@
 import { AddressLink } from "@/components/address-link";
+import { siteCopy } from "@/content/site-copy";
 import { ScheduleList } from "@/components/schedule-list";
 import { provinceTz } from "@/lib/constants";
 import { directionsHref } from "@/lib/listing-copy";
@@ -73,7 +74,7 @@ export function MarketSeasons({ places, now }: { places: SeasonPlace[]; now: Dat
                 rel="noreferrer"
                 className="mt-2 inline-flex text-sm font-medium text-primary hover:underline"
               >
-                Directions
+                {siteCopy["/markets/[slug]"].directions}
               </a>
             ) : null}
           </section>

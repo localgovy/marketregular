@@ -17,14 +17,14 @@ import { pageMeta } from "@/lib/seo";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { isUuid } from "@/lib/vendor-portal";
-import { SITE_NAME } from "@/lib/constants";
+import { copyText, siteCopy } from "@/content/site-copy";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = pageMeta({
-  title: "Order",
+  title: siteCopy["/vendors/[slug]/orders/[orderId]"].title,
   path: "/vendors",
-  description: `An order on ${SITE_NAME}.`,
+  description: copyText(siteCopy["/vendors/[slug]/orders/[orderId]"].description),
   index: false,
 });
 
@@ -107,18 +107,18 @@ export default async function StallOrderPage({
       <BackButton href={`/vendors/${slug}`} />
       <h1>
         {confirming
-          ? "Payment is confirming"
+          ? siteCopy["/vendors/[slug]/orders/[orderId]"].confirming
           : waiting
-            ? "Payment not finished"
+            ? siteCopy["/vendors/[slug]/orders/[orderId]"].notFinished
             : ready
-              ? "Ready for pickup"
+              ? siteCopy["/vendors/[slug]/orders/[orderId]"].ready
               : reserved
-                ? "Reservation"
-                : "Order placed"}
+                ? siteCopy["/vendors/[slug]/orders/[orderId]"].reservation
+                : siteCopy["/vendors/[slug]/orders/[orderId]"].placed}
       </h1>
       <p className="type-lede mt-2 text-muted-foreground">
         {confirming ? (
-          "Payment is still confirming. Refresh this page."
+          siteCopy["/vendors/[slug]/orders/[orderId]"].confirmingCaption
         ) : (
           <>
             {vendor?.name ? (
@@ -126,7 +126,7 @@ export default async function StallOrderPage({
                 {vendor.name}
               </Link>
             ) : (
-              "The stall"
+              siteCopy["/vendors/[slug]/orders/[orderId]"].theStall
             )}{" "}
             {waiting
               ? "has not been paid yet."
@@ -159,7 +159,7 @@ export default async function StallOrderPage({
       ) : null}
       {order.terms_snapshot ? (
         <div className="mt-8">
-          <h2>Stall terms</h2>
+          <h2>{siteCopy["/vendors/[slug]/orders/[orderId]"].stallTerms}</h2>
           <p className="mt-2 whitespace-pre-wrap text-base text-muted-foreground">{order.terms_snapshot}</p>
         </div>
       ) : null}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { siteCopy } from "@/content/site-copy";
 import { HoursRow } from "@/components/hours-row";
 import { ListingScore } from "@/components/listing-score";
 import { SaveButton } from "@/components/save-button";
@@ -19,7 +20,7 @@ export function EventsWeekList({ groups }: { groups: UpcomingGroup[] }) {
 
   return (
     <section aria-labelledby="next-two-days" className="mt-10">
-      <h2 id="next-two-days">Next two market days</h2>
+      <h2 id="next-two-days">{siteCopy["/events"].nextTwoDays}</h2>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {soon.map((group) => {
           const extra = Math.max(0, group.slots.length - PER_DAY);

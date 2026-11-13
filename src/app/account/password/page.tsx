@@ -4,15 +4,16 @@ import { SignOutForm } from "@/components/sign-out-form";
 import { Button } from "@/components/ui/button";
 import { getCurrentProfile } from "@/lib/data/catalog";
 import { mustSetPassword } from "@/lib/password-gate";
+import { siteCopy } from "@/content/site-copy";
 import { pageMeta } from "@/lib/seo";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = pageMeta({
-  title: "New password",
+  title: siteCopy["/account/password"].title,
   path: "/account/password",
-  description: "Set a new password for your account.",
+  description: siteCopy["/account/password"].description,
   index: false,
 });
 
@@ -24,17 +25,15 @@ export default async function AccountPasswordPage() {
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">
       {forced ? null : <BackButton href="/account" />}
-      <h1>{forced ? "Choose your password" : "New password"}</h1>
+      <h1>{forced ? siteCopy["/account/password"].choose : siteCopy["/account/password"].h1}</h1>
       <p className="type-lede mt-2 text-muted-foreground">
-        {forced
-          ? "Enter the password from the email, then choose the one you will use from now on. At least 8 characters. If that email did not arrive, sign out and use Forgot password on the sign-in page."
-          : "Choose a password you have not used here before. At least 8 characters."}
+        {forced ? siteCopy["/account/password"].ledeForced : siteCopy["/account/password"].lede}
       </p>
       <PasswordForm forced={forced} />
       {forced ? (
         <SignOutForm className="mt-6">
           <Button type="submit" variant="outline">
-            Sign out
+            {siteCopy["/account/password"].signOut}
           </Button>
         </SignOutForm>
       ) : null}

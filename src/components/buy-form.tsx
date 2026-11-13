@@ -5,6 +5,7 @@ import { placeStallOrder } from "@/app/actions/selling";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { siteCopy } from "@/content/site-copy";
 import { formatPrice } from "@/lib/format";
 import { checkoutTotalCents, MAX_QUANTITY, serviceFeeCents } from "@/lib/selling";
 
@@ -116,7 +117,7 @@ export function BuyForm({
       </div>
       {terms ? (
         <div>
-          <h2>Stall terms</h2>
+          <h2>{siteCopy["/vendors/[slug]/buy/[itemId]"].stallTerms}</h2>
           <p className="mt-2 whitespace-pre-wrap text-base text-muted-foreground">{terms}</p>
         </div>
       ) : null}

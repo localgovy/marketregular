@@ -1,9 +1,9 @@
-import { LAUNCH_CITY } from "@/lib/launch";
+import { copyText, siteCopy } from "@/content/site-copy";
 
 export default function MarketsLoading() {
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6">
-      <h1 className="sr-only">{LAUNCH_CITY} farmers&apos; markets</h1>
+      <h1 className="sr-only">{copyText(siteCopy["/markets"].h1)}</h1>
       <div className="flex flex-wrap gap-2">
         <div className="h-8 w-14 bg-muted" />
         <div className="h-8 w-24 bg-muted" />

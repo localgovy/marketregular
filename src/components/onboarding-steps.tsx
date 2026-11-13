@@ -11,6 +11,7 @@ import { SignOutForm } from "@/components/sign-out-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { normalizeUsername, usernameError } from "@/lib/username";
 import { cn } from "@/lib/utils";
 
@@ -120,11 +121,17 @@ export function OnboardingSteps({
   }
 
   const title =
-    step === 1 ? "Your handle" : step === 2 ? "Three markets" : "How this works";
+    step === 1
+      ? siteCopy["/onboarding"].handle
+      : step === 2
+        ? siteCopy["/onboarding"].threeMarkets
+        : siteCopy["/onboarding"].how;
 
   return (
     <div className="mx-auto w-full max-w-lg px-4 py-10">
-      <p className="type-kicker text-muted-foreground">Step {step} of 3</p>
+      <p className="type-kicker text-muted-foreground">
+        {copyText(siteCopy["/onboarding"].step, { step })}
+      </p>
       <h1>{title}</h1>
       {displayName ? (
         <p className="type-lede mt-2 text-muted-foreground">

@@ -29,7 +29,7 @@ import { SavedRail } from "@/components/saved-rail";
 import { SearchField } from "@/components/search-field";
 import { VerifiedName } from "@/components/verified-stamp";
 import { VendorTodayItem, VendorWeekItem } from "@/components/home-vendors-item";
-import { SEARCH_LABEL } from "@/lib/constants";
+import { SEARCH_LABEL } from "@/content/site-copy";
 import { marketsHref, tagLabel } from "@/lib/find-paths";
 import { LAUNCH_CITY } from "@/lib/launch";
 import { formatCensus } from "@/components/stall-emblem";

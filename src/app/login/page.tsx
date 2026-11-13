@@ -13,6 +13,7 @@ import {
 } from "@/lib/onboarding";
 import { cookieLooksLikeSupabaseAuth } from "@/lib/supabase/auth-cookie";
 import { createAuthedServerClient } from "@/lib/supabase/server";
+import { siteCopy } from "@/content/site-copy";
 import { pageMeta } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -20,9 +21,9 @@ import type { Metadata } from "next";
 export const maxDuration = 30;
 
 export const metadata: Metadata = pageMeta({
-  title: "Sign in",
+  title: siteCopy["/login"].title,
   path: "/login",
-  description: "Sign in to save markets across browsers and post reviews.",
+  description: siteCopy["/login"].description,
   index: false,
 });
 
@@ -53,11 +54,9 @@ export default async function LoginPage({
   return (
     <div className="mx-auto w-full max-w-md px-4 py-10">
       <BackButton href="/" />
-      <h1>Sign in</h1>
+      <h1>{siteCopy["/login"].h1}</h1>
       <p className="type-lede mt-2 mb-8 text-muted-foreground">
-        {isStallCheckoutPath(next)
-          ? "The order and the receipt stay with this account."
-          : "Saved markets and reviews follow this account. Browsing stays open."}
+        {isStallCheckoutPath(next) ? siteCopy["/login"].ledeCheckout : siteCopy["/login"].lede}
       </p>
       <LoginForm
         next={next}

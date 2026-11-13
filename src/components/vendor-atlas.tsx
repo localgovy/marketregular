@@ -34,6 +34,7 @@ import { ProductSaveButton, SaveButton } from "@/components/save-button";
 import { directPublicImageSrc, StallEmblem } from "@/components/stall-emblem";
 import { TagList } from "@/components/tag-list";
 import { VerifiedName } from "@/components/verified-stamp";
+import { copyText, siteCopy } from "@/content/site-copy";
 import { formatPrice } from "@/lib/format";
 import { tagLabel } from "@/lib/find-paths";
 import { formatRatingAvg, formatReviewCountShort, listingScore } from "@/lib/listing-score";
@@ -46,6 +47,8 @@ import type {
   VendorAtlasMarket,
   VendorAtlasMenuItem,
 } from "@/lib/vendor-atlas-data";
+
+const stallCopy = siteCopy["/vendors/[slug]"];
 
 /**
  * Cohesive square category thumbnail (`ProductThumb`).
@@ -380,8 +383,8 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                 <div className="min-w-0 flex-1">
                   <p className="type-kicker text-primary-foreground/90">
                     {vendor.primaryCategoryLabel}
-                    {vendor.secondaryCategoryLabel ? ` · ${vendor.secondaryCategoryLabel}` : ""} ·
-                    Toronto market stall
+                    {vendor.secondaryCategoryLabel ? ` · ${vendor.secondaryCategoryLabel}` : ""} ·{" "}
+                    {stallCopy.stallLine}
                   </p>
                   <h1 className="mt-1 text-primary-foreground">
                     <VerifiedName slug={vendor.slug} name={vendor.name} />
@@ -449,7 +452,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
               <div className="rounded-lg bg-primary-foreground/12 px-4 py-2.5">
                 <p className="type-census text-2xl text-primary-foreground">{markets.length}</p>
                 <p className="text-sm text-primary-foreground/85">
-                  Market {markets.length === 1 ? "location" : "locations"}
+                  {markets.length === 1 ? stallCopy.marketLocation : stallCopy.marketLocations}
                 </p>
               </div>
             </div>
@@ -464,11 +467,11 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
               <div className="flex items-center gap-2">
                 <PlateMark className="size-4 text-primary" />
                 <p className="type-kicker font-medium text-foreground">
-                  Products &amp; markets
+                  {stallCopy.productsAndMarkets}
                 </p>
               </div>
               <span className="stall-chip-sm bg-stamp px-2.5 py-0.5 text-sm font-medium text-chalk">
-                {menus.length > 0 ? "Published menu" : vendor.primaryCategoryLabel}
+                {menus.length > 0 ? stallCopy.publishedMenu : vendor.primaryCategoryLabel}
               </span>
             </div>
 
@@ -492,7 +495,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                         className="mt-0.5"
                       />
                       <div className="min-w-0">
-                        <p className="type-kicker text-primary">Selected market</p>
+                        <p className="type-kicker text-primary">{stallCopy.selectedMarket}</p>
                         <Link
                           href={`/markets/${activeMarket.slug}`}
                           className="mt-0.5 block text-base font-medium text-foreground hover:text-primary hover:underline"
@@ -545,8 +548,8 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
               <>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
                   <div>
-                    <p className="type-kicker text-primary">Menu &amp; products</p>
-                    <h2 className="mt-0.5">What {vendor.name} sells</h2>
+                    <p className="type-kicker text-primary">{stallCopy.menuKicker}</p>
+                    <h2 className="mt-0.5">{copyText(stallCopy.sells, { stall: vendor.name })}</h2>
                   </div>
                   <div className="flex items-center gap-3">
                     {hasActiveFilter ? (
@@ -555,7 +558,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                         onClick={resetAllFilters}
                         className="cursor-pointer text-sm font-medium text-primary hover:underline"
                       >
-                        Reset filters
+                        {stallCopy.resetFilters}
                       </button>
                     ) : null}
                     <span className="type-nums text-sm text-muted-foreground">
@@ -842,14 +845,14 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
               <div>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
                   <div>
-                    <p className="type-kicker text-primary">Products &amp; specialties</p>
-                    <h2 className="mt-0.5">What {vendor.name} brings to market</h2>
+                    <p className="type-kicker text-primary">{stallCopy.specialtiesKicker}</p>
+                    <h2 className="mt-0.5">{copyText(stallCopy.brings, { stall: vendor.name })}</h2>
                   </div>
                   <Link
                     href={`/products?aisle=${encodeURIComponent(vendor.primaryCategoryId)}`}
                     className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                   >
-                    <span>Browse {vendor.primaryCategoryLabel.toLowerCase()}</span>
+                    <span>{copyText(stallCopy.browseCategory, { category: vendor.primaryCategoryLabel.toLowerCase() })}</span>
                     <CaretRightMark className="size-3.5" />
                   </Link>
                 </div>
@@ -885,7 +888,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                             href={guide.href}
                             className="text-sm font-medium text-primary hover:underline"
                           >
-                            Browse →
+                            {stallCopy.browse}
                           </Link>
                         </div>
 
@@ -922,17 +925,16 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
               <div className="flex items-center justify-between gap-2 border-b border-black/15 bg-primary px-5 py-3.5 text-primary-foreground">
                 <div className="flex items-center gap-2">
                   <SlatsMark className="size-4 text-primary-foreground" />
-                  <h2 className="text-xl text-primary-foreground">Where they sell</h2>
+                  <h2 className="text-xl text-primary-foreground">{stallCopy.where}</h2>
                 </div>
                 <span className="stall-chip-sm type-nums bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
-                  {markets.length} {markets.length === 1 ? "market" : "markets"}
+                  {markets.length} {markets.length === 1 ? stallCopy.market : stallCopy.markets}
                 </span>
               </div>
 
               <div className="p-5">
                 <p className="text-sm text-muted-foreground">
-                  Select a market to inspect {vendor.name}&apos;s hours and fellow stalls selling
-                  alongside them.
+                  {copyText(stallCopy.selectMarket, { stall: vendor.name })}
                 </p>
 
                 {/* Market Selector Pills (up to 4 quick pills + full selector if more) */}
@@ -1115,7 +1117,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
           ) : null}
 
           <div className="bg-card p-5 text-foreground ring-1 ring-board">
-            <h3>Contact &amp; direct links</h3>
+            <h3>{stallCopy.contact}</h3>
             <ListingContact
               phone={vendor.contact.phone}
               email={vendor.contact.email}
@@ -1128,7 +1130,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
             {vendor.tags.length > 0 ? (
               <div className="mt-4 border-t border-dashed border-border pt-4">
                 <p className="mb-2 text-sm font-medium text-muted-foreground">
-                  Stall specialties &amp; tags
+                  {stallCopy.specialties}
                 </p>
                 <TagList tags={vendor.tags} />
               </div>
@@ -1146,16 +1148,16 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
         {similarVendors.length > 0 ? (
           <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
             <div>
-              <p className="type-kicker text-primary">More stalls to explore</p>
+              <p className="type-kicker text-primary">{stallCopy.moreStalls}</p>
               <h2 className="mt-0.5">
-                Other stalls known for {vendor.primaryCategoryLabel.toLowerCase()}
+                {copyText(stallCopy.otherStalls, { category: vendor.primaryCategoryLabel.toLowerCase() })}
               </h2>
             </div>
             <Link
               href={`/products?aisle=${encodeURIComponent(vendor.primaryCategoryId)}`}
               className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
             >
-              <span>Browse all {vendor.primaryCategoryLabel.toLowerCase()} stalls</span>
+              <span>{copyText(stallCopy.browseAllStalls, { category: vendor.primaryCategoryLabel.toLowerCase() })}</span>
               <CaretRightMark className="size-3.5" />
             </Link>
           </div>
@@ -1227,7 +1229,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                     </Link>
                     <div className="flex items-baseline justify-between gap-2">
                       <div>
-                        <p className="type-kicker font-medium text-foreground">Menu highlights</p>
+                        <p className="type-kicker font-medium text-foreground">{stallCopy.menuHighlights}</p>
                         <p className="text-sm text-muted-foreground">{peer.badge}</p>
                       </div>
                       <Link
@@ -1289,16 +1291,16 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
         >
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div>
-              <p className="type-kicker text-primary">Product categories &amp; guides</p>
+              <p className="type-kicker text-primary">{stallCopy.guidesKicker}</p>
               <h3 className="mt-0.5">
-                Compare Toronto market stalls by category
+                {stallCopy.compareByCategory}
               </h3>
             </div>
             <Link
               href="/products"
               className="inline-flex items-center gap-1.5 rounded bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              <span>All product categories</span>
+              <span>{stallCopy.allCategories}</span>
               <CaretRightMark className="size-3.5" />
             </Link>
           </div>
@@ -1322,11 +1324,13 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                         </Link>
                         {guide.itemCountOnMenu > 0 ? (
                           <p className="type-nums text-sm text-muted-foreground">
-                            {guide.itemCountOnMenu}{" "}
-                            {guide.itemCountOnMenu === 1 ? "item" : "items"} on this menu
+                            {copyText(
+                              guide.itemCountOnMenu === 1 ? stallCopy.itemOnMenu : stallCopy.itemsOnMenu,
+                              { count: guide.itemCountOnMenu },
+                            )}
                           </p>
                         ) : (
-                          <p className="text-sm text-muted-foreground">Toronto market guide</p>
+                          <p className="text-sm text-muted-foreground">{stallCopy.marketGuide}</p>
                         )}
                       </div>
                     </div>
@@ -1334,7 +1338,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                       href={guide.href}
                       className="text-sm font-medium text-primary hover:underline"
                     >
-                      Browse →
+                      {stallCopy.browse}
                     </Link>
                   </div>
 
@@ -1363,9 +1367,9 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
 
       {/* Shopper Notes & Reviews */}
       <section className="mt-8 bg-card p-5 ring-1 ring-board sm:p-6">
-        <h2>Shopper notes &amp; reviews</h2>
+        <h2>{stallCopy.notes}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Notes from regulars who stopped by {vendor.name}.
+          {copyText(stallCopy.notesCaption, { stall: vendor.name })}
         </p>
         <ListingReviewGate
           hasFeed={data.feed.length > 0}
