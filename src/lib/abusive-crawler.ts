@@ -21,10 +21,10 @@ export function hasEmptyUserAgent(userAgent: string | null) {
 }
 
 /**
- * Detect HTTP clients on dynamic product search that impersonate a desktop or
- * mobile browser User-Agent while sending raw non-browser headers (`Accept: *\/*`
- * or missing, with no Fetch Metadata `Sec-Fetch-Mode`). Declared search and AI
- * assistant crawlers and plain non-spoofed HTTP clients are not matched.
+ * Detect HTTP clients on product search and listing pages that impersonate a
+ * desktop or mobile browser User-Agent while sending raw non-browser headers
+ * (`Accept: *\/*` or missing, with no Fetch Metadata `Sec-Fetch-Mode`). Declared
+ * search and AI assistant crawlers and plain non-spoofed HTTP clients are not matched.
  */
 export function isSpoofedBrowserSearch(
   headers: Pick<Headers, "get">,
