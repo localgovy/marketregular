@@ -1,3 +1,5 @@
+import { applyDataApiGate } from "@/lib/supabase/data-api-gate";
+
 const RETRY_STATUSES = new Set([502, 503, 504, 520, 522, 524]);
 const ATTEMPTS = 3;
 /** Database statements already stop at 8 seconds. This only bounds a stalled socket. */
@@ -11,6 +13,15 @@ function signalForAttempt(caller: AbortSignal | undefined, timeoutMs: number) {
   const timeout = AbortSignal.timeout(timeoutMs);
   if (!caller) return timeout;
   return AbortSignal.any([caller, timeout]);
+}
+
+function headersForAttempt(input: RequestInfo | URL, init?: RequestInit) {
+  const headers = new Headers(input instanceof Request ? input.headers : undefined);
+  if (init?.headers) {
+    new Headers(init.headers).forEach((value, key) => headers.set(key, value));
+  }
+  applyDataApiGate(headers);
+  return headers;
 }
 
 function requestMethod(input: RequestInfo | URL, init?: RequestInit) {
@@ -49,7 +60,11 @@ export function fetchWithGatewayRetry(
       const request = input instanceof Request ? input.clone() : input;
       const signal = signalForAttempt(caller, attemptTimeoutMs);
       try {
-        response = await fetchImpl(request, { ...init, signal });
+        response = await fetchImpl(request, {
+          ...init,
+          headers: headersForAttempt(input, init),
+          signal,
+        });
       } catch (error) {
         if (caller?.aborted || !retry || attempt === ATTEMPTS - 1) throw error;
         await wait(200 * 2 ** attempt);

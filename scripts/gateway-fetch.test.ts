@@ -93,6 +93,25 @@ test("a caller abort is not tried again", async () => {
   assert.equal(calls, 1);
 });
 
+test("the server gate is attached when it is set", async () => {
+  const previous = process.env.MARKETREGULAR_DATA_API_GATE;
+  const gate = "b".repeat(64);
+  process.env.MARKETREGULAR_DATA_API_GATE = gate;
+  let seen = "";
+  const fetchImpl: typeof fetch = async (_input, init) => {
+    seen = new Headers(init?.headers).get("x-marketregular-gate") ?? "";
+    return jsonResponse(200);
+  };
+  try {
+    const response = await fetchWithGatewayRetry(fetchImpl, noWait)("https://example.test/vendors");
+    assert.equal(response.status, 200);
+    assert.equal(seen, gate);
+  } finally {
+    if (previous === undefined) delete process.env.MARKETREGULAR_DATA_API_GATE;
+    else process.env.MARKETREGULAR_DATA_API_GATE = previous;
+  }
+});
+
 test("a read stops after the last gateway failure", async () => {
   let calls = 0;
   const fetchImpl: typeof fetch = async () => {
