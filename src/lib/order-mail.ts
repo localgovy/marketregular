@@ -3,7 +3,7 @@ import "server-only";
 import { SITE_NAME, SITE_URL } from "@/lib/constants";
 import { formatPrice } from "@/lib/format";
 import { sanitizeMailHeader } from "@/lib/mail-header";
-import { fulfillmentLabel } from "@/lib/selling";
+import { formatTorontoStamp, fulfillmentLabel } from "@/lib/selling";
 import { Resend } from "resend";
 
 function escapeHtml(value: string) {
@@ -14,7 +14,7 @@ function escapeHtml(value: string) {
     .replaceAll('"', "&quot;");
 }
 
-export type OrderMailKind = "paid" | "reserved" | "ready" | "cancelled";
+export type OrderMailKind = "paid" | "reserved" | "ready" | "cancelled" | "pickup";
 
 export type OrderMailInput = {
   kind: OrderMailKind;
@@ -28,6 +28,7 @@ export type OrderMailInput = {
     buyer_email: string | null;
     pickup_name?: string | null;
     market_name?: string | null;
+    pickup_starts_at?: string | null;
     status?: string;
   };
   vendorName: string;
@@ -44,19 +45,29 @@ export function orderLetter(input: OrderMailInput, audience: "shopper" | "stall"
   const service = formatPrice(input.order.service_fee_cents);
   const how = fulfillmentLabel(input.order.fulfillment);
   const url = orderUrl(input.vendorSlug, input.order.id);
+  const when = input.order.pickup_starts_at ? formatTorontoStamp(input.order.pickup_starts_at) : null;
+  const priceLine = service
+    ? `${input.order.quantity} · ${price} plus ${service} service fee · ${how}`
+    : `${input.order.quantity} · ${price} · ${how}`;
   const lines =
-    input.kind === "ready"
+    input.kind === "pickup"
+      ? [
+          when
+            ? `Pickup for ${input.order.item_name} at ${input.vendorName} is ${when}.`
+            : `Pickup for ${input.order.item_name} at ${input.vendorName} has a new time.`,
+          priceLine,
+          url,
+        ]
+      : input.kind === "ready"
       ? input.order.status === "reserved"
         ? [
             `${input.order.item_name} is ready for pickup at ${input.vendorName}. Pay at the stall and show ID.`,
-            `${input.order.quantity} · ${price} · ${how}`,
+            priceLine,
             url,
           ]
         : [
             `${input.order.item_name} is ready for pickup at ${input.vendorName}.`,
-            service
-              ? `${input.order.quantity} · ${price} plus ${service} service fee · ${how}`
-              : `${input.order.quantity} · ${price} · ${how}`,
+            priceLine,
             url,
           ]
       : input.kind === "cancelled"
@@ -64,9 +75,7 @@ export function orderLetter(input: OrderMailInput, audience: "shopper" | "stall"
             audience === "stall"
               ? `A shopper cancelled ${input.order.item_name}.`
               : `Your order at ${input.vendorName} is cancelled.`,
-            service
-              ? `${input.order.quantity} · ${price} plus ${service} service fee · ${how}`
-              : `${input.order.quantity} · ${price} · ${how}`,
+            priceLine,
             url,
           ]
       : input.kind === "reserved"
@@ -74,27 +83,33 @@ export function orderLetter(input: OrderMailInput, audience: "shopper" | "stall"
             audience === "stall"
               ? `A shopper reserved ${input.order.item_name}. They pay at the stall and show ID.`
               : `Your reservation at ${input.vendorName} is in. Pay at the stall and show ID. There is no card charge.`,
-            `${input.order.quantity} · ${price} · ${how}`,
+            priceLine,
             url,
           ]
         : [
             audience === "stall"
               ? `A shopper paid for ${input.order.item_name}.`
               : `Your order at ${input.vendorName} is paid.`,
-            service
-              ? `${input.order.quantity} · ${price} plus ${service} service fee · ${how}`
-              : `${input.order.quantity} · ${price} · ${how}`,
+            priceLine,
             url,
           ];
   const subject =
-    input.kind === "ready"
+    input.kind === "pickup"
+      ? `Pickup time for ${input.order.item_name}`
+      : input.kind === "ready"
       ? `${input.order.item_name} is ready for pickup`
       : input.kind === "cancelled"
         ? `Cancelled order for ${input.order.item_name}`
         : input.kind === "reserved"
           ? `Reservation for ${input.order.item_name}`
           : `Order for ${input.order.item_name}`;
-  const who = [input.order.pickup_name?.trim(), input.order.market_name?.trim()].filter(Boolean).join(" · ");
+  const who = [
+    input.order.pickup_name?.trim(),
+    input.order.market_name?.trim(),
+    input.kind === "pickup" ? null : when,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const body = who ? [lines[0], who, ...lines.slice(1)] : lines;
   const text = body.join("\n\n");
   const html = `<!doctype html>
@@ -136,7 +151,7 @@ async function deliver(to: string, letter: { subject: string; text: string; html
 export async function sendOrderMail(input: OrderMailInput) {
   const shopper = input.order.buyer_email;
   if (shopper) await deliver(shopper, orderLetter(input, "shopper"));
-  if (input.kind !== "ready" && input.stallEmail) {
+  if (input.kind !== "ready" && input.kind !== "pickup" && input.stallEmail) {
     await deliver(input.stallEmail, orderLetter(input, "stall"));
   }
 }

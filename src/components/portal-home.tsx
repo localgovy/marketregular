@@ -188,6 +188,7 @@ export async function PortalHome({
               <li key={listing.id}>
                 <Link
                   href={stall ? `/vendor/${listing.id}` : `/market/${listing.id}`}
+                  prefetch={stall ? false : undefined}
                   className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 px-3 py-3 hover:bg-secondary"
                 >
                   <span className="min-w-0 text-base font-medium">{listing.name}</span>

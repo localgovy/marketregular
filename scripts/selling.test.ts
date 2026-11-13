@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import Stripe from "stripe";
 import { safePath } from "../src/lib/auth-redirect.ts";
 import { orderLetter } from "../src/lib/order-mail.ts";
 import { isStallCheckoutPath, onboardingExemptPath } from "../src/lib/onboarding.ts";
 import { reservesAtStall } from "../src/lib/product-hits.ts";
 import { checkoutSiteOrigin, originFromHost } from "../src/lib/site-host.ts";
+import { readStripeWebhook, thinEventSyncsAccount } from "../src/lib/stripe.ts";
 import {
+  formatTorontoStamp,
   applicationFeeCents,
   checkoutAmountMatches,
   checkoutTotalCents,
@@ -505,4 +508,85 @@ test("checkout returns use the public site, not the request host", () => {
     checkoutSiteOrigin(site),
     originFromHost("preview.marketregular.com", "https", site),
   );
+});
+
+test("a thin capability notice names the stall account after the signature matches", () => {
+  assert.equal(
+    thinEventSyncsAccount("v2.core.account[configuration.merchant].capability_status_updated"),
+    true,
+  );
+  assert.equal(thinEventSyncsAccount("checkout.session.completed"), false);
+  const secret = "whsec_test_secret";
+  const previous = process.env.STRIPE_WEBHOOK_SECRET;
+  const previousConnect = process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
+  process.env.STRIPE_WEBHOOK_SECRET = secret;
+  process.env.STRIPE_CONNECT_WEBHOOK_SECRET = "";
+  try {
+    const stripe = new Stripe("sk_test_123");
+    const payload = JSON.stringify({
+      id: "evt_thin",
+      object: "v2.core.event",
+      type: "v2.core.account[configuration.merchant].capability_status_updated",
+      livemode: false,
+      related_object: { id: "acct_stall", type: "v2.core.account" },
+    });
+    const signature = stripe.webhooks.generateTestHeaderString({ payload, secret });
+    const delivery = readStripeWebhook(stripe, payload, signature);
+    assert.equal(delivery?.kind, "thin");
+    if (delivery?.kind !== "thin") return;
+    assert.equal(delivery.accountId, "acct_stall");
+    assert.equal(delivery.livemode, false);
+    assert.throws(() => readStripeWebhook(stripe, payload, "t=1,v1=dead"));
+    const stamp = formatTorontoStamp("2026-11-18T16:00:00.000Z");
+    assert.ok(stamp);
+    const paid = orderLetter(
+      {
+        kind: "paid",
+        order: {
+          id: "11111111-1111-4111-8111-111111111111",
+          item_name: "Rye",
+          quantity: 1,
+          charge_cents: 800,
+          service_fee_cents: 50,
+          fulfillment: "pickup",
+          buyer_email: "buyer@example.com",
+          pickup_name: "Ada",
+          market_name: "YUM! Market",
+          pickup_starts_at: "2026-11-18T16:00:00.000Z",
+        },
+        vendorName: "River Fruit",
+        vendorSlug: "river-fruit",
+        stallEmail: null,
+      },
+      "shopper",
+    );
+    assert.match(paid.text, new RegExp(stamp.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+    assert.match(paid.text, /Ada/);
+    const moved = orderLetter(
+      {
+        kind: "pickup",
+        order: {
+          id: "11111111-1111-4111-8111-111111111111",
+          item_name: "Rye",
+          quantity: 1,
+          charge_cents: 800,
+          service_fee_cents: 50,
+          fulfillment: "pickup",
+          buyer_email: "buyer@example.com",
+          pickup_starts_at: "2026-11-18T16:00:00.000Z",
+        },
+        vendorName: "River Fruit",
+        vendorSlug: "river-fruit",
+        stallEmail: "stall@example.com",
+      },
+      "shopper",
+    );
+    assert.equal(moved.subject, "Pickup time for Rye");
+    assert.match(moved.text, /Pickup for Rye at River Fruit is/);
+  } finally {
+    if (previous === undefined) delete process.env.STRIPE_WEBHOOK_SECRET;
+    else process.env.STRIPE_WEBHOOK_SECRET = previous;
+    if (previousConnect === undefined) delete process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
+    else process.env.STRIPE_CONNECT_WEBHOOK_SECRET = previousConnect;
+  }
 });

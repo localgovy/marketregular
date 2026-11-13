@@ -36,7 +36,7 @@ import type { VendorTodayRow, VendorWeekPick } from "@/lib/vendor-week";
 import type { Market, PortalApplication, Profile, StallRef, Vendor } from "@/types/database";
 import type { AccountPost } from "@/lib/data/account";
 import type { Saves } from "@/lib/saves";
-import { fulfillmentLabel, orderStatusLabel } from "@/lib/selling";
+import { formatTorontoStamp, fulfillmentLabel, orderStatusLabel } from "@/lib/selling";
 import { formatPrice } from "@/lib/format";
 
 function marketFromPost(markets: AccountPost["markets"]) {
@@ -117,6 +117,7 @@ export function AccountHome({
     fulfillment: string;
     status: string;
     readyAt: string | null;
+    pickupStartsAt: string | null;
     vendorName: string;
     vendorSlug: string;
   }>;
@@ -170,7 +171,9 @@ export function AccountHome({
             <h2>{siteCopy["/account"].orders}</h2>
             {orders.length ? (
               <ul className="mt-3 divide-y divide-border">
-                {orders.map((order) => (
+                {orders.map((order) => {
+                  const pickupStamp = order.pickupStartsAt ? formatTorontoStamp(order.pickupStartsAt) : null;
+                  return (
                   <li key={order.id} className="grid gap-1 py-3">
                     <p className="text-base font-medium">
                       {order.vendorSlug ? (
@@ -192,11 +195,15 @@ export function AccountHome({
                     </p>
                     <p className="type-nums text-sm text-muted-foreground">
                       {order.quantity} · {formatPrice(order.chargeCents)}
-                      {order.serviceFeeCents > 0 ? ` plus ${formatPrice(order.serviceFeeCents)} service fee` : ""} ·{" "}
-                      {fulfillmentLabel(order.fulfillment)} · {orderStatusLabel(order.status, order.readyAt)}
+                      {order.serviceFeeCents > 0
+                        ? ` plus ${formatPrice(order.serviceFeeCents)} service fee · ${formatPrice(order.chargeCents + order.serviceFeeCents)}`
+                        : ""}{" "}
+                      · {fulfillmentLabel(order.fulfillment)}
+                      {pickupStamp ? ` · ${pickupStamp}` : ""} · {orderStatusLabel(order.status, order.readyAt)}
                     </p>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">No orders yet.</p>
@@ -486,7 +493,7 @@ export function AccountHome({
                       className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-3 border-b border-border px-3 py-2.5 last:border-b-0"
                     >
                       <span className="min-w-0 font-medium">{stall.name}</span>
-                      <Link href={`/vendor/${stall.id}`} className="shrink-0 text-sm font-medium hover:underline">
+                      <Link href={`/vendor/${stall.id}`} prefetch={false} className="shrink-0 text-sm font-medium hover:underline">
                         Edit stall
                       </Link>
                     </li>

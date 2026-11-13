@@ -59,14 +59,49 @@ export function stripeCheckoutRedirect(url: string) {
   return null;
 }
 
-export function constructWebhookEvent(stripe: Stripe, body: string, signature: string) {
+export type StripeWebhookDelivery =
+  | { kind: "snapshot"; event: Stripe.Event }
+  | { kind: "thin"; livemode: boolean; type: string; accountId: string | null };
+
+/** Capability changes on an Accounts v2 stall arrive as thin events on the platform endpoint. */
+export function thinEventSyncsAccount(type: string) {
+  return (
+    type === "v2.core.account[configuration.merchant].capability_status_updated" ||
+    type === "v2.core.account[configuration.merchant].updated" ||
+    type === "v2.core.account.updated" ||
+    type === "v2.core.account.closed"
+  );
+}
+
+function thinDelivery(body: string): StripeWebhookDelivery {
+  const parsed = JSON.parse(body) as {
+    type?: unknown;
+    livemode?: unknown;
+    related_object?: { id?: unknown };
+  };
+  return {
+    kind: "thin",
+    livemode: parsed.livemode === true,
+    type: typeof parsed.type === "string" ? parsed.type : "",
+    accountId: typeof parsed.related_object?.id === "string" ? parsed.related_object.id : null,
+  };
+}
+
+export function readStripeWebhook(
+  stripe: Stripe,
+  body: string,
+  signature: string,
+): StripeWebhookDelivery | null {
   const secrets = stripeWebhookSecrets();
   if (!secrets.length) return null;
   let lastError: unknown;
   for (const secret of secrets) {
     try {
-      return stripe.webhooks.constructEvent(body, signature, secret);
+      return { kind: "snapshot", event: stripe.webhooks.constructEvent(body, signature, secret) };
     } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      // Signature already matched. Snapshot parsing rejects a v2 thin notification.
+      if (message.includes("thin event")) return thinDelivery(body);
       lastError = error;
     }
   }

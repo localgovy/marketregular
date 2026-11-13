@@ -10,7 +10,13 @@ import {
   recordStallCheckout,
   syncAccountEvent,
 } from "@/lib/stall-payments";
-import { constructWebhookEvent, getStripe, stripeEventModeMatches, stripeWebhookSecrets } from "@/lib/stripe";
+import {
+  getStripe,
+  readStripeWebhook,
+  stripeEventModeMatches,
+  stripeWebhookSecrets,
+  thinEventSyncsAccount,
+} from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +28,26 @@ export async function POST(request: Request) {
   const signature = request.headers.get("stripe-signature");
   if (!signature) return NextResponse.json({ error: "Missing signature." }, { status: 400 });
   const body = await request.text();
-  let event: Stripe.Event;
+  let delivery;
   try {
-    const constructed = constructWebhookEvent(stripe, body, signature);
-    if (!constructed) return NextResponse.json({ error: "Not configured." }, { status: 500 });
-    event = constructed;
+    delivery = readStripeWebhook(stripe, body, signature);
+    if (!delivery) return NextResponse.json({ error: "Not configured." }, { status: 500 });
   } catch {
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
+  if (delivery.kind === "thin") {
+    if (!stripeEventModeMatches(delivery.livemode)) return NextResponse.json({ received: true });
+    if (delivery.accountId && thinEventSyncsAccount(delivery.type)) {
+      try {
+        await syncAccountEvent(delivery.accountId);
+      } catch (err) {
+        console.error("stripe webhook", delivery.type, err instanceof Error ? err.message : "failed");
+        return NextResponse.json({ error: "Could not record that event." }, { status: 500 });
+      }
+    }
+    return NextResponse.json({ received: true });
+  }
+  const event = delivery.event;
   if (!stripeEventModeMatches(event.livemode)) {
     return NextResponse.json({ received: true });
   }

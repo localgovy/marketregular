@@ -41,6 +41,7 @@ export function ListingPortalCta({
         <p className="mt-4 text-base">
           <Link
             href={stall ? `/vendor/${listingId}` : `/market/${listingId}`}
+            prefetch={stall ? false : undefined}
             className="font-medium hover:underline"
           >
             {stall ? "Edit this stall" : "Edit this market"}

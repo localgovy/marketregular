@@ -927,15 +927,18 @@ export function VendorPortalEditor({
             {listing.card_payments_active ? " After that, a refund is in the payments panel." : ""}
           </p>
           <ul className="divide-y divide-border">
-            {listing.orders.map((order) => (
+            {listing.orders.map((order) => {
+              const pickupStamp = order.pickup_starts_at ? formatTorontoStamp(order.pickup_starts_at) : null;
+              return (
               <li key={order.id} className="grid gap-1 py-3">
                 <p className="text-base font-medium">{order.item_name}</p>
                 <p className="type-nums text-sm text-muted-foreground">
                   {order.quantity} · {formatPrice(order.charge_cents)}
                   {order.service_fee_cents > 0
-                    ? ` plus ${formatPrice(order.service_fee_cents)} service fee`
+                    ? ` plus ${formatPrice(order.service_fee_cents)} service fee · ${formatPrice(order.charge_cents + order.service_fee_cents)}`
                     : ""}{" "}
-                  · {fulfillmentLabel(order.fulfillment)} · {orderStatusLabel(order.status, order.ready_at)}
+                  · {fulfillmentLabel(order.fulfillment)}
+                  {pickupStamp ? ` · ${pickupStamp}` : ""} · {orderStatusLabel(order.status, order.ready_at)}
                 </p>
                 {order.status === "paid" || order.status === "reserved" ? (
                   <StallOrderControls
@@ -962,7 +965,8 @@ export function VendorPortalEditor({
                   </p>
                 ) : null}
               </li>
-            ))}
+              );
+            })}
           </ul>
           </>
         ) : listing.selling_approved ? (

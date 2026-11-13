@@ -1443,11 +1443,19 @@ export async function setOrderPickupStart(
   const next = futurePickupStart(raw, new Date(), order.pickup_starts_at);
   if (next.error || !next.starts) return { error: next.error ?? "That pickup time is not allowed." };
   const starts = next.starts;
+  if (order.pickup_starts_at && Date.parse(order.pickup_starts_at) === Date.parse(starts)) {
+    return { error: null };
+  }
   const { error } = await db
     .from("orders")
     .update({ pickup_starts_at: starts })
     .eq("id", order.id);
   if (error) return { error: "Could not save the pickup time." as const };
+  const fresh = await loadOrder(order.id);
+  if (fresh?.buyer_email) {
+    const context = await orderMailContext(fresh);
+    if (context) await sendOrderMail({ kind: "pickup", order: fresh, ...context });
+  }
   return { error: null };
 }
 
@@ -1502,12 +1510,15 @@ export async function cancelShopperOrder(orderId: string, buyerId: string) {
     return { error: "This order can no longer be cancelled here." as const };
   }
   if (current.status === "reserved") {
-    const { error } = await db
+    const { data: cancelled, error } = await db
       .from("orders")
       .update({ status: "cancelled" })
-    .eq("id", current.id)
-    .eq("status", "reserved");
-    if (error) return { error: "Could not cancel that reservation." as const };
+      .eq("id", current.id)
+      .eq("status", "reserved")
+      .is("ready_at", null)
+      .is("disputed_at", null)
+      .select("id");
+    if (error || !cancelled?.length) return { error: "This order can no longer be cancelled here." as const };
     await sendCancelledOrderMail(current);
     return { error: null };
   }

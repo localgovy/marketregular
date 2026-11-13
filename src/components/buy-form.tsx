@@ -114,6 +114,7 @@ export function BuyForm({
       <div className="grid gap-1.5">
         <Label htmlFor="note">Note for the stall</Label>
         <Input id="note" name="note" maxLength={500} />
+        <p className="text-sm text-muted-foreground">Optional.</p>
       </div>
       {terms ? (
         <div>

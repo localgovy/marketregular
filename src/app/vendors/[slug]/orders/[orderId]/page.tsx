@@ -141,7 +141,10 @@ export default async function StallOrderPage({
       <p className="mt-6 text-base font-medium">{order.item_name}</p>
       <p className="type-nums mt-1 text-base">
         {order.quantity} · {formatPrice(order.charge_cents)}
-        {serviceFee > 0 ? ` plus ${formatPrice(serviceFee)} service fee` : ""} · {fulfillmentLabel(order.fulfillment)}
+        {serviceFee > 0
+          ? ` plus ${formatPrice(serviceFee)} service fee · ${formatPrice(order.charge_cents + serviceFee)}`
+          : ""}{" "}
+        · {fulfillmentLabel(order.fulfillment)}
         {marketName ? ` · ${marketName}` : ""}
         {pickupStamp ? ` · ${pickupStamp}` : ""}
       </p>

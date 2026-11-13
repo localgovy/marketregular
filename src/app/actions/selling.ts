@@ -245,7 +245,7 @@ export async function loadBuyerOrders(userId: string) {
   const { data, error } = await db
     .from("orders")
     .select(
-      "id, item_name, quantity, charge_cents, service_fee_cents, fulfillment, status, paid_at, ready_at, vendor_id, vendors(name, slug)",
+      "id, item_name, quantity, charge_cents, service_fee_cents, fulfillment, status, paid_at, ready_at, pickup_starts_at, vendor_id, vendors(name, slug)",
     )
     .eq("buyer_id", userId)
     .in("status", ["paid", "partially_refunded", "refunded", "reserved", "cancelled"])
@@ -272,6 +272,7 @@ export async function loadBuyerOrders(userId: string) {
         fulfillment: String(row.fulfillment),
         status: String(row.status),
         readyAt: typeof row.ready_at === "string" ? row.ready_at : null,
+        pickupStartsAt: typeof row.pickup_starts_at === "string" ? row.pickup_starts_at : null,
         paidAt: typeof row.paid_at === "string" ? row.paid_at : null,
         vendorName: name,
         vendorSlug: slug,
