@@ -304,6 +304,8 @@ test("bulk extraction surfaces stay closed and bounded", () => {
   assert.match(proxySource, /exceedsSpoofedSearchBurst\(/);
   assert.match(proxySource, /hasEmptyUserAgent\(/);
   assert.match(proxySource, /isProductSearchRequest\(request\)/);
+  assert.match(proxySource, /isDirectoryRead\(request\)/);
+  assert.match(proxySource, /vendors\|markets\|find/);
   assert.match(searchLib, /isInjectionProbe\(/);
   assert.match(productsAction, /isInjectionProbe\(/);
   assert.match(proxySource, /isInjectionProbe\(/);

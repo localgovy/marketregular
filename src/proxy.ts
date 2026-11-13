@@ -88,8 +88,12 @@ function productHop(request: NextRequest) {
   return NextResponse.rewrite(url);
 }
 
+function isRead(request: NextRequest) {
+  return request.method === "GET" || request.method === "HEAD";
+}
+
 function isProductSearchRequest(request: NextRequest) {
-  if (request.method !== "GET" && request.method !== "HEAD") return false;
+  if (!isRead(request)) return false;
   const { pathname, searchParams } = request.nextUrl;
   if (pathname === "/products/search" || pathname.startsWith("/products/search/")) {
     return true;
@@ -101,6 +105,31 @@ function isProductSearchRequest(request: NextRequest) {
       searchParams.get("market")?.trim() ||
       searchParams.get("day")?.trim(),
   );
+}
+
+/** Listing pages that render the directory and contact from the database. */
+function isDirectoryRead(request: NextRequest) {
+  if (!isRead(request)) return false;
+  return /^\/(vendors|markets|find)(\/|$)/.test(request.nextUrl.pathname);
+}
+
+function automatedReadBlock(request: NextRequest, userAgent: string | null) {
+  if (hasEmptyUserAgent(userAgent)) {
+    return new NextResponse("Forbidden", {
+      status: 403,
+      headers: { "cache-control": "no-store" },
+    });
+  }
+  if (
+    isSpoofedBrowserSearch(request.headers) &&
+    exceedsSpoofedSearchBurst(requestIp(request))
+  ) {
+    return new NextResponse("Too Many Requests", {
+      status: 429,
+      headers: { "cache-control": "no-store", "retry-after": "60" },
+    });
+  }
+  return null;
 }
 
 const AUTH_CALLBACK_PARAMS = new Set(["code", "token_hash", "error_description"]);
@@ -184,22 +213,9 @@ export async function proxy(request: NextRequest) {
   }
   const product = productHop(request);
   if (product?.status === 308) return product;
-  if (isProductSearchRequest(request)) {
-    if (hasEmptyUserAgent(userAgent)) {
-      return new NextResponse("Forbidden", {
-        status: 403,
-        headers: { "cache-control": "no-store" },
-      });
-    }
-    if (
-      isSpoofedBrowserSearch(request.headers) &&
-      exceedsSpoofedSearchBurst(requestIp(request))
-    ) {
-      return new NextResponse("Too Many Requests", {
-        status: 429,
-        headers: { "cache-control": "no-store", "retry-after": "60" },
-      });
-    }
+  if (isProductSearchRequest(request) || isDirectoryRead(request)) {
+    const blocked = automatedReadBlock(request, userAgent);
+    if (blocked) return blocked;
   }
   const session = await updateSession(request);
   if (!product || session.headers.get("location")) return session;
