@@ -1271,44 +1271,61 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
             <div className="lg:col-span-5">
               <nav
                 aria-label={home.censusLabel}
-                className="grid grid-cols-3 divide-x divide-border bg-card ring-1 ring-board"
+                className="grid grid-cols-[repeat(3,minmax(0,1fr))] divide-x divide-border bg-card ring-1 ring-board"
               >
                 <Link
                   href="/markets#directory-vendors"
-                  className="flex flex-col justify-between bg-secondary/45 p-3.5 transition-colors hover:bg-secondary"
+                  className="flex min-w-0 flex-col justify-between bg-secondary/45 px-1.5 py-2.5 transition-colors hover:bg-secondary sm:p-3.5"
                 >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker font-medium text-primary">{home.priorityVendors}</span>
-                    <CrateMark className="size-4 shrink-0 text-primary" />
-                  </div>
-                  <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
-                    {formatCensus(data.census.vendors)}
+                  <span className="type-kicker block min-w-0 leading-snug font-medium hyphens-auto text-primary">
+                    {home.priorityVendors}
+                  </span>
+                  <span className="mt-1 flex items-end justify-between gap-0.5">
+                    <span className="type-census min-w-0 text-2xl leading-none text-board sm:text-3xl lg:text-4xl">
+                      {formatCensus(data.census.vendors)}
+                    </span>
+                    <CrateMark className="mb-0.5 size-3 shrink-0 text-primary sm:size-4" />
                   </span>
                   <span className="mt-1 text-sm font-medium text-primary">{home.vendors}</span>
                 </Link>
                 <Link
                   href="/products"
-                  className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
+                  className="flex min-w-0 flex-col justify-between px-1.5 py-2.5 transition-colors hover:bg-secondary/60 sm:p-3.5"
                 >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker text-muted-foreground">{home.products}</span>
-                    <TagMark className="size-4 shrink-0 text-stamp" />
-                  </div>
-                  <span className="type-census mt-1 text-3xl leading-none text-stamp sm:text-4xl">
-                    {formatCensus(data.census.menus)}
+                  <span className="type-kicker block min-w-0 leading-snug hyphens-auto text-muted-foreground">
+                    {home.products}
+                  </span>
+                  <span className="mt-1 flex items-end justify-between gap-0.5">
+                    <span className="type-census min-w-0 text-2xl leading-none text-stamp sm:text-3xl lg:text-4xl">
+                      {formatCensus(data.census.menus)}
+                    </span>
+                    <TagMark className="mb-0.5 size-3 shrink-0 text-stamp sm:size-4" />
                   </span>
                   <span className="mt-1 text-sm font-medium text-stamp">{home.menuItems}</span>
                 </Link>
                 <Link
                   href="/markets"
-                  className="flex flex-col justify-between p-3.5 transition-colors hover:bg-secondary/60"
+                  className="flex min-w-0 flex-col justify-between px-1.5 py-2.5 transition-colors hover:bg-secondary/60 sm:p-3.5"
                 >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker text-muted-foreground">{home.neighbourhoods}</span>
-                    <RulesMark className="size-4 shrink-0 text-board" />
-                  </div>
-                  <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
-                    {formatCensus(data.census.markets)}
+                  <span className="type-kicker block min-w-0 leading-snug text-muted-foreground">
+                    {home.neighbourhoods === "Neighbourhoods" ? (
+                      <>
+                        <span className="sm:hidden">
+                          Neighbour-
+                          <br />
+                          hoods
+                        </span>
+                        <span className="hidden sm:inline">{home.neighbourhoods}</span>
+                      </>
+                    ) : (
+                      home.neighbourhoods
+                    )}
+                  </span>
+                  <span className="mt-1 flex items-end justify-between gap-0.5">
+                    <span className="type-census min-w-0 text-2xl leading-none text-board sm:text-3xl lg:text-4xl">
+                      {formatCensus(data.census.markets)}
+                    </span>
+                    <RulesMark className="mb-0.5 size-3 shrink-0 text-board sm:size-4" />
                   </span>
                   <span className="mt-1 text-sm font-medium text-primary">{home.markets}</span>
                 </Link>
@@ -1556,10 +1573,10 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
         {/* Synchronized Deep-Dive Split: 6-Col Product Crate Explorer (with Stalls) + 6-Col Live Neighbourhood Atlas (with Stalls) */}
         <section
           aria-label="Craving Crate Explorer and Live Atlas"
-          className="mt-8 grid gap-8 lg:grid-cols-12 lg:items-start"
+          className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-12 lg:items-start"
         >
           {/* Left 6 Columns: Interactive Craving & Aisle Crate Explorer + Top Stalls in Aisle */}
-          <div className="bg-card ring-1 ring-board lg:col-span-6">
+          <div className="min-w-0 bg-card ring-1 ring-board lg:col-span-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-board bg-secondary px-4 py-3">
               <div className="flex items-center gap-2.5">
                 <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
@@ -1735,7 +1752,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
           </div>
 
           {/* Right 6 Columns: Live Interactive Neighbourhood Atlas + Halls & Anchor Vendors */}
-          <div id="map" className="scroll-mt-24 bg-card ring-1 ring-board lg:col-span-6">
+          <div id="map" className="min-w-0 scroll-mt-24 bg-card ring-1 ring-board lg:col-span-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-board bg-secondary px-4 py-3">
               <div className="flex items-center gap-2.5">
                 <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-board text-chalk">

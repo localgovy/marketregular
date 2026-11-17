@@ -28,7 +28,7 @@ export function ProductPhotoFrame({
           height={300}
           loading="lazy"
           decoding="async"
-          className="size-full object-cover"
+          className="size-full min-h-0 min-w-0 object-cover"
           onError={() => setFailed(true)}
         />
       ) : (
