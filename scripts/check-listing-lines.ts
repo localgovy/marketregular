@@ -43,11 +43,13 @@ type Vendor = { id: string; slug: string; status: string };
 async function page<T>(path: string): Promise<T[]> {
   const rows: T[] = [];
   for (let from = 0; ; from += 1000) {
+    const gate = process.env.MARKETREGULAR_DATA_API_GATE?.trim() ?? "";
     const response = await fetch(`${url}/rest/v1/${path}`, {
       headers: {
         apikey: key!,
         authorization: `Bearer ${key}`,
         range: `${from}-${from + 999}`,
+        ...(gate.length >= 32 ? { "x-marketregular-gate": gate } : {}),
       },
     });
     if (!response.ok) throw new Error(`${path} ${response.status}`);

@@ -53,6 +53,9 @@ async function rpc(url: string, key: string, body: Record<string, unknown>) {
       apikey: key,
       authorization: `Bearer ${key}`,
       "content-type": "application/json",
+      ...((process.env.MARKETREGULAR_DATA_API_GATE?.trim().length ?? 0) >= 32
+        ? { "x-marketregular-gate": process.env.MARKETREGULAR_DATA_API_GATE!.trim() }
+        : {}),
     },
     body: JSON.stringify(body),
   });
