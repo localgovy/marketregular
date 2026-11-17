@@ -1677,6 +1677,41 @@ export function MarketsFloor({
   );
 }
 
+const SEARCH_FIRST = { products: 4, vendors: 4, markets: 3, guides: 3 } as const;
+
+function SectionPager({
+  shown,
+  total,
+  first,
+  moreLabel,
+  onMore,
+  onLess,
+}: {
+  shown: number;
+  total: number;
+  first: number;
+  moreLabel: string;
+  onMore: () => void;
+  onLess: () => void;
+}) {
+  const remaining = total - shown;
+  if (remaining <= 0 && shown <= first) return null;
+  return (
+    <div className="flex flex-wrap gap-2 px-4 py-3">
+      {remaining > 0 ? (
+        <button type="button" onClick={onMore} className={chipIdle}>
+          {moreLabel}
+        </button>
+      ) : null}
+      {shown > first ? (
+        <button type="button" onClick={onLess} className={chipIdle}>
+          {floor.showLess}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 function SearchAnswer({
   answer,
   onMarket,
@@ -1684,19 +1719,21 @@ function SearchAnswer({
   answer: SearchAnswer;
   onMarket: (slug: string, scope: "match" | "all") => void;
 }) {
-  const [more, setMore] = useState(false);
-  const shops = answer.vendors.filter((vendor) => vendor.rank < 9);
-  const foods = answer.products.slice(0, more ? 12 : 4);
-  const shownShops = shops.slice(0, more ? 8 : 4);
-  const shownMarkets = answer.markets.slice(0, more ? 8 : 3);
+  const [productLimit, setProductLimit] = useState<number>(SEARCH_FIRST.products);
+  const [vendorLimit, setVendorLimit] = useState<number>(SEARCH_FIRST.vendors);
+  const [marketLimit, setMarketLimit] = useState<number>(SEARCH_FIRST.markets);
+  const [guideLimit, setGuideLimit] = useState<number>(SEARCH_FIRST.guides);
+  const foods = answer.products.slice(0, productLimit);
+  const shownShops = answer.vendors.slice(0, vendorLimit);
+  const shownMarkets = answer.markets.slice(0, marketLimit);
   const best = answer.guides[0] ?? null;
-  const otherGuides = answer.guides.slice(1, more ? 6 : 3);
-  const empty = !best && foods.length === 0 && shownShops.length === 0 && shownMarkets.length === 0;
-  const hidden =
-    Math.max(0, answer.products.length - foods.length) +
-    Math.max(0, shops.length - shownShops.length) +
-    Math.max(0, answer.markets.length - shownMarkets.length) +
-    Math.max(0, answer.guides.length - 1 - otherGuides.length);
+  const extraGuides = answer.guides.slice(1);
+  const otherGuides = extraGuides.slice(0, guideLimit);
+  const empty =
+    !best &&
+    answer.products.length === 0 &&
+    answer.vendors.length === 0 &&
+    answer.markets.length === 0;
 
   if (empty) {
     return (
@@ -1736,16 +1773,26 @@ function SearchAnswer({
         </Link>
       ) : null}
       {otherGuides.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5 border-b border-border px-4 py-3">
-          {otherGuides.map((page) => (
-            <Link
-              key={page.slug}
-              href={`/find/${page.slug}`}
-              className="stall-chip-sm bg-receipt px-2.5 py-1 text-sm font-medium ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
-            >
-              {page.term}
-            </Link>
-          ))}
+        <div className="border-b border-border">
+          <div className="flex flex-wrap gap-1.5 px-4 py-3">
+            {otherGuides.map((page) => (
+              <Link
+                key={page.slug}
+                href={`/find/${page.slug}`}
+                className="stall-chip-sm bg-receipt px-2.5 py-1 text-sm font-medium ring-1 ring-border hover:bg-primary hover:text-primary-foreground"
+              >
+                {page.term}
+              </Link>
+            ))}
+          </div>
+          <SectionPager
+            shown={otherGuides.length}
+            total={extraGuides.length}
+            first={SEARCH_FIRST.guides}
+            moreLabel={copyText(floor.showMoreGuides, { count: extraGuides.length - otherGuides.length })}
+            onMore={() => setGuideLimit((value) => value + PAGE)}
+            onLess={() => setGuideLimit(SEARCH_FIRST.guides)}
+          />
         </div>
       ) : null}
 
@@ -1793,6 +1840,14 @@ function SearchAnswer({
               );
             })}
           </ul>
+          <SectionPager
+            shown={foods.length}
+            total={answer.products.length}
+            first={SEARCH_FIRST.products}
+            moreLabel={copyText(floor.showMoreProducts, { count: answer.products.length - foods.length })}
+            onMore={() => setProductLimit((value) => value + PAGE)}
+            onLess={() => setProductLimit(SEARCH_FIRST.products)}
+          />
         </section>
       ) : null}
 
@@ -1825,6 +1880,14 @@ function SearchAnswer({
               </li>
             ))}
           </ul>
+          <SectionPager
+            shown={shownShops.length}
+            total={answer.vendors.length}
+            first={SEARCH_FIRST.vendors}
+            moreLabel={copyText(floor.showMoreVendors, { count: answer.vendors.length - shownShops.length })}
+            onMore={() => setVendorLimit((value) => value + PAGE)}
+            onLess={() => setVendorLimit(SEARCH_FIRST.vendors)}
+          />
         </section>
       ) : null}
 
@@ -1861,15 +1924,15 @@ function SearchAnswer({
               </li>
             ))}
           </ul>
+          <SectionPager
+            shown={shownMarkets.length}
+            total={answer.markets.length}
+            first={SEARCH_FIRST.markets}
+            moreLabel={copyText(floor.showMoreMarkets, { count: answer.markets.length - shownMarkets.length })}
+            onMore={() => setMarketLimit((value) => value + PAGE)}
+            onLess={() => setMarketLimit(SEARCH_FIRST.markets)}
+          />
         </section>
-      ) : null}
-
-      {hidden > 0 ? (
-        <div className="px-4 py-3">
-          <button type="button" onClick={() => setMore(true)} className={chipIdle}>
-            Show more ({hidden})
-          </button>
-        </div>
       ) : null}
     </div>
   );

@@ -252,18 +252,12 @@ export function ProductListing({
                           </Link>
                         )}
                       </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
-                        <span>Sold by {vendorName}</span>
-                        {markets[0] ? (
-                          <>
-                            <span aria-hidden>·</span>
-                            <span>
-                              Pickup at {markets[0].name}
-                              {markets.length > 1 ? ` +${markets.length - 1}` : ""}
-                            </span>
-                          </>
-                        ) : null}
-                      </div>
+                      {markets[0] ? (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Pickup at {markets[0].name}
+                          {markets.length > 1 ? ` +${markets.length - 1}` : ""}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
 
