@@ -10,7 +10,6 @@ import { HeaderSearch } from "@/components/header-search";
 import { CaretDownMark, TicketMark } from "@/components/marks";
 import { NavLink } from "@/components/nav-link";
 import { SavesHydrator } from "@/components/saves-hydrator";
-import { useSaves } from "@/components/save-button";
 import { SiteWordmark } from "@/components/site-mark";
 import { Menu } from "@base-ui/react/menu";
 import {
@@ -20,8 +19,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { copyText, siteCopy } from "@/content/site-copy";
 import { PORTAL_NAV_LABEL, SITE_NAV, SITE_PORTAL_NAV } from "@/lib/nav";
-import type { Saves } from "@/lib/saves";
-import { useMounted } from "@/lib/use-now";
 import { cn } from "@/lib/utils";
 
 function onPortalPath(path: string) {
@@ -30,16 +27,6 @@ function onPortalPath(path: string) {
     path.startsWith("/market/") ||
     path === "/vendor" ||
     path.startsWith("/vendor/")
-  );
-}
-
-function savedCount(saves: Saves) {
-  return (
-    saves.markets.length +
-    saves.vendors.length +
-    saves.blogs.length +
-    saves.listings.length +
-    (saves.products?.length ?? 0)
   );
 }
 
@@ -101,23 +88,13 @@ function Sections() {
 }
 
 function SavedLink() {
-  const count = savedCount(useSaves());
-  const ready = useMounted();
   return (
     <Link
       href="/saved"
-      aria-label={
-        ready
-          ? copyText(siteCopy["every page"].savedCount, { count })
-          : siteCopy["every page"].nav.saved
-      }
       className="inline-flex h-10 shrink-0 items-center gap-1.5 px-2.5 text-sm font-medium whitespace-nowrap text-chalk transition-colors hover:bg-chalk/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
     >
       <TicketMark className="size-4 shrink-0" />
       {siteCopy["every page"].nav.saved}
-      <span className="type-nums inline-flex min-w-5 items-center justify-center bg-stamp px-1 text-sm font-semibold text-chalk">
-        {ready ? count : "\u00a0"}
-      </span>
     </Link>
   );
 }

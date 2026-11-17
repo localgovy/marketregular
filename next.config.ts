@@ -2,6 +2,7 @@ import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { dataApiGateHeaders } from "./src/lib/supabase/data-api-gate";
 import { FIND_SLUGS_AT_PRODUCTS } from "./src/data/find-redirects";
 import {
   flattenListingRedirects,
@@ -27,6 +28,7 @@ async function liveListingRedirects() {
         apikey: key,
         Authorization: `Bearer ${key}`,
         Accept: "application/json",
+        ...dataApiGateHeaders(),
       },
       signal: AbortSignal.timeout(3000),
     });

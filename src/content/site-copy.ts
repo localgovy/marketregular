@@ -75,7 +75,6 @@ export const siteCopy = {
     saveThisNote: "this note",
     saveNamed: "Save {item}",
     unsaveNamed: "Remove {item} from saved",
-    savedCount: "Saved, {count}",
     status: {
       open: "Open",
       openNow: "Open now",
