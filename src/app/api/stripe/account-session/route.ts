@@ -25,12 +25,12 @@ export async function POST(request: Request) {
     const body = (await request.json()) as { vendorId?: unknown };
     if (typeof body.vendorId === "string") vendorId = body.vendorId;
   } catch {
-    return NextResponse.json({ error: "That stall is missing." }, { status: 400 });
+    return NextResponse.json({ error: "That vendor is missing." }, { status: 400 });
   }
-  if (!isUuid(vendorId)) return NextResponse.json({ error: "That stall is missing." }, { status: 400 });
+  if (!isUuid(vendorId)) return NextResponse.json({ error: "That vendor is missing." }, { status: 400 });
   const { data: owns, error: ownsError } = await supabase.rpc("owns_vendor", { p_id: vendorId });
   if (ownsError || owns !== true) {
-    return NextResponse.json({ error: "That stall is not yours." }, { status: 403 });
+    return NextResponse.json({ error: "That vendor is not yours." }, { status: 403 });
   }
   const portal = await supabase.rpc("my_vendor_portal");
   const listing = parseVendorPortal(portal.data).find((row) => row.id === vendorId);

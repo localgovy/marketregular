@@ -22,32 +22,32 @@ const CONCEPTS: Array<{
 }> = [
   {
     id: "1",
-    shortLabel: "1 · Markets & Stalls Atlas",
-    title: "The Markets, Stalls & Products Atlas",
+    shortLabel: "1 · Markets & Vendors Atlas",
+    title: "The Markets, Vendors & Products Atlas",
     subtitle:
-      "Direct counterpart to ProductsAtlas & VendorAtlas — 7/5 dual-plate masthead, 8-column visual market cards, and 4-column sticky market inspector & stalls rail",
+      "Direct counterpart to ProductsAtlas & VendorAtlas — 7/5 dual-plate masthead, 8-column visual market cards, and 4-column sticky market inspector & vendors rail",
     standaloneHref: "/preview/market-1",
     focus:
-      "Optimized for browsing markets as rich visual cards (with their stalls, products, and prices) while inspecting any market or filtering stalls in the sticky right rail.",
+      "Optimized for browsing markets as rich visual cards (with their vendors, products, and prices) while inspecting any market or filtering vendors in the sticky right rail.",
     highlights: [
       "Dual-plate masthead pairing the 7-column forest-green search, category chip, and census plate with a 5-column Market Spotlight & Live Map toggle plate.",
-      "8-column filterable Markets Directory with a 1-click toggle between 2-column Atlas Market Cards (showing each market's stalls, products & prices) and Compact Rows.",
-      "Sticky 4-column rail combining a live Market Inspector (click any market to preview its full stall roster) with the Featured Stalls directory (#directory-vendors).",
+      "8-column filterable Markets Directory with a 1-click toggle between 2-column Atlas Market Cards (showing each market's vendors, products & prices) and Compact Rows.",
+      "Sticky 4-column rail combining a live Market Inspector (click any market to preview its full vendor roster) with the Featured Vendors directory (#directory-vendors).",
     ],
   },
   {
     id: "2",
-    shortLabel: "2 · Map, Timetable & Stall Explorer",
+    shortLabel: "2 · Map, Timetable & Vendor Explorer",
     title: "The Interactive Map, 7-Day Timetable & Market-Stall Explorer",
     subtitle:
-      "Dual-plate search + live map masthead, 2-column 7-day weekly schedule, and a 5/7 master-detail Market & Stall Roster stage",
+      "Dual-plate search + live map masthead, 2-column 7-day weekly schedule, and a 5/7 master-detail Market & Vendor Roster stage",
     standaloneHref: "/preview/market-2",
     focus:
-      "Optimized for spatial & day-of-week planning — see the 7-day schedule above the fold, then click any market to explore and filter its full stall & menu roster.",
+      "Optimized for spatial & day-of-week planning — see the 7-day schedule above the fold, then click any market to explore and filter its full vendor & menu roster.",
     highlights: [
       "Dual-plate masthead pairing the 7-column forest-green search & day-of-week filter plate with a 5-column live interactive map and active market telemetry card.",
       "Above-the-fold 2-column 7-Day Weekly Market Schedule where every session's hours sit in an unclipped auto column.",
-      "12-column Master-Detail Market Explorer: click any market in the 5-column list to inspect and filter its stalls, menu items, and prices in the 7-column forest-green stage.",
+      "12-column Master-Detail Market Explorer: click any market in the 5-column list to inspect and filter its vendors, menu items, and prices in the 7-column forest-green stage.",
     ],
   },
   {
@@ -61,7 +61,7 @@ const CONCEPTS: Array<{
       "Optimized for side-by-side comparison of matching Markets (left) and matching Vendors (right) with an expandable All-Filters drawer.",
     highlights: [
       "Dual-plate masthead with an expandable All-Filters drawer (When, Top districts, Product specialties) and a Featured Market Spotlight switcher card.",
-      "Stamp-bordered Live / Next-Up Floor Strip above the directory highlighting Saturday, Sunday, and Midweek markets with their anchor stalls.",
+      "Stamp-bordered Live / Next-Up Floor Strip above the directory highlighting Saturday, Sunday, and Midweek markets with their anchor vendors.",
       "Classic side-by-side Markets (5fr) | vertical board rule | Vendors & Map (7fr) layout, upgraded with forest-green Atlas Market Cards and receipt-framed Vendor Cards.",
     ],
   },

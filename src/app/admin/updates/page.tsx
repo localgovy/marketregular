@@ -29,7 +29,7 @@ export default async function AdminUpdatesPage() {
             <h2>{group.label}</h2>
             {empty ? (
               <p className="mt-2 text-base text-muted-foreground">
-                No stalls or markets have left this section alone.
+                No vendors or markets have left this section alone.
               </p>
             ) : (
               <div className="mt-3 grid gap-6">

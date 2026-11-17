@@ -43,7 +43,7 @@ export function CensusStrip({ data }: { data: MarketsPreviewData }) {
         className="flex flex-col justify-between bg-secondary/45 p-3.5 transition-colors hover:bg-secondary"
       >
         <span className="flex items-center justify-between gap-1">
-          <span className="type-kicker font-medium text-primary">Priority stalls</span>
+          <span className="type-kicker font-medium text-primary">Priority vendors</span>
           <CrateMark className="size-4 shrink-0 text-primary" />
         </span>
         <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
@@ -164,8 +164,8 @@ export function MastheadScore({
 export function formatStallNote(stall: string | null | undefined): string | null {
   const trimmed = stall?.trim();
   if (!trimmed) return null;
-  if (/^stall\b/i.test(trimmed)) return trimmed;
-  if (/^[A-Za-z]?\d+[A-Za-z]?$/.test(trimmed)) return `Stall ${trimmed}`;
+  if (/^stall\b/i.test(trimmed)) return trimmed.replace(/^stall\b/i, "Vendor");
+  if (/^[A-Za-z]?\d+[A-Za-z]?$/.test(trimmed)) return `Vendor ${trimmed}`;
   return trimmed;
 }
 
@@ -322,7 +322,7 @@ export function AtlasMarketCard({
           </div>
         </div>
 
-        {/* 2. Visual Specialty Strip + Participating Stalls Slip */}
+        {/* 2. Visual Specialty Strip + Participating Vendors Slip */}
         <div className="border-b border-border bg-secondary/45">
           <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-3 border-b border-border bg-card px-4 py-2.5">
             <Link href={`/markets/${market.slug}`} className="block">
@@ -344,8 +344,8 @@ export function AtlasMarketCard({
               <div>
                 <p className="type-kicker font-medium text-foreground">
                   {market.vendorCount > 0
-                    ? `${market.vendorCount} stalls registered`
-                    : "Local market stalls"}
+                    ? `${market.vendorCount} vendors registered`
+                    : "Local market vendors"}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {market.primaryCategoryLabel}
@@ -451,7 +451,7 @@ export function AtlasMarketCard({
                   href={`/markets/${market.slug}#vendors`}
                   className="type-nums text-muted-foreground hover:text-foreground hover:underline"
                 >
-                  +{extraStallCount} more {extraStallCount === 1 ? "stall" : "stalls"}
+                  +{extraStallCount} more {extraStallCount === 1 ? "vendor" : "vendors"}
                 </Link>
               ) : null}
             </div>

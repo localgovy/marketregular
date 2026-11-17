@@ -8,7 +8,7 @@
  * {region}    GTA
  * {coverage}  Toronto, including the GTA
  * {tagline}   the footer line in "every page"
- * {stall}     that stall's name
+ * {stall}     that vendor's name
  * {market}    that market's name
  * {category}  a product category
  * {area}      a neighbourhood
@@ -19,7 +19,7 @@
  * {effective} the date on Terms or Privacy
  * {entity}    the legal name on Privacy
  *
- * Market names, stall names, product names, prices, and hours are not listed
+ * Market names, vendor names, product names, prices, and hours are not listed
  * here. A page that repeats is written once, as /markets/[slug].
  */
 import { SITE_NAME } from "@/lib/constants";
@@ -62,7 +62,7 @@ export const siteCopy = {
     account: "Account",
     signIn: "Sign in",
     yourMarket: "Your market",
-    yourStall: "Your stall",
+    yourStall: "Your vendor",
     admin: "Admin",
     save: "Save",
     saved: "Saved",
@@ -279,7 +279,7 @@ export const siteCopy = {
     searchTitle: "{query} at {city} farmers' markets",
     description: "Search products and the vendors who sell them at {city} farmers' markets.",
     h1: "Products",
-    lede: "Search what the stalls sell, or start from a category. Each product opens the vendors who list it and the markets where they set up.",
+    lede: "Search what the vendors sell, or start from a category. Each product opens the vendors who list it and the markets where they set up.",
     searchPlaceholder: "Bread, eggs, honey, or a vendor",
     searchLabel: "Search products and vendors",
     filtersNeedQuery: "Add a product name to use selling today, a market, or a day.",
@@ -289,22 +289,22 @@ export const siteCopy = {
     browseCategories: "Browse categories",
     vendors: "Vendors",
     noOtherVendors: "No other vendors match that name.",
-    stallsSelling: "Stalls selling these items",
+    stallsSelling: "Vendors selling these items",
     curatedGuides: "Curated product guides",
     browseByCategory: "Browse by category",
-    compareStalls: "Compare every stall that lists a staple across {city} farmers' markets.",
+    compareStalls: "Compare every vendor that lists a staple across {city} farmers' markets.",
     categories: "Categories",
     allCategories: "All categories:",
-    publishedMenus: "Stalls with published menus & prices",
-    publishedMenusLabel: "Featured stalls with published menus",
-    browseAllStalls: "Browse all {count} stalls",
+    publishedMenus: "Vendors with published menus & prices",
+    publishedMenusLabel: "Featured vendors with published menus",
+    browseAllStalls: "Browse all {count} vendors",
   },
 
   "/find/[slug]": {
     /** The page title and the main heading are the product name. */
-    stallsAndMenus: "Stalls & menu comparison",
+    stallsAndMenus: "Vendors & menu comparison",
     whereToBuy: "Where to buy {product}",
-    publishedStalls: "Published stalls",
+    publishedStalls: "Published vendors",
     where: "Where they set up",
     market: "market",
     markets: "markets",
@@ -318,7 +318,7 @@ export const siteCopy = {
     titleAtMarket: "{stall} at {market}",
     titleNoMarket: "{stall} — {city} farmers' markets",
     titleManyMarkets: "{stall} — {count} {city} farmers' markets",
-    stallLine: "Toronto market stall",
+    stallLine: "Toronto market vendor",
     marketLocation: "Market location",
     marketLocations: "Market locations",
     productsAndMarkets: "Products & markets",
@@ -333,15 +333,16 @@ export const siteCopy = {
     where: "Where they sell",
     market: "market",
     markets: "markets",
-    selectMarket: "Select a market to inspect {stall}'s hours and fellow stalls selling alongside them.",
+    selectMarket: "Select a market to inspect {stall}'s hours and fellow vendors selling alongside them.",
+    otherVendorsAt: "Other vendors at {market}",
     contact: "Contact & direct links",
-    specialties: "Stall specialties & tags",
-    moreStalls: "More stalls to explore",
-    otherStalls: "Other stalls known for {category}",
-    browseAllStalls: "Browse all {category} stalls",
+    specialties: "Vendor specialties & tags",
+    moreStalls: "More vendors to explore",
+    otherStalls: "Other vendors known for {category}",
+    browseAllStalls: "Browse all {category} vendors",
     menuHighlights: "Menu highlights",
     guidesKicker: "Product categories & guides",
-    compareByCategory: "Compare Toronto market stalls by category",
+    compareByCategory: "Compare Toronto market vendors by category",
     allCategories: "All product categories",
     itemOnMenu: "{count} item on this menu",
     itemsOnMenu: "{count} items on this menu",
@@ -353,8 +354,8 @@ export const siteCopy = {
 
   "/vendors/[slug]/buy/[itemId]": {
     title: "Buy",
-    description: "Pay a stall on {brand}.",
-    stallTerms: "Stall terms",
+    description: "Pay a vendor on {brand}.",
+    stallTerms: "Vendor terms",
   },
 
   "/vendors/[slug]/orders/[orderId]": {
@@ -366,8 +367,8 @@ export const siteCopy = {
     ready: "Ready for pickup",
     reservation: "Reservation",
     placed: "Order placed",
-    theStall: "The stall",
-    stallTerms: "Stall terms",
+    theStall: "The vendor",
+    stallTerms: "Vendor terms",
   },
 
   "/saved": {
@@ -394,7 +395,7 @@ export const siteCopy = {
     lede: "Your {brand} identity. Post notes, save markets, and keep this week's hours in one profile.",
     orders: "Orders",
     markets: "Markets",
-    stalls: "Stalls",
+    stalls: "Vendors",
     noMarkets: "No markets on the list.",
   },
 
@@ -509,16 +510,16 @@ export const siteCopy = {
 
   "/vendor": {
     title: "Vendor Portal",
-    description: "Create an account to update the {brand} stall you run.",
+    description: "Create an account to update the {brand} vendor you run.",
     h1: "Vendor Portal",
-    lede: "Create an account with the email you use for the business, or sign in if you already have one. A Gmail address is fine. Ask only if you run the stall, or the person who does has asked you to. After we assign it, you can edit it here.",
+    lede: "Create an account with the email you use for the business, or sign in if you already have one. A Gmail address is fine. Ask only if you run the vendor, or the person who does has asked you to. After we assign it, you can edit it here.",
     createAccount: "Create an account",
     signIn: "Sign in",
     how: "How this works",
     stepAccount: "Create an account using the email you use for the business.",
     stepWait: "Wait for {brand}'s approval email.",
-    stepEdit: "Edit the stall page. Keep the days, menu, and contact details current.",
-    unavailable: "The stall editor is not available yet. Try again in a minute.",
+    stepEdit: "Edit the vendor page. Keep the days, menu, and contact details current.",
+    unavailable: "The vendor editor is not available yet. Try again in a minute.",
     ledeHasListings:
       "Update the name, menu, and the markets you sell at. Changes show on the public page. Keep the days and the menu current.",
     published: "Published",
@@ -526,10 +527,10 @@ export const siteCopy = {
   },
 
   "/vendor/[id]": {
-    title: "Edit your stall",
-    description: "Update a {brand} stall you run.",
-    unavailableTitle: "Your stall",
-    unavailable: "The stall editor is not available yet. Try again in a minute.",
+    title: "Edit your vendor",
+    description: "Update a {brand} vendor you run.",
+    unavailableTitle: "Your vendor",
+    unavailable: "The vendor editor is not available yet. Try again in a minute.",
     published: "Published.",
     viewPublic: "View the public page",
     hiddenUntilHall: "Published. The public page is hidden until you add a hall.",
@@ -556,7 +557,7 @@ export const siteCopy = {
     season: "Season",
     descriptionField: "Description",
     dietary: "Dietary tags",
-    stallLabel: "Stall label",
+    stallLabel: "Vendor label",
     findAMarket: "Find a market",
   },
 
@@ -570,10 +571,10 @@ export const siteCopy = {
     how: "How this works",
     stepAccount: "Create an account using your organization email.",
     stepWait: "Wait for {brand}'s approval email.",
-    stepEdit: "Edit the market page. Keep the hours and the stall list current.",
+    stepEdit: "Edit the market page. Keep the hours and the vendor list current.",
     unavailable: "The market editor is not available yet. Try again in a minute.",
     ledeHasListings:
-      "Update the hours, contact details, and the stalls. Changes show on the public page. Keep the hours and the stall list current.",
+      "Update the hours, contact details, and the vendors. Changes show on the public page. Keep the hours and the vendor list current.",
     published: "Published",
     draft: "Draft",
   },
@@ -589,9 +590,9 @@ export const siteCopy = {
     profile: "Profile",
     logo: "Logo",
     hours: "Hours",
-    stalls: "Stalls",
-    addListed: "Add a stall already listed",
-    addUnlisted: "Add a stall that is not listed yet",
+    stalls: "Vendors",
+    addListed: "Add a vendor already listed",
+    addUnlisted: "Add a vendor that is not listed yet",
     anotherTag: "Another tag",
     name: "Name",
     about: "About",
@@ -607,8 +608,8 @@ export const siteCopy = {
     seasonStart: "Season start",
     seasonEnd: "Season end",
     visitorNote: "Note for visitors",
-    stallLabel: "Stall label",
-    findAStall: "Find a stall",
+    stallLabel: "Vendor label",
+    findAStall: "Find a vendor",
   },
 
   "/terms": {
@@ -618,7 +619,7 @@ export const siteCopy = {
     lede: "Using {brand} means you agree to these terms. Current as of {effective}. Creating an account, with email and password or Continue with Google, is acceptance. Reading the directory without an account is still use of the site.",
     agreement: "The agreement",
     directory: "The directory",
-    accounts: "Stall and market accounts",
+    accounts: "Vendor and market accounts",
     orders: "Orders",
     posts: "Posts and reviews",
     login: "Your login",

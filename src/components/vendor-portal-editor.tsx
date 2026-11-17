@@ -485,20 +485,20 @@ function SaleFields({
         <Textarea id={`${id}-terms`} name="offer_terms" rows={4} maxLength={4000} defaultValue={terms} />
         <p className="text-sm text-muted-foreground">
           Buyers see this before they pay. Stripe usually keeps its card processing fee on a refund, and that
-          cost stays with this stall.
+          cost stays with this vendor.
         </p>
       </div>
       <label className="flex items-baseline gap-2 text-sm">
         <input type="checkbox" name="contains_alcohol" defaultChecked={containsAlcohol} className="accent-primary" />
         <span>
           {classifiedAlcohol
-            ? "Alcohol. Buyers reserve it, pay at the stall, and show ID."
+            ? "Alcohol. Buyers reserve it, pay at the vendor, and show ID."
             : "Contains alcohol. Buyers still pay by card."}
         </span>
       </label>
       <p className="text-sm text-muted-foreground">
-        A sale needs a price of at least $0.50, and pickup or preorder. Buyers pay this stall.
-        {classifiedAlcohol ? " Alcohol is reserved and paid at the stall." : ""}
+        A sale needs a price of at least $0.50, and pickup or preorder. Buyers pay this vendor.
+        {classifiedAlcohol ? " Alcohol is reserved and paid at the vendor." : ""}
       </p>
     </fieldset>
   );
@@ -559,7 +559,7 @@ function MenuItemForm({
             placeholder="vegan, gluten-free"
             defaultValue={item.dietary.join(", ")}
           />
-          <p className="text-sm text-muted-foreground">Shown on the stall page. Use tags that match the food.</p>
+          <p className="text-sm text-muted-foreground">Shown on the vendor page. Use tags that match the food.</p>
         </div>
         <MenuSectionFields id={field} sections={sections} defaultSection={item.menu_section} />
         {VENDOR_SALES_OPEN ? (
@@ -626,7 +626,7 @@ function AddMenuItem({ vendorId, sections }: { vendorId: string; sections: MenuS
         <div className="grid gap-1.5 sm:col-span-2">
           <Label htmlFor={`${vendorId}-new-dietary`}>{stallEditor.dietary}</Label>
           <Input id={`${vendorId}-new-dietary`} name="dietary" placeholder="vegan, gluten-free" />
-          <p className="text-sm text-muted-foreground">Shown on the stall page. Use tags that match the food.</p>
+          <p className="text-sm text-muted-foreground">Shown on the vendor page. Use tags that match the food.</p>
         </div>
         <MenuSectionFields id={`${vendorId}-new`} sections={sections} />
         {VENDOR_SALES_OPEN ? (
@@ -860,9 +860,9 @@ export function VendorPortalEditor({
           <div className="mt-4 grid gap-4">
             <p className="text-base text-muted-foreground">
               Stripe, not {SITE_NAME}, asks for your identity and bank account. Stripe needs them so this
-              stall can be paid, and so a buyer&apos;s card statement shows the stall. {SITE_NAME} does not
+              vendor can be paid, and so a buyer&apos;s card statement shows the vendor. {SITE_NAME} does not
               see the bank account number or the identity document. When Stripe finishes checking, buyers
-              can pay this stall on the site.
+              can pay this vendor on the site.
             </p>
             {paymentsConfigured ? (
               listing.payments_started ? (
@@ -887,7 +887,7 @@ export function VendorPortalEditor({
                     <form action={dashboard} className="flex flex-wrap items-center gap-3">
                       <input type="hidden" name="vendor_id" value={listing.id} />
                       <Button type="submit" variant="outline" disabled={dashboardPending}>
-                        {dashboardPending ? "Opening…" : "Open stall dashboard"}
+                        {dashboardPending ? "Opening…" : "Open vendor dashboard"}
                       </Button>
                       {dashboardState?.error ? (
                         <p className="text-sm text-destructive">{dashboardState.error}</p>
@@ -910,14 +910,14 @@ export function VendorPortalEditor({
               <p className="text-sm text-muted-foreground">Payments are not available yet.</p>
             )}
             <p className="text-base text-muted-foreground">
-              Buyers pay this stall. {SITE_NAME} keeps {listing.commission_bps / 100}% of the item
+              Buyers pay this vendor. {SITE_NAME} keeps {listing.commission_bps / 100}% of the item
               subtotal
               {listing.commission_flat_cents > 0
                 ? ` plus ${formatPrice(listing.commission_flat_cents)} on each order`
                 : ""}
               . The shopper also pays a service fee of $0.50 when the order is under $15, or $0.99 when it
               is $15 or more. That fee is its own line, and the percentage is not charged on it. Stripe&apos;s
-              card processing fee comes out of this stall. On a refund, Stripe usually keeps that processing
+              card processing fee comes out of this vendor. On a refund, Stripe usually keeps that processing
               fee.
             </p>
           </div>
@@ -1053,7 +1053,7 @@ export function VendorPortalEditor({
       <section>
         <h2>{stallEditor.markets}</h2>
         <p className="mt-2 text-base text-muted-foreground">
-          Add a market on the days this stall is there. Those days show on the public page.
+          Add a market on the days this vendor is there. Those days show on the public page.
         </p>
         {listing.stalls.length ? (
           <ul className="mt-2">
@@ -1071,11 +1071,11 @@ export function VendorPortalEditor({
           <p className="mt-3 text-sm text-muted-foreground">
             {staysWithoutHall
               ? "This listing stays on the site without a market."
-              : "This stall is not at a hall, so the public page is hidden until you add one."}
+              : "This vendor is not at a hall, so the public page is hidden until you add one."}
           </p>
         )}
         {full ? (
-          <p className="mt-4 text-sm text-muted-foreground">The stall list is full.</p>
+          <p className="mt-4 text-sm text-muted-foreground">The vendor list is full.</p>
         ) : (
           <AddStall vendorId={listing.id} takenIds={listing.stalls.map((stall) => stall.market_id)} />
         )}

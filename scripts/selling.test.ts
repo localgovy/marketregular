@@ -426,7 +426,7 @@ test("checkout returns use the public site, not the request host", () => {
       cardPaymentsActive: true,
       menus: [],
     }),
-    "Card payments are on. Buyers can pay once this stall is published and an item is offered for sale.",
+    "Card payments are on. Buyers can pay once this vendor is published and an item is offered for sale.",
   );
   assert.equal(
     stallCardStatusCopy({
@@ -510,7 +510,7 @@ test("checkout returns use the public site, not the request host", () => {
     },
     "shopper",
   );
-  assert.match(reservedReady.text, /Pay at the stall and show ID/);
+  assert.match(reservedReady.text, /Pay at the vendor and show ID/);
   assert.equal(torontoInstant("2026-11-12", "09:00"), "2026-11-12T14:00:00.000Z");
   assert.equal(checkoutSiteOrigin(site), site);
   assert.notEqual(

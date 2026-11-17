@@ -248,7 +248,7 @@ function buildFallbackFloorItems(nowMs: number): FloorItem[] {
       vendor_slug: "forbes-wild-foods",
       rating: 5,
       price_level: 2,
-      body: "Chanterelles, wildflower honey, and birch syrup at the north pavilion stall. Plenty of space under the roof even in the rain.",
+      body: "Chanterelles, wildflower honey, and birch syrup at the north pavilion vendor. Plenty of space under the roof even in the rain.",
       photos: [],
       tags: ["mushrooms", "honey", "maple"],
     },
@@ -630,7 +630,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
 
     const aisleIds = [...aisleSet];
     const primaryAisleId = aisleIds[0] ?? "vegetables";
-    const primaryAisleLabel = AISLE_LABEL_BY_ID[primaryAisleId] ?? "Market stall";
+    const primaryAisleLabel = AISLE_LABEL_BY_ID[primaryAisleId] ?? "Market vendor";
     const generalPhoto = primaryProductSlug
       ? productPhoto(photos, primaryProductSlug, primaryAisleId)
       : (photos.aisle[primaryAisleId] ?? null);
@@ -777,7 +777,7 @@ export async function loadHomePreviewData(): Promise<HomePreviewData> {
     return {
       id: aisle.id,
       label: aisle.label,
-      line: aisle.line || `${aisle.pages.length} items across Toronto stalls`,
+      line: aisle.line || `${aisle.pages.length} items across Toronto vendors`,
       count: aisle.pages.length,
       photoUrl: photo?.url ?? null,
       photoAlt: photo?.alt ?? null,

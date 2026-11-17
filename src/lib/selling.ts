@@ -217,7 +217,7 @@ export function checkoutAmountMatches(
 
 /**
  * A connected account can create its own Checkout Session and put any order id
- * in the metadata. Only the session this app stored, on that stall's account,
+ * in the metadata. Only the session this app stored, on that vendor's account,
  * can pay or expire the order. A missing event account still has to match the
  * stored session id.
  */
@@ -489,11 +489,11 @@ export function stallCardStatusCopy(input: {
   const cards = input.menus.some((item) => menuOffered(item) && !item.alcohol);
   const alcohol = input.menus.some((item) => menuOffered(item) && item.alcohol);
   if (input.cardPaymentsActive) {
-    if (input.published && cards) return "Card payments are on. Buyers can pay this stall.";
+    if (input.published && cards) return "Card payments are on. Buyers can pay this vendor.";
     if (input.published && alcohol) {
       return "Card payments are on. Alcohol can be reserved. A Buy button shows once another item is offered for sale.";
     }
-    return "Card payments are on. Buyers can pay once this stall is published and an item is offered for sale.";
+    return "Card payments are on. Buyers can pay once this vendor is published and an item is offered for sale.";
   }
   if (input.published && alcohol) {
     return "Finish the payment setup before a Buy button can show. Alcohol can still be reserved.";
@@ -633,11 +633,11 @@ export function shopperRefundWindowCopy(input: {
   if (input.status !== "paid" && input.status !== "partially_refunded" && input.status !== "reserved") return null;
   if (input.status === "reserved") {
     if (input.readyAt) return null;
-    return "You can cancel until the stall marks this ready.";
+    return "You can cancel until the vendor marks this ready.";
   }
   if (!shopperCancelAllowed(input)) return "A refund from here is closed.";
   if (!input.readyAt) {
-    return "A full refund stays open until the stall marks this ready and the pickup time has started.";
+    return "A full refund stays open until the vendor marks this ready and the pickup time has started.";
   }
   if (!input.pickupStartsAt) {
     return "A full refund stays open until a pickup time is set and that time has started.";

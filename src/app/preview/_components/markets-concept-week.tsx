@@ -322,7 +322,7 @@ export function MarketsConceptWeek({
         <div className="flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board lg:col-span-7">
           <div>
             <p className="type-kicker text-primary-foreground/90">
-              {LAUNCH_CITY} &amp; Ontario directory · Weekly hours, maps &amp; stall rosters
+              {LAUNCH_CITY} &amp; Ontario directory · Weekly hours, maps &amp; vendor rosters
             </p>
             <h1 className="mt-1 text-primary-foreground">
               {areaFilter !== "all"
@@ -332,7 +332,7 @@ export function MarketsConceptWeek({
             <p className="type-lede mt-2 max-w-2xl text-primary-foreground/95">
               Every market across {LAUNCH_CITY} and the GTA — with this week&apos;s hours,
               street addresses, indoor or outdoor setup, and the{" "}
-              {formatCensus(data.census.vendors)} stalls that sell there.
+              {formatCensus(data.census.vendors)} vendors that sell there.
             </p>
 
             {/* Joined Search Bar on Plate */}
@@ -371,7 +371,7 @@ export function MarketsConceptWeek({
             {/* Visual Product Category Chips on Plate */}
             <div className="mt-3.5 flex flex-wrap items-center gap-1.5 text-sm">
               <span className="mr-1 font-medium text-primary-foreground/85">
-                Filter by what stalls sell:
+                Filter by what vendors sell:
               </span>
               <button
                 type="button"
@@ -490,7 +490,7 @@ export function MarketsConceptWeek({
                 <p className="type-census text-2xl text-primary-foreground sm:text-3xl">
                   {formatCensus(data.census.vendors)}
                 </p>
-                <p className="text-sm text-primary-foreground/85">Market stalls</p>
+                <p className="text-sm text-primary-foreground/85">Market vendors</p>
               </div>
               <div className="rounded-lg bg-primary-foreground/12 px-3.5 py-2.5">
                 <p className="type-census text-2xl text-primary-foreground sm:text-3xl">
@@ -586,7 +586,7 @@ export function MarketsConceptWeek({
                       />
                       <div className="min-w-0">
                         <p className="type-kicker text-primary">
-                          Selected market · {inspectedMarket.vendorCount} stalls
+                          Selected market · {inspectedMarket.vendorCount} vendors
                         </p>
                         <Link
                           href={`/markets/${inspectedMarket.slug}`}
@@ -610,7 +610,7 @@ export function MarketsConceptWeek({
 
                   {inspectedMarket.topStalls.length > 0 ? (
                     <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-dashed border-border pt-2.5">
-                      <span className="mr-1 text-sm text-muted-foreground">Stalls here:</span>
+                      <span className="mr-1 text-sm text-muted-foreground">Vendors here:</span>
                       {inspectedMarket.topStalls.slice(0, 3).map((st) => (
                         <Link
                           key={st.slug}
@@ -630,7 +630,7 @@ export function MarketsConceptWeek({
 
           <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border bg-receipt px-5 py-3 text-sm">
             <span className="font-medium text-muted-foreground">
-              Showing {filteredMarkets.length} markets &amp; {filteredVendors.length} featured stalls
+              Showing {filteredMarkets.length} markets &amp; {filteredVendors.length} featured vendors
             </span>
             <div className="flex items-center gap-3">
               <a
@@ -643,14 +643,14 @@ export function MarketsConceptWeek({
                 href="#directory-vendors"
                 className="font-medium text-primary hover:underline"
               >
-                Stalls ↓
+                Vendors ↓
               </a>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main 12-Column Directory Workspace: 8-Col Markets Atlas + 4-Col Sticky Inspector & Stalls Rail */}
+      {/* Main 12-Column Directory Workspace: 8-Col Markets Atlas + 4-Col Sticky Inspector & Vendors Rail */}
       <div className="mt-8 grid gap-8 lg:grid-cols-12 lg:items-start">
         {/* Left 8 Columns: Filterable Markets Directory */}
         <section
@@ -683,7 +683,7 @@ export function MarketsConceptWeek({
                   className="cursor-pointer rounded bg-receipt px-2.5 py-1.5 text-sm font-medium text-foreground ring-1 ring-border"
                 >
                   <option value="soonest">Opening soonest</option>
-                  <option value="stalls">Most stalls</option>
+                  <option value="stalls">Most vendors</option>
                   <option value="reviewed">Most reviewed</option>
                   <option value="name">Name A–Z</option>
                 </select>
@@ -800,7 +800,7 @@ export function MarketsConceptWeek({
                           </p>
                           {market.topStalls.length > 0 ? (
                             <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                              <span className="text-sm text-muted-foreground">Stalls:</span>
+                              <span className="text-sm text-muted-foreground">Vendors:</span>
                               {market.topStalls.slice(0, 3).map((st) => (
                                 <Link
                                   key={st.slug}
@@ -815,7 +815,7 @@ export function MarketsConceptWeek({
                                 onClick={() => setInspectedSlug(market.slug)}
                                 className="cursor-pointer text-sm font-medium text-primary hover:underline"
                               >
-                                Inspect {market.vendorCount} stalls →
+                                Inspect {market.vendorCount} vendors →
                               </button>
                             </div>
                           ) : null}
@@ -870,7 +870,7 @@ export function MarketsConceptWeek({
                 </div>
                 <span className="stall-chip-sm type-nums bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
                   {inspectedMarket.vendorCount}{" "}
-                  {inspectedMarket.vendorCount === 1 ? "stall" : "stalls"}
+                  {inspectedMarket.vendorCount === 1 ? "vendor" : "vendors"}
                 </span>
               </div>
 
@@ -927,7 +927,7 @@ export function MarketsConceptWeek({
                   <div className="mt-4 border-t border-dashed border-border pt-3.5">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-medium text-foreground">
-                        Stalls at {inspectedMarket.name}
+                        Vendors at {inspectedMarket.name}
                       </p>
                       <Link
                         href={`/markets/${inspectedMarket.slug}#vendors`}
@@ -994,13 +994,13 @@ export function MarketsConceptWeek({
           {/* 2. Matching Vendors Directory (#directory-vendors) */}
           <section
             id="directory-vendors"
-            aria-label="Matching stalls directory"
+            aria-label="Matching vendors directory"
             className="scroll-mt-header bg-card ring-1 ring-board"
           >
             <div className="flex items-center justify-between gap-2 border-b border-black/15 bg-primary px-5 py-3.5 text-primary-foreground">
               <div className="flex items-center gap-2">
                 <CrateMark className="size-4 text-primary-foreground" />
-                <h2 className="text-xl text-primary-foreground">Featured stalls</h2>
+                <h2 className="text-xl text-primary-foreground">Featured vendors</h2>
               </div>
               <span className="stall-chip-sm type-nums bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
                 {filteredVendors.length}
@@ -1020,7 +1020,7 @@ export function MarketsConceptWeek({
                 </ul>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No featured stalls match those filters.
+                  No featured vendors match those filters.
                 </p>
               )}
 
@@ -1030,7 +1030,7 @@ export function MarketsConceptWeek({
                   onClick={() => setVendorLimit((prev) => prev + VENDOR_PAGE)}
                   className="mt-3.5 w-full cursor-pointer rounded bg-secondary px-3 py-2 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary/80"
                 >
-                  Show more stalls ({filteredVendors.length - shownVendors.length} more)
+                  Show more vendors ({filteredVendors.length - shownVendors.length} more)
                 </button>
               ) : null}
             </div>
@@ -1083,7 +1083,7 @@ export function MarketsConceptWeek({
                     </button>
                   </h3>
                   <span className="type-nums text-sm font-medium text-primary">
-                    {areaCard.vendorCount} stalls
+                    {areaCard.vendorCount} vendors
                   </span>
                 </div>
 

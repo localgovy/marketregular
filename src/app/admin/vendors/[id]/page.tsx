@@ -57,7 +57,7 @@ export default async function EditVendorPage({
       <section>
         <h2>Owner</h2>
         <p className="mt-2 mb-4 text-sm text-muted-foreground">
-          They sign in at /vendor with this account. The stall has no account yet, or this one already runs it.
+          They sign in at /vendor with this account. The vendor has no account yet, or this one already runs it.
         </p>
         <VendorOwnerForm vendorId={id} ownerEmail={ownerEmail} />
         {secret.error ? (
@@ -87,7 +87,7 @@ export default async function EditVendorPage({
         }))}
         menuLeftAlone={menuLeftAlone}
       />
-      <ConfirmDelete action={remove} label="Delete vendor" confirm="Delete this stall? This cannot be undone." />
+      <ConfirmDelete action={remove} label="Delete vendor" confirm="Delete this vendor? This cannot be undone." />
     </div>
   );
 }

@@ -32,11 +32,11 @@ export function ListingPortalCta({
   if (owned) {
     return (
       <div className="rounded-xl bg-secondary/50 p-5">
-        <p className="font-medium">{stall ? "This is your stall" : "This is your market"}</p>
+        <p className="font-medium">{stall ? "This is your vendor" : "This is your market"}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {stall
             ? "Update the name, menu, and the markets you sell at."
-            : "Update the hours, contact details, and the stalls."}
+            : "Update the hours, contact details, and the vendors."}
         </p>
         <p className="mt-4 text-base">
           <Link
@@ -44,7 +44,7 @@ export function ListingPortalCta({
             prefetch={stall ? false : undefined}
             className="font-medium hover:underline"
           >
-            {stall ? "Edit this stall" : "Edit this market"}
+            {stall ? "Edit this vendor" : "Edit this market"}
           </Link>
         </p>
       </div>
@@ -54,7 +54,7 @@ export function ListingPortalCta({
   if (taken) {
     return (
       <div className="rounded-xl bg-secondary/50 p-5">
-        <p className="font-medium">{stall ? "This stall has an account" : "This market has an account"}</p>
+        <p className="font-medium">{stall ? "This vendor has an account" : "This market has an account"}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {stall ? "The person who runs it edits the listing." : "The organization that runs it edits the listing."}
         </p>
@@ -64,10 +64,10 @@ export function ListingPortalCta({
 
   return (
     <div className="rounded-xl bg-secondary/50 p-5">
-      <p className="font-medium">{stall ? "Run this stall?" : "Run this market?"}</p>
+      <p className="font-medium">{stall ? "Run this vendor?" : "Run this market?"}</p>
       <p className="mt-1 text-sm text-muted-foreground">
         {stall
-          ? "Create a vendor account. After we assign this stall, you can edit it there."
+          ? "Create a vendor account. After we assign this vendor, you can edit it there."
           : "Create a market account. After we assign this market, you can edit it there."}
       </p>
       <p className="mt-4 text-base">

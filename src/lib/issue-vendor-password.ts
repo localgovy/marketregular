@@ -34,7 +34,7 @@ export async function prepareVendorClaimPassword(
   userId: string,
 ): Promise<PreparedVendorPassword> {
   const key = vendorPasswordKey();
-  if (!key) return { error: "Stall passwords are not configured yet." };
+  if (!key) return { error: "Vendor passwords are not configured yet." };
 
   const { data: owner, error: ownerError } = await admin.auth.admin.getUserById(userId);
   if (ownerError || !owner.user) return { error: "Could not open that account." };

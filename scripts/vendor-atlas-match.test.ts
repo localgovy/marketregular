@@ -17,8 +17,8 @@ test("an explicit product slug still wins over the item name", () => {
 });
 
 test("compare links name the stalls and the product", () => {
-  assert.equal(stallCompareLabel(23, "Croissants"), "Compare 23 stalls selling croissants");
-  assert.equal(stallCompareLabel(55, "General Bread"), "Compare 55 stalls selling bread");
+  assert.equal(stallCompareLabel(23, "Croissants"), "Compare 23 vendors selling croissants");
+  assert.equal(stallCompareLabel(55, "General Bread"), "Compare 55 vendors selling bread");
 });
 
 test("numbered menu sections stay ahead of sections without an order", () => {

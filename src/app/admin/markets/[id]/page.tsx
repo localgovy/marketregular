@@ -22,7 +22,7 @@ type RosterRow = {
 
 function rosterName(row: RosterRow) {
   const vendor = Array.isArray(row.vendors) ? row.vendors[0] : row.vendors;
-  return vendor?.name?.trim() || "Stall";
+  return vendor?.name?.trim() || "Vendor";
 }
 
 function rosterDays(days: number[] | null) {
@@ -150,12 +150,12 @@ export default async function EditMarketPage({
         </form>
       </section>
       <section>
-        <h2>Stalls</h2>
+        <h2>Vendors</h2>
         {stallsLeftAlone ? (
-          <p className="mt-2 text-base text-muted-foreground">Stalls stay with this market.</p>
+          <p className="mt-2 text-base text-muted-foreground">Vendors stay with this market.</p>
         ) : null}
         {rosterRes.error ? (
-          <p className="mt-3 text-base text-muted-foreground">Could not load stalls.</p>
+          <p className="mt-3 text-base text-muted-foreground">Could not load vendors.</p>
         ) : ((rosterRes.data ?? []) as RosterRow[]).length ? (
           <ul className="mt-3 divide-y divide-border">
             {((rosterRes.data ?? []) as RosterRow[])
@@ -181,7 +181,7 @@ export default async function EditMarketPage({
               ))}
           </ul>
         ) : (
-          <p className="mt-3 text-base text-muted-foreground">No stalls linked yet.</p>
+          <p className="mt-3 text-base text-muted-foreground">No vendors linked yet.</p>
         )}
         <form action={linkVendorToMarket} className="mt-4 grid gap-2 sm:grid-cols-3">
           <input type="hidden" name="market_id" value={id} />
@@ -192,7 +192,7 @@ export default async function EditMarketPage({
               </option>
             ))}
           </select>
-          <Input name="stall" placeholder="Stall" aria-label="Stall" />
+          <Input name="stall" placeholder="Vendor" aria-label="Vendor" />
           <Input name="days" placeholder="Days 0–6, at least one" aria-label="Days" required />
           <MaintenanceOverride show={stallsLeftAlone} className="sm:col-span-3" />
           <Button type="submit" className="w-fit">

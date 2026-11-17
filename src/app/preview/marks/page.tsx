@@ -86,14 +86,14 @@ const SECTIONS: SectionSpec[] = [
     currentCritique: "Trapezoid roof over two vertical slots reads as a generic store/trash icon.",
     conceptNoteA: "Market counter scale with dual brass pans & central dial.",
     conceptNoteB: "Dovetail slatted harvest bushel crate brimming with root & leaf produce.",
-    conceptNoteC: "Index tab register `" + "LIVE / STALLS" + "`.",
+    conceptNoteC: "Index tab register `" + "LIVE / VENDORS" + "`.",
   },
   {
     key: "vendorsWeek",
     idLabel: "section#vendors-week",
     kicker: "This week's vendors",
     title: "Top 5 this week",
-    how: "Five stalls with the most going on this week. Tap a name to learn more.",
+    how: "Five vendors with the most going on this week. Tap a name to learn more.",
     place: "rail",
     tone: "menus",
     currentMarkName: "TallyMark",
@@ -681,7 +681,7 @@ export default function MarksPreviewPage() {
       label: "Direction B · Market Hall Woodcut Stamps",
       subtitle: "High-contrast linocut/signwriter silhouettes on tactile offset-shadow enamel tiles",
       summary:
-        "Bold negative-space stamps inspired by physical farmers' market artifacts: a 5-pleat striped stall canopy, hanging iron-hook calendar board, slatted dovetail crate overflowing with leafy produce, crown hall plaque, woven shopper's basket, brass-clip dispatch board, folded triptych atlas, and brick market hall arch.",
+        "Bold negative-space stamps inspired by physical farmers' market artifacts: a 5-pleat striped vendor canopy, hanging iron-hook calendar board, slatted dovetail crate overflowing with leafy produce, crown hall plaque, woven shopper's basket, brass-clip dispatch board, folded triptych atlas, and brick market hall arch.",
     },
     {
       id: "bare-botanical",
@@ -692,10 +692,10 @@ export default function MarksPreviewPage() {
     },
     {
       id: "enamel-number",
-      label: "Direction D · Stall Number Plates (Zero Icons)",
-      subtitle: "Replaces pictograms with Barlow Condensed ExtraBold (`type-census`) stall numbers",
+      label: "Direction D · Vendor Number Plates (Zero Icons)",
+      subtitle: "Replaces pictograms with Barlow Condensed ExtraBold (`type-census`) vendor numbers",
       summary:
-        "If any icon feels superfluous, this direction uses the site's existing `type-census` face (`01`, `02`, `LIVE`, `TOP`, `03`, `04`, `05`) stamped into a sharp enamel stall number plate — 100% typographic and impossible to mistake for an icon pack.",
+        "If any icon feels superfluous, this direction uses the site's existing `type-census` face (`01`, `02`, `LIVE`, `TOP`, `03`, `04`, `05`) stamped into a sharp enamel vendor number plate — 100% typographic and impossible to mistake for an icon pack.",
     },
     {
       id: "ruled-ledger",

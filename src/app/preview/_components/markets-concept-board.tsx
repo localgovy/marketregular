@@ -220,12 +220,12 @@ export function MarketsConceptBoard({
         <div className="flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board lg:col-span-7">
           <div>
             <p className="type-kicker text-primary-foreground/90">
-              Interactive map, 7-day timetable &amp; stall roster explorer
+              Interactive map, 7-day timetable &amp; vendor roster explorer
             </p>
             <h1 className="mt-1 text-primary-foreground">{LAUNCH_CITY} farmers&apos; markets</h1>
             <p className="type-lede mt-2 max-w-2xl text-primary-foreground/95">
               Filter all {formatCensus(data.census.markets)} markets by day, neighbourhood, or
-              indoor/outdoor setup — and click any market to inspect its stalls, products, and
+              indoor/outdoor setup — and click any market to inspect its vendors, products, and
               weekly hours.
             </p>
 
@@ -362,7 +362,7 @@ export function MarketsConceptBoard({
                 <p className="type-census text-2xl text-primary-foreground sm:text-3xl">
                   {formatCensus(data.census.vendors)}
                 </p>
-                <p className="text-sm text-primary-foreground/85">Active stalls</p>
+                <p className="text-sm text-primary-foreground/85">Active vendors</p>
               </div>
               <div className="rounded-lg bg-primary-foreground/12 px-3.5 py-2.5">
                 <p className="type-census text-2xl text-primary-foreground sm:text-3xl">
@@ -410,7 +410,7 @@ export function MarketsConceptBoard({
                       />
                       <div className="min-w-0">
                         <p className="type-kicker text-primary">
-                          Active in explorer · {selectedMarket.vendorCount} stalls
+                          Active in explorer · {selectedMarket.vendorCount} vendors
                         </p>
                         <Link
                           href={`/markets/${selectedMarket.slug}`}
@@ -571,7 +571,7 @@ export function MarketsConceptBoard({
                             </button>
                             <span className="ml-1.5 text-sm text-muted-foreground">
                               · {slot.neighbourhood}
-                              {slot.vendorCount > 0 ? ` · ${slot.vendorCount} stalls` : ""}
+                              {slot.vendorCount > 0 ? ` · ${slot.vendorCount} vendors` : ""}
                             </span>
                           </div>
                         </div>
@@ -602,10 +602,10 @@ export function MarketsConceptBoard({
         </div>
       </section>
 
-      {/* Main 12-Col Interactive Market & Stall Explorer (5-Col Market List + 7-Col Selected Market & Stall Stage) */}
+      {/* Main 12-Col Interactive Market & Vendor Explorer (5-Col Market List + 7-Col Selected Market & Vendor Stage) */}
       <section
         id="market-explorer"
-        aria-label="Interactive market and stall explorer"
+        aria-label="Interactive market and vendor explorer"
         className="scroll-mt-header mt-8 grid gap-8 lg:grid-cols-12 lg:items-start"
       >
         {/* Left 5 Columns: Filterable Market List */}
@@ -617,7 +617,7 @@ export function MarketsConceptBoard({
               </span>
               <div>
                 <p className="type-kicker text-muted-foreground">
-                  Select a market to inspect its stalls
+                  Select a market to inspect its vendors
                 </p>
                 <h2>Markets ({filteredMarkets.length})</h2>
               </div>
@@ -630,7 +630,7 @@ export function MarketsConceptBoard({
               className="cursor-pointer rounded bg-receipt px-2.5 py-1 text-sm font-medium text-foreground ring-1 ring-border"
             >
               <option value="soonest">Opening soonest</option>
-              <option value="stalls">Most stalls</option>
+              <option value="stalls">Most vendors</option>
               <option value="reviewed">Most reviewed</option>
               <option value="name">Name A–Z</option>
             </select>
@@ -683,7 +683,7 @@ export function MarketsConceptBoard({
                             {m.neighbourhood}
                             {m.indoor_outdoor ? ` · ${m.indoor_outdoor}` : ""} ·{" "}
                             <span className="type-nums font-medium text-foreground">
-                              {m.vendorCount} stalls
+                              {m.vendorCount} vendors
                             </span>
                           </p>
                         </div>
@@ -730,7 +730,7 @@ export function MarketsConceptBoard({
           ) : null}
         </div>
 
-        {/* Right 7 Columns: Selected Market Deep Stage (Forest-Green Header + Filterable Stall & Menu Roster) */}
+        {/* Right 7 Columns: Selected Market Deep Stage (Forest-Green Header + Filterable Vendor & Menu Roster) */}
         <div className="lg:sticky lg:top-20 lg:col-span-7">
           {selectedMarket ? (
             <div className="bg-card ring-1 ring-board">
@@ -770,7 +770,7 @@ export function MarketsConceptBoard({
                           reviewCount={selectedMarket.review_count}
                         />
                         <span className="stall-chip-sm type-nums bg-board/80 px-2.5 py-0.5 text-sm font-medium text-chalk">
-                          {selectedMarket.vendorCount} registered stalls
+                          {selectedMarket.vendorCount} registered vendors
                         </span>
                       </div>
                     </div>
@@ -831,22 +831,22 @@ export function MarketsConceptBoard({
                 </div>
               </div>
 
-              {/* Stalls & Products at This Market */}
+              {/* Vendors & Products at This Market */}
               <div className="p-5 sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-3">
                   <div className="flex items-center gap-2">
                     <CrateMark className="size-4 text-primary" />
-                    <h3>Stalls &amp; menu highlights at {selectedMarket.name}</h3>
+                    <h3>Vendors &amp; menu highlights at {selectedMarket.name}</h3>
                   </div>
                   <Link
                     href={`/markets/${selectedMarket.slug}#vendors`}
                     className="text-sm font-medium text-primary hover:underline"
                   >
-                    See all {selectedMarket.vendorCount} stalls →
+                    See all {selectedMarket.vendorCount} vendors →
                   </Link>
                 </div>
 
-                {/* Category Filter Pills for Stalls at Selected Market */}
+                {/* Category Filter Pills for Vendors at Selected Market */}
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
@@ -949,7 +949,7 @@ export function MarketsConceptBoard({
                               href={`/vendors/${st.slug}`}
                               className="font-medium text-primary hover:underline"
                             >
-                              Stall menu →
+                              Vendor menu →
                             </Link>
                           </div>
                         </li>
@@ -958,7 +958,7 @@ export function MarketsConceptBoard({
                   </ul>
                 ) : (
                   <p className="mt-4 bg-receipt p-4 text-sm text-muted-foreground ring-1 ring-border">
-                    Visit the market page to browse all stalls at {selectedMarket.name}.
+                    Visit the market page to browse all vendors at {selectedMarket.name}.
                   </p>
                 )}
               </div>
@@ -970,7 +970,7 @@ export function MarketsConceptBoard({
       {/* Bottom Full-Width Vendors Directory (#directory-vendors) & BrowseLinks */}
       <section
         id="directory-vendors"
-        aria-label="Featured stalls across Toronto markets"
+        aria-label="Featured vendors across Toronto markets"
         className="scroll-mt-header mt-10 bg-card p-5 ring-1 ring-board sm:p-6"
       >
         <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
@@ -982,7 +982,7 @@ export function MarketsConceptBoard({
               <p className="type-kicker text-primary">
                 {formatCensus(data.census.vendors)} vendors across {LAUNCH_CITY} markets
               </p>
-              <h2 className="mt-0.5">Stalls, menus &amp; where they sell</h2>
+              <h2 className="mt-0.5">Vendors, menus &amp; where they sell</h2>
             </div>
           </div>
           <Link

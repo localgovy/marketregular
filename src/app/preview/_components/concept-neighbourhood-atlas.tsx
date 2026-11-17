@@ -153,7 +153,7 @@ function VendorTableCard({
   return (
     <li className="flex flex-col justify-between bg-card ring-1 ring-board">
       <div>
-        {/* 1. Vendor Plate Header (Unified Stall Emblem + Name + Live Status + Save) */}
+        {/* 1. Vendor Plate Header (Unified Vendor Emblem + Name + Live Status + Save) */}
         <div className="flex items-start justify-between gap-2.5 border-b border-black/15 bg-primary px-3.5 py-3 text-primary-foreground">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <StallEmblem
@@ -211,7 +211,7 @@ function VendorTableCard({
 
         {/* 2. Cohesive Visual Table Banner + Dashed Slip Menu Rows */}
         <div className="border-b border-border bg-secondary">
-          {/* Visual Table Strip: Pairs the stall's produce/bakery photography with its menu */}
+          {/* Visual Table Strip: Pairs the vendor's produce/bakery photography with its menu */}
           <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-3 border-b border-border bg-card/75 px-3.5 py-2.5">
             <Link href={`/vendors/${vendor.slug}`} className="block">
               <ProductPhotoFrame
@@ -240,7 +240,7 @@ function VendorTableCard({
                 href={`/vendors/${vendor.slug}`}
                 className="shrink-0 text-sm font-medium text-primary hover:underline"
               >
-                Stall menu
+                Vendor menu
               </Link>
             </div>
           </div>
@@ -274,7 +274,7 @@ function VendorTableCard({
             </ul>
           ) : (
             <p className="px-3.5 py-2 text-base text-foreground">
-              {vendor.about?.trim() || `${vendor.primaryAisleLabel} from this stall.`}
+              {vendor.about?.trim() || `${vendor.primaryAisleLabel} from this vendor.`}
             </p>
           )}
         </div>
@@ -316,7 +316,7 @@ function VendorTableCard({
                       </Link>
                       {market.stall ? (
                         <span className="type-nums ml-1.5 text-sm text-muted-foreground">
-                          · Stall {market.stall}
+                          · Vendor {market.stall}
                         </span>
                       ) : null}
                     </p>
@@ -457,7 +457,7 @@ export function ConceptNeighbourhoodAtlas({
 
   return (
     <div className="bg-background text-foreground">
-      {/* Top Canadian Banner + Live Hall & Stall Pulse */}
+      {/* Top Canadian Banner + Live Hall & Vendor Pulse */}
       <div className="border-b border-board bg-secondary">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2.5 lg:px-6">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -488,7 +488,7 @@ export function ConceptNeighbourhoodAtlas({
               href="/markets#directory-vendors"
               className="font-medium text-primary hover:underline"
             >
-              <span className="type-nums">{data.sellingToday.length}</span> stalls active today
+              <span className="type-nums">{data.sellingToday.length}</span> vendors active today
             </Link>
             <span aria-hidden className="text-muted-foreground">
               ·
@@ -506,7 +506,7 @@ export function ConceptNeighbourhoodAtlas({
           <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
             <div className="lg:col-span-7">
               <p className="type-kicker font-medium text-primary">
-                Stalls, products &amp; neighbourhood markets in one view
+                Vendors, products &amp; neighbourhood markets in one view
               </p>
               <h1 className="mt-1">{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
@@ -526,7 +526,7 @@ export function ConceptNeighbourhoodAtlas({
                   className="flex flex-col justify-between bg-secondary/45 p-3.5 transition-colors hover:bg-secondary"
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker font-medium text-primary">Priority stalls</span>
+                    <span className="type-kicker font-medium text-primary">Priority vendors</span>
                     <CrateMark className="size-4 shrink-0 text-primary" />
                   </div>
                   <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
@@ -604,7 +604,7 @@ export function ConceptNeighbourhoodAtlas({
 
               {/* Visual Craving Chips with Product Photo Thumbnails */}
               <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-primary-foreground/20 pt-3">
-                <span className="type-kicker mr-1 text-chalk">Jump to a craving or filter stalls:</span>
+                <span className="type-kicker mr-1 text-chalk">Jump to a craving or filter vendors:</span>
                 {CRAVING_SHORTCUTS.map((item) => {
                   const active = vendorAisleFilter === item.aisleId;
                   const thumbUrl = aislePhotoMap.get(item.aisleId) ?? null;
@@ -635,7 +635,7 @@ export function ConceptNeighbourhoodAtlas({
           aria-label="Priority Vendor, Product, and Market Showcase"
           className="mt-8 bg-card ring-1 ring-board"
         >
-          {/* Section Header + Cohesive Stall Emblem Ribbon */}
+          {/* Section Header + Cohesive Vendor Emblem Ribbon */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-board bg-secondary px-4 py-3.5 sm:px-5">
             <div className="flex items-center gap-3">
               <span className="stall-chip-sm flex size-9 shrink-0 items-center justify-center bg-primary text-primary-foreground">
@@ -645,15 +645,15 @@ export function ConceptNeighbourhoodAtlas({
                 <p className="type-kicker text-muted-foreground">
                   Vendors in priority · Paired with their signature products &amp; markets
                 </p>
-                <h2>Featured Stalls, Products &amp; Markets</h2>
+                <h2>Featured Vendors, Products &amp; Markets</h2>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              {/* Cohesive Stall Emblem Strip */}
+              {/* Cohesive Vendor Emblem Strip */}
               {logoVendors.length > 0 ? (
-                <div className="hidden items-center gap-1.5 xl:flex" aria-label="Featured stall emblems">
-                  <span className="type-kicker mr-1 text-muted-foreground">Stall marks:</span>
+                <div className="hidden items-center gap-1.5 xl:flex" aria-label="Featured vendor emblems">
+                  <span className="type-kicker mr-1 text-muted-foreground">Vendor marks:</span>
                   {logoVendors.slice(0, 6).map((v) => (
                     <Link
                       key={v.slug}
@@ -709,7 +709,7 @@ export function ConceptNeighbourhoodAtlas({
                       : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
                   )}
                 >
-                  All stalls
+                  All vendors
                 </button>
                 {data.aisles.slice(0, 6).map((aisle) => {
                   const active = vendorAisleFilter === aisle.id;
@@ -820,7 +820,7 @@ export function ConceptNeighbourhoodAtlas({
               </ul>
             ) : (
               <p className="text-base text-muted-foreground">
-                No stalls match these filters.{" "}
+                No vendors match these filters.{" "}
                 <button
                   type="button"
                   onClick={() => {
@@ -837,12 +837,12 @@ export function ConceptNeighbourhoodAtlas({
           </div>
         </section>
 
-        {/* Synchronized Deep-Dive Split: 6-Col Product Crate Explorer (with Stalls) + 6-Col Live Neighbourhood Atlas (with Stalls) */}
+        {/* Synchronized Deep-Dive Split: 6-Col Product Crate Explorer (with Vendors) + 6-Col Live Neighbourhood Atlas (with Vendors) */}
         <section
           aria-label="Craving Crate Explorer and Live Atlas"
           className="mt-8 grid gap-8 lg:grid-cols-12 lg:items-start"
         >
-          {/* Left 6 Columns: Interactive Craving & Aisle Crate Explorer + Top Stalls in Aisle */}
+          {/* Left 6 Columns: Interactive Craving & Aisle Crate Explorer + Top Vendors in Aisle */}
           <div className="bg-card ring-1 ring-board lg:col-span-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-board bg-secondary px-4 py-3">
               <div className="flex items-center gap-2.5">
@@ -851,7 +851,7 @@ export function ConceptNeighbourhoodAtlas({
                 </span>
                 <div>
                   <p className="type-kicker text-muted-foreground">
-                    Browse {formatCensus(data.census.menus)} items &amp; the stalls that grow or bake them
+                    Browse {formatCensus(data.census.menus)} items &amp; the vendors that grow or bake them
                   </p>
                   <h2>Products &amp; Categories</h2>
                 </div>
@@ -961,18 +961,18 @@ export function ConceptNeighbourhoodAtlas({
                   </div>
                 </div>
 
-                {/* Key Stalls Known for This Aisle (with Uniform StallEmblem) */}
+                {/* Key Vendors Known for This Aisle (with Uniform StallEmblem) */}
                 {activeAisle.topVendors.length > 0 ? (
                   <div className="mt-4 border-t border-border pt-3.5">
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="type-kicker font-medium text-foreground">
-                        Stalls known for {activeAisle.label.toLowerCase()}:
+                        Vendors known for {activeAisle.label.toLowerCase()}:
                       </p>
                       <Link
                         href={`/products?aisle=${activeAisle.id}`}
                         className="text-sm font-medium text-primary hover:underline"
                       >
-                        Compare all stalls &amp; prices
+                        Compare all vendors &amp; prices
                       </Link>
                     </div>
                     <ul className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -1075,7 +1075,7 @@ export function ConceptNeighbourhoodAtlas({
             {/* Neighbourhood Circuit Selector Strip */}
             <div className="border-b border-border bg-secondary/40 px-4 py-3">
               <p className="type-kicker mb-2 text-muted-foreground">
-                Inspect a neighbourhood and its stalls:
+                Inspect a neighbourhood and its vendors:
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {data.neighbourhoodCircuits.slice(0, 7).map((circuit, idx) => {
@@ -1118,7 +1118,7 @@ export function ConceptNeighbourhoodAtlas({
                     <h3>{activeCircuit.label}</h3>
                     <span className="type-nums text-sm text-muted-foreground">
                       {activeCircuit.vendorCount > 0
-                        ? `${activeCircuit.vendorCount} stalls registered`
+                        ? `${activeCircuit.vendorCount} vendors registered`
                         : `${activeCircuit.marketCount} hall`}
                     </span>
                   </div>
@@ -1190,11 +1190,11 @@ export function ConceptNeighbourhoodAtlas({
                     })}
                 </ul>
 
-                {/* Anchor Stalls in This Neighbourhood (with Cohesive Stall Emblems) */}
+                {/* Anchor Vendors in This Neighbourhood (with Cohesive Vendor Emblems) */}
                 {activeCircuit.topVendors.length > 0 ? (
                   <div className="border-t border-border bg-secondary/35 px-4 py-3">
                     <p className="type-kicker text-muted-foreground">
-                      Anchor stalls setting up in {activeCircuit.label}:
+                      Anchor vendors setting up in {activeCircuit.label}:
                     </p>
                     <div className="mt-2 grid gap-2 sm:grid-cols-2">
                       {activeCircuit.topVendors.slice(0, 4).map((v) => (
@@ -1218,7 +1218,7 @@ export function ConceptNeighbourhoodAtlas({
           </div>
         </section>
 
-        {/* Full-Width Section: Toronto Neighbourhood Markets (With Both Hall & Stall Emblems) */}
+        {/* Full-Width Section: Toronto Neighbourhood Markets (With Both Hall & Vendor Emblems) */}
         <section
           aria-label="Neighbourhood markets"
           className="mt-10 border-t-2 border-board pt-8"
@@ -1230,7 +1230,7 @@ export function ConceptNeighbourhoodAtlas({
               </span>
               <div>
                 <p className="type-kicker text-muted-foreground">
-                  Every major market district in {LAUNCH_CITY} — paired with its halls &amp; anchor stalls
+                  Every major market district in {LAUNCH_CITY} — paired with its halls &amp; anchor vendors
                 </p>
                 <h2>Neighbourhood Markets</h2>
               </div>
@@ -1276,7 +1276,7 @@ export function ConceptNeighbourhoodAtlas({
                     </div>
                     <span className="type-nums text-sm font-medium text-primary">
                       {circuit.vendorCount > 0
-                        ? `${circuit.vendorCount} stalls`
+                        ? `${circuit.vendorCount} vendors`
                         : `${circuit.marketCount} ${circuit.marketCount === 1 ? "market" : "markets"}`}
                     </span>
                   </div>
@@ -1324,7 +1324,7 @@ export function ConceptNeighbourhoodAtlas({
 
                   {circuit.topVendors.length > 0 ? (
                     <div className="border-t border-dashed border-border bg-secondary/30 px-4 py-2.5">
-                      <p className="type-kicker text-muted-foreground">Featured stalls here:</p>
+                      <p className="type-kicker text-muted-foreground">Featured vendors here:</p>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {circuit.topVendors.slice(0, 3).map((v) => (
                           <Link
@@ -1347,7 +1347,7 @@ export function ConceptNeighbourhoodAtlas({
                     onClick={() => syncAreaSelection(circuit.label)}
                     className="cursor-pointer font-medium text-stamp hover:underline"
                   >
-                    Show {circuit.label} stalls above
+                    Show {circuit.label} vendors above
                   </button>
                   <Link
                     href={`/markets?area=${encodeURIComponent(circuit.q)}`}
@@ -1361,13 +1361,13 @@ export function ConceptNeighbourhoodAtlas({
           </div>
         </section>
 
-        {/* Bottom 12-Col Spread: 8-Col Live Stalls & Regulars Roster + 4-Col Timetable & Saved Rail */}
+        {/* Bottom 12-Col Spread: 8-Col Live Vendors & Regulars Roster + 4-Col Timetable & Saved Rail */}
         <section
-          aria-label="Stalls, notes, and upcoming timetable"
+          aria-label="Vendors, notes, and upcoming timetable"
           className="mt-10 border-t-2 border-board pt-8 pb-4"
         >
           <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
-            {/* Left 8 Columns: Active Stalls Today + Top 5 This Week + Shopper Notes */}
+            {/* Left 8 Columns: Active Vendors Today + Top 5 This Week + Shopper Notes */}
             <div className="flex flex-col gap-6 lg:col-span-8">
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Active Vendors Today */}
@@ -1379,7 +1379,7 @@ export function ConceptNeighbourhoodAtlas({
                       </span>
                       <div>
                         <p className="type-kicker text-muted-foreground">Selling today</p>
-                        <h3>Stalls on the floor</h3>
+                        <h3>Vendors on the floor</h3>
                       </div>
                     </div>
                     <span className="type-nums text-sm font-medium text-primary">
@@ -1396,7 +1396,7 @@ export function ConceptNeighbourhoodAtlas({
                   </ul>
                 </div>
 
-                {/* Top 5 Stalls This Week */}
+                {/* Top 5 Vendors This Week */}
                 <div className="bg-card ring-1 ring-border">
                   <div className="flex items-start justify-between gap-2 border-b border-border bg-secondary/50 px-4 py-3">
                     <div className="flex items-center gap-2.5">
@@ -1405,14 +1405,14 @@ export function ConceptNeighbourhoodAtlas({
                       </span>
                       <div>
                         <p className="type-kicker text-muted-foreground">Regulars&apos; picks</p>
-                        <h3>Top 5 stalls this week</h3>
+                        <h3>Top 5 vendors this week</h3>
                       </div>
                     </div>
                     <Link
                       href="/markets#directory-vendors"
                       className="text-sm font-medium text-primary hover:underline"
                     >
-                      All stalls
+                      All vendors
                     </Link>
                   </div>
                   <ol>
@@ -1432,7 +1432,7 @@ export function ConceptNeighbourhoodAtlas({
                     </span>
                     <div>
                       <p className="type-kicker text-muted-foreground">
-                        Live from the group chat at the stalls
+                        Live from the group chat at the vendors
                       </p>
                       <h3>Recent shopper notes &amp; finds</h3>
                     </div>

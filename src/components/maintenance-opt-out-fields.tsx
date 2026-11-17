@@ -7,7 +7,7 @@ export function MaintenanceOptOutFields({
 }: {
   kind: MaintenanceKind;
   selected: readonly string[];
-  noun: "stall" | "market";
+  noun: "vendor" | "market";
 }) {
   return (
     <fieldset className="grid gap-2 sm:col-span-2">

@@ -277,13 +277,13 @@ export function VendorConceptCounter({
               href={guide.href}
               className="font-medium text-primary underline decoration-primary/40 underline-offset-4 hover:decoration-primary"
             >
-              All {guide.label.toLowerCase()} stalls
+              All {guide.label.toLowerCase()} vendors
             </Link>
           ))}
         </div>
       </div>
 
-      {/* Enamel Forest-Green Stall Counter Header Plate */}
+      {/* Enamel Forest-Green Vendor Counter Header Plate */}
       <section className="mt-4 rounded-xl bg-primary p-5 text-primary-foreground ring-2 ring-foreground/15 sm:p-7">
         <div className="grid gap-6 lg:grid-cols-12 lg:items-center">
           <div className="lg:col-span-8">
@@ -334,7 +334,7 @@ export function VendorConceptCounter({
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/15 px-3 py-1 text-sm font-medium text-primary-foreground">
                 <CheckMark className="size-3.5 text-primary-foreground" />
-                <span>Market stall pickup</span>
+                <span>Market vendor pickup</span>
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-md bg-primary-foreground/15 px-3 py-1 text-sm font-medium text-primary-foreground">
                 <TicketMark className="size-3.5 text-primary-foreground" />
@@ -350,7 +350,7 @@ export function VendorConceptCounter({
           <div className="flex flex-col justify-between gap-4 rounded-xl bg-foreground/25 p-4 ring-1 ring-primary-foreground/20 lg:col-span-4">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="type-kicker text-primary-foreground/75">Save this stall</p>
+                <p className="type-kicker text-primary-foreground/75">Save this vendor</p>
                 <p className="text-base font-medium text-primary-foreground">
                   Keep {vendor.name} on your list
                 </p>
@@ -380,9 +380,9 @@ export function VendorConceptCounter({
         </div>
       </section>
 
-      {/* Main 12-Column Counter Layout: 8-Col Interactive Stall Table + 4-Col Sticky Order Slip & Schedule */}
+      {/* Main 12-Column Counter Layout: 8-Col Interactive Vendor Table + 4-Col Sticky Order Slip & Schedule */}
       <div className="mt-8 grid gap-8 lg:grid-cols-12 lg:items-start">
-        {/* Left 8 Columns: Interactive Stall Menu + Category Cross-Links */}
+        {/* Left 8 Columns: Interactive Vendor Menu + Category Cross-Links */}
         <div className="flex flex-col gap-8 lg:col-span-8">
           <section
             id="menu"
@@ -399,11 +399,11 @@ export function VendorConceptCounter({
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2>Menu &amp; products</h2>
                   <span className="rounded-md bg-ticket px-2.5 py-1 text-sm font-medium text-chalk">
-                    {isSimulated ? "Online ordering active" : "Published stall menu"}
+                    {isSimulated ? "Online ordering active" : "Published vendor menu"}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Add items directly to your stall order slip for market pickup or delivery, or click any item&apos;s category link to compare prices across other Toronto vendors.
+                  Add items directly to your vendor order slip for market pickup or delivery, or click any item&apos;s category link to compare prices across other Toronto vendors.
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
                   {aisleGuides.map((guide) => (
@@ -617,7 +617,7 @@ export function VendorConceptCounter({
                                     {item.effectivePickup ? (
                                       <span className="inline-flex items-center gap-1 font-medium text-primary">
                                         <CheckMark className="size-3.5" />
-                                        <span>Stall pickup</span>
+                                        <span>Vendor pickup</span>
                                       </span>
                                     ) : null}
                                     {item.effectivePreorder ? (
@@ -699,7 +699,7 @@ export function VendorConceptCounter({
                                   </div>
                                 ) : (
                                   <span className="text-sm text-muted-foreground">
-                                    At the stall counter
+                                    At the vendor counter
                                   </span>
                                 )}
                               </div>
@@ -730,7 +730,7 @@ export function VendorConceptCounter({
               </Link>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Looking for more stalls that carry what {vendor.name} sells? Jump straight to the Toronto product guides or category directories.
+              Looking for more vendors that carry what {vendor.name} sells? Jump straight to the Toronto product guides or category directories.
             </p>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -758,7 +758,7 @@ export function VendorConceptCounter({
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Compare every Toronto stall carrying {guide.label.toLowerCase()}.
+                        Compare every Toronto vendor carrying {guide.label.toLowerCase()}.
                       </p>
                     </div>
                   </div>
@@ -788,16 +788,16 @@ export function VendorConceptCounter({
             <section className="rounded-xl bg-card p-5 ring-1 ring-foreground/10 sm:p-6">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div>
-                  <p className="type-kicker text-primary">More stalls to explore</p>
+                  <p className="type-kicker text-primary">More vendors to explore</p>
                   <h2 className="mt-0.5">
-                    Other stalls known for {vendor.primaryAisleLabel.toLowerCase()}
+                    Other vendors known for {vendor.primaryAisleLabel.toLowerCase()}
                   </h2>
                 </div>
                 <Link
                   href={`/products?aisle=${encodeURIComponent(vendor.primaryAisleId)}`}
                   className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
                 >
-                  <span>See all {vendor.primaryAisleLabel.toLowerCase()} stalls</span>
+                  <span>See all {vendor.primaryAisleLabel.toLowerCase()} vendors</span>
                   <CaretRightMark className="size-3.5" />
                 </Link>
               </div>
@@ -895,14 +895,14 @@ export function VendorConceptCounter({
           </section>
         </div>
 
-        {/* Right 4 Columns: Sticky Stall Order Slip + Unclipped Market Hall Schedule + Contact */}
+        {/* Right 4 Columns: Sticky Vendor Order Slip + Unclipped Market Hall Schedule + Contact */}
         <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:col-span-4">
-          {/* Interactive Stall Order Slip */}
+          {/* Interactive Vendor Order Slip */}
           <div className="rounded-xl bg-receipt p-5 ring-2 ring-stamp shadow-[inset_4px_0_0_var(--primary)]">
             <div className="flex items-start justify-between gap-2 border-b border-dashed border-border pb-3">
               <div>
-                <p className="type-kicker text-primary">Direct from the stall</p>
-                <h2 className="mt-0.5">Stall order slip</h2>
+                <p className="type-kicker text-primary">Direct from the vendor</p>
+                <h2 className="mt-0.5">Vendor order slip</h2>
               </div>
               <span className="type-nums rounded bg-ticket px-2.5 py-1 text-sm font-medium text-chalk">
                 {slipItems.reduce((acc, e) => acc + e.qty, 0)} selected
@@ -1007,7 +1007,7 @@ export function VendorConceptCounter({
             <div className="mt-3 border-t border-border pt-3">
               <div className="flex items-baseline justify-between">
                 <span className="text-sm font-medium text-muted-foreground">
-                  Estimated stall total
+                  Estimated vendor total
                 </span>
                 <span className="type-nums text-xl text-foreground">
                   {formatPrice(slipTotalCents) ?? "$0.00"}
@@ -1064,7 +1064,7 @@ export function VendorConceptCounter({
                           lat={market.lat}
                           lng={market.lng}
                         />
-                        {market.stall ? ` · Stall ${market.stall}` : ""}
+                        {market.stall ? ` · Vendor ${market.stall}` : ""}
                       </p>
                     </div>
                     <SessionLines hours={market.hours} fallback={market.nextOpen} />
@@ -1076,7 +1076,7 @@ export function VendorConceptCounter({
 
           {/* Contact, Socials & Tags */}
           <div className="rounded-xl bg-card p-5 ring-1 ring-foreground/10">
-            <h3>Stall contact &amp; links</h3>
+            <h3>Vendor contact &amp; links</h3>
             <div className="mt-3">
               <ListingContact phone={vendor.contact.phone} email={vendor.contact.email} />
               <ListingWebsite href={vendor.contact.website} />
@@ -1087,7 +1087,7 @@ export function VendorConceptCounter({
             {vendor.tags.length > 0 ? (
               <div className="mt-4 border-t border-dashed border-border pt-4">
                 <p className="mb-2 text-sm font-medium text-muted-foreground">
-                  Browse stalls by tag
+                  Browse vendors by tag
                 </p>
                 <TagList tags={vendor.tags} />
               </div>

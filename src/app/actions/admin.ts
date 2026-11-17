@@ -196,12 +196,12 @@ async function optOutsFor(
     .eq("id", id)
     .maybeSingle();
   if (error) failDb(error, "Could not open that listing.");
-  if (!data) fail(kind === "vendor" ? "That stall is missing." : "That market is missing.");
+  if (!data) fail(kind === "vendor" ? "That vendor is missing." : "That market is missing.");
   return readOptOuts(kind, data.maintenance_opt_outs);
 }
 
 function refuseSections(
-  groups: { labels: readonly string[]; noun: "stall" | "market" }[],
+  groups: { labels: readonly string[]; noun: "vendor" | "market" }[],
   formData: FormData | undefined,
 ) {
   if (maintenanceOverride(formData)) return;
@@ -372,14 +372,14 @@ export async function saveVendor(formData: FormData) {
       .eq("id", id)
       .maybeSingle();
     if (readError) failDb(readError, "Could not save that vendor.");
-    if (!current) fail("That stall is missing.");
+    if (!current) fail("That vendor is missing.");
     const blocked = labelsFor(
       "vendor",
       touchedVendorSections(vendorFields(current), vendorFields(payload)).filter((key) =>
         readOptOuts("vendor", current.maintenance_opt_outs).includes(key),
       ),
     );
-    refuseSections([{ labels: blocked, noun: "stall" }], formData);
+    refuseSections([{ labels: blocked, noun: "vendor" }], formData);
     const nextOptOuts = optOutsFromAdminForm("vendor", formData, current.maintenance_opt_outs);
     const update = nextOptOuts === undefined ? payload : { ...payload, maintenance_opt_outs: nextOptOuts };
     const previous = current.slug ? `/vendors/${current.slug}` : null;
@@ -470,7 +470,7 @@ export async function linkVendorToMarket(formData: FormData) {
   refuseSections(
     [
       ...(vendorOpt.includes("halls")
-        ? [{ labels: labelsFor("vendor", ["halls"]), noun: "stall" as const }]
+        ? [{ labels: labelsFor("vendor", ["halls"]), noun: "vendor" as const }]
         : []),
       ...(marketOpt.includes("roster")
         ? [{ labels: labelsFor("market", ["roster"]), noun: "market" as const }]
@@ -481,7 +481,7 @@ export async function linkVendorToMarket(formData: FormData) {
   const { error } = await supabase.from("market_vendors").insert({
     market_id,
     vendor_id,
-    stall: String(formData.get("stall") ?? "") || null,
+    vendor: String(formData.get("vendor") ?? "") || null,
     days: stallDays(formData.get("days")),
   });
   if (error) failDb(error, "Could not link that vendor.");
@@ -502,7 +502,7 @@ export async function unlinkVendorFromMarket(formData: FormData) {
   refuseSections(
     [
       ...(vendorOpt.includes("halls")
-        ? [{ labels: labelsFor("vendor", ["halls"]), noun: "stall" as const }]
+        ? [{ labels: labelsFor("vendor", ["halls"]), noun: "vendor" as const }]
         : []),
       ...(marketOpt.includes("roster")
         ? [{ labels: labelsFor("market", ["roster"]), noun: "market" as const }]
@@ -517,7 +517,7 @@ export async function unlinkVendorFromMarket(formData: FormData) {
     .eq("vendor_id", vendor_id)
     .select("vendor_id");
   if (error) failDb(error, "Could not unlink that vendor.");
-  if (!data?.length) fail("That stall is not on this market.");
+  if (!data?.length) fail("That vendor is not on this market.");
   const path = await listingPath(supabase, "markets", market_id);
   revalidatePublishedDirectory(path ? [path] : []);
   revalidatePath(`/admin/markets/${market_id}`);
@@ -548,7 +548,7 @@ export async function saveMenuItem(formData: FormData) {
   const vendor_id = String(formData.get("vendor_id"));
   const opted = await optOutsFor(supabase, "vendors", vendor_id);
   if (opted.includes("menu")) {
-    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "stall" }], formData);
+    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "vendor" }], formData);
   }
   const rows = await vendorMenuSectionRows(supabase, vendor_id);
   const section = parseMenuSectionForm(formData, menuSectionsFromItems(rows));
@@ -578,7 +578,7 @@ export async function assignMenuItemSection(formData: FormData) {
   const item_id = String(formData.get("item_id"));
   const opted = await optOutsFor(supabase, "vendors", vendor_id);
   if (opted.includes("menu")) {
-    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "stall" }], formData);
+    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "vendor" }], formData);
   }
   const rows = await vendorMenuSectionRows(supabase, vendor_id);
   const current = rows.find((row) => row.id === item_id);
@@ -607,7 +607,7 @@ async function applyAdminMenuSections(formData: FormData, vendorId: string) {
   if (!supabase) fail("Supabase is not configured yet.");
   const opted = await optOutsFor(supabase, "vendors", vendorId);
   if (opted.includes("menu")) {
-    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "stall" }], formData);
+    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "vendor" }], formData);
   }
   return supabase;
 }
@@ -655,7 +655,7 @@ export async function deleteMenuItem(id: string, vendorId: string, formData?: Fo
   if (!supabase) fail("Supabase is not configured yet.");
   const opted = await optOutsFor(supabase, "vendors", vendorId);
   if (opted.includes("menu")) {
-    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "stall" }], formData);
+    refuseSections([{ labels: labelsFor("vendor", ["menu"]), noun: "vendor" }], formData);
   }
   const { error } = await supabase.from("vendor_menus").delete().eq("id", id).eq("vendor_id", vendorId);
   if (error) failDb(error, "Could not delete that menu item.");
@@ -674,7 +674,7 @@ export async function assignVendorOwner(
   if (!supabase) return { error: "Supabase is not configured yet." };
   const vendorId = String(formData.get("vendor_id") ?? "");
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  if (!vendorId) return { error: "That stall is missing." };
+  if (!vendorId) return { error: "That vendor is missing." };
   if (!OWNER_EMAIL.test(email) || email.length > 120) {
     return { error: "Add the email on their account." };
   }
@@ -683,8 +683,8 @@ export async function assignVendorOwner(
     .select("id, slug, claimed_by")
     .eq("id", vendorId)
     .maybeSingle();
-  if (vendorError) return { error: dbPublicError(vendorError, "Could not open that stall.") };
-  if (!vendor) return { error: "That stall is missing." };
+  if (vendorError) return { error: dbPublicError(vendorError, "Could not open that vendor.") };
+  if (!vendor) return { error: "That vendor is missing." };
 
   const { data: userId, error: lookupError } = await supabase.rpc("auth_user_id_for_email", {
     p_email: email,
@@ -694,7 +694,7 @@ export async function assignVendorOwner(
     return { error: "No account uses that email. They need to sign up at /vendor first." };
   }
   if (vendor.claimed_by && vendor.claimed_by !== userId) {
-    return { error: "Someone else already runs this stall." };
+    return { error: "Someone else already runs this vendor." };
   }
 
   if (vendor.claimed_by !== userId) {
@@ -704,12 +704,12 @@ export async function assignVendorOwner(
       .eq("id", vendorId)
       .is("claimed_by", null)
       .select("id");
-    if (claimError) return { error: dbPublicError(claimError, "Could not give them this stall.") };
-    if (!updated?.length) return { error: "Someone else already runs this stall." };
+    if (claimError) return { error: dbPublicError(claimError, "Could not give them this vendor.") };
+    if (!updated?.length) return { error: "Someone else already runs this vendor." };
     const { data: profile } = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
     if (profile?.role !== "admin") {
       const { error: roleError } = await supabase.from("profiles").update({ role: "vendor" }).eq("id", userId);
-      if (roleError) return { error: dbPublicError(roleError, "Could not open the stall editor.") };
+      if (roleError) return { error: dbPublicError(roleError, "Could not open the vendor editor.") };
     }
   }
 
@@ -719,9 +719,9 @@ export async function assignVendorOwner(
   await closePendingApplication(supabase, userId, "vendor", vendorId);
   revalidatePath("/admin/applications");
   if (!mailed.sent) {
-    return { error: "They can edit this stall. The email did not send." };
+    return { error: "They can edit this vendor. The email did not send." };
   }
-  return { error: null, message: "They can edit this stall. We emailed the portal link." };
+  return { error: null, message: "They can edit this vendor. We emailed the portal link." };
 }
 
 export async function assignMarketOwner(
@@ -918,7 +918,7 @@ export async function decideApplication(
     return {
       error:
         kind === "vendor"
-          ? "They can edit this stall. The email did not send."
+          ? "They can edit this vendor. The email did not send."
           : "They can edit this market. The email did not send.",
     };
   }
@@ -926,7 +926,7 @@ export async function decideApplication(
     error: null,
     message:
       kind === "vendor"
-        ? "They can edit this stall. We emailed the portal link."
+        ? "They can edit this vendor. We emailed the portal link."
         : "They can edit this market. We emailed the portal link.",
   };
 }

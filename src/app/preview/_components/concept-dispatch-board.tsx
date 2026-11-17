@@ -209,7 +209,7 @@ export function ConceptDispatchBoard({
                 <span className="type-nums font-semibold text-chalk">
                   {data.sellingToday.length}
                 </span>{" "}
-                stalls active today
+                vendors active today
               </span>
               <span aria-hidden className="text-chalk/40">
                 ·
@@ -224,12 +224,12 @@ export function ConceptDispatchBoard({
           <div className="mt-6 grid gap-6 lg:grid-cols-12 lg:items-end">
             <div className="lg:col-span-7">
               <p className="type-kicker text-chalk/80">
-                Live market schedule, stall index &amp; hall status
+                Live market schedule, vendor index &amp; hall status
               </p>
               <h1 className="mt-1 text-chalk">{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-2 max-w-2xl text-chalk/85">
                 Filter all {formatCensus(data.census.markets)} {LAUNCH_CITY} market halls right on
-                the board by day, neighbourhood, indoor/outdoor setup, or what the stalls sell.
+                the board by day, neighbourhood, indoor/outdoor setup, or what the vendors sell.
               </p>
             </div>
 
@@ -386,7 +386,7 @@ export function ConceptDispatchBoard({
               </div>
 
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="type-kicker mr-1 text-chalk/80">Stalls:</span>
+                <span className="type-kicker mr-1 text-chalk/80">Vendors:</span>
                 {["produce", "bakery", "cheese", "meat", "coffee", "prepared-food", "organic"].map(
                   (tag) => {
                     const active = tagFilter === tag;
@@ -497,7 +497,7 @@ export function ConceptDispatchBoard({
               {/* Column Headers for the Civic Ledger */}
               <div className="hidden border-b border-border bg-secondary/45 px-4 py-2 text-sm font-medium text-muted-foreground sm:grid sm:grid-cols-[minmax(0,1.65fr)_minmax(0,0.85fr)_auto] sm:gap-x-4">
                 <span>Market hall &amp; street address</span>
-                <span>Area &amp; stalls</span>
+                <span>Area &amp; vendors</span>
                 <span className="text-right">Status &amp; hours</span>
               </div>
 
@@ -560,7 +560,7 @@ export function ConceptDispatchBoard({
                           ) : null}
                         </div>
 
-                        {/* Column 2: Neighbourhood + Stall Count + Setup */}
+                        {/* Column 2: Neighbourhood + Vendor Count + Setup */}
                         <div className="hidden min-w-0 sm:block">
                           <p className="text-sm font-medium text-foreground">
                             {market.neighbourhood}
@@ -571,7 +571,7 @@ export function ConceptDispatchBoard({
                                 <span className="type-nums font-medium text-foreground">
                                   {market.vendorCount}
                                 </span>{" "}
-                                stalls
+                                vendors
                               </span>
                             ) : (
                               <span>Community hall</span>
@@ -621,7 +621,7 @@ export function ConceptDispatchBoard({
                     No market halls match those exact board filters.
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Try clearing one of the neighbourhood or stall filters to see all sessions.
+                    Try clearing one of the neighbourhood or vendor filters to see all sessions.
                   </p>
                   <button
                     type="button"
@@ -667,7 +667,7 @@ export function ConceptDispatchBoard({
             </div>
           </section>
 
-          {/* Right 4 Columns: Tabbed Live Stall & Floor Wire + Saved Dock */}
+          {/* Right 4 Columns: Tabbed Live Vendor & Floor Wire + Saved Dock */}
           <aside className="flex flex-col gap-6 lg:col-span-4">
             {/* Tabbed Station Wire */}
             <section className="bg-card ring-1 ring-board">
@@ -681,12 +681,12 @@ export function ConceptDispatchBoard({
                     Full feed
                   </Link>
                 </div>
-                <h2 className="mt-0.5 text-chalk">Stalls &amp; Floor Wire</h2>
+                <h2 className="mt-0.5 text-chalk">Vendors &amp; Floor Wire</h2>
 
                 {/* 3-Tab Segmented Switcher */}
                 <div
                   role="tablist"
-                  aria-label="Stall and floor wire tabs"
+                  aria-label="Vendor and floor wire tabs"
                   className="mt-3 grid grid-cols-3 gap-1 bg-black/25 p-1"
                 >
                   <button
@@ -737,7 +737,7 @@ export function ConceptDispatchBoard({
               {wireTab === "today" ? (
                 <div>
                   <div className="border-b border-border bg-secondary/45 px-4 py-2 text-sm text-muted-foreground">
-                    Stalls on the floor today across {LAUNCH_CITY}
+                    Vendors on the floor today across {LAUNCH_CITY}
                   </div>
                   {data.sellingToday.length ? (
                     <ul>
@@ -750,7 +750,7 @@ export function ConceptDispatchBoard({
                     </ul>
                   ) : (
                     <p className="p-4 text-sm text-muted-foreground">
-                      Today&apos;s stalls have closed. Switch to Top 5 week to see upcoming schedules.
+                      Today&apos;s vendors have closed. Switch to Top 5 week to see upcoming schedules.
                     </p>
                   )}
                 </div>
@@ -759,7 +759,7 @@ export function ConceptDispatchBoard({
               {wireTab === "week" ? (
                 <div>
                   <div className="border-b border-border bg-secondary/45 px-4 py-2 text-sm text-muted-foreground">
-                    Highest-rated stalls setting up this week
+                    Highest-rated vendors setting up this week
                   </div>
                   <ol>
                     {data.weekVendors.slice(0, 5).map((pick, index) => (
@@ -783,7 +783,7 @@ export function ConceptDispatchBoard({
               ) : null}
             </section>
 
-            {/* Saved Markets & Stalls Rail */}
+            {/* Saved Markets & Vendors Rail */}
             <SavedRail />
 
             {/* Interactive 7-Day Hall Frequency Card (Compact 2-Col Grid) */}
@@ -855,7 +855,7 @@ export function ConceptDispatchBoard({
               </span>
               <div>
                 <p className="type-kicker text-muted-foreground">
-                  {formatCensus(data.census.menus)} menu items indexed across {formatCensus(data.census.vendors)} stalls
+                  {formatCensus(data.census.menus)} menu items indexed across {formatCensus(data.census.vendors)} vendors
                 </p>
                 <h2>The Produce &amp; Pantry Exchange</h2>
               </div>

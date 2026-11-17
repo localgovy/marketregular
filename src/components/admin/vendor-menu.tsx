@@ -30,7 +30,7 @@ export function AdminVendorMenu({
     <section>
       <h2>Menu items</h2>
       {menuLeftAlone ? (
-        <p className="mt-2 text-base text-muted-foreground">Menu stays with this stall.</p>
+        <p className="mt-2 text-base text-muted-foreground">Menu stays with this vendor.</p>
       ) : null}
       <AdminMenuSections
         vendorId={vendorId}
@@ -55,7 +55,7 @@ export function AdminVendorMenu({
                     <p className="text-sm text-muted-foreground">{menuCategoryLabel(item.product_category)}</p>
                   ) : null}
                   {inSearch ? null : (
-                    <p className="text-sm text-muted-foreground">On the stall page. Not in product search.</p>
+                    <p className="text-sm text-muted-foreground">On the vendor page. Not in product search.</p>
                   )}
                 </div>
                 <form
@@ -119,7 +119,7 @@ function AdminMenuSections({
     <div className="mt-4 grid gap-3">
       <h3>Sections</h3>
       <p className="text-sm text-muted-foreground">
-        Up to 5 named groups on the stall page. Rename or reorder them here.
+        Up to 5 named groups on the vendor page. Rename or reorder them here.
       </p>
       <ul className="grid gap-3">
         {sections.map((section, index) => (

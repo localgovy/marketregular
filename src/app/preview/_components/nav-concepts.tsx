@@ -62,9 +62,9 @@ const RESULTS: Array<{ name: string; kind: string; meta: string }> = [
   { name: "Sorauren Park", kind: "Market · Roncesvalles", meta: "3–7 PM" },
   { name: "Dufferin Grove", kind: "Market · Dufferin Grove Park", meta: "3–7 PM" },
   { name: "Trinity Bellwoods", kind: "Market · Queen West", meta: "3–7 PM" },
-  { name: "Honey, preserves and maple", kind: "Products · 24 stalls", meta: "Citywide" },
-  { name: "Sourdough and baked goods", kind: "Products · 31 stalls", meta: "Citywide" },
-  { name: "Flowers and plants", kind: "Products · 18 stalls", meta: "Citywide" },
+  { name: "Honey, preserves and maple", kind: "Products · 24 vendors", meta: "Citywide" },
+  { name: "Sourdough and baked goods", kind: "Products · 31 vendors", meta: "Citywide" },
+  { name: "Flowers and plants", kind: "Products · 18 vendors", meta: "Citywide" },
 ];
 
 const BOARD_TEXTURE = {
@@ -961,7 +961,7 @@ function LivingStrip({ state, limit }: { state: MockState; limit?: number }) {
       </span>
       <span className="inline-flex shrink-0 items-baseline gap-1.5 whitespace-nowrap">
         <span className="type-census text-2xl leading-none text-chalk">{day.stallCount}</span>
-        <span className="text-sm text-chalk/80">stalls today</span>
+        <span className="text-sm text-chalk/80">vendors today</span>
       </span>
       <span className="ml-1 hidden shrink-0 text-sm font-medium text-chalk sm:inline">{day.label}</span>
       {items.map(([name, hours]) => {
@@ -1131,12 +1131,12 @@ const CONCEPTS: Array<{
     tab: "5D · Living slab",
     title: "Concept 5D — The Living Slab",
     pitch:
-      "The slab that knows what time it is: a Morning/Evening switch sits under the wordmark inside the slab, and flipping it restages everything below — the open count, the stall count, and the markets in the strip. Search and sections hold their places while the day changes around them.",
+      "The slab that knows what time it is: a Morning/Evening switch sits under the wordmark inside the slab, and flipping it restages everything below — the open count, the vendor count, and the markets in the strip. Search and sections hold their places while the day changes around them.",
     desktopHeight: "Nameplate + day switch beside search + sections + living day strip",
     mobileHeight: "Nameplate + day switch + search + sections + living strip",
     changes: [
       "The day switch lives in the header itself, not in this page's controls: Morning and Evening are chalk buttons under the wordmark, and the strip answers with new counts and new markets.",
-      "The strip gained the day's stall count beside the open count, so the slab states the size of the day, not just its hours.",
+      "The strip gained the day's vendor count beside the open count, so the slab states the size of the day, not just its hours.",
       "A short line beside the switch says what the day is doing — “Saturday markets are setting up” in the morning, “Evening markets, after work” later — in plain sentence case, set in Grotesk.",
     ],
     tradeoffs:

@@ -146,7 +146,7 @@ export function ProductAisles({
                           {item.label}
                         </h3>
                         <span className="type-nums text-sm font-medium text-primary">
-                          {totalStallListings} stall listings
+                          {totalStallListings} vendor listings
                         </span>
                       </div>
                       {item.line && item.line !== item.label ? (
@@ -174,11 +174,11 @@ export function ProductAisles({
                   </div>
                 </div>
 
-                {/* Sample Stalls or Browse Footer */}
+                {/* Sample Vendors or Browse Footer */}
                 <div className="flex items-center justify-between gap-2 border-t border-border bg-secondary/45 px-4 py-2.5 text-sm">
                   {sampleStalls.length > 0 ? (
                     <span className="text-muted-foreground">
-                      Stalls:{" "}
+                      Vendors:{" "}
                       <Link
                         href={`/vendors/${sampleStalls[0]!.slug}`}
                         className="font-medium text-foreground hover:text-primary hover:underline"
@@ -188,7 +188,7 @@ export function ProductAisles({
                       {sampleStalls.length > 1 ? ` +${sampleStalls.length - 1}` : ""}
                     </span>
                   ) : (
-                    <span className="text-muted-foreground">Toronto market stalls</span>
+                    <span className="text-muted-foreground">Toronto market vendors</span>
                   )}
                   <Link
                     href={productsBrowseHref(item.id, sort)}

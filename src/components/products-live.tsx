@@ -113,7 +113,7 @@ export function ProductsLiveStatus({
           className="stall-chip-sm inline-flex items-center gap-1.5 bg-card px-3 py-1 text-sm font-medium text-foreground ring-1 ring-border hover:bg-secondary"
         >
           <WeekMark className="size-3.5 text-primary" />
-          <span>{counts.selling} stalls active today</span>
+          <span>{counts.selling} vendors active today</span>
         </Link>
       ) : null}
       <Link
@@ -221,7 +221,7 @@ export function FeaturedStallList({
                   <span>{stall.marketName}</span>
                 </Link>
                 <Link href={`/vendors/${stall.slug}#menu`} className="font-medium text-primary hover:underline">
-                  Stall menu →
+                  Vendor menu →
                 </Link>
               </div>
             ) : null}

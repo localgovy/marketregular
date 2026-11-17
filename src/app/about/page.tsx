@@ -35,7 +35,7 @@ export default function AboutPage() {
       <section className="mt-10">
         <h2>{copyText(siteCopy["/about"].why)}</h2>
         <p className="mt-2 text-base leading-relaxed">
-          The directory lists the markets, the stalls, and the hours, so you can see what is
+          The directory lists the markets, the vendors, and the hours, so you can see what is
           selling and go. That keeps the money with the farms and businesses at the market.
         </p>
         <p className="mt-4 text-base">

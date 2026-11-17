@@ -36,7 +36,7 @@ export function matchFindPageByName(
 
 export function stallCompareLabel(vendors: number, term: string) {
   const name = term.replace(/^General\s+/i, "").trim().toLowerCase();
-  return `Compare ${vendors} stalls selling ${name}`;
+  return `Compare ${vendors} vendors selling ${name}`;
 }
 
 export function orderedSectionNames(

@@ -442,7 +442,7 @@ export async function buildVendorAtlasData({
   const primaryCategoryLabel =
     menuCategoryLabel(primaryCategoryId) ??
     FIND_CATEGORIES.find((c) => c.id === primaryCategoryId)?.label ??
-    "Market stall";
+    "Market vendor";
 
   const secondaryEntry = sortedCategoryEntries.find(([id]) => id !== primaryCategoryId);
   const secondaryCategoryLabel = secondaryEntry
@@ -512,7 +512,7 @@ export async function buildVendorAtlasData({
       .map((st) => {
         const v = vendorById.get(st.id);
         const catId = categoryFromTags(st.name, v?.tags) ?? "vegetables";
-        const categoryLabel = menuCategoryLabel(catId) ?? "Market stall";
+        const categoryLabel = menuCategoryLabel(catId) ?? "Market vendor";
         const specialty = categoryLabel;
         return {
           slug: st.slug,
@@ -630,7 +630,7 @@ export async function buildVendorAtlasData({
           .map((m) => m.name)
           .slice(0, 2)
           .join(" and ")}${markets.length > 2 ? `, and ${markets.length - 2} other Ontario farmers' ${markets.length - 2 === 1 ? "market" : "markets"}` : ""}.`
-      : `${resolvedVendor.name} is a Toronto & Ontario farmers' market stall known for ${primaryCategoryLabel.toLowerCase()}.`);
+      : `${resolvedVendor.name} is a Toronto & Ontario farmers' market vendor known for ${primaryCategoryLabel.toLowerCase()}.`);
 
   return applyVendorClock({
     nowMs,

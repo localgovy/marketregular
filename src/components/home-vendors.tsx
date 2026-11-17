@@ -55,7 +55,7 @@ export function VendorsWeekPanel({ picks }: { picks: VendorWeekPick[] }) {
       icon={TallyMark}
       kicker="This week's vendors"
       title="Top 5 this week"
-      how="Five stalls with the most going on this week. Tap a name to learn more."
+      how="Five vendors with the most going on this week. Tap a name to learn more."
     >
       {picks.length ? (
         <ol className="ring-1 ring-border">

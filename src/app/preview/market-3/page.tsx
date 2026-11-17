@@ -6,7 +6,7 @@ import { SITE_NAME } from "@/lib/constants";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: `Markets Concept 3: Markets, Stalls & Neighbourhoods · ${SITE_NAME}`,
+  title: `Markets Concept 3: Markets, Vendors & Neighbourhoods · ${SITE_NAME}`,
   robots: { index: false, follow: false },
 };
 

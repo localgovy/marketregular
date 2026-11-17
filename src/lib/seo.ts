@@ -276,7 +276,7 @@ export function vendorJsonLd(
   return {
     "@context": "https://schema.org",
     "@type": servesFood ? asLocalBusiness("FoodEstablishment") : "LocalBusiness",
-    "@id": `${url}#stall`,
+    "@id": `${url}#vendor`,
     name: vendor.name,
     description: vendor.about ?? undefined,
     url,

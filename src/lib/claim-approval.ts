@@ -68,7 +68,7 @@ export async function applyClaimDecision(
 
   const listingApproval = input.status === "approved" && kind !== null && Boolean(claim.user_id);
   if (listingApproval && kind) {
-    if (!vendorPasswordKey()) return stopped("Stall passwords are not configured yet.");
+    if (!vendorPasswordKey()) return stopped("Vendor passwords are not configured yet.");
     const table = kind === "market" ? "markets" : "vendors";
     const { data: listing, error: listingError } = await admin
       .from(table)

@@ -150,7 +150,7 @@ export function ConceptBroadsheet({
               <h1 className="mt-1">{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
                 Find out everything you want to know about farmers&apos; markets in {LAUNCH_CITY} —
-                weekly hours, neighbourhood halls, active stalls, and what is in season.
+                weekly hours, neighbourhood halls, active vendors, and what is in season.
               </p>
             </div>
 
@@ -175,7 +175,7 @@ export function ConceptBroadsheet({
                     href="/markets#directory-vendors"
                     className="flex flex-col justify-between px-3.5 py-3 transition-colors hover:bg-white/10"
                   >
-                    <span className="type-kicker text-chalk/80">Stalls</span>
+                    <span className="type-kicker text-chalk/80">Vendors</span>
                     <span className="type-census mt-1 text-3xl leading-none sm:text-4xl">
                       {formatCensus(data.census.vendors)}
                     </span>
@@ -255,7 +255,7 @@ export function ConceptBroadsheet({
                   <SlatsMark className="size-4" />
                 </span>
                 <div>
-                  <p className="type-kicker text-chalk">Search by day, neighbourhood, or stall</p>
+                  <p className="type-kicker text-chalk">Search by day, neighbourhood, or vendor</p>
                   <h2>Quick Market Finder</h2>
                 </div>
               </div>
@@ -588,7 +588,7 @@ export function ConceptBroadsheet({
                                 <>
                                   <span aria-hidden>·</span>
                                   <span>
-                                    <span className="type-nums">{slot.vendorCount}</span> stalls
+                                    <span className="type-nums">{slot.vendorCount}</span> vendors
                                   </span>
                                 </>
                               ) : null}
@@ -852,7 +852,7 @@ export function ConceptBroadsheet({
                       </h3>
                       <span className="type-nums text-sm text-muted-foreground">
                         {circuit.vendorCount > 0
-                          ? `${circuit.vendorCount} stalls`
+                          ? `${circuit.vendorCount} vendors`
                           : `${circuit.marketCount} hall`}
                       </span>
                     </div>
@@ -888,14 +888,14 @@ export function ConceptBroadsheet({
         </section>
 
         {/* Full-Width 3-Column Broadsheet Gazette: Selling Today + Top 5 This Week + Live Floor Reviews */}
-        <section aria-label="Stalls and reviews" className="mt-10 border-t-2 border-board pt-8">
+        <section aria-label="Vendors and reviews" className="mt-10 border-t-2 border-board pt-8">
           <div className="mb-5 flex flex-wrap items-baseline justify-between gap-2">
             <div>
-              <p className="type-kicker text-muted-foreground">Live from the stalls</p>
-              <h2>The Stall Gazette</h2>
+              <p className="type-kicker text-muted-foreground">Live from the vendors</p>
+              <h2>The Vendor Gazette</h2>
             </div>
             <p className="text-sm text-muted-foreground">
-              Who is setting up today, the five busiest stalls of the week, and live notes from
+              Who is setting up today, the five busiest vendors of the week, and live notes from
               regulars.
             </p>
           </div>
@@ -925,13 +925,13 @@ export function ConceptBroadsheet({
                 </ul>
               ) : (
                 <p className="p-4 text-sm text-muted-foreground">
-                  Today&apos;s stalls have wrapped up. Check this week&apos;s top vendors in the next
+                  Today&apos;s vendors have wrapped up. Check this week&apos;s top vendors in the next
                   column.
                 </p>
               )}
             </div>
 
-            {/* Column 2: Top 5 Stalls This Week */}
+            {/* Column 2: Top 5 Vendors This Week */}
             <div className="bg-card ring-1 ring-border">
               <div className="flex items-start justify-between gap-2 border-b border-border bg-secondary/45 px-4 py-3">
                 <div className="flex items-center gap-2.5">

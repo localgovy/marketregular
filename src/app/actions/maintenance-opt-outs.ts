@@ -14,7 +14,7 @@ export async function saveOwnedMaintenanceOptOuts(formData: FormData): Promise<P
   const id = String(formData.get("listing_id") ?? "");
   if (kindRaw !== "vendor" && kindRaw !== "market") return { error: "That listing is missing." };
   const kind: MaintenanceKind = kindRaw;
-  if (!isUuid(id)) return { error: kind === "vendor" ? "That stall is missing." : "That market is missing." };
+  if (!isUuid(id)) return { error: kind === "vendor" ? "That vendor is missing." : "That market is missing." };
 
   const { supabase, user } = await createAuthedServerClient();
   if (!supabase || !user) return { error: "Sign in first." };
@@ -34,7 +34,7 @@ export async function saveOwnedMaintenanceOptOuts(formData: FormData): Promise<P
   });
   if (error) {
     if (error.code === "42501") {
-      return { error: kind === "vendor" ? "That stall is not yours." : "That market is not yours." };
+      return { error: kind === "vendor" ? "That vendor is not yours." : "That market is not yours." };
     }
     return { error: dbPublicError(error, "Could not save those updates.") };
   }

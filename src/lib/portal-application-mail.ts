@@ -17,14 +17,14 @@ export function portalDeclineLetter(kind: ClaimTarget) {
   const stall = kind === "vendor";
   const url = `${SITE_URL}${stall ? "/vendor" : "/market"}`;
   const sentence = stall
-    ? "We couldn't assign a stall to this account. You can sign in and send another request."
+    ? "We couldn't assign a vendor to this account. You can sign in and send another request."
     : "We couldn't assign a market to this account. You can sign in and send another request.";
   const text = `${sentence}\n\n${url}`;
   const html = `<!doctype html>
 <html><body style="margin:0;background:#F1EDE3;color:#141414;font-family:ui-sans-serif,system-ui,sans-serif">
 <div style="max-width:32rem;margin:0 auto;padding:24px">
 <p style="margin:0 0 8px;font-size:14px;color:#5e5a53">${escapeHtml(SITE_NAME)}</p>
-<h1 style="margin:0 0 16px;font-size:22px;font-weight:600">${stall ? "No stall was assigned" : "No market was assigned"}</h1>
+<h1 style="margin:0 0 16px;font-size:22px;font-weight:600">${stall ? "No vendor was assigned" : "No market was assigned"}</h1>
 <p style="margin:0 0 16px;font-size:16px;line-height:1.5">${escapeHtml(sentence)}</p>
 <p style="margin:0"><a href="${escapeHtml(url)}" style="color:#141414">${escapeHtml(url)}</a></p>
 </div>
@@ -33,7 +33,7 @@ export function portalDeclineLetter(kind: ClaimTarget) {
     url,
     text,
     html,
-    subject: sanitizeMailHeader(stall ? `Your stall on ${SITE_NAME}` : `Your market on ${SITE_NAME}`),
+    subject: sanitizeMailHeader(stall ? `Your vendor on ${SITE_NAME}` : `Your market on ${SITE_NAME}`),
   };
 }
 

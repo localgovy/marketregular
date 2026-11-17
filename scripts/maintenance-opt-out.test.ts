@@ -72,19 +72,19 @@ test("a patch names only the sections whose fields changed", () => {
 
 test("blocked sections are named for admin, and listings group under each section", () => {
   assert.equal(
-    maintenanceBlockMessage([{ labels: ["About"], noun: "stall" }]),
-    "About stays with this stall. Check Save these sections anyway to change it.",
+    maintenanceBlockMessage([{ labels: ["About"], noun: "vendor" }]),
+    "About stays with this vendor. Check Save these sections anyway to change it.",
   );
   assert.equal(
-    maintenanceBlockMessage([{ labels: ["About", "Menu"], noun: "stall" }]),
-    "About and Menu stay with this stall. Check Save these sections anyway to change them.",
+    maintenanceBlockMessage([{ labels: ["About", "Menu"], noun: "vendor" }]),
+    "About and Menu stay with this vendor. Check Save these sections anyway to change them.",
   );
   assert.equal(
     maintenanceBlockMessage([
-      { labels: ["Markets"], noun: "stall" },
-      { labels: ["Stalls"], noun: "market" },
+      { labels: ["Markets"], noun: "vendor" },
+      { labels: ["Vendors"], noun: "market" },
     ]),
-    "Markets stays with this stall. Stalls stays with this market. Check Save these sections anyway to change them.",
+    "Markets stays with this vendor. Vendors stays with this market. Check Save these sections anyway to change them.",
   );
   assert.equal(maintenanceBlockMessage([{ labels: [], noun: "market" }]), null);
 

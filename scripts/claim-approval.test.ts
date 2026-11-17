@@ -274,7 +274,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
     delete process.env.VENDOR_PASSWORD_KEY;
     try {
       const { result, mail } = await decide(missingKey, { status: "approved" });
-      assert.equal(result.error, "Stall passwords are not configured yet.");
+      assert.equal(result.error, "Vendor passwords are not configured yet.");
       assert.equal(result.committed, false);
       assert.equal(mail.length, 0);
       assertUntouched(missingKey.state);
@@ -564,7 +564,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
     delete process.env.VENDOR_PASSWORD_KEY;
     try {
       const result = await prepareVendorClaimPassword(missingKey.client, USER);
-      assert.deepEqual(result, { error: "Stall passwords are not configured yet." });
+      assert.deepEqual(result, { error: "Vendor passwords are not configured yet." });
       assertUntouched(missingKey.state);
     } finally {
       process.env.VENDOR_PASSWORD_KEY = previous;
@@ -730,7 +730,7 @@ describe("vendor claim approval", { concurrency: false }, () => {
     assert.equal(open.text.includes("Password:"), false);
     assert.equal(open.html.includes("Password:"), false);
     assert.equal(open.text.toLowerCase().includes("claim"), false);
-    assert.equal(open.text.includes("Your stall is assigned"), true);
+    assert.equal(open.text.includes("Your vendor is assigned"), true);
     const selling = sellingReadyLetter("11111111-1111-4111-8111-111111111111");
     assert.equal(new URL(selling.url).pathname, "/vendor/11111111-1111-4111-8111-111111111111");
     assert.equal(new URL(selling.url).hash, "#selling");
@@ -793,12 +793,12 @@ describe("vendor claim approval", { concurrency: false }, () => {
     const once = marketPortalLetter(password);
     assert.equal(once.subject.includes("Your market on"), true);
     assert.equal(new URL(once.url).searchParams.get("next"), "/account/password");
-    assert.equal(once.text.includes("hours, contact details, and the stalls"), false);
+    assert.equal(once.text.includes("hours, contact details, and the vendors"), false);
     assert.equal(once.html.includes("a&lt;b&gt;&amp;&quot;c"), true);
     assert.equal(once.html.includes(password), false);
     const open = marketPortalLetter();
     assert.equal(new URL(open.url).pathname, "/market");
-    assert.equal(open.text.includes("hours, contact details, and the stalls"), true);
+    assert.equal(open.text.includes("hours, contact details, and the vendors"), true);
     assert.equal(open.html.includes("Password:"), false);
     assert.equal(open.text.toLowerCase().includes("claim"), false);
     assert.equal(open.text.includes("Your market is assigned"), true);

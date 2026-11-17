@@ -18,7 +18,7 @@ export function marketPortalLetter(password?: string) {
     : `${SITE_URL}/market`;
   const text = password
     ? `Your market is assigned. Sign in with this one-time password, then choose your own.\n\nPassword: ${password}\n\n${url}`
-    : `Your market is assigned. Sign in to update the hours, contact details, and the stalls.\n\n${url}`;
+    : `Your market is assigned. Sign in to update the hours, contact details, and the vendors.\n\n${url}`;
   const html = password
     ? `<!doctype html>
 <html><body style="margin:0;background:#F1EDE3;color:#141414;font-family:ui-sans-serif,system-ui,sans-serif">
@@ -35,7 +35,7 @@ export function marketPortalLetter(password?: string) {
 <div style="max-width:32rem;margin:0 auto;padding:24px">
 <p style="margin:0 0 8px;font-size:14px;color:#5e5a53">${SITE_NAME}</p>
 <h1 style="margin:0 0 16px;font-size:22px;font-weight:600">Your market is ready to edit</h1>
-<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Your market is assigned. Sign in to update the hours, contact details, and the stalls.</p>
+<p style="margin:0 0 16px;font-size:16px;line-height:1.5">Your market is assigned. Sign in to update the hours, contact details, and the vendors.</p>
 <p style="margin:0"><a href="${url}" style="color:#141414">${url}</a></p>
 </div>
 </body></html>`;

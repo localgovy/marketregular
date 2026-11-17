@@ -32,7 +32,7 @@ export async function generateMetadata({
   const vendors = await listFindVendors(page);
   return pageMeta({
     title,
-    description: `${title}. Stalls that list it, the markets they sell at, and the days they are there.`,
+    description: `${title}. Vendors that list it, the markets they sell at, and the days they are there.`,
     path: `/find/${page.slug}`,
     index: vendors.length >= 5,
   });

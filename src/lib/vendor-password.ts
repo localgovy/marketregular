@@ -74,7 +74,7 @@ export function readVendorPassword(ciphertext: string, chosen: boolean) {
   if (chosen || ciphertext === CHOSEN_PASSWORD_MARKER) return null;
   const label = "One-time password";
   const key = vendorPasswordKey();
-  if (!key) return { label, value: "The stall password key is not set." };
+  if (!key) return { label, value: "The vendor password key is not set." };
   try {
     return { label, value: decryptVendorPassword(ciphertext, key) };
   } catch {

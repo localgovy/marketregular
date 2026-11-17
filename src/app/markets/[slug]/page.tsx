@@ -283,8 +283,8 @@ export default async function MarketPage({
           </div>
         ) : (
           <p className="text-base text-muted-foreground lg:col-span-2">
-            This market does not publish its stall list on this page. Search for a vendor by name
-            to open their stall.
+            This market does not publish its vendor list on this page. Search for a vendor by name
+            to open their vendor.
           </p>
         )}
         <div className="lg:col-span-2">

@@ -27,10 +27,10 @@ export function VendorSellingForm({
           defaultChecked={approved}
           className="accent-primary"
         />
-        <span>This stall can sell to signed-in buyers</span>
+        <span>This vendor can sell to signed-in buyers</span>
       </label>
       <p className="text-sm text-muted-foreground">
-        Saving this lets the stall sell once card payments are on. Alcohol can be reserved without a card.
+        Saving this lets the vendor sell once card payments are on. Alcohol can be reserved without a card.
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending}>

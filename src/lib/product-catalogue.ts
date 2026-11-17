@@ -233,6 +233,6 @@ export function catalogueHeading(aisle: string | null) {
   const line = aisleLine(aisle);
   return {
     title: label,
-    blurb: line && line !== label ? line : "Stalls that list it, and the markets where they set up.",
+    blurb: line && line !== label ? line : "Vendors that list it, and the markets where they set up.",
   };
 }

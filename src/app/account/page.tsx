@@ -147,7 +147,7 @@ export default async function AccountPage() {
       }
       portalUnavailable={
         [
-          portal.error ? "The stall editor is not available yet. Try again in a minute." : null,
+          portal.error ? "The vendor editor is not available yet. Try again in a minute." : null,
           marketPortal.error ? "The market editor is not available yet. Try again in a minute." : null,
         ]
           .filter(Boolean)

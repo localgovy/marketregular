@@ -356,7 +356,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
     sampleVendors.unshift({
       slug: resolvedVendor.slug,
       name: resolvedVendor.name,
-      label: "Selected stall",
+      label: "Selected vendor",
       logoUrl: listingMarkSrc(resolvedVendor.logo_url),
       itemCount: resolvedVendor.menus.length,
       marketCount: resolvedVendor.markets.length,
@@ -432,7 +432,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
       activeDelivery: index % 2 === 0,
       activeTerms:
         item.offer_terms ??
-        "Reserve ahead for market-day stall pickup, or choose local Toronto delivery.",
+        "Reserve ahead for market-day vendor pickup, or choose local Toronto delivery.",
     };
   });
 
@@ -480,7 +480,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
   const primaryAisleLabel =
     menuCategoryLabel(primaryAisleId) ??
     FIND_CATEGORIES.find((c) => c.id === primaryAisleId)?.label ??
-    "Market stall";
+    "Market vendor";
 
   const secondaryEntry = sortedAisleEntries.find(([id]) => id !== primaryAisleId);
   const secondaryAisleLabel = secondaryEntry
@@ -567,7 +567,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
         const aisleLabel =
           spot?.primaryAisleLabel ??
           menuCategoryLabel(catId) ??
-          "Market stall";
+          "Market vendor";
         const specialty = spot?.items[0]?.name ?? aisleLabel;
         return {
           slug: st.slug,
@@ -776,7 +776,7 @@ export async function loadVendorPreviewData(requestedSlug?: string): Promise<Ven
           {
             id: `preview-note-2-${resolvedVendor.slug}`,
             kind: "post",
-            body: `Pre-ordered from ${resolvedVendor.name} for market pickup and everything was packed and waiting at the stall counter.`,
+            body: `Pre-ordered from ${resolvedVendor.name} for market pickup and everything was packed and waiting at the vendor counter.`,
             created_at: new Date(nowMs - 5 * 24 * 3600 * 1000).toISOString(),
             author_name: "Devon T.",
             market_name: markets[1]?.name ?? firstActiveMarket?.name ?? "Toronto Farmers' Market",

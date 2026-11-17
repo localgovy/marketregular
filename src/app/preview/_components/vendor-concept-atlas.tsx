@@ -128,8 +128,8 @@ function MastheadScore({
 function formatStallNote(stall: string | null | undefined): string | null {
   const trimmed = stall?.trim();
   if (!trimmed) return null;
-  if (/^stall\b/i.test(trimmed)) return trimmed;
-  if (/^[A-Za-z]?\d+[A-Za-z]?$/.test(trimmed)) return `Stall ${trimmed}`;
+  if (/^stall\b/i.test(trimmed)) return trimmed.replace(/^stall\b/i, "Vendor");
+  if (/^[A-Za-z]?\d+[A-Za-z]?$/.test(trimmed)) return `Vendor ${trimmed}`;
   return trimmed;
 }
 
@@ -348,7 +348,7 @@ export function VendorConceptAtlas({
             href={`/products?aisle=${encodeURIComponent(vendor.primaryAisleId)}`}
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
-            <span>Compare {vendor.primaryAisleLabel.toLowerCase()} stalls</span>
+            <span>Compare {vendor.primaryAisleLabel.toLowerCase()} vendors</span>
             <CaretRightMark className="size-3.5" />
           </Link>
         </div>
@@ -356,7 +356,7 @@ export function VendorConceptAtlas({
 
       {/* Above-the-Fold Dual-Plate Atlas Header */}
       <section className="mt-4 grid gap-5 lg:grid-cols-12">
-        {/* Left 7 Cols: Full Forest-Green Enamel Stall Identity & Story Plate */}
+        {/* Left 7 Cols: Full Forest-Green Enamel Vendor Identity & Story Plate */}
         <div className="flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board lg:col-span-7">
           <div>
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -373,7 +373,7 @@ export function VendorConceptAtlas({
                   <p className="type-kicker text-primary-foreground/90">
                     {vendor.primaryAisleLabel}
                     {vendor.secondaryAisleLabel ? ` · ${vendor.secondaryAisleLabel}` : ""} ·
-                    Toronto market stall
+                    Toronto market vendor
                   </p>
                   <h1 className="mt-1 text-primary-foreground">
                     <VerifiedName slug={vendor.slug} name={vendor.name} />
@@ -513,7 +513,7 @@ export function VendorConceptAtlas({
         </div>
       </section>
 
-      {/* Synchronized 12-Column Menu (8 Cols) & Markets / Fellow Stalls Rail (4 Cols) */}
+      {/* Synchronized 12-Column Menu (8 Cols) & Markets / Fellow Vendors Rail (4 Cols) */}
       <div className="mt-8 grid gap-8 lg:grid-cols-12 lg:items-start">
         {/* Left 8 Columns: Stall Menu */}
         <div className="flex flex-col gap-8 lg:col-span-8">
@@ -679,7 +679,7 @@ export function VendorConceptAtlas({
                   onClick={resetAllFilters}
                   className="mt-3 cursor-pointer rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                 >
-                  Show all {menus.length} stall items
+                  Show all {menus.length} vendor items
                 </button>
               </div>
             ) : (
@@ -809,7 +809,7 @@ export function VendorConceptAtlas({
           </section>
         </div>
 
-        {/* Right 4 Columns: Interactive Markets & Fellow Stalls Rail */}
+        {/* Right 4 Columns: Interactive Markets & Fellow Vendors Rail */}
         <aside className="flex flex-col gap-6 lg:sticky lg:top-20 lg:col-span-4">
           <div className="bg-card ring-1 ring-board">
             {/* Rail Header Band */}
@@ -825,7 +825,7 @@ export function VendorConceptAtlas({
 
             <div className="p-5">
               <p className="text-sm text-muted-foreground">
-                Select a market to inspect {vendor.name}&apos;s hours and fellow stalls selling
+                Select a market to inspect {vendor.name}&apos;s hours and fellow vendors selling
                 alongside them.
               </p>
 
@@ -917,12 +917,12 @@ export function VendorConceptAtlas({
                     <SessionLines hours={activeHall.hours} fallback={activeHall.nextOpen} />
                   </div>
 
-                  {/* Fellow Stalls at Selected Hall */}
+                  {/* Fellow Vendors at Selected Hall */}
                   {activeHall.fellowVendors.length > 0 ? (
                     <div className="mt-4 border-t border-dashed border-border pt-3.5">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium text-foreground">
-                          Fellow stalls at {activeHall.name}
+                          Fellow vendors at {activeHall.name}
                         </p>
                         <Link
                           href={`/markets/${activeHall.slug}`}
@@ -1019,7 +1019,7 @@ export function VendorConceptAtlas({
             {vendor.tags.length > 0 ? (
               <div className="mt-4 border-t border-dashed border-border pt-4">
                 <p className="mb-2 text-sm font-medium text-muted-foreground">
-                  Stall specialties &amp; tags
+                  Vendor specialties &amp; tags
                 </p>
                 <TagList tags={vendor.tags} />
               </div>
@@ -1036,16 +1036,16 @@ export function VendorConceptAtlas({
       <section className="mt-10 bg-card p-5 ring-1 ring-board sm:p-6">
         <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-4">
           <div>
-            <p className="type-kicker text-primary">More stalls to explore</p>
+            <p className="type-kicker text-primary">More vendors to explore</p>
             <h2 className="mt-0.5">
-              Other stalls known for {vendor.primaryAisleLabel.toLowerCase()}
+              Other vendors known for {vendor.primaryAisleLabel.toLowerCase()}
             </h2>
           </div>
           <Link
             href={`/products?aisle=${encodeURIComponent(vendor.primaryAisleId)}`}
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
-            <span>Browse all {vendor.primaryAisleLabel.toLowerCase()} stalls</span>
+            <span>Browse all {vendor.primaryAisleLabel.toLowerCase()} vendors</span>
             <CaretRightMark className="size-3.5" />
           </Link>
         </div>
@@ -1057,7 +1057,7 @@ export function VendorConceptAtlas({
               className="flex flex-col justify-between bg-card ring-1 ring-board"
             >
               <div>
-                {/* 1. Peer Stall Plate Header */}
+                {/* 1. Peer Vendor Plate Header */}
                 <div className="flex items-start justify-between gap-2.5 border-b border-border bg-receipt px-4 py-3.5">
                   <div className="flex min-w-0 flex-1 items-start gap-3">
                     <StallEmblem
@@ -1122,7 +1122,7 @@ export function VendorConceptAtlas({
                         href={`/vendors/${peer.slug}`}
                         className="shrink-0 text-sm font-medium text-primary hover:underline"
                       >
-                        Stall menu →
+                        Vendor menu →
                       </Link>
                     </div>
                   </div>
@@ -1174,7 +1174,7 @@ export function VendorConceptAtlas({
             <div>
               <p className="type-kicker text-primary">Product categories &amp; guides</p>
               <h3 className="mt-0.5">
-                Compare Toronto market stalls by category
+                Compare Toronto market vendors by category
               </h3>
             </div>
             <Link

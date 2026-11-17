@@ -30,8 +30,8 @@ export default function TermsPage() {
         <h2>{siteCopy["/terms"].agreement}</h2>
         <p className={body}>
           These terms are between you and {LEGAL_ENTITY}, a corporation in {LEGAL_JURISDICTION},
-          for the {SITE_NAME} website. If you open a stall or market account, you are agreeing for
-          that business as well as for yourself. The stall fee below is billed by {LEGAL_ENTITY}. How
+          for the {SITE_NAME} website. If you open a vendor or market account, you are agreeing for
+          that business as well as for yourself. The vendor fee below is billed by {LEGAL_ENTITY}. How
           we handle personal information is in the{" "}
           <Link href="/privacy" className="font-medium text-foreground hover:underline">
             {siteCopy["/terms"].privacyPolicy}
@@ -59,31 +59,31 @@ export default function TermsPage() {
         <h2>{siteCopy["/terms"].accounts}</h2>
         <p className={body}>
           Creating a vendor or market account is a request. It does not hand you the listing. We
-          look at it and may assign the stall or market, or decline. One account can hold more than
+          look at it and may assign the vendor or market, or decline. One account can hold more than
           one listing. One listing has one owner.
         </p>
         <p className={body}>
-          You confirm that you run that stall or market, or that the person who runs it has allowed
+          You confirm that you run that vendor or market, or that the person who runs it has allowed
           you to open the account. You confirm you are an adult and allowed to bind that business.
           Keep the password to yourself. You are responsible for what happens on the account until
           you tell us the login should move and we take it off the listing.
         </p>
         <p className={body}>
-          After we assign a stall, that account can edit its name, description, logo, tags, phone,
+          After we assign a vendor, that account can edit its name, description, logo, tags, phone,
           email, links, menu, and the markets it attends, including the days. After we assign a
           market, that account can edit the market&apos;s name, description, hours, logo, tags,
-          phone, email, links, and the stalls at that market. The street address and the map pin
+          phone, email, links, and the vendors at that market. The street address and the map pin
           are not edited there. Write us if the market moves. The web address, published or draft
           status, and the public score stay with us. Selling on the site stays off until we turn it
-          on for that stall.
+          on for that vendor.
         </p>
         <p className={body}>
-          A market can add a stall that is not listed yet. That page is public, with no owner,
-          until a vendor account is assigned. The market can edit that stall&apos;s profile until
-          then, unless a request for it is already waiting. Add a stall only if it sells at that
-          market, and publish a phone or email only if the stall is willing to have it on the page.
-          A stall adds a market only on days it is actually there. Either side can update those
-          days. A stall with no market is hidden on the public site, unless it is a listing we
+          A market can add a vendor that is not listed yet. That page is public, with no owner,
+          until a vendor account is assigned. The market can edit that vendor&apos;s profile until
+          then, unless a request for it is already waiting. Add a vendor only if it sells at that
+          market, and publish a phone or email only if the vendor is willing to have it on the page.
+          A vendor adds a market only on days it is actually there. Either side can update those
+          days. A vendor with no market is hidden on the public site, unless it is a listing we
           already show without a hall.
         </p>
         <p className={body}>
@@ -93,8 +93,8 @@ export default function TermsPage() {
           wrong. Keep the name, hours, days, menu, prices, and contact details accurate. People
           use them to decide where to go. Tags and dietary notes are your
           description of the food. They are not a check by us. Someone with an allergy should ask
-          the stall. You are responsible for your own permits, safe food, labels, and any licence
-          you need, including for alcohol. We do not inspect a stall.
+          the vendor. You are responsible for your own permits, safe food, labels, and any licence
+          you need, including for alcohol. We do not inspect a vendor.
         </p>
         <p className={body}>
           You keep ownership of your name, text, menu, photos, and logo. You give {LEGAL_ENTITY}{" "}
@@ -118,25 +118,25 @@ export default function TermsPage() {
       <section className="mt-10">
         <h2>{siteCopy["/terms"].orders}</h2>
         <p className={body}>
-          A stall sells its own items. {SITE_NAME} hosts the page and is not the seller. When
-          selling is open and we have approved that stall, a card payment runs on the stall&apos;s
-          Stripe account, in the stall&apos;s name. We do not hold that money, and card numbers stay
-          with Stripe. The stall accepts Stripe&apos;s terms when it sets up payments. You need an
-          account to buy. The stall offers pickup or preorder, and any terms shown before you pay.
-          Delivery is not offered. Alcohol is reserved on the site, then paid at the stall when you
+          A vendor sells its own items. {SITE_NAME} hosts the page and is not the seller. When
+          selling is open and we have approved that vendor, a card payment runs on the vendor&apos;s
+          Stripe account, in the vendor&apos;s name. We do not hold that money, and card numbers stay
+          with Stripe. The vendor accepts Stripe&apos;s terms when it sets up payments. You need an
+          account to buy. The vendor offers pickup or preorder, and any terms shown before you pay.
+          Delivery is not offered. Alcohol is reserved on the site, then paid at the vendor when you
           show ID. There is no card charge for that reservation. Refunds, chargebacks, and handing
-          the item over are the stall&apos;s. The stall sees the order details it needs. We do not
-          have to resolve a dispute between a buyer and a stall.
+          the item over are the vendor&apos;s. The vendor sees the order details it needs. We do not
+          have to resolve a dispute between a buyer and a vendor.
         </p>
         <p className={body}>
           {LEGAL_ENTITY} keeps 4% of the item subtotal on each paid order. The shopper also pays a
           service fee of $0.50 CAD when that subtotal is under $15, or $0.99 CAD when it is $15 or
           more. The service fee is its own line at checkout. The 4% is not charged on the service
-          fee. The stall pays Stripe&apos;s card processing fee. A shopper who cancels before the
-          stall marks the order ready, or before the pickup window starts, is refunded in full,
-          including the service fee. After the stall has marked the order ready and the pickup
+          fee. The vendor pays Stripe&apos;s card processing fee. A shopper who cancels before the
+          vendor marks the order ready, or before the pickup window starts, is refunded in full,
+          including the service fee. After the vendor has marked the order ready and the pickup
           window has started, there is no automatic refund. Stripe usually keeps its card processing
-          fee on a refund, and that cost stays with the stall.
+          fee on a refund, and that cost stays with the vendor.
         </p>
       </section>
 
@@ -146,7 +146,7 @@ export default function TermsPage() {
           You own what you write, and the photos you attach. You give {LEGAL_ENTITY} permission to
           show them on {SITE_NAME} while they are up, on the same terms as a listing. Do not post
           anything illegal, anything that pretends to be someone else, or spam. We can flag or
-          remove posts and reviews. We do not remove a note only because a stall or market dislikes
+          remove posts and reviews. We do not remove a note only because a vendor or market dislikes
           it. Closing the account deletes your posts and reviews on our side.
         </p>
       </section>
@@ -155,7 +155,7 @@ export default function TermsPage() {
         <h2>{siteCopy["/terms"].login}</h2>
         <p className={body}>
           One person holds the login. A password you choose stays a hash. A password issued for an
-          older stall approval is visible in admin until it is replaced. You are responsible for
+          older vendor approval is visible in admin until it is replaced. You are responsible for
           what happens on the account. We can close it if these terms are broken, if the feed is
           abused, or if we have to for the law.
         </p>
@@ -172,9 +172,9 @@ export default function TermsPage() {
       <section className="mt-10">
         <h2>{siteCopy["/terms"].acceptableUse}</h2>
         <p className={body}>
-          Use the site as a person looking up markets, or as the stall or market the account is
+          Use the site as a person looking up markets, or as the vendor or market the account is
           for. Do not attack it, scrape it beyond ordinary browsing, or try to open someone
-          else&apos;s account. Do not use it to break the law, to pretend you are another stall or
+          else&apos;s account. Do not use it to break the law, to pretend you are another vendor or
           market, to publish someone else&apos;s private information, or to send spam.
         </p>
         <p className={body}>
@@ -191,20 +191,20 @@ export default function TermsPage() {
         <h2>{siteCopy["/terms"].goesWrong}</h2>
         <p className={body}>
           We work to keep hours and names right. The directory can still be wrong, and the site can
-          be down. We are not responsible if you travel to a market that is closed, if a stall is
+          be down. We are not responsible if you travel to a market that is closed, if a vendor is
           out of something, if a third-party map, payment service, or host fails, or if the network
           drops.
         </p>
         <p className={body}>
-          The stall and market accounts are free to open. We are not responsible to that business
+          The vendor and market accounts are free to open. We are not responsible to that business
           for lost sales, lost visitors, or other indirect loss from the site or a listing. Our
           total responsibility to that business for the account is limited to the greater of $100
-          CAD and the stall fees that account paid {LEGAL_ENTITY} in the 12 months before the claim.
+          CAD and the vendor fees that account paid {LEGAL_ENTITY} in the 12 months before the claim.
           This limit does not apply to fraud, or to anything the law does not allow us to limit.
         </p>
         <p className={body}>
           If someone brings a claim against us because of what this account adds or keeps on a
-          listing it controls, or because of an order from its stall, that stall or market will
+          listing it controls, or because of an order from its vendor, that vendor or market will
           deal with the claim, including reasonable legal costs. If you opened the account without
           authority to bind them, you deal with the claim yourself. This does not apply when the
           claim is caused by our fraud, or when the law does not allow us to shift it to you.
@@ -218,7 +218,7 @@ export default function TermsPage() {
         <h2>{siteCopy["/terms"].ontarioLaw}</h2>
         <p className={body}>
           The laws of {LEGAL_JURISDICTION}, and the federal laws of Canada that apply, govern these
-          terms. The courts of Ontario have jurisdiction over a dispute about a stall or market
+          terms. The courts of Ontario have jurisdiction over a dispute about a vendor or market
           account. A shopper may also use another court where the law says so.
         </p>
       </section>
@@ -227,7 +227,7 @@ export default function TermsPage() {
         <h2>{siteCopy["/terms"].changes}</h2>
         <p className={body}>
           If these terms change in a way that matters, we update the date at the top of this page.
-          If the change affects a stall or market account, we email that account. Using the site
+          If the change affects a vendor or market account, we email that account. Using the site
           after the new date is acceptance. You can close the account if you do not want the
           change.
         </p>

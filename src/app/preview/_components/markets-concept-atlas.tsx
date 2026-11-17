@@ -273,7 +273,7 @@ export function MarketsConceptAtlas({
         <div className="flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board lg:col-span-7">
           <div>
             <p className="type-kicker text-primary-foreground/90">
-              Unified markets &amp; stalls directory · {LAUNCH_CITY} &amp; GTA
+              Unified markets &amp; vendors directory · {LAUNCH_CITY} &amp; GTA
             </p>
             <h1 className="mt-1 text-primary-foreground">{LAUNCH_CITY} farmers&apos; markets</h1>
             <p className="type-lede mt-2 max-w-2xl text-primary-foreground/95">
@@ -504,7 +504,7 @@ export function MarketsConceptAtlas({
           </div>
         </div>
 
-        {/* Right 5 Cols: Featured Market & Anchor Stalls Spotlight Plate */}
+        {/* Right 5 Cols: Featured Market & Anchor Vendors Spotlight Plate */}
         <div className="flex flex-col justify-between bg-card ring-1 ring-board lg:col-span-5">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-receipt px-5 py-3">
@@ -567,7 +567,7 @@ export function MarketsConceptAtlas({
                           {spotlightMarket.name}
                         </Link>
                         <p className="mt-0.5 text-sm text-muted-foreground">
-                          {spotlightMarket.neighbourhood} · {spotlightMarket.vendorCount} stalls
+                          {spotlightMarket.neighbourhood} · {spotlightMarket.vendorCount} vendors
                         </p>
                       </div>
                     </div>
@@ -631,7 +631,7 @@ export function MarketsConceptAtlas({
                 href="#directory-vendors"
                 className="font-medium text-primary hover:underline"
               >
-                {filteredVendors.length} stalls ↓
+                {filteredVendors.length} vendors ↓
               </a>
             </div>
           </div>
@@ -650,7 +650,7 @@ export function MarketsConceptAtlas({
                 <span className="type-nums font-semibold">{data.saturdayOpenCount}</span>{" "}
                 Saturday markets ·{" "}
                 <span className="type-nums font-semibold">{data.saturdayStallCount}</span>{" "}
-                stalls on the schedule
+                vendors on the schedule
               </span>
             </NowLabel>
           </div>
@@ -724,7 +724,7 @@ export function MarketsConceptAtlas({
                       >
                         {slot.neighbourhood}
                       </button>{" "}
-                      · <span className="type-nums">{slot.vendorCount}</span> stalls
+                      · <span className="type-nums">{slot.vendorCount}</span> vendors
                     </p>
                   </div>
                 </div>
@@ -743,7 +743,7 @@ export function MarketsConceptAtlas({
               {slot.topStalls.length > 0 ? (
                 <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-dashed border-border pt-2 pl-10">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-sm text-muted-foreground">Stalls here:</span>
+                    <span className="text-sm text-muted-foreground">Vendors here:</span>
                     {slot.topStalls.slice(0, 2).map((v) => (
                       <Link
                         key={v.slug}
@@ -792,7 +792,7 @@ export function MarketsConceptAtlas({
               className="cursor-pointer rounded bg-receipt px-2.5 py-1.5 text-sm font-medium text-foreground ring-1 ring-border"
             >
               <option value="soonest">Opening soonest</option>
-              <option value="stalls">Most stalls</option>
+              <option value="stalls">Most vendors</option>
               <option value="reviewed">Most reviewed</option>
               <option value="name">Name A–Z</option>
             </select>
@@ -853,7 +853,7 @@ export function MarketsConceptAtlas({
                     {formatCensus(data.census.vendors)} total · {filteredVendors.length} featured
                     with menus
                   </p>
-                  <h2>Vendors &amp; stalls</h2>
+                  <h2>Vendors &amp; vendors</h2>
                 </div>
               </div>
 

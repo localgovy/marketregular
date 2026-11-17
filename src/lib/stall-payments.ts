@@ -179,7 +179,7 @@ async function saveStallAccount(
   if (raced?.owner_user_id === ownerUserId && typeof raced.stripe_account_id === "string") {
     return { error: null };
   }
-  console.error("stall account save", error.code);
+  console.error("vendor account save", error.code);
   return { error: "Could not save the payment account." as const };
 }
 
@@ -201,7 +201,7 @@ export async function createStallAccount(input: {
     .eq("id", input.vendorId)
     .maybeSingle();
   if (vendor?.claimed_by !== input.userId) {
-    return { error: "That stall is not yours." as const, accountId: null };
+    return { error: "That vendor is not yours." as const, accountId: null };
   }
   const { data: existing } = await db
     .from("vendor_stripe_accounts")
@@ -222,7 +222,7 @@ export async function createStallAccount(input: {
       .eq("vendor_id", input.vendorId)
       .in("status", ["paid", "reserved", "partially_refunded"]);
     if (error || (count ?? 0) > 0) {
-      return { error: "This stall already has orders on its payment account." as const, accountId: null };
+      return { error: "This vendor already has orders on its payment account." as const, accountId: null };
     }
     await db.from("vendor_stripe_accounts").delete().eq("vendor_id", input.vendorId);
   }
@@ -337,7 +337,7 @@ async function prefillStallAccount(
       { apiVersion: CONNECT_PREVIEW_API_VERSION },
     );
   } catch (err) {
-    console.error("stall account prefill", err instanceof Error ? err.message : "stripe");
+    console.error("vendor account prefill", err instanceof Error ? err.message : "stripe");
   }
 }
 
@@ -404,11 +404,11 @@ export async function createStallDashboardLink(vendorId: string, userId: string)
   if (typeof accountId !== "string") return { error: "Set up payments first." as const, url: null };
   try {
     const link = await stripe.accounts.createLoginLink(accountId);
-    if (!link.url) return { error: "Could not open the stall dashboard." as const, url: null };
+    if (!link.url) return { error: "Could not open the vendor dashboard." as const, url: null };
     return { error: null, url: link.url };
   } catch (err) {
-    console.error("stall dashboard", err instanceof Error ? err.message : "stripe");
-    return { error: "Could not open the stall dashboard." as const, url: null };
+    console.error("vendor dashboard", err instanceof Error ? err.message : "stripe");
+    return { error: "Could not open the vendor dashboard." as const, url: null };
   }
 }
 
@@ -451,7 +451,7 @@ async function chargeAccountId(order: OrderRow) {
 async function syncFee(order: OrderRow, actualApplicationFeeCents?: number | null) {
   if (order.status === "pending" || order.status === "expired" || order.status === "reserved") return;
   const db = service();
-  if (!db) throw new Error("stall fee was not recorded");
+  if (!db) throw new Error("vendor fee was not recorded");
   const parts = feeAfterRefund({
     subtotalCents: order.charge_cents,
     refundedSubtotalCents: order.refunded_cents,
@@ -471,7 +471,7 @@ async function syncFee(order: OrderRow, actualApplicationFeeCents?: number | nul
     typeof actualApplicationFeeCents === "number" &&
     actualApplicationFeeCents !== expectedFee
   ) {
-    console.error("stall application fee mismatch", order.id, expectedFee, actualApplicationFeeCents);
+    console.error("vendor application fee mismatch", order.id, expectedFee, actualApplicationFeeCents);
   }
   const { data: existing } = await db
     .from("platform_fees")
@@ -492,11 +492,11 @@ async function syncFee(order: OrderRow, actualApplicationFeeCents?: number | nul
   };
   if (existing) {
     const { error } = await db.from("platform_fees").update(row).eq("order_id", order.id);
-    if (error) throw new Error("stall fee was not recorded");
+    if (error) throw new Error("vendor fee was not recorded");
     return;
   }
   const { error } = await db.from("platform_fees").insert(row);
-  if (error && error.code !== "23505") throw new Error("stall fee was not recorded");
+  if (error && error.code !== "23505") throw new Error("vendor fee was not recorded");
 }
 
 export async function recordStallCheckout(
@@ -506,9 +506,9 @@ export async function recordStallCheckout(
   if (session.metadata?.kind !== "stall_order") return;
   if (session.payment_status !== "paid") return;
   const orderId = session.metadata.order_id;
-  if (!orderId) throw new Error("stall checkout was not recorded");
+  if (!orderId) throw new Error("vendor checkout was not recorded");
   const order = await loadOrder(orderId);
-  if (!order) throw new Error("stall checkout was not recorded");
+  if (!order) throw new Error("vendor checkout was not recorded");
   if (
     !checkoutAmountMatches(
       session.currency,
@@ -517,7 +517,7 @@ export async function recordStallCheckout(
       order.charge_cents + order.service_fee_cents,
     )
   ) {
-    throw new Error("stall checkout amount mismatch");
+    throw new Error("vendor checkout amount mismatch");
   }
   const actualFee = await applicationFeeOnCharge(session, stripeAccount);
   const vendorAccount = order.stripe_account_id ?? (await stallAccountId(order.vendor_id));
@@ -529,10 +529,10 @@ export async function recordStallCheckout(
       vendorAccount,
     })
   ) {
-    throw new Error("stall checkout session mismatch");
+    throw new Error("vendor checkout session mismatch");
   }
   const db = service();
-  if (!db) throw new Error("stall checkout was not recorded");
+  if (!db) throw new Error("vendor checkout was not recorded");
   const buyerEmail = order.buyer_email ?? checkoutEmail(session);
   const next = paidStatus(order.charge_cents, order.refunded_cents);
   const wasUnpaid = order.status === "pending" || order.status === "expired";
@@ -549,10 +549,10 @@ export async function recordStallCheckout(
       .eq("id", order.id)
       .in("status", wasUnpaid ? ["pending", "expired"] : ["paid"])
       .select("id");
-    if (error) throw new Error("stall checkout was not recorded");
+    if (error) throw new Error("vendor checkout was not recorded");
     if (wasUnpaid && updated?.length) {
       const paid = await loadOrder(order.id);
-      if (!paid) throw new Error("stall checkout was not recorded");
+      if (!paid) throw new Error("vendor checkout was not recorded");
       await sendPaidOrderMail(paid);
       await syncFee(paid, actualFee);
       await stampIntroWindow(paid);
@@ -611,7 +611,7 @@ export async function recordPlatformFee(
     stripe_checkout_session_id: session.id,
     seller_user_id: sellerUserId,
   });
-  if (error && error.code !== "23505") console.error("stall fee payment", error.code);
+  if (error && error.code !== "23505") console.error("vendor fee payment", error.code);
   refreshDirectoryLater([`/vendor/${expectedVendorId}`]);
 }
 
@@ -709,7 +709,7 @@ async function applyReturnedAmount(order: OrderRow, returned: number, paymentInt
     ? write.in("status", ["pending", "expired"])
     : write.in("status", ["paid", "partially_refunded", "refunded", "refund_pending"])
   ).select("id");
-  if (error) throw new Error("stall refund was not recorded");
+  if (error) throw new Error("vendor refund was not recorded");
   if (!data?.length && open) {
     const current = await loadOrder(order.id);
     if (current && current.status !== "pending" && current.status !== "expired") {
@@ -738,7 +738,7 @@ async function applyPlatformFeeReturn(charge: Stripe.Charge, returned: number) {
     .eq("stripe_checkout_session_id", session.id)
     .maybeSingle();
   if (typeof payment?.amount_cents !== "number") {
-    throw new Error("stall fee payment is not recorded yet");
+    throw new Error("vendor fee payment is not recorded yet");
   }
   const next = feeCreditAfterReturn(payment.amount_cents, charge.amount, returned);
   if (next.action === "keep") return;
@@ -748,13 +748,13 @@ async function applyPlatformFeeReturn(charge: Stripe.Charge, returned: number) {
       .update({ amount_cents: next.amountCents })
       .eq("stripe_checkout_session_id", session.id)
       .gt("amount_cents", next.amountCents);
-    if (error) throw new Error("stall fee credit was not recorded");
+    if (error) throw new Error("vendor fee credit was not recorded");
   } else {
     const { error } = await db
       .from("platform_fee_payments")
       .delete()
       .eq("stripe_checkout_session_id", session.id);
-    if (error) throw new Error("stall fee credit was not recorded");
+    if (error) throw new Error("vendor fee credit was not recorded");
   }
   const vendorId = session.metadata.vendor_id;
   if (typeof vendorId === "string") refreshDirectoryLater([`/vendor/${vendorId}`]);
@@ -850,7 +850,7 @@ async function refundApplicationFee(
 async function applyChargeReturn(charge: Stripe.Charge, returned: number, stripeAccount: string | null) {
   if (returned <= 0) return;
   if (charge.currency?.toLowerCase() !== "cad") {
-    if (stripeAccount) throw new Error("stall refund was not recorded");
+    if (stripeAccount) throw new Error("vendor refund was not recorded");
     return;
   }
   const order = await findOrderForCharge(charge, stripeAccount);
@@ -868,7 +868,7 @@ async function applyChargeReturn(charge: Stripe.Charge, returned: number, stripe
     await applyPlatformFeeReturn(charge, returned);
     return;
   }
-  throw new Error("stall refund was not recorded");
+  throw new Error("vendor refund was not recorded");
 }
 
 export async function applyStallRefund(charge: Stripe.Charge, stripeAccount: string | null) {
@@ -878,9 +878,9 @@ export async function applyStallRefund(charge: Stripe.Charge, stripeAccount: str
 export async function applyRefundUpdate(refund: Stripe.Refund, stripeAccount: string | null) {
   if (refund.status !== "succeeded") return;
   const stripe = getStripe();
-  if (!stripe) throw new Error("stall refund was not recorded");
+  if (!stripe) throw new Error("vendor refund was not recorded");
   const chargeId = typeof refund.charge === "string" ? refund.charge : refund.charge?.id;
-  if (!chargeId) throw new Error("stall refund was not recorded");
+  if (!chargeId) throw new Error("vendor refund was not recorded");
   const charge = stripeAccount
     ? await stripe.charges.retrieve(chargeId, {}, { stripeAccount })
     : await stripe.charges.retrieve(chargeId);
@@ -1177,7 +1177,7 @@ export async function startStallCheckout(input: {
   if (input.sellable.reserve) return startReservation(input);
   if (!stripe) return { error: "Payments are not available yet." as const };
   const flags = await refreshStallCapabilities(input.sellable.vendor_id);
-  if (!flags?.cardPaymentsActive) return { error: "This stall cannot take a card yet." as const };
+  if (!flags?.cardPaymentsActive) return { error: "This vendor cannot take a card yet." as const };
 
   const { details, sellable, buyerId } = input;
   if (details.fulfillment === "delivery") return { error: "Delivery is not available." as const };
@@ -1195,7 +1195,7 @@ export async function startStallCheckout(input: {
     .eq("id", sellable.vendor_id)
     .maybeSingle();
   if (typeof owner?.claimed_by !== "string") {
-    return { error: "This stall cannot take a card yet." as const };
+    return { error: "This vendor cannot take a card yet." as const };
   }
 
   const { data: inserted, error } = await db
@@ -1313,7 +1313,7 @@ export async function startStallCheckout(input: {
     }
     return { error: null, url: session.url };
   } catch (err) {
-    console.error("stall checkout", err instanceof Error ? err.message : "stripe");
+    console.error("vendor checkout", err instanceof Error ? err.message : "stripe");
     await db.from("orders").update({ status: "expired" }).eq("id", orderId).eq("status", "pending");
     return { error: "Could not start that payment." as const };
   }
@@ -1338,7 +1338,7 @@ export async function confirmStallCheckout(input: {
     if (session.metadata?.order_id !== order.id) return { order, confirmFailed: false };
     await recordStallCheckout(session, accountId);
   } catch (err) {
-    console.error("stall checkout confirm", err instanceof Error ? err.message : "stripe");
+    console.error("vendor checkout confirm", err instanceof Error ? err.message : "stripe");
     return { order: (await loadOrder(order.id)) ?? order, confirmFailed: true };
   }
   return { order: (await loadOrder(order.id)) ?? order, confirmFailed: false };
@@ -1354,7 +1354,7 @@ export async function startFeeCheckout(
   void balanceCents;
   void email;
   void sellerUserId;
-  return { error: "The stall fee is taken on each paid order." as const, url: null };
+  return { error: "The vendor fee is taken on each paid order." as const, url: null };
 }
 
 export async function confirmFeeCheckout(vendorId: string, sessionId: string) {
@@ -1381,7 +1381,7 @@ async function startReservation(input: {
     .eq("id", sellable.vendor_id)
     .maybeSingle();
   if (typeof owner?.claimed_by !== "string") {
-    return { error: "This stall cannot take a reservation yet." as const };
+    return { error: "This vendor cannot take a reservation yet." as const };
   }
   const { data: inserted, error } = await db
     .from("orders")
@@ -1564,7 +1564,7 @@ export async function reconcileStallPayment(order: OrderRow) {
       if (dispute.status === "lost") await applyLostDispute(dispute, accountId);
     }
   } catch (err) {
-    console.error("stall payment reconcile", err instanceof Error ? err.message : "stripe");
+    console.error("vendor payment reconcile", err instanceof Error ? err.message : "stripe");
   }
   return (await loadOrder(order.id)) ?? order;
 }
@@ -1585,7 +1585,7 @@ async function claimShopperRefund(orderId: string) {
     .in("status", ["paid", "partially_refunded"])
     .is("disputed_at", null)
     .select("id");
-  if (error) throw new Error("stall refund was not recorded");
+  if (error) throw new Error("vendor refund was not recorded");
   return Boolean(data?.length);
 }
 
@@ -1675,7 +1675,7 @@ export async function cancelShopperOrder(orderId: string, buyerId: string) {
       }
     }
     await releaseShopperRefund(current);
-    console.error("stall cancel", err instanceof Error ? err.message : "stripe");
+    console.error("vendor cancel", err instanceof Error ? err.message : "stripe");
     return { error: "Could not refund that order." as const };
   }
   await applyReturnedAmount(order, order.charge_cents + order.service_fee_cents, paymentIntentId);

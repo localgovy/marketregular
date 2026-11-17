@@ -114,8 +114,8 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
               <span>
                 {data.stats.todayVendorsCount}{" "}
                 {data.stats.todayVendorsCount === 1
-                  ? "stall selling today"
-                  : "stalls selling today"}
+                  ? "vendor selling today"
+                  : "vendors selling today"}
               </span>
             </span>
           ) : (
@@ -158,8 +158,8 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
                     <span className="text-sm font-medium text-primary-foreground/90">
                       {data.stats.pricedVendorsCount}{" "}
                       {data.stats.pricedVendorsCount === 1
-                        ? "stall lists menu prices"
-                        : "stalls list menu prices"}{" "}
+                        ? "vendor lists menu prices"
+                        : "vendors list menu prices"}{" "}
                       · Prices show when the vendor has added them.
                     </span>
                   </>
@@ -172,7 +172,7 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
             ) : null}
 
             <p className="type-lede mt-4 text-primary-foreground/95">
-              {data.term} from stalls at {LAUNCH_CITY} farmers&apos; markets. These vendors list
+              {data.term} from vendors at {LAUNCH_CITY} farmers&apos; markets. These vendors list
               it, with the markets and days where they sell.
             </p>
 
@@ -203,7 +203,7 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
                   {data.stats.vendorsCount}
                 </p>
                 <p className="text-sm text-primary-foreground/85">
-                  {data.stats.vendorsCount === 1 ? "Stall listing it" : "Stalls listing it"}
+                  {data.stats.vendorsCount === 1 ? "Vendor listing it" : "Vendors listing it"}
                 </p>
               </div>
               <div className="rounded-lg bg-primary-foreground/12 px-3.5 py-2.5">
@@ -314,7 +314,7 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
                           >
                             {active
                               ? "Selected"
-                              : `${market.vendorCount} ${market.vendorCount === 1 ? "stall" : "stalls"}`}
+                              : `${market.vendorCount} ${market.vendorCount === 1 ? "vendor" : "vendors"}`}
                           </button>
                         </li>
                       );
@@ -338,9 +338,9 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
         </div>
       </section>
 
-      {/* Synchronized 12-Column Stall Comparison (8 Cols) & Markets / Sibling Guides Rail (4 Cols) */}
+      {/* Synchronized 12-Column Vendor Comparison (8 Cols) & Markets / Sibling Guides Rail (4 Cols) */}
       <div className="mt-8 grid gap-8 lg:grid-cols-12 lg:items-start">
-        {/* Left 8 Columns: Interactive Stall & Menu Comparison List */}
+        {/* Left 8 Columns: Interactive Vendor & Menu Comparison List */}
         <div className="flex flex-col gap-8 lg:col-span-8">
           <SortableFindVendors
             vendors={data.vendors}
@@ -370,7 +370,7 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
 
               <div className="p-5">
                 <p className="text-sm text-muted-foreground">
-                  Select a market hall to filter the {data.cleanTerm.toLowerCase()} stalls on the
+                  Select a market hall to filter the {data.cleanTerm.toLowerCase()} vendors on the
                   left, or open the market page for directions.
                 </p>
 
@@ -438,7 +438,7 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
                             >
                               {active
                                 ? "Showing"
-                                : `${market.vendorCount} ${market.vendorCount === 1 ? "stall" : "stalls"}`}
+                                : `${market.vendorCount} ${market.vendorCount === 1 ? "vendor" : "vendors"}`}
                             </button>
                             <SaveButton
                               kind="market"
@@ -493,7 +493,7 @@ export function FindProductAtlas({ data }: { data: FindProductAtlasData }) {
                         </span>
                       </span>
                       <span className="type-nums text-sm text-stamp">
-                        {guide.vendors} {guide.vendors === 1 ? "stall" : "stalls"}
+                        {guide.vendors} {guide.vendors === 1 ? "vendor" : "vendors"}
                       </span>
                     </Link>
                   </li>

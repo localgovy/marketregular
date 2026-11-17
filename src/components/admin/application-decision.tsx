@@ -28,7 +28,7 @@ export function ApplicationDecisionForm({
           <input type="hidden" name="intent" value="assign" />
           <input type="hidden" name="target_id" value={suggested.id} />
           <Button type="submit" disabled={pending}>
-            {pending ? "Saving…" : stall ? "Assign this stall" : "Assign this market"}
+            {pending ? "Saving…" : stall ? "Assign this vendor" : "Assign this market"}
           </Button>
         </form>
       ) : null}
@@ -36,7 +36,7 @@ export function ApplicationDecisionForm({
         <input type="hidden" name="application_id" value={id} />
         <input type="hidden" name="intent" value="find" />
         <div className="grid gap-1.5">
-          <Label htmlFor={`${id}-q`}>{stall ? "Find a stall" : "Find a market"}</Label>
+          <Label htmlFor={`${id}-q`}>{stall ? "Find a vendor" : "Find a market"}</Label>
           <Input
             id={`${id}-q`}
             name="q"

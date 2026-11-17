@@ -234,7 +234,7 @@ export function VendorConceptCatalogue({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <BackButton href={homeMarket ? `/markets/${homeMarket.slug}` : "/markets"} />
-          <span className="text-sm text-muted-foreground">Stall catalogue in</span>
+          <span className="text-sm text-muted-foreground">Vendor catalogue in</span>
           {aisleGuides.map((guide) => (
             <Link
               key={guide.id}
@@ -320,7 +320,7 @@ export function VendorConceptCatalogue({
                 <p className="type-census text-2xl text-foreground">
                   {similarAisleVendors.length}
                 </p>
-                <p className="text-sm text-muted-foreground">Similar stalls</p>
+                <p className="text-sm text-muted-foreground">Similar vendors</p>
               </div>
             </div>
 
@@ -358,7 +358,7 @@ export function VendorConceptCatalogue({
             </div>
 
             <div className="mt-4 flex items-center justify-between gap-2">
-              <h2 className="text-primary-foreground">Order from this stall</h2>
+              <h2 className="text-primary-foreground">Order from this vendor</h2>
               <span className="type-nums rounded bg-ticket px-2.5 py-0.5 text-sm font-medium text-chalk">
                 {slipCount} {slipCount === 1 ? "item" : "items"} ·{" "}
                 {formatPrice(slipTotalCents) ?? "$0.00"}
@@ -421,14 +421,14 @@ export function VendorConceptCatalogue({
         </div>
       </section>
 
-      {/* Visual Stall Catalogue Section */}
+      {/* Visual Vendor Catalogue Section */}
       <section
         id="menu"
         className="mt-8 rounded-xl bg-card p-5 ring-1 ring-foreground/10 sm:p-6"
       >
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
           <div>
-            <p className="type-kicker text-primary">Interactive stall catalogue</p>
+            <p className="type-kicker text-primary">Interactive vendor catalogue</p>
             <h2 className="mt-0.5">Shop {vendor.name} &amp; compare across the market</h2>
           </div>
 
@@ -756,7 +756,7 @@ export function VendorConceptCatalogue({
                   Explore {activeExplorerGuide.label} across Toronto
                 </p>
                 <p className="text-sm text-chalk/75">
-                  Jump to a specific product guide or search every stall in this category.
+                  Jump to a specific product guide or search every vendor in this category.
                 </p>
               </div>
             </div>
@@ -783,7 +783,7 @@ export function VendorConceptCatalogue({
           </div>
         ) : null}
 
-        {/* Peer Stalls Comparison Cards */}
+        {/* Peer Vendors Comparison Cards */}
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {similarAisleVendors.slice(0, 3).map((peer) => (
             <div
@@ -854,7 +854,7 @@ export function VendorConceptCatalogue({
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <BlocksMark className="size-4 text-primary" />
-                <h2>Markets &amp; fellow stalls</h2>
+                <h2>Markets &amp; fellow vendors</h2>
               </div>
               <Link href="/markets" className="text-sm font-medium text-primary hover:underline">
                 All Toronto markets →
@@ -888,7 +888,7 @@ export function VendorConceptCatalogue({
                           lat={market.lat}
                           lng={market.lng}
                         />
-                        {market.stall ? ` · Stall ${market.stall}` : ""}
+                        {market.stall ? ` · Vendor ${market.stall}` : ""}
                       </p>
                     </div>
                     <SessionLines hours={market.hours} fallback={market.nextOpen} />
@@ -920,7 +920,7 @@ export function VendorConceptCatalogue({
 
           {coMarketVendors.length > 0 ? (
             <section className="rounded-xl bg-card p-5 ring-1 ring-foreground/10 sm:p-6">
-              <h2>More stalls at the same market halls</h2>
+              <h2>More vendors at the same market halls</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 Pair your stop at {vendor.name} with these fellow vendors at the same halls.
               </p>

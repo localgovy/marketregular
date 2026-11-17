@@ -63,7 +63,7 @@ export default async function VendorEditorPage({
     try {
       await refreshStallCapabilities(id);
     } catch (err) {
-      console.error("stall capabilities", err instanceof Error ? err.message : "stripe");
+      console.error("vendor capabilities", err instanceof Error ? err.message : "stripe");
     }
     portal = await loadVendorPortal();
     listing = portal.listings.find((row) => row.id === id) ?? listing;
@@ -73,7 +73,7 @@ export default async function VendorEditorPage({
     query.fee === "cancelled"
       ? "Payment was not finished."
       : query.fee === "paid"
-        ? "The stall fee is taken on each paid order."
+        ? "The vendor fee is taken on each paid order."
         : null;
 
   return (

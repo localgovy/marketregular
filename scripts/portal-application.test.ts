@@ -51,7 +51,7 @@ test("email confirmation can rebuild the portal request without granting access"
 test("assignment mail does not talk about a claim or replace the password", () => {
   const stall = vendorPortalLetter();
   const market = marketPortalLetter();
-  assert.equal(stall.text.includes("Your stall is assigned"), true);
+  assert.equal(stall.text.includes("Your vendor is assigned"), true);
   assert.equal(market.text.includes("Your market is assigned"), true);
   assert.equal(stall.text.toLowerCase().includes("claim"), false);
   assert.equal(market.text.toLowerCase().includes("claim"), false);
@@ -62,7 +62,7 @@ test("assignment mail does not talk about a claim or replace the password", () =
 test("a turned-down request tells them they can ask again", () => {
   const stall = portalDeclineLetter("vendor");
   const market = portalDeclineLetter("market");
-  assert.equal(stall.text.includes("couldn't assign a stall"), true);
+  assert.equal(stall.text.includes("couldn't assign a vendor"), true);
   assert.equal(market.text.includes("couldn't assign a market"), true);
   assert.equal(stall.text.includes("send another request"), true);
   assert.equal(stall.text.toLowerCase().includes("claim"), false);

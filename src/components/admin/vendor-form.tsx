@@ -125,7 +125,7 @@ export function VendorForm({ vendor }: { vendor?: Vendor }) {
       {vendor ? (
         <MaintenanceOptOutFields
           kind="vendor"
-          noun="stall"
+          noun="vendor"
           selected={readOptOuts("vendor", vendor.maintenance_opt_outs)}
         />
       ) : null}

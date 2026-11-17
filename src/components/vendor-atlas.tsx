@@ -133,8 +133,8 @@ function MastheadScore({
 function formatStallNote(stall: string | null | undefined): string | null {
   const trimmed = stall?.trim();
   if (!trimmed) return null;
-  if (/^stall\b/i.test(trimmed)) return trimmed;
-  if (/^[A-Za-z]?\d+[A-Za-z]?$/.test(trimmed)) return `Stall ${trimmed}`;
+  if (/^stall\b/i.test(trimmed)) return trimmed.replace(/^stall\b/i, "Vendor");
+  if (/^[A-Za-z]?\d+[A-Za-z]?$/.test(trimmed)) return `Vendor ${trimmed}`;
   return trimmed;
 }
 
@@ -359,7 +359,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
             href={`/products?aisle=${encodeURIComponent(vendor.primaryCategoryId)}`}
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
-            <span>Compare {vendor.primaryCategoryLabel.toLowerCase()} stalls</span>
+            <span>Compare {vendor.primaryCategoryLabel.toLowerCase()} vendors</span>
             <CaretRightMark className="size-3.5" />
           </Link>
         </div>
@@ -367,7 +367,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
 
       {/* Above-the-Fold Dual-Plate Header */}
       <section className="mt-4 grid gap-5 lg:grid-cols-12">
-        {/* Left 7 Cols: Full Forest-Green Enamel Stall Identity & Story Plate */}
+        {/* Left 7 Cols: Full Forest-Green Enamel Vendor Identity & Story Plate */}
         <div className="flex flex-col justify-between bg-primary p-6 text-primary-foreground ring-1 ring-board lg:col-span-7">
           <div>
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -539,7 +539,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
         </div>
       </section>
 
-      {/* Synchronized 12-Column Menu (8 Cols) & Markets / Fellow Stalls Rail (4 Cols) */}
+      {/* Synchronized 12-Column Menu (8 Cols) & Markets / Fellow Vendors Rail (4 Cols) */}
       <div className="mt-8 grid gap-8 lg:grid-cols-12 lg:items-start">
         {/* Left 8 Columns: Stall Menu or Category & Specialty Overview */}
         <div className="flex flex-col gap-8 lg:col-span-8">
@@ -714,7 +714,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                       onClick={resetAllFilters}
                       className="mt-3 cursor-pointer rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                     >
-                      Show all {menus.length} stall {menus.length === 1 ? "item" : "items"}
+                      Show all {menus.length} vendor {menus.length === 1 ? "item" : "items"}
                     </button>
                   </div>
                 ) : (
@@ -858,7 +858,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                 </div>
 
                 <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                  {vendor.summaryLine} Explore this stall&apos;s product categories below or compare
+                  {vendor.summaryLine} Explore this vendor&apos;s product categories below or compare
                   other {vendor.primaryCategoryLabel.toLowerCase()} vendors across Toronto markets.
                 </p>
 
@@ -917,7 +917,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
           </section>
         </div>
 
-        {/* Right 4 Columns: Interactive Markets & Fellow Stalls Rail */}
+        {/* Right 4 Columns: Interactive Markets & Fellow Vendors Rail */}
         <aside className="flex flex-col gap-6 lg:sticky lg:top-[var(--header-offset)] lg:col-span-4">
           {markets.length > 0 ? (
             <div className="bg-card ring-1 ring-board">
@@ -1027,12 +1027,12 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                       <SessionLines hours={activeMarket.hours} fallback={activeMarket.nextOpen} />
                     </div>
 
-                    {/* Fellow Stalls at Selected Market */}
+                    {/* Fellow Vendors at Selected Market */}
                     {activeMarket.fellowVendors.length > 0 ? (
                       <div className="mt-4 border-t border-dashed border-border pt-3.5">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-sm font-medium text-foreground">
-                            Fellow stalls at {activeMarket.name}
+                            Fellow vendors at {activeMarket.name}
                           </p>
                           <Link
                             href={`/markets/${activeMarket.slug}`}
@@ -1171,7 +1171,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
               className="flex flex-col justify-between bg-card ring-1 ring-board"
             >
               <div>
-                {/* 1. Peer Stall Plate Header */}
+                {/* 1. Peer Vendor Plate Header */}
                 <div className="flex items-start justify-between gap-2.5 border-b border-border bg-receipt px-4 py-3.5">
                   <div className="flex min-w-0 flex-1 items-start gap-3">
                     <StallEmblem
@@ -1236,7 +1236,7 @@ export function VendorAtlas({ data: source }: { data: VendorAtlasData }) {
                         href={`/vendors/${peer.slug}`}
                         className="shrink-0 text-sm font-medium text-primary hover:underline"
                       >
-                        Stall menu →
+                        Vendor menu →
                       </Link>
                     </div>
                   </div>

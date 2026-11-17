@@ -38,7 +38,7 @@ async function openListing(
     return {
       error:
         kind === "vendor"
-          ? "Someone else already runs this stall."
+          ? "Someone else already runs this vendor."
           : "Someone else already runs this market.",
     };
   }
@@ -77,7 +77,7 @@ export async function filePortalApplication(input: {
     return { error: "Send the listing or the organization name, not both." };
   }
   if (!requestId && !organizationName) {
-    return { error: kind === "vendor" ? "Add the stall or the organization name." : "Add the market or the organization name." };
+    return { error: kind === "vendor" ? "Add the vendor or the organization name." : "Add the market or the organization name." };
   }
 
   const opened = requestId ? await openListing(kind, requestId, user.id) : null;
@@ -87,7 +87,7 @@ export async function filePortalApplication(input: {
   if (listing && (await alreadyOwns(supabase, kind, listing.id))) {
     return {
       error: null,
-      message: kind === "vendor" ? "You already edit this stall." : "You already edit this market.",
+      message: kind === "vendor" ? "You already edit this vendor." : "You already edit this market.",
     };
   }
 

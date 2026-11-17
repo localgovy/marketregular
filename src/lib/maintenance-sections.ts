@@ -17,7 +17,7 @@ export const MAINTENANCE_SECTIONS: readonly MaintenanceSection[] = [
   { key: "halls", label: "Markets", kinds: ["vendor"] },
   { key: "place", label: "Place", kinds: ["market"] },
   { key: "hours", label: "Hours", kinds: ["market"] },
-  { key: "roster", label: "Stalls", kinds: ["market"] },
+  { key: "roster", label: "Vendors", kinds: ["market"] },
 ];
 
 export type VendorMaintenanceFields = {
@@ -165,12 +165,12 @@ function joinLabels(labels: readonly string[]) {
   return `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
 }
 
-function staysSentence(labels: readonly string[], noun: "stall" | "market") {
+function staysSentence(labels: readonly string[], noun: "vendor" | "market") {
   const stay = labels.length === 1 ? "stays" : "stay";
   return `${joinLabels(labels)} ${stay} with this ${noun}`;
 }
 
-export function maintenanceBlockMessage(groups: { labels: readonly string[]; noun: "stall" | "market" }[]) {
+export function maintenanceBlockMessage(groups: { labels: readonly string[]; noun: "vendor" | "market" }[]) {
   const sentences = groups
     .filter((group) => group.labels.length > 0)
     .map((group) => staysSentence(group.labels, group.noun));

@@ -21,7 +21,7 @@ export function VendorOwnerForm({
       {ownerEmail ? (
         <p className="text-sm text-muted-foreground">Current owner: {ownerEmail}</p>
       ) : (
-        <p className="text-sm text-muted-foreground">No one can edit this stall yet.</p>
+        <p className="text-sm text-muted-foreground">No one can edit this vendor yet.</p>
       )}
       <div className="grid gap-1.5">
         <Label htmlFor="owner-email">Account email</Label>
@@ -31,13 +31,13 @@ export function VendorOwnerForm({
           type="email"
           required
           autoComplete="off"
-          placeholder="stall@example.com"
+          placeholder="vendor@example.com"
           defaultValue={ownerEmail ?? ""}
         />
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Give them this stall"}
+          {pending ? "Saving…" : "Give them this vendor"}
         </Button>
         {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
         {state?.message ? <p className="text-sm text-primary">{state.message}</p> : null}

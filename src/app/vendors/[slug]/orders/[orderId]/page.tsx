@@ -133,7 +133,7 @@ export default async function StallOrderPage({
             {waiting
               ? "has not been paid yet."
               : reserved
-                ? "is holding this reservation. Pay at the stall and show ID."
+                ? "is holding this reservation. Pay at the vendor and show ID."
                 : "has this order."}{" "}
             {orderStatusLabel(status, readyAt)}.
           </>

@@ -216,7 +216,7 @@ export function SortableFindVendors({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={`Filter ${vendors.length} ${vendors.length === 1 ? "stall" : "stalls"}, menu varieties, or markets…`}
+              placeholder={`Filter ${vendors.length} ${vendors.length === 1 ? "vendor" : "vendors"}, menu varieties, or markets…`}
               className="w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
           </label>
@@ -336,14 +336,14 @@ export function SortableFindVendors({
       {filtered.length === 0 && hasActiveFilter ? (
         <div className="mt-5 bg-receipt p-6 text-center ring-1 ring-board">
           <p className="text-base font-medium text-foreground">
-            No stalls match that filter combination.
+            No vendors match that filter combination.
           </p>
           <button
             type="button"
             onClick={resetFilters}
             className="mt-3 cursor-pointer rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Show all {vendors.length} {vendors.length === 1 ? "stall" : "stalls"}
+            Show all {vendors.length} {vendors.length === 1 ? "vendor" : "vendors"}
           </button>
         </div>
       ) : (

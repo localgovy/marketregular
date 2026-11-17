@@ -38,7 +38,7 @@ function portalError(
   error: { message?: string; code?: string } | null,
   fallback: string,
 ): PortalResult {
-  if (error?.code === "42501") return { error: "That stall is not yours." };
+  if (error?.code === "42501") return { error: "That vendor is not yours." };
   return { error: dbPublicError(error, fallback) };
 }
 
@@ -77,10 +77,10 @@ async function requireOwned(id: string) {
   if (!(await takeOwnerSaveSlot(user.id))) {
     return { error: "Wait a bit, then try again." as const, supabase: null, user: null };
   }
-  if (!isUuid(id)) return { error: "That stall is missing." as const, supabase: null, user: null };
+  if (!isUuid(id)) return { error: "That vendor is missing." as const, supabase: null, user: null };
   const { data, error } = await supabase.rpc("owns_vendor", { p_id: id });
   if (error || data !== true) {
-    return { error: "That stall is not yours." as const, supabase: null, user: null };
+    return { error: "That vendor is not yours." as const, supabase: null, user: null };
   }
   return { error: null, supabase, user };
 }
@@ -123,7 +123,7 @@ export async function saveOwnedVendor(formData: FormData): Promise<PortalResult>
     p_email: text(formData, "email"),
     p_tags: tags,
   });
-  if (error) return portalError(error, "Could not save that stall.");
+  if (error) return portalError(error, "Could not save that vendor.");
   const loaded = await loadOwned(gate.supabase, id);
   if (loaded.listing && gate.user) {
     await syncStallPublicProfile({
@@ -232,7 +232,7 @@ export async function renameOwnedMenuSection(formData: FormData): Promise<Portal
   const gate = await requireOwned(vendorId);
   if (!gate.supabase) return { error: gate.error };
   const loaded = await loadOwned(gate.supabase, vendorId);
-  if (!loaded.listing) return { error: "That stall is missing." };
+  if (!loaded.listing) return { error: "That vendor is missing." };
   const next = renameMenuSectionList(
     menuSectionsFromItems(loaded.listing.menus),
     text(formData, "from"),
@@ -247,7 +247,7 @@ export async function moveOwnedMenuSection(formData: FormData): Promise<PortalRe
   const gate = await requireOwned(vendorId);
   if (!gate.supabase) return { error: gate.error };
   const loaded = await loadOwned(gate.supabase, vendorId);
-  if (!loaded.listing) return { error: "That stall is missing." };
+  if (!loaded.listing) return { error: "That vendor is missing." };
   const direction = text(formData, "direction");
   if (direction !== "up" && direction !== "down") {
     return { error: "Those sections are not allowed." };
@@ -291,7 +291,7 @@ export async function saveOwnedStall(formData: FormData): Promise<PortalResult> 
   const { error } = await gate.supabase.rpc("save_owned_stall", {
     p_vendor_id: vendorId,
     p_market_id: marketId,
-    p_stall: text(formData, "stall"),
+    p_stall: text(formData, "vendor"),
     p_days: days,
   });
   if (error) return portalError(error, "Could not save that market.");
@@ -407,7 +407,7 @@ export async function searchPortalMarkets(
   if (!supabase || !user) return { error: "Sign in first.", markets: [] };
   if (mustSetPassword(user.app_metadata)) return { error: "Set a password first.", markets: [] };
   const { data: owns, error: ownsError } = await supabase.rpc("has_owned_vendor");
-  if (ownsError || owns !== true) return { error: "That stall is not yours.", markets: [] };
+  if (ownsError || owns !== true) return { error: "That vendor is not yours.", markets: [] };
 
   const q = query.trim().slice(0, 80);
   if (q.length < 2) return { error: null, markets: [] };
@@ -478,7 +478,7 @@ export async function loadVendorPortal() {
       listing.card_payments_active = flags.cardPaymentsActive;
       listing.payouts_active = flags.payoutsActive;
     } catch (err) {
-      console.error("stall capabilities", err instanceof Error ? err.message : "stripe");
+      console.error("vendor capabilities", err instanceof Error ? err.message : "stripe");
     }
   }
   return { listings, signedIn: true, error: false as const };

@@ -376,7 +376,7 @@ async function buildProductsHubContext(activeAisle: string | null) {
       : activeAisleObj
         ? activeAisleObj.line ||
           `Compare ${activeAisleObj.label.toLowerCase()} across Toronto farmers' markets.`
-        : "Compare what Toronto market stalls grow, bake, and prepare — with listed prices, stall ratings, and weekly market hours.";
+        : "Compare what Toronto market vendors grow, bake, and prepare — with listed prices, vendor ratings, and weekly market hours.";
 
   const leadSlug = spotlightPages[0]?.slug ?? "sourdough-toronto";
   const leadCategory = spotlightPages[0]?.category ?? "bread-and-bakery";

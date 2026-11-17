@@ -53,12 +53,12 @@ const VARIANTS: Array<{
     shortLabel: "Option A · Masthead Floor Strip",
     title: "Masthead Live Floor Strip + Next-Up Dispatch",
     subtitle:
-      "Restores the signature stamp-red FloorStrip directly inside the masthead, upgraded with hall emblems, neighbourhood links, and active stall chips.",
+      "Restores the signature stamp-red FloorStrip directly inside the masthead, upgraded with hall emblems, neighbourhood links, and active vendor chips.",
     summary:
       "Keeps the new homepage's vertical rhythm tight while giving live markets immediate above-the-fold prominence right between the title/census and the green search bar.",
     highlights: [
       "Left-bordered stamp-red FloorStrip (`shadow-[inset_4px_0_0_var(--stamp)]`) sits above the search bar so open halls are the first interactive element on the page.",
-      "Each live hall card shows its StallEmblem, VerifiedName, ListingScore, neighbourhood, unclipped hours in `type-nums`, and quick-links to stalls set up inside.",
+      "Each live hall card shows its StallEmblem, VerifiedName, ListingScore, neighbourhood, unclipped hours in `type-nums`, and quick-links to vendors set up inside.",
       "Graceful after-hours state: when today's markets have closed, the strip automatically pivots to highlight tomorrow's opening halls alongside a compact toggle for earlier today.",
     ],
   },
@@ -67,27 +67,27 @@ const VARIANTS: Array<{
     shortLabel: "Option B · Live Hall & Day Tabs",
     title: "Above-the-Fold Live Hall & 7-Day Timetable Deck",
     subtitle:
-      "Brings the interactive Upcoming Markets timetable directly above the Featured Stalls showcase with 1-click tabs for Open Now, Today, Tomorrow, and the week.",
+      "Brings the interactive Upcoming Markets timetable directly above the Featured Vendors showcase with 1-click tabs for Open Now, Today, Tomorrow, and the week.",
     summary:
       "Bridges the classic homepage's `TorontoWeek` schedule with the new Atlas aesthetic — letting shoppers inspect live halls or any day of the week without scrolling to the footer.",
     highlights: [
       "Dedicated `tone=\"open\"` panel with `WeekMark` woodcut stamp and live hall count badge positioned immediately below the green search bar.",
       "Day-by-day tab bar (`Open now`, `Later today`, `Tomorrow`, and upcoming weekdays) renders a 2-column unclipped market grid where hours never shrink or truncate.",
-      "Clicking a hall's neighbourhood pill synchronizes directly with the Featured Stalls showcase below.",
+      "Clicking a hall's neighbourhood pill synchronizes directly with the Featured Vendors showcase below.",
     ],
   },
   {
     id: "C",
-    shortLabel: "Option C · Split Live Halls + Stalls",
-    title: "Live Floor Command Deck (Open Halls × Active Stalls Today)",
+    shortLabel: "Option C · Split Live Halls + Vendors",
+    title: "Live Floor Command Deck (Open Halls × Active Vendors Today)",
     subtitle:
-      "Pairs live market halls (7 cols) with the active Stalls on the Floor roster (5 cols) above the fold so shoppers see both open venues and who is selling today.",
+      "Pairs live market halls (7 cols) with the active Vendors on the Floor roster (5 cols) above the fold so shoppers see both open venues and who is selling today.",
     summary:
-      "Previously, 'Stalls on the floor' was buried at the very bottom of the 1,600-line page. Option C unites live market halls and today's active vendors into a cohesive above-the-fold dispatch.",
+      "Previously, 'Vendors on the floor' was buried at the very bottom of the 1,600-line page. Option C unites live market halls and today's active vendors into a cohesive above-the-fold dispatch.",
     highlights: [
       "Left 7 columns showcase open (or next opening) market halls with full street addresses, unclipped hours, indoor/outdoor setup badges, and participating vendor emblems.",
-      "Right 5 columns elevate `Stalls on the floor` (`sellingToday`) with live status chips, hall locations, and unclipped hours.",
-      "Includes a 1-click 'Filter Featured Stalls to Open Today' link that locks the 6-card vendor showcase below to today's active roster.",
+      "Right 5 columns elevate `Vendors on the floor` (`sellingToday`) with live status chips, hall locations, and unclipped hours.",
+      "Includes a 1-click 'Filter Featured Vendors to Open Today' link that locks the 6-card vendor showcase below to today's active roster.",
     ],
   },
 ];
@@ -261,7 +261,7 @@ function LiveMarketHallCard({
                       <span className="type-nums font-medium text-foreground">
                         {slot.vendorCount}
                       </span>{" "}
-                      stalls
+                      vendors
                     </span>
                   </>
                 ) : null}
@@ -307,11 +307,11 @@ function LiveMarketHallCard({
         </div>
       </div>
 
-      {/* Participating Stall Emblems at this Market Hall */}
+      {/* Participating Vendor Emblems at this Market Hall */}
       {slot.sampleVendors.length > 0 ? (
         <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-dashed border-border pt-2 pl-10">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-sm text-muted-foreground">Stalls here:</span>
+            <span className="text-sm text-muted-foreground">Vendors here:</span>
             {slot.sampleVendors.slice(0, compact ? 2 : 3).map((v) => (
               <Link
                 key={v.slug}
@@ -423,7 +423,7 @@ function VariantAMastheadFloorStrip({
                 onClick={onFilterTodayStalls}
                 className="cursor-pointer text-sm font-medium text-primary hover:underline"
               >
-                <span className="type-nums">{scenario.sellingTodayCount}</span> stalls active today
+                <span className="type-nums">{scenario.sellingTodayCount}</span> vendors active today
                 (show below)
               </button>
             </>
@@ -698,7 +698,7 @@ function VariantCSplitLiveDispatch({
 
   return (
     <section
-      aria-label="Live Halls and Stalls on the Floor"
+      aria-label="Live Halls and Vendors on the Floor"
       className="mt-8 grid gap-6 lg:grid-cols-12 lg:items-start"
     >
       {/* Left 7 Columns: Live / Next Up Market Halls */}
@@ -759,7 +759,7 @@ function VariantCSplitLiveDispatch({
         ) : null}
       </div>
 
-      {/* Right 5 Columns: Stalls Selling on the Floor Today */}
+      {/* Right 5 Columns: Vendors Selling on the Floor Today */}
       <div className="bg-card ring-1 ring-board lg:col-span-5">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-board bg-secondary px-4 py-3.5">
           <div className="flex items-center gap-2.5">
@@ -768,9 +768,9 @@ function VariantCSplitLiveDispatch({
             </span>
             <div>
               <p className="type-kicker text-muted-foreground">
-                Growers, bakers &amp; makers at today&apos;s stalls
+                Growers, bakers &amp; makers at today&apos;s vendors
               </p>
-              <h2>Stalls on the Floor</h2>
+              <h2>Vendors on the Floor</h2>
             </div>
           </div>
           <span className="type-nums text-sm font-medium text-stamp">
@@ -821,7 +821,7 @@ function VariantCSplitLiveDispatch({
                               {row.marketName}
                             </Link>
                             {row.stall ? (
-                              <span className="type-nums"> · Stall {row.stall}</span>
+                              <span className="type-nums"> · Vendor {row.stall}</span>
                             ) : null}
                           </p>
                           <div className="mt-1 flex flex-wrap items-center gap-x-2">
@@ -848,20 +848,20 @@ function VariantCSplitLiveDispatch({
                 onClick={onFilterTodayStalls}
                 className="cursor-pointer font-medium text-stamp hover:underline"
               >
-                Show today&apos;s stalls in the showcase below
+                Show today&apos;s vendors in the showcase below
               </button>
               <Link
                 href="/markets#directory-vendors"
                 className="font-medium text-primary hover:underline"
               >
-                All stalls
+                All vendors
               </Link>
             </div>
           </>
         ) : (
           <div className="p-4">
             <p className="text-base text-muted-foreground">
-              Today&apos;s market stalls have packed up for the evening. Switch the clock bar above
+              Today&apos;s market vendors have packed up for the evening. Switch the clock bar above
               to <span className="font-medium text-foreground">Saturday 10:30 AM</span> or{" "}
               <span className="font-medium text-foreground">Tuesday 4:00 PM</span> to preview the
               live floor roster in action.
@@ -972,14 +972,14 @@ function VendorTableCard({
                 <p className="type-kicker font-medium text-foreground">Menu highlights</p>
                 <p className="text-sm text-muted-foreground">
                   {vendor.primaryAisleLabel}
-                  {vendor.publishedMenu ? " · Published stall items" : ""}
+                  {vendor.publishedMenu ? " · Published vendor items" : ""}
                 </p>
               </div>
               <Link
                 href={`/vendors/${vendor.slug}`}
                 className="shrink-0 text-sm font-medium text-primary hover:underline"
               >
-                Stall menu
+                Vendor menu
               </Link>
             </div>
           </div>
@@ -1016,7 +1016,7 @@ function VendorTableCard({
             </ul>
           ) : (
             <p className="px-3.5 py-2 text-base text-foreground">
-              {vendor.about?.trim() || `${vendor.primaryAisleLabel} from this stall.`}
+              {vendor.about?.trim() || `${vendor.primaryAisleLabel} from this vendor.`}
             </p>
           )}
         </div>
@@ -1056,7 +1056,7 @@ function VendorTableCard({
                     </Link>
                     {market.stall ? (
                       <span className="type-nums ml-1.5 text-sm text-muted-foreground">
-                        · Stall {market.stall}
+                        · Vendor {market.stall}
                       </span>
                     ) : null}
                   </p>
@@ -1382,7 +1382,7 @@ export function LiveMarketsWorkbench({
               href="/markets#directory-vendors"
               className="font-medium text-primary hover:underline"
             >
-              <span className="type-nums">{scenario.sellingTodayCount}</span> stalls active today
+              <span className="type-nums">{scenario.sellingTodayCount}</span> vendors active today
             </Link>
             <span aria-hidden className="text-muted-foreground">
               ·
@@ -1400,7 +1400,7 @@ export function LiveMarketsWorkbench({
           <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
             <div className="lg:col-span-7">
               <p className="type-kicker font-medium text-primary">
-                Stalls, products &amp; neighbourhood markets in one view
+                Vendors, products &amp; neighbourhood markets in one view
               </p>
               <h1 className="mt-1">{LAUNCH_CITY} farmers&apos; markets</h1>
               <p className="type-lede mt-2 max-w-2xl text-muted-foreground">
@@ -1420,7 +1420,7 @@ export function LiveMarketsWorkbench({
                   className="flex flex-col justify-between bg-secondary/45 p-3.5 transition-colors hover:bg-secondary"
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <span className="type-kicker font-medium text-primary">Priority stalls</span>
+                    <span className="type-kicker font-medium text-primary">Priority vendors</span>
                     <CrateMark className="size-4 shrink-0 text-primary" />
                   </div>
                   <span className="type-census mt-1 text-3xl leading-none text-board sm:text-4xl">
@@ -1507,7 +1507,7 @@ export function LiveMarketsWorkbench({
 
               <div className="mt-3.5 flex flex-wrap items-center gap-2 border-t border-primary-foreground/20 pt-3">
                 <span className="type-kicker mr-1 text-chalk">
-                  Jump to a craving or filter stalls:
+                  Jump to a craving or filter vendors:
                 </span>
                 {CRAVING_SHORTCUTS.map((item) => {
                   const active = vendorAisleFilter === item.aisleId;
@@ -1542,7 +1542,7 @@ export function LiveMarketsWorkbench({
           />
         ) : null}
 
-        {/* OPTION C: Split Live Command Deck (7-Col Open Halls + 5-Col Stalls on Floor) */}
+        {/* OPTION C: Split Live Command Deck (7-Col Open Halls + 5-Col Vendors on Floor) */}
         {activeVariant === "C" ? (
           <VariantCSplitLiveDispatch
             scenario={scenario}
@@ -1565,7 +1565,7 @@ export function LiveMarketsWorkbench({
                 <p className="type-kicker text-muted-foreground">
                   Vendors in priority · Paired with their signature products &amp; market halls
                 </p>
-                <h2>Featured Stalls, Tables &amp; Market Halls</h2>
+                <h2>Featured Vendors, Tables &amp; Market Halls</h2>
               </div>
             </div>
 
@@ -1573,9 +1573,9 @@ export function LiveMarketsWorkbench({
               {logoVendors.length > 0 ? (
                 <div
                   className="hidden items-center gap-1.5 xl:flex"
-                  aria-label="Featured stall emblems"
+                  aria-label="Featured vendor emblems"
                 >
-                  <span className="type-kicker mr-1 text-muted-foreground">Stall marks:</span>
+                  <span className="type-kicker mr-1 text-muted-foreground">Vendor marks:</span>
                   {logoVendors.slice(0, 6).map((v) => (
                     <Link
                       key={v.slug}
@@ -1629,7 +1629,7 @@ export function LiveMarketsWorkbench({
                       : "bg-card text-foreground ring-1 ring-border hover:bg-secondary",
                   )}
                 >
-                  All stalls
+                  All vendors
                 </button>
                 {data.aisles.slice(0, 5).map((aisle) => {
                   const active = vendorAisleFilter === aisle.id;
@@ -1737,7 +1737,7 @@ export function LiveMarketsWorkbench({
               </ul>
             ) : (
               <p className="text-base text-muted-foreground">
-                No stalls match these filters.{" "}
+                No vendors match these filters.{" "}
                 <button
                   type="button"
                   onClick={() => {

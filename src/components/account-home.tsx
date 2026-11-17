@@ -373,7 +373,7 @@ export function AccountHome({
                 <Link href="#note" className="font-medium text-primary hover:underline">
                   Tell the next shopper
                 </Link>{" "}
-                what was fresh at the stalls.
+                what was fresh at the vendors.
               </p>
             )}
           </HomePanel>
@@ -494,7 +494,7 @@ export function AccountHome({
                     >
                       <span className="min-w-0 font-medium">{stall.name}</span>
                       <Link href={`/vendor/${stall.id}`} prefetch={false} className="shrink-0 text-sm font-medium hover:underline">
-                        Edit stall
+                        Edit vendor
                       </Link>
                     </li>
                   ))}

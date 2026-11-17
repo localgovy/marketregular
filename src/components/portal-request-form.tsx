@@ -72,10 +72,10 @@ export function PortalRequestForm({
           : request
             ? instead
               ? stall
-                ? "Request this stall instead"
+                ? "Request this vendor instead"
                 : "Request this market instead"
               : stall
-                ? "Request this stall"
+                ? "Request this vendor"
                 : "Request this market"
             : "Request access"}
       </Button>

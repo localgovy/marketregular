@@ -163,7 +163,7 @@ export async function PortalHome({
   const pendingListing = published(names.get(pending?.requested_target_id ?? ""));
   const legacyListing = published(names.get(legacy?.target_id ?? ""));
   const waitingLabel = pending
-    ? pendingListing?.name || pending.organization_name || (stall ? "your stall" : "your market")
+    ? pendingListing?.name || pending.organization_name || (stall ? "your vendor" : "your market")
     : legacyListing?.name || null;
   const waiting = Boolean(waitingLabel);
   const askedOpen = asked && !owned.has(asked.id) ? asked : null;
@@ -210,10 +210,10 @@ export async function PortalHome({
         <p className="type-lede mt-2 mb-8 text-muted-foreground">
           {fresh
             ? stall
-              ? "Request this stall if you run it, or the person who does has asked you to. After we assign it, you can edit it here."
+              ? "Request this vendor if you run it, or the person who does has asked you to. After we assign it, you can edit it here."
               : "Request this market if you run it, or the organization has asked you to. After we assign it, you can edit it here."
             : stall
-              ? "Tell us the business you run. After we assign the stall, you can edit it here."
+              ? "Tell us the business you run. After we assign the vendor, you can edit it here."
               : "Tell us the organization you run. After we assign the market, you can edit it here."}
         </p>
       )}

@@ -52,7 +52,7 @@ export default async function BuyItemPage({
             <h1>{item.name}</h1>
             <p className="type-lede mt-2 text-muted-foreground">{item.vendor_name}</p>
             {item.reserve ? (
-            <p className="mt-3 text-base text-muted-foreground">Pay at the stall</p>
+            <p className="mt-3 text-base text-muted-foreground">Pay at the vendor</p>
           ) : price ? (
             <p className="type-nums mt-3 text-base">{price}</p>
           ) : null}
@@ -63,7 +63,7 @@ export default async function BuyItemPage({
           <h1>{item.name}</h1>
           <p className="type-lede mt-2 text-muted-foreground">{item.vendor_name}</p>
           {item.reserve ? (
-            <p className="mt-3 text-base text-muted-foreground">Pay at the stall</p>
+            <p className="mt-3 text-base text-muted-foreground">Pay at the vendor</p>
           ) : price ? (
             <p className="type-nums mt-3 text-base">{price}</p>
           ) : null}

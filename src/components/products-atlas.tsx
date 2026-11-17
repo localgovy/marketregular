@@ -170,7 +170,7 @@ export function ProductsAtlas({
                 <p className="type-census text-2xl text-primary-foreground sm:text-3xl">
                   {formatCensus(census.vendors)}
                 </p>
-                <p className="text-sm text-primary-foreground/85">Market stalls</p>
+                <p className="text-sm text-primary-foreground/85">Market vendors</p>
               </div>
               <div className="rounded-lg bg-primary-foreground/12 px-3.5 py-2.5">
                 <p className="type-census text-2xl text-primary-foreground sm:text-3xl">
@@ -222,7 +222,7 @@ export function ProductsAtlas({
                 </div>
               ) : null}
 
-              {/* Featured Stalls Preview */}
+              {/* Featured Vendors Preview */}
               {spotlight.featuredStalls.length > 0 ? (
                 <div className="mt-4 bg-receipt p-3.5 ring-1 ring-border shadow-[inset_3px_0_0_var(--primary)]">
                   <p className="type-kicker text-primary">{productsCopy.stallsSelling}</p>
@@ -413,7 +413,7 @@ export function ProductsAtlas({
             blurb={heading.blurb}
           />
 
-          {/* Featured Stalls With Published Menus Band */}
+          {/* Featured Vendors With Published Menus Band */}
           {featuredStalls.length > 0 ? (
             <section
               aria-label={productsCopy.publishedMenusLabel}

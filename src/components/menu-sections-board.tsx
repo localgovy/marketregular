@@ -46,7 +46,7 @@ export function MenuSectionsBoard({
     <div className="mt-4 grid gap-3">
       <h3>Sections</h3>
       <p className="text-sm text-muted-foreground">
-        Up to 5 named groups on the stall page. Rename or reorder them here.
+        Up to 5 named groups on the vendor page. Rename or reorder them here.
       </p>
       <ul className="grid gap-3">
         {sections.map((section, index) => (

@@ -61,7 +61,7 @@ export function orderLetter(input: OrderMailInput, audience: "shopper" | "stall"
       : input.kind === "ready"
       ? input.order.status === "reserved"
         ? [
-            `${input.order.item_name} is ready for pickup at ${input.vendorName}. Pay at the stall and show ID.`,
+            `${input.order.item_name} is ready for pickup at ${input.vendorName}. Pay at the vendor and show ID.`,
             priceLine,
             url,
           ]
@@ -81,8 +81,8 @@ export function orderLetter(input: OrderMailInput, audience: "shopper" | "stall"
       : input.kind === "reserved"
         ? [
             audience === "stall"
-              ? `A shopper reserved ${input.order.item_name}. They pay at the stall and show ID.`
-              : `Your reservation at ${input.vendorName} is in. Pay at the stall and show ID. There is no card charge.`,
+              ? `A shopper reserved ${input.order.item_name}. They pay at the vendor and show ID.`
+              : `Your reservation at ${input.vendorName} is in. Pay at the vendor and show ID. There is no card charge.`,
             priceLine,
             url,
           ]

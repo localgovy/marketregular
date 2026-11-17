@@ -512,7 +512,7 @@ function StallRosterForm({
       <div>
         <p className="text-base font-medium">{stall.vendor_name}</p>
         <p className="text-sm text-muted-foreground">
-          {stall.claimed ? "The stall runs this listing." : stall.created_here ? "Added by this market." : "Directory listing."}
+          {stall.claimed ? "The vendor runs this listing." : stall.created_here ? "Added by this market." : "Directory listing."}
         </p>
       </div>
       <form action={action} className="grid gap-3">
@@ -547,7 +547,7 @@ function StallRosterForm({
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" variant="outline" disabled={removePending}>
-            {removePending ? "Removing…" : "Remove stall"}
+            {removePending ? "Removing…" : "Remove vendor"}
           </Button>
           <PortalNote state={removeState} />
         </div>
@@ -600,7 +600,7 @@ function EditableStall({
         />
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
           <Button type="submit" disabled={pending}>
-            {pending ? "Saving…" : "Save stall"}
+            {pending ? "Saving…" : "Save vendor"}
           </Button>
           <PortalNote state={state} />
         </div>
@@ -698,7 +698,7 @@ function AddExistingStall({
   return (
     <div className="mt-4 grid gap-3">
       <h3>{marketEditor.addListed}</h3>
-      <p className="text-sm text-muted-foreground">Add a stall that sells here.</p>
+      <p className="text-sm text-muted-foreground">Add a vendor that sells here.</p>
       <div className="grid gap-1.5">
         <Label htmlFor={`${marketId}-vendor-q`}>{marketEditor.findAStall}</Label>
         <Input
@@ -711,7 +711,7 @@ function AddExistingStall({
             setSearching(next.trim().length >= 2);
             if (next.trim().length < 2) setSearchError(null);
           }}
-          placeholder="Stall name"
+          placeholder="Vendor name"
           autoComplete="off"
         />
       </div>
@@ -731,7 +731,7 @@ function AddExistingStall({
           ))}
         </ul>
       ) : query.trim().length >= 2 && !searchError && !searching ? (
-        <p className="text-sm text-muted-foreground">No stalls match that name.</p>
+        <p className="text-sm text-muted-foreground">No vendors match that name.</p>
       ) : null}
       {picked ? (
         <form action={action} className="grid gap-3 rounded-xl bg-secondary/50 p-4">
@@ -746,7 +746,7 @@ function AddExistingStall({
           <DayChoices openDays={openDays} hours={hours} selected={openDays} />
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" disabled={pending || openDays.length === 0}>
-              {pending ? "Saving…" : "Add stall"}
+              {pending ? "Saving…" : "Add vendor"}
             </Button>
             <PortalNote state={state} />
           </div>
@@ -804,7 +804,7 @@ function NewStall({
         </div>
         <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
           <Button type="submit" disabled={pending || openDays.length === 0}>
-            {pending ? "Adding…" : "Add stall"}
+            {pending ? "Adding…" : "Add vendor"}
           </Button>
           <PortalNote state={state} />
         </div>
@@ -888,7 +888,7 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
       </section>
       <section>
         <h2>{marketEditor.stalls}</h2>
-        <p className="mt-2 text-base text-muted-foreground">List stalls that sell at this market.</p>
+        <p className="mt-2 text-base text-muted-foreground">List vendors that sell at this market.</p>
         {listing.stalls.length ? (
           <ul className="mt-2">
             {listing.stalls.map((stall) => (
@@ -899,10 +899,10 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
             ))}
           </ul>
         ) : (
-          <p className="mt-3 text-sm text-muted-foreground">No stalls at this market yet.</p>
+          <p className="mt-3 text-sm text-muted-foreground">No vendors at this market yet.</p>
         )}
         {rosterFull ? (
-          <p className="mt-4 text-sm text-muted-foreground">The stall list is full.</p>
+          <p className="mt-4 text-sm text-muted-foreground">The vendor list is full.</p>
         ) : (
           <AddExistingStall
             marketId={listing.id}
@@ -913,7 +913,7 @@ export function MarketPortalEditor({ listing }: { listing: MarketPortalListing }
         )}
         {rosterFull || createdFull ? (
           createdFull ? (
-            <p className="mt-6 text-sm text-muted-foreground">This market cannot add more stalls.</p>
+            <p className="mt-6 text-sm text-muted-foreground">This market cannot add more vendors.</p>
           ) : null
         ) : (
           <NewStall marketId={listing.id} hours={hours} openDays={openDays} />

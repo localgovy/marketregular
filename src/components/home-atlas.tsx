@@ -502,7 +502,7 @@ function VendorTableCard({
   return (
     <li className="flex flex-col justify-between bg-card ring-1 ring-board">
       <div>
-        {/* 1. Vendor Plate Header (Unified Stall Emblem + Name + Live Status + Save) */}
+        {/* 1. Vendor Plate Header (Unified Vendor Emblem + Name + Live Status + Save) */}
         <div className="flex items-start justify-between gap-2.5 border-b border-black/15 bg-primary px-3.5 py-3 text-primary-foreground">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <StallEmblem
@@ -558,7 +558,7 @@ function VendorTableCard({
           </span>
         </div>
 
-        {/* Aisle picture for the stall, then each seeded item picture beside its name. */}
+        {/* Aisle picture for the vendor, then each seeded item picture beside its name. */}
         <div className="border-b border-border bg-secondary">
           {/* General Product Banner: 1 shared category/product photo indicating what the vendor sells */}
           <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-center gap-3 border-b border-border bg-card/75 px-3.5 py-2.5">
@@ -657,7 +657,7 @@ function VendorTableCard({
                       </Link>
                       {market.stall ? (
                         <span className="type-nums ml-1.5 text-sm text-muted-foreground">
-                          · Stall {market.stall}
+                          · Vendor {market.stall}
                         </span>
                       ) : null}
                     </p>
@@ -1210,7 +1210,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
 
   return (
     <div className="bg-background text-foreground">
-      {/* Top Canadian Banner + Live Hall & Stall Pulse */}
+      {/* Top Canadian Banner + Live Hall & Vendor Pulse */}
       <div className="border-b border-board bg-secondary">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2.5 lg:px-6">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -1388,7 +1388,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
           aria-label="Priority Vendor, Product, and Market Showcase"
           className="mt-8 bg-card ring-1 ring-board"
         >
-          {/* Section Header + Cohesive Stall Emblem Ribbon */}
+          {/* Section Header + Cohesive Vendor Emblem Ribbon */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-board bg-secondary px-4 py-3.5 sm:px-5">
             <div className="flex items-center gap-2.5">
               <span className="stall-chip-sm flex size-8 shrink-0 items-center justify-center bg-primary text-primary-foreground">
@@ -1398,7 +1398,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              {/* Cohesive Stall Emblem Strip */}
+              {/* Cohesive Vendor Emblem Strip */}
               {logoVendors.length > 0 ? (
                 <div className="hidden items-center gap-1.5 xl:flex" aria-label={home.featuredEmblems}>
                   <span className="type-kicker mr-1 text-muted-foreground">{home.vendorMarks}</span>
@@ -1570,12 +1570,12 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
           </div>
         </section>
 
-        {/* Synchronized Deep-Dive Split: 6-Col Product Crate Explorer (with Stalls) + 6-Col Live Neighbourhood Atlas (with Stalls) */}
+        {/* Synchronized Deep-Dive Split: 6-Col Product Crate Explorer (with Vendors) + 6-Col Live Neighbourhood Atlas (with Vendors) */}
         <section
           aria-label="Craving Crate Explorer and Live Atlas"
           className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-12 lg:items-start"
         >
-          {/* Left 6 Columns: Interactive Craving & Aisle Crate Explorer + Top Stalls in Aisle */}
+          {/* Left 6 Columns: Interactive Craving & Aisle Crate Explorer + Top Vendors in Aisle */}
           <div className="min-w-0 bg-card ring-1 ring-board lg:col-span-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b-2 border-board bg-secondary px-4 py-3">
               <div className="flex items-center gap-2.5">
@@ -1667,7 +1667,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   </div>
                 </div>
 
-                {/* Key Stalls Known for This Aisle (with Uniform StallEmblem) */}
+                {/* Key Vendors Known for This Aisle (with Uniform StallEmblem) */}
                 {activeAisle.topVendors.length > 0 ? (
                   <div className="mt-4 border-t border-border pt-3.5">
                     <div className="flex items-baseline justify-between gap-2">
@@ -1884,7 +1884,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                     })}
                 </ul>
 
-                {/* Anchor Stalls in This Neighbourhood (with Cohesive Stall Emblems) */}
+                {/* Anchor Vendors in This Neighbourhood (with Cohesive Vendor Emblems) */}
                 {activeCircuit.topVendors.length > 0 ? (
                   <div className="border-t border-border bg-secondary/35 px-4 py-3">
                     <p className="type-kicker text-muted-foreground">
@@ -1912,7 +1912,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
           </div>
         </section>
 
-        {/* Full-Width Section: Toronto Neighbourhood Markets (With Both Hall & Stall Emblems) */}
+        {/* Full-Width Section: Toronto Neighbourhood Markets (With Both Hall & Vendor Emblems) */}
         <section
           id="directory"
           aria-label={home.neighbourhoodMarkets}
@@ -1955,13 +1955,13 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
           </div>
         </section>
 
-        {/* Bottom 12-Col Spread: 8-Col Live Stalls & Regulars Roster + 4-Col Timetable & Saved Rail */}
+        {/* Bottom 12-Col Spread: 8-Col Live Vendors & Regulars Roster + 4-Col Timetable & Saved Rail */}
         <section
           aria-label="Vendors, notes, and upcoming timetable"
           className="mt-10 border-t-2 border-board pt-8 pb-4"
         >
           <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
-            {/* Left 8 Columns: Active Stalls Today + Top 5 This Week + Shopper Notes */}
+            {/* Left 8 Columns: Active Vendors Today + Top 5 This Week + Shopper Notes */}
             <div className="flex flex-col gap-6 lg:col-span-8">
               <div className="grid gap-6 md:grid-cols-2">
                 {/* Active Vendors Today */}
@@ -2000,7 +2000,7 @@ export function HomeAtlas({ data: source }: { data: HomeAtlasSource }) {
                   )}
                 </div>
 
-                {/* Top 5 Stalls This Week */}
+                {/* Top 5 Vendors This Week */}
                 <div className="bg-card ring-1 ring-border">
                   <div className="flex items-start justify-between gap-2 border-b border-border bg-secondary/50 px-4 py-3">
                     <div className="flex items-center gap-2.5">

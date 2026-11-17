@@ -50,7 +50,7 @@ export function BuyForm({
       {cancelled ? <p className="text-sm text-muted-foreground">Payment was not finished.</p> : null}
       {reserve ? (
         <p className="text-base text-muted-foreground">
-          This is a reservation. Pay at the stall and show ID. There is no card charge.
+          This is a reservation. Pay at the vendor and show ID. There is no card charge.
         </p>
       ) : null}
       <div className="grid gap-1.5">
@@ -112,7 +112,7 @@ export function BuyForm({
         </fieldset>
       )}
       <div className="grid gap-1.5">
-        <Label htmlFor="note">Note for the stall</Label>
+        <Label htmlFor="note">Note for the vendor</Label>
         <Input id="note" name="note" maxLength={500} />
         <p className="text-sm text-muted-foreground">Optional.</p>
       </div>
@@ -127,7 +127,7 @@ export function BuyForm({
       </p>
       {state?.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       <Button type="submit" disabled={pending} className="w-fit">
-        {pending ? "Starting…" : reserve ? "Reserve" : "Pay the stall"}
+        {pending ? "Starting…" : reserve ? "Reserve" : "Pay the vendor"}
       </Button>
     </form>
   );

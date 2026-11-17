@@ -58,8 +58,8 @@ function shortDays(days: number[]) {
 function formatStallNote(stall: string | null | undefined): string | null {
   const trimmed = stall?.trim();
   if (!trimmed) return null;
-  if (/^stall\b/i.test(trimmed)) return trimmed;
-  if (/^[A-Za-z]?\d+[A-Za-z]?$/.test(trimmed)) return `Stall ${trimmed}`;
+  if (/^stall\b/i.test(trimmed)) return trimmed.replace(/^stall\b/i, "Vendor");
+  if (/^[A-Za-z]?\d+[A-Za-z]?$/.test(trimmed)) return `Vendor ${trimmed}`;
   return trimmed;
 }
 
@@ -194,7 +194,7 @@ export function ProductListing({
                 href={`/vendors/${vendorSlug}#menu`}
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary-foreground/90 hover:text-primary-foreground hover:underline"
               >
-                <span>Full stall menu</span>
+                <span>Full vendor menu</span>
                 <CaretRightMark className="size-3" />
               </Link>
             </div>
@@ -408,7 +408,7 @@ export function FindVendorList({
     return (
       <div className="mt-6 bg-receipt p-6 text-center ring-1 ring-border">
         <p className="text-base font-medium text-foreground">
-          No published stalls match this filter yet.
+          No published vendors match this filter yet.
         </p>
       </div>
     );
@@ -506,7 +506,7 @@ export function VendorHitList({ vendors }: { vendors: VendorHit[] }) {
                 href={vendor.href}
                 className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
               >
-                <span>Open stall &amp; menu</span>
+                <span>Open vendor &amp; menu</span>
                 <CaretRightMark className="size-3" />
               </Link>
             </div>

@@ -33,13 +33,13 @@ const CONCEPTS: Array<{
     id: "1",
     shortLabel: "Concept 1 · Broadsheet",
     title: "The Saturday Broadsheet & Almanac",
-    subtitle: "Editorial print-inspired weekly schedule, compact enamel finder & 3-column stall gazette",
+    subtitle: "Editorial print-inspired weekly schedule, compact enamel finder & 3-column vendor gazette",
     standaloneHref: "/preview/home-1",
     primaryQuestion: "“When can I go this week, and what is the weekly market rhythm?”",
     keyInnovations: [
       "Replaces the tall vertical filter form with a compact, single-ribbon Quick Market Finder featuring expandable Neighbourhood, Product, and Cuisine drawers.",
       "Elevates the 7-day Market Schedule above the fold as a 2-column broadsheet spread with day-by-day tabs and a live Open Now masthead ribbon.",
-      "Pairs the schedule with a featured Field Note dispatch, a 2x2 photographic Category grid, a 6-card Neighbourhood strip, and a 3-column Stall Gazette.",
+      "Pairs the schedule with a featured Field Note dispatch, a 2x2 photographic Category grid, a 6-card Neighbourhood strip, and a 3-column Vendor Gazette.",
     ],
     critiqueRefinement:
       "Refined in Iteration 2 to default the schedule to the full 6-day weekday grid (avoiding duplication with the Open Now masthead strip), added a vertical broadsheet column rule, and balanced column heights across the spread.",
@@ -52,9 +52,9 @@ const CONCEPTS: Array<{
     standaloneHref: "/preview/home-2",
     primaryQuestion: "“Which of the 130 halls are operating, and how do I filter them right on the page?”",
     keyInnovations: [
-      "Architectural chalkboard-green command masthead with live hall telemetry (open halls, active stalls today, and Barlow Condensed ExtraBold census figures).",
-      "Instant client-side filtering of all 130 Toronto & GTA markets right on the homepage by time window, neighbourhood, indoor/outdoor setup, or stall category — plus a 1-click toggle between Board and Board + Map views.",
-      "Docks a 3-tab Stalls & Floor Wire (Selling Today, Top 5 Week, Floor Notes) and a compact 2-column Weekly Hall Frequency filter beside the ledger.",
+      "Architectural chalkboard-green command masthead with live hall telemetry (open halls, active vendors today, and Barlow Condensed ExtraBold census figures).",
+      "Instant client-side filtering of all 130 Toronto & GTA markets right on the homepage by time window, neighbourhood, indoor/outdoor setup, or vendor category — plus a 1-click toggle between Board and Board + Map views.",
+      "Docks a 3-tab Vendors & Floor Wire (Selling Today, Top 5 Week, Floor Notes) and a compact 2-column Weekly Hall Frequency filter beside the ledger.",
     ],
     critiqueRefinement:
       "Refined in Iteration 2 to unlock all 130 markets for live client-side filtering, populate real product photos across all 8 Produce & Pantry Exchange cards, and compact the Weekly Hall Frequency into a 2-column grid for symmetrical column termination.",
@@ -62,17 +62,17 @@ const CONCEPTS: Array<{
   {
     id: "3",
     shortLabel: "Concept 3 · Vendors, Products & Atlas",
-    title: "The Priority Stall, Product & Neighbourhood Atlas",
+    title: "The Priority Vendor, Product & Neighbourhood Atlas",
     subtitle: "Unified Vendor × Product × Market matrix above the fold with synchronized category crates & live map",
     standaloneHref: "/preview/home-3",
     primaryQuestion: "“Which vendors make what I'm craving, what do they sell, and which markets do they set up at?”",
     keyInnovations: [
-      "Puts Vendors in priority above the fold in a 6-card Featured Stalls, Products & Markets showcase: each card pairs the vendor's stall plate, live status, dashed-rule menu items/prices ('Menu highlights'), and exact markets + unclipped hours ('Where they set up').",
+      "Puts Vendors in priority above the fold in a 6-card Featured Vendors, Products & Markets showcase: each card pairs the vendor's vendor plate, live status, dashed-rule menu items/prices ('Menu highlights'), and exact markets + unclipped hours ('Where they set up').",
       "Provides a 3-way interactive filter bar (Category × Neighbourhood × Selling Window) that synchronizes in real time with the Products & Categories explorer and the Live Neighbourhood Atlas below.",
-      "Enriches every Product Crate with the top stalls known for that category, and every neighbourhood card with both its markets and anchor vendors.",
+      "Enriches every Product Crate with the top vendors known for that category, and every neighbourhood card with both its markets and anchor vendors.",
     ],
     critiqueRefinement:
-      "Evolved to unify Vendors, Products, and Markets as equal first-class citizens — elevating vendor cards above the fold and cross-linking every category and neighbourhood with its participating stalls.",
+      "Evolved to unify Vendors, Products, and Markets as equal first-class citizens — elevating vendor cards above the fold and cross-linking every category and neighbourhood with its participating vendors.",
   },
 ];
 

@@ -3352,7 +3352,7 @@ export const seedVendors: SeedVendor[] = [
     id: "00000000-0000-0000-0000-000000000341",
     slug: "agrarian-kitchen",
     name: "Agrarian Kitchen & The Strong Earth Company",
-    about: "Agrarian Kitchen makes small-batch preserves, cakes, pickles, pies, and made-to-order sourdough pizza with a three-day fermented crust, using peak-season produce from local farmers and fellow market vendors. Its sister stall, The Strong Earth Company, grows seedlings, annuals, and perennials from urban Toronto gardens and sells houseplants and terrariums. At Evergreen Brick Works they are known for sticky toffee pudding, maple crème brûlée, and sticky buns made with maple from more than 20 years of tapping trees at a family cottage.",
+    about: "Agrarian Kitchen makes small-batch preserves, cakes, pickles, pies, and made-to-order sourdough pizza with a three-day fermented crust, using peak-season produce from local farmers and fellow market vendors. Its sister vendor, The Strong Earth Company, grows seedlings, annuals, and perennials from urban Toronto gardens and sells houseplants and terrariums. At Evergreen Brick Works they are known for sticky toffee pudding, maple crème brûlée, and sticky buns made with maple from more than 20 years of tapping trees at a family cottage.",
     website: null,
     phone: null,
     tags: ["bakery", "plants", "prepared-food", "preserves"],

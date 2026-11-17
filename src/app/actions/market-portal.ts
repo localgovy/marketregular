@@ -208,16 +208,16 @@ export async function saveMarketRoster(formData: FormData): Promise<PortalResult
   const vendorId = text(formData, "vendor_id");
   const gate = await requireOwned(marketId);
   if (!gate.supabase) return { error: gate.error };
-  if (!isUuid(vendorId)) return { error: "That stall is missing." };
+  if (!isUuid(vendorId)) return { error: "That vendor is missing." };
   const days = daysOf(formData);
   if (days.length === 0) return { error: "Pick at least one day the market is open." };
   const { error } = await gate.supabase.rpc("save_market_roster", {
     p_market_id: marketId,
     p_vendor_id: vendorId,
-    p_stall: text(formData, "stall"),
+    p_stall: text(formData, "vendor"),
     p_days: days,
   });
-  if (error) return portalError(error, "Could not save that stall.");
+  if (error) return portalError(error, "Could not save that vendor.");
   const loaded = await loadOwned(gate.supabase, marketId);
   const stall = loaded.listing?.stalls.find((row) => row.vendor_id === vendorId);
   const vendorSlug = stall && /^[a-z0-9-]+$/.test(stall.vendor_slug) ? stall.vendor_slug : "";
@@ -232,14 +232,14 @@ export async function deleteMarketRoster(formData: FormData): Promise<PortalResu
   const vendorId = text(formData, "vendor_id");
   const gate = await requireOwned(marketId);
   if (!gate.supabase) return { error: gate.error };
-  if (!isUuid(vendorId)) return { error: "That stall is missing." };
+  if (!isUuid(vendorId)) return { error: "That vendor is missing." };
   const before = await loadOwned(gate.supabase, marketId);
   const previous = before.listing?.stalls.find((stall) => stall.vendor_id === vendorId);
   const { data: removed, error } = await gate.supabase.rpc("delete_market_roster", {
     p_market_id: marketId,
     p_vendor_id: vendorId,
   });
-  if (error) return portalError(error, "Could not remove that stall.");
+  if (error) return portalError(error, "Could not remove that vendor.");
   const loaded = await loadOwned(gate.supabase, marketId);
   if (loaded.listing) {
     revalidateListing(loaded.listing, previous ? [`/vendors/${previous.vendor_slug}`] : []);
@@ -274,10 +274,10 @@ export async function createMarketVendor(formData: FormData): Promise<PortalResu
     p_phone: text(formData, "phone"),
     p_email: text(formData, "email"),
     p_tags: tagsOf(formData),
-    p_stall: text(formData, "stall"),
+    p_stall: text(formData, "vendor"),
     p_days: days,
   });
-  if (error) return portalError(error, "Could not add that stall.");
+  if (error) return portalError(error, "Could not add that vendor.");
   const loaded = await loadOwned(gate.supabase, marketId);
   if (loaded.listing) revalidateListing(loaded.listing);
   return { error: null, message: "Added." };
@@ -288,7 +288,7 @@ export async function saveMarketVendorProfile(formData: FormData): Promise<Porta
   const vendorId = text(formData, "vendor_id");
   const gate = await requireOwned(marketId);
   if (!gate.supabase) return { error: gate.error };
-  if (!isUuid(vendorId)) return { error: "That stall is missing." };
+  if (!isUuid(vendorId)) return { error: "That vendor is missing." };
   const links = linksOf(formData);
   if ("error" in links) return { error: links.error };
   const { error } = await gate.supabase.rpc("save_market_vendor_profile", {
@@ -304,7 +304,7 @@ export async function saveMarketVendorProfile(formData: FormData): Promise<Porta
     p_email: text(formData, "email"),
     p_tags: tagsOf(formData),
   });
-  if (error) return portalError(error, "Could not save that stall.");
+  if (error) return portalError(error, "Could not save that vendor.");
   const loaded = await loadOwned(gate.supabase, marketId);
   if (loaded.listing) revalidateListing(loaded.listing);
   return { error: null, message: "Saved." };
@@ -396,10 +396,10 @@ export async function uploadMarketVendorLogo(formData: FormData): Promise<Portal
   const vendorId = text(formData, "vendor_id");
   const gate = await requireOwned(marketId);
   if (!gate.supabase || !gate.user) return { error: gate.error ?? "Sign in first." };
-  if (!isUuid(vendorId)) return { error: "That stall is missing." };
+  if (!isUuid(vendorId)) return { error: "That vendor is missing." };
   const before = await loadOwned(gate.supabase, marketId);
   const stall = before.listing?.stalls.find((row) => row.vendor_id === vendorId);
-  if (!stall?.editable) return { error: "That stall is not yours to edit." };
+  if (!stall?.editable) return { error: "That vendor is not yours to edit." };
 
   const file = formData.get("logo");
   if (!(file instanceof File) || file.size === 0) return { error: "Choose an image." };
@@ -417,7 +417,7 @@ export async function uploadMarketVendorLogo(formData: FormData): Promise<Portal
   }
   if (!(await stallStillOnRoster(stored.service, marketId, vendorId))) {
     await stored.service.storage.from("listing-marks").remove([objectName]);
-    return { error: "That stall is not yours to edit." };
+    return { error: "That vendor is not yours to edit." };
   }
 
   const { data: updated, error } = await stored.service.rpc("set_market_vendor_logo", {
@@ -445,14 +445,14 @@ export async function clearMarketVendorLogo(formData: FormData): Promise<PortalR
   const vendorId = text(formData, "vendor_id");
   const gate = await requireOwned(marketId);
   if (!gate.supabase || !gate.user) return { error: gate.error ?? "Sign in first." };
-  if (!isUuid(vendorId)) return { error: "That stall is missing." };
+  if (!isUuid(vendorId)) return { error: "That vendor is missing." };
   const before = await loadOwned(gate.supabase, marketId);
   const stall = before.listing?.stalls.find((row) => row.vendor_id === vendorId);
-  if (!stall?.editable) return { error: "That stall is not yours to edit." };
+  if (!stall?.editable) return { error: "That vendor is not yours to edit." };
   const service = createServiceClient();
   if (!service) return { error: "Could not remove that image." };
   if (!(await stallStillOnRoster(service, marketId, vendorId))) {
-    return { error: "That stall is not yours to edit." };
+    return { error: "That vendor is not yours to edit." };
   }
   const { data: updated, error } = await service.rpc("set_market_vendor_logo", {
     p_market_id: marketId,
@@ -497,7 +497,7 @@ export async function searchPortalVendors(
   if (needle.length < 2) return { error: null, vendors: [] };
 
   const service = createServiceClient();
-  if (!service) return { error: "Could not search stalls.", vendors: [] };
+  if (!service) return { error: "Could not search vendors.", vendors: [] };
   const { data, error } = await service
     .from("vendors")
     .select("id, name, slug")
@@ -505,7 +505,7 @@ export async function searchPortalVendors(
     .ilike("name", `%${needle}%`)
     .order("name")
     .limit(12);
-  if (error) return { error: "Could not search stalls.", vendors: [] };
+  if (error) return { error: "Could not search vendors.", vendors: [] };
   return {
     error: null,
     vendors: ((data ?? []) as PortalVendorHit[]).map((row) => ({

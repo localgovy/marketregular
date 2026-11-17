@@ -27,39 +27,39 @@ const VENDOR_CONCEPTS: Array<{
     id: "1",
     shortLabel: "1 · Market Counter & Slip",
     title: "The Market Counter & Sticky Order Slip",
-    subtitle: "High-conversion stall counter with interactive order slip, fulfillment selector & per-item category comparison",
+    subtitle: "High-conversion vendor counter with interactive order slip, fulfillment selector & per-item category comparison",
     standaloneHref: "/preview/vendor-1",
-    focus: "Optimized for direct stall ordering, pickup location selection, and fast menu filtering.",
+    focus: "Optimized for direct vendor ordering, pickup location selection, and fast menu filtering.",
     highlights: [
-      "8-column filterable stall menu with section tabs, dietary chips, fulfillment filters (Pickup, Pre-order, Delivery), and per-item Compare (/find/*) links.",
-      "Sticky 4-column Stall Order Slip with quantity steppers, pickup market selector, subtotal in .type-nums, and direct checkout handoff (/vendors/[slug]/buy/[itemId]).",
-      "Bottom discovery spread pairing Product Category Crates with similar stalls.",
+      "8-column filterable vendor menu with section tabs, dietary chips, fulfillment filters (Pickup, Pre-order, Delivery), and per-item Compare (/find/*) links.",
+      "Sticky 4-column Vendor Order Slip with quantity steppers, pickup market selector, subtotal in .type-nums, and direct checkout handoff (/vendors/[slug]/buy/[itemId]).",
+      "Bottom discovery spread pairing Product Category Crates with similar vendors.",
     ],
   },
   {
     id: "2",
     shortLabel: "2 · Visual Catalogue & Category Explorer",
-    title: "The Visual Stall Catalogue & Category Explorer",
+    title: "The Visual Vendor Catalogue & Category Explorer",
     subtitle: "Visual product cards, 1-click Card/Receipt toggle, and an interactive Market-Wide Category Explorer band",
     standaloneHref: "/preview/vendor-2",
-    focus: "Optimized for visual merchandising, browsing products as cards, and comparing stalls across categories.",
+    focus: "Optimized for visual merchandising, browsing products as cards, and comparing vendors across categories.",
     highlights: [
-      "Split masthead pairing the stall identity, story, and 3-stamp census strip with a Featured Products Showcase & Express Checkout card.",
+      "Split masthead pairing the vendor identity, story, and 3-stamp census strip with a Featured Products Showcase & Express Checkout card.",
       "Shoppers can toggle between 3-column Visual Product Cards (with fulfillment badges, + Add to order, Buy now, and category comparison footer) and the compact Receipt List.",
-      "Interactive dark-board Market-Wide Category Explorer band lets shoppers switch between the vendor's product categories to inspect curated /find guides and peer stalls.",
+      "Interactive dark-board Market-Wide Category Explorer band lets shoppers switch between the vendor's product categories to inspect curated /find guides and peer vendors.",
     ],
   },
   {
     id: "3",
-    shortLabel: "3 · Stall Profile, Menu & Markets",
-    title: "The Stall Profile, Menu & Markets",
-    subtitle: "Direct sibling to the Homepage — unifying the Vendor Profile, Filterable Menu & Fellow Market Stalls",
+    shortLabel: "3 · Vendor Profile, Menu & Markets",
+    title: "The Vendor Profile, Menu & Markets",
+    subtitle: "Direct sibling to the Homepage — unifying the Vendor Profile, Filterable Menu & Fellow Market Vendors",
     standaloneHref: "/preview/vendor-3",
-    focus: "Optimized for planning a market visit around this vendor, their menu items, and fellow stalls at the same markets.",
+    focus: "Optimized for planning a market visit around this vendor, their menu items, and fellow vendors at the same markets.",
     highlights: [
-      "Dual-plate header pairing the forest-green stall identity plate with a Products & Markets showcase card.",
+      "Dual-plate header pairing the forest-green vendor identity plate with a Products & Markets showcase card.",
       "8-column filterable Menu & Products directory with category, section, dietary, and fulfillment filters.",
-      "Interactive 4-column Where They Sell rail: click any market where the vendor sells to see unclipped hours and fellow stalls at that exact location.",
+      "Interactive 4-column Where They Sell rail: click any market where the vendor sells to see unclipped hours and fellow vendors at that exact location.",
     ],
   },
 ];
@@ -93,7 +93,7 @@ export function VendorPreviewWorkbench({
               <div>
                 <p className="type-kicker text-chalk/80">Vendor Page Redesign Workbench</p>
                 <p className="text-base font-medium text-chalk">
-                  Active selling, stall profile &amp; cross-vendor discovery
+                  Active selling, vendor profile &amp; cross-vendor discovery
                 </p>
               </div>
             </div>
@@ -168,7 +168,7 @@ export function VendorPreviewWorkbench({
           {/* Sample Vendor Switcher Bar */}
           <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-chalk/15 pt-2 text-sm">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-chalk/75">Sample stall:</span>
+              <span className="text-chalk/75">Sample vendor:</span>
               {data.sampleVendors.map((sample) => {
                 const isCurrent = sample.slug === data.vendor.slug;
                 return (

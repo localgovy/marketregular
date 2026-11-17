@@ -29,14 +29,14 @@ async function ownedListing(vendorId: string) {
   if (mustSetPassword(user.app_metadata)) {
     return { error: "Set a password first." as const, user: null, listing: null };
   }
-  if (!isUuid(vendorId)) return { error: "That stall is missing." as const, user: null, listing: null };
+  if (!isUuid(vendorId)) return { error: "That vendor is missing." as const, user: null, listing: null };
   const { data, error } = await supabase.rpc("owns_vendor", { p_id: vendorId });
   if (error || data !== true) {
-    return { error: "That stall is not yours." as const, user: null, listing: null };
+    return { error: "That vendor is not yours." as const, user: null, listing: null };
   }
   const portal = await supabase.rpc("my_vendor_portal");
   const listing = parseVendorPortal(portal.data).find((row) => row.id === vendorId) ?? null;
-  if (!listing) return { error: "That stall is not yours." as const, user: null, listing: null };
+  if (!listing) return { error: "That vendor is not yours." as const, user: null, listing: null };
   return { error: null, user, listing };
 }
 
@@ -44,7 +44,7 @@ export async function setVendorSelling(formData: FormData) {
   const { supabase } = await requireAdmin();
   if (!supabase) return { error: "Admins only." };
   const id = String(formData.get("vendor_id") ?? "");
-  if (!isUuid(id)) return { error: "That stall is missing." };
+  if (!isUuid(id)) return { error: "That vendor is missing." };
   const approved = formData.get("selling_approved") === "on";
   const { data: current } = await supabase
     .from("vendors")
@@ -67,7 +67,7 @@ export async function setVendorSelling(formData: FormData) {
   return {
     error: null,
     message: approved
-      ? "Saved. This stall can sell once card payments are on."
+      ? "Saved. This vendor can sell once card payments are on."
       : "Saved. Selling stays off.",
   };
 }
@@ -78,8 +78,8 @@ export async function beginStallPayments(formData: FormData) {
   if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
   const vendorId = String(formData.get("vendor_id") ?? "");
   const gate = await ownedListing(vendorId);
-  if (!gate.listing || !gate.user) return { error: gate.error ?? "That stall is not yours." };
-  if (!gate.listing.selling_approved) return { error: "Selling is not approved for this stall." };
+  if (!gate.listing || !gate.user) return { error: gate.error ?? "That vendor is not yours." };
+  if (!gate.listing.selling_approved) return { error: "Selling is not approved for this vendor." };
   if (!stripeConnectConfigured()) return { error: "Payments are not available yet." };
   if (!gate.user.email) return { error: "This account needs an email before payments can start." };
   try {
@@ -94,7 +94,7 @@ export async function beginStallPayments(formData: FormData) {
     });
     if (created.error) return { error: created.error };
   } catch (err) {
-    console.error("stall account", err instanceof Error ? err.message : "stripe");
+    console.error("vendor account", err instanceof Error ? err.message : "stripe");
     return { error: "Could not start payments." };
   }
   revalidatePublishedDirectory([`/vendor/${vendorId}`, `/vendors/${gate.listing.slug}`]);
@@ -105,7 +105,7 @@ export async function payStallFee(formData: FormData) {
   if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
   const vendorId = String(formData.get("vendor_id") ?? "");
   const gate = await ownedListing(vendorId);
-  if (!gate.listing || !gate.user) return { error: gate.error ?? "That stall is not yours." };
+  if (!gate.listing || !gate.user) return { error: gate.error ?? "That vendor is not yours." };
   const opened = await startFeeCheckout(
     vendorId,
     gate.listing.fee_balance_cents,
@@ -119,9 +119,9 @@ export async function openStallDashboard(formData: FormData) {
   if (!VENDOR_SALES_OPEN) return { error: SALES_CLOSED };
   const vendorId = String(formData.get("vendor_id") ?? "");
   const gate = await ownedListing(vendorId);
-  if (!gate.listing || !gate.user) return { error: gate.error ?? "That stall is not yours." };
+  if (!gate.listing || !gate.user) return { error: gate.error ?? "That vendor is not yours." };
   const opened = await createStallDashboardLink(vendorId, gate.user.id);
-  if (opened.error || !opened.url) return { error: opened.error ?? "Could not open the stall dashboard." };
+  if (opened.error || !opened.url) return { error: opened.error ?? "Could not open the vendor dashboard." };
   redirect(opened.url);
 }
 
@@ -130,7 +130,7 @@ export async function markStallOrderReady(formData: FormData) {
   const vendorId = String(formData.get("vendor_id") ?? "");
   const orderId = String(formData.get("order_id") ?? "");
   const gate = await ownedListing(vendorId);
-  if (!gate.user) return { error: gate.error ?? "That stall is not yours." };
+  if (!gate.user) return { error: gate.error ?? "That vendor is not yours." };
   if (!isUuid(orderId)) return { error: "That order is missing." };
   const saved = await markOrderReady(vendorId, orderId, gate.user.id);
   if (saved.error) return { error: saved.error };
@@ -143,7 +143,7 @@ export async function saveStallPickupStart(formData: FormData) {
   const vendorId = String(formData.get("vendor_id") ?? "");
   const orderId = String(formData.get("order_id") ?? "");
   const gate = await ownedListing(vendorId);
-  if (!gate.user) return { error: gate.error ?? "That stall is not yours." };
+  if (!gate.user) return { error: gate.error ?? "That vendor is not yours." };
   if (!isUuid(orderId)) return { error: "That order is missing." };
   const saved = await setOrderPickupStart(
     vendorId,
@@ -173,7 +173,7 @@ export async function settleStallFeeReturn(vendorId: string, sessionId: string) 
   try {
     await confirmFeeCheckout(vendorId, sessionId);
   } catch (err) {
-    console.error("stall fee confirm", err instanceof Error ? err.message : "stripe");
+    console.error("vendor fee confirm", err instanceof Error ? err.message : "stripe");
   }
 }
 
@@ -257,7 +257,7 @@ export async function loadBuyerOrders(userId: string) {
     const name =
       joined && typeof joined === "object" && "name" in joined && typeof joined.name === "string"
         ? joined.name
-        : "Stall";
+        : "Vendor";
     const slug =
       joined && typeof joined === "object" && "slug" in joined && typeof joined.slug === "string"
         ? joined.slug

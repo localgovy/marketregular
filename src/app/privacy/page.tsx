@@ -44,8 +44,8 @@ export default function PrivacyPage() {
         <h2>{siteCopy["/privacy"].why}</h2>
         <p className={body}>
           We use personal information to run your account, publish the directory, send mail the
-          account needs or that you asked for, complete an order when a stall is selling, keep the
-          stall-fee record, see which pages are used, and stop abuse. We do not sell personal
+          account needs or that you asked for, complete an order when a vendor is selling, keep the
+          vendor-fee record, see which pages are used, and stop abuse. We do not sell personal
           information, and we do not build an advertising profile of you for other sites.
         </p>
       </section>
@@ -66,35 +66,35 @@ export default function PrivacyPage() {
         </p>
         <p className={body}>
           A vendor or market account uses the email you give, including a Gmail address, and the
-          password you choose. The request names the organization, or points at a published stall
+          password you choose. The request names the organization, or points at a published vendor
           or market. We keep a hash of the network address on that request only to slow repeat
           sends. The hash is not the address itself. Sign-in is limited the same way, with a hash
           of the email or the network address. Those rows are cleared after two days.
         </p>
         <p className={body}>
-          After we assign a stall, that account can edit the stall&apos;s name, description, logo,
+          After we assign a vendor, that account can edit the vendor&apos;s name, description, logo,
           tags, phone, email, links, menu, and which markets it attends. It cannot change the web
           address, whether the page is published, or the public score. After we assign a market,
           that account can edit the market&apos;s name, description, hours, logo, tags, phone, email,
-          links, and the stalls at that market. The street address and the map pin stay with us. A
-          stall the market adds is public and stays without an owner until we assign a vendor
-          account. Until then, that market can edit the stall&apos;s profile, unless a request for
+          links, and the vendors at that market. The street address and the map pin stay with us. A
+          vendor the market adds is public and stays without an owner until we assign a vendor
+          account. Until then, that market can edit the vendor&apos;s profile, unless a request for
           it is already waiting.
         </p>
         <p className={body}>
           Phone, email, and the logo are shown on the public page. The logo file is stored with the
-          directory. Use a phone and email the stall or market is willing to have on that page. A
-          market that types a stall&apos;s phone or email is publishing it.
+          directory. Use a phone and email the vendor or market is willing to have on that page. A
+          market that types a vendor&apos;s phone or email is publishing it.
         </p>
         <p className={body}>
-          If a stall is approved to sell, we also store that selling is on, which menu items are
-          for sale, and the delivery, pickup, or preorder terms the stall writes. An order stores
+          If a vendor is approved to sell, we also store that selling is on, which menu items are
+          for sale, and the delivery, pickup, or preorder terms the vendor writes. An order stores
           the item, quantity, price, how the buyer asked for it, the buyer&apos;s email, and, for
-          delivery, a name and address so the stall can hand it over. Card numbers stay with
+          delivery, a name and address so the vendor can hand it over. Card numbers stay with
           Stripe. We do not store them.
         </p>
         <p className={body}>
-          When we assign a stall or market, we email a link to that portal. We do not replace the
+          When we assign a vendor or market, we email a link to that portal. We do not replace the
           password you chose. A password issued for an older approval can still be shown in admin
           until you replace it. Shopper passwords, and passwords chosen on the vendor or market
           portal, stay a hash only. An issued-password copy is removed when the account is deleted.
@@ -135,7 +135,7 @@ export default function PrivacyPage() {
         <h2>{siteCopy["/privacy"].mail}</h2>
         <p className={body}>
           Account mail is the note the account needs. Confirming the address and resetting a
-          password go through Supabase. Account requests go to us through Resend. When a stall or
+          password go through Supabase. Account requests go to us through Resend. When a vendor or
           market is assigned, or when we cannot assign one, Resend sends that note to the account
           email. If you ask for this week&apos;s markets from a signed-in account, Resend sends that
           mail to the address on the account. We do not run a separate advertising list.
@@ -146,7 +146,7 @@ export default function PrivacyPage() {
         <h2>{siteCopy["/privacy"].whoElse}</h2>
         <p className={body}>
           Vercel hosts the site. Supabase holds accounts, the directory, and logo and post files.
-          Stripe handles card numbers for stall checkout and for the stall fee, when those are on.
+          Stripe handles card numbers for vendor checkout and for the vendor fee, when those are on.
           Google handles Analytics and, if you choose it, sign-in. Resend sends the mail above.
           OpenFreeMap serves map tiles. Those companies process information for us, and we use them
           to run the site. They may store it outside Canada, including in the United States. While
@@ -154,7 +154,7 @@ export default function PrivacyPage() {
           disclose it.
         </p>
         <p className={body}>
-          We may share information if the law requires it, or to stop abuse. The stall sees the
+          We may share information if the law requires it, or to stop abuse. The vendor sees the
           order details it needs to fulfill. A later owner of that listing does not receive the
           earlier orders.
         </p>
@@ -167,7 +167,7 @@ export default function PrivacyPage() {
           and type delete to close the account. That removes the login, profile, posts, photos on
           those posts, reviews, saves, and portal requests on our side. If a listing was assigned
           to you, the listing stays and the account is taken off it. Order records and the
-          stall-fee ledger stay so the stall can still fulfill an order and so the tax record stays
+          vendor-fee ledger stay so the vendor can still fulfill an order and so the tax record stays
           accurate. We keep those for at least six years after the year they relate to, and longer
           if a dispute about them is still open. The account link on an order is cleared when the
           buyer deletes the account. Copies can linger for a while in email, backups, and
@@ -196,7 +196,7 @@ export default function PrivacyPage() {
         <h2>{siteCopy["/privacy"].children}</h2>
         <p className={body}>
           {SITE_NAME} is not for children under 13. The feed is public. Do not create an account
-          for someone younger than that. A stall or market account is for an adult who is allowed
+          for someone younger than that. A vendor or market account is for an adult who is allowed
           to speak for that business.
         </p>
       </section>
@@ -205,7 +205,7 @@ export default function PrivacyPage() {
         <h2>{siteCopy["/privacy"].rights}</h2>
         <p className={body}>
           Under PIPEDA you can ask what we hold, ask us to correct it, and ask us to delete it,
-          subject to what the law lets us keep, including a tax record and an order a stall still
+          subject to what the law lets us keep, including a tax record and an order a vendor still
           has to fulfill. You can withdraw consent by closing the account or by writing us. A
           record we are required to keep can stay. Start with the account page or{" "}
           <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-foreground hover:underline">
@@ -220,7 +220,7 @@ export default function PrivacyPage() {
         <h2>{siteCopy["/privacy"].changes}</h2>
         <p className={body}>
           If this policy changes in a way that matters, we update the date at the top of this page.
-          If the change affects a stall or market account, we also email that account.
+          If the change affects a vendor or market account, we also email that account.
         </p>
       </section>
 
