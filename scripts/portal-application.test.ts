@@ -5,12 +5,21 @@ import {
   clipOrganizationName,
   decodePortalOrgCookie,
   portalHomePath,
+  portalRequestAwaitingAssignment,
   portalRequestId,
   portalSignupRecord,
   readPortalSignupIntent,
 } from "../src/lib/portal-application.ts";
 import { portalApplicationNotice, portalDeclineLetter } from "../src/lib/portal-application-mail.ts";
 import { vendorPortalLetter } from "../src/lib/vendor-portal-mail.ts";
+
+test("an owned listing is no longer waiting on assignment", () => {
+  const market = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+  assert.equal(portalRequestAwaitingAssignment(null, [market]), true);
+  assert.equal(portalRequestAwaitingAssignment(market, []), true);
+  assert.equal(portalRequestAwaitingAssignment(market, [market]), false);
+  assert.equal(portalRequestAwaitingAssignment("55555555-5555-4555-8555-555555555555", [market]), true);
+});
 
 test("portal paths keep a listing request and drop a bad id", () => {
   assert.equal(portalHomePath("vendor", null), "/vendor");

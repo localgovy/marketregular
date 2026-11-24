@@ -24,6 +24,18 @@ export function portalKind(value: unknown): ClaimTarget | null {
   return value === "vendor" || value === "market" ? value : null;
 }
 
+/**
+ * A request with no listing yet is still waiting.
+ * A request for a listing this account already edits is not.
+ */
+export function portalRequestAwaitingAssignment(
+  requestedTargetId: string | null | undefined,
+  ownedIds: readonly string[],
+) {
+  if (!requestedTargetId) return true;
+  return !ownedIds.includes(requestedTargetId);
+}
+
 /** Portal index, keeping a listing request on the query string. */
 export function portalHomePath(kind: ClaimTarget, requestId?: string | null) {
   const base = kind === "market" ? "/market" : "/vendor";
