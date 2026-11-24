@@ -27,6 +27,16 @@ test("service client sends the gate only when a server secret is set", () => {
   }
 });
 
+test("signed-in market editors can save which sections they keep", () => {
+  const sql = readFileSync(
+    new URL("../supabase/migrations/20261124175227_market_portal_opt_outs.sql", import.meta.url),
+    "utf8",
+  );
+  assert.match(sql, /'save_owned_maintenance_opt_outs'/);
+  assert.match(sql, /maintenance_opt_outs/);
+  assert.doesNotMatch(sql, /if auth\.role\(\) = 'service_role' then\s+return;/);
+});
+
 test("service role no longer skips the data api allowlist", () => {
   const sql = readFileSync(migration, "utf8");
   const admin = readFileSync(new URL("../src/lib/supabase/admin.ts", import.meta.url), "utf8");

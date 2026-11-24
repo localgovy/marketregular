@@ -7,7 +7,7 @@ import { PortalRequestForm } from "@/components/portal-request-form";
 import { PortalSignupForm } from "@/components/portal-signup-form";
 import { copyText, siteCopy } from "@/content/site-copy";
 import { loginQueryError } from "@/lib/public-error";
-import { portalHomePath, portalRequestId } from "@/lib/portal-application";
+import { portalHomePath, portalRequestAwaitingAssignment, portalRequestId } from "@/lib/portal-application";
 import { createServiceClient } from "@/lib/supabase/admin";
 import { createAuthedServerClient } from "@/lib/supabase/server";
 import type { ClaimTarget, PortalApplication } from "@/types/database";
@@ -151,8 +151,13 @@ export async function PortalHome({
   }
 
   const applications = applicationsFailed ? [] : ((applicationRows?.data ?? []) as PortalApplication[]);
-  const pending = applications.find((row) => row.status === "pending") ?? null;
   const owned = new Set(portal.listings.map((listing) => listing.id));
+  const pendingCandidate = applications.find((row) => row.status === "pending") ?? null;
+  const pending =
+    pendingCandidate &&
+    portalRequestAwaitingAssignment(pendingCandidate.requested_target_id, [...owned])
+      ? pendingCandidate
+      : null;
   const rejected = !pending && applications[0]?.status === "rejected";
   const legacy = legacyRows?.data?.[0] ?? null;
   const names = await namedListings(kind, [
