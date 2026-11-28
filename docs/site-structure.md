@@ -526,7 +526,7 @@ Resend uses `RESEND_API_KEY` and `RESEND_FROM`. A failed portal email is reporte
 
 | Service | Use |
 | --- | --- |
-| Supabase | Auth, Postgres, storage, Realtime, `pg_cron`. `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, server `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
+| Supabase | Auth, Postgres, storage, Realtime, `pg_cron`. URL in `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_URL`. Publishable key (`sb_publishable_...`) in `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_ANON_KEY`. Secret key (`sb_secret_...`) in `SUPABASE_SERVICE_ROLE_KEY`. Legacy JWT anon and service-role keys are disabled. Service-role HTTP calls also send `MARKETREGULAR_DATA_API_GATE` |
 | Vercel | Host, region `yul1` only (`vercel.json`). Analytics. IP header `x-vercel-forwarded-for` for rate limits. No Vercel cron |
 | Stripe | Connect and Checkout. Sales are on when the stall `can_buy` |
 | Resend | Transactional mail |

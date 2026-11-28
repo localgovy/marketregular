@@ -1,5 +1,6 @@
-/** Public project URL and anon key. Server also accepts non-public aliases.
- *  The service-role key lives in `admin.ts` so it cannot follow this module into the client bundle. */
+/** Public project URL and publishable key. The env names stay ANON_KEY.
+ *  Server also accepts non-public aliases.
+ *  The secret key lives in `admin.ts` so it cannot follow this module into the client bundle. */
 export function supabaseUrl() {
   return (
     process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ||

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { supabaseApiKeyHeaders } from "../src/lib/supabase/api-key-headers.ts";
 
 function loadEnv(path: string) {
   const text = readFileSync(path, "utf8");
@@ -50,8 +51,7 @@ async function rpc(url: string, key: string, body: Record<string, unknown>) {
   const response = await fetch(`${url}/rest/v1/rpc/search_products`, {
     method: "POST",
     headers: {
-      apikey: key,
-      authorization: `Bearer ${key}`,
+      ...supabaseApiKeyHeaders(key),
       "content-type": "application/json",
       ...((process.env.MARKETREGULAR_DATA_API_GATE?.trim().length ?? 0) >= 32
         ? { "x-marketregular-gate": process.env.MARKETREGULAR_DATA_API_GATE!.trim() }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+import { supabaseApiKeyHeaders } from "../src/lib/supabase/api-key-headers.ts";
 import {
   DATA_API_GATE_HEADER,
   dataApiGateHeaders,
@@ -45,4 +46,17 @@ test("service role no longer skips the data api allowlist", () => {
   assert.match(sql, /not allowed/);
   assert.doesNotMatch(sql, /if auth\.role\(\) = 'service_role' then\s+return;/);
   assert.match(admin, /dataApiGateHeaders\(\)/);
+});
+
+test("new api keys are not sent as bearer tokens", () => {
+  assert.deepEqual(supabaseApiKeyHeaders("sb_publishable_example"), {
+    apikey: "sb_publishable_example",
+  });
+  assert.deepEqual(supabaseApiKeyHeaders("sb_secret_example"), {
+    apikey: "sb_secret_example",
+  });
+  assert.deepEqual(supabaseApiKeyHeaders("eyJhbGciOiJlegacy"), {
+    apikey: "eyJhbGciOiJlegacy",
+    Authorization: "Bearer eyJhbGciOiJlegacy",
+  });
 });

@@ -2,6 +2,7 @@ import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { supabaseApiKeyHeaders } from "./src/lib/supabase/api-key-headers";
 import { dataApiGateHeaders } from "./src/lib/supabase/data-api-gate";
 import { FIND_SLUGS_AT_PRODUCTS } from "./src/data/find-redirects";
 import {
@@ -25,8 +26,7 @@ async function liveListingRedirects() {
   try {
     const res = await fetch(`${url}/rest/v1/listing_slug_aliases?select=kind,from_slug,to_slug`, {
       headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
+        ...supabaseApiKeyHeaders(key),
         Accept: "application/json",
         ...dataApiGateHeaders(),
       },

@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { supabaseApiKeyHeaders } from "../src/lib/supabase/api-key-headers.ts";
 
 function loadEnv(path: string) {
   const text = readFileSync(path, "utf8");
@@ -26,8 +27,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!url || !key) throw new Error("Missing publishable Supabase env");
 
 const headers = {
-  apikey: key,
-  authorization: `Bearer ${key}`,
+  ...supabaseApiKeyHeaders(key),
   "content-type": "application/json",
 };
 

@@ -69,7 +69,7 @@ Google’s consent screen names the host of the Auth callback (`redirect_uri`), 
 
 Do not add `https://<project-ref>.supabase.co/auth/v1/callback`. Google would show that host on the consent screen.
 
-Copy the project URL, anon key, and service role key into `.env.local` and Vercel env vars.
+Copy the project URL, the publishable key (`sb_publishable_...`), and the secret key (`sb_secret_...`) into `.env.local` and the Vercel env vars. The env names stay `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`. Legacy anon and service-role JWTs are disabled and will be rejected. Service-role HTTP calls also need `MARKETREGULAR_DATA_API_GATE`, the same value Vercel already stores.
 
 Grant admin in SQL (once), not via an env allow-list:
 

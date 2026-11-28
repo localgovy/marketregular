@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { supabaseApiKeyHeaders } from "../src/lib/supabase/api-key-headers.ts";
 import {
   formatHours,
   formatSeasonRange,
@@ -46,8 +47,7 @@ async function page<T>(path: string): Promise<T[]> {
     const gate = process.env.MARKETREGULAR_DATA_API_GATE?.trim() ?? "";
     const response = await fetch(`${url}/rest/v1/${path}`, {
       headers: {
-        apikey: key!,
-        authorization: `Bearer ${key}`,
+        ...supabaseApiKeyHeaders(key!),
         range: `${from}-${from + 999}`,
         ...(gate.length >= 32 ? { "x-marketregular-gate": gate } : {}),
       },

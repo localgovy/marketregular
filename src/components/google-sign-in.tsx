@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { guardGoogleAuthorize } from "@/app/actions/google-oauth";
 import { authNextCookie } from "@/lib/auth-redirect";
+import { supabaseApiKeyHeaders } from "@/lib/supabase/api-key-headers";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { supabaseAnonKey, supabaseUrl } from "@/lib/supabase/env";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export function GoogleSignIn({
 
     try {
       const settingsRes = await fetch(`${url}/auth/v1/settings`, {
-        headers: { apikey: key, Authorization: `Bearer ${key}` },
+        headers: supabaseApiKeyHeaders(key),
       });
       const settings = (await settingsRes.json()) as {
         external?: { google?: boolean };
